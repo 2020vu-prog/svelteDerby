@@ -1,33 +1,15 @@
  <script>
+ import CarAndDriver from './CarAndDriver.svelte'
  import { standings,driverMap } from './stores.js';
 	export let idx;
  const standing=$standings[idx]
- const hhmmssOLD=()=>{
-     return "00:11:22"
- }
+
 const hhmmss = ()=> {
         var time = new Date(standing.lastUpdateMS);
         return (
             ("0" + time.getHours()).slice(-2) + ":" +
             ("0" + time.getMinutes()).slice(-2));
         //+ ":" + ("0" + time.getSeconds()).slice(-2));
-    };
-const getDriverName =  (lane)=> {
-        var carNumber;
-        if (lane === 1) {
-            carNumber = standing.carNumber1;
-        }
-        if (lane === 2) {
-            carNumber = standing.carNumber2;
-
-        }
-        if (carNumber && $driverMap[ carNumber]) {
-            return ($driverMap[carNumber].firstName);
-        }
-        else
-        {
-            return "";
-        }
     };
 
 const isWinner =  (lane, phase) =>{
@@ -73,7 +55,7 @@ const getWinTime =  (lane, phase)=> {
 
                 <ul class="list-group">
                     <li class="list-group-item">
-                        <big><b>{standing.carNumber1}</b></big> {getDriverName(1)}
+                        <CarAndDriver carNumber={standing.carNumber1} />
                         {#if isWinner(1,0)}
                             <big class="bigbadge badge">Overall: {getWinTime(1,0)} </big>
                         {/if}
@@ -81,12 +63,12 @@ const getWinTime =  (lane, phase)=> {
                             <big class="bigbadge badge">A: {getWinTime(1,1)}</big>
                         {/if}
                         {#if isWinner(1,2)}
-                            <big class="bigbadge badge">B: {getWinTime(1,2,standing)}</big>
+                            <big class="bigbadge badge">B: {getWinTime(1,2)}</big>
                         {/if}
 
                     </li>
                     <li class="list-group-item">
-                        <big><b>{standing.carNumber2}</b></big> {getDriverName(2)}
+                        <CarAndDriver carNumber={standing.carNumber2} />
                         {#if isWinner(2,0)}
                             <big class="bigbadge badge">Overall: {getWinTime(2,0)}</big>
                         {/if}
