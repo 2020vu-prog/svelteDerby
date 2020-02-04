@@ -55,7 +55,7 @@ const getWinTime =  (lane, phase)=> {
 
                 <ul class="list-group">
                     <li class="list-group-item">
-                        <CarAndDriver carNumber={standing.carNumber1} />
+                        <CarAndDriver carNumber={standing.carNumber1} isWinner={isWinner(1,0)} phaseLetter=""/>
                         {#if isWinner(1,0)}
                             <big class="bigbadge badge">Overall: {getWinTime(1,0)} </big>
                         {/if}
@@ -68,7 +68,7 @@ const getWinTime =  (lane, phase)=> {
 
                     </li>
                     <li class="list-group-item">
-                        <CarAndDriver carNumber={standing.carNumber2} />
+                        <CarAndDriver carNumber={standing.carNumber2}  isWinner={isWinner(2,0)} phaseLetter="" />
                         {#if isWinner(2,0)}
                             <big class="bigbadge badge">Overall: {getWinTime(2,0)}</big>
                         {/if}

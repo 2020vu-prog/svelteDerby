@@ -1,5 +1,8 @@
+import axios from "axios";
+
 import { writable } from 'svelte/store';
 
+export const doRefreshBlocks=writable(0);
 export const standings = writable([]);
 export const driverMap = writable({});
 export const carFilter = writable("");
@@ -7,3 +10,66 @@ export const nextOnBlocks = writable({});
 export const raceConfig= writable({
     orgName: "Chicago"
 });
+
+
+const fakeNextOnBlocks=     {
+    "carNumber1": 101,
+    "carNumber2": 115,
+    "loadMS": 1570286201451,
+    "phaseNumber": 1,
+    "lastUpdateMS": 1570286201474,
+    "raceStandingID": 3,
+    "id": 2,
+    "version": 1
+  };
+export const doRefresh=()=>{
+    axios.get('./data/driver.json')
+    .then((response) => {
+        console.log("drivers:"+response.data.length);
+        const driverTmp={}
+        response.data.forEach(function (driver) {
+            driverTmp[driver.carNumber]=driver;
+        });
+        driverMap.set(driverTmp);
+                        console.log("did set driverMap");
+        nextOnBlocks.set(fakeNextOnBlocks);
+        doRefreshBlocks.set(new Date().getTime())
+    
+
+    })
+    .catch((err) => {
+                        console.log(err);
+    })
+
+
+    //const racerUrl="http://s3.amazonaws.com/chicago2019oct-s3derbyracedata-vtp3oauyufv6/data/racer.json.gz?nocache=1580673517399";
+    const racerUrl='./data/rs.json'
+    axios.get(racerUrl)
+    .then((response) => {
+        console.log(response.data.length);
+        const sortedStandings=            response.data.sort(sortBy('lastUpdateMS', true, parseInt));
+        standings.set(sortedStandings);
+                        console.log("did set standings");
+                        nextOnBlocks.set(fakeNextOnBlocks);
+
+    })
+    .catch((err) => {
+                        console.log(err);
+    })
+}
+const sortBy = (field, reverse, primer) =>{
+    var key = primer ?
+        function (x) {
+            return primer(x[field])
+        } :
+        function (x) {
+            return x[field]
+        };
+
+    reverse = !reverse ? 1 : -1;
+
+    return function (a, b) {
+        return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
+    }
+};
+doRefresh();

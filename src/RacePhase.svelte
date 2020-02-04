@@ -9,26 +9,20 @@ const getBgColor=()=>{
 
     return $nextOnBlocks.raceStandingID?"Green":"Red";
 }
-/*
-let bgColor="Blue"
 
-if($nextOnBlocks.raceStandingID){
-    bgColor="Green"
+const getPhaseLetter=()=>{
+    return "A";
 }
-else{
-     bgColor="Red"
-}
-*/
 </script>
 {#if $nextOnBlocks && refreshTime}
         <div class="well well-sm " style="background: {getBgColor()}">
             <div class="panel panel-info ">
                 <ul class="list-group ">
                     <li class="list-group-item ">
-                        <CarAndDriver carNumber={$nextOnBlocks.carNumber1} />
+                        <CarAndDriver carNumber={$nextOnBlocks.carNumber1}  isWinner="" phaseLetter={getPhaseLetter()} />
                     </li>
                     <li class="list-group-item">
-                        <CarAndDriver carNumber={$nextOnBlocks.carNumber2} />
+                        <CarAndDriver carNumber={$nextOnBlocks.carNumber2}  isWinner="" phaseLetter={getPhaseLetter()} />
                     </li>
 
                 </ul>
