@@ -4,7 +4,7 @@ export let carNumber;
 export let isWinner;
 export let phaseLetter;
 const getDriverName =  ()=> {
-    console.log("gdn: "+carNumber)
+    //console.log("gdn: "+carNumber)
         if (carNumber && $driverMap[ carNumber]) {
             return ($driverMap[carNumber].firstName);
         }
