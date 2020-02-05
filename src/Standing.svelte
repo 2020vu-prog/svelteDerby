@@ -14,7 +14,6 @@ const filterMatches=(standing,lclFilter)=>{
 </script>
 
 <main>
-	    <h3 class="center">{$raceConfig.orgName} Derby Race</h3>
 
 
 <h4>Next On Blocks</h4>
