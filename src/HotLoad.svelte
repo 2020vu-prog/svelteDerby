@@ -1,7 +1,9 @@
 <script>
 import axios from "axios";
-import { doRefresh,nextOnBlocks} from './stores.js';
+import { doRefresh,nextOnBlocks, doRefreshBlocks} from './stores.js';
 
+const nextPhaseTopic="nextPhase";
+const iosTriggerTopic="iosTrigger";
 var client;
 var btnClass="btn-danger";
 function guid() {
@@ -58,8 +60,8 @@ function mqttJsonSuccess(data){
 function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
   console.log("onConnect");
-  client.subscribe("iosTrigger");
-  client.subscribe("nextOnBlocks");
+  client.subscribe(iosTriggerTopic);
+  client.subscribe(nextPhaseTopic);
 }
 
 // called when the client loses its connection
@@ -71,17 +73,27 @@ function onConnectionLost(responseObject) {
 
 // called when a message arrives
 function onMessageArrived(message) {
-  console.log("onMessageArrived:"+message.payloadString);
-  const parsed=JSON.parse(message.payloadString)
+  console.log("onMessageArrived: from topic: "+ message.destinationName + " payload: "+message.payloadString);
+  try{
+    const parsed=JSON.parse(message.payloadString)
     console.log("onMessageArrived: parsed: "+parsed);
 
-    if(parsed.loadMS){
+    if(nextPhaseTopic=== message.destinationName ){
         $nextOnBlocks=parsed;
+        $doRefreshBlocks=new Date().getTime()
+
         return;
     }
-             btnClass="btn-primary";
+    if(iosTriggerTopic=== message.destinationName ){
+        btnClass="btn-primary";
+        doRefresh();
+        return;
+    }
 
-                doRefresh();
+  }
+  catch(err){
+      console.log("mqtt parse error:"+err)
+  }
         
 }
 </script>

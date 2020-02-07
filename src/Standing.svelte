@@ -2,6 +2,7 @@
 import { standings ,driverMap, carFilter, nextOnBlocks, raceConfig,doRefreshBlocks} from './stores.js';
 import RaceStanding from "./RaceStanding.svelte";
 import RacePhase from "./RacePhase.svelte";
+import CarFilter from "./CarFilter.svelte";
 
 
 
@@ -22,9 +23,7 @@ const filterMatches=(standing,lclFilter)=>{
 		<hr/>
 		
 		<h4>Race History</h4>
-
-	
-				Filter: <input type="number" maxLength="3" size="3" bind:value={$carFilter}>
+		<CarFilter/>
 
 		{#each $standings as standing,i}
 			{#if filterMatches(standing, $carFilter)}

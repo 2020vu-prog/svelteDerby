@@ -1,6 +1,7 @@
 <script>
 import {  driverMap, carFilter, doRefreshBlocks} from './stores.js';
 import CarAndDriver from "./CarAndDriver.svelte";
+import CarFilter from "./CarFilter.svelte";
 
 
 const filterMatches=(carNumber,lclFilter)=>{
@@ -18,7 +19,7 @@ const getDriversAsList=()=>{
 <div>
 <h4>Driver List </h4>
 <p/>
-				Filter: <input type="number" maxLength="3" size="3" bind:value={$carFilter}>
+<CarFilter/>
 
 		{#each getDriversAsList() as driver,i}
 			{#if filterMatches(driver, $carFilter)}
