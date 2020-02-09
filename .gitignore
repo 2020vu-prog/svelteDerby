@@ -1,4 +1,9 @@
-/node_modules/
-/public/build/
+terraform.tfstate
+terraform.tfstate.backup
+amplify/
+node_modules/
+/public/bundle.*
+build/
+.terraform/
 
 .DS_Store

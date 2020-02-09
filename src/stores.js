@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { writable } from 'svelte/store';
+import { writable, readable } from 'svelte/store';
 
 export const doRefreshBlocks=writable(0);
 export const standings = writable([]);
@@ -8,7 +8,9 @@ export const driverMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlocks = writable({});
 export const raceConfig= writable({
-    orgName: "Chicago"
+    orgName: "Chicago",
+    orgId: "chi",
+    baseUrl: "https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
 });
 
 

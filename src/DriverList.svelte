@@ -1,6 +1,7 @@
 <script>
 import {  driverMap, carFilter, doRefreshBlocks} from './stores.js';
 import CarAndDriver from "./CarAndDriver.svelte";
+import MaterialAdd from "./MaterialAdd.svelte";
 import CarFilter from "./CarFilter.svelte";
 
 
@@ -19,6 +20,7 @@ const getDriversAsList=()=>{
 <div>
 <h4>Driver List </h4>
 <p/>
+<MaterialAdd/>
 <CarFilter/>
 
 		{#each getDriversAsList() as driver,i}

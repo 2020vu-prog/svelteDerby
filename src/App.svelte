@@ -5,7 +5,10 @@ import {push, pop, replace} from 'svelte-spa-router'
 
 import Standing from './Standing.svelte'
 import DriverList from './DriverList.svelte'
+import DriverAdd from './DriverAdd.svelte'
+import Login from './Login.svelte'
 import HotLoad from "./HotLoad.svelte";
+//import CognitoAuth from "./CognitoAuth.svelte";
 import { raceConfig} from './stores.js';
 
 
@@ -13,6 +16,8 @@ const routes = {
     // Exact path
     '/': Standing,
     '/drivers': DriverList,
+    '/login': Login,
+    '/driverAdd': DriverAdd,
 }
 
 /* Toggle between showing and hiding the navigation menu links when the user clicks on the hamburger menu / bar icon */
@@ -79,9 +84,9 @@ const navTo=(route)=>{
   <a href="#home" class="active">{$raceConfig.orgName} Derby Race <HotLoad/></a>
   <!-- Navigation links (hidden by default) -->
   <div id="myLinks">
-      <a href="javascript:void(0);" on:click={() => navTo('/drivers')} >Drivers</a>
-    
+    <a href="javascript:void(0);" on:click={() => navTo('/drivers')} >Drivers</a>
     <a href="javascript:void(0);"  on:click={() => navTo('/')}>Standings</a>
+    <a href="javascript:void(0);"  on:click={() => navTo('/login')}>Login</a>
 
   </div>
   <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->
@@ -89,7 +94,6 @@ const navTo=(route)=>{
     <i class="fa fa-bars"></i>
   </a>
 </div>
-
 
     <Router {routes}/>
 </body>
