@@ -49,7 +49,7 @@ const create_UUID=()=>{
     });
     return uuid;
 }
-const ddbQueryRsContains=(json)=>{
+const ddbQueryRsContains=async (json)=>{
 	var containsFilters=[];
 	var containsValues={};
 	var i;
@@ -68,17 +68,21 @@ const ddbQueryRsContains=(json)=>{
 	 //   }
 	    KeyConditionExpression: "PK = :pk",
 	    FilterExpression: containsFilters.join(" OR "),
+	    ReturnConsumedCapacity: "TOTAL", 
 	    ExpressionAttributeValues :  containsValues
 	};
 	console.log("ddb query: "+ JSON.stringify(params));
 
-	   ddbClient.query(params, function(err, data) {
-	   if (err) console.log("queryRsContains failed: ",err, err.stack); // an error occurred
-	   else {
+	try{
+	   var data=await ddbClient.query(params);
 		 console.log("queryRsContains: "+ data);           // successful response
 		 console.log("queryRsContains: "+ JSON.stringify(data));           // successful response
-		}
-	 });
+		return data.Count;
+	}
+	catch(err){
+	   console.log("queryRsContains failed: ",err, err.stack); // an error occurred
+	}
+	return 99;
 }
 const ddbListOfStrings=(slist)=>{
 	var rc={"L":[]}
@@ -88,8 +92,13 @@ const ddbListOfStrings=(slist)=>{
 	}
 	return rc;
 }
-const addPending=(json)=>{
+const addPending=async (json)=>{
 	console.log("addPending: "+ JSON.stringify(json));
+	const alreadyExists=await ddbQueryRsContains(json);
+	if(alreadyExists>0){
+	   return {error: "Pending already exists"};
+	}
+	
 	json.rsPrefix=json.rsPrefix?json.rsPrefix:"";
 	 var params = {
 	  Item: {
@@ -115,13 +124,19 @@ const addPending=(json)=>{
 	 };
 
 	console.log("addPending skel: "+ JSON.stringify(params));
-	   ddbClient.putItem(params, function(err, data) {
-	   if (err) console.log(err, err.stack); // an error occurred
-	   else     console.log("Added RS: "+ JSON.stringify(data));           // successful response
-	 });
+
+	try{
+	   var data=await ddbClient.putItem(params);
+	   console.log("Added RS: "+ JSON.stringify(data));           // successful response
+	   return {status: "ok"};
+	}
+	catch(err){
+	   console.log(err, err.stack); // an error occurred
+	   return {error: err};
+	 }
 };
 
-const addParticipant=(json)=>{
+const addParticipant=async (json)=>{
 	   console.log("addParticipant: "+ JSON.stringify(json));
 	 var params = {
 	  Item: {
@@ -151,14 +166,20 @@ const addParticipant=(json)=>{
 	  TableName: process.env.DynamoDbTable
 	 };
 
-		ddbClient.putItem(params, function(err, data) {
-	   if (err) console.log(err, err.stack); // an error occurred
-	   else     console.log("Added PTCP: "+ JSON.stringify(data));           // successful response
-	 });
+	try{
+		var data=await ddbClient.putItem(params);
+	   	console.log("Added PTCP: "+ JSON.stringify(data));           // successful response
+	   return {status: "ok", detail: "Added"};
+	}
+	catch(err){
+		console.log(err, err.stack); // an error occurred
+	   return {error: err};
+	}
 };
 
-exports.handler = function(event, context, callback) {
+exports.handler = async (event ) =>{
   const dbArn=process.env.DynamoDbArn
+  var jsonRC={};
 
   // Allow Cors
   if(event.httpMethod==="OPTIONS"){
@@ -176,25 +197,29 @@ exports.handler = function(event, context, callback) {
   }
 
   if(event.path==="/addParticipant"){
-	addParticipant(JSON.parse(event.body));
+	jsonRC=await addParticipant(JSON.parse(event.body));
   }
   else if(event.path==="/addPending"){
-	addPending(JSON.parse(event.body));
+	jsonRC=await addPending(JSON.parse(event.body));
   }
   else if(event.path==="/ddbQuery"){
-	ddbQueryRsContains(JSON.parse(event.body));
+	var qr=	await ddbQueryRsContains(JSON.parse(event.body));
+       console.log("ddbQuery: "+qr);
+	jsonRC={Count: qr};
   }
   else{
        console.log("Unhandled Path: "+event.path);
+	jsonRC={error: "Unhandled"};
   }
 
   console.log(JSON.stringify(event));
   var response = {
     statusCode: 200,
     headers: {
-      'Content-Type': 'text/html; charset=utf-8'
+      'Content-Type': 'application/json; charset=utf-8'
     },
-    body: '<p>Bonjour derby! ' +dbArn +'</p>'
+    body: JSON.stringify(jsonRC)
   }
-  callback(null, response)
+  //callback(null, response)
+  return response;
 }
