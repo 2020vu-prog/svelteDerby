@@ -3,6 +3,8 @@
     import { store} from './stores/auth.js'
 
   import axios from "axios";
+
+
     function handleSubmit() {
         console.log("Adding:"+JSON.stringify(loginForm))
         const createdBy=$store.username
@@ -25,6 +27,8 @@
                 .catch((err) => {
                     console.log("driverAdd failed: "+err)
                 })
+        loginForm.driverName="";
+        loginForm.carNumber="";
     }
     const loginForm={
     }

@@ -72,6 +72,7 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
+		"dynamodb:Query",
                 "dynamodb:BatchWriteItem",
                 "dynamodb:BatchGetItem",
                 "dynamodb:GetItem",
