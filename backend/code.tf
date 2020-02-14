@@ -6,6 +6,8 @@ variable AwsRegion {}
 variable DeployEnvironment {}
 variable CognitoPoolArn {}
  provider "aws" {
+  version = "~> 2.0"
+
    region = var.AwsRegion
  }
 

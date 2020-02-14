@@ -1,0 +1,138 @@
+
+variable DeployEnvironment {}
+variable DistDbArn {}
+variable DynamoDbArn {}
+variable DynamoDbStreamArn {}
+variable S3DistBucket {}
+variable S3DistBucketArn {}
+variable AwsRegion {}
+
+provider "archive" {}
+locals{
+  tags = {
+    Environment = var.DeployEnvironment
+    CreatedBy = "terraform ${basename(path.cwd)}"
+  }
+      ddbList= split("/",var.DynamoDbArn)
+      DynamoDbTable= element(local.ddbList,length(local.ddbList)-1)
+
+      distDdbList= split("/",var.DistDbArn)
+      DistDbTable= element(local.distDdbList,length(local.distDdbList)-1)
+      
+}
+
+data "archive_file" "zip" {
+  type        = "zip"
+  source_dir = "${path.module}/src/"
+  output_path = "tmp/build/dynamoMain.zip"
+}
+
+data "aws_iam_policy_document" "policy" {
+  statement {
+    sid    = ""
+    effect = "Allow"
+
+    principals {
+      identifiers = [
+         "lambda.amazonaws.com",
+         "edgelambda.amazonaws.com",
+      ]
+      type        = "Service"
+    }
+
+    actions = ["sts:AssumeRole" ]
+  }
+}
+
+
+
+resource "aws_iam_role" "iam_for_lambda_dynamo" {
+  name               = "iam_for_lambda_dynamo"
+  assume_role_policy = data.aws_iam_policy_document.policy.json
+  tags=local.tags
+}
+
+resource "aws_lambda_function" "lambda" {
+  function_name = "dynamoMain"
+
+  filename         = data.archive_file.zip.output_path
+  source_code_hash = data.archive_file.zip.output_base64sha256
+
+  role    = aws_iam_role.iam_for_lambda_dynamo.arn
+  handler = "dynamoMain.handler"
+  runtime = "nodejs10.x"
+  publish = true
+  tags=local.tags
+  environment {
+    variables = {
+      DistDbTable= local.DistDbTable
+      DistDbArn= var.DistDbArn
+      DynamoDbTable= local.DynamoDbTable
+      DynamoDbArn= var.DynamoDbArn
+      AwsRegion = var.AwsRegion
+      DstBucket=var.S3DistBucket 
+      DstBucketArn=var.S3DistBucketArn
+    }
+  }
+
+}
+
+/*
+*** Begin permissions mods 
+*/
+data "aws_iam_policy_document" "dynamo_allow_doc" {
+    statement {
+        actions = [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+		"dynamodb:ListStreams",
+		"dynamodb:GetRecords",
+		"dynamodb:GetShardIterator",
+		"dynamodb:DescribeStream",
+		"dynamodb:Query",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+		"s3:PutObject",
+		"s3:PutObjectAcl"
+        ]   
+        resources = [
+                "arn:aws:logs:*:*:*",
+                var.DistDbArn,
+                var.DynamoDbArn,
+                var.DynamoDbStreamArn,
+                "${var.S3DistBucketArn}/*"
+        ]   
+    }   
+}
+resource "aws_iam_policy" "dynamo_allow" {
+    name = "dynamo_allow"
+    path = "/"
+    policy = data.aws_iam_policy_document.dynamo_allow_doc.json
+}
+resource "aws_iam_role_policy_attachment" "eventwatch_dynamo_policy_attach" {
+    role       = aws_iam_role.iam_for_lambda_dynamo.name
+    policy_arn = aws_iam_policy.dynamo_allow.arn
+}
+output ddbTable {
+	value=local.DynamoDbTable
+}
+
+output "qualified_arn" {
+  value = "${aws_lambda_function.lambda.qualified_arn}"
+}
+output "arn" {
+  value = "${aws_lambda_function.lambda.arn}"
+}
+output "invoke_arn" {
+  value = "${aws_lambda_function.lambda.invoke_arn}"
+}
+output "function_name" {
+  value = "${aws_lambda_function.lambda.function_name}"
+}
+output "version" {
+  value = "${aws_lambda_function.lambda.version}"
+}

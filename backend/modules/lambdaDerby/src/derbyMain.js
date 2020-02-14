@@ -1,6 +1,12 @@
 'use strict'
 const {DynamoDB} = require('@aws-sdk/client-dynamodb-v2-node');
 const ddbClient = new DynamoDB({region: process.env.AwsRegion});
+const configDefault={
+	ttlIncrement:3600*.25
+}
+const configMap={
+	chi: configDefault,
+}
 
 /*
 const insert=()=>{
@@ -40,6 +46,16 @@ const insert=()=>{
 }
 */
 
+const getConfig=(orgId)=>{
+	if(configMap[orgId]){
+		return configMap[orgId];
+	}
+	return configDefault;
+}
+const getTtl=(orgId)=>{
+	const config=getConfig(orgId);
+	return Math.round((new Date().getTime()/1000)+config.ttlIncrement);
+}
 const create_UUID=()=>{
     var dt = new Date().getTime();
     var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -114,6 +130,12 @@ const addPending=async (json)=>{
 	    },
 	   "at": {
 	     S: new Date().toISOString()
+	    },
+	   "TTL": {
+	     N: getTtl()+""
+	    },
+	   "TTQ": {
+	     N: getTtl()+""
 	    },
 	   "orgId": {
 	     S: json.orgId

@@ -1,5 +1,7 @@
 locals {
   dbName="DerbyMain"
+  distDbName="DerbyDist"
+  S3DistBucket="test-s3-dst-bucket-rr1-us"
 }
 resource "aws_dynamodb_table" "derby-dynamodb-table" {
   name           = local.dbName
@@ -25,4 +27,54 @@ resource "aws_dynamodb_table" "derby-dynamodb-table" {
     Name           = local.dbName
     DeployEnvironment = var.DeployEnvironment
   }
+}
+resource "aws_dynamodb_table" "derby-distribution" {
+  name           = local.distDbName
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "DP"
+  range_key      = "DS"
+  stream_enabled = false
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+  attribute {
+    name = "DP"
+    type = "S"
+  }
+
+  attribute {
+    name = "DS"
+    type = "N"
+  }
+  ttl {
+    attribute_name = "TTL"
+    enabled        = true
+  }
+  tags = {
+    Name           = local.distDbName
+    DeployEnvironment = var.DeployEnvironment
+  }
+}
+resource "aws_s3_bucket" "dstBucket" {
+  bucket = local.S3DistBucket
+  acl    = "private"
+}
+module "derbyDynamoLambda" {
+  source = "./modules/lambdaDynamo"
+
+  DistDbArn=aws_dynamodb_table.derby-distribution.arn
+  DynamoDbArn=aws_dynamodb_table.derby-dynamodb-table.arn
+  DynamoDbStreamArn=aws_dynamodb_table.derby-dynamodb-table.stream_arn
+  DeployEnvironment=var.DeployEnvironment
+  AwsRegion=var.AwsRegion
+  S3DistBucket = local.S3DistBucket
+  S3DistBucketArn = aws_s3_bucket.dstBucket.arn
+  
+}
+resource "aws_lambda_event_source_mapping" "dynamo_stream_link" {
+  event_source_arn  = aws_dynamodb_table.derby-dynamodb-table.stream_arn
+  function_name     = module.derbyDynamoLambda.function_name
+  starting_position = "LATEST"
+  //maximum_retry_attempts=5
+}
+output bucket {
+	value=aws_s3_bucket.dstBucket
 }
