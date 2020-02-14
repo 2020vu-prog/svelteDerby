@@ -1,4 +1,5 @@
 'use strict'
+const  AWS = require("aws-sdk");
 const {DynamoDB} = require('@aws-sdk/client-dynamodb-v2-node');
 const ddbClient = new DynamoDB({region: process.env.AwsRegion});
 const configDefault={
@@ -64,6 +65,34 @@ const create_UUID=()=>{
         return (c=='x' ? r :(r&0x3|0x8)).toString(16);
     });
     return uuid;
+}
+const ddbQueryRaceConfig=async ()=>{
+	var containsValues={};
+        containsValues[":pk"]={S: "EventConfig"};
+	var params = {
+	    TableName: process.env.DynamoDbTable,
+	    KeyConditionExpression: "PK = :pk",
+	    ReturnConsumedCapacity: "TOTAL", 
+	    ExpressionAttributeValues :  containsValues
+	};
+	console.log("ddb query: "+ JSON.stringify(params));
+	try{
+	   var data=await ddbClient.query(params);
+		 console.log("queryRaceConfig: "+ data);           // successful response
+		 console.log("queryRaceConfig: "+ JSON.stringify(data));           // successful response
+		const rc={};
+		for (var i = 0; i < data.Items.length; i++) {
+			var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
+			rc[unmarshalled.SK]=unmarshalled;
+		}
+
+		
+		return rc;
+	}
+	catch(err){
+	   console.log("queryRaceConfig failed: ",err, err.stack); // an error occurred
+	}
+	   return {error: "Query Failed"};
 }
 const ddbQueryRsContains=async (json)=>{
 	var containsFilters=[];
@@ -228,6 +257,10 @@ exports.handler = async (event ) =>{
 	var qr=	await ddbQueryRsContains(JSON.parse(event.body));
        console.log("ddbQuery: "+qr);
 	jsonRC={Count: qr};
+  }
+  else if(event.path==="/getRaceConfig"){
+	var qr=	await ddbQueryRaceConfig();
+	jsonRC=qr;
   }
   else{
        console.log("Unhandled Path: "+event.path);

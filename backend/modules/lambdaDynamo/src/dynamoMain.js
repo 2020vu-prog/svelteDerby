@@ -4,7 +4,7 @@ const  AWS = require("aws-sdk");
 const s3 = new AWS.S3();
 
 
-//const ddbClient = new DynamoDB({region: process.env.AwsRegion});
+const ddbClient = new DynamoDB({region: process.env.AwsRegion});
 
 
 console.log('Loading function');
@@ -17,6 +17,36 @@ const asyncForEach=async (array, callback) =>{
     await callback(array[index], index, array);
   }
 }
+
+// It is very unlikely that there would be a millisecond collision given 
+//   limited update volume.
+// Add a 1000 bytes of entropy to the time just as precaution.
+const getMicroEpoch=()=>{
+	const rand999=Math.floor(Math.random() * 1000);
+	return (new Date().getTime()*1000)+rand999;
+}
+
+const propagateRecord=async (json)=>{
+	   console.log("propagateRecord: "+ JSON.stringify(json));
+	json.DP=json.orgId;
+	json.DS= getMicroEpoch();
+	 var params = {
+	  Item: AWS.DynamoDB.Converter.marshall(json),
+	  ReturnConsumedCapacity: "TOTAL", 
+	  TableName: process.env.DistDbTable
+	 };
+
+	try{
+	   	console.log("Adding pr: "+ JSON.stringify(params));
+		var data=await ddbClient.putItem(params);
+	   	console.log("Added pr: "+ JSON.stringify(data));           // successful response
+	   return {status: "ok", detail: "Added"};
+	}
+	catch(err){
+		console.log(err, err.stack); // an error occurred
+	   return {error: err};
+	}
+};
 exports.handler = async (event ) =>{
   const dbArn=process.env.DynamoDbArn
   var jsonRC={};
@@ -38,20 +68,13 @@ exports.handler = async (event ) =>{
 		    const dstKey=    unmarshalled.orgId+"/"+ new Date().toISOString()
 		    const dstBucket=process.env.DstBucket;
 		    const contentType="application/json";
-		    console.log('S3 Putting : %s:%s', dstBucket,dstKey);
-		    var foo=await s3.putObject({
-			    Bucket: dstBucket,
-			    Key: dstKey,
-			    Body: JSON.stringify(unmarshalled),
-    			    ACL: 'public-read',
-			    ContentType: contentType
-			}).promise();
-		    console.log('S3 done0');
-		    console.log('S3 done1'+foo);
-		    console.log(foo);
+
+		    console.log('DB Putting : %s:%s', dstBucket,dstKey);
+		    var foo=await propagateRecord( unmarshalled);
+		    console.log('DB done0');
 	    }
 	    catch(err){
-		console.log('s3 Put failed');
+		console.log('DB Put failed');
 		console.log(err);
 	    }
 	}

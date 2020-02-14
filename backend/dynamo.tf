@@ -34,7 +34,7 @@ resource "aws_dynamodb_table" "derby-distribution" {
   hash_key       = "DP"
   range_key      = "DS"
   stream_enabled = false
-  stream_view_type = "NEW_AND_OLD_IMAGES"
+  //stream_view_type = "NEW_AND_OLD_IMAGES"
   attribute {
     name = "DP"
     type = "S"
