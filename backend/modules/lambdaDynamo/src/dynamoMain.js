@@ -2,6 +2,7 @@
 const {DynamoDB} = require('@aws-sdk/client-dynamodb-v2-node');
 const  AWS = require("aws-sdk");
 const s3 = new AWS.S3();
+var iotdata;
 
 
 const ddbClient = new DynamoDB({region: process.env.AwsRegion});
@@ -26,6 +27,31 @@ const getMicroEpoch=()=>{
 	return (new Date().getTime()*1000)+rand999;
 }
 
+//TODO: consolidate and publish entire batch at once!
+const propagateIot =async( json)=>{
+	console.log("Iot Begin.");
+	if(!iotdata){ // first time
+		iotdata = new AWS.IotData({endpoint: process.env.IotEndpoint});
+	}
+	const params = {
+	    topic: 'derby/'+json.orgId+'/dist',
+	    payload: JSON.stringify(json),
+	    qos: 0
+	};
+	try{
+		var data=await iotdata.publish(params).promise();
+		console.log("Iot Success.");
+		console.log(data);
+		return {status: "ok", detail: "Published"};
+	}
+	catch(err){
+		console.log("Iot Success.");
+		console.log(err, err.stack); // an error occurred
+		return {error: err};
+	}
+
+}
+//TODO: Batch write!
 const propagateRecord=async (json)=>{
 	   console.log("propagateRecord: "+ JSON.stringify(json));
 	json.DP=json.orgId;
@@ -70,8 +96,12 @@ exports.handler = async (event ) =>{
 		    const contentType="application/json";
 
 		    console.log('DB Putting : %s:%s', dstBucket,dstKey);
-		    var foo=await propagateRecord( unmarshalled);
-		    console.log('DB done0');
+		    const dbPromise =propagateRecord( unmarshalled);
+		    const iotPromise=propagateIot( unmarshalled);
+                    //const [dbResult, iotResult] = await Promise.allSettled([dbPromise,iotPromise]);
+                    const [dbResult, iotResult] = await Promise.all([dbPromise,iotPromise]);
+
+		    console.log('Promises settled:'+dbResult+' iot: ' +iotResult);
 	    }
 	    catch(err){
 		console.log('DB Put failed');

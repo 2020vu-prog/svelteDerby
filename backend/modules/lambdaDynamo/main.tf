@@ -18,7 +18,17 @@ locals{
 
       distDdbList= split("/",var.DistDbArn)
       DistDbTable= element(local.distDdbList,length(local.distDdbList)-1)
+	accountId = data.aws_caller_identity.current.account_id
+	IotArn="arn:aws:iot:${var.AwsRegion}:${local.accountId}"
+
       
+}
+
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iot_endpoint" "mqtt" {
+  endpoint_type="iot:Data-ATS"
 }
 
 data "archive_file" "zip" {
@@ -72,6 +82,7 @@ resource "aws_lambda_function" "lambda" {
       AwsRegion = var.AwsRegion
       DstBucket=var.S3DistBucket 
       DstBucketArn=var.S3DistBucketArn
+      IotEndpoint=data.aws_iot_endpoint.mqtt.endpoint_address
     }
   }
 
@@ -83,9 +94,21 @@ resource "aws_lambda_function" "lambda" {
 data "aws_iam_policy_document" "dynamo_allow_doc" {
     statement {
         actions = [
+		"iot:Connect",
+		"iot:Publish",
+	]
+        resources = [
+		"*"
+	]
+    }   
+
+    statement {
+        actions = [
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
+
+
 		"dynamodb:ListStreams",
 		"dynamodb:GetRecords",
 		"dynamodb:GetShardIterator",
@@ -135,4 +158,7 @@ output "function_name" {
 }
 output "version" {
   value = "${aws_lambda_function.lambda.version}"
+}
+output "mqtt" {
+  value = data.aws_iot_endpoint.mqtt
 }

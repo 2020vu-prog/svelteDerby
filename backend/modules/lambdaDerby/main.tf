@@ -1,5 +1,9 @@
 
 provider "archive" {}
+variable DeployEnvironment {}
+variable DynamoDbArn {}
+variable DistDbArn {}
+variable AwsRegion {}
 locals{
   tags = {
     Environment = var.DeployEnvironment
@@ -7,6 +11,9 @@ locals{
   }
       ddbList= split("/",var.DynamoDbArn)
       DynamoDbTable= element(local.ddbList,length(local.ddbList)-1)
+
+      distDbList= split("/",var.DistDbArn)
+      DistDbTable= element(local.distDbList,length(local.distDbList)-1)
       
 }
 
@@ -57,6 +64,10 @@ resource "aws_lambda_function" "lambda" {
     variables = {
       DynamoDbTable= local.DynamoDbTable
       DynamoDbArn= var.DynamoDbArn
+
+      DistDbTable= local.DistDbTable
+      DistDbArn= var.DistDbArn
+
       AwsRegion = var.AwsRegion
     }
   }
@@ -81,7 +92,8 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
         ]   
         resources = [
                 "arn:aws:logs:*:*:*",
-                var.DynamoDbArn
+                var.DynamoDbArn,
+                var.DistDbArn
         ]   
     }   
 }
@@ -96,4 +108,19 @@ resource "aws_iam_role_policy_attachment" "eventwatch_cw_policy_attach" {
 }
 output ddbTable {
 	value=local.DynamoDbTable
+}
+output "qualified_arn" {
+  value = "${aws_lambda_function.lambda.qualified_arn}"
+}
+output "arn" {
+  value = "${aws_lambda_function.lambda.arn}"
+}
+output "invoke_arn" {
+  value = "${aws_lambda_function.lambda.invoke_arn}"
+}
+output "function_name" {
+  value = "${aws_lambda_function.lambda.function_name}"
+}
+output "version" {
+  value = "${aws_lambda_function.lambda.version}"
 }

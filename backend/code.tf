@@ -15,6 +15,7 @@ module "derbyMainLambda" {
   source = "./modules/lambdaDerby"
 
   DynamoDbArn=aws_dynamodb_table.derby-dynamodb-table.arn
+  DistDbArn=aws_dynamodb_table.derby-distribution.arn
   DeployEnvironment=var.DeployEnvironment
   AwsRegion=var.AwsRegion
   
@@ -93,4 +94,7 @@ resource "aws_api_gateway_authorizer" "require_pool" {
 
 output "base_url" {
   value = aws_api_gateway_deployment.derbyMain.invoke_url
+}
+output "apiGateway" {
+  value = aws_api_gateway_deployment.derbyMain
 }

@@ -66,6 +66,50 @@ const create_UUID=()=>{
     });
     return uuid;
 }
+const ddbQueryRaceHistory=async (qsp)=>{
+	var limit = parseInt(qsp.limit);
+
+	if( ! qsp.loMicros){
+		qsp.loMicros="1";
+	}
+	if( ! qsp.hiMicros){
+		qsp.hiMicros=new Date().getTime()*1000 +"";
+	}
+	if(isNaN(limit) || limit>25){
+		limit=25;
+	}
+
+	var containsValues={};
+        containsValues[":dp"]={S: qsp.orgId};
+        containsValues[":loMicros"]={N: qsp.loMicros};
+        containsValues[":hiMicros"]={N: qsp.hiMicros};
+	var params = {
+	    TableName: process.env.DistDbTable,
+	    KeyConditionExpression: "DP = :dp and DS BETWEEN :loMicros  and :hiMicros",
+	    ReturnConsumedCapacity: "TOTAL", 
+	    Limit: limit,
+	    ScanIndexForward: false,  // sort descending
+	    ExpressionAttributeValues :  containsValues
+	};
+	console.log("history query: "+ JSON.stringify(params));
+	try{
+	   var data=await ddbClient.query(params);
+		 console.log("queryRaceHistory: "+ data);           // successful response
+		 console.log("queryRaceHistory: "+ JSON.stringify(data));           // successful response
+		const rc=[];
+		for (var i = 0; i < data.Items.length; i++) {
+			var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
+			rc.push(unmarshalled);
+		}
+
+		
+		return rc;
+	}
+	catch(err){
+	   console.log("queryRaceHistory failed: ",err, err.stack); // an error occurred
+	}
+	   return {error: "Query History Failed"};
+}
 const ddbQueryRaceConfig=async ()=>{
 	var containsValues={};
         containsValues[":pk"]={S: "EventConfig"};
@@ -247,23 +291,32 @@ exports.handler = async (event ) =>{
 	  return;
   }
 
-  if(event.path==="/addParticipant"){
+  console.log(event);
+  const routePath=event.path.replace(/^\/app/,"");
+  var cacheControl="no-cache";
+  if(routePath==="/addParticipant"){
 	jsonRC=await addParticipant(JSON.parse(event.body));
   }
-  else if(event.path==="/addPending"){
+  else if(routePath==="/addPending"){
 	jsonRC=await addPending(JSON.parse(event.body));
   }
-  else if(event.path==="/ddbQuery"){
+  else if(routePath==="/ddbQuery"){
 	var qr=	await ddbQueryRsContains(JSON.parse(event.body));
        console.log("ddbQuery: "+qr);
 	jsonRC={Count: qr};
   }
-  else if(event.path==="/getRaceConfig"){
+  else if(routePath==="/getRaceConfig"){
 	var qr=	await ddbQueryRaceConfig();
 	jsonRC=qr;
+        cacheControl='max-age=7207'
+  }
+  else if(routePath==="/getRaceHistory"){
+	var qr=	await ddbQueryRaceHistory(event.queryStringParameters);
+	jsonRC=qr;
+        cacheControl='max-age=7208'
   }
   else{
-       console.log("Unhandled Path: "+event.path);
+       console.log("Unhandled Path: "+routePath + " ep: "+event.path);
 	jsonRC={error: "Unhandled"};
   }
 
@@ -271,7 +324,8 @@ exports.handler = async (event ) =>{
   var response = {
     statusCode: 200,
     headers: {
-      'Content-Type': 'application/json; charset=utf-8'
+      'Content-Type': 'application/json; charset=utf-8',
+	'Cache-Control': cacheControl
     },
     body: JSON.stringify(jsonRC)
   }
