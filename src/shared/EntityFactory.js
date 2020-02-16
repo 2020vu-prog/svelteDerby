@@ -1,30 +1,51 @@
 const entityFactories = {};
-entityFactories['RaceStanding'] = class RaceStanding {
-    members = ["PK", "SK", "at", "by", "name", "carNumbers", "orgID"];
+const cHelper=(pthis,props,optionalMembers)=>{
+    //console.log (pthis.constructor.members) ;
+
+    const members=optionalMembers?optionalMembers:pthis.constructor.members;
+    for (let [key, value] of Object.entries(props)) {
+        //console.log("Chelper checking:"+key);
+
+        if (members.includes(key)) {
+            //console.log("Chelper applying:"+key);
+            pthis[key] = value;
+        }
+    }
+}
+class EntityBase{
+    static EntityBaseMembers = ["PK", "SK", "at", "by", "orgID"];
+
+    constructor(props){
+        cHelper(this,props,this.constructor.EntityBaseMembers);
+    }
+    get primaryKey() {
+        return this.PK;
+      }
+}
+entityFactories['RaceStanding'] = class RaceStanding  extends EntityBase{
+    static members = [ "name", "carNumbers"];
 
     static canBuild(json) {
         return (json.PK && json.PK.endsWith(":RS"));
     }
     constructor(props) {
+        super(props);
 
-        for (let [key, value] of Object.entries(props)) {
-            if (this.members.includes(key)) {
-                this[key] = value;
-
-            }
-        }
+        cHelper(this,props);
     }
 };
-entityFactories['Participant'] = class Participant {
-    static members = ["PK", "SK", "at", "by", "name", "number", "orgID"];
+entityFactories['Participant'] = class Participant extends EntityBase{
+    static members = [ "name", "number"];
     static canBuild(json) {
         return (json.PK && json.PK.endsWith(":PTCP"));
     }
     constructor(props) {
-        for (let [key, value] of Object.entries(props)) {
-            this[key] = value;
-        }
+        super(props);
+        cHelper(this,props);
     }
+    get lastUpdate() {
+        return this.at;
+      }
 };
 
 class EntityFactory {
@@ -39,5 +60,12 @@ class EntityFactory {
     }
 };
 const ef = new EntityFactory();
-console.log(ef.build({ PK: "foo:PTCP", bar: "none", number: 100 }));
-console.log(ef.build({ PK: "foo:RS", carNumbers: [101, 102] }));
+const foo=ef.build({ PK: "foo:PTCP", SK:"sksk", bar: "none", number: 100 ,by:"IT",at:123});
+console.log(foo);
+console.log("back to json:"+JSON.stringify(foo));
+console.log("primaryKey:"+ foo.primaryKey);
+console.log(foo.lastUpdate);
+const rs=ef.build({ PK: "foo:RS", SK:"uuu",carNumbers: [101, 102], by:"IT2" });
+console.log(rs);
+console.log("primaryKey:"+ rs.primaryKey);
+
