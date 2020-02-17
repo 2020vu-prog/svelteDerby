@@ -26,14 +26,13 @@ class EntityBase {
     preWrite(){
         this.ttl=getTtl(this.orgId);
         this.at=new Date().toISOString();
-
     }
 
     get partitionKey() {
         return this.PK;
     }
     get sortKey() {
-        return this.PK;
+        return this.SK;
     }
     get lastUpdate() {
         return this.at;
@@ -111,20 +110,21 @@ const getTtl = (orgId) => {
     ttlIncrement=1800;
     return Math.round((new Date().getTime() / 1000) + ttlIncrement);
 }
-const defaultOrgId="chi";
-const defaultBy="whoDunnIt";
+
 class EntityFactory {
-    constructor() { }
+    propOverrides={}
+    constructor(propOverrides) { 
+        this.propOverrides=propOverrides;
+    }
     build(json) {
+        for (const [overrideKey, value] of Object.entries(this.propOverrides)) {
+            json[overrideKey]=value;
+
+          }
         const candidates = Object.values(entityFactories).filter(function (factory) {
             return (factory.canBuild(json));
         }).map(function (factory) {
-            if(defaultOrgId){
-                json.orgId=defaultOrgId;
-            }
-            if(defaultBy){
-                json.by=defaultBy;
-            }
+
             return new factory(json);
         });
         
