@@ -112,6 +112,7 @@ const getTtl = (orgId) => {
     return Math.round((new Date().getTime() / 1000) + ttlIncrement);
 }
 const defaultOrgId="chi";
+const defaultBy="whoDunnIt";
 class EntityFactory {
     constructor() { }
     build(json) {
@@ -120,6 +121,9 @@ class EntityFactory {
         }).map(function (factory) {
             if(defaultOrgId){
                 json.orgId=defaultOrgId;
+            }
+            if(defaultBy){
+                json.by=defaultBy;
             }
             return new factory(json);
         });
