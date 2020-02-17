@@ -23,6 +23,20 @@ data "archive_file" "zip" {
   source_dir = "${path.module}/src/"
   output_path = "tmp/build/derbyMain.zip"
 }
+/*
+resource "null_resource" "zip_the_node_folder" {
+  triggers = {
+    build_number = timestamp()
+  }
+
+  provisioner "local-exec" {
+    command = "zip -r9 tmp/build/derbyMain.zip2 src"
+    working_dir = "${path.module}"
+  }
+
+  depends_on = [null_resource.python_with_packages]
+}
+*/
 
 data "aws_iam_policy_document" "policy" {
   statement {
@@ -57,7 +71,7 @@ resource "aws_lambda_function" "lambda" {
 
   role    = aws_iam_role.iam_for_lambda.arn
   handler = "derbyMain.handler"
-  runtime = "nodejs10.x"
+  runtime = "nodejs12.x"
   publish = true
   tags=local.tags
   environment {
