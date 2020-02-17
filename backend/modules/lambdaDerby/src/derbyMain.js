@@ -9,44 +9,8 @@ const configDefault = {
 const configMap = {
 	chi: configDefault,
 }
-const entityFactory = new EntityFactory();
-/*
-const insert = () => {
-	var params = {
-		RequestItems: {
-			[process.env.DynamoDbTable]: [
-				{
-					PutRequest: {
-						Item: {
-							"PK": { "S": "PK1" },
-							"SK": { "S": "SK1" },
-							"ATTRIBUTE_1": { "S": "ATTRIBUTE_1_VALUE" },
-							"ATTRIBUTE_2": { "N": "123" }
-						}
-					}
-				},
-				{
-					PutRequest: {
-						Item: {
-							"PK": { "S": "PK1" },
-							"SK": { "S": "SK2" },
-							"ATTRIBUTE_1": { "S": "ATTRIBUTE_2_VALUE" },
-							"ATTRIBUTE_2": { "N": "456" }
-						}
-					}
-				}
-			]
-		}
-	};
-	ddbClient.batchWriteItem(params, function (err, data) {
-		if (err) {
-			console.log("ddbClient Error", err);
-		} else {
-			console.log("ddbClient Success", data);
-		}
-	});
-}
-*/
+
+
 
 const getConfig = (orgId) => {
 	if (configMap[orgId]) {
@@ -58,6 +22,9 @@ const getTtl = (orgId) => {
 	const config = getConfig(orgId);
 	return Math.round((new Date().getTime() / 1000) + config.ttlIncrement);
 }
+const bearerOrgId="chi";
+const entityFactory = new EntityFactory({orgId:bearerOrgId,by:"jwt",TTL:getTtl(bearerOrgId)});
+
 const create_UUID = () => {
 	var dt = new Date().getTime();
 	var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -232,32 +199,28 @@ const addPending = async (json) => {
 		return { error: err };
 	}
 };
+const fmtBulkPut = (json1) => {
+	const myP = entityFactory.build(json1);
 
-const addBulk = async (json) => {
-	const requests = [];
-
-	for (var i = 0; i < json.length; i++) {
-		console.log("addBulk: " + i);
-
-		const json1 = json[i];
-		const myP = entityFactory.build(json1);
-		
-		if (myP) {
-			myP.preWrite();
-			console.log(myP);
-			var marshalled = AWS.DynamoDB.Converter.marshall(myP);
-			console.log(marshalled);
-			const putRequest = {
-				PutRequest: {
-					Item: marshalled
-				}
+	if (myP) {
+		myP.preWrite();
+		console.log(myP);
+		var marshalled = AWS.DynamoDB.Converter.marshall(myP);
+		console.log(marshalled);
+		const putRequest = {
+			PutRequest: {
+				Item: marshalled
 			}
-			requests.push(putRequest);
 		}
-		else {
-			console.log("addBulk ignored invalid:" + JSON.stringify(json1));
-		}
+		const uk=myP.partitionKey+":"+myP.sortKey;
+		return [uk,putRequest];
 	}
+	else {
+		console.log("addBulk ignored invalid:" + JSON.stringify(json1));
+		return [null,null];
+	}
+};
+const flushBulkRequests = async (requests) => {
 	if (requests.length > 0) {
 		var params = {
 			RequestItems: {
@@ -268,14 +231,30 @@ const addBulk = async (json) => {
 			var data = await ddbClient.batchWriteItem(params);
 
 			console.log("Added Bulk: " + JSON.stringify(data));           // successful response
-			return { status: "ok", count: requests.length };
+			return requests.length ;// TODO get from TotalProcessed;
 		}
 		catch (err) {
 			console.log(err, err.stack); // an error occurred
-			return { bulkEßrror: err };
+			return 0;
 		}
 	}
-
+}
+const addBulk = async (json) => {
+	var requests = {}; // keyed by unique pk/sk to elimate duplicates.
+	var totalProcessed = 0;
+	for (var i = 0; i < json.length; i++) {
+		console.log("addBulk: " + i);
+		const [uk,putRequest] = fmtBulkPut(json[i]);
+		if (putRequest && uk) {
+			requests[uk]=putRequest;
+		}
+		if (Object.keys(requests).length > 20) {
+			totalProcessed += await flushBulkRequests(Object.values(requests));
+			requests = {};
+		}
+	}
+	totalProcessed += await flushBulkRequests(Object.values(requests));
+	return { status: "ok", detail: "BulkProcessed" , count:totalProcessed};
 }
 const addParticipant = async (json) => {
 	console.log("addParticipant: " + JSON.stringify(json));
