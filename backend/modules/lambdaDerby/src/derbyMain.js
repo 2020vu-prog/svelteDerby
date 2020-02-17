@@ -235,10 +235,15 @@ const addPending = async (json) => {
 
 const addBulk = async (json) => {
 	const requests = [];
+
 	for (var i = 0; i < json.length; i++) {
+		console.log("addBulk: " + i);
+
 		const json1 = json[i];
 		const myP = entityFactory.build(json1);
+		
 		if (myP) {
+			myP.preWrite();
 			console.log(myP);
 			var marshalled = AWS.DynamoDB.Converter.marshall(myP);
 			console.log(marshalled);
@@ -252,24 +257,25 @@ const addBulk = async (json) => {
 		else {
 			console.log("addBulk ignored invalid:" + JSON.stringify(json1));
 		}
-		if (requests.length > 0) {
-			var params = {
-				RequestItems: {
-					[process.env.DynamoDbTable]: requests
-				}
-			}
-			try {
-				var data=await ddbClient.batchWriteItem(params);
-
-				console.log("Added Bulk: " + JSON.stringify(data));           // successful response
-				return { status: "ok" ,count: requests.length};
-			}
-			catch (err) {
-				console.log(err, err.stack); // an error occurred
-				return { bulkError: err };
+	}
+	if (requests.length > 0) {
+		var params = {
+			RequestItems: {
+				[process.env.DynamoDbTable]: requests
 			}
 		}
+		try {
+			var data = await ddbClient.batchWriteItem(params);
+
+			console.log("Added Bulk: " + JSON.stringify(data));           // successful response
+			return { status: "ok", count: requests.length };
+		}
+		catch (err) {
+			console.log(err, err.stack); // an error occurred
+			return { bulkEßrror: err };
+		}
 	}
+
 }
 const addParticipant = async (json) => {
 	console.log("addParticipant: " + JSON.stringify(json));

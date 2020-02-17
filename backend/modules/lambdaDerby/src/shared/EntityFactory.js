@@ -1,4 +1,7 @@
 const entityFactories = {};
+const RacePhaseEid=":RP";
+const RaceStandingEid=":RS";
+const ParticipantEid=":PTCP";
 const cHelper = (pthis, props, optionalMembers) => {
     //console.log (pthis.constructor.members) ;
 
@@ -14,11 +17,18 @@ const cHelper = (pthis, props, optionalMembers) => {
 }
 
 class EntityBase {
-    static EntityBaseMembers = ["PK", "SK", "at", "by", "orgID"];
+    static EntityBaseMembers = ["PK", "SK", "at", "by", "orgId"];
 
     constructor(props) {
         cHelper(this, props, this.constructor.EntityBaseMembers);
     }
+
+    preWrite(){
+        this.ttl=getTtl(this.orgId);
+        this.at=new Date().toISOString();
+
+    }
+
     get partitionKey() {
         return this.PK;
     }
@@ -28,26 +38,41 @@ class EntityBase {
     get lastUpdate() {
         return this.at;
     }
+    
 }
+
+
 entityFactories['RacePhase'] = class RacePhase extends EntityBase {
     static members = ["carNumbers", "phr","rs"];
     static canBuild(json) {
-        return (json.PK && json.PK.endsWith(":RP"));
+        return (json.PK && json.PK.endsWith(RacePhaseEid));
     }
     constructor(props) {
         super(props);
         cHelper(this, props);
+    }
+    preWrite(){
+        super.preWrite();
+        this.PK=this.orgId+ RacePhaseEid;
+
+        this.SK=new Date().getTime() +"";
     }
 }
 entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
     static members = ["carNumbers", "ph1", "ph2"];
-
+    static eid=":RS";
     static canBuild(json) {
-        return (json.PK && json.PK.endsWith(":RS"));
+        return (json.PK && json.PK.endsWith(RaceStandingEid));
     }
     constructor(props) {
         super(props);
         cHelper(this, props);
+    }
+    preWrite(){
+        super.preWrite();
+        this.PK=this.orgId+ RaceStandingEid;
+
+        this.SK=new Date().getTime() +"";
     }
     get phase1Results() {
         return this.ph1;
@@ -67,27 +92,41 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
 }
 entityFactories['Participant'] = class Participant extends EntityBase {
     static members = ["name", "number"];
+    static eid=":PTCP";
     static canBuild(json) {
-        return (json.PK && json.PK.endsWith(":PTCP"));
+        return (json.PK && json.PK.endsWith(ParticipantEid));
     }
     constructor(props) {
         super(props);
         cHelper(this, props);
     }
-
+    preWrite(){
+        super.preWrite();
+        this.PK=this.orgId+ ParticipantEid;
+        this.SK=this.number+"";
+    }
 };
-
+const getTtl = (orgId) => {
+    //const config = getConfig(orgId);
+    ttlIncrement=1800;
+    return Math.round((new Date().getTime() / 1000) + ttlIncrement);
+}
+const defaultOrgId="chi";
 class EntityFactory {
     constructor() { }
     build(json) {
         const candidates = Object.values(entityFactories).filter(function (factory) {
             return (factory.canBuild(json));
         }).map(function (factory) {
+            if(defaultOrgId){
+                json.orgId=defaultOrgId;
+            }
             return new factory(json);
         });
         
         return candidates.length>0?candidates[0]:null;
     }
+
 };
 
 module.exports = EntityFactory;
