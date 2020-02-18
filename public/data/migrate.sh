@@ -36,8 +36,13 @@ cat rs.json|jq . |jq -c '
 migratedJson=$(cat /tmp/xx.json|jq -s  .|jq -c .)
 	time curl $VERBOSE  "${CF}/addBulk" --compress -XPOST --data "$migratedJson"
 
-exit 99
-cat driver.json|jq . |jq -c '.[]|.["orgId"] = "chi"|.["by"]="migrate"|.["name"]=.firstName|del (.id,.version,.firstName,.lastUpdateMS)'| while IFS= read -r line ;
+cat driver.json|jq . |jq -c '
+	.[]|
+	.["orgId"] = "chi"|
+	.["by"]="migrate"|
+	.["name"]=.firstName|
+	.["number"]=.carNumber|
+	del (.id,.version,.firstName,.lastUpdateMS)'| while IFS= read -r line ;
 do
 	time curl $VERBOSE  "${CF}/addParticipant" --compress -XPOST --data "$line"
    #printf "%s" "$line" | wc -c
