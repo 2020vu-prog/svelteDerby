@@ -110,19 +110,15 @@ const ddbQueryRsContains = async (json) => {
 	var containsFilters = [];
 	var containsValues = {};
 	var i;
-	for (i = 0; i < json.carNumbers.length; i++) {
-		containsFilters[i] = "contains (carNumbers, :c" + i + ")";
-		containsValues[":c" + i] = { S: json.carNumbers[i] };
+	for (i = 0; i < json.cn.length; i++) {
+		containsFilters[i] = "contains (cn, :cn" + i + ")";
+		containsValues[":cn" + i] = { S: json.cn[i] };
 	}
 	containsValues[":pk"] = { S: json.orgId + ":RS" };
 
 	var params = {
 		TableName: process.env.DynamoDbTable,
-		//FilterExpression: "contains (category, :category1) OR contains (category, :category2)",
-		//ExpressionAttributeValues : {   
-		//	':category1' : "apple",
-		//	':category2' : "orange"
-		//   }
+
 		KeyConditionExpression: "PK = :pk",
 		FilterExpression: containsFilters.join(" OR "),
 		ReturnConsumedCapacity: "TOTAL",
@@ -141,64 +137,9 @@ const ddbQueryRsContains = async (json) => {
 	}
 	return 99;
 }
-const ddbListOfStrings = (slist) => {
-	var rc = { "L": [] }
-	var i;
-	for (i = 0; i < slist.length; i++) {
-		rc["L"][i] = { "S": slist[i] };
-	}
-	return rc;
-}
-const addPending = async (json) => {
 
-	console.log("addPending: " + JSON.stringify(json));
-	const alreadyExists = await ddbQueryRsContains(json);
-	if (alreadyExists > 0) {
-		return { error: "Pending already exists" };
-	}
 
-	json.rsPrefix = json.rsPrefix ? json.rsPrefix : "";
-	var params = {
-		Item: {
-			"PK": {
-				S: json.orgId + ":RS"
-			},
-			"SK": {
-				S: json.rsPrefix + create_UUID()
-			},
-			"carNumbers": ddbListOfStrings(json.carNumbers),
-			"by": {
-				S: json.by
-			},
-			"at": {
-				S: new Date().toISOString()
-			},
-			"TTL": {
-				N: getTtl() + ""
-			},
-			"TTQ": {
-				N: getTtl() + ""
-			},
-			"orgId": {
-				S: json.orgId
-			}
-		},
-		ReturnConsumedCapacity: "TOTAL",
-		TableName: process.env.DynamoDbTable
-	};
 
-	console.log("addPending skel: " + JSON.stringify(params));
-
-	try {
-		var data = await ddbClient.putItem(params);
-		console.log("Added RS: " + JSON.stringify(data));           // successful response
-		return { status: "ok" };
-	}
-	catch (err) {
-		console.log(err, err.stack); // an error occurred
-		return { error: err };
-	}
-};
 const fmtBulkPut = (json1) => {
 	const myP = entityFactory.build(json1);
 
@@ -225,7 +166,8 @@ const flushBulkRequests = async (requests) => {
 		var params = {
 			RequestItems: {
 				[process.env.DynamoDbTable]: requests
-			}
+			},
+			ReturnConsumedCapacity: "TOTAL"
 		}
 		try {
 			var data = await ddbClient.batchWriteItem(params);
@@ -256,46 +198,34 @@ const addBulk = async (json) => {
 	totalProcessed += await flushBulkRequests(Object.values(requests));
 	return { status: "ok", detail: "BulkProcessed" , count:totalProcessed};
 }
-const addParticipant = async (json) => {
-	console.log("addParticipant: " + JSON.stringify(json));
-	var params = {
-		Item: {
-			"PK": {
-				S: json.orgId + ":PTCP"
-			},
-			"SK": {
-				S: json.carNumber + ""
-			},
-			"number": {
-				S: json.carNumber + ""
-			},
-			"name": {
-				S: json.name
-			},
-			"by": {
-				S: json.by
-			},
-			"at": {
-				S: new Date().toISOString()
-			},
-			"orgId": {
-				S: json.orgId
-			}
-		},
-		ReturnConsumedCapacity: "TOTAL",
-		TableName: process.env.DynamoDbTable
-	};
+const addSingle = async (json) => {
+	const [uk,putRequest] = fmtBulkPut(json);
+	if (putRequest && uk) {
+	 	await flushBulkRequests([putRequest]);
+		return { status: "ok" };
+	}
+	return { error: "Invalid Request" };
+}
+const addPending2 = async (json) => {
 
-	try {
-		var data = await ddbClient.putItem(params);
-		console.log("Added PTCP: " + JSON.stringify(data));           // successful response
-		return { status: "ok", detail: "Added" };
+	console.log("addPending2: " + JSON.stringify(json));
+	json.PK=":RS";  // force RaceStanding
+
+	const alreadyExists = await ddbQueryRsContains(json);
+	if (alreadyExists > 0) {
+		return { error: "Pending2 already exists" };
 	}
-	catch (err) {
-		console.log(err, err.stack); // an error occurred
-		return { error: err };
-	}
+
+	return await addSingle(json);
+
 };
+const addParticipant2 = async (json) => {
+
+	console.log("addParticipant2: " + JSON.stringify(json));
+	json.PK=":PTCP";  // force Participant
+	return await addSingle(json);
+};
+
 
 exports.handler = async (event) => {
 	const dbArn = process.env.DynamoDbArn
@@ -320,10 +250,10 @@ exports.handler = async (event) => {
 	const routePath = event.path.replace(/^\/app/, "");
 	var cacheControl = "no-cache";
 	if (routePath === "/addParticipant") {
-		jsonRC = await addParticipant(JSON.parse(event.body));
+		jsonRC = await addParticipant2(JSON.parse(event.body));
 	}
 	else if (routePath === "/addPending") {
-		jsonRC = await addPending(JSON.parse(event.body));
+		jsonRC = await addPending2(JSON.parse(event.body));
 	}
 	else if (routePath === "/addBulk") {
 		jsonRC = await addBulk(JSON.parse(event.body));
