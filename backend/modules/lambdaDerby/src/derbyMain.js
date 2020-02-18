@@ -22,8 +22,8 @@ const getTtl = (orgId) => {
 	const config = getConfig(orgId);
 	return Math.round((new Date().getTime() / 1000) + config.ttlIncrement);
 }
-const bearerOrgId="chi";
-const entityFactory = new EntityFactory({orgId:bearerOrgId,by:"jwt",TTL:getTtl(bearerOrgId)});
+const bearerOrgId = "chi";
+const entityFactory = new EntityFactory({ orgId: bearerOrgId, by: "jwt", TTL: getTtl(bearerOrgId) });
 
 const create_UUID = () => {
 	var dt = new Date().getTime();
@@ -35,13 +35,17 @@ const create_UUID = () => {
 	return uuid;
 }
 const ddbQueryRaceHistory = async (qsp) => {
+	if (!qsp) { qsp = {} }
 	var limit = parseInt(qsp.limit);
 
+	var cacheMaxSeconds = 7277;
 	if (!qsp.loMicros) {
 		qsp.loMicros = "1";
 	}
 	if (!qsp.hiMicros) {
 		qsp.hiMicros = new Date().getTime() * 1000 + "";
+		cacheMaxSeconds = 30;
+
 	}
 	if (isNaN(limit) || limit > 25) {
 		limit = 25;
@@ -71,12 +75,12 @@ const ddbQueryRaceHistory = async (qsp) => {
 		}
 
 
-		return rc;
+		return [rc, cacheMaxSeconds];
 	}
 	catch (err) {
 		console.log("queryRaceHistory failed: ", err, err.stack); // an error occurred
 	}
-	return { error: "Query History Failed" };
+	return [{ error: "Query History Failed" }, cacheMaxSeconds];
 }
 const ddbQueryRaceConfig = async () => {
 	var containsValues = {};
@@ -153,12 +157,12 @@ const fmtBulkPut = (json1) => {
 				Item: marshalled
 			}
 		}
-		const uk=myP.partitionKey+":"+myP.sortKey;
-		return [uk,putRequest];
+		const uk = myP.partitionKey + ":" + myP.sortKey;
+		return [uk, putRequest];
 	}
 	else {
 		console.log("addBulk ignored invalid:" + JSON.stringify(json1));
-		return [null,null];
+		return [null, null];
 	}
 };
 const flushBulkRequests = async (requests) => {
@@ -173,7 +177,7 @@ const flushBulkRequests = async (requests) => {
 			var data = await ddbClient.batchWriteItem(params);
 
 			console.log("Added Bulk: " + JSON.stringify(data));           // successful response
-			return requests.length ;// TODO get from TotalProcessed;
+			return requests.length;// TODO get from TotalProcessed;
 		}
 		catch (err) {
 			console.log(err, err.stack); // an error occurred
@@ -186,9 +190,9 @@ const addBulk = async (json) => {
 	var totalProcessed = 0;
 	for (var i = 0; i < json.length; i++) {
 		console.log("addBulk: " + i);
-		const [uk,putRequest] = fmtBulkPut(json[i]);
+		const [uk, putRequest] = fmtBulkPut(json[i]);
 		if (putRequest && uk) {
-			requests[uk]=putRequest;
+			requests[uk] = putRequest;
 		}
 		if (Object.keys(requests).length > 20) {
 			totalProcessed += await flushBulkRequests(Object.values(requests));
@@ -196,12 +200,12 @@ const addBulk = async (json) => {
 		}
 	}
 	totalProcessed += await flushBulkRequests(Object.values(requests));
-	return { status: "ok", detail: "BulkProcessed" , count:totalProcessed};
+	return { status: "ok", detail: "BulkProcessed", count: totalProcessed };
 }
 const addSingle = async (json) => {
-	const [uk,putRequest] = fmtBulkPut(json);
+	const [uk, putRequest] = fmtBulkPut(json);
 	if (putRequest && uk) {
-	 	await flushBulkRequests([putRequest]);
+		await flushBulkRequests([putRequest]);
 		return { status: "ok" };
 	}
 	return { error: "Invalid Request" };
@@ -209,7 +213,7 @@ const addSingle = async (json) => {
 const addPending2 = async (json) => {
 
 	console.log("addPending2: " + JSON.stringify(json));
-	json.PK=":RS";  // force RaceStanding
+	json.PK = ":RS";  // force RaceStanding
 
 	const alreadyExists = await ddbQueryRsContains(json);
 	if (alreadyExists > 0) {
@@ -222,7 +226,7 @@ const addPending2 = async (json) => {
 const addParticipant2 = async (json) => {
 
 	console.log("addParticipant2: " + JSON.stringify(json));
-	json.PK=":PTCP";  // force Participant
+	json.PK = ":PTCP";  // force Participant
 	return await addSingle(json);
 };
 
@@ -269,9 +273,9 @@ exports.handler = async (event) => {
 		cacheControl = 'max-age=7207'
 	}
 	else if (routePath === "/getRaceHistory") {
-		var qr = await ddbQueryRaceHistory(event.queryStringParameters);
+		var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
 		jsonRC = qr;
-		cacheControl = 'max-age=7208'
+		cacheControl = 'max-age=' + cacheMaxSeconds;
 	}
 	else {
 		console.log("Unhandled Path: " + routePath + " ep: " + event.path);

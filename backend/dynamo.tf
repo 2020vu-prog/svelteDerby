@@ -9,7 +9,7 @@ resource "aws_dynamodb_table" "derby-dynamodb-table" {
   hash_key       = "PK"
   range_key      = "SK"
   stream_enabled = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
+  stream_view_type = "NEW_IMAGE"
   attribute {
     name = "PK"
     type = "S"
@@ -73,6 +73,8 @@ resource "aws_lambda_event_source_mapping" "dynamo_stream_link" {
   event_source_arn  = aws_dynamodb_table.derby-dynamodb-table.stream_arn
   function_name     = module.derbyDynamoLambda.function_name
   starting_position = "LATEST"
+  maximum_batching_window_in_seconds=2  // consolidate clustered updates into single iot publish
+  batch_size=10  // default of 100 takes too long to process and caused lambda timeout error LOOP!
   //maximum_retry_attempts=5
 }
 output bucket {

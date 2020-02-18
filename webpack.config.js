@@ -45,6 +45,14 @@ module.exports = {
 			}
 		]
 	},
+	devServer: {
+		proxy: {
+		  '/app': {
+			  target:'https://d15zun4udup4ky.cloudfront.net',
+			  changeOrigin: true
+		  }
+		}
+	  },
 	mode,
 	plugins: [
 		new MiniCssExtractPlugin({
