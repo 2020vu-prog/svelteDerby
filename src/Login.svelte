@@ -1,4 +1,4 @@
-// https://www.swyx.io/writing/svelte-auth/#draw-the-rest-of-the-owl
+<!-- https://www.swyx.io/writing/svelte-auth/#draw-the-rest-of-the-owl -->
 <script>
   import { store, signUp, signIn, confirmSignUp, loginFormState ,logout} from './stores/auth.js'
   let mode = localStorage.getItem('svelteLoginMode') || 'signup'

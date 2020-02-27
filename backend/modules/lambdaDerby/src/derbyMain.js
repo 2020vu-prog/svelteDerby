@@ -3,6 +3,8 @@ const EntityFactory = require('./shared/EntityFactory.js')
 const AWS = require("aws-sdk");
 const { DynamoDB } = require('@aws-sdk/client-dynamodb-v2-node');
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
+var jwt = require('jsonwebtoken');
+
 const configDefault = {
 	ttlIncrement: 3600 * .25
 }
@@ -23,7 +25,7 @@ const getTtl = (orgId) => {
 	return Math.round((new Date().getTime() / 1000) + config.ttlIncrement);
 }
 const bearerOrgId = "chi";
-const entityFactory = new EntityFactory({ orgId: bearerOrgId, by: "jwt", TTL: getTtl(bearerOrgId) });
+var entityFactory ;
 
 const create_UUID = () => {
 	var dt = new Date().getTime();
@@ -223,6 +225,23 @@ const addPending2 = async (json) => {
 	return await addSingle(json);
 
 };
+const addEventConfig = async (json) => {
+
+	console.log("addEventConfig: " + JSON.stringify(json));
+	json.PK = "EventConfig";  // force 
+	json.SK = json.orgId;  // force 
+
+	/*
+	if(!json.TTL){
+		json.TTL=
+	}
+	*/
+	//const alreadyExists = await ddbQueryRsContains(json);
+
+
+	return await addSingle(json);
+
+};
 const addParticipant2 = async (json) => {
 
 	console.log("addParticipant2: " + JSON.stringify(json));
@@ -232,6 +251,8 @@ const addParticipant2 = async (json) => {
 
 
 exports.handler = async (event) => {
+	const decoded=jwt.decode(event.headers.Authorization);
+	entityFactory = new EntityFactory({ orgId: bearerOrgId, by: decoded.email, TTL: getTtl(bearerOrgId) });
 	const dbArn = process.env.DynamoDbArn
 	var jsonRC = {};
 
@@ -276,6 +297,11 @@ exports.handler = async (event) => {
 		var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
 		jsonRC = qr;
 		cacheControl = 'max-age=' + cacheMaxSeconds;
+	}
+	else if (routePath === "/addEventConfig") {
+		//var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
+		jsonRC = await addEventConfig(JSON.parse(event.body));
+
 	}
 	else {
 		console.log("Unhandled Path: " + routePath + " ep: " + event.path);

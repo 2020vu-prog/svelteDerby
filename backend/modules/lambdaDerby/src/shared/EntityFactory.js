@@ -38,7 +38,24 @@ class EntityBase {
     }
 
 }
+const EventConfigLit='EventConfig';
+entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
+    static members = ["lcl1"]; // lowCarlane1
+    static canBuild(json) {
+        return (json.PK && json.PK===EventConfigLit);
+    }
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK =  EventConfigLit;
 
+        this.SK = this.orgId;
+    }
+
+}
 
 entityFactories['RacePhase'] = class RacePhase extends EntityBase {
     static members = ["cn", "phr", "rs"];
