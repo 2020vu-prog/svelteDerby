@@ -5,27 +5,33 @@ const { DynamoDB } = require('@aws-sdk/client-dynamodb-v2-node');
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
 var jwt = require('jsonwebtoken');
 
-const configDefault = {
-	ttlIncrement: 3600 * .25
-}
+
 const configMap = {
-	chi: configDefault,
 }
 
 
 
-const getConfig = (orgId) => {
+const getConfig = async (orgId) => {
 	if (configMap[orgId]) {
 		return configMap[orgId];
 	}
-	return configDefault;
+	var allConfig = await ddbQueryRaceConfig();
+	Object.keys(allConfig).forEach((orgId) => {
+		configMap[orgId] = allConfig[orgId];
+	});
+
+	return configMap[orgId];
+
 }
-const getTtl = (orgId) => {
-	const config = getConfig(orgId);
-	return Math.round((new Date().getTime() / 1000) + config.ttlIncrement);
+const getTtl = async (orgId) => {
+	const config = await getConfig(orgId);
+	if (config) {
+		return config.TTL;
+	}
+	return null;
+	//return Math.round((new Date().getTime() / 1000) + config.ttlIncrement);
 }
-const bearerOrgId = "chi";
-var entityFactory ;
+var entityFactory;
 
 const create_UUID = () => {
 	var dt = new Date().getTime();
@@ -217,26 +223,41 @@ const addPending2 = async (json) => {
 	console.log("addPending2: " + JSON.stringify(json));
 	json.PK = ":RS";  // force RaceStanding
 
+
 	const alreadyExists = await ddbQueryRsContains(json);
 	if (alreadyExists > 0) {
 		return { error: "Pending2 already exists" };
 	}
 
+	const cfg=await getConfig(json.orgId);
+	if(cfg && cfg.lcl1){  //low car lane 1?
+		json.cn.sort();
+		console.log("addPending2: sorted: " , json.cn);
+	}
+	else{
+		console.log("addPending2: unsorted: " , json.cn);
+
+	}
 	return await addSingle(json);
 
 };
-const addEventConfig = async (json) => {
+
+const addEventConfig = async (json, priorTtl) => {
 
 	console.log("addEventConfig: " + JSON.stringify(json));
 	json.PK = "EventConfig";  // force 
 	json.SK = json.orgId;  // force 
 
-	/*
-	if(!json.TTL){
-		json.TTL=
-	}
-	*/
-	//const alreadyExists = await ddbQueryRsContains(json);
+	// use prior ttl if found (API cannot change ttl of in progress event!)
+	const newTtl = priorTtl ? priorTtl :
+		Math.round((new Date().getTime() / 1000)) + (3600 * 24 * 1);
+
+	json.TTL = newTtl;
+
+	const by = entityFactory.propOverrides.by;
+	entityFactory = new EntityFactory({ orgId: json.orgId, by: by, TTL: json.TTL });
+
+
 
 
 	return await addSingle(json);
@@ -248,11 +269,18 @@ const addParticipant2 = async (json) => {
 	json.PK = ":PTCP";  // force Participant
 	return await addSingle(json);
 };
-
+const getOrgId = (event) => {
+	if (event.body) {
+		return JSON.parse(event.body).orgId;
+	}
+	if (event.queryStringParameters) {
+		return event.queryStringParameters.orgId;
+	}
+	return null;
+}
 
 exports.handler = async (event) => {
-	const decoded=jwt.decode(event.headers.Authorization);
-	entityFactory = new EntityFactory({ orgId: bearerOrgId, by: decoded.email, TTL: getTtl(bearerOrgId) });
+
 	const dbArn = process.env.DynamoDbArn
 	var jsonRC = {};
 
@@ -270,11 +298,33 @@ exports.handler = async (event) => {
 		callback(null, response)
 		return;
 	}
+	const decoded = jwt.decode(event.headers.Authorization);
+	const orgId = getOrgId(event);
+	//const orgConfig = await getConfig(orgId);
+	const defaultTTL = await getTtl(orgId);
 
+	entityFactory = new EntityFactory({ orgId: orgId, by: decoded.email, TTL: defaultTTL });
 	console.log(event);
 	const routePath = event.path.replace(/^\/app/, "");
 	var cacheControl = "no-cache";
-	if (routePath === "/addParticipant") {
+	if (false) { }
+	else if (routePath === "/getRaceConfig") {
+		var qr = await ddbQueryRaceConfig();
+		jsonRC = qr;
+		cacheControl = 'max-age=7207'
+	}
+	else if (!orgId) {
+		jsonRC = { error: "Unable to determine orgId" };
+	}
+	else if (routePath === "/addEventConfig") {
+		//var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
+		jsonRC = await addEventConfig(JSON.parse(event.body), defaultTTL);
+	}
+	else if (!defaultTTL) {
+		jsonRC = { error: "Unable to determine default TTL" };
+
+	}
+	else if (routePath === "/addParticipant") {
 		jsonRC = await addParticipant2(JSON.parse(event.body));
 	}
 	else if (routePath === "/addPending") {
@@ -288,21 +338,13 @@ exports.handler = async (event) => {
 		console.log("ddbQuery: " + qr);
 		jsonRC = { Count: qr };
 	}
-	else if (routePath === "/getRaceConfig") {
-		var qr = await ddbQueryRaceConfig();
-		jsonRC = qr;
-		cacheControl = 'max-age=7207'
-	}
+
 	else if (routePath === "/getRaceHistory") {
 		var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
 		jsonRC = qr;
 		cacheControl = 'max-age=' + cacheMaxSeconds;
 	}
-	else if (routePath === "/addEventConfig") {
-		//var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
-		jsonRC = await addEventConfig(JSON.parse(event.body));
 
-	}
 	else {
 		console.log("Unhandled Path: " + routePath + " ep: " + event.path);
 		jsonRC = { error: "Unhandled" };

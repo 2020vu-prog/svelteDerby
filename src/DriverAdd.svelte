@@ -1,24 +1,26 @@
   <script>
   import { raceConfig } from './stores.js';
     import { store} from './stores/auth.js'
+    import { Auth } from 'aws-amplify';
 
   import axios from "axios";
 
 
     function handleSubmit() {
         console.log("Adding:"+JSON.stringify(loginForm))
-        const createdBy=$store.username
+        //const currentSession = await Auth.currentSession();
+         Auth.currentSession(); // refresh token. TODO: await!
 
         const req={
             orgId:$raceConfig.orgId,
             number:loginForm.carNumber,
             name:loginForm.driverName,
-            by:createdBy,
         }
         const bearer=$store.signInUserSession.idToken.jwtToken
         
         console.log("token:"+ bearer)
-        axios.defaults.headers.common['Authorization'] = "Bearer "+bearer;
+
+        axios.defaults.headers.common['Authorization'] = bearer;
 
                 axios.post($raceConfig.baseUrl+'/addParticipant', req)
                 .then((response) => {
