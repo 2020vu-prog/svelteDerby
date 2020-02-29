@@ -279,27 +279,36 @@ const getOrgId = (event) => {
 	return null;
 }
 const routeMap = {
-	"/addParticipant": { h: async (event) => { await addParticipant2(JSON.parse(event.body)); } },
-	"/addPending": { h: async (event) => { await addPending2(JSON.parse(event.body)); } },
-	"/addBulk": { h: async (event) => { await addBulk(JSON.parse(event.body)); } },
+	"/addParticipant": { h: async (event) => { return buildResponse(await addParticipant2(JSON.parse(event.body))); } },
+	"/addPending": { h: async (event) => { return buildResponse(await addPending2(JSON.parse(event.body))); } },
+	"/addBulk": { h: async (event) => { return buildResponse(await addBulk(JSON.parse(event.body))); } },
 	"/ddbQuery": {
 		h: async (event) => {
 			var qr = await ddbQueryRsContains(JSON.parse(event.body));
 			console.log("ddbQuery: " + qr);
-			return { Count: qr };
+			return buildResponse({ Count: qr });
 		}
 	},
 	"/getRaceHistory": {
 		h: async (event) => {
 			var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
-			//cacheControl = 'max-age=' + cacheMaxSeconds; // TODO: expose as function?
-			return qr;
+			const cacheControl = 'max-age=' + cacheMaxSeconds;
+			return buildResponse(qr, cacheControl);
 		}
 	},
 }
 
 
-
+const buildResponse = (jsonObj, cacheControl = "no-cache") => {
+	return {
+		statusCode: 200,
+		headers: {
+			'Content-Type': 'application/json; charset=utf-8',
+			'Cache-Control': cacheControl
+		},
+		body: JSON.stringify(jsonObj)
+	}
+}
 
 
 
@@ -308,7 +317,6 @@ const routeMap = {
 exports.handler = async (event) => {
 
 	const dbArn = process.env.DynamoDbArn
-	var jsonRC = {};
 
 	// Allow Cors
 	if (event.httpMethod === "OPTIONS") {
@@ -332,48 +340,39 @@ exports.handler = async (event) => {
 	entityFactory = new EntityFactory({ orgId: orgId, by: decoded.email, TTL: defaultTTL });
 	console.log(event);
 	const routePath = event.path.replace(/^\/app/, "");
-	var cacheControl = "no-cache";
 	if (false) { }
 	else if (routePath === "/getRaceConfig") {
-		var qr = await ddbQueryRaceConfig();
-		jsonRC = qr;
-		cacheControl = 'max-age=7207'
+		const qr = await ddbQueryRaceConfig();
+		return buildResponse(qr, 'max-age=7207');
 	}
 	else if (!orgId) {
-		jsonRC = { error: "Unable to determine orgId" };
+		const qr = { error: "Unable to determine orgId" };
+		return buildResponse(qr);
+
 	}
 	else if (routePath === "/addEventConfig") {
 		//var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
-		jsonRC = await addEventConfig(JSON.parse(event.body), defaultTTL);
+		const jsonRC = await addEventConfig(JSON.parse(event.body), defaultTTL);
+		return buildResponse(jsonRC);
 	}
 	else if (!defaultTTL) {
-		jsonRC = { error: "Unable to determine default TTL" };
+		const qr = { error: "Unable to determine default TTL" };
+		return buildResponse(qr);
 
 	}
-	else if(routeMap[routePath] && routeMap[routePath].h){
+	else if (routeMap[routePath] && routeMap[routePath].h) {
 		console.log("ph routeMap handling: " + routePath, " object:", routeMap[routePath]);
 
-		const phandler= routeMap[routePath].h;
+		const phandler = routeMap[routePath].h;
 		console.log("routeMap handling: " + phandler);
 
-		jsonRC=await phandler(event);
+		return await phandler(event);
 		console.log("routeMap handled: " + routePath);
 
 	}
-	else {
-		console.log("Unhandled Path: " + routePath + " ep: " + event.path);
-		jsonRC = { error: "Unhandled" };
-	}
 
-	console.log(JSON.stringify(event));
-	var response = {
-		statusCode: 200,
-		headers: {
-			'Content-Type': 'application/json; charset=utf-8',
-			'Cache-Control': cacheControl
-		},
-		body: JSON.stringify(jsonRC)
-	}
-	//callback(null, response)
-	return response;
+	console.log("Unhandled Path: " + routePath + " ep: " + event.path);
+	const jsonRC = { error: "Unhandled" };
+	return buildResponse(qr);
+
 }
