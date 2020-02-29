@@ -229,13 +229,13 @@ const addPending2 = async (json) => {
 		return { error: "Pending2 already exists" };
 	}
 
-	const cfg=await getConfig(json.orgId);
-	if(cfg && cfg.lcl1){  //low car lane 1?
+	const cfg = await getConfig(json.orgId);
+	if (cfg && cfg.lcl1) {  //low car lane 1?
 		json.cn.sort();
-		console.log("addPending2: sorted: " , json.cn);
+		console.log("addPending2: sorted: ", json.cn);
 	}
-	else{
-		console.log("addPending2: unsorted: " , json.cn);
+	else {
+		console.log("addPending2: unsorted: ", json.cn);
 
 	}
 	return await addSingle(json);
@@ -278,6 +278,32 @@ const getOrgId = (event) => {
 	}
 	return null;
 }
+const routeMap = {
+	"/addParticipant": { h: async (event) => { await addParticipant2(JSON.parse(event.body)); } },
+	"/addPending": { h: async (event) => { await addPending2(JSON.parse(event.body)); } },
+	"/addBulk": { h: async (event) => { await addBulk(JSON.parse(event.body)); } },
+	"/ddbQuery": {
+		h: async (event) => {
+			var qr = await ddbQueryRsContains(JSON.parse(event.body));
+			console.log("ddbQuery: " + qr);
+			return { Count: qr };
+		}
+	},
+	"/getRaceHistory": {
+		h: async (event) => {
+			var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
+			cacheControl = 'max-age=' + cacheMaxSeconds; // TODO: expose as function?
+			return qr;
+		}
+	},
+}
+
+
+
+
+
+
+
 
 exports.handler = async (event) => {
 
@@ -324,27 +350,16 @@ exports.handler = async (event) => {
 		jsonRC = { error: "Unable to determine default TTL" };
 
 	}
-	else if (routePath === "/addParticipant") {
-		jsonRC = await addParticipant2(JSON.parse(event.body));
-	}
-	else if (routePath === "/addPending") {
-		jsonRC = await addPending2(JSON.parse(event.body));
-	}
-	else if (routePath === "/addBulk") {
-		jsonRC = await addBulk(JSON.parse(event.body));
-	}
-	else if (routePath === "/ddbQuery") {
-		var qr = await ddbQueryRsContains(JSON.parse(event.body));
-		console.log("ddbQuery: " + qr);
-		jsonRC = { Count: qr };
-	}
+	else if(routeMap[routePath] && routeMap[routePath].h){
+		console.log("ph routeMap handling: " + routePath, " object:", routeMap[routePath]);
 
-	else if (routePath === "/getRaceHistory") {
-		var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
-		jsonRC = qr;
-		cacheControl = 'max-age=' + cacheMaxSeconds;
-	}
+		const phandler= routeMap[routePath].h;
+		console.log("routeMap handling: " + phandler);
 
+		jsonRC=await phandler(event);
+		console.log("routeMap handled: " + routePath);
+
+	}
 	else {
 		console.log("Unhandled Path: " + routePath + " ep: " + event.path);
 		jsonRC = { error: "Unhandled" };

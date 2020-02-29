@@ -6,6 +6,7 @@ import {push, pop, replace} from 'svelte-spa-router'
 import Standing from './Standing.svelte'
 import DriverList from './DriverList.svelte'
 import DriverAdd from './DriverAdd.svelte'
+import RaceStandingAdd from './RaceStandingAdd.svelte'
 import Login from './Login.svelte'
 import HotLoad from "./HotLoad.svelte";
 //import CognitoAuth from "./CognitoAuth.svelte";
@@ -18,6 +19,7 @@ const routes = {
     '/drivers': DriverList,
     '/login': Login,
     '/driverAdd': DriverAdd,
+    '/raceStandingAdd': RaceStandingAdd,
 }
 
 /* Toggle between showing and hiding the navigation menu links when the user clicks on the hamburger menu / bar icon */

@@ -1,6 +1,9 @@
 <script>
 import {push, pop, replace} from 'svelte-spa-router'
 //export let permission;
+export let clickHandleRoute;
+
+const chFunction=()=>{push(clickHandleRoute)};
 </script>
 <style>
 .app-fab--absolute {
@@ -17,7 +20,7 @@ import {push, pop, replace} from 'svelte-spa-router'
 }
 </style>
 
-<button class="mdc-fab app-fab--absolute" aria-label="Add" on:click={() => push('/driverAdd')}>
+<button class="mdc-fab app-fab--absolute" aria-label="Add" on:click={chFunction}>
   <div class="mdc-fab__ripple"></div>
   <span class="mdc-fab__icon material-icons">add_circle</span>
 </button>

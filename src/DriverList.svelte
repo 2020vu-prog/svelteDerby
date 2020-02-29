@@ -20,7 +20,7 @@ const getDriversAsList=()=>{
 <div>
 <h4>Driver List </h4>
 <p/>
-<MaterialAdd/>
+<MaterialAdd  clickHandleRoute="/driverAdd" />
 <CarFilter/>
 
 		{#each getDriversAsList() as driver,i}

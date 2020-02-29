@@ -3,6 +3,7 @@ import { standings ,driverMap, carFilter, nextOnBlocks, raceConfig,doRefreshBloc
 import RaceStanding from "./RaceStanding.svelte";
 import RacePhase from "./RacePhase.svelte";
 import CarFilter from "./CarFilter.svelte";
+import MaterialAdd from "./MaterialAdd.svelte";
 
 
 
@@ -18,6 +19,7 @@ const filterMatches=(standing,lclFilter)=>{
 
 
 <h4>Next On Blocks</h4>
+<MaterialAdd  clickHandleRoute="/raceStandingAdd" />
 
 		<RacePhase refreshTime={$doRefreshBlocks} />
 		<hr/>
