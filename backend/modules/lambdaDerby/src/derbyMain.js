@@ -292,7 +292,7 @@ const routeMap = {
 	"/getRaceHistory": {
 		h: async (event) => {
 			var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
-			cacheControl = 'max-age=' + cacheMaxSeconds; // TODO: expose as function?
+			//cacheControl = 'max-age=' + cacheMaxSeconds; // TODO: expose as function?
 			return qr;
 		}
 	},

@@ -12,3 +12,4 @@ time curl   $VERBOSE $CF/addPending     -XPOST --data @pending.json       --head
 time curl   $VERBOSE $CF/ddbQuery       -XPOST --data @ddbQuery.json       --header "$AUTH"
 time curl  $VERBOSE $CF/addBulk         -XPOST --data @bulk.json        --header "$AUTH"
 time curl   $VERBOSE $CF/getRaceConfig  --header "$AUTH"
+time curl   $VERBOSE $CF/getRaceHistory?orgId=chi  --header "$AUTH"
