@@ -1,5 +1,6 @@
 const fs = require('fs');
 const axios = require("axios");
+const { v4: uuidv4 } = require('uuid');
 
 
 
@@ -9,7 +10,8 @@ const CF="https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
 
 //time curl  $VERBOSE $CF/addBulk         -XPOST --data @bulk.json        --header "$AUTH"
 //time curl   $VERBOSE $CF/getRaceConfig  --header "$AUTH"
-const orgId="test."+new Date().getTime();
+const orgU= uuidv4().substring(0,5);
+const orgId="test."+orgU;
 const getH=`${CF}/getRaceHistory?orgId=${orgId}`
 const eventUrl=`${CF}/addEventConfig`
 const driverUrl=`${CF}/addParticipant`
@@ -34,8 +36,8 @@ const postData = async (url,req) => {
     axios.defaults.headers.common['Authorization'] = token;
 
   	const response=await              axios.post(url, req);
-	console.log(response);
-			return response;
+	//console.log(response);
+	return response;
   } catch (error) {
     console.log(error);
   }
@@ -61,6 +63,17 @@ test('postAddBlocks: ', () => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
+test('postDuplicateAddBlocks: ', () => {
+  return postData(`${CF}/addBlocks`,{"orgId":orgId, "cn":["333","334"] }).then(received => {
+    expect(received.data.status).toMatch(/error/i);
+  });
+});
+
+test('postApplyFinishTime: ', () => {
+  return postData(`${CF}/doApplyFinishTime`,{"orgId":orgId, "SK":"foobar"}).then(received => {
+    expect(received.data.status).toMatch(/error/i);
+  });
+});
 
 test('postDdbQuery: ', () => {
   return postData(`${CF}/ddbQuery`,{"orgId":orgId, "cn":["333","800"] }).then(received => {
@@ -74,4 +87,25 @@ test('getHistory: the data should by created by 2020vu', () => {
   });
 });
 
+var timerSk="";
+test('getNextOnBlocks: ', () => {
+  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}`).then(data => {
+    console.log("nextOnBlocks:",data);
+    expect(data[0].by).toMatch(/2020vu/i);
+    expect(data.length).toEqual(1);
+    timerSk=data[0].SK;
+  });
+});
+
+test('applyFinishTime: ', () => {
+  return postData(`${CF}/doApplyFinishTime`,{"orgId":orgId, SK:timerSk, phr: [0,33]}).then(received => {
+    expect(received.data.status).toMatch(/ok/i);
+  });
+});
+
+test('getNextOnBlocks: should be empty after apply finish time', () => {
+  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}`).then(data => {
+    expect(data.length).toEqual(0);
+  });
+});
 

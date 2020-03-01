@@ -38,11 +38,11 @@ class EntityBase {
     }
 
 }
-const EventConfigLit='EventConfig';
+const EventConfigLit = 'EventConfig';
 entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
     static members = ["lcl1"]; // lowCarlane1
     static canBuild(json) {
-        return (json.PK && json.PK===EventConfigLit);
+        return (json.PK && json.PK === EventConfigLit);
     }
     constructor(props) {
         super(props);
@@ -50,7 +50,7 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
     }
     preWrite() {
         super.preWrite();
-        this.PK =  EventConfigLit;
+        this.PK = EventConfigLit;
 
         this.SK = this.orgId;
     }
@@ -70,10 +70,12 @@ entityFactories['RacePhase'] = class RacePhase extends EntityBase {
         super.preWrite();
         this.PK = this.orgId + RacePhaseEid;
 
-        this.SK = new Date().getTime() + "";
+        if (!this.SK) {
+            this.SK = new Date().getTime() + "";
+        }
     }
-    set phaseResults(results){
-        this.phr=results;
+    set phaseResults(results) {
+        this.phr = results;
     }
     get phaseResults() {
         return this.phr;
@@ -98,20 +100,20 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
         if (!this.SK)
             this.SK = new Date().getTime() + "";
     }
-    nextRace(){
-        if(!this.phase1Results){
+    nextRace() {
+        if (!this.phase1Results) {
             return [...this.carNumbers];
         }
-        if(!this.phase2Results){
+        if (!this.phase2Results) {
             return [...this.carNumbers].reverse();
         }
         return null;
     }
     set phase1Results(ph1) {
-        return this.ph1=ph1;
+        return this.ph1 = ph1;
     }
     set phase2Results(ph2) {
-        return this.ph2=ph2;
+        return this.ph2 = ph2;
     }
     get phase1Results() {
         return this.ph1;

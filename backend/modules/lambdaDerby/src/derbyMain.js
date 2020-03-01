@@ -42,6 +42,39 @@ const create_UUID = () => {
 	});
 	return uuid;
 }
+const promoteToObject = (unmarshalled, factory) => {
+	if (factory) {
+		return factory.build(unmarshalled);
+	}
+	else {
+		return unmarshalled;
+	}
+}
+const unmarshallResultsToArray = (data, factory) => {
+	const rc = [];
+	for (var i = 0; i < data.Items.length; i++) {
+		var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
+		unmarshalled = promoteToObject(unmarshalled, factory);
+		if (unmarshalled) {
+			rc.push(unmarshalled);
+		}
+	}
+	return rc;
+};
+const unmarshallResultsToObject = (data, key, factory) => {
+	const rc = [];
+
+	for (var i = 0; i < data.Items.length; i++) {
+		var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
+		unmarshalled = promoteToObject(unmarshalled, factory);
+		if (unmarshalled) {
+			rc[unmarshalled[key]] = unmarshalled;
+		}
+
+	}
+	return rc;
+};
+
 const ddbQueryRaceHistory = async (qsp) => {
 	if (!qsp) { qsp = {} }
 	var limit = parseInt(qsp.limit);
@@ -76,11 +109,8 @@ const ddbQueryRaceHistory = async (qsp) => {
 		var data = await ddbClient.query(params);
 		console.log("queryRaceHistory: " + data);           // successful response
 		console.log("queryRaceHistory: " + JSON.stringify(data));           // successful response
-		const rc = [];
-		for (var i = 0; i < data.Items.length; i++) {
-			var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
-			rc.push(unmarshalled);
-		}
+		const rc = unmarshallResultsToArray(data);
+
 
 
 		return [rc, cacheMaxSeconds];
@@ -102,37 +132,180 @@ const ddbQueryRaceConfig = async () => {
 	console.log("ddb query: " + JSON.stringify(params));
 	try {
 		var data = await ddbClient.query(params);
-		console.log("queryRaceConfig: " + data);           // successful response
-		console.log("queryRaceConfig: " + JSON.stringify(data));           // successful response
-		const rc = {};
-		for (var i = 0; i < data.Items.length; i++) {
-			var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
-			rc[unmarshalled.SK] = unmarshalled;
-		}
+		console.log("queryRaceConfig: ", data);           // successful response
+		return unmarshallResultsToObject(data, "SK");
 
-
-		return rc;
 	}
 	catch (err) {
 		console.log("queryRaceConfig failed: ", err, err.stack); // an error occurred
 	}
 	return { error: "Query Failed" };
 }
-const ddbQueryRsContains = async (json) => {
-	var containsFilters = [];
-	var containsValues = {};
-	var i;
-	for (i = 0; i < json.cn.length; i++) {
-		containsFilters[i] = "contains (cn, :cn" + i + ")";
-		containsValues[":cn" + i] = { S: json.cn[i] };
+
+/*
+** Lookup RP by exact PK/SK
+*/
+const ddbQueryRpByKey = async (json) => {
+	const containsValues = {};
+	const keyCondition = buildKeyCondition(json.orgId + ":RP", containsValues);
+	containsValues[":sk"] = { S: json.SK };
+
+	var params = {
+		TableName: process.env.DynamoDbTable,
+		Limit: 20,
+		ScanIndexForward: false,  // sort descending
+		KeyConditionExpression: keyCondition + " and  SK = :sk",
+		FilterExpression: " attribute_not_exists (phr) ",
+		ReturnConsumedCapacity: "TOTAL",
+		ExpressionAttributeValues: containsValues
+	};
+	console.log("ddbQueryRpByKey query: " + JSON.stringify(params));
+
+	try {
+		var data = await ddbClient.query(params);
+		console.log("ddbQueryRpByKey: ", data);           // successful response
+
+		const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+
+		return udata.filter(rp => (!rp.phaseResults));  // only return entries w/o results
+
 	}
-	containsValues[":pk"] = { S: json.orgId + ":RS" };
+	catch (err) {
+		console.log("ddbQueryRpByKey failed: ", err, err.stack); // an error occurred
+		throw (err);
+	}
+};
+/*
+**
+*/
+const ddbQueryRpNextOnBlocks = async (json) => {
+	const containsValues = {};
+	const keyCondition = buildKeyCondition(json.orgId + ":RP", containsValues);
+
+	var params = {
+		TableName: process.env.DynamoDbTable,
+		Limit: 20,
+		ScanIndexForward: false,  // sort descending
+		KeyConditionExpression: keyCondition ,
+		FilterExpression: " attribute_not_exists (phr) ",
+		ReturnConsumedCapacity: "TOTAL",
+		ExpressionAttributeValues: containsValues
+	};
+	console.log("ddbQueryRpNextOnBlocks query: " + JSON.stringify(params));
+
+	try {
+		var data = await ddbClient.query(params);
+		console.log("ddbQueryRpNextOnBlocks: ", data);           // successful response
+
+		const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+
+		return udata.filter(rp => (!rp.phaseResults)).reverse();  // only return entries w/o results
+
+	}
+	catch (err) {
+		console.log("ddbQueryRpNextOnBlocks failed: ", err, err.stack); // an error occurred
+		throw (err);
+	}
+};
+/*
+** Any given car should have at most one entry "on the blocks"
+*/
+const ddbQueryRpDuplicateCheck = async (json) => {
+	const containsValues = {};
+	const carFIlterString = buildDdbCarFilter(json.cn, containsValues, " OR ");
+	const keyCondition = buildKeyCondition(json.orgId + ":RP", containsValues);
+
+	//TODO: verify interaction of limit and filter. is it desirable?  tolerable?
+	var params = {
+		TableName: process.env.DynamoDbTable,
+		Limit: 20,
+		ScanIndexForward: false,  // sort descending
+		KeyConditionExpression: keyCondition,
+		FilterExpression: carFIlterString + " AND attribute_not_exists (phr) ",
+		ReturnConsumedCapacity: "TOTAL",
+		ExpressionAttributeValues: containsValues
+	};
+	console.log("ddbQueryRpDuplicateCheck query: " + JSON.stringify(params));
+
+	try {
+		var data = await ddbClient.query(params);
+		console.log("ddbQueryRpDuplicateCheck: ", data);           // successful response
+
+		const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+
+		return udata.filter(rp => (!rp.phaseResults));  // only return entries w/o results
+
+	}
+	catch (err) {
+		console.log("ddbQueryRpDuplicateCheck failed: ", err, err.stack); // an error occurred
+		throw (err);
+	}
+};
+
+const ddbQueryRsExistsAndPendingCheck = async (json) => {
+	const containsValues = {};
+	const filterString = buildDdbCarFilter(json.cn, containsValues, " AND ");
+	const keyCondition = buildKeyCondition(json.orgId + ":RS", containsValues);
 
 	var params = {
 		TableName: process.env.DynamoDbTable,
 
-		KeyConditionExpression: "PK = :pk",
-		FilterExpression: containsFilters.join(" OR "),
+		KeyConditionExpression: keyCondition,
+		FilterExpression: filterString,
+		ReturnConsumedCapacity: "TOTAL",
+		ExpressionAttributeValues: containsValues
+	};
+	console.log("ddbQueryRsExistsAndPendingCheck query: " + JSON.stringify(params));
+
+	try {
+		var data = await ddbClient.query(params);
+		console.log("ddbQueryRsExistsAndPendingCheck: ", data);           // successful response
+		const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+
+		return udata.filter(rs => rs.nextRace());  // only return entries that need to race
+	}
+	catch (err) {
+		console.log("ddbQueryRsExistsAndPendingCheck failed: ", err, err.stack); // an error occurred
+		throw (err);
+	}
+};
+/*
+ cnList: input carNumber list
+ containsValues: object that will have car number values added to 
+ qualifier: s/b " AND " or " OR "
+ */
+const buildDdbCarFilter = (cnList, containsValues, qualifier = " OR ") => {
+	var containsFilters = [];
+
+	if (!cnList || cnList.length == 0) {
+		return "";
+	}
+	var i;
+	for (i = 0; i < cnList.length; i++) {
+		containsFilters[i] = "contains (cn, :cn" + i + ")";
+		containsValues[":cn" + i] = { S: cnList[i] };
+	}
+
+	return "(" + containsFilters.join(" OR ") + ")";
+}
+const buildKeyCondition = (pk, containsValues) => {
+	containsValues[":pk"] = { S: pk };
+	return "PK = :pk";
+}
+/*
+**
+*/
+const ddbQueryRsContains = async (json) => {
+	const containsValues = {};
+	const filterString = buildDdbCarFilter(json.cn, containsValues, " OR ");
+	const keyCondition = buildKeyCondition(json.orgId + ":RS", containsValues);
+
+	console.log("containsValues:", containsValues);
+	var params = {
+		TableName: process.env.DynamoDbTable,
+
+		KeyConditionExpression: keyCondition,
+		FilterExpression: filterString,
 		ReturnConsumedCapacity: "TOTAL",
 		ExpressionAttributeValues: containsValues
 	};
@@ -241,7 +414,64 @@ const addPending2 = async (json) => {
 	return await addSingle(json);
 
 };
+const applyFinishTime = async (json) => {
+	console.log("addBlocks: " + JSON.stringify(json));
+	const targetRp = await ddbQueryRpByKey(json);
+	if (targetRp.length == 0) {
+		return {
+			status: "error",
+			error: "No eligible target for update.",
+		};
+	}
+	const tgt=targetRp[0];
+	tgt.phr=json.phr;
+	return await addSingle(tgt);
+	/*
+	return {
+		status: "ok",
+	};
+	*/
+};
+const addBlocks = async (json) => {
 
+	console.log("addBlocks: " + JSON.stringify(json));
+	json.PK = ":RP";  // force RacePhase
+
+
+	const waitRp = ddbQueryRpDuplicateCheck(json);
+	const waitRs = ddbQueryRsExistsAndPendingCheck(json);
+	const [rpFound, rsFound] = await Promise.all([waitRp, waitRs]);
+	console.log("rpFound", rpFound);
+	console.log("rsFound", rsFound);
+	if (rsFound.length == 0) {
+		return {
+			status: "error",
+			error: "No Pending race found"
+		};
+	}
+	if (rsFound[0].nextRace().toString() == json.cn.toString()) { }
+	else {
+		return {
+			status: "error",
+
+			error: "Cars in wrong lane(s)",
+			expected: rsFound[0].nextRace().toString(),
+			requested: json.cn.toString(),
+		};
+	}
+	if (rpFound.length > 0) {
+		return {
+			status: "error",
+			error: "Car(s) already loaded on blocks:" + rpFound[0].carNumbers.toString()
+		};
+	}
+
+	// link racePhase to RaceStanding!
+	json["rs"] = rsFound[0].SK;
+
+	return await addSingle(json);
+
+};
 const addEventConfig = async (json, priorTtl) => {
 
 	console.log("addEventConfig: " + JSON.stringify(json));
@@ -281,6 +511,8 @@ const getOrgId = (event) => {
 const routeMap = {
 	"/addParticipant": { h: async (event) => { return buildResponse(await addParticipant2(JSON.parse(event.body))); } },
 	"/addPending": { h: async (event) => { return buildResponse(await addPending2(JSON.parse(event.body))); } },
+	"/addBlocks": { h: async (event) => { return buildResponse(await addBlocks(JSON.parse(event.body))); } },
+	"/doApplyFinishTime": { h: async (event) => { return buildResponse(await applyFinishTime(JSON.parse(event.body))); } },
 	"/addBulk": { h: async (event) => { return buildResponse(await addBulk(JSON.parse(event.body))); } },
 	"/ddbQuery": {
 		h: async (event) => {
@@ -289,8 +521,15 @@ const routeMap = {
 			return buildResponse({ Count: qr });
 		}
 	},
-	"/getRaceHistory": {
+	"/getNextOnBlocks": {
 		h: async (event) => {
+			const nob=await ddbQueryRpNextOnBlocks(event.queryStringParameters);
+			return buildResponse(nob); 
+
+		}
+	},
+		"/getRaceHistory": {
+			h: async (event) => {
 			var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
 			const cacheControl = 'max-age=' + cacheMaxSeconds;
 			return buildResponse(qr, cacheControl);
@@ -372,7 +611,9 @@ exports.handler = async (event) => {
 	}
 
 	console.log("Unhandled Path: " + routePath + " ep: " + event.path);
-	const jsonRC = { error: "Unhandled" };
-	return buildResponse(qr);
+	return buildResponse({
+		status: "unhandled",
+		error: "Unhandled"
+	});
 
 }

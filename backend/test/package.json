@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "mainTest.js",
- "scripts": {
+  "scripts": {
     "test": "jest"
   },
   "jest": {
@@ -14,7 +14,8 @@
   "license": "ISC",
   "dependencies": {
     "@aws-amplify/auth": "^2.1.6",
-    "axios": "^0.19.2"
+    "axios": "^0.19.2",
+    "uuid": "^7.0.1"
   },
   "devDependencies": {
     "jest": "^25.1.0"
