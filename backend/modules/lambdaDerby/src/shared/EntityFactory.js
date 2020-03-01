@@ -72,6 +72,12 @@ entityFactories['RacePhase'] = class RacePhase extends EntityBase {
 
         this.SK = new Date().getTime() + "";
     }
+    set phaseResults(results){
+        this.phr=results;
+    }
+    get phaseResults() {
+        return this.phr;
+    }
     get carNumbers() {
         return this.cn;
     }
@@ -91,6 +97,21 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
         this.PK = this.orgId + RaceStandingEid;
         if (!this.SK)
             this.SK = new Date().getTime() + "";
+    }
+    nextRace(){
+        if(!this.phase1Results){
+            return [...this.carNumbers];
+        }
+        if(!this.phase2Results){
+            return [...this.carNumbers].reverse();
+        }
+        return null;
+    }
+    set phase1Results(ph1) {
+        return this.ph1=ph1;
+    }
+    set phase2Results(ph2) {
+        return this.ph2=ph2;
     }
     get phase1Results() {
         return this.ph1;
