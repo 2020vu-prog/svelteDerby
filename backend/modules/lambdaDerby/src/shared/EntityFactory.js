@@ -58,7 +58,7 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
 }
 
 entityFactories['RacePhase'] = class RacePhase extends EntityBase {
-    static members = ["cn", "phr", "rs"];
+    static members = ["cn", "phr", "rs", "pl"];
     static canBuild(json) {
         return (json.PK && json.PK.endsWith(RacePhaseEid));
     }
@@ -82,6 +82,12 @@ entityFactories['RacePhase'] = class RacePhase extends EntityBase {
     }
     get carNumbers() {
         return this.cn;
+    }
+    get phaseLiteral() {
+        return this.pl;
+    }
+    set phaseLiteral(pl) {
+        return this.pl=pl;
     }
 }
 entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
@@ -108,6 +114,14 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
             return [...this.carNumbers].reverse();
         }
         return null;
+    }
+    // "A" or "B" phase?  (given carNumber list)
+    getPhaseLiteral(phaseCarNumbers){
+		if (this.carNumbers.toString() == phaseCarNumbers.toString()) { 
+            return "A";
+		}else{
+			return "B";
+		}
     }
     set phase1Results(ph1) {
         return this.ph1 = ph1;

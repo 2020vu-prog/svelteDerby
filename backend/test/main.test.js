@@ -58,6 +58,13 @@ test('postAddPending: ', () => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
+test('postAddBlocksBackwards: should fail b/c cars in wrong lanes. ', () => {
+  return postData(`${CF}/addBlocks`,{"orgId":orgId, "cn":["334","333"] }).then(received => {
+    expect(received.data.status).toMatch(/error/i);
+    expect(received.data.error).toEqual("Cars in wrong lane(s)");
+  });
+});
+
 test('postAddBlocks: ', () => {
   return postData(`${CF}/addBlocks`,{"orgId":orgId, "cn":["333","334"] }).then(received => {
     expect(received.data.status).toMatch(/ok/i);
@@ -69,8 +76,8 @@ test('postDuplicateAddBlocks: ', () => {
   });
 });
 
-test('postApplyFinishTime: ', () => {
-  return postData(`${CF}/doApplyFinishTime`,{"orgId":orgId, "SK":"foobar"}).then(received => {
+test('postApplyFinishTime: should fail because key is invalid!', () => {
+  return postData(`${CF}/doApplyFinishTime`,{"orgId":orgId, "SK":"foobar:KeyNotPresentOnDb"}).then(received => {
     expect(received.data.status).toMatch(/error/i);
   });
 });
@@ -87,18 +94,21 @@ test('getHistory: the data should by created by 2020vu', () => {
   });
 });
 
-var timerSk="";
+var timerSkAPhase="";
+var timerSkBPhase="";
+
 test('getNextOnBlocks: ', () => {
   return getData(`${CF}/getNextOnBlocks?orgId=${orgId}`).then(data => {
     console.log("nextOnBlocks:",data);
     expect(data[0].by).toMatch(/2020vu/i);
     expect(data.length).toEqual(1);
-    timerSk=data[0].SK;
+    timerSkAPhase=data[0].SK;
   });
 });
 
-test('applyFinishTime: ', () => {
-  return postData(`${CF}/doApplyFinishTime`,{"orgId":orgId, SK:timerSk, phr: [0,33]}).then(received => {
+test('applyFinishTime: should succeed', () => {
+    console.log("applyFinishTime:",timerSkAPhase);
+  return postData(`${CF}/doApplyFinishTime`,{"orgId":orgId, SK:timerSkAPhase, phr: [0,33] }).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
@@ -109,3 +119,28 @@ test('getNextOnBlocks: should be empty after apply finish time', () => {
   });
 });
 
+test('postAddBlocksPhase2: should work. ', () => {
+  return postData(`${CF}/addBlocks`,{"orgId":orgId, "cn":["334","333"] }).then(received => {
+    expect(received.data.status).toMatch(/ok/i);
+  });
+});
+
+test('getNextOnBlocks: should be B phase key', () => {
+  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}`).then(data => {
+    expect(data.length).toEqual(1);
+    timerSkBPhase=data[0].SK;
+  });
+});
+
+test('applyFinishTime: (B Phase) should succeed', () => {
+    console.log("applyFinishTime:",timerSkBPhase);
+  return postData(`${CF}/doApplyFinishTime`,{"orgId":orgId, SK:timerSkBPhase, phr: [44,0] }).then(received => {
+    expect(received.data.status).toMatch(/ok/i);
+  });
+});
+
+test('getNextOnBlocks: should be empty after apply (B phase) finish time', () => {
+  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}`).then(data => {
+    expect(data.length).toEqual(0);
+  });
+});

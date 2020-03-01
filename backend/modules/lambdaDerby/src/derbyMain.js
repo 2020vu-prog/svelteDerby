@@ -141,7 +141,38 @@ const ddbQueryRaceConfig = async () => {
 	}
 	return { error: "Query Failed" };
 }
+/*
+** Lookup RP by exact PK/SK
+*/
+const ddbQueryRsByKey = async (json) => {
+	const containsValues = {};
+	const keyCondition = buildKeyCondition(json.orgId + ":RS", containsValues);
+	containsValues[":sk"] = { S: json.SK };
 
+	var params = {
+		TableName: process.env.DynamoDbTable,
+		Limit: 20,
+		ScanIndexForward: false,  // sort descending
+		KeyConditionExpression: keyCondition + " and  SK = :sk",
+		ReturnConsumedCapacity: "TOTAL",
+		ExpressionAttributeValues: containsValues
+	};
+	console.log("ddbQueryRsByKey query: " + JSON.stringify(params));
+
+	try {
+		var data = await ddbClient.query(params);
+		console.log("ddbQueryRsByKey: ", data);           // successful response
+
+		const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+
+		return udata;
+
+	}
+	catch (err) {
+		console.log("ddbQueryRsByKey failed: ", err, err.stack); // an error occurred
+		throw (err);
+	}
+};
 /*
 ** Lookup RP by exact PK/SK
 */
@@ -414,23 +445,50 @@ const addPending2 = async (json) => {
 	return await addSingle(json);
 
 };
+
+
 const applyFinishTime = async (json) => {
-	console.log("addBlocks: " + JSON.stringify(json));
-	const targetRp = await ddbQueryRpByKey(json);
-	if (targetRp.length == 0) {
+	console.log("applyFinishTime 413: " + JSON.stringify(json));
+	const tgtRpList = await ddbQueryRpByKey(json);
+	if (tgtRpList.length == 0) {
 		return {
 			status: "error",
 			error: "No eligible target for update.",
 		};
 	}
-	const tgt=targetRp[0];
-	tgt.phr=json.phr;
-	return await addSingle(tgt);
-	/*
+	const tgtRp=tgtRpList[0];
+	tgtRp.phr=json.phr;  //TODO: verify client sent array of ints in "phr"
+	const rsPromise=ddbQueryRsByKey({orgId: tgtRp.orgId, SK: tgtRp.rs})
+	const rpUpdatePromise= addSingle(tgtRp);
+	const [rsFoundList, rpUpdate]= await Promise.all([rsPromise, rpUpdatePromise]);
+
+	console.log("applyFinishTime 413 rsFoundList: " , rsFoundList);
+
+	if(rsFoundList.length>0){
+		const tgtRs=rsFoundList[0];
+		// match means A phase.
+		const phase=tgtRp.phaseLiteral;
+		console.log("applyFinishTime 413 phase: " , phase);
+
+		if (phase==="A"){
+			tgtRs.phase1Results=json.phr;
+		}
+		else{
+			tgtRs.phase2Results=json.phr.reverse();
+		}
+		await addSingle(tgtRs);
+	}
+	else{
+		return {
+			status: "error",
+			error: "No raceStanding found!",
+		};
+	}
+	
 	return {
 		status: "ok",
 	};
-	*/
+	
 };
 const addBlocks = async (json) => {
 
@@ -469,6 +527,7 @@ const addBlocks = async (json) => {
 	// link racePhase to RaceStanding!
 	json["rs"] = rsFound[0].SK;
 
+	json["pl"] = rsFound[0].getPhaseLiteral(json.cn);
 	return await addSingle(json);
 
 };
