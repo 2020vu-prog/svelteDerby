@@ -62,7 +62,7 @@ const unmarshallResultsToArray = (data, factory) => {
 	return rc;
 };
 const unmarshallResultsToObject = (data, key, factory) => {
-	const rc = [];
+	const rc = {};
 
 	for (var i = 0; i < data.Items.length; i++) {
 		var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
@@ -641,6 +641,7 @@ exports.handler = async (event) => {
 	if (false) { }
 	else if (routePath === "/getRaceConfig") {
 		const qr = await ddbQueryRaceConfig();
+		console.log("getRaceConfig 23232:", qr)
 		return buildResponse(qr, 'max-age=7207');
 	}
 	else if (!orgId) {

@@ -48,6 +48,13 @@ test('postEvent: ', () => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
+
+test('getRaceConfig: ', () => {
+  return getData(`${CF}/getRaceConfig`).then(data => {
+    expect(Object.keys(data).length).toBeGreaterThan(0);
+  });
+});
+
 test('postAddParticipant: ', () => {
   return postData(driverUrl,{"orgId":orgId, "number":"333", "name":"Elmer333"}).then(received => {
     expect(received.data.status).toMatch(/ok/i);
