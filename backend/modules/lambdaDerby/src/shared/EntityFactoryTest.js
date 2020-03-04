@@ -20,11 +20,13 @@ console.log(foo);
 
 console.log("back to json:" + JSON.stringify(foo));
 console.log("partitionKey:" + foo.partitionKey);
+console.log("PK:" + foo.PK);
 console.log(foo.lastUpdate);
 
 console.log(rs);
 console.log("partitionKey:" + rs.partitionKey);
 console.log("results:" + rs.overallResults);
+console.log("PK:" + rs.PK);
 
 console.log(rp);
 console.log(ef.build({}));

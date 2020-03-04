@@ -3,10 +3,10 @@ import { standings,driverMap } from './stores.js';
 export let carNumber;
 export let isWinner;
 export let phaseLetter;
-const getDriverName =  (carNumber)=> {
+const getDriverName =  (number)=> {
     //console.log("gdn: "+carNumber)
-        if (carNumber && $driverMap[ carNumber]) {
-            return ($driverMap[carNumber].firstName);
+        if (number && $driverMap[ number]) {
+            return ($driverMap[number].name);
         }
         else{
             return " ";

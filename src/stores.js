@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { writable, readable } from 'svelte/store';
+import { storeAuth} from './stores/auth.js'
 
 export const doRefreshBlocks=writable(0);
 export const standings = writable([]);
@@ -26,7 +27,8 @@ const fakeNextOnBlocks=     {
     "id": 2,
     "version": 1
   };
-export const doRefresh=()=>{
+
+export const doRefreshOLD=()=>{
     axios.get('./data/driver.json')
     .then((response) => {
         console.log("drivers:"+response.data.length);
@@ -76,4 +78,4 @@ const sortBy = (field, reverse, primer) =>{
         return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
     }
 };
-doRefresh();
+//doRefresh();

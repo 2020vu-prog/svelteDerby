@@ -42,13 +42,25 @@ module.exports = {
 					prod ? MiniCssExtractPlugin.loader : 'style-loader',
 					'css-loader'
 				]
-			}
+			},
+			{
+				test: /EntityFactory\.m?js$/,
+				exclude: /(node_modules|bower_components)/,
+				use: {
+				  loader: 'babel-loader',
+				  options: {
+					presets: ['@babel/preset-env'],
+					plugins: ["@babel/plugin-proposal-class-properties"]
+
+				  }
+				}
+			  }
 		]
 	},
 	devServer: {
 		proxy: {
 		  '/app': {
-			  target:'https://d15zun4udup4ky.cloudfront.net',
+			  target:'https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test',
 			  changeOrigin: true
 		  }
 		}

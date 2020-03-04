@@ -1,6 +1,10 @@
 <script>
 import axios from "axios";
-import { doRefresh,nextOnBlocks, doRefreshBlocks} from './stores.js';
+import { driverMap,nextOnBlocks, doRefreshBlocks} from './stores.js';
+import { store} from './stores/auth.js'
+import { raceConfig } from './stores.js';
+
+const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
 
 const nextPhaseTopic="nextPhase";
 const iosTriggerTopic="iosTrigger";
@@ -96,7 +100,78 @@ function onMessageArrived(message) {
   }
         
 }
+const parseAndApply=(response)=>{
+  const entityFactory=new EntityFactory({});
+    const driverTmp={}
+    const rpTmp={}
+
+    for(var i=0;i<response.data.length;i++){
+
+      const ej=response.data[i];
+      const e=entityFactory.build(ej);
+      console.log("vanillaJ",ej);
+      console.log("vanilla",e);
+
+      if(ej.PK.endsWith(":PTCP") ){
+        console.log("participant",e);
+        console.log("participant",e.number);
+        console.log("participant",e.name);
+        driverTmp[e.number]=e;
+
+      }
+      if(ej.PK.endsWith(":RP") ){
+        const sk=ej.SK;
+        console.log("rp:",e);
+        console.log("rp cars",e.carNumbers);
+        console.log("rp.phase",e.phaseLiteral);
+        if(! rpTmp[sk]){
+          rpTmp[sk]=e;
+        }
+        else{
+            if(rpTmp[sk].lastUpdate< e.lastUpdate){
+              rpTmp[sk]=e;
+            }
+        }
+      }
+    }
+
+    return [driverTmp,rpTmp]
+  }
+const doRefresh=()=>{
+  console.log("old nob:",$nextOnBlocks)
+
+    const bearer=$store.signInUserSession.idToken.jwtToken
+
+    console.log("token:"+ bearer)
+
+    axios.defaults.headers.common['Authorization'] = bearer;
+  axios.get($raceConfig.baseUrl+"/getRaceHistory?orgId="+$raceConfig.orgId)
+  .then((response) => {
+    console.log("history:"+response.data.length);
+    //console.log("history:",response.data);
+   
+    const [driverTmp,rpTmp]=parseAndApply(response);
+    driverMap.set(driverTmp);
+
+    console.log("rpTmp:",rpTmp)
+    if(Object.keys(rpTmp).length>0){
+      const nobKey=Object.keys(rpTmp)[0];
+      const nob=rpTmp[nobKey]
+      console.log("set new nob:",nob)
+      nextOnBlocks.set(nob); // TODO: get actual next!
+    }else{
+      nextOnBlocks.set({}); // TODO: get actual next!
+
+      }
+      doRefreshBlocks.set(new Date().getTime())
+
+  })
+  .catch((err) => {
+                      console.log(err);
+  })
+};
 </script>
 
-<button class="btn {btnClass}" type="button" disabled>
+<button class="btn {btnClass}" type="button" on:click|preventDefault={doRefresh}>
+  Refresh
 </button>

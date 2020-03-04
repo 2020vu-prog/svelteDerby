@@ -1,28 +1,35 @@
 <script>
  import CarAndDriver from './CarAndDriver.svelte'
+ import { onMount } from 'svelte';
 
-    import { standings,driverMap,nextOnBlocks } from './stores.js';
+import { standings,driverMap,nextOnBlocks } from './stores.js';
 export let refreshTime;
 
 const getBgColor=()=>{
-    console.log("nob:" + JSON.stringify($nextOnBlocks));
+    console.log("nob getBgColor:" + JSON.stringify($nextOnBlocks));
 
-    return $nextOnBlocks.raceStandingID?"Green":"Red";
+    return $nextOnBlocks.rs?"Green":"Red";
 }
 
 const getPhaseLetter=()=>{
-    return "A";
+    console.log("nob getPhaseLetter:" + JSON.stringify($nextOnBlocks));
+
+    //return "A";
+    return $nextOnBlocks.phaseLiteral;
 }
+onMount(async () => {
+    console.log("mounted first nob:",$nextOnBlocks);
+	});
 </script>
 {#if $nextOnBlocks && refreshTime}
         <div class="well well-sm " style="background: {getBgColor()}">
             <div class="panel panel-info ">
                 <ul class="list-group ">
                     <li class="list-group-item ">
-                        <CarAndDriver carNumber={$nextOnBlocks.carNumber1}  isWinner="" phaseLetter={getPhaseLetter()} />
+                        <CarAndDriver carNumber={$nextOnBlocks.carNumbers[0]}  isWinner="" phaseLetter={getPhaseLetter()} />
                     </li>
                     <li class="list-group-item">
-                        <CarAndDriver carNumber={$nextOnBlocks.carNumber2}  isWinner="" phaseLetter={getPhaseLetter()} />
+                        <CarAndDriver carNumber={$nextOnBlocks.carNumbers[1]}  isWinner="" phaseLetter={getPhaseLetter()} />
                     </li>
 
                 </ul>
