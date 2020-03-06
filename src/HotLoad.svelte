@@ -1,175 +1,190 @@
 <script>
-import axios from "axios";
-import { driverMap,nextOnBlocks, doRefreshBlocks} from './stores.js';
-import { store} from './stores/auth.js'
-import { raceConfig } from './stores.js';
+  import axios from "axios";
+  import { driverMap, nextOnBlocks, doRefreshBlocks, standings, racePhases } from './stores.js';
+  import { store } from './stores/auth.js'
+  import { raceConfig } from './stores.js';
 
-const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
+  const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
 
-const nextPhaseTopic="nextPhase";
-const iosTriggerTopic="iosTrigger";
-var client;
-var btnClass="btn-danger";
-function guid() {
-  function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000)
-      .toString(16)
-      .substring(1);
+  const nextPhaseTopic = "nextPhase";
+  const iosTriggerTopic = "iosTrigger";
+  var client;
+  var btnClass = "btn-danger";
+  function guid() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
   }
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-    s4() + '-' + s4() + s4() + s4();
-}
-function initWebsocket(host,port){
-        // Create a client instance
-        //client = new Paho.MQTT.Client("174.138.79.223", Number(9001), "broswer."+guid());
-       // client = new Paho.MQTT.Client(host,Number(port), "browser."+guid());
-client = new Paho.MQTT.Client("wss://"+host+":"+port+"/mqtt", "browser."+guid());
+  function initWebsocket(host, port) {
+    // Create a client instance
+    //client = new Paho.MQTT.Client("174.138.79.223", Number(9001), "broswer."+guid());
+    // client = new Paho.MQTT.Client(host,Number(port), "browser."+guid());
+    client = new Paho.MQTT.Client("wss://" + host + ":" + port + "/mqtt", "browser." + guid());
 
 
-        // set callback handlers
-        client.onConnectionLost = onConnectionLost;
-        client.onMessageArrived = onMessageArrived;
+    // set callback handlers
+    client.onConnectionLost = onConnectionLost;
+    client.onMessageArrived = onMessageArrived;
 
-        // connect the client
-        client.connect( {
-                onSuccess:onConnect,
-                keepAliveInterval: 7200,
-                cleanSession:true
-        });
-}
-
-
-	axios.get('./data/mqtt.json')
-		.then((response) => {
-
-                mqttJsonSuccess(response.data)
-		})
-		.catch((err) => {
-							mqttJsonError(err);
-		})
-
-function mqttJsonError(data){
-          console.log("mqttJsonError:"+data);
-}
-function mqttJsonSuccess(data){
-        console.log("mqttJsonSuccess:"+data);
-        console.log("mqttJsonSuccess host:"+data.host);
-        console.log("mqttJsonSuccess port:"+data.port);
-
-        initWebsocket(data.host,data.port);
-
-}
-
-// called when the client connects
-function onConnect() {
-  // Once a connection has been made, make a subscription and send a message.
-  console.log("onConnect");
-  client.subscribe(iosTriggerTopic);
-  client.subscribe(nextPhaseTopic);
-}
-
-// called when the client loses its connection
-function onConnectionLost(responseObject) {
-  if (responseObject.errorCode !== 0) {
-    console.log("onConnectionLost:"+responseObject.errorMessage);
+    // connect the client
+    client.connect({
+      onSuccess: onConnect,
+      keepAliveInterval: 7200,
+      cleanSession: true
+    });
   }
-}
 
-// called when a message arrives
-function onMessageArrived(message) {
-  console.log("onMessageArrived: from topic: "+ message.destinationName + " payload: "+message.payloadString);
-  try{
-    const parsed=JSON.parse(message.payloadString)
-    console.log("onMessageArrived: parsed: "+parsed);
 
-    if(nextPhaseTopic=== message.destinationName ){
-        $nextOnBlocks=parsed;
-        $doRefreshBlocks=new Date().getTime()
+  axios.get('./data/mqtt.json')
+    .then((response) => {
+
+      mqttJsonSuccess(response.data)
+    })
+    .catch((err) => {
+      mqttJsonError(err);
+    })
+
+  function mqttJsonError(data) {
+    console.log("mqttJsonError:" + data);
+  }
+  function mqttJsonSuccess(data) {
+    console.log("mqttJsonSuccess:" + data);
+    console.log("mqttJsonSuccess host:" + data.host);
+    console.log("mqttJsonSuccess port:" + data.port);
+
+    initWebsocket(data.host, data.port);
+
+  }
+
+  // called when the client connects
+  function onConnect() {
+    // Once a connection has been made, make a subscription and send a message.
+    console.log("onConnect");
+    client.subscribe(iosTriggerTopic);
+    client.subscribe(nextPhaseTopic);
+  }
+
+  // called when the client loses its connection
+  function onConnectionLost(responseObject) {
+    if (responseObject.errorCode !== 0) {
+      console.log("onConnectionLost:" + responseObject.errorMessage);
+    }
+  }
+
+  // called when a message arrives
+  function onMessageArrived(message) {
+    console.log("onMessageArrived: from topic: " + message.destinationName + " payload: " + message.payloadString);
+    try {
+      const parsed = JSON.parse(message.payloadString)
+      console.log("onMessageArrived: parsed: " + parsed);
+
+      if (nextPhaseTopic === message.destinationName) {
+        $nextOnBlocks = parsed;
+        $doRefreshBlocks = new Date().getTime()
 
         return;
-    }
-    if(iosTriggerTopic=== message.destinationName ){
-        btnClass="btn-primary";
+      }
+      if (iosTriggerTopic === message.destinationName) {
+        btnClass = "btn-primary";
         doRefresh();
         return;
+      }
+
+    }
+    catch (err) {
+      console.log("mqtt parse error:" + err)
     }
 
   }
-  catch(err){
-      console.log("mqtt parse error:"+err)
-  }
-        
-}
-const parseAndApply=(response)=>{
-  const entityFactory=new EntityFactory({});
-    const driverTmp={}
-    const rpTmp={}
+  const sortBy = (field, reverse, primer) =>{
+    var key = primer ?
+        function (x) {
+            return primer(x[field])
+        } :
+        function (x) {
+            return x[field]
+        };
 
-    for(var i=0;i<response.data.length;i++){
+    reverse = !reverse ? 1 : -1;
 
-      const ej=response.data[i];
-      const e=entityFactory.build(ej);
-      console.log("vanillaJ",ej);
-      console.log("vanilla",e);
+    return function (a, b) {
+        return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
+    }
+};
+  const parseAndApply = (response) => {
+    const entityFactory = new EntityFactory({});
 
-      if(ej.PK.endsWith(":PTCP") ){
-        console.log("participant",e);
-        console.log("participant",e.number);
-        console.log("participant",e.name);
-        driverTmp[e.number]=e;
+    const hist = {}
+    entityFactory.entityTypes.forEach(et => {
+      console.log("et:", et)
+      hist[et] = {};
+    });
 
-      }
-      if(ej.PK.endsWith(":RP") ){
-        const sk=ej.SK;
-        console.log("rp:",e);
-        console.log("rp cars",e.carNumbers);
-        console.log("rp.phase",e.phaseLiteral);
-        if(! rpTmp[sk]){
-          rpTmp[sk]=e;
-        }
-        else{
-            if(rpTmp[sk].lastUpdate< e.lastUpdate){
-              rpTmp[sk]=e;
-            }
-        }
+
+    for (var i = 0; i < response.data.length; i++) {
+
+      const json = response.data[i];
+      const e = entityFactory.build(json);
+      console.log("entity", e);
+      const sk = e.classKey;
+      const pk = e.classType;
+
+      const tblHist = hist[pk];
+
+      if (tblHist[sk] && tblHist[sk].lastUpdate > e.lastUpdate) { }
+      else {
+        tblHist[sk] = e;
       }
     }
 
-    return [driverTmp,rpTmp]
+    return hist;
   }
-const doRefresh=()=>{
-  console.log("old nob:",$nextOnBlocks)
+  const getNextOnBlocksFromRP = (rpTmp) => {
+    console.log("rpTmp:", rpTmp)
+    //TODO: sort after filter!
+    const onBlocks=Object.values(rpTmp).filter(rp => (!rp.phaseResults));
+    if (onBlocks.length > 0) {
+      console.log("set new nob:", onBlocks[0])
+      return onBlocks[0];
+    } else {
+      return {};
+    }
+  }
+  const doRefresh = () => {
+    console.log("old nob:", $nextOnBlocks)
 
-    const bearer=$store.signInUserSession.idToken.jwtToken
+    const bearer = $store.signInUserSession.idToken.jwtToken
 
-    console.log("token:"+ bearer)
+    console.log("token:" + bearer)
 
     axios.defaults.headers.common['Authorization'] = bearer;
-  axios.get($raceConfig.baseUrl+"/getRaceHistory?orgId="+$raceConfig.orgId)
-  .then((response) => {
-    console.log("history:"+response.data.length);
-    //console.log("history:",response.data);
-   
-    const [driverTmp,rpTmp]=parseAndApply(response);
-    driverMap.set(driverTmp);
+    axios.get($raceConfig.baseUrl + "/getRaceHistory?orgId=" + $raceConfig.orgId)
+      .then((response) => {
+        console.log("history:" + response.data.length);
+        //console.log("history:",response.data);
 
-    console.log("rpTmp:",rpTmp)
-    if(Object.keys(rpTmp).length>0){
-      const nobKey=Object.keys(rpTmp)[0];
-      const nob=rpTmp[nobKey]
-      console.log("set new nob:",nob)
-      nextOnBlocks.set(nob); // TODO: get actual next!
-    }else{
-      nextOnBlocks.set({}); // TODO: get actual next!
+        const hist = parseAndApply(response);
+        driverMap.set(hist.Participant);
 
-      }
-      doRefreshBlocks.set(new Date().getTime())
 
-  })
-  .catch((err) => {
-                      console.log(err);
-  })
-};
+        nextOnBlocks.set(getNextOnBlocksFromRP(hist.RacePhase));
+        const sortedStandings=Object.values(hist.RaceStanding).sort(sortBy('lastUpdate', true, parseInt));
+        standings.set(sortedStandings);
+
+        const sortedPhases=Object.values(hist.RacePhase).sort(sortBy('lastUpdate', true, parseInt));
+        racePhases.set(sortedPhases)
+
+        doRefreshBlocks.set(new Date().getTime())
+
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+  };
 </script>
 
 <button class="btn {btnClass}" type="button" on:click|preventDefault={doRefresh}>

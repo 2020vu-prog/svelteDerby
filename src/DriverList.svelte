@@ -5,14 +5,13 @@ import MaterialAdd from "./MaterialAdd.svelte";
 import CarFilter from "./CarFilter.svelte";
 
 
-const filterMatches=(carNumber,lclFilter)=>{
+const filterMatches=(driver,lclFilter)=>{
 	if(! lclFilter) return true;
 	let re = new RegExp('^' +lclFilter);
-
-	return ( String(carNumber ).match(re));
+	return ( String(driver ).match(re));
 }
-const getDriversAsList=()=>{
-    return Object.keys($driverMap);
+const getDriversAsList=(driverMap)=>{
+    return Object.keys(driverMap);
 }
 </script>
 
@@ -23,7 +22,7 @@ const getDriversAsList=()=>{
 <MaterialAdd  clickHandleRoute="/driverAdd" />
 <CarFilter/>
 
-		{#each getDriversAsList() as driver,i}
+		{#each getDriversAsList($driverMap) as driver,i}
 			{#if filterMatches(driver, $carFilter)}
             <div class="panel panel-info">
 				<CarAndDriver carNumber={driver} isWinner="" phaseLetter=""/>

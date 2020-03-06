@@ -10,12 +10,16 @@ const chFunction=()=>{push(clickHandleRoute)};
   position: fixed;
   bottom: 1rem;
   right: 1rem;
+  z-index: 99;
+
 }
 
 @media(min-width: 1024px) {
    .app-fab--absolute {
     bottom: 1.5rem;
     right: 1.5rem;
+    z-index: 99;
+
   }
 }
 </style>

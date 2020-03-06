@@ -54,7 +54,12 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
 
         this.SK = this.orgId;
     }
-
+    get classType(){
+        return EventConfigLit;
+    }
+    get classKey(){
+        return this.orgId;
+    }
 }
 
 entityFactories['RacePhase'] = class RacePhase extends EntityBase {
@@ -88,6 +93,12 @@ entityFactories['RacePhase'] = class RacePhase extends EntityBase {
     }
     set phaseLiteral(pl) {
         return this.pl=pl;
+    }
+    get classType(){
+        return 'RacePhase';
+    }
+    get classKey(){
+        return this.SK;
     }
 }
 entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
@@ -140,12 +151,39 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
     }
     get overallResults() {
         const rc = [];
-        if (this.carNumbers && this.phase1Results && this.phase2Results) {
+        if (isComplete()) {
             for (var i = 0; i < this.carNumbers.length; i++) {
                 rc[i] = this.phase1Results[i] + this.phase2Results[i];
             }
         }
         return rc;
+    }
+    hasResults(){
+        return  (this.carNumbers && this.phase1Results );
+    }
+    isComplete(){
+        return  (this.carNumbers && this.phase1Results && this.phase2Results);
+    }
+    isPending(){
+        return  !this.isComplete();
+    }
+    // legacy emulation
+    getPhaseXDeltaMS(x){
+        if(!x) return undefined;
+        return(x[1]- x[0]);
+    }
+    get phase1DeltaMS(){
+        return this.getPhaseXDeltaMS(this.phase1Results);
+
+    }
+    get phase2DeltaMS(){
+        return this.getPhaseXDeltaMS(this.phase2Results);
+    }
+    get classType(){
+        return 'RaceStanding';
+    }
+    get classKey(){
+        return this.SK;
     }
 }
 entityFactories['Participant'] = class Participant extends EntityBase {
@@ -163,7 +201,12 @@ entityFactories['Participant'] = class Participant extends EntityBase {
         this.PK = this.orgId + ParticipantEid;
         this.SK = this.number + "";
     }
-
+    get classType(){
+        return 'Participant';
+    }
+    get classKey(){
+        return this.SK;
+    }
 };
 
 
@@ -185,6 +228,9 @@ class EntityFactory {
         });
 
         return candidates.length > 0 ? candidates[0] : null;
+    }
+    get entityTypes(){
+        return Object.keys(entityFactories);
     }
 
 };

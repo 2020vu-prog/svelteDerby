@@ -5,6 +5,7 @@ import { storeAuth} from './stores/auth.js'
 
 export const doRefreshBlocks=writable(0);
 export const standings = writable([]);
+export const racePhases = writable([]);
 export const driverMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlocks = writable({});
@@ -17,16 +18,7 @@ export const raceConfig= writable({
 });
 
 
-const fakeNextOnBlocks=     {
-    "carNumber1": 101,
-    "carNumber2": 115,
-    "loadMS": 1570286201451,
-    "phaseNumber": 1,
-    "lastUpdateMS": 1570286201474,
-    "raceStandingID": 3,
-    "id": 2,
-    "version": 1
-  };
+
 
 export const doRefreshOLD=()=>{
     axios.get('./data/driver.json')
@@ -38,7 +30,6 @@ export const doRefreshOLD=()=>{
         });
         driverMap.set(driverTmp);
                         console.log("did set driverMap");
-        nextOnBlocks.set(fakeNextOnBlocks);
         doRefreshBlocks.set(new Date().getTime())
     
 
@@ -56,7 +47,6 @@ export const doRefreshOLD=()=>{
         const sortedStandings=            response.data.sort(sortBy('lastUpdateMS', true, parseInt));
         standings.set(sortedStandings);
                         console.log("did set standings");
-                        nextOnBlocks.set(fakeNextOnBlocks);
 
     })
     .catch((err) => {

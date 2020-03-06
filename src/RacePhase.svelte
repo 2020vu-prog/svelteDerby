@@ -3,6 +3,8 @@
  import { onMount } from 'svelte';
 
 import { standings,driverMap,nextOnBlocks } from './stores.js';
+import MaterialAdd from "./MaterialAdd.svelte";
+
 export let refreshTime;
 
 const getBgColor=()=>{
@@ -21,6 +23,7 @@ onMount(async () => {
     console.log("mounted first nob:",$nextOnBlocks);
 	});
 </script>
+
 {#if $nextOnBlocks && refreshTime}
         <div class="well well-sm " style="background: {getBgColor()}">
             <div class="panel panel-info ">

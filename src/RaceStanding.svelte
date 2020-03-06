@@ -1,21 +1,21 @@
- <script>
- import CarAndDriver from './CarAndDriver.svelte'
- import { standings,driverMap } from './stores.js';
-	export let idx;
- const standing=$standings[idx]
+<script>
+    import CarAndDriver from './CarAndDriver.svelte'
+    import { standings, driverMap } from './stores.js';
+    export let idx;
+    const standing = $standings[idx]
 
-const hhmmss = ()=> {
-        var time = new Date(standing.lastUpdateMS);
+    const hhmmss = () => {
+        var time = new Date(standing.lastUpdate);
         return (
             ("0" + time.getHours()).slice(-2) + ":" +
             ("0" + time.getMinutes()).slice(-2));
         //+ ":" + ("0" + time.getSeconds()).slice(-2));
     };
 
-const isWinner =  (lane, phase) =>{
+    const isWinner = (lane, phase) => {
 
         var phaseWinTime = getPhaseWinTime(phase);
-        if (phaseWinTime == 0.0) {
+        if (phaseWinTime == 0) {
             return true;
         }
 
@@ -25,7 +25,7 @@ const isWinner =  (lane, phase) =>{
             return phaseWinTime < 0;
         }
     };
-const getPhaseWinTime =  (phase) =>{
+    const getPhaseWinTime = (phase) => {
         if (phase === 1) {
             return standing.phase1DeltaMS;
         }
@@ -37,9 +37,9 @@ const getPhaseWinTime =  (phase) =>{
         }
         return undefined;
     };
-const getWinTime =  (lane, phase)=> {
+    const getWinTime = (lane, phase) => {
 
-        var phaseWinTime = getPhaseWinTime(phase, );
+        var phaseWinTime = getPhaseWinTime(phase);
         if (lane === 2) {
             phaseWinTime = phaseWinTime * -1;
         }
@@ -48,14 +48,14 @@ const getWinTime =  (lane, phase)=> {
         }
         return phaseWinTime;
     };
- </script>       
-        <div class="well well-sm">
-            <div class="panel panel-info">
-                <div class="panel-heading">Heat: {standing.chartPosition}<span class="spanRight">{hhmmss()}</span></div>
+</script>
+<div class="well well-sm">
+    <div class="panel panel-info">
+        <div class="panel-heading">Heat: {standing.chartPosition}<span class="spanRight">{hhmmss()}</span></div>
 
-                <ul class="list-group">
-                    <li class="list-group-item">
-                        <CarAndDriver carNumber={standing.carNumber1} isWinner={isWinner(1,0)} phaseLetter=""/>
+        <ul class="list-group">
+            <li class="list-group-item">
+                <CarAndDriver carNumber={standing.carNumbers[0]} isWinner={isWinner(1,0)} phaseLetter="" />
                         {#if isWinner(1,0)}
                             <big class="bigbadge badge">Overall: {getWinTime(1,0)} </big>
                         {/if}
@@ -68,7 +68,7 @@ const getWinTime =  (lane, phase)=> {
 
                     </li>
                     <li class="list-group-item">
-                        <CarAndDriver carNumber={standing.carNumber2}  isWinner={isWinner(2,0)} phaseLetter="" />
+                        <CarAndDriver carNumber={standing.carNumbers[1]}  isWinner={isWinner(2,0)} phaseLetter="" />
                         {#if isWinner(2,0)}
                             <big class="bigbadge badge">Overall: {getWinTime(2,0)}</big>
                         {/if}
