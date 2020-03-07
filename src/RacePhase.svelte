@@ -2,7 +2,7 @@
  import CarAndDriver from './CarAndDriver.svelte'
  import { onMount } from 'svelte';
 
-import { standings,driverMap,nextOnBlocks } from './stores.js';
+import { driverMap,nextOnBlocks } from './stores.js';
 import MaterialAdd from "./MaterialAdd.svelte";
 
 export let refreshTime;

@@ -1,5 +1,5 @@
 <script>
-	import { standings, driverMap, carFilter, nextOnBlocks, raceConfig, doRefreshBlocks } from './stores.js';
+	import { standingsMap, driverMap, carFilter, nextOnBlocks, raceConfig, doRefreshBlocks } from './stores.js';
 	import RaceStanding from "./RaceStanding.svelte";
 	import RacePhase from "./RacePhase.svelte";
 	import CarFilter from "./CarFilter.svelte";
@@ -25,6 +25,8 @@
 
 	}
 	const filterMatches = (standing, lclFilter) => {
+		console.log("filterMatches", standing)
+
 		if (!lclFilter) return true;
 		let re = new RegExp('^' + lclFilter);
 
@@ -32,7 +34,9 @@
 	}
 	//loc &drb passed in to coerce svelte refesh screen
 	const getStandings=(loc,drb)=>{
-		return $standings;
+		console.log("getStandings")
+		return Object.values($standingsMap);
+
 	}
 </script>
 
@@ -49,10 +53,10 @@
 
 	<CarFilter />
 
-	{#each getStandings($location, $doRefreshBlocks) as standing,i}
+	{#each getStandings($location, $doRefreshBlocks) as standing}
 		{#if filterMatches(standing, $carFilter, $doRefreshBlocks)}
 		{#if typeFilter(standing,$doRefreshBlocks )}
-			<RaceStanding idx={i} refresh={doRefreshBlocks}/>
+			<RaceStanding standingKey={standing.classKey} refresh={doRefreshBlocks}/>
 		{/if}
 		{/if}
 	{/each}

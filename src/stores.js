@@ -4,7 +4,7 @@ import { writable, readable } from 'svelte/store';
 import { storeAuth} from './stores/auth.js'
 
 export const doRefreshBlocks=writable(0);
-export const standings = writable([]);
+export const standingsMap = writable({});
 export const racePhases = writable([]);
 export const driverMap = writable({});
 export const carFilter = writable("");

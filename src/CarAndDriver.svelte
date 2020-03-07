@@ -1,5 +1,5 @@
  <script>
-import { standings,driverMap } from './stores.js';
+import { driverMap } from './stores.js';
 export let carNumber;
 export let isWinner;
 export let phaseLetter;

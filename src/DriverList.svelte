@@ -10,7 +10,7 @@ const filterMatches=(driver,lclFilter)=>{
 	let re = new RegExp('^' +lclFilter);
 	return ( String(driver ).match(re));
 }
-const getDriversAsList=(driverMap)=>{
+const getCarNumbersAsList=(driverMap)=>{
     return Object.keys(driverMap);
 }
 </script>
@@ -22,10 +22,10 @@ const getDriversAsList=(driverMap)=>{
 <MaterialAdd  clickHandleRoute="/driverAdd" />
 <CarFilter/>
 
-		{#each getDriversAsList($driverMap) as driver,i}
-			{#if filterMatches(driver, $carFilter)}
+		{#each getCarNumbersAsList($driverMap) as carNumber}
+			{#if filterMatches(carNumber, $carFilter)}
             <div class="panel panel-info">
-				<CarAndDriver carNumber={driver} isWinner="" phaseLetter=""/>
+				<CarAndDriver carNumber={carNumber} isWinner="" phaseLetter=""/>
                 </div>
 			{/if}
 		{/each}

@@ -1,10 +1,13 @@
 <script>
     import CarAndDriver from './CarAndDriver.svelte'
-    import { standings, driverMap } from './stores.js';
-    export let idx;
+    import { standingsMap, driverMap } from './stores.js';
+    export let standingKey;
     export let refresh;  // TODO: should probably use lastUpdate!
-    const standing = $standings[idx]
+    console.log("standingKey",standingKey)
 
+    const standing = $standingsMap[standingKey]
+
+    console.log("refresh",refresh)
     const hhmmss = () => {
         var time = new Date(standing.lastUpdate);
         return (

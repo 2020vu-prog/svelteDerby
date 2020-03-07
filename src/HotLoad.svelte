@@ -1,6 +1,6 @@
 <script>
   import axios from "axios";
-  import { driverMap, nextOnBlocks, doRefreshBlocks, standings, racePhases } from './stores.js';
+  import { driverMap, nextOnBlocks, doRefreshBlocks, standingsMap, racePhases } from './stores.js';
   import { store } from './stores/auth.js'
   import { raceConfig } from './stores.js';
 
@@ -172,8 +172,8 @@
 
 
         nextOnBlocks.set(getNextOnBlocksFromRP(hist.RacePhase));
-        const sortedStandings=Object.values(hist.RaceStanding).sort(sortBy('lastUpdate', true, parseInt));
-        standings.set(sortedStandings);
+        //const sortedStandings=Object.values(hist.RaceStanding).sort(sortBy('lastUpdate', true, parseInt));
+        standingsMap.set(hist.RaceStanding);
 
         const sortedPhases=Object.values(hist.RacePhase).sort(sortBy('lastUpdate', true, parseInt));
         racePhases.set(sortedPhases)
