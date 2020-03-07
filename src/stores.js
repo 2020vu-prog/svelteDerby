@@ -5,7 +5,7 @@ import { storeAuth} from './stores/auth.js'
 
 export const doRefreshBlocks=writable(0);
 export const standingsMap = writable({});
-export const racePhases = writable([]);
+export const racePhaseMap = writable({});
 export const driverMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlocks = writable({});

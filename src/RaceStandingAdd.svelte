@@ -16,18 +16,16 @@
     title = (params.type === "RaceStanding") ? "Add Pending Race" : "Add Blocks"
 
   });
-  function handleSubmit() {
+  
+  async function  handleSubmit()   {
     console.log("Adding:" + JSON.stringify(carNumberForm))
-    //const currentSession = await Auth.currentSession();
-    Auth.currentSession(); // refresh token. TODO: await!
-
+    const currentSession = await Auth.currentSession();
+    const bearer=currentSession.idToken.jwtToken;
+    
     const req = {
       orgId: $raceConfig.orgId,
       cn: [carNumberForm.car1 + "", carNumberForm.car2 + ""],
     }
-    const bearer = $store.signInUserSession.idToken.jwtToken
-
-    console.log("token:" + bearer)
 
     axios.defaults.headers.common['Authorization'] = bearer;
 

@@ -1,8 +1,9 @@
 <script>
   import axios from "axios";
-  import { driverMap, nextOnBlocks, doRefreshBlocks, standingsMap, racePhases } from './stores.js';
+  import { driverMap, nextOnBlocks, doRefreshBlocks, standingsMap, racePhaseMap } from './stores.js';
   import { store } from './stores/auth.js'
   import { raceConfig } from './stores.js';
+  import { Auth } from 'aws-amplify';
 
   const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
 
@@ -154,12 +155,11 @@
       return {};
     }
   }
-  const doRefresh = () => {
+  const  doRefresh = async () => {
     console.log("old nob:", $nextOnBlocks)
+    const currentSession = await Auth.currentSession();
+    const bearer=currentSession.idToken.jwtToken;
 
-    const bearer = $store.signInUserSession.idToken.jwtToken
-
-    console.log("token:" + bearer)
 
     axios.defaults.headers.common['Authorization'] = bearer;
     axios.get($raceConfig.baseUrl + "/getRaceHistory?orgId=" + $raceConfig.orgId)
@@ -175,8 +175,8 @@
         //const sortedStandings=Object.values(hist.RaceStanding).sort(sortBy('lastUpdate', true, parseInt));
         standingsMap.set(hist.RaceStanding);
 
-        const sortedPhases=Object.values(hist.RacePhase).sort(sortBy('lastUpdate', true, parseInt));
-        racePhases.set(sortedPhases)
+        //const sortedPhases=Object.values(hist.RacePhase).sort(sortBy('lastUpdate', true, parseInt));
+        racePhaseMap.set(hist.RacePhase)
 
         doRefreshBlocks.set(new Date().getTime())
 

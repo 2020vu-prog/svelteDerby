@@ -1,5 +1,5 @@
 <script>
-	import { racePhases, driverMap, carFilter, nextOnBlocks, raceConfig, doRefreshBlocks } from './stores.js';
+	import { racePhaseMap, driverMap, carFilter, nextOnBlocks, raceConfig, doRefreshBlocks } from './stores.js';
 	import RaceStanding from "./RaceStanding.svelte";
 	import RacePhase from "./RacePhase.svelte";
 	import CarFilter from "./CarFilter.svelte";
@@ -16,7 +16,8 @@
 	}
 	//loc &drb passed in to coerce svelte refesh screen
 	const getRacePhases=(drb)=>{
-		return $racePhases;
+		return Object.values($racePhaseMap);
+
 	}
 </script>
 
