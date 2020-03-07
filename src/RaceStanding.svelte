@@ -2,6 +2,7 @@
     import CarAndDriver from './CarAndDriver.svelte'
     import { standings, driverMap } from './stores.js';
     export let idx;
+    export let refresh;  // TODO: should probably use lastUpdate!
     const standing = $standings[idx]
 
     const hhmmss = () => {

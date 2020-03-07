@@ -123,6 +123,9 @@ resource "aws_cloudfront_distribution" "derbyApp" {
     target_origin_id = local.app_origin_id
 
     forwarded_values {
+      headers = [
+         "Authorization",
+      ]
       query_string = true
 
       cookies {

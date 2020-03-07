@@ -52,7 +52,7 @@
 	{#each getStandings($location, $doRefreshBlocks) as standing,i}
 		{#if filterMatches(standing, $carFilter, $doRefreshBlocks)}
 		{#if typeFilter(standing,$doRefreshBlocks )}
-			<RaceStanding idx={i}/>
+			<RaceStanding idx={i} refresh={doRefreshBlocks}/>
 		{/if}
 		{/if}
 	{/each}

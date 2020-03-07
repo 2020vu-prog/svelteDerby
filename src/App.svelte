@@ -3,7 +3,8 @@ import  Router from 'svelte-spa-router'
 import  {link} from 'svelte-spa-router'
 import {push, pop, replace} from 'svelte-spa-router'
 
-import Standing from './Standing.svelte'
+import RaceStandingList from './RaceStandingList.svelte'
+import RacePhaseList from './RacePhaseList.svelte'
 import DriverList from './DriverList.svelte'
 import DriverAdd from './DriverAdd.svelte'
 import RaceStandingAdd from './RaceStandingAdd.svelte'
@@ -15,11 +16,14 @@ import { raceConfig} from './stores.js';
 
 const routes = {
     // Exact path
-    '/': Standing,
+    '/': RaceStandingList,
+    '/RsList/:type': RaceStandingList,
+    '/RpList': RacePhaseList,
     '/drivers': DriverList,
     '/login': Login,
     '/driverAdd': DriverAdd,
-    '/raceStandingAdd': RaceStandingAdd,
+    '/raceStandingAdd/:type': RaceStandingAdd,
+   // '/raceStandingAdd': RaceStandingAdd,
 }
 
 /* Toggle between showing and hiding the navigation menu links when the user clicks on the hamburger menu / bar icon */
@@ -87,7 +91,9 @@ const navTo=(route)=>{
   <!-- Navigation links (hidden by default) -->
   <div id="myLinks">
     <a href="javascript:void(0);" on:click={() => navTo('/drivers')} >Drivers</a>
-    <a href="javascript:void(0);"  on:click={() => navTo('/')}>Standings</a>
+    <a href="javascript:void(0);"  on:click={() => navTo('/RpList')}>Phase History</a>
+    <a href="javascript:void(0);"  on:click={() => navTo('/')}>Race History</a>
+    <a href="javascript:void(0);"  on:click={() => navTo('/RsList/Pending')}>Pending Races</a>
     <a href="javascript:void(0);"  on:click={() => navTo('/login')}>Login</a>
 
   </div>

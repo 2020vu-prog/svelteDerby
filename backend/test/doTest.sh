@@ -1,6 +1,6 @@
 set -x
-export CF="https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
-#export CF="https://d15zun4udup4ky.cloudfront.net/app"
+#export CF="https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
+export CF="https://d15zun4udup4ky.cloudfront.net/app"
 export token=$(cat token.txt)
 AUTH="Authorization: $token"
 
