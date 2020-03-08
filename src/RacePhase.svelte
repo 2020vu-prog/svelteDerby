@@ -19,20 +19,30 @@ const getPhaseLetter=()=>{
     //return "A";
     return $nextOnBlocks.phaseLiteral;
 }
+const getTimerLink=()=>{
+    return "/ManualTimerAdd/"+ $nextOnBlocks.classKey
+}
 onMount(async () => {
-    console.log("mounted first nob:",$nextOnBlocks);
-	});
+    if($nextOnBlocks && $nextOnBlocks.classKey){
+    console.log("mounted first nob:",$nextOnBlocks.classKey);
+}
+else{
+    console.log("empty  nob!");
+
+}
+    });
+
 </script>
 
-{#if $nextOnBlocks && refreshTime}
+{#if $nextOnBlocks && $nextOnBlocks.classKey && refreshTime}
         <div class="well well-sm " style="background: {getBgColor()}">
             <div class="panel panel-info ">
                 <ul class="list-group ">
                     <li class="list-group-item ">
-                        <CarAndDriver carNumber={$nextOnBlocks.carNumbers[0]}  isWinner="" phaseLetter={getPhaseLetter()} />
+                        <CarAndDriver carNumber={$nextOnBlocks.carNumbers[0]}  isWinner="" phaseLetter={getPhaseLetter()}  timerLink={getTimerLink()}/>
                     </li>
                     <li class="list-group-item">
-                        <CarAndDriver carNumber={$nextOnBlocks.carNumbers[1]}  isWinner="" phaseLetter={getPhaseLetter()} />
+                        <CarAndDriver carNumber={$nextOnBlocks.carNumbers[1]}  isWinner="" phaseLetter={getPhaseLetter()}  timerLink={getTimerLink()}/>
                     </li>
 
                 </ul>

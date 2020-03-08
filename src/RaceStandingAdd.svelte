@@ -10,10 +10,27 @@
 
   console.log("RaceStandingAdd", params)
 
+  const typeVars={
+    RaceStanding:{
+      title: "Add Pending Race",
+      endPoint: '/addPending'
+    },
+    RacePhase:{
+      title: "Add Blocks",
+      endPoint:"/addBlocks"
+    },
+  }
   var title = "abc";
+  const unMapType=(feature)=>{
+    if(typeVars[params.type] && typeVars[params.type][feature]){
+      return typeVars[params.type][feature];
+    }
+    console.log("unMapType:missing map for ",params.type, feature);
+    return "unknown";
+  }
   onMount(async () => {
     console.log("mounted type:", params.type);
-    title = (params.type === "RaceStanding") ? "Add Pending Race" : "Add Blocks"
+    title = unMapType("title"); 
 
   });
   
@@ -29,13 +46,14 @@
 
     axios.defaults.headers.common['Authorization'] = bearer;
 
-    axios.post($raceConfig.baseUrl + '/addPending', req)
+    const endPoint=unMapType("endPoint"); 
+    axios.post($raceConfig.baseUrl + endPoint, req)
       .then((response) => {
-        console.log("addPending axios success")
+        console.log(endPoint+" axios success")
         pop();
       })
       .catch((err) => {
-        console.log("addPending failed: " + err)
+        console.log(endPoint +" failed: " + err)
       })
     carNumberForm.car1 = "";
     carNumberForm.car2 = "";

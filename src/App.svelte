@@ -7,6 +7,7 @@ import RaceStandingList from './RaceStandingList.svelte'
 import RacePhaseList from './RacePhaseList.svelte'
 import DriverList from './DriverList.svelte'
 import DriverAdd from './DriverAdd.svelte'
+import ManualTimerAdd from './ManualTimerAdd.svelte'
 import RaceStandingAdd from './RaceStandingAdd.svelte'
 import Login from './Login.svelte'
 import HotLoad from "./HotLoad.svelte";
@@ -21,7 +22,7 @@ const routes = {
     '/RpList': RacePhaseList,
     '/drivers': DriverList,
     '/login': Login,
-    '/driverAdd': DriverAdd,
+    '/ManualTimerAdd/:rpKey': ManualTimerAdd,
     '/raceStandingAdd/:type': RaceStandingAdd,
    // '/raceStandingAdd': RaceStandingAdd,
 }
@@ -72,11 +73,8 @@ const navTo=(route)=>{
   top: 0;
 }
 
-/* Add a grey background color on mouse-over */
-.topnav a:hover {
-  background-color: #ddd;
-  color: black;
-}
+
+
 
 /* Style the active link (or home/logo) */
 .active {
