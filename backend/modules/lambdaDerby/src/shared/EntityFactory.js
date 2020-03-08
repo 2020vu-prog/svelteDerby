@@ -85,6 +85,11 @@ entityFactories['RacePhase'] = class RacePhase extends EntityBase {
     get phaseResults() {
         return this.phr;
     }
+        // legacy emulation
+        getPhaseDeltaMS(){
+            if(!this.phr) return undefined;
+            return(this.phr[1]- this.phr[0]);
+        }
     get carNumbers() {
         return this.cn;
     }

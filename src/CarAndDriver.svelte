@@ -6,7 +6,7 @@ export let carNumber;
 export let isWinner;
 export let phaseLetter;
 export let timerLink;
-console.log("timerLink",timerLink);
+//console.log("timerLink",timerLink);
 const gotoTimer =  ()=> {
     console.log("routing to:", timerLink);
     //push("/drivers")

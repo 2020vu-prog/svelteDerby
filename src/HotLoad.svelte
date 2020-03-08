@@ -1,6 +1,6 @@
 <script>
   import axios from "axios";
-  import { driverMap, nextOnBlocks, doRefreshBlocks, standingsMap, racePhaseMap } from './stores.js';
+  import { driverMap, nextOnBlockKey, doRefreshBlocks, standingsMap, racePhaseMap } from './stores.js';
   import { store } from './stores/auth.js'
   import { raceConfig } from './stores.js';
   import { Auth } from 'aws-amplify';
@@ -84,7 +84,7 @@
       console.log("onMessageArrived: parsed: " + parsed);
 
       if (nextPhaseTopic === message.destinationName) {
-        $nextOnBlocks = parsed;
+        //$nextOnBlocks = parsed;
         $doRefreshBlocks = new Date().getTime()
 
         return;
@@ -144,19 +144,19 @@
 
     return hist;
   }
-  const getNextOnBlocksFromRP = (rpTmp) => {
+  const getNextOnBlockKeyFromRP = (rpTmp) => {
     console.log("rpTmp:", rpTmp)
     //TODO: sort after filter!
     const onBlocks=Object.values(rpTmp).filter(rp => (!rp.phaseResults));
     if (onBlocks.length > 0) {
       console.log("set new nob:", onBlocks[0])
-      return onBlocks[0];
+      return onBlocks[0].classKey;
     } else {
       return {};
     }
   }
   const  doRefresh = async () => {
-    console.log("old nob:", $nextOnBlocks)
+    console.log("old nobKey:", $nextOnBlockKey)
     const currentSession = await Auth.currentSession();
     const bearer=currentSession.idToken.jwtToken;
 
@@ -171,7 +171,7 @@
         driverMap.set(hist.Participant);
 
 
-        nextOnBlocks.set(getNextOnBlocksFromRP(hist.RacePhase));
+        nextOnBlockKey.set(getNextOnBlockKeyFromRP(hist.RacePhase));
         //const sortedStandings=Object.values(hist.RaceStanding).sort(sortBy('lastUpdate', true, parseInt));
         standingsMap.set(hist.RaceStanding);
 

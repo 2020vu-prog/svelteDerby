@@ -24,6 +24,7 @@ const routes = {
     '/login': Login,
     '/ManualTimerAdd/:rpKey': ManualTimerAdd,
     '/raceStandingAdd/:type': RaceStandingAdd,
+    '/driverAdd': DriverAdd,
    // '/raceStandingAdd': RaceStandingAdd,
 }
 

@@ -8,7 +8,7 @@ export const standingsMap = writable({});
 export const racePhaseMap = writable({});
 export const driverMap = writable({});
 export const carFilter = writable("");
-export const nextOnBlocks = writable({});
+export const nextOnBlockKey = writable("");
 export const raceConfig= writable({
     orgName: "Chicago",
     orgId: "chi",

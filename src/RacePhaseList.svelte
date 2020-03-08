@@ -1,6 +1,5 @@
 <script>
-	import { racePhaseMap, driverMap, carFilter, nextOnBlocks, raceConfig, doRefreshBlocks } from './stores.js';
-	import RaceStanding from "./RaceStanding.svelte";
+	import {nextOnBlockKey, racePhaseMap, carFilter, doRefreshBlocks } from './stores.js';
 	import RacePhase from "./RacePhase.svelte";
 	import CarFilter from "./CarFilter.svelte";
 	import MaterialAdd from "./MaterialAdd.svelte";
@@ -8,8 +7,17 @@
 
 
 
-	const filterMatches = (phase, lclFilter) => {
+	const filterMatchesX= (phase, lclFilter) => {
+		const fm= filterMatches(phase,lclFilter);
+		console.log("filterMatch:", fm);
+		return fm;
+	}
+		const filterMatches = (phase, lclFilter) => {
+		console.log("filter:", phase)
+		console.log("lclFilter:", lclFilter)
 		if (!lclFilter) return true;
+		if($nextOnBlockKey=== phase.classKey) return true;  //Always show!
+
 		let re = new RegExp('^' + lclFilter);
 
 		return phase.carNumbers.filter((cn) => cn.match(re)).length > 0
@@ -24,19 +32,18 @@
 <main>
 
 
-	<h4>Next On Blocks</h4>
 	<MaterialAdd clickHandleRoute="/raceStandingAdd/RacePhase" />
 
-	<RacePhase refreshTime={$doRefreshBlocks} />
-	<hr />
+	
+
 
 	<h4>Race Phases</h4>
 
 	<CarFilter />
 
-	{#each getRacePhases( $doRefreshBlocks) as racePhase,i}
-		{#if filterMatches(racePhase, $carFilter, $doRefreshBlocks)}
-			<RacePhase idx={i}/>
+	{#each getRacePhases( $doRefreshBlocks) as racePhase}
+		{#if filterMatchesX(racePhase, $carFilter, $doRefreshBlocks)}
+			<RacePhase refreshTime={$doRefreshBlocks} phaseKey={racePhase.classKey}/>
 		{/if}
 	{/each}
 </main>
