@@ -9,7 +9,6 @@ const CF="https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
 
 
 //time curl  $VERBOSE $CF/addBulk         -XPOST --data @bulk.json        --header "$AUTH"
-//time curl   $VERBOSE $CF/getRaceConfig  --header "$AUTH"
 const orgU= uuidv4().substring(0,5);
 const orgId="test."+orgU;
 const getH=`${CF}/getRaceHistory?orgId=${orgId}`

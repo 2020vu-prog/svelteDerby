@@ -7,6 +7,8 @@ import RaceStandingList from './RaceStandingList.svelte'
 import RacePhaseList from './RacePhaseList.svelte'
 import DriverList from './DriverList.svelte'
 import DriverAdd from './DriverAdd.svelte'
+import EventSelection from './EventSelection.svelte'
+import OrgSelection from './OrgSelection.svelte'
 import ManualTimerAdd from './ManualTimerAdd.svelte'
 import RaceStandingAdd from './RaceStandingAdd.svelte'
 import Login from './Login.svelte'
@@ -25,6 +27,8 @@ const routes = {
     '/ManualTimerAdd/:rpKey': ManualTimerAdd,
     '/raceStandingAdd/:type': RaceStandingAdd,
     '/driverAdd': DriverAdd,
+    '/eventSelection': EventSelection,
+    '/orgSelection': OrgSelection,
    // '/raceStandingAdd': RaceStandingAdd,
 }
 
@@ -93,6 +97,7 @@ const navTo=(route)=>{
     <a href="javascript:void(0);"  on:click={() => navTo('/RpList')}>Phase History</a>
     <a href="javascript:void(0);"  on:click={() => navTo('/')}>Race History</a>
     <a href="javascript:void(0);"  on:click={() => navTo('/RsList/Pending')}>Pending Races</a>
+    <a href="javascript:void(0);"  on:click={() => navTo('/orgSelection')}>Watch different event</a>
     <a href="javascript:void(0);"  on:click={() => navTo('/login')}>Login</a>
 
   </div>

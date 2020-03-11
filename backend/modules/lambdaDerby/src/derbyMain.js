@@ -15,7 +15,7 @@ const getConfig = async (orgId) => {
 	if (configMap[orgId]) {
 		return configMap[orgId];
 	}
-	var allConfig = await ddbQueryRaceConfig();
+	var allConfig = await ddbQueryEventConfig();
 	Object.keys(allConfig).forEach((orgId) => {
 		configMap[orgId] = allConfig[orgId];
 	});
@@ -107,7 +107,9 @@ const ddbQueryRaceHistory = async (qsp) => {
 	console.log("history query: " + JSON.stringify(params));
 	try {
 		var data = await ddbClient.query(params);
-		console.log("queryRaceHistory: " + data);           // successful response
+		const cc=data.ConsumedCapacity.CapacityUnits;
+		console.log("queryRaceHistory cc: " , cc);           // successful response
+		console.log("queryRaceHistory: " , data);           // successful response
 		console.log("queryRaceHistory: " + JSON.stringify(data));           // successful response
 		const rc = unmarshallResultsToArray(data);
 
@@ -120,7 +122,7 @@ const ddbQueryRaceHistory = async (qsp) => {
 	}
 	return [{ error: "Query History Failed" }, cacheMaxSeconds];
 }
-const ddbQueryRaceConfig = async () => {
+const ddbQueryEventConfig = async () => {
 	var containsValues = {};
 	containsValues[":pk"] = { S: "EventConfig" };
 	var params = {
@@ -132,14 +134,35 @@ const ddbQueryRaceConfig = async () => {
 	console.log("ddb query: " + JSON.stringify(params));
 	try {
 		var data = await ddbClient.query(params);
-		console.log("queryRaceConfig: ", data);           // successful response
+		console.log("ddbQueryEventConfig: ", data);           // successful response
 		return unmarshallResultsToObject(data, "SK");
 
 	}
 	catch (err) {
-		console.log("queryRaceConfig failed: ", err, err.stack); // an error occurred
+		console.log("ddbQueryEventConfig failed: ", err, err.stack); // an error occurred
 	}
 	return { error: "Query Failed" };
+}
+const ddbQueryOrgConfig = async () => {
+	var containsValues = {};
+	containsValues[":pk"] = { S: "OrgConfig" };
+	var params = {
+		TableName: process.env.DynamoDbTable,
+		KeyConditionExpression: "PK = :pk",
+		ReturnConsumedCapacity: "TOTAL",
+		ExpressionAttributeValues: containsValues
+	};
+	console.log("ddbQueryOrgConfig query : " + JSON.stringify(params));
+	try {
+		var data = await ddbClient.query(params);
+		console.log("ddbQueryOrgConfig: ", data);           // successful response
+		return unmarshallResultsToObject(data, "SK");
+
+	}
+	catch (err) {
+		console.log("ddbQueryOrgConfig failed: ", err, err.stack); // an error occurred
+	}
+	return { error: "Query OrgFailed" };
 }
 /*
 ** Lookup RP by exact PK/SK
@@ -477,6 +500,10 @@ const applyFinishTime = async (json) => {
 			tgtRs.phase2Results=json.phr.reverse();
 		}
 		await addSingle(tgtRs);
+
+		if(tgtRs.isOverallTie()){
+			await cloneRs(tgtRs);
+		}
 	}
 	else{
 		return {
@@ -490,6 +517,18 @@ const applyFinishTime = async (json) => {
 	};
 	
 };
+
+
+const cloneRs = async (srcRs) => {
+	const clone={
+		cn: srcRs.cn,
+		orgId: srcRs.orgId,
+		by: srcRs.by
+	};
+	console.log("cloneRs: " , JSON.stringify(clone));
+	return await addSingle(clone);
+}
+
 const addBlocks = async (json) => {
 
 	console.log("addBlocks: " + JSON.stringify(json));
@@ -531,6 +570,15 @@ const addBlocks = async (json) => {
 	return await addSingle(json);
 
 };
+const addOrgConfig = async (json) =>{
+	console.log("addOrgConfig: " + JSON.stringify(json));
+	json.PK = "OrgConfig";  // force 
+	json.SK = json.orgIz;  // force 
+	const by = entityFactory.propOverrides.by;
+	entityFactory = new EntityFactory({ orgIz: json.orgIz, by: by });
+
+	return await addSingle(json);
+}
 const addEventConfig = async (json, priorTtl) => {
 
 	console.log("addEventConfig: " + JSON.stringify(json));
@@ -587,8 +635,8 @@ const routeMap = {
 
 		}
 	},
-		"/getRaceHistory": {
-			h: async (event) => {
+	"/getRaceHistory": {
+		h: async (event) => {
 			var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
 			const cacheControl = 'max-age=' + cacheMaxSeconds;
 			return buildResponse(qr, cacheControl);
@@ -639,9 +687,14 @@ exports.handler = async (event) => {
 	console.log(event);
 	const routePath = event.path.replace(/^\/app/, "");
 	if (false) { }
-	else if (routePath === "/getRaceConfig") {
-		const qr = await ddbQueryRaceConfig();
-		console.log("getRaceConfig 23232:", qr)
+	else if (routePath === "/getEventConfig") {
+		const qr = await ddbQueryEventConfig();
+		console.log("getEventConfig 23232:", qr)
+		return buildResponse(qr, 'max-age=7207');
+	}
+	else if (routePath === "/getOrgConfig") {
+		const qr = await ddbQueryOrgConfig();
+		console.log("getOrgConfig :", qr)
 		return buildResponse(qr, 'max-age=7207');
 	}
 	else if (!orgId) {
@@ -654,6 +707,10 @@ exports.handler = async (event) => {
 		const jsonRC = await addEventConfig(JSON.parse(event.body), defaultTTL);
 		return buildResponse(jsonRC);
 	}
+	//else if (routePath === "/addOrgConfig") {
+	//	const jsonRC = await addOrgConfig(JSON.parse(event.body) );
+	//	return buildResponse(jsonRC);
+	//}
 	else if (!defaultTTL) {
 		const qr = { error: "Unable to determine default TTL" };
 		return buildResponse(qr);

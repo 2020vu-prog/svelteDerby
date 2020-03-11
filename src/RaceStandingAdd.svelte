@@ -31,6 +31,7 @@
   onMount(async () => {
     console.log("mounted type:", params.type);
     title = unMapType("title"); 
+    document.getElementById("cn1").focus();
 
   });
   
@@ -64,7 +65,7 @@
 <h3>{title}</h3>
 <form on:submit|preventDefault={handleSubmit}>
   <label>
-    <input type="number" bind:value={carNumberForm.car1} placeholder="Car1" />
+    <input type="number" bind:value={carNumberForm.car1} placeholder="Car1" id="cn1"/>
   </label>
   <label>
     <input type="number" bind:value={carNumberForm.car2} placeholder="Car2" />

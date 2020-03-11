@@ -62,6 +62,29 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
     }
 }
 
+const OrgConfigLit = 'OrgConfig';
+entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
+    static members = ["lcl1"]; // lowCarlane1
+    static canBuild(json) {
+        return (json.PK && json.PK === OrgConfigLit);
+    }
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK = OrgConfigLit;
+
+        this.SK = this.orgIz;
+    }
+    get classType(){
+        return OrgConfigLit;
+    }
+    get classKey(){
+        return this.orgIz;
+    }
+}
 entityFactories['RacePhase'] = class RacePhase extends EntityBase {
     static members = ["cn", "phr", "rs", "pl"];
     static canBuild(json) {
@@ -156,12 +179,16 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
     }
     get overallResults() {
         const rc = [];
-        if (isComplete()) {
+        if (this.isComplete()) {
             for (var i = 0; i < this.carNumbers.length; i++) {
                 rc[i] = this.phase1Results[i] + this.phase2Results[i];
             }
         }
         return rc;
+    }
+    isOverallTie(){
+        const distinctResults=[...new Set(this.overallResults)];
+        return (distinctResults.length==1);
     }
     hasResults(){
         return  (this.carNumbers && this.phase1Results );

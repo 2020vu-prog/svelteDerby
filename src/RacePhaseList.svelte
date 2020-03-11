@@ -4,6 +4,8 @@
 	import CarFilter from "./CarFilter.svelte";
 	import MaterialAdd from "./MaterialAdd.svelte";
 
+	$: console.log(`doRefreshChanged: ${doRefreshBlocks}`)
+	$: console.log(`filter: ${carFilter}`)
 
 
 
@@ -13,8 +15,6 @@
 		return fm;
 	}
 		const filterMatches = (phase, lclFilter) => {
-		console.log("filter:", phase)
-		console.log("lclFilter:", lclFilter)
 		if (!lclFilter) return true;
 		if($nextOnBlockKey=== phase.classKey) return true;  //Always show!
 
@@ -24,7 +24,7 @@
 	}
 	//loc &drb passed in to coerce svelte refesh screen
 	const getRacePhases=(drb)=>{
-		return Object.values($racePhaseMap);
+		return Object.values(drb);
 
 	}
 </script>
@@ -41,7 +41,7 @@
 
 	<CarFilter />
 
-	{#each getRacePhases( $doRefreshBlocks) as racePhase}
+	{#each getRacePhases( $racePhaseMap) as racePhase}
 		{#if filterMatchesX(racePhase, $carFilter, $doRefreshBlocks)}
 			<RacePhase refreshTime={$doRefreshBlocks} phaseKey={racePhase.classKey}/>
 		{/if}

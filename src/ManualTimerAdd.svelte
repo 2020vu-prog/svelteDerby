@@ -46,7 +46,7 @@
     }
     const resultForm = {
         lane1:undefined,
-        lane2:"abc"
+        lane2:undefined
     }
   </script>
   <h3>Manual Timing Results</h3>
