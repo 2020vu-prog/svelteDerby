@@ -11,9 +11,6 @@ const CF="https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
 //time curl  $VERBOSE $CF/addBulk         -XPOST --data @bulk.json        --header "$AUTH"
 const orgU= uuidv4().substring(0,5);
 const orgId="test."+orgU;
-const getH=`${CF}/getRaceHistory?orgId=${orgId}`
-const eventUrl=`${CF}/addEventConfig`
-const driverUrl=`${CF}/addParticipant`
 
 const getData = async url => {
   try {
@@ -41,9 +38,17 @@ const postData = async (url,req) => {
     console.log(error);
   }
 };
+const orgIz="test";
+
+test('listOrgConfig: ', () => {
+  return getData(`${CF}/listOrgConfig`).then(data => {
+    expect(Object.keys(data).length).toBeGreaterThan(0);
+  });
+});
+
 
 test('postEvent: ', () => {
-  return postData(eventUrl,{"orgId":orgId, "lcl1":"true"}).then(received => {
+  return postData(`${CF}/addEventConfig`,{"orgIz": orgIz,"orgId":orgId, "lcl1":"true"}).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
@@ -55,47 +60,47 @@ test('getRaceConfig: ', () => {
 });
 
 test('postAddParticipant: ', () => {
-  return postData(driverUrl,{"orgId":orgId, "number":"333", "name":"Elmer333"}).then(received => {
+  return postData(`${CF}/addParticipant`,{"orgIz": orgIz,"orgId":orgId, "number":"333", "name":"Elmer333"}).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
 test('postAddPending: ', () => {
-  return postData(`${CF}/addPending`,{"orgId":orgId, "cn":["333","334"] }).then(received => {
+  return postData(`${CF}/addPending`,{"orgIz": orgIz,"orgId":orgId, "cn":["333","334"] }).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
 test('postAddBlocksBackwards: should fail b/c cars in wrong lanes. ', () => {
-  return postData(`${CF}/addBlocks`,{"orgId":orgId, "cn":["334","333"] }).then(received => {
+  return postData(`${CF}/addBlocks`,{"orgIz": orgIz,"orgId":orgId, "cn":["334","333"] }).then(received => {
     expect(received.data.status).toMatch(/error/i);
     expect(received.data.error).toEqual("Cars in wrong lane(s)");
   });
 });
 
 test('postAddBlocks: ', () => {
-  return postData(`${CF}/addBlocks`,{"orgId":orgId, "cn":["333","334"] }).then(received => {
+  return postData(`${CF}/addBlocks`,{"orgIz": orgIz,"orgId":orgId, "cn":["333","334"] }).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
 test('postDuplicateAddBlocks: ', () => {
-  return postData(`${CF}/addBlocks`,{"orgId":orgId, "cn":["333","334"] }).then(received => {
+  return postData(`${CF}/addBlocks`,{"orgIz": orgIz,"orgId":orgId, "cn":["333","334"] }).then(received => {
     expect(received.data.status).toMatch(/error/i);
   });
 });
 
 test('postApplyFinishTime: should fail because key is invalid!', () => {
-  return postData(`${CF}/doApplyFinishTime`,{"orgId":orgId, "SK":"foobar:KeyNotPresentOnDb"}).then(received => {
+  return postData(`${CF}/doApplyFinishTime`,{"orgIz": orgIz,"orgId":orgId, "SK":"foobar:KeyNotPresentOnDb"}).then(received => {
     expect(received.data.status).toMatch(/error/i);
   });
 });
 
 test('postDdbQuery: ', () => {
-  return postData(`${CF}/ddbQuery`,{"orgId":orgId, "cn":["333","800"] }).then(received => {
+  return postData(`${CF}/ddbQuery`,{"orgIz": orgIz,"orgId":orgId, "cn":["333","800"] }).then(received => {
     expect(received.data.Count).toEqual(1);
   });
 });
 
 test('getHistory: the data should by created by 2020vu', () => {
-  return getData(getH).then(data => {
+  return getData(`${CF}/getRaceHistory?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
     expect(data[0].by).toMatch(/2020vu/i);
   });
 });
@@ -104,7 +109,7 @@ var timerSkAPhase="";
 var timerSkBPhase="";
 
 test('getNextOnBlocks: ', () => {
-  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}`).then(data => {
+  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
     console.log("nextOnBlocks:",data);
     expect(data[0].by).toMatch(/2020vu/i);
     expect(data.length).toEqual(1);
@@ -114,25 +119,25 @@ test('getNextOnBlocks: ', () => {
 
 test('applyFinishTime: should succeed', () => {
     console.log("applyFinishTime:",timerSkAPhase);
-  return postData(`${CF}/doApplyFinishTime`,{"orgId":orgId, SK:timerSkAPhase, phr: [0,33] }).then(received => {
+  return postData(`${CF}/doApplyFinishTime`,{"orgIz": orgIz,"orgId":orgId, SK:timerSkAPhase, phr: [0,33] }).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
 
 test('getNextOnBlocks: should be empty after apply finish time', () => {
-  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}`).then(data => {
+  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
     expect(data.length).toEqual(0);
   });
 });
 
 test('postAddBlocksPhase2: should work. ', () => {
-  return postData(`${CF}/addBlocks`,{"orgId":orgId, "cn":["334","333"] }).then(received => {
+  return postData(`${CF}/addBlocks`,{"orgIz": orgIz,"orgId":orgId, "cn":["334","333"] }).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
 
 test('getNextOnBlocks: should be B phase key', () => {
-  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}`).then(data => {
+  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
     expect(data.length).toEqual(1);
     timerSkBPhase=data[0].SK;
   });
@@ -140,13 +145,13 @@ test('getNextOnBlocks: should be B phase key', () => {
 
 test('applyFinishTime: (B Phase) should succeed', () => {
     console.log("applyFinishTime:",timerSkBPhase);
-  return postData(`${CF}/doApplyFinishTime`,{"orgId":orgId, SK:timerSkBPhase, phr: [44,0] }).then(received => {
+  return postData(`${CF}/doApplyFinishTime`,{"orgIz": orgIz,"orgId":orgId, SK:timerSkBPhase, phr: [44,0] }).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
 
 test('getNextOnBlocks: should be empty after apply (B phase) finish time', () => {
-  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}`).then(data => {
+  return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
     expect(data.length).toEqual(0);
   });
 });

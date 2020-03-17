@@ -27,7 +27,7 @@ const routes = {
     '/ManualTimerAdd/:rpKey': ManualTimerAdd,
     '/raceStandingAdd/:type': RaceStandingAdd,
     '/driverAdd': DriverAdd,
-    '/eventSelection': EventSelection,
+    '/eventSelection/:orgIz': EventSelection,
     '/orgSelection': OrgSelection,
    // '/raceStandingAdd': RaceStandingAdd,
 }

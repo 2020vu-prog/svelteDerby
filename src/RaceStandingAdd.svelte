@@ -42,6 +42,7 @@
     
     const req = {
       orgId: $raceConfig.orgId,
+      orgIz: $raceConfig.orgIz,
       cn: [carNumberForm.car1 + "", carNumberForm.car2 + ""],
     }
 

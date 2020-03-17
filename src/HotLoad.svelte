@@ -159,10 +159,14 @@
     console.log("old nobKey:", $nextOnBlockKey)
     const currentSession = await Auth.currentSession();
     const bearer=currentSession.idToken.jwtToken;
-
+    if($raceConfig.orgId && $raceConfig.orgIz){}
+    else{
+      console.log("no selected race");
+      return;
+    }
 
     axios.defaults.headers.common['Authorization'] = bearer;
-    axios.get($raceConfig.baseUrl + "/getRaceHistory?orgId=" + $raceConfig.orgId)
+    axios.get($raceConfig.baseUrl + "/getRaceHistory?orgId=" + $raceConfig.orgId+"&orgIz="+$raceConfig.orgIz)
       .then((response) => {
         console.log("history:" + response.data.length);
         //console.log("history:",response.data);

@@ -11,20 +11,22 @@ const configMap = {
 
 
 
-const getConfig = async (orgId) => {
-	if (configMap[orgId]) {
-		return configMap[orgId];
+const getConfig = async (eventKey) => {
+
+	if (configMap[eventKey]) {
+		return configMap[eventKey];
 	}
-	var allConfig = await ddbQueryEventConfig();
-	Object.keys(allConfig).forEach((orgId) => {
-		configMap[orgId] = allConfig[orgId];
-	});
 
-	return configMap[orgId];
+	var eConfig = await ddbQueryEventConfig(eventKey);
+	if(eConfig[eventKey]){
+		configMap[eventKey] = eConfig[eventKey];
+		return eConfig[eventKey];
+	}
 
+	return undefined;
 }
-const getTtl = async (orgId) => {
-	const config = await getConfig(orgId);
+const getTtl = async (eventKey) => {
+	const config = await getConfig(eventKey);
 	if (config) {
 		return config.TTL;
 	}
@@ -122,12 +124,35 @@ const ddbQueryRaceHistory = async (qsp) => {
 	}
 	return [{ error: "Query History Failed" }, cacheMaxSeconds];
 }
-const ddbQueryEventConfig = async () => {
+const ddbQueryEventConfig = async (eventKey) => {
 	var containsValues = {};
 	containsValues[":pk"] = { S: "EventConfig" };
+	containsValues[":sk"] = { S: eventKey };
 	var params = {
 		TableName: process.env.DynamoDbTable,
-		KeyConditionExpression: "PK = :pk",
+		KeyConditionExpression: "PK = :pk" + " and  SK = :sk",
+		ReturnConsumedCapacity: "TOTAL",
+		ExpressionAttributeValues: containsValues
+	};
+	console.log("ddb query: " + JSON.stringify(params));
+	try {
+		var data = await ddbClient.query(params);
+		console.log("ddbQueryEventConfig: ", data);           // successful response
+		return unmarshallResultsToObject(data, "SK");
+
+	}
+	catch (err) {
+		console.log("ddbQueryEventConfig failed: ", err, err.stack); // an error occurred
+	}
+	return { error: "Query Failed" };
+}
+const ddbListEventConfigByOrg=async(orgIz)=>{
+	var containsValues = {};
+	containsValues[":pk"] = { S: "EventConfig" };
+	containsValues[":sk"] = { S: orgIz+":" };
+	var params = {
+		TableName: process.env.DynamoDbTable,
+		KeyConditionExpression: "PK = :pk" + " and  begins_with (SK, :sk)",
 		ReturnConsumedCapacity: "TOTAL",
 		ExpressionAttributeValues: containsValues
 	};
@@ -384,9 +409,9 @@ const fmtBulkPut = (json1) => {
 
 	if (myP) {
 		myP.preWrite();
-		console.log(myP);
+		console.log("addBulk pw:",myP);
 		var marshalled = AWS.DynamoDB.Converter.marshall(myP);
-		console.log(marshalled);
+		console.log("addBulk mar:",marshalled);
 		const putRequest = {
 			PutRequest: {
 				Item: marshalled
@@ -445,8 +470,10 @@ const addSingle = async (json) => {
 	}
 	return { error: "Invalid Request" };
 }
-const addPending2 = async (json) => {
+const addPending2 = async (event) => {
 
+	const  eventKey= getEventKey(event);
+	const json=JSON.parse(event.body)
 	console.log("addPending2: " + JSON.stringify(json));
 	json.PK = ":RS";  // force RaceStanding
 
@@ -456,8 +483,15 @@ const addPending2 = async (json) => {
 		return { error: "Pending2 already exists" };
 	}
 
-	const cfg = await getConfig(json.orgId);
-	if (cfg && cfg.lcl1) {  //low car lane 1?
+	const cfg = await getConfig(eventKey);
+	if (!cfg ) { 
+		return {
+			status: "error",
+			error: "No Event config found.",
+		};
+	}
+
+	if (cfg.lcl1) {  //low car lane 1?
 		json.cn.sort();
 		console.log("addPending2: sorted: ", json.cn);
 	}
@@ -582,8 +616,15 @@ const addOrgConfig = async (json) =>{
 const addEventConfig = async (json, priorTtl) => {
 
 	console.log("addEventConfig: " + JSON.stringify(json));
-	json.PK = "EventConfig";  // force 
-	json.SK = json.orgId;  // force 
+	if(!json.orgIz){
+		return { error: "Missing orgIz" };
+	}
+	if(!json.orgId){
+		return { error: "Missing orgId" };
+	}
+		
+	json.PK = "EventConfig";   // force 
+	json.SK = json.orgIz +":" +    json.orgId;  // force 
 
 	// use prior ttl if found (API cannot change ttl of in progress event!)
 	const newTtl = priorTtl ? priorTtl :
@@ -615,9 +656,21 @@ const getOrgId = (event) => {
 	}
 	return null;
 }
+const getOrgIz = (event) => {
+	if (event.body) {
+		return JSON.parse(event.body).orgIz;
+	}
+	if (event.queryStringParameters) {
+		return event.queryStringParameters.orgIz;
+	}
+	return null;
+}
+const getEventKey=(event)=>{
+	return getOrgIz(event) +":"+getOrgId(event);
+}
 const routeMap = {
 	"/addParticipant": { h: async (event) => { return buildResponse(await addParticipant2(JSON.parse(event.body))); } },
-	"/addPending": { h: async (event) => { return buildResponse(await addPending2(JSON.parse(event.body))); } },
+	"/addPending": { h: async (event) => { return buildResponse(await addPending2(event)); } },
 	"/addBlocks": { h: async (event) => { return buildResponse(await addBlocks(JSON.parse(event.body))); } },
 	"/doApplyFinishTime": { h: async (event) => { return buildResponse(await applyFinishTime(JSON.parse(event.body))); } },
 	"/addBulk": { h: async (event) => { return buildResponse(await addBulk(JSON.parse(event.body))); } },
@@ -646,6 +699,9 @@ const routeMap = {
 
 
 const buildResponse = (jsonObj, cacheControl = "no-cache") => {
+	if(jsonObj && jsonObj.error){
+		console.log("buildResponse: error:  ", jsonObj)
+	}
 	return {
 		statusCode: 200,
 		headers: {
@@ -678,27 +734,37 @@ exports.handler = async (event) => {
 		callback(null, response)
 		return;
 	}
-	const decoded = jwt.decode(event.headers.Authorization);
-	const orgId = getOrgId(event);
-	//const orgConfig = await getConfig(orgId);
-	const defaultTTL = await getTtl(orgId);
 
-	entityFactory = new EntityFactory({ orgId: orgId, by: decoded.email, TTL: defaultTTL });
-	console.log(event);
+	console.log("event.path: ", event.path)
+
 	const routePath = event.path.replace(/^\/app/, "");
-	if (false) { }
-	else if (routePath === "/getEventConfig") {
-		const qr = await ddbQueryEventConfig();
+	if (routePath === "/listOrgEvents") {
+		const qr = await ddbListEventConfigByOrg(getOrgIz(event));
 		console.log("getEventConfig 23232:", qr)
 		return buildResponse(qr, 'max-age=7207');
 	}
-	else if (routePath === "/getOrgConfig") {
+	if (routePath === "/listOrgConfig") {
 		const qr = await ddbQueryOrgConfig();
-		console.log("getOrgConfig :", qr)
+		console.log("listOrgConfig :", qr)
 		return buildResponse(qr, 'max-age=7207');
 	}
+
+	const decoded = jwt.decode(event.headers.Authorization);
+	const  eventKey= getEventKey(event);
+	const  orgId= getOrgId(event);
+	const  orgIz= getOrgIz(event);
+	const defaultTTL = await getTtl(eventKey);
+
+	entityFactory = new EntityFactory({ orgId: orgId, by: decoded.email, TTL: defaultTTL });
+	console.log("Begin event",event);
+	if (false) { }
 	else if (!orgId) {
 		const qr = { error: "Unable to determine orgId" };
+		return buildResponse(qr);
+
+	}
+	else if (!orgIz) {
+		const qr = { error: "Unable to determine orgIz" };
 		return buildResponse(qr);
 
 	}

@@ -40,7 +40,10 @@ class EntityBase {
 }
 const EventConfigLit = 'EventConfig';
 entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
-    static members = ["lcl1"]; // lowCarlane1
+    static members = [
+        "lcl1",    // lowCarlane1
+        "orgIz", // Org Id (pending refactor)
+    ];
     static canBuild(json) {
         return (json.PK && json.PK === EventConfigLit);
     }
@@ -52,12 +55,12 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
         super.preWrite();
         this.PK = EventConfigLit;
 
-        this.SK = this.orgId;
+        this.SK = this.orgIz+":"+this.orgId;
     }
-    get classType(){
+    get classType() {
         return EventConfigLit;
     }
-    get classKey(){
+    get classKey() {
         return this.orgId;
     }
 }
@@ -78,10 +81,10 @@ entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
 
         this.SK = this.orgIz;
     }
-    get classType(){
+    get classType() {
         return OrgConfigLit;
     }
-    get classKey(){
+    get classKey() {
         return this.orgIz;
     }
 }
@@ -108,11 +111,11 @@ entityFactories['RacePhase'] = class RacePhase extends EntityBase {
     get phaseResults() {
         return this.phr;
     }
-        // legacy emulation
-        getPhaseDeltaMS(){
-            if(!this.phr) return undefined;
-            return(this.phr[1]- this.phr[0]);
-        }
+    // legacy emulation
+    getPhaseDeltaMS() {
+        if (!this.phr) return undefined;
+        return (this.phr[1] - this.phr[0]);
+    }
     get carNumbers() {
         return this.cn;
     }
@@ -120,12 +123,12 @@ entityFactories['RacePhase'] = class RacePhase extends EntityBase {
         return this.pl;
     }
     set phaseLiteral(pl) {
-        return this.pl=pl;
+        return this.pl = pl;
     }
-    get classType(){
+    get classType() {
         return 'RacePhase';
     }
-    get classKey(){
+    get classKey() {
         return this.SK;
     }
 }
@@ -155,12 +158,12 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
         return null;
     }
     // "A" or "B" phase?  (given carNumber list)
-    getPhaseLiteral(phaseCarNumbers){
-		if (this.carNumbers.toString() == phaseCarNumbers.toString()) { 
+    getPhaseLiteral(phaseCarNumbers) {
+        if (this.carNumbers.toString() == phaseCarNumbers.toString()) {
             return "A";
-		}else{
-			return "B";
-		}
+        } else {
+            return "B";
+        }
     }
     set phase1Results(ph1) {
         return this.ph1 = ph1;
@@ -186,35 +189,35 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
         }
         return rc;
     }
-    isOverallTie(){
-        const distinctResults=[...new Set(this.overallResults)];
-        return (distinctResults.length==1);
+    isOverallTie() {
+        const distinctResults = [...new Set(this.overallResults)];
+        return (distinctResults.length == 1);
     }
-    hasResults(){
-        return  (this.carNumbers && this.phase1Results );
+    hasResults() {
+        return (this.carNumbers && this.phase1Results);
     }
-    isComplete(){
-        return  (this.carNumbers && this.phase1Results && this.phase2Results);
+    isComplete() {
+        return (this.carNumbers && this.phase1Results && this.phase2Results);
     }
-    isPending(){
-        return  !this.isComplete();
+    isPending() {
+        return !this.isComplete();
     }
     // legacy emulation
-    getPhaseXDeltaMS(x){
-        if(!x) return undefined;
-        return(x[1]- x[0]);
+    getPhaseXDeltaMS(x) {
+        if (!x) return undefined;
+        return (x[1] - x[0]);
     }
-    get phase1DeltaMS(){
+    get phase1DeltaMS() {
         return this.getPhaseXDeltaMS(this.phase1Results);
 
     }
-    get phase2DeltaMS(){
+    get phase2DeltaMS() {
         return this.getPhaseXDeltaMS(this.phase2Results);
     }
-    get classType(){
+    get classType() {
         return 'RaceStanding';
     }
-    get classKey(){
+    get classKey() {
         return this.SK;
     }
 }
@@ -233,10 +236,10 @@ entityFactories['Participant'] = class Participant extends EntityBase {
         this.PK = this.orgId + ParticipantEid;
         this.SK = this.number + "";
     }
-    get classType(){
+    get classType() {
         return 'Participant';
     }
-    get classKey(){
+    get classKey() {
         return this.SK;
     }
 };
@@ -261,7 +264,7 @@ class EntityFactory {
 
         return candidates.length > 0 ? candidates[0] : null;
     }
-    get entityTypes(){
+    get entityTypes() {
         return Object.keys(entityFactories);
     }
 

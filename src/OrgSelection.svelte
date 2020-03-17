@@ -1,47 +1,53 @@
 <script>
-    import { doRefreshBlocks} from './stores.js';
-    import MaterialAdd from "./MaterialAdd.svelte";
-    import { raceConfig } from './stores.js';
-    import { onMount } from 'svelte';
-    import { Auth } from 'aws-amplify';
-    import axios from "axios";
+  import { doRefreshBlocks } from './stores.js';
+  import MaterialAdd from "./MaterialAdd.svelte";
+  import { raceConfig } from './stores.js';
+  import { onMount } from 'svelte';
+  import { Auth } from 'aws-amplify';
+  import axios from "axios";
+  import {push, pop, replace} from 'svelte-spa-router'
 
-    
-    var orgMap={};
-    const getOrgsAsList=(orgList)=>{
-        return Object.keys(orgList);
-    }
-    const  refreshOrgMap = async () => {
+
+  var orgMap = {};
+  $: { console.log("bound orgMap: ", orgMap); }
+
+  const getOrgsAsList = (orgList) => {
+    return Object.keys(orgList);
+  }
+  const refreshOrgMap = async () => {
     console.log("refreshOrgMap:")
     const currentSession = await Auth.currentSession();
-    const bearer=currentSession.idToken.jwtToken;
+    const bearer = currentSession.idToken.jwtToken;
 
 
     axios.defaults.headers.common['Authorization'] = bearer;
-    axios.get($raceConfig.baseUrl + "/getOrgConfig")
+    axios.get($raceConfig.baseUrl + "/listOrgConfig")
       .then((response) => {
         console.log("refreshOrgMap length:" + response.data.length);
-        console.log("refreshOrgMap:" , response.data);
+        console.log("refreshOrgMap:", response.data);
+        orgMap = response.data;
       })
       .catch((err) => {
         console.log(err);
       })
-  };  
+  };
+const navTo=()=>{
 
-    onMount(async () => {
-        refreshOrgMap();
+}
+  onMount(async () => {
+    refreshOrgMap();
 
-    });
-    </script>
-    
-    
-    <div>
-    <h4>Organization List </h4>
-    <p/>
-    
-            {#each getOrgsAsList(orgMap) as orgIz}
+  });
+</script>
+
+
+<div>
+  <h4>Organization List </h4>
+  <p />
+
+  {#each getOrgsAsList(orgMap) as orgIz}
                 <div class="panel panel-info">
-                    {orgIz}
+                    <a href="javascript:void(0);"  on:click={() => replace('/eventSelection/'+orgIz)}>{orgIz}</a>
                     </div>
             {/each}
     </div>

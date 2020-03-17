@@ -25,6 +25,8 @@
 
       const req = {
         orgId: $raceConfig.orgId,
+        orgIz: $raceConfig.orgIz,
+
         SK: params.rpKey,
 
         phr: [resultForm.lane1 , resultForm.lane2 ],
