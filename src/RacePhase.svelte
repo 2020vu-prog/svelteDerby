@@ -7,6 +7,7 @@
 
     export let refreshTime;
     export let phaseKey;
+    export let at;
     const racePhase = $racePhaseMap[phaseKey];
 
     //console.log("RacePhaseKey:", phaseKey)
@@ -15,7 +16,8 @@
         if ($nextOnBlockKey === phaseKey) {
 
 
-            console.log("nob getBgColor:" + JSON.stringify($nextOnBlockKey));
+            console.log("nob getBgColor key:" + JSON.stringify($nextOnBlockKey));
+            console.log("nob refresh:" ,refreshTime);
 
             return racePhase.rs ? "Green" : "Red";
         } else {
@@ -27,7 +29,8 @@
         return "Adhoc";
     }
     const hhmmss = () => {
-        var time = new Date(racePhase.lastUpdate);
+       // var time = new Date(racePhase.lastUpdate);
+        var time = new Date(at);
         return (
             ("0" + time.getHours()).slice(-2) + ":" +
             ("0" + time.getMinutes()).slice(-2));
@@ -90,7 +93,7 @@
 
 {#if  refreshTime}
         <div class="well well-sm " style="background: {getBgColor()}">
-            <div class="panel panel-info ">
+            <div class="panel panel-info " refreshTickler={refreshTime}>
                 <div class="panel-heading">Heat: {getChartPosition()}<span class="spanRight">{hhmmss()}</span></div>
 
                 <ul class="list-group ">

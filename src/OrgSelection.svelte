@@ -31,9 +31,7 @@
         console.log(err);
       })
   };
-const navTo=()=>{
 
-}
   onMount(async () => {
     refreshOrgMap();
 

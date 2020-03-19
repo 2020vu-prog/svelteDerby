@@ -4,19 +4,20 @@
 	import CarFilter from "./CarFilter.svelte";
 	import MaterialAdd from "./MaterialAdd.svelte";
 
-	$: console.log(`doRefreshChanged: ${doRefreshBlocks}`)
-	$: console.log(`filter: ${carFilter}`)
+	$: console.log(`DC: NOB:`, $nextOnBlockKey)
+	$: console.log(`DC: rpm:`, $racePhaseMap)
+	$: console.log('DC: doRefreshChanged :', $doRefreshBlocks)
 
 
 
-	const filterMatchesX= (phase, lclFilter) => {
-		const fm= filterMatches(phase,lclFilter);
+	const filterMatchesX= (phase, lclFilter,nobKey) => {
+		const fm= filterMatches(phase,lclFilter,nobKey);
 		console.log("filterMatch:", fm);
 		return fm;
 	}
-		const filterMatches = (phase, lclFilter) => {
+	const filterMatches = (phase, lclFilter,nobKey) => {
 		if (!lclFilter) return true;
-		if($nextOnBlockKey=== phase.classKey) return true;  //Always show!
+		if(nobKey === phase.classKey) return true;  //Always show!
 
 		let re = new RegExp('^' + lclFilter);
 
@@ -42,8 +43,8 @@
 	<CarFilter />
 
 	{#each getRacePhases( $racePhaseMap) as racePhase}
-		{#if filterMatchesX(racePhase, $carFilter, $doRefreshBlocks)}
-			<RacePhase refreshTime={$doRefreshBlocks} phaseKey={racePhase.classKey}/>
+		{#if filterMatchesX(racePhase, $carFilter, $nextOnBlockKey)}
+			<RacePhase refreshTime={$doRefreshBlocks} phaseKey={racePhase.classKey} at={racePhase.at}/>
 		{/if}
 	{/each}
 </main>

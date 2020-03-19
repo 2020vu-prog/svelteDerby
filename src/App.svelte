@@ -15,6 +15,7 @@ import Login from './Login.svelte'
 import HotLoad from "./HotLoad.svelte";
 //import CognitoAuth from "./CognitoAuth.svelte";
 import { raceConfig} from './stores.js';
+import { onMount } from 'svelte';
 
 
 const routes = {
@@ -32,6 +33,31 @@ const routes = {
    // '/raceStandingAdd': RaceStandingAdd,
 }
 
+const menuMap=[
+{text: "Drivers", clickHandler:() => navTo('/drivers')},
+{text: "Phase History", clickHandler:() => navTo('/RpList')},
+{text: "Race History", clickHandler:() => navTo('/')},
+{text: "Pending Races", clickHandler:() => navTo('/RsList/Pending')},
+{text: "Watch different event", clickHandler:() => navTo('/orgSelection'),alwaysShow:true},
+{text: "Login", clickHandler:() => navTo('/login'),alwaysShow:true},
+]
+
+onMount(async () => {
+    console.log("mounted app");
+    replace('/orgSelection')
+  });
+const shouldDisplay=(menuOption, raceConfig)=>{
+  if(menuOption.alwaysShow )
+    return true;
+
+  
+  return raceConfig.orgIz && raceConfig.orgId;
+}
+const getTitle=(cfg)=>{
+  if(cfg&&cfg.title) return cfg.title;
+  else
+  return "";
+}
 /* Toggle between showing and hiding the navigation menu links when the user clicks on the hamburger menu / bar icon */
 const menuClickFunction=()=>{
   var x = document.getElementById("myLinks");
@@ -90,16 +116,15 @@ const navTo=(route)=>{
 <body>
 <!-- Top Navigation Menu -->
 <div class="topnav">
-  <a href="#home" class="active">{$raceConfig.orgName} Derby Race <HotLoad/></a>
+  <a href="#home" class="active">{getTitle($raceConfig)} Derby Race <HotLoad/></a>
   <!-- Navigation links (hidden by default) -->
   <div id="myLinks">
-    <a href="javascript:void(0);" on:click={() => navTo('/drivers')} >Drivers</a>
-    <a href="javascript:void(0);"  on:click={() => navTo('/RpList')}>Phase History</a>
-    <a href="javascript:void(0);"  on:click={() => navTo('/')}>Race History</a>
-    <a href="javascript:void(0);"  on:click={() => navTo('/RsList/Pending')}>Pending Races</a>
-    <a href="javascript:void(0);"  on:click={() => navTo('/orgSelection')}>Watch different event</a>
-    <a href="javascript:void(0);"  on:click={() => navTo('/login')}>Login</a>
 
+		{#each menuMap as menuOption}
+      {#if shouldDisplay(menuOption, $raceConfig)}
+       <a href="javascript:void(0);"  on:click={menuOption.clickHandler}>{menuOption.text}</a>
+			{/if}
+		{/each}
   </div>
   <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->
   <a href="javascript:void(0);" class="icon" on:click={menuClickFunction}>

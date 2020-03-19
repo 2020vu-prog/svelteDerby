@@ -1,5 +1,5 @@
 <script>
-	import { nextOnBlockKey,standingsMap, driverMap, carFilter, doRefreshBlocks } from './stores.js';
+	import { nextOnBlockKey,standingsMap, racePhaseMap, driverMap, carFilter, doRefreshBlocks } from './stores.js';
 	import RaceStanding from "./RaceStanding.svelte";
 	import RacePhase from "./RacePhase.svelte";
 	import CarFilter from "./CarFilter.svelte";
@@ -47,7 +47,7 @@
 	<MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
 
 	{#if   $nextOnBlockKey.length >0}
-		<RacePhase refreshTime={$doRefreshBlocks} phaseKey={$nextOnBlockKey} />
+		<RacePhase refreshTime={$doRefreshBlocks} phaseKey={$nextOnBlockKey} at={$racePhaseMap[$nextOnBlockKey].at}/>
 	{:else}
 		Starting Blocks are empty
 	{/if}

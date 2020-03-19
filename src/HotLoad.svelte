@@ -172,17 +172,20 @@
         //console.log("history:",response.data);
 
         const hist = parseAndApply(response);
-        driverMap.set(hist.Participant);
+        $driverMap=hist.Participant;
 
 
-        nextOnBlockKey.set(getNextOnBlockKeyFromRP(hist.RacePhase));
+        $nextOnBlockKey=getNextOnBlockKeyFromRP(hist.RacePhase)
         //const sortedStandings=Object.values(hist.RaceStanding).sort(sortBy('lastUpdate', true, parseInt));
-        standingsMap.set(hist.RaceStanding);
+        $standingsMap=hist.RaceStanding;
 
         //const sortedPhases=Object.values(hist.RacePhase).sort(sortBy('lastUpdate', true, parseInt));
-        racePhaseMap.set(hist.RacePhase)
+        //racePhaseMap.set(hist.RacePhase)
+        $racePhaseMap=hist.RacePhase
+        console.log("HotLoad: rpm now:",Object.keys(hist.RacePhase));
 
-        doRefreshBlocks.set(new Date().getTime())
+        $doRefreshBlocks=new Date().getTime()
+        console.log("HotLoad: updated doRefreshBlocks");
 
       })
       .catch((err) => {

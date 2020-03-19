@@ -39,12 +39,15 @@
       refreshOrgMap();
   
     });
-    const doSelect=(orgId)=>{
+    const doSelect=(config)=>{
 
-        console.log("selecting id: ", orgId);
-        console.log("selecting iz:", params.orgIz);
-        $raceConfig.orgIz=params.orgIz;
-        $raceConfig.orgId=orgId;
+        //console.log("selecting id: ", config.orgId);
+        //console.log("selecting iz:", config.orgIz);
+        console.log("selecting config:", config);
+        config.baseUrl="/app";
+        config.title=config.orgName?config.orgName:config.orgId;
+
+        $raceConfig=config;
         replace("/RpList");
     }
   </script>
@@ -57,7 +60,7 @@
   
     {#each getOrgsAsList(orgMap) as orgConfig}
                   <div class="panel panel-info">
-                      <a href="javascript:void(0);"  on:click={() => doSelect(orgConfig.orgId)}>{orgConfig.orgId}</a>
+                      <a href="javascript:void(0);"  on:click={() => doSelect(orgConfig)}>{orgConfig.orgId}</a>
                       </div>
               {/each}
       </div>
