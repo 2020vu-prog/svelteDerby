@@ -40,7 +40,7 @@ const propagateIot = async (json) => {
 	};
 	try {
 		var data = await iotdata.publish(params).promise();
-		console.log("Iot Success.");
+		console.log("Iot Success.",params);
 		//console.log(data);
 		return { status: "ok", detail: "Published" };
 	}

@@ -4,6 +4,8 @@
   import { store } from './stores/auth.js'
   import { raceConfig } from './stores.js';
   import { Auth } from 'aws-amplify';
+  import Amplify, { PubSub } from 'aws-amplify';
+  import { AWSIoTProvider } from '@aws-amplify/pubsub/lib/Providers';
 
   const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
 
@@ -20,106 +22,101 @@
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
       s4() + '-' + s4() + s4() + s4();
   }
-  function initWebsocket(host, port) {
-    // Create a client instance
-    //client = new Paho.MQTT.Client("174.138.79.223", Number(9001), "broswer."+guid());
-    // client = new Paho.MQTT.Client(host,Number(port), "browser."+guid());
-    client = new Paho.MQTT.Client("wss://" + host + ":" + port + "/mqtt", "browser." + guid());
+
+  var subscription=undefined;
+  const watchIot = () => {
 
 
-    // set callback handlers
-    client.onConnectionLost = onConnectionLost;
-    client.onMessageArrived = onMessageArrived;
+    Amplify.addPluggable(new AWSIoTProvider({
+      aws_pubsub_region: 'us-east-2',
+      aws_pubsub_endpoint: 'wss://a1fobetfjrk30o-ats.iot.us-east-2.amazonaws.com/mqtt',
+    }));
 
-    // connect the client
-    client.connect({
-      onSuccess: onConnect,
-      keepAliveInterval: 7200,
-      cleanSession: true
+    /*
+    Auth.currentCredentials().then((info) => {
+      const cognitoIdentityId = info.data.IdentityId;
+      console.log("auth idid:", cognitoIdentityId)
+    });
+    */
+
+    const topic = "derby/" + $raceConfig.orgId + "/dist"
+    if(subscription){
+      console.log("UnSubscribing", subscription)
+
+      subscription.unsubscribe()
+    }
+    console.log("Subscribing to:", topic)
+
+    subscription=PubSub.subscribe(topic).subscribe({
+      next: data => {
+        console.log('Message received', data);
+        console.log('Message value', data.value);
+        applyFromMqMsg(data.value);
+      },
+      error: error => console.error('AWS iot error:', error),
+      close: () => console.log('AWS iot Done'),
     });
   }
 
 
-  axios.get('./data/mqtt.json')
-    .then((response) => {
-
-      mqttJsonSuccess(response.data)
-    })
-    .catch((err) => {
-      mqttJsonError(err);
-    })
-
-  function mqttJsonError(data) {
-    console.log("mqttJsonError:" + data);
-  }
-  function mqttJsonSuccess(data) {
-    console.log("mqttJsonSuccess:" + data);
-    console.log("mqttJsonSuccess host:" + data.host);
-    console.log("mqttJsonSuccess port:" + data.port);
-
-    initWebsocket(data.host, data.port);
-
-  }
-
-  // called when the client connects
-  function onConnect() {
-    // Once a connection has been made, make a subscription and send a message.
-    console.log("onConnect");
-    client.subscribe(iosTriggerTopic);
-    client.subscribe(nextPhaseTopic);
-  }
-
-  // called when the client loses its connection
-  function onConnectionLost(responseObject) {
-    if (responseObject.errorCode !== 0) {
-      console.log("onConnectionLost:" + responseObject.errorMessage);
-    }
-  }
 
   // called when a message arrives
-  function onMessageArrived(message) {
-    console.log("onMessageArrived: from topic: " + message.destinationName + " payload: " + message.payloadString);
-    try {
-      const parsed = JSON.parse(message.payloadString)
-      console.log("onMessageArrived: parsed: " + parsed);
 
-      if (nextPhaseTopic === message.destinationName) {
-        //$nextOnBlocks = parsed;
-        $doRefreshBlocks = new Date().getTime()
-
-        return;
-      }
-      if (iosTriggerTopic === message.destinationName) {
-        btnClass = "btn-primary";
-        doRefresh();
-        return;
-      }
-
-    }
-    catch (err) {
-      console.log("mqtt parse error:" + err)
-    }
-
-  }
-  const sortBy = (field, reverse, primer) =>{
+  const sortBy = (field, reverse, primer) => {
     var key = primer ?
-        function (x) {
-            return primer(x[field])
-        } :
-        function (x) {
-            return x[field]
-        };
+      function (x) {
+        return primer(x[field])
+      } :
+      function (x) {
+        return x[field]
+      };
 
     reverse = !reverse ? 1 : -1;
 
     return function (a, b) {
-        return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
+      return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
     }
-};
+  };
+
+  const applyFromMqMsg = (json) => {
+    const hist=getHistFromStore();
+    const entityFactory = new EntityFactory({});
+    const e = entityFactory.build(json);
+    console.log("Entity from mq:", e)
+    applyEntityToHist(e, hist);
+    applyHistToStore(hist);
+  }
+  const applyHistToStore = (hist) => {
+    $driverMap = hist.Participant;
+
+
+    $nextOnBlockKey = getNextOnBlockKeyFromRP(hist.RacePhase)
+    //const sortedStandings=Object.values(hist.RaceStanding).sort(sortBy('lastUpdate', true, parseInt));
+    $standingsMap = hist.RaceStanding;
+
+    //const sortedPhases=Object.values(hist.RacePhase).sort(sortBy('lastUpdate', true, parseInt));
+    //racePhaseMap.set(hist.RacePhase)
+    $racePhaseMap = hist.RacePhase
+    console.log("HotLoad: rpm now:", Object.keys(hist.RacePhase));
+
+    $doRefreshBlocks = new Date().getTime()
+    console.log("HotLoad: updated doRefreshBlocks");
+  };
+  const getHistFromStore = () => {
+    return {
+      Participant: $driverMap,
+      RacePhase: $racePhaseMap,
+      RaceStanding: $standingsMap
+    }
+  };
+
+  /*
+  **
+  */
   const parseAndApply = (response) => {
     const entityFactory = new EntityFactory({});
 
-    const hist = {}
+    const hist = getHistFromStore();
     entityFactory.entityTypes.forEach(et => {
       console.log("et:", et)
       hist[et] = {};
@@ -130,24 +127,28 @@
 
       const json = response.data[i];
       const e = entityFactory.build(json);
-      console.log("entity", e);
-      const sk = e.classKey;
-      const pk = e.classType;
-
-      const tblHist = hist[pk];
-
-      if (tblHist[sk] && tblHist[sk].lastUpdate > e.lastUpdate) { }
-      else {
-        tblHist[sk] = e;
-      }
+      applyEntityToHist(e, hist);
     }
+    applyHistToStore(hist);
 
     return hist;
+  }
+  const applyEntityToHist = (e, hist) => {
+    console.log("entity", e);
+    const sk = e.classKey;
+    const pk = e.classType;
+
+    const tblHist = hist[pk];
+
+    if (tblHist[sk] && tblHist[sk].lastUpdate > e.lastUpdate) { }
+    else {
+      tblHist[sk] = e;
+    }
   }
   const getNextOnBlockKeyFromRP = (rpTmp) => {
     console.log("rpTmp:", rpTmp)
     //TODO: sort after filter!
-    const onBlocks=Object.values(rpTmp).filter(rp => (!rp.phaseResults));
+    const onBlocks = Object.values(rpTmp).filter(rp => (!rp.phaseResults));
     if (onBlocks.length > 0) {
       console.log("set new nob:", onBlocks[0])
       return onBlocks[0].classKey;
@@ -155,37 +156,25 @@
       return {};
     }
   }
-  const  doRefresh = async () => {
+  const doRefresh = async () => {
+    watchIot();
     console.log("old nobKey:", $nextOnBlockKey)
     const currentSession = await Auth.currentSession();
-    const bearer=currentSession.idToken.jwtToken;
-    if($raceConfig.orgId && $raceConfig.orgIz){}
-    else{
+    const bearer = currentSession.idToken.jwtToken;
+    if ($raceConfig.orgId && $raceConfig.orgIz) { }
+    else {
       console.log("no selected race");
       return;
     }
 
     axios.defaults.headers.common['Authorization'] = bearer;
-    axios.get($raceConfig.baseUrl + "/getRaceHistory?orgId=" + $raceConfig.orgId+"&orgIz="+$raceConfig.orgIz)
+    axios.get($raceConfig.baseUrl + "/getRaceHistory?orgId=" + $raceConfig.orgId + "&orgIz=" + $raceConfig.orgIz)
       .then((response) => {
         console.log("history:" + response.data.length);
         //console.log("history:",response.data);
 
         const hist = parseAndApply(response);
-        $driverMap=hist.Participant;
 
-
-        $nextOnBlockKey=getNextOnBlockKeyFromRP(hist.RacePhase)
-        //const sortedStandings=Object.values(hist.RaceStanding).sort(sortBy('lastUpdate', true, parseInt));
-        $standingsMap=hist.RaceStanding;
-
-        //const sortedPhases=Object.values(hist.RacePhase).sort(sortBy('lastUpdate', true, parseInt));
-        //racePhaseMap.set(hist.RacePhase)
-        $racePhaseMap=hist.RacePhase
-        console.log("HotLoad: rpm now:",Object.keys(hist.RacePhase));
-
-        $doRefreshBlocks=new Date().getTime()
-        console.log("HotLoad: updated doRefreshBlocks");
 
       })
       .catch((err) => {
