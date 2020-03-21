@@ -741,12 +741,12 @@ exports.handler = async (event) => {
 	if (routePath === "/listOrgEvents") {
 		const qr = await ddbListEventConfigByOrg(getOrgIz(event));
 		console.log("getEventConfig 23232:", qr)
-		return buildResponse(qr, 'max-age=7207');
+		return buildResponse(qr, 'max-age=307');
 	}
 	if (routePath === "/listOrgConfig") {
 		const qr = await ddbQueryOrgConfig();
 		console.log("listOrgConfig :", qr)
-		return buildResponse(qr, 'max-age=7207');
+		return buildResponse(qr, 'max-age=1807');
 	}
 
 	const decoded = jwt.decode(event.headers.Authorization);

@@ -1,4 +1,5 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 
 const mode = process.env.NODE_ENV || 'development';
@@ -17,7 +18,7 @@ module.exports = {
 	},
 	output: {
 		path: __dirname + '/public',
-		filename: '[name].js',
+		filename: '[name].[contentHash].js',
 		chunkFilename: '[name].[id].js'
 	},
 	module: {
@@ -69,7 +70,12 @@ module.exports = {
 	plugins: [
 		new MiniCssExtractPlugin({
 			filename: '[name].css'
-		})
+		}),
+		new HtmlWebpackPlugin({
+			hash: false,
+			template: './src/index.ejs',
+			filename: './index.html'
+		}),
 	],
 	devtool: prod ? false: 'source-map'
 };
