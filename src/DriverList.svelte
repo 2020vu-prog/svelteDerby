@@ -25,7 +25,7 @@ const getCarNumbersAsList=(driverMap)=>{
 		{#each getCarNumbersAsList($driverMap) as carNumber}
 			{#if filterMatches(carNumber, $carFilter)}
             <div class="panel panel-info">
-				<CarAndDriver carNumber={carNumber} isWinner="" phaseLetter=""/>
+				<CarAndDriver number={carNumber} isWinner="" phaseLetter=""/>
                 </div>
 			{/if}
 		{/each}

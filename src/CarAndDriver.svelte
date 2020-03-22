@@ -1,11 +1,19 @@
  <script>
 import { driverMap } from './stores.js';
 import {push, replace} from 'svelte-spa-router'
+import { onMount } from 'svelte';
 
-export let carNumber;
 export let isWinner;
 export let phaseLetter;
 export let timerLink;
+export let number;
+let name=""
+onMount(async () => {
+    name=getDriverName(number,$driverMap);
+
+  });
+$: name=getDriverName(number,$driverMap);
+
 //console.log("timerLink",timerLink);
 const gotoTimer =  ()=> {
     console.log("routing to:", timerLink);
@@ -31,4 +39,4 @@ const gotoTimer =  ()=> {
 {:else}
 <img alt="noflag" src="data/checkered-flag-svgrepo-com.svg" width="25px" style="visibility:hidden"/>
 {/if}
-<big><b>{carNumber}</b></big> {getDriverName(carNumber)}
+<big><b>{number}</b></big> {name}

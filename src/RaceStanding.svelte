@@ -59,7 +59,7 @@
 
         <ul class="list-group">
             <li class="list-group-item">
-                <CarAndDriver carNumber={standing.carNumbers[0]} isWinner={isWinner(1,0)} phaseLetter="" />
+                <CarAndDriver number={standing.carNumbers[0]} isWinner={isWinner(1,0)} phaseLetter="" />
                         {#if isWinner(1,0)}
                             <big class="bigbadge badge">Overall: {getWinTime(1,0)} </big>
                         {/if}
@@ -72,7 +72,7 @@
 
                     </li>
                     <li class="list-group-item">
-                        <CarAndDriver carNumber={standing.carNumbers[1]}  isWinner={isWinner(2,0)} phaseLetter="" />
+                        <CarAndDriver number={standing.carNumbers[1]}  isWinner={isWinner(2,0)} phaseLetter="" />
                         {#if isWinner(2,0)}
                             <big class="bigbadge badge">Overall: {getWinTime(2,0)}</big>
                         {/if}

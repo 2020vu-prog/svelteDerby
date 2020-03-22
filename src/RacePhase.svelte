@@ -98,13 +98,13 @@
 
                 <ul class="list-group ">
                     <li class="list-group-item ">
-                        <CarAndDriver carNumber={racePhase.carNumbers[0]}  isWinner={isWinner(1)} phaseLetter={getPhaseIcon()}  timerLink={getTimerLink()}/>
+                        <CarAndDriver number={racePhase.carNumbers[0]}  isWinner={isWinner(1)} phaseLetter={getPhaseIcon()}  timerLink={getTimerLink()}/>
                         {#if isWinner(1)}
                             <big class="bigbadge badge">{getPhaseLetter()}:{getWinTime(1)} </big>
                         {/if}
                     </li>
                     <li class="list-group-item">
-                        <CarAndDriver carNumber={racePhase.carNumbers[1]}  isWinner={isWinner(2)} phaseLetter={getPhaseIcon()}  timerLink={getTimerLink()}/>
+                        <CarAndDriver number={racePhase.carNumbers[1]}  isWinner={isWinner(2)} phaseLetter={getPhaseIcon()}  timerLink={getTimerLink()}/>
                         {#if isWinner(2)}
                              <big class="bigbadge badge">{getPhaseLetter()}:{getWinTime(2)} </big>
                          {/if}
