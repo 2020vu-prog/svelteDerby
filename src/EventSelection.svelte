@@ -8,6 +8,8 @@
     import { Auth } from 'aws-amplify';
     import axios from "axios";
     import {push, pop, replace} from 'svelte-spa-router'
+    import {db , dbReset} from './eventDb.js';
+
     export let params = {}
 
   
@@ -39,8 +41,9 @@
       refreshOrgMap();
   
     });
-    const doSelect=(config)=>{
+    const doSelect=async (config)=>{
 
+      await dbReset();
         //console.log("selecting id: ", config.orgId);
         //console.log("selecting iz:", config.orgIz);
         console.log("selecting config:", config);
@@ -48,7 +51,9 @@
         config.title=config.orgName?config.orgName:config.orgId;
 
         $raceConfig=config;
+
         replace("/RpList");
+
     }
   </script>
   

@@ -1,4 +1,5 @@
-<script>
+<script >
+  
   import axios from "axios";
   import { driverMap, nextOnBlockKey, doRefreshBlocks, standingsMap, racePhaseMap } from './stores.js';
   import { store } from './stores/auth.js'
@@ -6,6 +7,7 @@
   import { Auth } from 'aws-amplify';
   import Amplify, { PubSub } from 'aws-amplify';
   import { AWSIoTProvider } from '@aws-amplify/pubsub/lib/Providers';
+  import {db , dbInit} from './eventDb.js';
 
   const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
 
@@ -13,6 +15,10 @@
   const iosTriggerTopic = "iosTrigger";
   var client;
   var btnClass = "btn-danger";
+  $: {
+    console.log("Race config changed. refreshing.")
+    doRefresh($raceConfig); // call doRefresh if/when RaceConfig changes.
+  }
   function guid() {
     function s4() {
       return Math.floor((1 + Math.random()) * 0x10000)
@@ -23,7 +29,9 @@
       s4() + '-' + s4() + s4() + s4();
   }
 
-  var subscription=undefined;
+  var subscription = undefined;
+
+
   const watchIot = () => {
 
 
@@ -40,18 +48,18 @@
     */
 
     const topic = "derby/" + $raceConfig.orgId + "/dist"
-    if(subscription){
+    if (subscription) {
       console.log("UnSubscribing", subscription)
 
       subscription.unsubscribe()
     }
     console.log("Subscribing to:", topic)
 
-    subscription=PubSub.subscribe(topic).subscribe({
-      next: data => {
+    subscription = PubSub.subscribe(topic).subscribe({
+      next: async data => {
         console.log('Message received', data);
         console.log('Message value', data.value);
-        applyFromMqMsg(data.value);
+        await applyFromMqMsg(data.value);
       },
       error: error => console.error('AWS iot error:', error),
       close: () => console.log('AWS iot Done'),
@@ -78,12 +86,12 @@
     }
   };
 
-  const applyFromMqMsg = (json) => {
-    const hist=getHistFromStore();
+  const applyFromMqMsg = async (json) => {
+    const hist = getHistFromStore();
     const entityFactory = new EntityFactory({});
     const e = entityFactory.build(json);
     console.log("Entity from mq:", e)
-    applyEntityToHist(e, hist);
+    await applyEntityToHist(e, hist);
     applyHistToStore(hist);
   }
   const applyHistToStore = (hist) => {
@@ -113,10 +121,13 @@
   /*
   **
   */
-  const parseAndApply = (response) => {
+  const parseAndApply = async (response) => {
     const entityFactory = new EntityFactory({});
 
     const hist = getHistFromStore();
+
+
+    //TODO:   shouldn't clear hist on refresh (we just loaded it!)
     entityFactory.entityTypes.forEach(et => {
       console.log("et:", et)
       hist[et] = {};
@@ -127,13 +138,13 @@
 
       const json = response.data[i];
       const e = entityFactory.build(json);
-      applyEntityToHist(e, hist);
+      await applyEntityToHist(e, hist);
     }
     applyHistToStore(hist);
 
     return hist;
   }
-  const applyEntityToHist = (e, hist) => {
+  const applyEntityToHist = async (e, hist) => {
     console.log("entity", e);
     const sk = e.classKey;
     const pk = e.classType;
@@ -143,8 +154,14 @@
     if (tblHist[sk] && tblHist[sk].lastUpdate > e.lastUpdate) { }
     else {
       tblHist[sk] = e;
+      if (db[e.classType]) {
+        let id = await db[e.classType].put(e);
+        console.log(`Added ${e.classType} with id ${id}`);
+      }
+
     }
   }
+  
   const getNextOnBlockKeyFromRP = (rpTmp) => {
     console.log("rpTmp:", rpTmp)
     //TODO: sort after filter!
@@ -158,6 +175,7 @@
   }
   const doRefresh = async () => {
     watchIot();
+    await dbInit();
     console.log("old nobKey:", $nextOnBlockKey)
     const currentSession = await Auth.currentSession();
     const bearer = currentSession.idToken.jwtToken;
@@ -173,7 +191,7 @@
         console.log("history:" + response.data.length);
         //console.log("history:",response.data);
 
-        const hist = parseAndApply(response);
+        parseAndApply(response);
 
 
       })
