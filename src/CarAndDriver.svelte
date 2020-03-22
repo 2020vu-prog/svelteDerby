@@ -12,7 +12,10 @@ onMount(async () => {
     name=getDriverName(number,$driverMap);
 
   });
-$: name=getDriverName(number,$driverMap);
+$: {
+    console.log("lookup modified DN")
+    name=getDriverName(number,$driverMap);
+}
 
 //console.log("timerLink",timerLink);
 const gotoTimer =  ()=> {

@@ -8,8 +8,23 @@
     export let refreshTime;
     export let phaseKey;
     export let at;
-    const racePhase = $racePhaseMap[phaseKey];
+    let racePhase ={}
+    let rp=racePhase;
+    let hhmmss;
+    let chartPosition;
+    let bgColor;
 
+    const updateBoundVars=(at)=>{
+        racePhase = $racePhaseMap[phaseKey];
+        rp=racePhase;
+        hhmmss=hhmmssFmt();
+        chartPosition=getChartPosition();
+        bgColor=getBgColor();
+    }
+    $: {
+        console.log("rp changed:",at)
+        updateBoundVars(at);
+    }
     //console.log("RacePhaseKey:", phaseKey)
     //console.log("RacePhase:", racePhase)
     const getBgColor = () => {
@@ -28,7 +43,7 @@
     const getChartPosition=()=>{
         return "Adhoc";
     }
-    const hhmmss = () => {
+    const hhmmssFmt = () => {
        // var time = new Date(racePhase.lastUpdate);
         var time = new Date(at);
         return (
@@ -63,50 +78,43 @@
         }
         return phaseWinTime;
     };
-    const getPhaseIcon = () => {
+    const getPhaseIcon = (racePhase) => {
         if (racePhase.phaseResults) {
             return undefined;  // No Phase icon for completed phase.
         }
         return racePhase.phaseLiteral;
     }
-    const getPhaseLetter = () => {
+    const getPhaseLetter = (racePhase) => {
         return racePhase.phaseLiteral;
     }
-    const getTimerLink = () => {
+    const getTimerLink = (racePhase) => {
         if (racePhase.phaseResults) {
             return undefined;  // No timerLink for completed phase.
         }
         return "/ManualTimerAdd/" + racePhase.classKey
     }
-    /*
     onMount(async () => {
-        if ($nextOnBlockKey === phaseKey) {
-            console.log("mounted first nob:", $nextOnBlockKey);
-        }
-        else {
-            console.log("Not  nob!", phaseKey);
-
-        }
+        updateBoundVars(at);
     });
-*/
+
 </script>
 
 {#if  refreshTime}
-        <div class="well well-sm " style="background: {getBgColor()}">
-            <div class="panel panel-info " refreshTickler={refreshTime}>
-                <div class="panel-heading">Heat: {getChartPosition()}<span class="spanRight">{hhmmss()}</span></div>
+        <div class="well well-sm " style="background: {bgColor}">
+            <div class="panel panel-info " >
+                <div class="panel-heading">Heat: {chartPosition}<span class="spanRight">{hhmmss}</span></div>
 
                 <ul class="list-group ">
                     <li class="list-group-item ">
-                        <CarAndDriver number={racePhase.carNumbers[0]}  isWinner={isWinner(1)} phaseLetter={getPhaseIcon()}  timerLink={getTimerLink()}/>
-                        {#if isWinner(1)}
-                            <big class="bigbadge badge">{getPhaseLetter()}:{getWinTime(1)} </big>
+                        <CarAndDriver number={rp.carNumbers[0]}  isWinner={isWinner(1,rp)} phaseLetter={getPhaseIcon(rp)}  timerLink={getTimerLink(rp)}/>
+                        {#if isWinner(1,rp)}
+                            <big class="bigbadge badge">{getPhaseLetter(rp)}:{getWinTime(1,rp)} </big>
                         {/if}
                     </li>
                     <li class="list-group-item">
-                        <CarAndDriver number={racePhase.carNumbers[1]}  isWinner={isWinner(2)} phaseLetter={getPhaseIcon()}  timerLink={getTimerLink()}/>
-                        {#if isWinner(2)}
-                             <big class="bigbadge badge">{getPhaseLetter()}:{getWinTime(2)} </big>
+                        <CarAndDriver number={rp.carNumbers[1]}  isWinner={isWinner(2,rp)} phaseLetter={getPhaseIcon(rp)}  timerLink={getTimerLink(rp)}/>
+                        {#if isWinner(2,rp)}
+                             <big class="bigbadge badge">{getPhaseLetter(rp)}:{getWinTime(2,rp)} </big>
                          {/if}
                     </li>
 

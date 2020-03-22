@@ -1,7 +1,8 @@
 
 
 <script>
-    import { doRefreshBlocks } from './stores.js';
+  	import {nextOnBlockKey, racePhaseMap, carFilter, doRefreshBlocks } from './stores.js';
+
     import MaterialAdd from "./MaterialAdd.svelte";
     import { raceConfig } from './stores.js';
     import { onMount } from 'svelte';
@@ -41,9 +42,17 @@
       refreshOrgMap();
   
     });
+    const clearStore=()=>{
+      $nextOnBlockKey="N/A";
+      $racePhaseMap={};
+      $carFilter="";
+      $doRefreshBlocks=0;
+
+    }
     const doSelect=async (config)=>{
 
       await dbReset();
+      clearStore();
         //console.log("selecting id: ", config.orgId);
         //console.log("selecting iz:", config.orgIz);
         console.log("selecting config:", config);
