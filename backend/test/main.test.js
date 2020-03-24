@@ -64,9 +64,15 @@ test('postAddParticipant: ', () => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
-test('postAddPending: ', () => {
+test('postAddPending should work: ', () => {
   return postData(`${CF}/addPending`,{"orgIz": orgIz,"orgId":orgId, "cn":["333","334"] }).then(received => {
     expect(received.data.status).toMatch(/ok/i);
+  });
+});
+test('postAddPending should fail: ', () => {
+  return postData(`${CF}/addPending`,{"orgIz": orgIz,"orgId":orgId, "cn":["333","334"] }).then(received => {
+    expect(received.data.status).toMatch(/error/i);
+    expect(received.data.error).toMatch(/Pending2 already exists/i);
   });
 });
 test('postAddBlocksBackwards: should fail b/c cars in wrong lanes. ', () => {
@@ -130,6 +136,13 @@ test('getNextOnBlocks: should be empty after apply finish time', () => {
   });
 });
 
+// Still pending until phase2 time applied.
+test('postAddPending phase2 should fail : ', () => {
+  return postData(`${CF}/addPending`,{"orgIz": orgIz,"orgId":orgId, "cn":["333","334"] }).then(received => {
+    expect(received.data.status).toMatch(/error/i);
+    expect(received.data.error).toMatch(/Pending2 already exists/i);
+  });
+});
 test('postAddBlocksPhase2: should work. ', () => {
   return postData(`${CF}/addBlocks`,{"orgIz": orgIz,"orgId":orgId, "cn":["334","333"] }).then(received => {
     expect(received.data.status).toMatch(/ok/i);
@@ -153,5 +166,11 @@ test('applyFinishTime: (B Phase) should succeed', () => {
 test('getNextOnBlocks: should be empty after apply (B phase) finish time', () => {
   return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
     expect(data.length).toEqual(0);
+  });
+});
+
+test('postAddPending should work again: ', () => {
+  return postData(`${CF}/addPending`,{"orgIz": orgIz,"orgId":orgId, "cn":["333","334"] }).then(received => {
+    expect(received.data.status).toMatch(/ok/i);
   });
 });

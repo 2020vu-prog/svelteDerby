@@ -4,6 +4,7 @@
 
     import { racePhaseMap, driverMap, nextOnBlockKey } from './stores.js';
     import MaterialAdd from "./MaterialAdd.svelte";
+    import {safeGetAt} from "./utils.js";
 
     export let refreshTime;
     export let phaseKey;
@@ -106,13 +107,13 @@
 
                 <ul class="list-group ">
                     <li class="list-group-item ">
-                        <CarAndDriver number={rp.carNumbers[0]}  isWinner={isWinner(1,rp)} phaseLetter={getPhaseIcon(rp)}  timerLink={getTimerLink(rp)}/>
+                        <CarAndDriver number={rp.carNumbers[0]}  isWinner={isWinner(1,rp)} phaseLetter={getPhaseIcon(rp)}  timerLink={getTimerLink(rp)}  at={safeGetAt($driverMap,rp.carNumbers[0])}/>
                         {#if isWinner(1,rp)}
                             <big class="bigbadge badge">{getPhaseLetter(rp)}:{getWinTime(1,rp)} </big>
                         {/if}
                     </li>
                     <li class="list-group-item">
-                        <CarAndDriver number={rp.carNumbers[1]}  isWinner={isWinner(2,rp)} phaseLetter={getPhaseIcon(rp)}  timerLink={getTimerLink(rp)}/>
+                        <CarAndDriver number={rp.carNumbers[1]}  isWinner={isWinner(2,rp)} phaseLetter={getPhaseIcon(rp)}  timerLink={getTimerLink(rp)}  at={safeGetAt($driverMap,rp.carNumbers[1])}/>
                         {#if isWinner(2,rp)}
                              <big class="bigbadge badge">{getPhaseLetter(rp)}:{getWinTime(2,rp)} </big>
                          {/if}

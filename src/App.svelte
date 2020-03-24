@@ -19,7 +19,6 @@ import HotLoad from "./HotLoad.svelte";
 import { raceConfig} from './stores.js';
 import { onMount } from 'svelte';
 
-
 const routes = {
     // Exact path
     '/': RaceStandingList,

@@ -1,36 +1,37 @@
- <script>
-import { driverMap } from './stores.js';
-import {push, replace} from 'svelte-spa-router'
-import { onMount } from 'svelte';
+<script>
+    import { driverMap } from './stores.js';
+    import { push, replace } from 'svelte-spa-router'
+    import { onMount } from 'svelte';
 
-export let isWinner;
-export let phaseLetter;
-export let timerLink;
-export let number;
-let name=""
-onMount(async () => {
-    name=getDriverName(number,$driverMap);
+    export let isWinner;
+    export let phaseLetter;
+    export let timerLink;
+    export let number;
+    let name = ""
+    export let at;
+    onMount(async () => {
+        name = getDriverName(number, at);
 
-  });
-$: {
-    console.log("lookup modified DN")
-    name=getDriverName(number,$driverMap);
-}
+    });
+    $: {
+        console.log("lookup modified DN")
+        name = getDriverName(number, at);
+    }
 
-//console.log("timerLink",timerLink);
-const gotoTimer =  ()=> {
-    console.log("routing to:", timerLink);
-    //push("/drivers")
-    
-   // push("/ManualTimerAdd/1583608357232")
-    push(timerLink)
-}
-    const getDriverName =  (number)=> {
-    //console.log("gdn: "+carNumber)
-        if (number && $driverMap[ number]) {
+    //console.log("timerLink",timerLink);
+    const gotoTimer = () => {
+        console.log("routing to:", timerLink);
+        //push("/drivers")
+
+        // push("/ManualTimerAdd/1583608357232")
+        push(timerLink)
+    }
+    const getDriverName = (number) => {
+        //console.log("gdn: "+carNumber)
+        if (number && $driverMap[number]) {
             return ($driverMap[number].name);
         }
-        else{
+        else {
             return " ";
         }
     };

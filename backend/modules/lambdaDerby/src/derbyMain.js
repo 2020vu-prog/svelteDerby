@@ -365,11 +365,42 @@ const buildDdbCarFilter = (cnList, containsValues, qualifier = " OR ") => {
 		containsValues[":cn" + i] = { S: cnList[i] };
 	}
 
-	return "(" + containsFilters.join(" OR ") + ")";
+	return "(" + containsFilters.join(qualifier) + ")";
 }
 const buildKeyCondition = (pk, containsValues) => {
 	containsValues[":pk"] = { S: pk };
 	return "PK = :pk";
+}
+/*
+**
+*/
+const ddbQueryRsAlreadyPending = async (json) => {
+	const containsValues = {};
+	const filterString = buildDdbCarFilter(json.cn, containsValues, " OR ");
+	const filterPendingString=filterString + " AND attribute_not_exists(ph2) ";
+	const keyCondition = buildKeyCondition(json.orgId + ":RS", containsValues);
+
+	console.log("containsValues:", containsValues);
+	var params = {
+		TableName: process.env.DynamoDbTable,
+
+		KeyConditionExpression: keyCondition,
+		FilterExpression: filterPendingString,
+		ReturnConsumedCapacity: "TOTAL",
+		ExpressionAttributeValues: containsValues
+	};
+	console.log("ddb ddbQueryRsAlreadyPending: " + JSON.stringify(params));
+
+	try {
+		var data = await ddbClient.query(params);
+		console.log("ddbQueryRsAlreadyPending: " + data);           // successful response
+		console.log("ddbQueryRsAlreadyPending: " + JSON.stringify(data));           // successful response
+		return data.Count;
+	}
+	catch (err) {
+		console.log("queryRsAlreadyPending failed: ", err, err.stack); // an error occurred
+	}
+	return 99;
 }
 /*
 **
@@ -473,16 +504,6 @@ const addSingle = async (json) => {
 const addPending2 = async (event) => {
 
 	const  eventKey= getEventKey(event);
-	const json=JSON.parse(event.body)
-	console.log("addPending2: " + JSON.stringify(json));
-	json.PK = ":RS";  // force RaceStanding
-
-
-	const alreadyExists = await ddbQueryRsContains(json);
-	if (alreadyExists > 0) {
-		return { error: "Pending2 already exists" };
-	}
-
 	const cfg = await getConfig(eventKey);
 	if (!cfg ) { 
 		return {
@@ -490,6 +511,17 @@ const addPending2 = async (event) => {
 			error: "No Event config found.",
 		};
 	}
+
+	const json=JSON.parse(event.body)
+	console.log("addPending2: " + JSON.stringify(json));
+	json.PK = ":RS";  // force RaceStanding
+
+
+	const alreadyExists = await ddbQueryRsAlreadyPending(json);
+	if (alreadyExists > 0) {
+		return { error: "Pending2 already exists" ,status: "error"};
+	}
+
 
 	if (cfg.lcl1) {  //low car lane 1?
 		json.cn.sort();
@@ -555,6 +587,7 @@ const applyFinishTime = async (json) => {
 
 const cloneRs = async (srcRs) => {
 	const clone={
+		PK: ":RS",  // force RacePhase
 		cn: srcRs.cn,
 		orgId: srcRs.orgId,
 		by: srcRs.by

@@ -3,6 +3,7 @@ import {  driverMap, carFilter, doRefreshBlocks} from './stores.js';
 import CarAndDriver from "./CarAndDriver.svelte";
 import MaterialAdd from "./MaterialAdd.svelte";
 import CarFilter from "./CarFilter.svelte";
+import {safeGetAt} from "./utils.js";
 
 
 const filterMatches=(driver,lclFilter)=>{
@@ -25,7 +26,7 @@ const getCarNumbersAsList=(driverMap)=>{
 		{#each getCarNumbersAsList($driverMap) as carNumber}
 			{#if filterMatches(carNumber, $carFilter)}
             <div class="panel panel-info">
-				<CarAndDriver number={carNumber} isWinner="" phaseLetter=""/>
+				<CarAndDriver number={carNumber} at={safeGetAt($driverMap,carNumber)} isWinner="" phaseLetter=""/>
                 </div>
 			{/if}
 		{/each}

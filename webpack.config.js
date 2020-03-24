@@ -18,9 +18,19 @@ module.exports = {
 	},
 	output: {
 		path: __dirname + '/public',
-		filename: '[name].[contentHash].js',
-		chunkFilename: '[name].[id].js'
+		filename: '[name].[contentHash].js'
 	},
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all'
+        }
+      }
+    }
+  },
 	module: {
 		rules: [
 			{
