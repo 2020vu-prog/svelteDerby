@@ -3,6 +3,7 @@ terraform.tfstate.backup
 amplify/
 node_modules/
 /public/bundle.*
+/public/vendors.*.js
 /public/index.html
 build/
 .terraform/

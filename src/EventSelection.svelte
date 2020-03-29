@@ -51,8 +51,13 @@
     }
     const doSelect=async (config)=>{
 
+      console.log("selected:",config)
       await dbReset();
+      console.log("db reset complete.")
+
       clearStore();
+            console.log("clearStore  complete.")
+
         //console.log("selecting id: ", config.orgId);
         //console.log("selecting iz:", config.orgIz);
         console.log("selecting config:", config);

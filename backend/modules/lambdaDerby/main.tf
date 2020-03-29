@@ -4,6 +4,8 @@ variable DeployEnvironment {}
 variable DynamoDbArn {}
 variable DistDbArn {}
 variable AwsRegion {}
+variable   CcaQueueId  {}
+variable   CcaQueueArn  {}
 locals{
   tags = {
     Environment = var.DeployEnvironment
@@ -82,6 +84,7 @@ resource "aws_lambda_function" "lambda" {
 
       DistDbTable= local.DistDbTable
       DistDbArn= var.DistDbArn
+      CcaQueueId =var.CcaQueueId 
 
       AwsRegion = var.AwsRegion
     }
@@ -98,6 +101,7 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
+		"sqs:SendMessage",
 		"dynamodb:Query",
                 "dynamodb:BatchWriteItem",
                 "dynamodb:BatchGetItem",
@@ -107,6 +111,7 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
         ]   
         resources = [
                 "arn:aws:logs:*:*:*",
+                var.CcaQueueArn,
                 var.DynamoDbArn,
                 var.DistDbArn
         ]   

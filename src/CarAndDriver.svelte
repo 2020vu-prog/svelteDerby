@@ -14,7 +14,7 @@
 
     });
     $: {
-        console.log("lookup modified DN")
+        console.log("lookup modified DN:", number)
         name = getDriverName(number, at);
     }
 

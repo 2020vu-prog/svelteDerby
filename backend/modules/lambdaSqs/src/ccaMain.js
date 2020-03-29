@@ -1,9 +1,190 @@
 'use strict'
+const AWS = require("aws-sdk");
+const  s3 = new AWS.S3({apiVersion: '2006-03-01'});
+const fs = require('fs');
+const { DynamoDB } = require('@aws-sdk/client-dynamodb-v2-node');
+const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
+
+
+
+const flushBulkRequests = async (requests) => {
+        if (requests.length > 0) {
+                var params = {
+                        RequestItems: {
+                                [process.env.DistDbTable]: requests
+                        },
+                        ReturnConsumedCapacity: "TOTAL"
+                }
+                try {
+                        var data = await ddbClient.batchWriteItem(params);
+
+                        console.log("Added Bulk: " + JSON.stringify(data));           // successful response
+                        return requests.length;// TODO get from TotalProcessed;
+                }
+                catch (err) {
+                        console.log(err, err.stack); // an error occurred
+                        return 0;
+                }
+        }
+}
+const addBulk = async (json) => {
+        var requests = {}; // keyed by unique pk/sk to elimate duplicates.
+        var totalProcessed = 0;
+        for (var i = 0; i < json.length; i++) {
+                console.log("addBulk: " + i);
+                const [uk, putRequest] = fmtBulkPut(json[i]);
+                if (putRequest && uk) {
+                        requests[uk] = putRequest;
+                }
+                if (Object.keys(requests).length > 20) {
+                        totalProcessed += await flushBulkRequests(Object.values(requests));
+                        requests = {};
+                }
+        }
+        totalProcessed += await flushBulkRequests(Object.values(requests));
+        return { status: "ok", detail: "BulkProcessed", count: totalProcessed };
+}
+const addSingle = async (json) => {
+        const [uk, putRequest] = fmtBulkPut(json);
+        if (putRequest && uk) {
+                await flushBulkRequests([putRequest]);
+                return { status: "ok" };
+        }
+        return { error: "Invalid Request" };
+}
+const fmtBulkPut = (json1) => {
+
+        if (json1) {
+                console.log("addBulk pw:",json1);
+                var marshalled = AWS.DynamoDB.Converter.marshall(json1);
+                console.log("addBulk mar:",marshalled);
+                const putRequest = {
+                        PutRequest: {
+                                Item: marshalled
+                        }
+                }
+                const uk = json1.DP + ":" + json1.DS;
+                return [uk, putRequest];
+        }
+        else {
+                console.log("addBulk ignored invalid:" + JSON.stringify(json1));
+                return [null, null];
+        }
+};
+
+const promoteToObject = (unmarshalled, factory) => {
+        if (factory) {
+                return factory.build(unmarshalled);
+        }
+        else {
+                return unmarshalled;
+        }
+}
+
+const unmarshallResultsToArray = (data, factory) => {
+        const rc = [];
+        for (var i = 0; i < data.Items.length; i++) {
+                var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
+                unmarshalled = promoteToObject(unmarshalled, factory);
+                if (unmarshalled) {
+                        rc.push(unmarshalled);
+                }
+        }
+        return rc;
+};
+const ddbQueryRaceHistory = async (qsp) => {
+
+
+	var containsValues = {};
+	containsValues[":dp"] = { S: qsp.orgId };
+	var params = {
+		TableName: process.env.DistDbTable,
+		KeyConditionExpression: "DP = :dp ",
+		ReturnConsumedCapacity: "TOTAL",
+		ScanIndexForward: false,  // sort descending
+		ExpressionAttributeValues: containsValues
+	};
+	console.log("history query: " + JSON.stringify(params));
+	try {
+		var data = await ddbClient.query(params);
+		const cc=data.ConsumedCapacity.CapacityUnits;
+		console.log("queryRaceHistory cc: " , cc);           // successful response
+		console.log("queryRaceHistory: " , data);           // successful response
+		console.log("queryRaceHistory: " + JSON.stringify(data));           // successful response
+		const rc = unmarshallResultsToArray(data);
+
+		return rc
+	}
+	catch (err) {
+		console.log("queryRaceHistory failed: ", err, err.stack); // an error occurred
+	}
+	return [{ error: "Query History Failed" }, cacheMaxSeconds];
+}
+const putS3=async(msg,items)=>{
+  const now= new Date().getTime();
+  const putObjectName="archive/"+msg.orgIz +"/" + msg.orgId +"/" + now +".json";
+ var params = {
+  Body: JSON.stringify(items),
+  Key: putObjectName,
+  Bucket: process.env.DstBucket
+ };
+	 try{
+	   console.log("puts3 to :",putObjectName);           // successful response
+		const didPut=await s3.putObject(params).promise()
+	   console.log("puts3:",didPut);           // successful response
+
+		const newCCA={
+			DP: msg.orgId,
+			DS: now*1000,
+			PK: "CCA",
+			s3: putObjectName,
+			orgId: msg.orgIz,  // name mismatch, allow!
+		};
+		   console.log("db adding:",newCCA);           // successful response
+		await addSingle(newCCA);
+		   console.log("db added:",newCCA);           // successful response
+	}
+	catch(err){
+	   console.log("s3put failed:",err);           // successful response
+	}
+
+}
+const getS3=async(msg)=>{
+ var params = {
+  Key: "HappyFace2.jpg", 
+  Bucket: process.env.DstBucket
+ };
+	 try{
+		const didGet=await s3.getObject(params).promise()
+	   console.log("gets3:",didGet);
+		}
+	catch(err){
+	   console.log("s3get failed:",err);           // successful response
+	}
+
+}
+async function asyncForEach(array, callback) {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
+}
 
 exports.handler = async function(event, context) {
-  event.Records.forEach(record => {
-    const { body } = record;
-    console.log("sqs:",body);
-  });
+  await asyncForEach( event.Records, async record => {
+	    const { body } = record;
+	    console.log("sqs b4PutAndGet:",body);
+	    try{
+		const parsedQsp=JSON.parse(body)
+		const items=await ddbQueryRaceHistory(parsedQsp);
+
+		await getS3(parsedQsp);
+		await putS3(parsedQsp,items);
+	    }
+	    catch(err){
+		    console.log("s3 error:",err);
+	    }
+	  }
+	);
+	
   return {};
 }

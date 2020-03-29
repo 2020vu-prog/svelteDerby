@@ -3,6 +3,8 @@ const EntityFactory = require('./shared/EntityFactory.js')
 const AWS = require("aws-sdk");
 const { DynamoDB } = require('@aws-sdk/client-dynamodb-v2-node');
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
+const  sqs = new AWS.SQS({apiVersion: '2012-11-05'});
+
 var jwt = require('jsonwebtoken');
 
 
@@ -11,6 +13,23 @@ const configMap = {
 
 
 
+const requestCCA= async (qsp,data)=>{
+	var params = {
+	  MessageGroupId: "orgId:"+qsp.orgId,
+	  MessageBody: JSON.stringify(qsp),
+	  // MessageId: "Group1",  // Required for FIFO queues
+	  QueueUrl: process.env.CcaQueueId,
+	  MessageDeduplicationId:create_UUID()
+	};
+	try {
+	    console.log("SQS sending:", qsp);
+		const sent=await sqs.sendMessage(params).promise();
+	    console.log("SQS send Success", sent.MessageId);
+	  }
+	  catch(err){
+	    console.log("SQS send Error", err);
+	}
+};
 const getConfig = async (eventKey) => {
 
 	if (configMap[eventKey]) {
@@ -114,6 +133,14 @@ const ddbQueryRaceHistory = async (qsp) => {
 		console.log("queryRaceHistory: " , data);           // successful response
 		console.log("queryRaceHistory: " + JSON.stringify(data));           // successful response
 		const rc = unmarshallResultsToArray(data);
+
+		if(cc>0.5 || data.Count >= limit){
+			console.log("queryRaceHistory: requesting CCA: " ,cc);
+			await requestCCA(qsp, data);
+		}
+		else{
+			console.log("queryRaceHistory: skipping CCA: " ,cc);
+		}
 
 
 

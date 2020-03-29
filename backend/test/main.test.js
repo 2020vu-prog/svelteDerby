@@ -3,9 +3,13 @@ const axios = require("axios");
 const { v4: uuidv4 } = require('uuid');
 
 
+const dloop=[];
+for(var x=701;x<730;x++){
+	dloop.push([x]);
+}
 
-const CF="https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
-//const CF="https://d15zun4udup4ky.cloudfront.net/app"
+//const CF="https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
+const CF="https://d15zun4udup4ky.cloudfront.net/app"
 
 
 //time curl  $VERBOSE $CF/addBulk         -XPOST --data @bulk.json        --header "$AUTH"
@@ -64,6 +68,14 @@ test('postAddParticipant: ', () => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
+
+//test.each([[778],[ 776], [775]])('postAddParticipantLOOP: ', (carNumber) => {
+test.each(dloop)('postAddParticipantLOOP: ', (carNumber) => {
+  return postData(`${CF}/addParticipant`,{"orgIz": orgIz,"orgId":orgId, "number":""+carNumber, "name":"Elmer"+carNumber}).then(received => {
+    expect(received.data.status).toMatch(/ok/i);
+  });
+});
+
 test('postAddPending should work: ', () => {
   return postData(`${CF}/addPending`,{"orgIz": orgIz,"orgId":orgId, "cn":["333","334"] }).then(received => {
     expect(received.data.status).toMatch(/ok/i);

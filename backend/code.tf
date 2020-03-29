@@ -14,6 +14,8 @@ variable CognitoPoolArn {}
 module "derbyMainLambda" {
   source = "./modules/lambdaDerby"
 
+    CcaQueueId  = aws_sqs_queue.cacheAlignmentQueue.id
+    CcaQueueArn  = aws_sqs_queue.cacheAlignmentQueue.arn
   DynamoDbArn=aws_dynamodb_table.derby-dynamodb-table.arn
   DistDbArn=aws_dynamodb_table.derby-distribution.arn
   DeployEnvironment=var.DeployEnvironment

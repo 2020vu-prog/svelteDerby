@@ -7,7 +7,7 @@
   import { Auth } from 'aws-amplify';
   import Amplify, { PubSub } from 'aws-amplify';
   import { AWSIoTProvider } from '@aws-amplify/pubsub/lib/Providers';
-  import {db , dbInit} from './eventDb.js';
+  import {db } from './eventDb.js';
 
   const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
 
@@ -138,7 +138,12 @@
 
       const json = response.data[i];
       const e = entityFactory.build(json);
-      await applyEntityToHist(e, hist);
+      if(e!=null){
+        await applyEntityToHist(e, hist);
+      }
+      else{
+        console.log("wtf json: ",json)
+      }
     }
     applyHistToStore(hist);
 
@@ -175,7 +180,7 @@
   }
   const doRefresh = async () => {
     watchIot();
-    await dbInit();
+    //await dbInit();
     console.log("old nobKey:", $nextOnBlockKey)
     const currentSession = await Auth.currentSession();
     const bearer = currentSession.idToken.jwtToken;

@@ -13,11 +13,14 @@ import EventSelection from './EventSelection.svelte'
 import OrgSelection from './OrgSelection.svelte'
 import ManualTimerAdd from './ManualTimerAdd.svelte'
 import RaceStandingAdd from './RaceStandingAdd.svelte'
+import AboutPage from './AboutPage.svelte'
 import Login from './Login.svelte'
 import HotLoad from "./HotLoad.svelte";
 //import CognitoAuth from "./CognitoAuth.svelte";
 import { raceConfig} from './stores.js';
 import { onMount } from 'svelte';
+import {db } from './eventDb.js';
+const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
 
 const routes = {
     // Exact path
@@ -31,6 +34,7 @@ const routes = {
     '/driverAdd': DriverAdd,
     '/eventSelection/:orgIz': EventSelection,
     '/orgSelection': OrgSelection,
+    '/about': AboutPage,
    // '/raceStandingAdd': RaceStandingAdd,
 }
 
@@ -47,21 +51,47 @@ $: buildMenuMap($AuthStore)
       { text: "Race History", clickHandler: () => navTo('/RsList/History') },
       { text: "Pending Races", clickHandler: () => navTo('/RsList/Pending') },
       { text: "Watch different event", clickHandler: () => navTo('/orgSelection'), alwaysShow: true },
+      { text: "About", clickHandler: () => navTo('/about'), alwaysShow: true },
+
       { text: loginLabel, clickHandler: () => navTo('/login'), alwaysShow: true },
     ]
   }
-
+const reloadEvent=async (raceConfigParam)=>{
+  const start=new Date().getTime();
+  const rpList=await db.RacePhase.toArray()
+  const rsList=await db.RaceStanding.toArray()
+  const ptcptList=await db.Participant.toArray()
+  const entityFactory = new EntityFactory({});
+  const done=new Date().getTime();
+  const elapsed=done-start;
+  console.log("dexie reload took",elapsed)
+  raceConfigParam.baseUrl="/app";
+  raceConfigParam.title=raceConfigParam.orgId;
+  $raceConfig=raceConfigParam;
+  
+}
 onMount(async () => {
     console.log("mounted app");
     buildMenuMap();
-    replace('/orgSelection')
+    const cfg=await db.EventConfig.toArray()
+    console.log("config:",cfg);
+
+    if(cfg.length){
+      await reloadEvent(cfg[0]);
+      replace('/RpList')
+
+    }else{
+      replace('/orgSelection')
+
+    }
+
   });
-const shouldDisplay=(menuOption, raceConfig)=>{
+const shouldDisplay=(menuOption, raceConfigParam)=>{
   if(menuOption.alwaysShow )
     return true;
 
   
-  return raceConfig.orgIz && raceConfig.orgId;
+  return raceConfigParam.orgIz && raceConfigParam.orgId;
 }
 const getTitle=(cfg)=>{
   if(cfg&&cfg.title) return cfg.title;

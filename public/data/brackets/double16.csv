@@ -1,3 +1,4 @@
+Round,Heat,WinDest,LoseDest
 W1,01,13A,09A
 W1,02,13B,12B
 W1,03,14A,10A
@@ -17,7 +18,6 @@ W3,24,28B,26B
 
 W4,28,30A,29B
 
-#losers
 L11,09,17A,OUT
 L11,10,18A,OUT
 L11,11,19A,OUT
@@ -43,19 +43,19 @@ L9,22,26A,501B
 Runoff,501,Place7,Place8
 Runoff,502,Place5,Place6
 
-Seed01,01A
-Seed02,02A
-Seed03,03A
-Seed04,04A
-Seed05,05A
-Seed06,06A
-Seed07,07A
-Seed08,08A
-Seed09,08B
-Seed10,06B
-Seed11,04B
-Seed12,02B
-Seed13,07B
-Seed14,03B
-Seed15,05B
-Seed16,01B
+Seed01,01A,,
+Seed02,02A,,
+Seed03,03A,,
+Seed04,04A,,
+Seed05,05A,,
+Seed06,06A,,
+Seed07,07A,,
+Seed08,08A,,
+Seed09,08B,,
+Seed10,06B,,
+Seed11,04B,,
+Seed12,02B,,
+Seed13,07B,,
+Seed14,03B,,
+Seed15,05B,,
+Seed16,01B,,

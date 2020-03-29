@@ -116,6 +116,7 @@ data "aws_iam_policy_document" "sqs_allow_doc" {
                 "dynamodb:GetItem",
                 "dynamodb:PutItem",
                 "dynamodb:UpdateItem",
+		"s3:GetObject",
 		"s3:PutObject",
 		"s3:PutObjectAcl"
         ]   
