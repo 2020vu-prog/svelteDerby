@@ -4,8 +4,12 @@ const path = require('path');
 
 const mode = process.env.NODE_ENV || 'development';
 const prod = mode === 'production';
+const pkg = require('./package.json')
+
 
 module.exports = {
+  VERSION: pkg.version,  // exposed on AboutPage.svelte
+
 	entry: {
 		bundle: ['./src/main.js']
 	},
