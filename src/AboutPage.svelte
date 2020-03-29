@@ -1,5 +1,8 @@
 <script>
     import {  carFilter} from './stores.js';
+    import {buildVersion, buildDate} from "./utils.js";
 </script>
-
-Build Number2: {process.env.VERSION}
+Build Version: {buildVersion()} 
+<p/>
+Build Date: {buildDate()}
+<p/>

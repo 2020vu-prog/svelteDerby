@@ -6,3 +6,9 @@ export function safeGetAt(map, key) {
         return 0;
     }
 }
+export function buildDate(){
+    return '[AIV]{date}[/AIV]'
+}
+export function buildVersion(){
+    return '[AIV]{version}[/AIV]'
+}

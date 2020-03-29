@@ -1,14 +1,14 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const WebpackAutoInject = require('webpack-auto-inject-version');
+
 const path = require('path');
 
 const mode = process.env.NODE_ENV || 'development';
 const prod = mode === 'production';
-const pkg = require('./package.json')
 
 
 module.exports = {
-  VERSION: pkg.version,  // exposed on AboutPage.svelte
 
 	entry: {
 		bundle: ['./src/main.js']
@@ -82,6 +82,12 @@ module.exports = {
 	  },
 	mode,
 	plugins: [
+		new WebpackAutoInject({
+		   components: {
+			AutoIncreaseVersion: false
+		    }
+		}),
+
 		new MiniCssExtractPlugin({
 			filename: '[name].css'
 		}),
