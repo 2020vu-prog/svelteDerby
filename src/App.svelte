@@ -10,7 +10,10 @@ import RacePhaseList from './RacePhaseList.svelte'
 import DriverList from './DriverList.svelte'
 import DriverAdd from './DriverAdd.svelte'
 import EventSelection from './EventSelection.svelte'
+import EventAdd from './EventAdd.svelte'
+
 import OrgSelection from './OrgSelection.svelte'
+import OrgAdd from './OrgAdd.svelte'
 import ManualTimerAdd from './ManualTimerAdd.svelte'
 import RaceStandingAdd from './RaceStandingAdd.svelte'
 import AboutPage from './AboutPage.svelte'
@@ -33,7 +36,9 @@ const routes = {
     '/raceStandingAdd/:type': RaceStandingAdd,
     '/driverAdd': DriverAdd,
     '/eventSelection/:orgIz': EventSelection,
+    '/eventAdd': EventAdd,
     '/orgSelection': OrgSelection,
+    '/orgAdd': OrgAdd,
     '/about': AboutPage,
    // '/raceStandingAdd': RaceStandingAdd,
 }

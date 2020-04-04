@@ -73,6 +73,8 @@
   
   
   <div>
+    <MaterialAdd  clickHandleRoute="/eventAdd" />
+
     <h4>EventSelection for {params.orgIz}</h4>
 
     <p />

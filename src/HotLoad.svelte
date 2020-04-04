@@ -93,6 +93,7 @@
       // baseUrl is /app.   archives are at root.
       const response=await axios.get($raceConfig.baseUrl + "/../" +s3Path);
       console.log("LoadCca finished:",response)
+      parseAndApply(response,false); // don't recurse into another CCA load
     }
     catch(err){
       console.log("LoadCca failed:",err)
@@ -133,7 +134,8 @@
   /*
   **
   */
-  const parseAndApply = async (response) => {
+  const parseAndApply = async (response,doLoadCca) => {
+    console.log("parseAndApply:",doLoadCca)
     const entityFactory = new EntityFactory({});
 
     const hist = getHistFromStore();
@@ -155,7 +157,7 @@
       }
       else{
         console.log("wtf json: ",json)
-        if(json.PK==="CCA" && json.s3){
+        if(doLoadCca && json.PK==="CCA" && json.s3){
           await loadCcaHistory(json.s3);
         }
       }
@@ -211,7 +213,7 @@
         console.log("history:" + response.data.length);
         //console.log("history:",response.data);
 
-        parseAndApply(response);
+        parseAndApply(response,true);
 
 
       })

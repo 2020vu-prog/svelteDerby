@@ -40,6 +40,8 @@
 
 
 <div>
+  <MaterialAdd  clickHandleRoute="/orgAdd" />
+
   <h4>Organization List </h4>
   <p />
 
