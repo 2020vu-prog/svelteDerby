@@ -86,6 +86,18 @@
     }
   };
 
+  const loadCcaHistory= async(s3Path)=>{
+    console.log("LoadCca begin.")
+
+    try{
+      // baseUrl is /app.   archives are at root.
+      const response=await axios.get($raceConfig.baseUrl + "/../" +s3Path);
+      console.log("LoadCca finished:",response)
+    }
+    catch(err){
+      console.log("LoadCca failed:",err)
+    }
+  }
   const applyFromMqMsg = async (json) => {
     const hist = getHistFromStore();
     const entityFactory = new EntityFactory({});
@@ -143,6 +155,9 @@
       }
       else{
         console.log("wtf json: ",json)
+        if(json.PK==="CCA" && json.s3){
+          await loadCcaHistory(json.s3);
+        }
       }
     }
     applyHistToStore(hist);

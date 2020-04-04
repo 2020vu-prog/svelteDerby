@@ -18,11 +18,11 @@ const flushBulkRequests = async (requests) => {
                 try {
                         var data = await ddbClient.batchWriteItem(params);
 
-                        console.log("Added Bulk: " + JSON.stringify(data));           // successful response
+                        console.log("flushBulk: " + JSON.stringify(data));           // successful response
                         return requests.length;// TODO get from TotalProcessed;
                 }
                 catch (err) {
-                        console.log(err, err.stack); // an error occurred
+                        console.log("flushBulk:",err, err.stack); // an error occurred
                         return 0;
                 }
         }
@@ -55,9 +55,9 @@ const addSingle = async (json) => {
 const fmtBulkPut = (json1) => {
 
         if (json1) {
-                console.log("addBulk pw:",json1);
+                console.log("fmtBulkPut pw:",json1);
                 var marshalled = AWS.DynamoDB.Converter.marshall(json1);
-                console.log("addBulk mar:",marshalled);
+                console.log("fmtBulkPut mar:",marshalled);
                 const putRequest = {
                         PutRequest: {
                                 Item: marshalled
@@ -67,7 +67,30 @@ const fmtBulkPut = (json1) => {
                 return [uk, putRequest];
         }
         else {
-                console.log("addBulk ignored invalid:" + JSON.stringify(json1));
+                console.log("fmtBulkPut ignored invalid:" + JSON.stringify(json1));
+                return [null, null];
+        }
+};
+const fmtBulkDelete = (json1) => {
+
+        if (json1) {
+                console.log("fmtBulkDelete raw:",json1);
+		const jsonKey={
+			DP: json1.DP,
+			DS: json1.DS
+		}
+                var marshalled = AWS.DynamoDB.Converter.marshall(jsonKey);
+                console.log("fmtBulkDelete marsh:",marshalled);
+                const putRequest = {
+                        DeleteRequest: {
+                                Key: marshalled
+                        }
+                }
+                const uk = json1.DP + ":" + json1.DS;
+                return [uk, putRequest];
+        }
+        else {
+                console.log("fmtBulkDelete ignored invalid:" + JSON.stringify(json1));
                 return [null, null];
         }
 };
@@ -143,6 +166,7 @@ const putS3=async(msg,items)=>{
 		   console.log("db adding:",newCCA);           // successful response
 		await addSingle(newCCA);
 		   console.log("db added:",newCCA);           // successful response
+		await doBulkCleanup(items);
 	}
 	catch(err){
 	   console.log("s3put failed:",err);           // successful response
@@ -162,6 +186,20 @@ const getS3=async(msg)=>{
 	   console.log("s3get failed:",err);           // successful response
 	}
 
+}
+const doBulkCleanup=async (items)=>{
+	var requests=[];
+	for (let index = 0; index < items.length; index++) {
+		const [uk, deleteRequest] = fmtBulkDelete(items[index]);
+		requests.push(deleteRequest);
+		if(requests.length>=24){
+			await flushBulkRequests(requests);
+			requests=[];
+		}
+	}
+	if(requests.length>0){
+			await flushBulkRequests(requests);
+        }
 }
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
