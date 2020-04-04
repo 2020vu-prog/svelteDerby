@@ -86,14 +86,14 @@
     }
   };
 
-  const loadCcaHistory= async(s3Path)=>{
+  const loadCcaHistory= async(s3Path,histP)=>{
     console.log("LoadCca begin.")
 
     try{
       // baseUrl is /app.   archives are at root.
       const response=await axios.get($raceConfig.baseUrl + "/../" +s3Path);
       console.log("LoadCca finished:",response)
-      parseAndApply(response,false); // don't recurse into another CCA load
+      parseAndApply(response,false,histP); // don't recurse into another CCA load
     }
     catch(err){
       console.log("LoadCca failed:",err)
@@ -134,17 +134,21 @@
   /*
   **
   */
-  const parseAndApply = async (response,doLoadCca) => {
-    console.log("parseAndApply:",doLoadCca)
+  const parseAndApply = async (response,doLoadCca,histP) => {
+    console.log("parseAndApply:",doLoadCca, histP)
     const entityFactory = new EntityFactory({});
 
-    const hist = getHistFromStore();
+    const hist = (histP)?histP:getHistFromStore();
+  
 
 
     //TODO:   shouldn't clear hist on refresh (we just loaded it!)
+    
     entityFactory.entityTypes.forEach(et => {
       console.log("et:", et)
-      hist[et] = {};
+      if(!hist[et]){
+        hist[et] = {};
+      }
     });
 
 
@@ -158,11 +162,14 @@
       else{
         console.log("wtf json: ",json)
         if(doLoadCca && json.PK==="CCA" && json.s3){
-          await loadCcaHistory(json.s3);
+          await loadCcaHistory(json.s3,hist);
         }
       }
     }
-    applyHistToStore(hist);
+    if(!histP){
+      console.log("parseAndApply: saving hist")
+      applyHistToStore(hist);
+    }
 
     return hist;
   }
