@@ -10,6 +10,8 @@
     var jsReady = false;
     var treeReady = false;
     var mounted = false;
+    var loginForm = {};
+    $:{syncAddButton(loginForm.chartName)}
     const jqLoaded = () => {
         console.log("jqloaded")
         jsReady = true;
@@ -22,9 +24,6 @@
 
     };
     onMount(async () => {
-        console.log("mounted focus");
-        document.getElementById("carNumber").focus();
-
         mounted = true;
         tryBuild();
 
@@ -37,15 +36,20 @@
             window.$('#jstree_demo_div').jstree({
                 'core': {
                     'data': [
-                        { "id": "ajson1", "parent": "#", "text": "Simple root node" },
-                        { "id": "ajson2", "parent": "#", "text": "Root node 2" },
-                        { "id": "ajson3", "parent": "ajson2", "text": "Child 1" },
-                        { "id": "ajson4", "parent": "ajson2", "text": "Child 2" },
+                        { "id": "aasbd", "parent": "#", "text": "AASBD" },
+                        { "id": "ndr", "parent": "#", "text": "NDR" },
+                        { "id": "ndrDoubles", "parent": "ndr", "text": "Doubles" },
+                        { "id": "ndrDouble6", "parent": "ndrDoubles", "text": "6 Car" },
+                        { "id": "ndrSingles", "parent": "ndr", "text": "Singles" },
+                        { "id": "aasbdDoubles", "parent": "aasbd", "text": "Doubles" },
+                        { "id": "aasbdSingles", "parent": "aasbd", "text": "Singles" },
                     ]
                 }
             });
             window.$('#jstree_demo_div').on("changed.jstree", function (e, data) {
                 console.log(data.selected);
+                loginForm.bracketSelected = data.selected;
+                syncAddButton();
             });
         }
     }
@@ -57,7 +61,7 @@
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
-            number: loginForm.carNumber,
+            bracket: loginForm.bracketSelected,
             name: loginForm.chartName,
         }
 
@@ -74,9 +78,19 @@
                 console.log("addChart failed: " + err)
             })
         loginForm.chartName = "";
-        loginForm.carNumber = "";
+        loginForm.bracketSelected = "";
     }
-    const loginForm = {
+    function syncAddButton() {
+        if (!mounted) {
+            return;
+        }
+        if (loginForm.bracketSelected && loginForm.chartName) {
+            document.getElementById("formSubmitButton").disabled = false;
+            console.log("sync add button SYNC")
+        } else {
+            console.log("sync add button FAIL")
+            document.getElementById("formSubmitButton").disabled = true;
+        }
     }
 // embedded script link: https://www.nielsvandermolen.com/external-javascript-sveltejs/
 
@@ -95,12 +109,10 @@
     <label>
         Chart Type:
         <div id="jstree_demo_div"></div>
-
-        <input id="carNumber" type="number" bind:value={loginForm.carNumber} placeholder="Car Number" />
     </label>
     <label>
         ChartName:
         <input type="text" bind:value={loginForm.chartName} placeholder="Chart Name" />
     </label>
-    <button type="submit">Add</button>
+    <button id="formSubmitButton" type="submit" disabled>Add</button>
 </form>
