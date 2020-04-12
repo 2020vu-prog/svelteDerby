@@ -7,6 +7,7 @@ import { store as AuthStore } from './stores/auth.js'
 
 import RaceStandingList from './RaceStandingList.svelte'
 import RacePhaseList from './RacePhaseList.svelte'
+import ChartList from './ChartList.svelte'
 import DriverList from './DriverList.svelte'
 import DriverAdd from './DriverAdd.svelte'
 import EventSelection from './EventSelection.svelte'
@@ -42,6 +43,7 @@ const routes = {
     '/orgAdd': OrgAdd,
     '/about': AboutPage,
     '/chart': Chart,
+    '/chartList': ChartList,
    // '/raceStandingAdd': RaceStandingAdd,
 }
 
@@ -57,7 +59,8 @@ $: buildMenuMap($AuthStore)
       { text: "Phase History", clickHandler: () => navTo('/RpList') },
       { text: "Race History", clickHandler: () => navTo('/RsList/History') },
       { text: "Pending Races", clickHandler: () => navTo('/RsList/Pending') },
-      { text: "Charts", clickHandler: () => navTo('/chart') },
+      { text: "Charts", clickHandler: () => navTo('/chartList') },
+      { text: "ChartDemo", clickHandler: () => navTo('/chart') },
       { text: "Watch different event", clickHandler: () => navTo('/orgSelection'), alwaysShow: true },
       { text: "About", clickHandler: () => navTo('/about'), alwaysShow: true },
 

@@ -3,6 +3,7 @@ import axios from "axios";
 import { writable, readable } from 'svelte/store';
 import { storeAuth} from './stores/auth.js'
 
+export const prefStore=writable({"initial":1,disableCache:2});
 export const doRefreshBlocks=writable(0);
 export const standingsMap = writable({});
 export const racePhaseMap = writable({});
@@ -17,8 +18,33 @@ export const raceConfig= writable({
     baseUrlOLD: "https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test",
 });
 
+const  getPrefs=()=>{
+    var prefs={}; 
+    const unsubscribe = prefStore.subscribe(value => {
+	    prefs = value;
+    });
+    unsubscribe();
+    return prefs;
+}
+export function getCacheKey(){
+    var prefs=getPrefs();
+    const expiresMS=new Date().getTime() -(5*60*1000); // 5 minutes ago
+    console.log("getCacheKey:",expiresMS," pref:",prefs.disableCache);
+    if(prefs.disableCache && prefs.disableCache >  expiresMS ){
+        return prefs.disableCache+"";
+    }
+    else{
+        return "";
+    }
+}
 
+export function setCacheKey(newKey){
+    var prefs=getPrefs();
 
+    prefs.disableCache=newKey;
+    prefStore.set(prefs);
+
+}
 
 export const doRefreshOLD=()=>{
     axios.get('./data/driver.json')

@@ -10,6 +10,7 @@
     import axios from "axios";
     import {push, pop, replace} from 'svelte-spa-router'
     import {db , dbReset} from './eventDb.js';
+    import { getCacheKey } from "./stores.js";
 
     export let params = {}
 
@@ -27,7 +28,8 @@
   
   
       axios.defaults.headers.common['Authorization'] = bearer;
-      axios.get($raceConfig.baseUrl + "/listOrgEvents?orgIz="+params.orgIz)
+      const cacheKey=getCacheKey();
+      axios.get($raceConfig.baseUrl + `/listOrgEvents?orgIz=${params.orgIz}&cache=${cacheKey}`)
         .then((response) => {
           console.log("refreshOrgMap length:" + response.data.length);
           console.log("refreshOrgMap:", response.data);

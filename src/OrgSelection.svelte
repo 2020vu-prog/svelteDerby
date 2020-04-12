@@ -6,6 +6,7 @@
   import { Auth } from 'aws-amplify';
   import axios from "axios";
   import {push, pop, replace} from 'svelte-spa-router'
+  import { getCacheKey} from "./stores.js";
 
 
   var orgMap = {};
@@ -21,7 +22,9 @@
 
 
     axios.defaults.headers.common['Authorization'] = bearer;
-    axios.get($raceConfig.baseUrl + "/listOrgConfig")
+    const cacheKey=getCacheKey();
+
+    axios.get($raceConfig.baseUrl + `/listOrgConfig?cacheKey=${cacheKey}`)
       .then((response) => {
         console.log("refreshOrgMap length:" + response.data.length);
         console.log("refreshOrgMap:", response.data);
