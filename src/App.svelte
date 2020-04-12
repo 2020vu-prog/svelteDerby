@@ -8,6 +8,7 @@ import { store as AuthStore } from './stores/auth.js'
 import RaceStandingList from './RaceStandingList.svelte'
 import RacePhaseList from './RacePhaseList.svelte'
 import ChartList from './ChartList.svelte'
+import ChartAdd from './ChartAdd.svelte'
 import DriverList from './DriverList.svelte'
 import DriverAdd from './DriverAdd.svelte'
 import EventSelection from './EventSelection.svelte'
@@ -44,6 +45,7 @@ const routes = {
     '/about': AboutPage,
     '/chart': Chart,
     '/chartList': ChartList,
+    '/chartAdd': ChartAdd,
    // '/raceStandingAdd': RaceStandingAdd,
 }
 

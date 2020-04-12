@@ -4,7 +4,8 @@
     import MaterialAdd from "./MaterialAdd.svelte";
     import CarFilter from "./CarFilter.svelte";
     import {safeGetAt} from "./utils.js";
-    
+    import {  prefStore} from './stores.js';
+
     
     const filterMatches=(driver,lclFilter)=>{
         if(! lclFilter) return true;
@@ -20,7 +21,7 @@
     <div>
     <h4>Chart List </h4>
     <p/>
-    <MaterialAdd  clickHandleRoute="/ChartAdd" />
+    <MaterialAdd  clickHandleRoute="/chartAdd" />
     <CarFilter/>
     
             {#each getCarNumbersAsList($driverMap) as carNumber}
