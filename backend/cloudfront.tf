@@ -73,6 +73,19 @@ resource "aws_cloudfront_origin_access_identity" "svelte_oaid" {
   comment = "Svelte origin access"
 }
 
+resource "null_resource" "sync_s3_chart_data" {
+
+  provisioner "local-exec" {
+    command = "scripts/syncS3ChartData.sh"
+    working_dir = path.module
+    environment = {
+    	BucketName= aws_s3_bucket.svelteBucket.id
+    }
+  }
+
+  depends_on = [ aws_s3_bucket.svelteBucket ]
+}
+
 resource "aws_cloudfront_distribution" "derbyApp" {
   origin {
     domain_name = aws_s3_bucket.svelteBucket.bucket_regional_domain_name
