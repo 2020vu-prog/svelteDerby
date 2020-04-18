@@ -169,7 +169,7 @@ const navTo=(route)=>{
 <body>
 <!-- Top Navigation Menu -->
 <div class="topnav" style="z-index: 20;">
-  <a href="#home" class="active">{getTitle($raceConfig)} Derby Race <HotLoad/></a>
+  <a href="#home" class="active">{getTitle($raceConfig)}&nbsp;<HotLoad/></a>
   <!-- Navigation links (hidden by default) -->
   <div id="myLinks">
 

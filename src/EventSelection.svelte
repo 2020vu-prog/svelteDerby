@@ -64,13 +64,16 @@
         //console.log("selecting iz:", config.orgIz);
         console.log("selecting config:", config);
         config.baseUrl="/app";
-        config.title=config.orgName?config.orgName:config.orgId;
+        config.title=getRaceName(config);
 
         $raceConfig=config;
 
         replace("/RpList");
 
     }
+    const getRaceName=(config)=>{
+        return config.name?config.name:config.orgId;
+      }
   </script>
   
   
@@ -83,7 +86,7 @@
   
     {#each getOrgsAsList(orgMap) as orgConfig}
                   <div class="panel panel-info">
-                      <a href="javascript:void(0);"  on:click={() => doSelect(orgConfig)}>{orgConfig.orgId}</a>
+                      <a href="javascript:void(0);"  on:click={() => doSelect(orgConfig)}>{getRaceName(orgConfig)}</a>
                       </div>
               {/each}
       </div>
