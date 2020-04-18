@@ -15,6 +15,8 @@
     const jqLoaded = () => {
         console.log("jqloaded")
         jsReady = true;
+        const jsTreeUrl="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"
+        jQuery.getScript( jsTreeUrl,jsTreeLoaded);
         tryBuild();
     };
     const jsTreeLoaded = () => {
@@ -97,7 +99,6 @@
 </script>
 <svelte:head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js" on:load={jqLoaded}></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js" on:load={jsTreeLoaded}></script>
 
 </svelte:head>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
