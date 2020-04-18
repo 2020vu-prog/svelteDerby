@@ -43,6 +43,7 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
     static members = [
         "lcl1",    // lowCarlane1
         "orgIz", // Org Id (pending refactor)
+        "name",
     ];
     static canBuild(json) {
         return (json.PK && json.PK === EventConfigLit);
