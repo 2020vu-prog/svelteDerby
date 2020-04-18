@@ -4,14 +4,28 @@ const AWS = require("aws-sdk");
 const { DynamoDB } = require('@aws-sdk/client-dynamodb-v2-node');
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
 const  sqs = new AWS.SQS({apiVersion: '2012-11-05'});
-
+const s3=new AWS.S3({apiVersion: '2006-03-01'})
 var jwt = require('jsonwebtoken');
 
 
 const configMap = {
 }
 
+const s3QueryChartTypes=async ()=>{
+	var params = {
+		Bucket: process.env.ChartS3BucketName,
+		Prefix: "data/brackets"
+	};
+	try{
+		const data=	await s3.listObjectsV2(params).promise();
+		return data;
+	}
+	catch (err){
+		console.log("s3 list Error", err);
+		return { error: "s3 list buckets Failed" }
 
+	}
+}
 
 const requestCCA= async (qsp,data)=>{
 	var params = {
@@ -755,6 +769,13 @@ const routeMap = {
 			return buildResponse(qr, cacheControl);
 		}
 	},
+	"/listChartTypes": {
+		h: async (event) => {
+			var chartTypes = await s3QueryChartTypes();
+			const cacheControl = 'max-age=' + (3600*24*7);
+			return buildResponse(chartTypes, cacheControl);
+		}
+	},
 }
 
 
@@ -781,6 +802,7 @@ exports.handler = async (event) => {
 	const dbArn = process.env.DynamoDbArn
 
 	// Allow Cors
+	/*
 	if (event.httpMethod === "OPTIONS") {
 		var response = {
 			statusCode: 200,
@@ -794,6 +816,7 @@ exports.handler = async (event) => {
 		callback(null, response)
 		return;
 	}
+	*/
 
 	console.log("event.path: ", event.path)
 
@@ -860,3 +883,6 @@ exports.handler = async (event) => {
 	});
 
 }
+
+
+// changed.

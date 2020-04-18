@@ -14,6 +14,7 @@ variable CognitoPoolArn {}
 module "derbyMainLambda" {
   source = "./modules/lambdaDerby"
 
+    ChartS3BucketName  =  aws_s3_bucket.svelteBucket.id
     CcaQueueId  = aws_sqs_queue.cacheAlignmentQueue.id
     CcaQueueArn  = aws_sqs_queue.cacheAlignmentQueue.arn
   DynamoDbArn=aws_dynamodb_table.derby-dynamodb-table.arn

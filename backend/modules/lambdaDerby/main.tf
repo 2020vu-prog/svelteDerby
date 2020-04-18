@@ -6,6 +6,7 @@ variable DistDbArn {}
 variable AwsRegion {}
 variable   CcaQueueId  {}
 variable   CcaQueueArn  {}
+variable     ChartS3BucketName  {}
 locals{
   tags = {
     Environment = var.DeployEnvironment
@@ -85,7 +86,7 @@ resource "aws_lambda_function" "lambda" {
       DistDbTable= local.DistDbTable
       DistDbArn= var.DistDbArn
       CcaQueueId =var.CcaQueueId 
-
+      ChartS3BucketName  =  var.ChartS3BucketName  
       AwsRegion = var.AwsRegion
     }
   }
@@ -101,7 +102,12 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
+
 		"sqs:SendMessage",
+
+		"s3:ListObjects",
+		"s3:ListBucket",
+
 		"dynamodb:Query",
                 "dynamodb:BatchWriteItem",
                 "dynamodb:BatchGetItem",
@@ -110,6 +116,8 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 "dynamodb:UpdateItem"
         ]   
         resources = [
+            "arn:aws:s3:::${var.ChartS3BucketName}",
+            "arn:aws:s3:::${var.ChartS3BucketName}/*",
                 "arn:aws:logs:*:*:*",
                 var.CcaQueueArn,
                 var.DynamoDbArn,

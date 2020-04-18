@@ -52,7 +52,9 @@ test('listOrgConfig: ', () => {
 
 
 test('postEvent: ', () => {
-  return postData(`${CF}/addEventConfig`,{"orgIz": orgIz,"orgId":orgId, "lcl1":"true"}).then(received => {
+	const now=new Date().toISOString()
+
+  return postData(`${CF}/addEventConfig`,{"orgIz": orgIz,"orgId":orgId, "lcl1":"true", "name": `npm Test ${now} `}).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
@@ -60,6 +62,13 @@ test('postEvent: ', () => {
 test('getRaceConfig: ', () => {
   return getData(`${CF}/getRaceConfig`).then(data => {
     expect(Object.keys(data).length).toBeGreaterThan(0);
+  });
+});
+
+test('listChartTypes: ', () => {
+  return getData(`${CF}/listChartTypes?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
+    expect(Object.keys(data).length).toBeGreaterThan(0);
+    console.log("s3listdata: ", data);
   });
 });
 
