@@ -3,45 +3,45 @@ const EntityFactory = require('./shared/EntityFactory.js')
 const AWS = require("aws-sdk");
 const { DynamoDB } = require('@aws-sdk/client-dynamodb-v2-node');
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
-const  sqs = new AWS.SQS({apiVersion: '2012-11-05'});
-const s3=new AWS.S3({apiVersion: '2006-03-01'})
+const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
+const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
 var jwt = require('jsonwebtoken');
 
 
 const configMap = {
 }
 
-const s3QueryChartTypes=async ()=>{
+const s3QueryChartTypes = async () => {
 	var params = {
 		Bucket: process.env.ChartS3BucketName,
 		Prefix: "data/brackets"
 	};
-	try{
-		const data=	await s3.listObjectsV2(params).promise();
+	try {
+		const data = await s3.listObjectsV2(params).promise();
 		return data;
 	}
-	catch (err){
+	catch (err) {
 		console.log("s3 list Error", err);
 		return { error: "s3 list buckets Failed" }
 
 	}
 }
 
-const requestCCA= async (qsp,data)=>{
+const requestCCA = async (qsp, data) => {
 	var params = {
-	  MessageGroupId: "orgId:"+qsp.orgId,
-	  MessageBody: JSON.stringify(qsp),
-	  // MessageId: "Group1",  // Required for FIFO queues
-	  QueueUrl: process.env.CcaQueueId,
-	  MessageDeduplicationId:create_UUID()
+		MessageGroupId: "orgId:" + qsp.orgId,
+		MessageBody: JSON.stringify(qsp),
+		// MessageId: "Group1",  // Required for FIFO queues
+		QueueUrl: process.env.CcaQueueId,
+		MessageDeduplicationId: create_UUID()
 	};
 	try {
-	    console.log("SQS sending:", qsp);
-		const sent=await sqs.sendMessage(params).promise();
-	    console.log("SQS send Success", sent.MessageId);
-	  }
-	  catch(err){
-	    console.log("SQS send Error", err);
+		console.log("SQS sending:", qsp);
+		const sent = await sqs.sendMessage(params).promise();
+		console.log("SQS send Success", sent.MessageId);
+	}
+	catch (err) {
+		console.log("SQS send Error", err);
 	}
 };
 const getConfig = async (eventKey) => {
@@ -51,7 +51,7 @@ const getConfig = async (eventKey) => {
 	}
 
 	var eConfig = await ddbQueryEventConfig(eventKey);
-	if(eConfig[eventKey]){
+	if (eConfig[eventKey]) {
 		configMap[eventKey] = eConfig[eventKey];
 		return eConfig[eventKey];
 	}
@@ -142,18 +142,18 @@ const ddbQueryRaceHistory = async (qsp) => {
 	console.log("history query: " + JSON.stringify(params));
 	try {
 		var data = await ddbClient.query(params);
-		const cc=data.ConsumedCapacity.CapacityUnits;
-		console.log("queryRaceHistory cc: " , cc);           // successful response
-		console.log("queryRaceHistory: " , data);           // successful response
+		const cc = data.ConsumedCapacity.CapacityUnits;
+		console.log("queryRaceHistory cc: ", cc);           // successful response
+		console.log("queryRaceHistory: ", data);           // successful response
 		console.log("queryRaceHistory: " + JSON.stringify(data));           // successful response
 		const rc = unmarshallResultsToArray(data);
 
-		if(cc>0.5 || data.Count >= limit){
-			console.log("queryRaceHistory: requesting CCA: " ,cc);
+		if (cc > 0.5 || data.Count >= limit) {
+			console.log("queryRaceHistory: requesting CCA: ", cc);
 			await requestCCA(qsp, data);
 		}
-		else{
-			console.log("queryRaceHistory: skipping CCA: " ,cc);
+		else {
+			console.log("queryRaceHistory: skipping CCA: ", cc);
 		}
 
 
@@ -187,10 +187,10 @@ const ddbQueryEventConfig = async (eventKey) => {
 	}
 	return { error: "Query Failed" };
 }
-const ddbListEventConfigByOrg=async(orgIz)=>{
+const ddbListEventConfigByOrg = async (orgIz) => {
 	var containsValues = {};
 	containsValues[":pk"] = { S: "EventConfig" };
-	containsValues[":sk"] = { S: orgIz+":" };
+	containsValues[":sk"] = { S: orgIz + ":" };
 	var params = {
 		TableName: process.env.DynamoDbTable,
 		KeyConditionExpression: "PK = :pk" + " and  begins_with (SK, :sk)",
@@ -306,7 +306,7 @@ const ddbQueryRpNextOnBlocks = async (json) => {
 		TableName: process.env.DynamoDbTable,
 		Limit: 20,
 		ScanIndexForward: false,  // sort descending
-		KeyConditionExpression: keyCondition ,
+		KeyConditionExpression: keyCondition,
 		FilterExpression: " attribute_not_exists (phr) ",
 		ReturnConsumedCapacity: "TOTAL",
 		ExpressionAttributeValues: containsValues
@@ -361,7 +361,35 @@ const ddbQueryRpDuplicateCheck = async (json) => {
 		throw (err);
 	}
 };
+const ddbQueryBracketMdExistsCheck = async (json) => {
+	const containsValues = {};
+	containsValues[":pk"] = { S: json.orgId + ":Bmd" };
+	containsValues[":sk"] = { S: json.SK };
+	const keyCondition= "PK = :pk and SK = :sk";
+	//const filterString = buildDdbCarFilter(json.cn, containsValues, " AND ");
+	//const keyCondition = buildKeyCondition(json.orgId + ":Bmd", containsValues);
 
+	var params = {
+		TableName: process.env.DynamoDbTable,
+		KeyConditionExpression: keyCondition,
+		//FilterExpression: filterString,
+		ReturnConsumedCapacity: "TOTAL",
+		ExpressionAttributeValues: containsValues
+	};
+	console.log("ddbQueryBracketMdExistsCheck query: " + JSON.stringify(params));
+
+	try {
+		var data = await ddbClient.query(params);
+		console.log("ddbQueryBracketMdExistsCheck: ", data);           // successful response
+		const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+
+		return udata;
+	}
+	catch (err) {
+		console.log("ddbQueryBracketMdExistsCheck failed: ", err, err.stack); // an error occurred
+		throw (err);
+	}
+};
 const ddbQueryRsExistsAndPendingCheck = async (json) => {
 	const containsValues = {};
 	const filterString = buildDdbCarFilter(json.cn, containsValues, " AND ");
@@ -418,7 +446,7 @@ const buildKeyCondition = (pk, containsValues) => {
 const ddbQueryRsAlreadyPending = async (json) => {
 	const containsValues = {};
 	const filterString = buildDdbCarFilter(json.cn, containsValues, " OR ");
-	const filterPendingString=filterString + " AND attribute_not_exists(ph2) ";
+	const filterPendingString = filterString + " AND attribute_not_exists(ph2) ";
 	const keyCondition = buildKeyCondition(json.orgId + ":RS", containsValues);
 
 	console.log("containsValues:", containsValues);
@@ -481,9 +509,9 @@ const fmtBulkPut = (json1) => {
 
 	if (myP) {
 		myP.preWrite();
-		console.log("addBulk pw:",myP);
+		console.log("addBulk pw:", myP);
 		var marshalled = AWS.DynamoDB.Converter.marshall(myP);
-		console.log("addBulk mar:",marshalled);
+		console.log("addBulk mar:", marshalled);
 		const putRequest = {
 			PutRequest: {
 				Item: marshalled
@@ -544,23 +572,23 @@ const addSingle = async (json) => {
 }
 const addPending2 = async (event) => {
 
-	const  eventKey= getEventKey(event);
+	const eventKey = getEventKey(event);
 	const cfg = await getConfig(eventKey);
-	if (!cfg ) { 
+	if (!cfg) {
 		return {
 			status: "error",
 			error: "No Event config found.",
 		};
 	}
 
-	const json=JSON.parse(event.body)
+	const json = JSON.parse(event.body)
 	console.log("addPending2: " + JSON.stringify(json));
 	json.PK = ":RS";  // force RaceStanding
 
 
 	const alreadyExists = await ddbQueryRsAlreadyPending(json);
 	if (alreadyExists > 0) {
-		return { error: "Pending2 already exists" ,status: "error"};
+		return { error: "Pending2 already exists", status: "error" };
 	}
 
 
@@ -586,54 +614,54 @@ const applyFinishTime = async (json) => {
 			error: "No eligible target for update.",
 		};
 	}
-	const tgtRp=tgtRpList[0];
-	tgtRp.phr=json.phr;  //TODO: verify client sent array of ints in "phr"
-	const rsPromise=ddbQueryRsByKey({orgId: tgtRp.orgId, SK: tgtRp.rs})
-	const rpUpdatePromise= addSingle(tgtRp);
-	const [rsFoundList, rpUpdate]= await Promise.all([rsPromise, rpUpdatePromise]);
+	const tgtRp = tgtRpList[0];
+	tgtRp.phr = json.phr;  //TODO: verify client sent array of ints in "phr"
+	const rsPromise = ddbQueryRsByKey({ orgId: tgtRp.orgId, SK: tgtRp.rs })
+	const rpUpdatePromise = addSingle(tgtRp);
+	const [rsFoundList, rpUpdate] = await Promise.all([rsPromise, rpUpdatePromise]);
 
-	console.log("applyFinishTime 413 rsFoundList: " , rsFoundList);
+	console.log("applyFinishTime 413 rsFoundList: ", rsFoundList);
 
-	if(rsFoundList.length>0){
-		const tgtRs=rsFoundList[0];
+	if (rsFoundList.length > 0) {
+		const tgtRs = rsFoundList[0];
 		// match means A phase.
-		const phase=tgtRp.phaseLiteral;
-		console.log("applyFinishTime 413 phase: " , phase);
+		const phase = tgtRp.phaseLiteral;
+		console.log("applyFinishTime 413 phase: ", phase);
 
-		if (phase==="A"){
-			tgtRs.phase1Results=json.phr;
+		if (phase === "A") {
+			tgtRs.phase1Results = json.phr;
 		}
-		else{
-			tgtRs.phase2Results=json.phr.reverse();
+		else {
+			tgtRs.phase2Results = json.phr.reverse();
 		}
 		await addSingle(tgtRs);
 
-		if(tgtRs.isOverallTie()){
+		if (tgtRs.isOverallTie()) {
 			await cloneRs(tgtRs);
 		}
 	}
-	else{
+	else {
 		return {
 			status: "error",
 			error: "No raceStanding found!",
 		};
 	}
-	
+
 	return {
 		status: "ok",
 	};
-	
+
 };
 
 
 const cloneRs = async (srcRs) => {
-	const clone={
+	const clone = {
 		PK: ":RS",  // force RacePhase
 		cn: srcRs.cn,
 		orgId: srcRs.orgId,
 		by: srcRs.by
 	};
-	console.log("cloneRs: " , JSON.stringify(clone));
+	console.log("cloneRs: ", JSON.stringify(clone));
 	return await addSingle(clone);
 }
 
@@ -643,7 +671,6 @@ const addBlocks = async (json) => {
 	json.PK = ":RP";  // force RacePhase
 
 
-	const waitRp = ddbQueryRpDuplicateCheck(json);
 	const waitRs = ddbQueryRsExistsAndPendingCheck(json);
 	const [rpFound, rsFound] = await Promise.all([waitRp, waitRs]);
 	console.log("rpFound", rpFound);
@@ -678,7 +705,37 @@ const addBlocks = async (json) => {
 	return await addSingle(json);
 
 };
-const addOrgConfig = async (json) =>{
+
+//AC
+const addChart = async (json) => {
+
+	console.log("addChart: " + JSON.stringify(json));
+	json.PK = ":Bmd";  // force BracketMetaData
+	if (!json.SK) {
+		const uu6 = create_UUID().substring(0, 6);
+		json.SK = uu6;
+	}
+
+	const bmdFound = await ddbQueryBracketMdExistsCheck(json);
+	console.log("bmdFound", bmdFound);
+	if (bmdFound.length == 0) {
+		console.log("addChart add needed:", bmdFound);
+		// Add
+		//return await addSingle(json);
+
+	} else {
+		console.log("addChart update needed:", bmdFound);
+		// update name.
+	}
+
+	return await addSingle(json);
+
+
+
+
+
+};
+const addOrgConfig = async (json) => {
 	console.log("addOrgConfig: " + JSON.stringify(json));
 	json.PK = "OrgConfig";  // force 
 	json.SK = json.orgIz;  // force 
@@ -690,15 +747,15 @@ const addOrgConfig = async (json) =>{
 const addEventConfig = async (json, priorTtl) => {
 
 	console.log("addEventConfig: " + JSON.stringify(json));
-	if(!json.orgIz){
+	if (!json.orgIz) {
 		return { error: "Missing orgIz" };
 	}
-	if(!json.orgId){
+	if (!json.orgId) {
 		return { error: "Missing orgId" };
 	}
-		
+
 	json.PK = "EventConfig";   // force 
-	json.SK = json.orgIz +":" +    json.orgId;  // force 
+	json.SK = json.orgIz + ":" + json.orgId;  // force 
 
 	// use prior ttl if found (API cannot change ttl of in progress event!)
 	const newTtl = priorTtl ? priorTtl :
@@ -739,13 +796,14 @@ const getOrgIz = (event) => {
 	}
 	return null;
 }
-const getEventKey=(event)=>{
-	return getOrgIz(event) +":"+getOrgId(event);
+const getEventKey = (event) => {
+	return getOrgIz(event) + ":" + getOrgId(event);
 }
 const routeMap = {
 	"/addParticipant": { h: async (event) => { return buildResponse(await addParticipant2(JSON.parse(event.body))); } },
 	"/addPending": { h: async (event) => { return buildResponse(await addPending2(event)); } },
 	"/addBlocks": { h: async (event) => { return buildResponse(await addBlocks(JSON.parse(event.body))); } },
+	"/addChart": { h: async (event) => { return buildResponse(await addChart(JSON.parse(event.body))); } },
 	"/doApplyFinishTime": { h: async (event) => { return buildResponse(await applyFinishTime(JSON.parse(event.body))); } },
 	"/addBulk": { h: async (event) => { return buildResponse(await addBulk(JSON.parse(event.body))); } },
 	"/ddbQuery": {
@@ -757,8 +815,8 @@ const routeMap = {
 	},
 	"/getNextOnBlocks": {
 		h: async (event) => {
-			const nob=await ddbQueryRpNextOnBlocks(event.queryStringParameters);
-			return buildResponse(nob); 
+			const nob = await ddbQueryRpNextOnBlocks(event.queryStringParameters);
+			return buildResponse(nob);
 
 		}
 	},
@@ -772,7 +830,7 @@ const routeMap = {
 	"/listChartTypes": {
 		h: async (event) => {
 			var chartTypes = await s3QueryChartTypes();
-			const cacheControl = 'max-age=' + (3600*24*7);
+			const cacheControl = 'max-age=' + (3600 * 24 * 7);
 			return buildResponse(chartTypes, cacheControl);
 		}
 	},
@@ -780,7 +838,7 @@ const routeMap = {
 
 
 const buildResponse = (jsonObj, cacheControl = "no-cache") => {
-	if(jsonObj && jsonObj.error){
+	if (jsonObj && jsonObj.error) {
 		console.log("buildResponse: error:  ", jsonObj)
 	}
 	return {
@@ -833,13 +891,13 @@ exports.handler = async (event) => {
 	}
 
 	const decoded = jwt.decode(event.headers.Authorization);
-	const  eventKey= getEventKey(event);
-	const  orgId= getOrgId(event);
-	const  orgIz= getOrgIz(event);
+	const eventKey = getEventKey(event);
+	const orgId = getOrgId(event);
+	const orgIz = getOrgIz(event);
 	const defaultTTL = await getTtl(eventKey);
 
 	entityFactory = new EntityFactory({ orgId: orgId, by: decoded.email, TTL: defaultTTL });
-	console.log("Begin event",event);
+	console.log("Begin event", event);
 	if (false) { }
 	else if (!orgId) {
 		const qr = { error: "Unable to determine orgId" };

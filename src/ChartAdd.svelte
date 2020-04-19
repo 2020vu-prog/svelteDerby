@@ -38,6 +38,7 @@
     if (treeReady && mounted && jsReady && s3ChartTypes) {
       console.log("GO");
       //  window.$(function () { window.$('#jstree_demo_div').jstree(); });
+      /*
       const testData = {
         core: {
           data: [
@@ -51,14 +52,21 @@
           ]
         }
       };
+      */
       const testData2 = { core: { data: [] } };
       var keyList = getKeys(s3ChartTypes["Contents"]);
       testData2.core.data = keyList;
       window.$("#jstree_demo_div").jstree(testData2);
       window.$("#jstree_demo_div").on("changed.jstree", function (e, data) {
         console.log(data.selected);
-        loginForm.bracketSelected = data.selected;
+        if(data.selected && data.selected[0] && data.selected[0].includes(".")){
+          loginForm.bracketSelected = data.selected[0];
+        }
+        else{
+          loginForm.bracketSelected=""
+        }
         syncAddButton();
+
       });
     }
   };
@@ -66,17 +74,18 @@
     console.log("Adding:" + JSON.stringify(loginForm));
     const currentSession = await Auth.currentSession();
     const bearer = currentSession.idToken.jwtToken;
+    axios.defaults.headers.common["Authorization"] = bearer;
 
     const req = {
       orgId: $raceConfig.orgId,
       orgIz: $raceConfig.orgIz,
-      bracket: loginForm.bracketSelected,
-      name: loginForm.chartName
+      imgPath: loginForm.bracketSelected,
+      jsonPath: loginForm.bracketSelected + ".combined.json",
+      bracketName: loginForm.chartName
     };
 
     console.log("token:" + bearer);
 
-    axios.defaults.headers.common["Authorization"] = bearer;
 
     axios
       .post($raceConfig.baseUrl + "/addChart", req)
@@ -94,27 +103,28 @@
     if (!mounted) {
       return;
     }
-    if (loginForm.bracketSelected && loginForm.chartName) {
-      document.getElementById("formSubmitButton").disabled = false;
-      console.log("sync add button SYNC");
-    } else {
-      console.log("sync add button FAIL");
-      document.getElementById("formSubmitButton").disabled = true;
-    }
+    const doEnable=(loginForm.bracketSelected && loginForm.chartName );
+      document.getElementById("formSubmitButton").disabled = !doEnable;
+      console.log("sync add button isEnabled:"+doEnable);
+   
   }
   // embedded script link: https://www.nielsvandermolen.com/external-javascript-sveltejs/
   const getChartDataFromServer = async () => {
-    const cacheKey=getCacheKey();
-const params={
-  orgId:$raceConfig.orgId,
-  orgIz:$raceConfig.orgIz,
-  chris:"418a",  // get rid of /public/data/brackets again.
-  cacheKey:cacheKey,
-}
+    const cacheKey = getCacheKey();
+    const params = {
+      orgId: $raceConfig.orgId,
+      orgIz: $raceConfig.orgIz,
+      chris: "418a",  // get rid of /public/data/brackets again.
+      cacheKey: cacheKey,
+    }
+
+    const currentSession = await Auth.currentSession();
+    const bearer = currentSession.idToken.jwtToken;
+    axios.defaults.headers.common["Authorization"] = bearer;
     axios
       .get(
         $raceConfig.baseUrl +
-        "/listChartTypes",{params:params}
+        "/listChartTypes", { params: params }
       )
       .then(response => {
         console.log("listChartTypes:" + response.data);

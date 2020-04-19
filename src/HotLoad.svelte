@@ -127,7 +127,9 @@
     return {
       Participant: $driverMap,
       RacePhase: $racePhaseMap,
-      RaceStanding: $standingsMap
+      RaceStanding: $standingsMap,
+      BracketMetaData: {},
+
     }
   };
 
@@ -180,6 +182,10 @@
 
     const tblHist = hist[pk];
 
+    if(!tblHist){
+      console.log("skipping load for pk: ",pk);
+      return;
+    }
     if (tblHist[sk] && tblHist[sk].lastUpdate > e.lastUpdate) { }
     else {
       tblHist[sk] = e;

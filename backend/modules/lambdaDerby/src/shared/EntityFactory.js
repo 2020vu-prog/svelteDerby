@@ -2,6 +2,7 @@ const entityFactories = {};
 const RacePhaseEid = ":RP";
 const RaceStandingEid = ":RS";
 const ParticipantEid = ":PTCP";
+const BracketMetaDataEid = ":Bmd";
 const cHelper = (pthis, props, optionalMembers) => {
     //console.log (pthis.constructor.members) ;
 
@@ -56,7 +57,7 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
         super.preWrite();
         this.PK = EventConfigLit;
 
-        this.SK = this.orgIz+":"+this.orgId;
+        this.SK = this.orgIz + ":" + this.orgId;
     }
     get classType() {
         return EventConfigLit;
@@ -87,6 +88,33 @@ entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
     }
     get classKey() {
         return this.orgIz;
+    }
+}
+
+
+const BracketMetaDataLit = 'BracketMetaData';
+entityFactories[BracketMetaDataLit] = class BracketMetaData extends EntityBase {
+    static members = ["bracketName", "imgPath", "jsonPath"];
+    static canBuild(json) {
+        // client should populate SK for bracketMetaData!
+        return (json.PK &&
+            json.PK.endsWith(BracketMetaDataEid) && json.SK)
+    }
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK = this.orgId + BracketMetaDataEid;
+
+ 
+    }
+    get classType() {
+        return BracketMetaDataLit;
+    }
+    get classKey() {
+        return this.SK;
     }
 }
 entityFactories['RacePhase'] = class RacePhase extends EntityBase {

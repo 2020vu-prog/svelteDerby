@@ -39,7 +39,7 @@ const routes = {
     '/raceStandingAdd/:type': RaceStandingAdd,
     '/driverAdd': DriverAdd,
     '/eventSelection/:orgIz': EventSelection,
-    '/eventAdd': EventAdd,
+    '/eventAdd/:orgIz': EventAdd,
     '/orgSelection': OrgSelection,
     '/orgAdd': OrgAdd,
     '/about': AboutPage,
