@@ -4,6 +4,7 @@
   import { Auth } from "aws-amplify";
   import { push, pop, replace } from "svelte-spa-router";
   import { onMount } from "svelte";
+  import { getCacheKey } from "./stores.js";
 
   import axios from "axios";
 
@@ -54,7 +55,7 @@
       var keyList = getKeys(s3ChartTypes["Contents"]);
       testData2.core.data = keyList;
       window.$("#jstree_demo_div").jstree(testData2);
-      window.$("#jstree_demo_div").on("changed.jstree", function(e, data) {
+      window.$("#jstree_demo_div").on("changed.jstree", function (e, data) {
         console.log(data.selected);
         loginForm.bracketSelected = data.selected;
         syncAddButton();
@@ -103,13 +104,17 @@
   }
   // embedded script link: https://www.nielsvandermolen.com/external-javascript-sveltejs/
   const getChartDataFromServer = async () => {
+    const cacheKey=getCacheKey();
+const params={
+  orgId:$raceConfig.orgId,
+  orgIz:$raceConfig.orgIz,
+  chris:"418",
+  cacheKey:cacheKey,
+}
     axios
       .get(
         $raceConfig.baseUrl +
-          "/listChartTypes?orgId=" +
-          $raceConfig.orgId +
-          "&orgIz=" +
-          $raceConfig.orgIz
+        "/listChartTypes",{params:params}
       )
       .then(response => {
         console.log("listChartTypes:" + response.data);
@@ -120,10 +125,10 @@
         console.log(err);
       });
   };
-  const getKeys = json => {
+  const getKeys = (json) => {
     const children = [];
     const parents = {};
-    json.forEach(function(item) {
+    json.forEach(function (item) {
       var simpleKey = item.Key.replace("data/brackets/", "");
       var structureArray = simpleKey.split("/");
       var child = "";
@@ -135,43 +140,39 @@
           children.push(child);
         } else {
           const parent = formatItem(structureArray);
-            parents[parent.id]=parent;
+          parents[parent.id] = parent;
         }
         structureArray.pop();
       }
     });
-    const rc=[...Object.values(parents),...children]
-    rc.sort((a,b)=>{return a.id.length - b.id.length})
+    const rc = [...Object.values(parents), ...children]
+    rc.sort((a, b) => { return a.id.length - b.id.length })
     console.log(rc)
     return rc
   };
   const formatItem = structureArray => {
-      console.log("format item ", structureArray);
-    const child = {};
-      child.id = structureArray.join("/");
-      child.text = structureArray[structureArray.length - 1];
-      if (structureArray.length > 1) {
-          const tempParents = [...structureArray];
-          tempParents.pop();  // just want the parents.
-        child.parent = tempParents.join("/");
-      } else {
-          child.parent = "#";
-      }
-      
-    return child;
+    const treeItem = {};
+    treeItem.id = structureArray.join("/");
+    treeItem.text = structureArray[structureArray.length - 1];
+    if (structureArray.length > 1) {
+      const tempParents = [...structureArray];
+      tempParents.pop();  // just want the parents.
+      treeItem.parent = tempParents.join("/");
+    } else {
+      treeItem.parent = "#";
+    }
+    console.log("format item ", structureArray, " gave: ", treeItem);
+
+    return treeItem;
   };
 </script>
 
 <svelte:head>
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"
-    on:load={jqLoaded}>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js" on:load={jqLoaded}>
 
   </script>
 </svelte:head>
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
 
 <h3>Add Chart</h3>
 
@@ -183,10 +184,7 @@
   </label>
   <label>
     ChartName:
-    <input
-      type="text"
-      bind:value={loginForm.chartName}
-      placeholder="Chart Name" />
+    <input type="text" bind:value={loginForm.chartName} placeholder="Chart Name" />
   </label>
   <button id="formSubmitButton" type="submit" disabled>Add</button>
 </form>
