@@ -108,7 +108,7 @@
 const params={
   orgId:$raceConfig.orgId,
   orgIz:$raceConfig.orgIz,
-  chris:"418",
+  chris:"418a",  // get rid of /public/data/brackets again.
   cacheKey:cacheKey,
 }
     axios
