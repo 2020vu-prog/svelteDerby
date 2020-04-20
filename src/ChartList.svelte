@@ -7,6 +7,7 @@
     import { prefStore } from './stores.js';
     import { db } from './eventDb.js';
     import { onMount } from "svelte";
+    import { push, pop, replace } from 'svelte-spa-router'
 
     $: {
         refreshDataFromDb($doRefreshBlocks);
@@ -41,6 +42,10 @@
         //console.log("bmdArray:",bmdArray)
         //return bmdArray;
     }
+    const navToChartDetail = (bmd) => {
+        console.log("navToChartDetail:", bmd)
+        push("/ChartDetail/"+bmd.SK);
+    }
 </script>
 
 
@@ -51,7 +56,7 @@
     <CarFilter />
 
     {#each bmdFromDexie as bmd}
-                <div class="panel panel-info">
+                <div class="panel panel-info" on:click={() => navToChartDetail(bmd)}>
                     {bmd.bracketName}
                     </div>
             {/each}

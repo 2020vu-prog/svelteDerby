@@ -120,8 +120,8 @@
     scale = 0.9 * scale;
     brackets2.imgPositions = brackets2.imgPositions; // force re-render?
 
-    myImg.style.width = brackets.imgSize.width * scale + "px";
-    myImg.style.height = brackets.imgSize.height * scale + "px";
+    myImg.style.width = brackets2.imgSize.width * scale + "px";
+    myImg.style.height = brackets2.imgSize.height * scale + "px";
   }
 </script>
 

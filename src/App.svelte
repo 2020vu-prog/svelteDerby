@@ -19,7 +19,9 @@ import OrgAdd from './OrgAdd.svelte'
 import ManualTimerAdd from './ManualTimerAdd.svelte'
 import RaceStandingAdd from './RaceStandingAdd.svelte'
 import AboutPage from './AboutPage.svelte'
-import Chart from './Chart.svelte'
+import ChartPrototype from './ChartPrototype.svelte'
+import ChartDetail from './ChartDetail.svelte'
+
 import Login from './Login.svelte'
 import HotLoad from "./HotLoad.svelte";
 //import CognitoAuth from "./CognitoAuth.svelte";
@@ -43,7 +45,8 @@ const routes = {
     '/orgSelection': OrgSelection,
     '/orgAdd': OrgAdd,
     '/about': AboutPage,
-    '/chart': Chart,
+    '/chartPrototype': ChartPrototype,
+    '/chartDetail/:chartId': ChartDetail,
     '/chartList': ChartList,
     '/chartAdd': ChartAdd,
    // '/raceStandingAdd': RaceStandingAdd,
@@ -62,7 +65,7 @@ $: buildMenuMap($AuthStore)
       { text: "Race History", clickHandler: () => navTo('/RsList/History') },
       { text: "Pending Races", clickHandler: () => navTo('/RsList/Pending') },
       { text: "Charts", clickHandler: () => navTo('/chartList') },
-      { text: "ChartDemo", clickHandler: () => navTo('/chart') },
+      { text: "Chart Prototype", clickHandler: () => navTo('/chartPrototype') },
       { text: "Watch different event", clickHandler: () => navTo('/orgSelection'), alwaysShow: true },
       { text: "About", clickHandler: () => navTo('/about'), alwaysShow: true },
 
