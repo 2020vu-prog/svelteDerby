@@ -1,5 +1,39 @@
 <script>
   import ChartHotSpot from "./ChartHotSpot.svelte";
+  import { onMount } from "svelte";
+  import { db } from './eventDb.js';
+  import axios from "axios";
+
+  export let params = {}
+  var bmdFromDexie = {}
+  onMount(async () => {
+    refreshDataFromDb();
+
+  });
+  const refreshDataFromDb = async (trigger) => {
+    console.log("refreshDataFromDb data:", trigger)
+
+    bmdFromDexie = await db.BracketMetaData.get(params.chartId);
+    console.log("refreshDataFromDb gave:", bmdFromDexie)
+
+    await getChartImage(bmdFromDexie.imgPath);
+    await getChartImage(bmdFromDexie.jsonPath);
+  }
+  const getChartImage = async (imgPath) => {
+
+
+
+    axios
+      .get("/static/data/brackets/" + imgPath)
+      .then(response => {
+        console.log("ChartDetail  axios success");
+        pop();
+      })
+      .catch(err => {
+        console.log("ChartDetail failed: " + err);
+      });
+  }
+  console.log("chartDetail params:", params)
   const brackets2 = {
     imgSize: { height: 1700, width: 2200 },
     imgPositions: {
@@ -132,7 +166,7 @@
     background: blue;
   }
 </style>
-
+<h3 style="z-index: 9;">Chart Name: {params.chartId}</h3>
 <div id="top" class="container" style="z-index: 8;">
 
   {#each Object.values(brackets2.imgPositions) as bracket, pos}
