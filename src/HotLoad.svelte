@@ -129,6 +129,7 @@
       RacePhase: $racePhaseMap,
       RaceStanding: $standingsMap,
       BracketMetaData: {},
+      EventConfig: {},
 
     }
   };

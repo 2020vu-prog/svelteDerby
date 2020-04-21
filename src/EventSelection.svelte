@@ -60,8 +60,6 @@
       clearStore();
             console.log("clearStore  complete.")
 
-        //console.log("selecting id: ", config.orgId);
-        //console.log("selecting iz:", config.orgIz);
         console.log("selecting config:", config);
         config.baseUrl="/app";
         config.title=getRaceName(config);
