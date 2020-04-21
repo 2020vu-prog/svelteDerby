@@ -1,7 +1,7 @@
 
 
 <script>
-  	import {nextOnBlockKey, racePhaseMap, carFilter, doRefreshBlocks } from './stores.js';
+  	import {nextOnBlockKey, racePhaseMap, doRefreshBlocks } from './stores.js';
 
     import MaterialAdd from "./MaterialAdd.svelte";
     import { raceConfig } from './stores.js';
@@ -44,11 +44,9 @@
       refreshOrgMap();
   
     });
-    const clearStore=()=>{
-      $nextOnBlockKey="N/A";
-      $racePhaseMap={};
-      $carFilter="";
-      $doRefreshBlocks=0;
+    const requestClearStore=()=>{
+
+      $doRefreshBlocks=-1;
 
     }
     const doSelect=async (config)=>{
@@ -57,8 +55,8 @@
       await dbReset();
       console.log("db reset complete.")
 
-      clearStore();
-            console.log("clearStore  complete.")
+      requestClearStore();
+            console.log("requestClearStore  complete.")
 
         console.log("selecting config:", config);
         config.baseUrl="/app";
