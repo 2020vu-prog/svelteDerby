@@ -671,6 +671,7 @@ const addBlocks = async (json) => {
 	json.PK = ":RP";  // force RacePhase
 
 
+	const waitRp = ddbQueryRpDuplicateCheck(json);
 	const waitRs = ddbQueryRsExistsAndPendingCheck(json);
 	const [rpFound, rsFound] = await Promise.all([waitRp, waitRs]);
 	console.log("rpFound", rpFound);

@@ -16,6 +16,16 @@ const CF="https://d15zun4udup4ky.cloudfront.net/app"
 const orgU= uuidv4().substring(0,5);
 const orgId="test."+orgU;
 
+    function checkTime(i) {
+        return (i < 10) ? "0" + i : i;
+    }
+
+    function getHHMMSS(inDate) {
+            h = checkTime(inDate.getHours()),
+            m = checkTime(inDate.getMinutes()),
+            s = checkTime(inDate.getSeconds());
+        return(`${h}:${m}:${s}`);
+    }
 const getData = async url => {
   try {
 	const token=  fs.readFileSync(__dirname + '/token.txt', 'utf8');
@@ -73,14 +83,16 @@ test('listChartTypes: ', () => {
 });
 
 test('postAddParticipant: ', () => {
-  return postData(`${CF}/addParticipant`,{"orgIz": orgIz,"orgId":orgId, "number":"333", "name":"Elmer333"}).then(received => {
+  const hhmmss=getHHMMSS(new Date());
+  return postData(`${CF}/addParticipant`,{"orgIz": orgIz,"orgId":orgId, "number":"333", "name":`Elmer333 ${hhmmss}`}).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
 
 //test.each([[778],[ 776], [775]])('postAddParticipantLOOP: ', (carNumber) => {
 test.each(dloop)('postAddParticipantLOOP: ', (carNumber) => {
-  return postData(`${CF}/addParticipant`,{"orgIz": orgIz,"orgId":orgId, "number":""+carNumber, "name":"Elmer"+carNumber}).then(received => {
+  const hhmmss=getHHMMSS(new Date());
+  return postData(`${CF}/addParticipant`,{"orgIz": orgIz,"orgId":orgId, "number":""+carNumber, "name":`Elmer ${carNumber} ${hhmmss}`}).then(received => {
     expect(received.data.status).toMatch(/ok/i);
   });
 });
