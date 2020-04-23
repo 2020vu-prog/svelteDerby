@@ -19,7 +19,9 @@
     $: { console.log("bound orgMap: ", orgMap); }
   
     const getOrgsAsList = (orgList) => {
-      return Object.values(orgList);
+      const orgs= Object.values(orgList);
+      orgs.sort((a, b) => { return getRaceName(a).localeCompare( getRaceName(b))});
+      return orgs;
     }
     const refreshOrgMap = async () => {
       console.log("refreshOrgMap:")
