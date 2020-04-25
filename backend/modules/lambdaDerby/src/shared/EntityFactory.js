@@ -3,6 +3,7 @@ const RacePhaseEid = ":RP";
 const RaceStandingEid = ":RS";
 const ParticipantEid = ":PTCP";
 const BracketMetaDataEid = ":Bmd";
+const BracketPosEid = ":Bp";
 const cHelper = (pthis, props, optionalMembers) => {
     //console.log (pthis.constructor.members) ;
 
@@ -108,7 +109,7 @@ entityFactories[BracketMetaDataLit] = class BracketMetaData extends EntityBase {
         super.preWrite();
         this.PK = this.orgId + BracketMetaDataEid;
 
- 
+
     }
     get classType() {
         return BracketMetaDataLit;
@@ -117,6 +118,75 @@ entityFactories[BracketMetaDataLit] = class BracketMetaData extends EntityBase {
         return this.SK;
     }
 }
+
+/*
+heatStatus[hs]? seedNeeded, pendingAddPending, waiting on (A), waiting on (B), done
+heatNumber[hn]: "01"
+
+pos: [
+    {
+
+    
+    id: "A"
+    status: "bye/forfeit/ptcp/empty" (optional)
+    ptcp: "101"
+    ptcp: ":bye:"
+    ptcp: "forfeit:222"
+    ptcp: "100"
+}
+*/
+const BrackePosLit = 'BracketPos';
+entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
+    static members = ["hn", "pos", "hs"];
+    static canBuild(json) {
+        // client should populate SK for bracketMetaData!
+        return (json.PK &&
+            json.PK.endsWith(BracketPosEid) && json.SK)
+    }
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK = this.orgId + BracketPosEid;
+    }
+    get classType() {
+        return BrackePosLit;
+    }
+    get classKey() {
+        return this.SK;
+    }
+    set heatNumber(hn) {
+        this.hn = hn;
+    }
+    get heatNumber() {
+        return this.hn;
+    }
+    set heatStatus(hs) {
+        this.hs = hs;
+    }
+    get heatStatus() {
+        return this.hs;
+    }
+    set heatPositionList(pos) {
+        this.pos = pos;
+    }
+    get heatPositionList() {
+        return this.pos;
+    }
+    formatSK(chartId, heatNumber) {
+        SK = `${chartId}:${heatNumber}`;
+    }
+    //TODO chartId setter (populate this.SK chartId?)
+    get chartId() {
+        // expecting SK to be chartId:heatNumber
+        return this.SK.replace(/:.*/, "");
+    }
+}
+
+
+
 entityFactories['RacePhase'] = class RacePhase extends EntityBase {
     static members = ["cn", "phr", "rs", "pl"];
     static canBuild(json) {
