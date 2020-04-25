@@ -1,16 +1,16 @@
 <script>
     import CarAndDriver from './CarAndDriver.svelte'
     import { standingsMap, driverMap } from './stores.js';
-    import {safeGetAt} from "./utils.js";
+    import { safeGetAt } from "./utils.js";
 
-    
+
     export let standingKey;
     export let refresh;  // TODO: should probably use lastUpdate!
-    console.log("standingKey",standingKey)
+    console.log("standingKey", standingKey)
 
     const standing = $standingsMap[standingKey]
 
-    console.log("refresh",refresh)
+    console.log("refresh", refresh)
     const hhmmss = () => {
         var time = new Date(standing.lastUpdate);
         return (
@@ -62,8 +62,9 @@
 
         <ul class="list-group">
             <li class="list-group-item">
-                <CarAndDriver number={standing.carNumbers[0]} isWinner={isWinner(1,0)} phaseLetter=""   at={safeGetAt($driverMap,standing.carNumbers[0])}/>
-                        {#if isWinner(1,0)}
+                <CarAndDriver number={standing.carNumbers[0]} isWinner={isWinner(1,0)} phaseLetter=""
+                    at={safeGetAt($driverMap,standing.carNumbers[0])} />
+                {#if isWinner(1,0)}
                             <big class="bigbadge badge">Overall: {getWinTime(1,0)} </big>
                         {/if}
                         {#if isWinner(1,1)}

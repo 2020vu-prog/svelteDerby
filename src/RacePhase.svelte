@@ -4,26 +4,26 @@
 
     import { racePhaseMap, driverMap, nextOnBlockKey } from './stores.js';
     import MaterialAdd from "./MaterialAdd.svelte";
-    import {safeGetAt} from "./utils.js";
+    import { safeGetAt } from "./utils.js";
 
     export let refreshTime;
     export let phaseKey;
     export let at;
-    let racePhase ={}
-    let rp=racePhase;
+    let racePhase = {}
+    let rp = racePhase;
     let hhmmss;
     let chartPosition;
     let bgColor;
 
-    const updateBoundVars=(at)=>{
+    const updateBoundVars = (at) => {
         racePhase = $racePhaseMap[phaseKey];
-        rp=racePhase;
-        hhmmss=hhmmssFmt();
-        chartPosition=getChartPosition();
-        bgColor=getBgColor();
+        rp = racePhase;
+        hhmmss = hhmmssFmt();
+        chartPosition = getChartPosition();
+        bgColor = getBgColor();
     }
     $: {
-        console.log("rp changed:",at)
+        console.log("rp changed:", at)
         updateBoundVars(at);
     }
     //console.log("RacePhaseKey:", phaseKey)
@@ -33,7 +33,7 @@
 
 
             console.log("nob getBgColor key:" + JSON.stringify($nextOnBlockKey));
-            console.log("nob refresh:" ,refreshTime);
+            console.log("nob refresh:", refreshTime);
 
             return racePhase.rs ? "Green" : "Red";
         } else {
@@ -41,11 +41,11 @@
 
         }
     }
-    const getChartPosition=()=>{
+    const getChartPosition = () => {
         return "Adhoc";
     }
     const hhmmssFmt = () => {
-       // var time = new Date(racePhase.lastUpdate);
+        // var time = new Date(racePhase.lastUpdate);
         var time = new Date(at);
         return (
             ("0" + time.getHours()).slice(-2) + ":" +
@@ -69,7 +69,7 @@
         }
     };
     const getWinTime = (lane) => {
-        
+
         var phaseWinTime = racePhase.getPhaseDeltaMS();
         if (lane === 2) {
             phaseWinTime = phaseWinTime * -1;

@@ -1,31 +1,31 @@
 <!-- https://www.swyx.io/writing/svelte-auth/#draw-the-rest-of-the-owl -->
 <script>
-  import { store, signUp, signIn, confirmSignUp, loginFormState ,logout} from './stores/auth.js'
-  let mode = localStorage.getItem('svelteLoginMode') || 'signup'
-  let isSigningIn = mode === 'signin'
-  let promise // nothing to start with
-  function toggleMode() {
-    if (mode === 'signup') mode = 'signin'
-    else mode = 'signup'
-    localStorage.setItem('svelteLoginMode', mode)
-  }
-  function handleSubmit() {
-    if (mode === 'signup') {
-      promise = signUp().then(() => {
-        mode = 'confirm'
-      })
-    } else if (mode === 'confirm') {
-      promise = confirmSignUp()
-    } else {
-      promise = signIn()
+    import { store, signUp, signIn, confirmSignUp, loginFormState, logout } from './stores/auth.js'
+    let mode = localStorage.getItem('svelteLoginMode') || 'signup'
+    let isSigningIn = mode === 'signin'
+    let promise // nothing to start with
+    function toggleMode() {
+        if (mode === 'signup') mode = 'signin'
+        else mode = 'signup'
+        localStorage.setItem('svelteLoginMode', mode)
     }
-  }
-  function doLogOut(){
-    localStorage.clear() //clears everything in localStorage
-    logout();
-  }
+    function handleSubmit() {
+        if (mode === 'signup') {
+            promise = signUp().then(() => {
+                mode = 'confirm'
+            })
+        } else if (mode === 'confirm') {
+            promise = confirmSignUp()
+        } else {
+            promise = signIn()
+        }
+    }
+    function doLogOut() {
+        localStorage.clear() //clears everything in localStorage
+        logout();
+    }
 </script>
-    {#if $store && $store.username}
+{#if $store && $store.username}
     <p>Logged in as {$store.username}</p>
         <button on:click={doLogOut}>Log Out</button>
 

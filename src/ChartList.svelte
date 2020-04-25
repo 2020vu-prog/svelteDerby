@@ -44,7 +44,7 @@
     }
     const navToChartDetail = (bmd) => {
         console.log("navToChartDetail:", bmd)
-        push("/ChartDetail/"+bmd.SK);
+        push("/ChartDetail/" + bmd.SK);
     }
 </script>
 

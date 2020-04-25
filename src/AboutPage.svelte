@@ -1,5 +1,5 @@
 <script>
-    import { doRefreshBlocks } from './stores.js';
+    import { doRefreshBlocks, theme } from './stores.js';
 
     import { buildVersion, buildDate } from "./utils.js";
     import { onMount } from 'svelte';
@@ -41,7 +41,7 @@
 
         mounted = true;
         refreshDataFromDb();
-
+        updateColorSelector();
 
     });
     async function handleSubmit() {
@@ -59,7 +59,37 @@
         console.log("mounted&bound Disable cache now:", lclCacheKey)
         setCacheKey(lclCacheKey)
     }
+    const updateTheme = () => {
+        $theme = document.getElementById("themeSelector").value;
+        console.log("Updated theme to: " + $theme);
+    };
 
+    const updateColorSelector = () => {
+        var colorOptions = [];
+        colorOptions = document.getElementsByClassName("colorOption");
+        console.log("ucsBegin: " + $theme);
+        Array.from(colorOptions).forEach(function (element, index, array) {
+            console.log("A " + String(element.value) + " B " + String($theme));
+            if (String(element.value) == String($theme)) {
+                console.log("MATCH");
+                document.getElementById(
+                    "themeSelector"
+                ).value = document.querySelectorAll("option")[index].value;
+                //document.getElementById("themeSelector").value = "Red";
+                console.log(
+                    "label of option: " + document.querySelectorAll("option")[index].value
+                );
+                console.log(
+                    "theme selector value: " +
+                    document.getElementById("themeSelector").value
+                );
+                console.log(
+                    "element to select: " + document.querySelectorAll("option")[index]
+                );
+                return;
+            }
+        });
+    };
 </script>
 {#if ecFromDexie && ecFromDexie[0]}
     Event: {ecFromDexie[0].name}<p/>
@@ -74,4 +104,23 @@ Build Date: {buildDate()}
         <input type=checkbox bind:checked={disableCache} on:click={() => handleSubmit() }>
         Temporary Cache Disable
     </label>
+    <br />
+  <br />
+  <label>
+    Select a Theme Color:
+    <select id="themeSelector" on:change={() => updateTheme()}>
+      <option class="colorOption" value="#4CAF50">Default (Green)</option>
+      <option class="colorOption">Pink</option>
+      <option class="colorOption" value="fuchsia">Light Purple</option>
+      <option class="colorOption">Purple</option>
+      <option class="colorOption">Blue</option>
+      <option class="colorOption" value="lightblue">Light Blue</option>
+      <option class="colorOption">Cyan</option>
+      <option class="colorOption">Yellow</option>
+      <option class="colorOption" value="lightsalmon">Light Orange</option>
+      <option class="colorOption">Orange</option>
+      <option class="colorOption" value="saddlebrown">Brown</option>
+      <option class="colorOption">Gray</option>
+    </select>
+  </label>
 </form>

@@ -1,30 +1,35 @@
 <script>
-import {push, pop, replace} from 'svelte-spa-router'
-//export let permission;
-export let clickHandleRoute;
+    import { push, pop, replace } from 'svelte-spa-router'
+    import { theme } from './stores.js'
+    //export let permission;
+    export let clickHandleRoute;
 
-const chFunction=()=>{push(clickHandleRoute)};
+    const chFunction = () => { push(clickHandleRoute) };
 </script>
 <style>
-.app-fab--absolute {
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  z-index: 99;
+    .fab {
+        width: 1.5em;
+        height: 1.5em;
+        border-radius: 50%;
+        box-shadow: 0 6px 10px 0 #666;
+        transition: all 0.1s ease-in-out;
 
-}
+        font-size: 6vh;
+        color: white;
+        text-align: center;
+        line-height: 1.5em;
 
-@media(min-width: 1024px) {
-   .app-fab--absolute {
-    bottom: 1.5rem;
-    right: 1.5rem;
-    z-index: 99;
+        position: fixed;
+        right: 50px;
+        bottom: 50px;
 
-  }
-}
+        z-index: 99;
+    }
+
+    .fab:hover {
+        box-shadow: 0 6px 14px 0 #666;
+        transform: scale(1.05);
+    }
 </style>
 
-<button class="mdc-fab app-fab--absolute" aria-label="Add" on:click={chFunction}>
-  <div class="mdc-fab__ripple"></div>
-  <span class="mdc-fab__icon material-icons">add_circle</span>
-</button>
+<div class="fab" style="background-color: {$theme};" on:click={chFunction}> + </div>

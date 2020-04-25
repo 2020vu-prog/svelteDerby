@@ -2,7 +2,7 @@ import axios from "axios";
 
 import { writable, readable } from 'svelte/store';
 import { storeAuth} from './stores/auth.js'
-
+export const theme = writable("#4CAF50");
 export const prefStore=writable({"initial":1,disableCache:2});
 export const doRefreshBlocks=writable(0);
 export const standingsMap = writable({});
