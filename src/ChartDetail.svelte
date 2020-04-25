@@ -24,7 +24,7 @@
 
 
     axios
-      .get("/static/data/brackets/" + imgPath)
+      .get("/data/brackets/" + imgPath)
       .then(response => {
         console.log("ChartDetail  axios success");
         pop();
@@ -174,7 +174,9 @@
     pos={Object.keys(brackets2.imgPositions)[pos]}
       {scale}
       left={bracket.left}
-      top={bracket.top} />
+      top={bracket.top} 
+      chartId={params.chartId}
+      />
   {/each}
   <img
     style="position: absolute; z-index: 1; top:0px;left:0px;"

@@ -21,6 +21,7 @@ import RaceStandingAdd from './RaceStandingAdd.svelte'
 import AboutPage from './AboutPage.svelte'
 import ChartPrototype from './ChartPrototype.svelte'
 import ChartDetail from './ChartDetail.svelte'
+import ChartPosition from './ChartPosition.svelte'
 
 import Login from './Login.svelte'
 import HotLoad from "./HotLoad.svelte";
@@ -47,6 +48,7 @@ const routes = {
     '/about': AboutPage,
     '/chartPrototype': ChartPrototype,
     '/chartDetail/:chartId': ChartDetail,
+    '/chartPosition/:chartId/:chartPosition': ChartPosition,
     '/chartList': ChartList,
     '/chartAdd': ChartAdd,
    // '/raceStandingAdd': RaceStandingAdd,
