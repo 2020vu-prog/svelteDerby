@@ -1,11 +1,14 @@
 'use strict'
 const EntityFactory = require('./shared/EntityFactory.js')
+const { permissionMap } = require('./shared/permissionLits.js')
+const { lookupUserPermissions } = require('./shared/PermissionLookup.js')
 const AWS = require("aws-sdk");
 const { DynamoDB } = require('@aws-sdk/client-dynamodb-v2-node');
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
 const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
 var jwt = require('jsonwebtoken');
+
 
 
 const configMap = {
@@ -952,6 +955,19 @@ exports.handler = async (event) => {
 
     entityFactory = new EntityFactory({ orgId: orgId, by: decoded.email, TTL: defaultTTL });
     console.log("Begin event", event);
+
+    console.log(`perms: ${permissionMap} lup ${lookupUserPermissions}`);
+
+    const effectiveUserPerms = lookupUserPermissions(decoded.email);
+    if (effectiveUserPerms && effectiveUserPerms[routePath]) {
+        console.log(`allowing access to ${routePath} for [${decoded.email}]`)
+    }
+    else {
+        console.log(`prohibiting access to ${routePath} for [${decoded.email}]`)
+        return buildResponse({ "error": "unauthorized" });
+    }
+
+
     if (false) { }
     else if (!orgId) {
         const qr = { error: "Unable to determine orgId" };
