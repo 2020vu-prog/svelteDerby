@@ -93,8 +93,8 @@
             document.getElementById("formSubmitButton").disabled = true;
             console.log("sync add button FAIL");
         }
-        document.getElementById("r1").innerHTML = getDriverName(document.getElementById("cn1").value.toString());
-        document.getElementById("r2").innerHTML = getDriverName(document.getElementById("cn2").value.toString());
+        document.getElementById("r1").innerHTML = getDriverName(carNumberForm.car1);
+        document.getElementById("r2").innerHTML = getDriverName(carNumberForm.car2);
     }
     const getDriverName = (number) => {
         console.log("gdn: " + number)

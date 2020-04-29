@@ -21,7 +21,9 @@
         scaledHeight = 30 * scale;
     }
     const gotoChartPos = () => {
-        push(`/ChartPosition/${chartId}/${pos}`);
+        var unmodifiedHeatPos = pos;
+        var heatPos = pos.substring(0, pos.length - 1);
+        push(`/ChartPosition/${chartId}/${heatPos}?clickedOn=${unmodifiedHeatPos}`);
 
     }
 </script>

@@ -84,7 +84,7 @@
         const elapsed = done - start;
         console.log("dexie reload took", elapsed)
         raceConfigParam.baseUrl = "/app";
-        raceConfigParam.title = raceConfigParam.orgId;
+        raceConfigParam.title = raceConfigParam.name;
         $raceConfig = raceConfigParam;
 
     }
