@@ -91,23 +91,41 @@
         });
     };
 </script>
-{#if ecFromDexie && ecFromDexie[0]}
-    Event: {ecFromDexie[0].name}<p/>
-    Archive Pending: {new Date(ecFromDexie[0].TTL * 1000).toString()}<p/>
-{/if}
-Build Version: {buildVersion()}
-<p />
-Build Date: {buildDate()}
-<p />
-<form on:submit|preventDefault={handleSubmit}>
-    <label>
-        <input type=checkbox bind:checked={disableCache} on:click={() => handleSubmit() }>
-        Temporary Cache Disable
-    </label>
-    <br />
-  <br />
-  <label>
-    Select a Theme Color:
+<style>
+    /*
+    using css grid layout from this example: https://stackoverflow.com/questions/9686538/align-labels-in-form-next-to-input
+    */
+    div.settings {
+        display: grid;
+        grid-template-columns: max-content max-content;
+        grid-gap: 5px;
+    }
+
+    div.settings label {
+        text-align: right;
+    }
+
+    div.settings label:after {
+        content: ":";
+    }
+    div.settings select {
+        width: min-content;
+    }
+</style>
+<div class="settings">
+
+    {#if ecFromDexie && ecFromDexie[0]}
+        <label> Event </label>
+        <span> {ecFromDexie[0].name} </span>
+
+        <label> Archive Pending </label>
+        <span> {new Date(ecFromDexie[0].TTL * 1000).toLocaleString()}</span>
+    {/if}
+
+    <label>Disable Cache</label>
+    <input type=checkbox bind:checked={disableCache} on:click={() => handleSubmit() }>
+
+    <label>Theme Color </label>
     <select id="themeSelector" on:change={() => updateTheme()}>
       <option class="colorOption" value="#4CAF50">Default (Green)</option>
       <option class="colorOption">Pink</option>
@@ -122,5 +140,13 @@ Build Date: {buildDate()}
       <option class="colorOption" value="saddlebrown">Brown</option>
       <option class="colorOption">Gray</option>
     </select>
-  </label>
-</form>
+
+    <b></b> <b></b>
+    <b></b> <b></b>
+    <b></b> <b></b>
+    <label> Build Version</label>
+    <span> {buildVersion()} </span>
+
+    <label> Build Date</label>
+    <span> {buildDate()} </span>
+</div>
