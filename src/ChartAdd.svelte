@@ -62,7 +62,9 @@
                 if (data.node.children.length > 0) {
                     window.$("#jstree_demo_div").jstree(true).deselect_node(data.node);
                     window.$("#jstree_demo_div").jstree(true).toggle_node(data.node);
+                    document.getElementById("chartSelectedP").innerHTML = "Chart Selected: ";
                 }
+                document.getElementById("chartSelectedP").innerHTML = "Chart Selected: " + String(data.selected);
                 if (data.selected && data.selected[0] && data.selected[0].includes(".")) {
                     loginForm.bracketSelected = data.selected[0];
                 }
@@ -196,6 +198,7 @@
         Chart Type:
         <div id="jstree_demo_div" />
     </label>
+    <p id="chartSelectedP">Chart Selected: </p>
     <label>
         ChartName:
         <input type="text" bind:value={loginForm.chartName} placeholder="Chart Name" />

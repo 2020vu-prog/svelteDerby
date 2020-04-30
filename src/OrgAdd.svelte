@@ -7,8 +7,14 @@
 
     import axios from "axios";
 
+    var mounted = false;
+    onMount(async () => {
+        mounted = true;
+    });
 
     async function handleSubmit() {
+        syncAddButton();
+
         console.log("Adding:" + JSON.stringify(orgForm))
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
@@ -38,6 +44,18 @@
     const orgForm = {
     }
 
+    const syncAddButton = () => {
+        if(!mounted) {
+            return;
+        }
+        orgForm.lcl1 = String(document.getElementById("lcl1").checked);
+        if (orgForm.name!="" && orgForm.name!=undefined) {
+            console.log("name: " + orgForm.name)
+            document.getElementById("formSubmitButton").disabled = false;
+        } else {
+            document.getElementById("formSubmitButton").disabled = true;
+        }
+    }
 </script>
 <h3>Add Organization</h3>
 
@@ -45,11 +63,11 @@
 
     <label>
         Name:
-        <input id="name" type="text" bind:value={orgForm.name} placeholder="Organization Name" />
+        <input id="name" type="text" bind:value={orgForm.name} placeholder="Organization Name" on:keyup={() => {syncAddButton()}}/>
     </label>
     <label>
         LowCarLane1:
-        <input type="text" bind:value={orgForm.lcl1} placeholder="true" />
+        <input type="checkbox" id="lcl1" on:change={syncAddButton()} checked />
     </label>
-    <button type="submit">Add</button>
+    <button id="formSubmitButton" type="submit" disabled>Add</button>
 </form>

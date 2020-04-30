@@ -7,10 +7,11 @@
 
     import axios from "axios";
 
+    var mounted = false;
     onMount(async () => {
         console.log("mounted focus");
         document.getElementById("carNumber").focus();
-
+        mounted = true;
     });
     async function handleSubmit() {
         console.log("Adding:" + JSON.stringify(loginForm))
@@ -39,9 +40,32 @@
         loginForm.driverName = "";
         loginForm.carNumber = "";
     }
+
     const loginForm = {
     }
 
+    const changeFocus = (carNumber, textboxIdentifier) => {
+        if (textboxIdentifier=="A") {
+            if (carNumber.toString().length == 3) {
+                document.getElementById("driverName").focus();
+            }
+        }
+         syncAddButton();     
+    }
+
+    const syncAddButton = () => {
+        if (!mounted) {
+            return;
+        }
+        if (document.getElementById("carNumber").value.toString().length >= 3 && document.getElementById("driverName").value.toString()!="") {
+            document.getElementById("formSubmitButton").disabled = false;
+            console.log("sync add button SYNC");
+        } else {
+            document.getElementById("formSubmitButton").disabled = true;
+            console.log("sync add button FAIL");
+        }
+        
+    }
 </script>
 <h3>Add Driver</h3>
 
@@ -49,11 +73,11 @@
 
     <label>
         Car Number:
-        <input id="carNumber" type="number" bind:value={loginForm.carNumber} placeholder="Car Number" />
+        <input id="carNumber" type="number" bind:value={loginForm.carNumber} placeholder="Car Number" on:keyup={() => {changeFocus(loginForm.carNumber, "A")}}/>
     </label>
     <label>
         Driver:
-        <input type="text" bind:value={loginForm.driverName} placeholder="Driver Name" />
+        <input id="driverName" type="text" bind:value={loginForm.driverName} placeholder="Driver Name" on:keyup={() => {changeFocus(null, "B")}}/>
     </label>
-    <button type="submit">Add</button>
+    <button id="formSubmitButton" type="submit" disabled>Add</button>
 </form>

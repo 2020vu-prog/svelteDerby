@@ -1,8 +1,7 @@
 <script>
-    import { driverMap, carFilter, doRefreshBlocks } from './stores.js';
+    import { driverMap, doRefreshBlocks } from './stores.js';
     import CarAndDriver from "./CarAndDriver.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
-    import CarFilter from "./CarFilter.svelte";
     import { safeGetAt } from "./utils.js";
     import { prefStore } from './stores.js';
     import { db } from './eventDb.js';
@@ -23,11 +22,6 @@
 
         bmdFromDexie = await db.BracketMetaData.toArray();
 
-    }
-    const filterMatches = (driver, lclFilter) => {
-        if (!lclFilter) return true;
-        let re = new RegExp('^' + lclFilter);
-        return (String(driver).match(re));
     }
     const getBmdAsList = (driverMap) => {
         const rc = [];
@@ -53,7 +47,6 @@
     <h4>Chart List </h4>
     <p />
     <MaterialAdd clickHandleRoute="/chartAdd" />
-    <CarFilter />
 
     {#each bmdFromDexie as bmd}
                 <div class="panel panel-info" on:click={() => navToChartDetail(bmd)}>

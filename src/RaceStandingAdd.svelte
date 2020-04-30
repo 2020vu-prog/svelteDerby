@@ -35,14 +35,16 @@
         document.getElementById("cn1").focus();
         mounted = true;
     });
-    const changeFocus = (cn1) => {
-        console.log("changeFocus", cn1)
-        console.log("changeFocus", cn1)
-        if (cn1.toString().length == 3) {
-            document.getElementById("cn2").focus();
-
-        }
-        syncAddButton();
+    const changeFocus = (carNumber, seedIdentifier) => {
+        console.log("changeFocus ", seedIdentifier, " ", carNumber)
+        if (carNumber.toString().length == 3) {
+            if (seedIdentifier=="A") {
+                document.getElementById("cn2").focus();
+                syncAddButton();
+            } else if (seedIdentifier=="B") {
+                syncAddButton(true);
+            }
+        }       
     }
 
     async function handleSubmit() {
@@ -82,7 +84,7 @@
     }
     const carNumberForm = {
     }
-    function syncAddButton() {
+    const syncAddButton = (shouldEnableButton) => {
         if (!mounted) {
             return;
         }
@@ -95,6 +97,10 @@
         }
         document.getElementById("r1").innerHTML = getDriverName(carNumberForm.car1);
         document.getElementById("r2").innerHTML = getDriverName(carNumberForm.car2);
+
+        if (shouldEnableButton==true) {
+            document.getElementById("formSubmitButton").focus();
+        }
     }
     const getDriverName = (number) => {
         console.log("gdn: " + number)
@@ -114,13 +120,13 @@
 
 <form on:submit|preventDefault={handleSubmit}>
   <label>
-    <input type="number" bind:value={carNumberForm.car1} placeholder="Car1" id="cn1" on:keyup={() => {changeFocus(carNumberForm.car1);}} 
+    <input type="number" bind:value={carNumberForm.car1} placeholder="Car1" id="cn1" on:keyup={() => {changeFocus(carNumberForm.car1, "A")}} 
     />
     <p id="r1">Unknown Racer</p>
   </label>
   
    <label>
-    <input type="number" bind:value={carNumberForm.car2} placeholder="Car2" id="cn2" on:keyup={() => {syncAddButton();}}/>
+    <input type="number" bind:value={carNumberForm.car2} placeholder="Car2" id="cn2" on:keyup={() => {changeFocus(carNumberForm.car2, "B")}}/>
     <p id="r2">Unknown Racer</p>
   </label>
   <button id="formSubmitButton" type="submit" disabled>Add</button>
