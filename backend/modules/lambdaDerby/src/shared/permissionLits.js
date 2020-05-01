@@ -29,7 +29,10 @@ addPermission("TODO", [
     "/getRaceHistory",
     "/listChartTypes",
     "/addEventConfig",
-], []);
+], [
+    "/orgAdd",  // be careful with this one!
+    "/eventAdd",
+]);
 
 module.exports.permissionMap = {
     "/addParticipant": "d",
