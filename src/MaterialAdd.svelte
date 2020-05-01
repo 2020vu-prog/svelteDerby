@@ -1,10 +1,29 @@
 <script>
     import { push, pop, replace } from 'svelte-spa-router'
     import { theme } from './stores.js'
+    import { isUserAllowedRoutePath } from "./utils.js";
+    import { onMount } from 'svelte';
+
+    //const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
+    //const { hasSvelteRoutePath } = require('../backend/modules/lambdaDerby/src/shared/PermissionLookup.js')
     //export let permission;
     export let clickHandleRoute;
 
+    var userHasPermission = false;
+
     const chFunction = () => { push(clickHandleRoute) };
+    onMount(async () => {
+        userHasPermission = await isUserAllowedRoutePath(clickHandleRoute);
+    });
+    /*
+    const userHasPermission = () => {
+
+        const effectiveUserPerms = hasSvelteRoutePath("2020vu@gmail.com", clickHandleRoute);
+        console.log("hasSvelteRoutePath:", effectiveUserPerms)
+        //return true;
+        return effectiveUserPerms;
+    }
+    */
 </script>
 <style>
     .fab {
@@ -31,5 +50,6 @@
         transform: scale(1.05);
     }
 </style>
-
+{#if userHasPermission}
 <div class="fab" style="background-color: {$theme};" on:click={chFunction}> + </div>
+{/if}

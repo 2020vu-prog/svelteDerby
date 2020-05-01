@@ -1,7 +1,7 @@
 'use strict'
 const EntityFactory = require('./shared/EntityFactory.js')
 const { permissionMap } = require('./shared/permissionLits.js')
-const { lookupUserPermissions } = require('./shared/PermissionLookup.js')
+const { hasServerRoutePath } = require('./shared/PermissionLookup.js')
 const AWS = require("aws-sdk");
 const { DynamoDB } = require('@aws-sdk/client-dynamodb-v2-node');
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
@@ -956,14 +956,13 @@ exports.handler = async (event) => {
     entityFactory = new EntityFactory({ orgId: orgId, by: decoded.email, TTL: defaultTTL });
     console.log("Begin event", event);
 
-    console.log(`perms: ${permissionMap} lup ${lookupUserPermissions}`);
 
-    const effectiveUserPerms = lookupUserPermissions(decoded.email);
-    if (effectiveUserPerms && effectiveUserPerms[routePath]) {
-        console.log(`allowing access to ${routePath} for [${decoded.email}]`)
+    const email = decoded.email;
+    if (email && hasServerRoutePath(email, routePath)) {
+        console.log(`allowing access to ${routePath} for [${email}]`)
     }
     else {
-        console.log(`prohibiting access to ${routePath} for [${decoded.email}]`)
+        console.log(`prohibiting access to ${routePath} for [${email}]`)
         return buildResponse({ "error": "unauthorized" });
     }
 

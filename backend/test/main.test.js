@@ -1,5 +1,6 @@
-const fs = require('fs');
-const axios = require("axios");
+
+
+const { CF, getData, postData, getHHMMSS } = require("./common.js");
 const { v4: uuidv4 } = require('uuid');
 const testers = /2020vu|ConnorM/i
 
@@ -8,50 +9,12 @@ for (var x = 701; x < 730; x++) {
     dloop.push([x]);
 }
 
-//const CF="https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
-const CF = "https://d15zun4udup4ky.cloudfront.net/app"
 
 
-//time curl  $VERBOSE $CF/addBulk         -XPOST --data @bulk.json        --header "$AUTH"
 const orgU = uuidv4().substring(0, 5);
 const orgId = "test." + orgU;
 
-function checkTime(i) {
-    return (i < 10) ? "0" + i : i;
-}
 
-function getHHMMSS(inDate) {
-    h = checkTime(inDate.getHours()),
-        m = checkTime(inDate.getMinutes()),
-        s = checkTime(inDate.getSeconds());
-    return (`${h}:${m}:${s}`);
-}
-const getData = async url => {
-    try {
-        const token = fs.readFileSync(__dirname + '/token.txt', 'utf8');
-        const AUTH = "Authorization: " + token
-        axios.defaults.headers.common['Authorization'] = token;
-
-        const response = await axios.get(url);
-        const data = response.data;
-        return data;
-    } catch (error) {
-        console.log(error);
-    }
-};
-const postData = async (url, req) => {
-    try {
-        const token = fs.readFileSync(__dirname + '/token.txt', 'utf8');
-        const AUTH = "Authorization: " + token
-        axios.defaults.headers.common['Authorization'] = token;
-
-        const response = await axios.post(url, req);
-        //console.log(response);
-        return response;
-    } catch (error) {
-        console.log(error);
-    }
-};
 const orgIz = "test";
 
 test('listOrgConfig: ', () => {
