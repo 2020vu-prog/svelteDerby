@@ -2,7 +2,6 @@ import Dexie from 'dexie';
 
 const db = new Dexie('eventDb');
 
-
 db.version(6).stores({
   EventConfig: `SK`,
   RaceStanding: `SK`,
@@ -20,6 +19,12 @@ export async function dbReset() {
     await db.open();
   }
 
-export { db}
+
+const localConfigDb = new Dexie('localConfigDb');
 
 
+localConfigDb.version(6).stores({
+  LocalConfig: `KEY`
+});
+
+export {db, localConfigDb}

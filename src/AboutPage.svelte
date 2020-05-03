@@ -4,7 +4,7 @@
     import { buildVersion, buildDate } from "./utils.js";
     import { onMount } from 'svelte';
     import { getCacheKey, setCacheKey } from "./stores.js";
-    import { db } from './eventDb.js';
+    import { db, localConfigDb } from './eventDb.js';
 
     //import { prefStore } from './stores.js';
 
@@ -42,7 +42,6 @@
         mounted = true;
         refreshDataFromDb();
         updateColorSelector();
-
     });
     async function handleSubmit() {
         console.log("check do")
@@ -59,9 +58,10 @@
         console.log("mounted&bound Disable cache now:", lclCacheKey)
         setCacheKey(lclCacheKey)
     }
-    const updateTheme = () => {
+    const updateTheme = async() => {
         $theme = document.getElementById("themeSelector").value;
         console.log("Updated theme to: " + $theme);
+        let id = await localConfigDb["LocalConfig"].put({"KEY":"theme", "bgColor":$theme});
     };
 
     const updateColorSelector = () => {

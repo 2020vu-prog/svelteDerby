@@ -7,7 +7,7 @@
     import { Auth } from 'aws-amplify';
     import Amplify, { PubSub } from 'aws-amplify';
     import { AWSIoTProvider } from '@aws-amplify/pubsub/lib/Providers';
-    import { db } from './eventDb.js';
+    import { db, localConfigDb} from './eventDb.js';
     import { onMount } from "svelte";
 
     const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
