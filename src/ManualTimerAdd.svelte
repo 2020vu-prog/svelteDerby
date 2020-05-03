@@ -1,5 +1,5 @@
 <script>
-    import { raceConfig } from './stores.js';
+    import { raceConfig, statusMessage } from './stores.js';
     import { store } from './stores/auth.js'
     import { Auth } from 'aws-amplify';
     import { onMount } from 'svelte';
@@ -8,7 +8,6 @@
     import axios from "axios";
     export let params = {}
 
-    let errMessage = undefined; // empty to start.
     let spinner = undefined; // empty to start.
 
     console.log("ManualTimeAdd", params)
@@ -42,7 +41,10 @@
             const response = await axios.post($raceConfig.baseUrl + endPoint, req);
             if (response.data.error) {
                 console.log("add failed", response)
-                errMessage = response.data.error;
+                $statusMessage = {
+                    text: response.data.error,
+                    type: "error"
+                }
             }
             else {
 
@@ -64,25 +66,14 @@
     }
 </script>
 <h3>Manual Timing Results</h3>
-{#if errMessage}
-<p class="errorMessage">{errMessage}</p>
-{/if}
 
 
 <form on:submit|preventDefault={handleSubmit}>
-  <label>
-    <input type="number" bind:value={resultForm.lane1} placeholder="Lane1 MS" />
-  </label>
-  <label>
-    <input type="number" bind:value={resultForm.lane2} placeholder="Lane2 MS" />
-  </label>
-  <button type="submit">Apply Time</button>
+    <label>
+        <input type="number" bind:value={resultForm.lane1} placeholder="Lane1 MS" />
+    </label>
+    <label>
+        <input type="number" bind:value={resultForm.lane2} placeholder="Lane2 MS" />
+    </label>
+    <button type="submit">Apply Time</button>
 </form>
-
-<style>
-  .errorMessage {
-   background: papayawhip;
-   color: red;
-   padding: 1rem;
- }
-</style>

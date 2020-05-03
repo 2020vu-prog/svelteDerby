@@ -57,11 +57,11 @@
     });
 
     const syncAddButton = () => {
-        if(!mounted) {
+        if (!mounted) {
             return;
         }
         orgForm.lcl1 = String(document.getElementById("lcl1").checked);
-        if (orgForm.name!="" && orgForm.name!=undefined) {
+        if (orgForm.name != "" && orgForm.name != undefined) {
             console.log("name: " + orgForm.name)
             document.getElementById("formSubmitButton").disabled = false;
         } else {
@@ -75,7 +75,8 @@
 
     <label>
         Name:
-        <input id="name" type="text" bind:value={orgForm.name} placeholder="Organization Name" on:keyup={() => {syncAddButton()}}/>
+        <input id="name" type="text" bind:value={orgForm.name} placeholder="Event Name" on:keyup={()=>
+        {syncAddButton()}}/>
     </label>
     <label>
         LowCarLane1:

@@ -1,5 +1,5 @@
 <script>
-    import { raceConfig, driverMap } from './stores.js';
+    import { raceConfig, driverMap, statusMessage } from './stores.js';
     import { store } from './stores/auth.js'
     import { Auth } from 'aws-amplify';
     import { onMount } from 'svelte';
@@ -7,7 +7,6 @@
 
     import axios from "axios";
     export let params = {}
-    let errMessage = undefined; // empty to start.
     let spinner = undefined; // empty to start.
     console.log("RaceStandingAdd", params)
     var mounted = false;
@@ -38,13 +37,13 @@
     const changeFocus = (carNumber, seedIdentifier) => {
         console.log("changeFocus ", seedIdentifier, " ", carNumber)
         if (carNumber.toString().length == 3) {
-            if (seedIdentifier=="A") {
+            if (seedIdentifier == "A") {
                 document.getElementById("cn2").focus();
                 syncAddButton();
-            } else if (seedIdentifier=="B") {
+            } else if (seedIdentifier == "B") {
                 syncAddButton(true);
             }
-        }       
+        }
     }
 
     async function handleSubmit() {
@@ -68,14 +67,22 @@
 
             if (response.data.error) {
                 console.log("add failed", response)
-                errMessage = response.data.error;
+                $statusMessage = {
+                    text: response.data.error,
+                    type: "error"
+                }
+
             }
             else {
                 pop();
             }
         }
         catch (err) {
-            errMessage = err;
+            $statusMessage = {
+                text: err,
+                type: "error"
+            }
+
         }
         spinner = false;
 
@@ -98,7 +105,7 @@
         document.getElementById("r1").innerHTML = getDriverName(carNumberForm.car1);
         document.getElementById("r2").innerHTML = getDriverName(carNumberForm.car2);
 
-        if (shouldEnableButton==true) {
+        if (shouldEnableButton == true) {
             document.getElementById("formSubmitButton").focus();
         }
     }
@@ -114,28 +121,19 @@
 </script>
 <h3>{title}</h3>
 
-{#if errMessage}
-<p class="errorMessage">{errMessage}</p>
-{/if}
 
 <form on:submit|preventDefault={handleSubmit}>
-  <label>
-    <input type="number" bind:value={carNumberForm.car1} placeholder="Car1" id="cn1" on:keyup={() => {changeFocus(carNumberForm.car1, "A")}} 
-    />
-    <p id="r1">Unknown Racer</p>
-  </label>
-  
-   <label>
-    <input type="number" bind:value={carNumberForm.car2} placeholder="Car2" id="cn2" on:keyup={() => {changeFocus(carNumberForm.car2, "B")}}/>
-    <p id="r2">Unknown Racer</p>
-  </label>
-  <button id="formSubmitButton" type="submit" disabled>Add</button>
-</form>
+    <label>
+        <input type="number" bind:value={carNumberForm.car1} placeholder="Car1" id="cn1" on:keyup={()=>
+        {changeFocus(carNumberForm.car1, "A")}}
+        />
+        <p id="r1">Unknown Racer</p>
+    </label>
 
-<style>
-   .errorMessage {
-    background: papayawhip;
-    color: red;
-    padding: 1rem;
-  }
-</style>
+    <label>
+        <input type="number" bind:value={carNumberForm.car2} placeholder="Car2" id="cn2" on:keyup={()=>
+        {changeFocus(carNumberForm.car2, "B")}}/>
+        <p id="r2">Unknown Racer</p>
+    </label>
+    <button id="formSubmitButton" type="submit" disabled>Add</button>
+</form>
