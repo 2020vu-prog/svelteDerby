@@ -1,13 +1,13 @@
 <script>
 
     import axios from "axios";
-    import { driverMap, nextOnBlockKey, doRefreshBlocks, standingsMap, racePhaseMap, carFilter } from './stores.js';
+    import { driverMap, nextOnBlockKey, doRefreshBlocks, standingsMap, racePhaseMap, carFilter, statusMessage } from './stores.js';
     import { store } from './stores/auth.js'
     import { raceConfig } from './stores.js';
     import { Auth } from 'aws-amplify';
     import Amplify, { PubSub } from 'aws-amplify';
     import { AWSIoTProvider } from '@aws-amplify/pubsub/lib/Providers';
-    import { db, localConfigDb} from './eventDb.js';
+    import { db, localConfigDb } from './eventDb.js';
     import { onMount } from "svelte";
 
     const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
@@ -157,6 +157,7 @@
     */
     const parseAndApply = async (response, doLoadCca, histP) => {
         console.log("parseAndApply:", doLoadCca, histP)
+        const startTime = new Date().getTime();
         const entityFactory = new EntityFactory({});
 
         const hist = (histP) ? histP : getHistFromStore();
@@ -192,6 +193,13 @@
             applyHistToStore(hist);
         }
 
+        const elapsedTime = new Date().getTime() - startTime;
+
+        $statusMessage = {
+            text: `Refresh took ${elapsedTime}`,
+            type: "success"
+        }
+
         return hist;
     }
     const applyEntityToHist = async (e, hist) => {
@@ -199,6 +207,8 @@
         const sk = e.classKey;
         const pk = e.classType;
 
+        const idh = await db['EventHistory'].put(e);
+        console.log(`Added EventHistory with id ${idh}`);
         const tblHist = hist[pk];
 
         if (!tblHist) {
@@ -209,7 +219,7 @@
         else {
             tblHist[sk] = e;
             if (db[e.classType]) {
-                let id = await db[e.classType].put(e);
+                const id = await db[e.classType].put(e);
                 console.log(`Added ${e.classType} with id ${id}`);
             }
 

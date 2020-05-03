@@ -1,17 +1,21 @@
 <script>
     import { statusMessage } from './stores.js';
     var messages = [];
-    const messageDuration = 5000;
+    const messageDuration = {
+        "error": 10000,
+        "success": 5000
+    };
+
     $: {
         console.log(`triggered by statusMessage change: ${statusMessage}`);
         if ($statusMessage && $statusMessage.text) {
             if (!$statusMessage.type) {
                 $statusMessage.type = "error";
             }
-            messages.push({ text: $statusMessage.text, type: $statusMessage.type, TTL: getTtl() });
+            messages.push({ text: $statusMessage.text, type: $statusMessage.type, TTL: getTtl($statusMessage) });
             messages = messages;
+            clearLater(getDurationMs($statusMessage));
             $statusMessage = {};
-            clearLater();
         }
     }
 
@@ -22,15 +26,21 @@
             return (msg.TTL > now)
         });
     }
-    const clearLater = () => {
+    const clearLater = (durationMs) => {
         if (messages.length > 0) {
             window.setTimeout(() => {
                 clearNow();
-            }, messageDuration);
+            }, durationMs + 10);  // add some fudge time to allow for potential of inaccurate/short wait 
         }
     }
-    const getTtl = () => {
-        return new Date().getTime() + messageDuration;
+    const getDurationMs = (statusMessage) => {
+        if (statusMessage && statusMessage.type && messageDuration[statusMessage.type])
+            return messageDuration[statusMessage.type]
+        else
+            return 60000;
+    }
+    const getTtl = (statusMessage) => {
+        return new Date().getTime() + getDurationMs(statusMessage);
     }
 </script>
 <style>
@@ -41,8 +51,8 @@
     }
 
     .successMessage {
-        background: lightgreen;
-        color: green;
+        background: rgb(218, 238, 218);
+        color: black;
         padding: 1rem;
     }
 </style>
