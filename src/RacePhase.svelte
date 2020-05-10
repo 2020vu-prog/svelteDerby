@@ -92,7 +92,7 @@
         if (racePhase.phaseResults) {
             return undefined;  // No timerLink for completed phase.
         }
-        return "/ManualTimerAdd/" + racePhase.classKey
+        return "/ManualTimerAdd/" + racePhase.classKey + "/?carNumber1=" + String(rp.carNumbers[0]) + "&carNumber2=" + String(rp.carNumbers[1]);
     }
     onMount(async () => {
         updateBoundVars(at);

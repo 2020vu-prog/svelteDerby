@@ -48,6 +48,9 @@
     <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
     <BottomNav />
 
+    {#if params.type === "Pending"}
+        <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
+    {/if}
     {#if   $nextOnBlockKey.length >0}
 		<RacePhase refreshTime={$doRefreshBlocks} phaseKey={$nextOnBlockKey} at={$racePhaseMap[$nextOnBlockKey].at}/>
 	{:else}

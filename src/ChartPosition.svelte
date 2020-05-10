@@ -127,9 +127,28 @@
     }
 </script>
 
+<style>
+.card {
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+  transition: 0.3s;
+  width: min-content;
+  border-radius: 5px;
+}
+
+.card:hover {
+  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+}
+
+.container {
+  padding: 2px 16px;
+}
+</style>
+
 <h2>Heat: {params.chartPosition}</h2>
 <form on:submit|preventDefault={handleSubmit}>
 
+<div class="card">
+  <div class="container">
   <div id="seedADiv">
     <h3>{params.chartPosition}A</h3>
     <select
@@ -151,7 +170,10 @@
       <p id="r1">Unknown Racer</p>
     </div>
   </div>
+</div></div>
 
+<div class="card">
+  <div class="container">
   <div id="seedBDiv">
     <h3>{params.chartPosition}B</h3>
     <select
@@ -173,7 +195,7 @@
       <p id="r2">Unknown Racer</p>
     </div>
   </div>
-
+    </div></div>
   <br />
   <br />
   <br />
