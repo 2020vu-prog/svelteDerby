@@ -7,7 +7,9 @@ const BracketPosEid = ":Bp";
 const cHelper = (pthis, props, optionalMembers) => {
     //console.log (pthis.constructor.members) ;
 
-    const members = optionalMembers ? optionalMembers : pthis.constructor.members;
+    const members = optionalMembers
+        ? optionalMembers
+        : pthis.constructor.members;
     for (let [key, value] of Object.entries(props)) {
         //console.log("Chelper checking:"+key);
 
@@ -16,7 +18,7 @@ const cHelper = (pthis, props, optionalMembers) => {
             pthis[key] = value;
         }
     }
-}
+};
 
 class EntityBase {
     static EntityBaseMembers = ["PK", "SK", "at", "by", "orgId", "TTL"];
@@ -38,17 +40,16 @@ class EntityBase {
     get lastUpdate() {
         return this.at;
     }
-
 }
-const EventConfigLit = 'EventConfig';
+const EventConfigLit = "EventConfig";
 entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
     static members = [
-        "lcl1",    // lowCarlane1
+        "lcl1", // lowCarlane1
         "orgIz", // Org Id (pending refactor)
         "name",
     ];
     static canBuild(json) {
-        return (json.PK && json.PK === EventConfigLit);
+        return json.PK && json.PK === EventConfigLit;
     }
     constructor(props) {
         super(props);
@@ -66,13 +67,13 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
     get classKey() {
         return this.orgId;
     }
-}
+};
 
-const OrgConfigLit = 'OrgConfig';
+const OrgConfigLit = "OrgConfig";
 entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
     static members = ["lcl1"]; // lowCarlane1
     static canBuild(json) {
-        return (json.PK && json.PK === OrgConfigLit);
+        return json.PK && json.PK === OrgConfigLit;
     }
     constructor(props) {
         super(props);
@@ -90,16 +91,14 @@ entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
     get classKey() {
         return this.orgIz;
     }
-}
+};
 
-
-const BracketMetaDataLit = 'BracketMetaData';
+const BracketMetaDataLit = "BracketMetaData";
 entityFactories[BracketMetaDataLit] = class BracketMetaData extends EntityBase {
     static members = ["bracketName", "imgPath", "jsonPath"];
     static canBuild(json) {
         // client should populate SK for bracketMetaData!
-        return (json.PK &&
-            json.PK.endsWith(BracketMetaDataEid) && json.SK)
+        return json.PK && json.PK.endsWith(BracketMetaDataEid) && json.SK;
     }
     constructor(props) {
         super(props);
@@ -108,8 +107,6 @@ entityFactories[BracketMetaDataLit] = class BracketMetaData extends EntityBase {
     preWrite() {
         super.preWrite();
         this.PK = this.orgId + BracketMetaDataEid;
-
-
     }
     get classType() {
         return BracketMetaDataLit;
@@ -117,7 +114,7 @@ entityFactories[BracketMetaDataLit] = class BracketMetaData extends EntityBase {
     get classKey() {
         return this.SK;
     }
-}
+};
 
 /*
 heatStatus[hs]? seedNeeded, pendingAddPending, waiting on (A), waiting on (B), done
@@ -135,13 +132,12 @@ pos: [
     ptcp: "100"
 }
 */
-const BrackePosLit = 'BracketPos';
+const BrackePosLit = "BracketPos";
 entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
     static members = ["hn", "pos", "hs"];
     static canBuild(json) {
         // client should populate SK for bracketMetaData!
-        return (json.PK &&
-            json.PK.endsWith(BracketPosEid) && json.SK)
+        return json.PK && json.PK.endsWith(BracketPosEid) && json.SK;
     }
     constructor(props) {
         super(props);
@@ -169,11 +165,29 @@ entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
     get heatStatus() {
         return this.hs;
     }
-    set heatPositionList(pos) {
+    set heatPositionMap(pos) {
         this.pos = pos;
     }
-    get heatPositionList() {
+    get heatPositionMap() {
         return this.pos;
+    }
+    get isReadyToAddPending() {
+        return this.isPtcpValid("A") && this.isPtcpValid("B");
+    }
+    isPtcpValid(ab) {
+        const po = this.getPtcpObject(ab);
+        return po && po.ptcp && po.disp === "ptcp";
+    }
+    getPtcpObject(ab) {
+        return this.pos ? this.pos[ab] : {};
+    }
+    getPtcpNumber(ab) {
+        return this.getPtcpObject(ab).ptcp;
+    }
+
+    //TODO: status->disp
+    getPtcpStatus(ab) {
+        return this.getPtcpObject(ab).status;
     }
     formatSK(chartId, heatNumber) {
         SK = `${chartId}:${heatNumber}`;
@@ -183,14 +197,12 @@ entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
         // expecting SK to be chartId:heatNumber
         return this.SK.replace(/:.*/, "");
     }
-}
+};
 
-
-
-entityFactories['RacePhase'] = class RacePhase extends EntityBase {
+entityFactories["RacePhase"] = class RacePhase extends EntityBase {
     static members = ["cn", "phr", "rs", "pl"];
     static canBuild(json) {
-        return (json.PK && json.PK.endsWith(RacePhaseEid));
+        return json.PK && json.PK.endsWith(RacePhaseEid);
     }
     constructor(props) {
         super(props);
@@ -213,7 +225,7 @@ entityFactories['RacePhase'] = class RacePhase extends EntityBase {
     // legacy emulation
     getPhaseDeltaMS() {
         if (!this.phr) return undefined;
-        return (this.phr[1] - this.phr[0]);
+        return this.phr[1] - this.phr[0];
     }
     get carNumbers() {
         return this.cn;
@@ -222,20 +234,20 @@ entityFactories['RacePhase'] = class RacePhase extends EntityBase {
         return this.pl;
     }
     set phaseLiteral(pl) {
-        return this.pl = pl;
+        return (this.pl = pl);
     }
     get classType() {
-        return 'RacePhase';
+        return "RacePhase";
     }
     get classKey() {
         return this.SK;
     }
-}
-entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
+};
+entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     static members = ["cn", "ph1", "ph2"];
     static eid = ":RS";
     static canBuild(json) {
-        return (json.PK && json.PK.endsWith(RaceStandingEid));
+        return json.PK && json.PK.endsWith(RaceStandingEid);
     }
     constructor(props) {
         super(props);
@@ -244,8 +256,7 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
     preWrite() {
         super.preWrite();
         this.PK = this.orgId + RaceStandingEid;
-        if (!this.SK)
-            this.SK = new Date().getTime() + "";
+        if (!this.SK) this.SK = new Date().getTime() + "";
     }
     nextRace() {
         if (!this.phase1Results) {
@@ -265,10 +276,10 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
         }
     }
     set phase1Results(ph1) {
-        return this.ph1 = ph1;
+        return (this.ph1 = ph1);
     }
     set phase2Results(ph2) {
-        return this.ph2 = ph2;
+        return (this.ph2 = ph2);
     }
     get phase1Results() {
         return this.ph1;
@@ -290,13 +301,13 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
     }
     isOverallTie() {
         const distinctResults = [...new Set(this.overallResults)];
-        return (distinctResults.length == 1);
+        return distinctResults.length == 1;
     }
     hasResults() {
-        return (this.carNumbers && this.phase1Results);
+        return this.carNumbers && this.phase1Results;
     }
     isComplete() {
-        return (this.carNumbers && this.phase1Results && this.phase2Results);
+        return this.carNumbers && this.phase1Results && this.phase2Results;
     }
     isPending() {
         return !this.isComplete();
@@ -304,27 +315,26 @@ entityFactories['RaceStanding'] = class RaceStanding extends EntityBase {
     // legacy emulation
     getPhaseXDeltaMS(x) {
         if (!x) return undefined;
-        return (x[1] - x[0]);
+        return x[1] - x[0];
     }
     get phase1DeltaMS() {
         return this.getPhaseXDeltaMS(this.phase1Results);
-
     }
     get phase2DeltaMS() {
         return this.getPhaseXDeltaMS(this.phase2Results);
     }
     get classType() {
-        return 'RaceStanding';
+        return "RaceStanding";
     }
     get classKey() {
         return this.SK;
     }
-}
-entityFactories['Participant'] = class Participant extends EntityBase {
+};
+entityFactories["Participant"] = class Participant extends EntityBase {
     static members = ["name", "number"];
     static eid = ":PTCP";
     static canBuild(json) {
-        return (json.PK && json.PK.endsWith(ParticipantEid));
+        return json.PK && json.PK.endsWith(ParticipantEid);
     }
     constructor(props) {
         super(props);
@@ -336,38 +346,35 @@ entityFactories['Participant'] = class Participant extends EntityBase {
         this.SK = this.number + "";
     }
     get classType() {
-        return 'Participant';
+        return "Participant";
     }
     get classKey() {
         return this.SK;
     }
 };
 
-
 class EntityFactory {
-    propOverrides = {}
+    propOverrides = {};
     constructor(propOverrides) {
         this.propOverrides = propOverrides;
     }
     build(json) {
         for (const [overrideKey, value] of Object.entries(this.propOverrides)) {
             json[overrideKey] = value;
-
         }
-        const candidates = Object.values(entityFactories).filter(function (factory) {
-            return (factory.canBuild(json));
-        }).map(function (factory) {
-
-            return new factory(json);
-        });
+        const candidates = Object.values(entityFactories)
+            .filter(function (factory) {
+                return factory.canBuild(json);
+            })
+            .map(function (factory) {
+                return new factory(json);
+            });
 
         return candidates.length > 0 ? candidates[0] : null;
     }
     get entityTypes() {
         return Object.keys(entityFactories);
     }
-
-};
+}
 
 module.exports = EntityFactory;
-
