@@ -1,11 +1,11 @@
 <script>
-    import { doRefreshBlocks, theme } from './stores.js';
+    import { doRefreshBlocks, theme, showBottomNav } from './stores.js';
 
     import { buildVersion, buildDate } from "./utils.js";
     import { onMount } from 'svelte';
     import { getCacheKey, setCacheKey } from "./stores.js";
     import { db, localConfigDb } from './eventDb.js';
-
+    import BottomNav from "./BottomNav.svelte";
     //import { prefStore } from './stores.js';
 
     let disableCache = false;
@@ -43,7 +43,7 @@
         refreshDataFromDb();
         updateColorSelector();
     });
-    async function handleSubmit() {
+    async function clickDisableCache() {
         console.log("check do")
         if (!disableCache) {  // negated test, b/c clickhandler called before bind value :-(
             //$prefStore.disableCache = new Date().getTime();
@@ -58,10 +58,10 @@
         console.log("mounted&bound Disable cache now:", lclCacheKey)
         setCacheKey(lclCacheKey)
     }
-    const updateTheme = async() => {
+    const updateTheme = async () => {
         $theme = document.getElementById("themeSelector").value;
         console.log("Updated theme to: " + $theme);
-        let id = await localConfigDb["LocalConfig"].put({"KEY":"theme", "bgColor":$theme});
+        let id = await localConfigDb["LocalConfig"].put({ "KEY": "theme", "bgColor": $theme });
     };
 
     const updateColorSelector = () => {
@@ -108,6 +108,7 @@
     div.settings label:after {
         content: ":";
     }
+
     div.settings select {
         width: min-content;
     }
@@ -123,7 +124,9 @@
     {/if}
 
     <label>Disable Cache</label>
-    <input type=checkbox bind:checked={disableCache} on:click={() => handleSubmit() }>
+    <input type=checkbox bind:checked={disableCache} on:click={() => clickDisableCache() }>
+    <label>Bottom NavBar</label>
+    <input type=checkbox bind:checked={$showBottomNav} >
 
     <label>Theme Color </label>
     <select id="themeSelector" on:change={() => updateTheme()}>
@@ -149,4 +152,5 @@
 
     <label> Build Date</label>
     <span> {buildDate()} </span>
+    <BottomNav />
 </div>

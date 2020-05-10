@@ -5,6 +5,7 @@
     import CarFilter from "./CarFilter.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
     import { location } from 'svelte-spa-router'
+    import BottomNav from "./BottomNav.svelte";
 
     export let params = {}
 
@@ -45,6 +46,7 @@
 
     <h4>Next On Blocks</h4>
     <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
+    <BottomNav />
 
     {#if   $nextOnBlockKey.length >0}
 		<RacePhase refreshTime={$doRefreshBlocks} phaseKey={$nextOnBlockKey} at={$racePhaseMap[$nextOnBlockKey].at}/>

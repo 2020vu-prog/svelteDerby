@@ -3,6 +3,7 @@
     import RacePhase from "./RacePhase.svelte";
     import CarFilter from "./CarFilter.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
+    import BottomNav from "./BottomNav.svelte";
 
     $: console.log(`DC: NOB:`, $nextOnBlockKey)
     $: console.log(`DC: rpm:`, $racePhaseMap)
@@ -34,6 +35,7 @@
 
 
     <MaterialAdd clickHandleRoute="/raceStandingAdd/RacePhase" />
+    <BottomNav />
 
 
 
