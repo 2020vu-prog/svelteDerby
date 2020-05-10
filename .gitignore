@@ -4,6 +4,7 @@ amplify/
 node_modules/
 /public/bundle.*
 /public/vendors.*.js
+/public/vendors.css
 /public/index.html
 build/
 .terraform/

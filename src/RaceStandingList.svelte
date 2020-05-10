@@ -45,7 +45,6 @@
 
 
     <h4>Next On Blocks</h4>
-    <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
     <BottomNav />
 
     {#if params.type === "Pending"}
