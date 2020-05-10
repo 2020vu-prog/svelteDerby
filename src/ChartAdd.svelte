@@ -82,11 +82,12 @@
         const bearer = currentSession.idToken.jwtToken;
         axios.defaults.headers.common["Authorization"] = bearer;
 
+        const combinedJson = loginForm.bracketSelected.replace(/\.png$/i, "") + ".combined.json";
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
             imgPath: loginForm.bracketSelected,
-            jsonPath: loginForm.bracketSelected + ".combined.json",
+            jsonPath: combinedJson,
             bracketName: loginForm.chartName
         };
 
@@ -120,7 +121,7 @@
         const params = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
-            chris: "418a",  // get rid of /public/data/brackets again.
+            chris: "509d",  // get rid of /public/data/brackets again.
             cacheKey: cacheKey,
         }
 
@@ -146,6 +147,10 @@
         const parents = {};
         json.forEach(function (item) {
             var simpleKey = item.Key.replace("data/brackets/", "");
+            console.log("simpleKey:", simpleKey)
+            if (! /.png/i.test(simpleKey)) {
+                return;
+            }
             var structureArray = simpleKey.split("/");
             var child = "";
 
