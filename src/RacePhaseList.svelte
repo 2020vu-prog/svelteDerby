@@ -40,9 +40,10 @@
 
 
 
-    <h4>Race Phases</h4>
+    <h4>Race Phases
+        <CarFilter />
+    </h4>
 
-    <CarFilter />
 
     {#each getRacePhases( $racePhaseMap) as racePhase}
 		{#if filterMatchesX(racePhase, $carFilter, $nextOnBlockKey)}

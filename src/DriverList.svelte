@@ -18,10 +18,12 @@
 
 
 <div>
-    <h4>Driver List </h4>
+    <h4>Driver List
+        <CarFilter />
+    </h4>
+
     <p />
     <MaterialAdd clickHandleRoute="/driverAdd" />
-    <CarFilter />
 
     {#each getCarNumbersAsList($driverMap) as carNumber}
 			{#if filterMatches(carNumber, $carFilter)}

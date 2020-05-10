@@ -59,9 +59,10 @@
 
 	<hr />
 
-	<h4>{getTitle($location)}</h4>
+	<h4>{getTitle($location)}
+        <CarFilter />
+    </h4>
 
-	<CarFilter />
 
 	{#each getStandings($location, $doRefreshBlocks) as standing}
 		{#if filterMatches(standing, $carFilter, $doRefreshBlocks)}

@@ -49,8 +49,8 @@
     <p />
 
     {#each getOrgsAsList(orgMap) as orgIz}
-                <div class="panel panel-info">
-                    <a href="javascript:void(0);"  on:click={() => replace('/eventSelection/'+orgIz)}>{orgIz}</a>
+                <div class="panel panel-info" on:click={() => replace('/eventSelection/'+orgIz)}>
+                    <a href="javascript:void(0);"  >{orgIz}</a>
                     </div>
             {/each}
     </div>

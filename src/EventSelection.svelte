@@ -81,8 +81,8 @@
     <p />
 
     {#each getOrgsAsList(orgMap) as orgConfig}
-                  <div class="panel panel-info">
-                      <a href="javascript:void(0);"  on:click={() => doSelect(orgConfig)}>{getRaceName(orgConfig)}</a>
+                  <div class="panel panel-info" on:click={() => doSelect(orgConfig)}>
+                      <a href="javascript:void(0);"  >{getRaceName(orgConfig)}</a>
                       </div>
               {/each}
       </div>
