@@ -31,15 +31,8 @@
 
     const getPtcpFromEntity = (ab) => {
         console.log("getPtcpFromEntity ab:", ab);
-        if (bposFromDexie && bposFromDexie.pos) {
-            console.log("getPtcpFromEntity filtering:", ab);
-            const abMatch = bposFromDexie.pos.filter(
-                (entry) => entry.id === ab
-            );
-            console.log("getPtcpFromEntity filtered:", abMatch);
-            if (abMatch) {
-                return abMatch[0].ptcp;
-            }
+        if (bposFromDexie && bposFromDexie.pos && bposFromDexie.pos[ab]) {
+            return bposFromDexie.pos[ab].ptcp;
         }
 
         return "";
@@ -53,28 +46,27 @@
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
             chartId: params.chartId,
-            pos: [],
+            pos: {},
             heatNumber: params.chartPosition,
         };
         var seedAObject = {
-            id: "A",
             status: document.getElementById("seedAType").value,
             ptcp: "",
         };
         var seedBObject = {
-            id: "B",
             status: document.getElementById("seedBType").value,
             ptcp: "",
         };
 
         if (seedAObject.status == "ptcp" || seedBObject.status == "forfeit") {
-            seedAObject.ptcp = document.getElementById("car1").value;
+            seedAObject.ptcp = loginForm.carNumber1.toString();
         }
 
         if (seedBObject.status == "ptcp" || seedBObject.status == "forfeit") {
-            seedBObject.ptcp = document.getElementById("car2").value;
+            seedBObject.ptcp = loginForm.carNumber2.toString();
         }
-        req.pos.push(seedAObject, seedBObject);
+        req.pos["A"] = seedAObject;
+        req.pos["B"] = seedBObject;
         console.log("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
@@ -100,7 +92,7 @@
         if (document.getElementById("seedAType").value == "bye") {
             syncCounter += 0.5;
         } else {
-            if (document.getElementById("car1").value.toString().length >= 3) {
+            if (loginForm.carNumber1.toString().length >= 3) {
                 syncCounter += 0.5;
             }
         }
@@ -108,7 +100,7 @@
         if (document.getElementById("seedBType").value == "bye") {
             syncCounter += 0.5;
         } else {
-            if (document.getElementById("car2").value.toString().length >= 3) {
+            if (loginForm.carNumber2.toString().length >= 3) {
                 syncCounter += 0.5;
             }
         }
@@ -193,22 +185,16 @@
         <div class="container">
             <div id="seedADiv">
                 <h3>{params.chartPosition}A</h3>
-                <select
-                    id="seedAType"
-                    on:change={() => updateInputUI('A', document.getElementById('seedAType').value)}>
+                <select id="seedAType" on:change={()=> updateInputUI('A', document.getElementById('seedAType').value)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
                 </select>
                 <div id="seedACarInput">
-                    <input
-                        id="car1"
-                        type="number"
-                        bind:value={loginForm.carNumber1}
-                        placeholder="Car Number 1"
-                        on:keyup={() => {
-                            changeFocus(loginForm.carNumber1, 'A');
-                        }} />
+                    <input id="car1" type="number" bind:value={loginForm.carNumber1} placeholder="Car Number 1"
+                        on:keyup={()=> {
+                    changeFocus(loginForm.carNumber1, 'A');
+                    }} />
                     <p id="r1">Unknown Racer</p>
                 </div>
             </div>
@@ -219,22 +205,16 @@
         <div class="container">
             <div id="seedBDiv">
                 <h3>{params.chartPosition}B</h3>
-                <select
-                    id="seedBType"
-                    on:change={() => updateInputUI('B', document.getElementById('seedBType').value)}>
+                <select id="seedBType" on:change={()=> updateInputUI('B', document.getElementById('seedBType').value)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
                 </select>
                 <div id="seedBCarInput">
-                    <input
-                        id="car2"
-                        type="number"
-                        bind:value={loginForm.carNumber2}
-                        placeholder="Car Number 2"
-                        on:keyup={() => {
-                            changeFocus(loginForm.carNumber2, 'B');
-                        }} />
+                    <input id="car2" type="number" bind:value={loginForm.carNumber2} placeholder="Car Number 2"
+                        on:keyup={()=> {
+                    changeFocus(loginForm.carNumber2, 'B');
+                    }} />
                     <p id="r2">Unknown Racer</p>
                 </div>
             </div>
