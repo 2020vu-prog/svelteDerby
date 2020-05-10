@@ -783,7 +783,7 @@ const addChartPosition = async (json) => {
         //return await addSingle(json);
 
     } else {
-        console.log("addChartPosition update needed:", bmdFound);
+        console.log("addChartPosition update needed:", posFound);
         // update name.
     }
 

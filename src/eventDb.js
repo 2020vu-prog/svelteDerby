@@ -2,12 +2,13 @@ import Dexie from 'dexie';
 
 const db = new Dexie('eventDb');
 
-db.version(9).stores({
+db.version(11).stores({
     EventConfig: `SK`,
     RaceStanding: `SK`,
     RacePhase: `SK`,
     Participant: `SK`,
     BracketMetaData: `SK`,
+    BracketPos: `SK`,
     EventHistory: `[PK+SK+at]`,
     Foo: `SK`
 });
