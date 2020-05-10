@@ -1,20 +1,19 @@
 <script>
-    import { raceConfig, statusMessage } from './stores.js';
-    import { store } from './stores/auth.js'
-    import { Auth } from 'aws-amplify';
-    import { onMount } from 'svelte';
-    import { push, pop, replace } from 'svelte-spa-router'
+    import { raceConfig, statusMessage } from "./stores.js";
+    import { store } from "./stores/auth.js";
+    import { Auth } from "aws-amplify";
+    import { onMount } from "svelte";
+    import { push, pop, replace } from "svelte-spa-router";
 
     import axios from "axios";
-    export let params = {}
+    export let params = {};
 
     let spinner = undefined; // empty to start.
 
-    console.log("ManualTimeAdd", params)
-
+    console.log("ManualTimeAdd", params);
 
     async function handleSubmit() {
-        console.log("Manual Timer:" + JSON.stringify(resultForm))
+        console.log("Manual Timer:" + JSON.stringify(resultForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -32,48 +31,52 @@
             SK: params.rpKey,
 
             phr: [resultForm.lane1, resultForm.lane2],
-        }
+        };
 
-        axios.defaults.headers.common['Authorization'] = bearer;
+        axios.defaults.headers.common["Authorization"] = bearer;
 
-        const endPoint = "/doApplyFinishTime"
+        const endPoint = "/doApplyFinishTime";
         try {
-            const response = await axios.post($raceConfig.baseUrl + endPoint, req);
+            const response = await axios.post(
+                $raceConfig.baseUrl + endPoint,
+                req
+            );
             if (response.data.error) {
-                console.log("add failed", response)
+                console.log("add failed", response);
                 $statusMessage = {
                     text: response.data.error,
-                    type: "error"
-                }
-            }
-            else {
-
-
-                console.log(endPoint + " axios success")
+                    type: "error",
+                };
+            } else {
+                console.log(endPoint + " axios success");
                 pop();
             }
-
-        }
-        catch (err) {
-            console.log(endPoint + " failed: " + err)
+        } catch (err) {
+            console.log(endPoint + " failed: " + err);
         }
         resultForm.lane1 = undefined;
         resultForm.lane2 = undefined;
     }
     const resultForm = {
         lane1: undefined,
-        lane2: undefined
-    }
+        lane2: undefined,
+    };
 </script>
-<h3>Manual Timing Results</h3>
 
+<h3>Manual Timing Results</h3>
 
 <form on:submit|preventDefault={handleSubmit}>
     <label>
-        <input type="number" bind:value={resultForm.lane1} placeholder="Lane1 MS" />
+        <input
+            type="number"
+            bind:value={resultForm.lane1}
+            placeholder="Lane1 MS" />
     </label>
     <label>
-        <input type="number" bind:value={resultForm.lane2} placeholder="Lane2 MS" />
+        <input
+            type="number"
+            bind:value={resultForm.lane2}
+            placeholder="Lane2 MS" />
     </label>
     <button type="submit">Apply Time</button>
 </form>

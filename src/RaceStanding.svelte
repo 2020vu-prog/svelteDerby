@@ -1,26 +1,26 @@
 <script>
-    import CarAndDriver from './CarAndDriver.svelte'
-    import { standingsMap, driverMap } from './stores.js';
+    import CarAndDriver from "./CarAndDriver.svelte";
+    import { standingsMap, driverMap } from "./stores.js";
     import { safeGetAt } from "./utils.js";
 
-
     export let standingKey;
-    export let refresh;  // TODO: should probably use lastUpdate!
-    console.log("standingKey", standingKey)
+    export let refresh; // TODO: should probably use lastUpdate!
+    console.log("standingKey", standingKey);
 
-    const standing = $standingsMap[standingKey]
+    const standing = $standingsMap[standingKey];
 
-    console.log("refresh", refresh)
+    console.log("refresh", refresh);
     const hhmmss = () => {
         var time = new Date(standing.lastUpdate);
         return (
-            ("0" + time.getHours()).slice(-2) + ":" +
-            ("0" + time.getMinutes()).slice(-2));
+            ("0" + time.getHours()).slice(-2) +
+            ":" +
+            ("0" + time.getMinutes()).slice(-2)
+        );
         //+ ":" + ("0" + time.getSeconds()).slice(-2));
     };
 
     const isWinner = (lane, phase) => {
-
         var phaseWinTime = getPhaseWinTime(phase);
         if (phaseWinTime == 0) {
             return true;
@@ -40,12 +40,11 @@
             return standing.phase2DeltaMS;
         }
         if (phase === 0) {
-            return (standing.phase1DeltaMS + standing.phase2DeltaMS);
+            return standing.phase1DeltaMS + standing.phase2DeltaMS;
         }
         return undefined;
     };
     const getWinTime = (lane, phase) => {
-
         var phaseWinTime = getPhaseWinTime(phase);
         if (lane === 2) {
             phaseWinTime = phaseWinTime * -1;
@@ -56,39 +55,53 @@
         return phaseWinTime;
     };
 </script>
+
 <div class="well well-sm">
     <div class="panel panel-info">
-        <div class="panel-heading">Heat: {standing.chartPosition}<span class="spanRight">{hhmmss()}</span></div>
+        <div class="panel-heading">
+            Heat: {standing.chartPosition}
+            <span class="spanRight">{hhmmss()}</span>
+        </div>
 
         <ul class="list-group">
             <li class="list-group-item">
-                <CarAndDriver number={standing.carNumbers[0]} isWinner={isWinner(1,0)} phaseLetter=""
-                    at={safeGetAt($driverMap,standing.carNumbers[0])} />
-                {#if isWinner(1,0)}
-                            <big class="bigbadge badge">Overall: {getWinTime(1,0)} </big>
-                        {/if}
-                        {#if isWinner(1,1)}
-                            <big class="bigbadge badge">A: {getWinTime(1,1)}</big>
-                        {/if}
-                        {#if isWinner(1,2)}
-                            <big class="bigbadge badge">B: {getWinTime(1,2)}</big>
-                        {/if}
+                <CarAndDriver
+                    number={standing.carNumbers[0]}
+                    isWinner={isWinner(1, 0)}
+                    phaseLetter=""
+                    at={safeGetAt($driverMap, standing.carNumbers[0])} />
+                {#if isWinner(1, 0)}
+                    <big class="bigbadge badge">
+                        Overall: {getWinTime(1, 0)}
+                    </big>
+                {/if}
+                {#if isWinner(1, 1)}
+                    <big class="bigbadge badge">A: {getWinTime(1, 1)}</big>
+                {/if}
+                {#if isWinner(1, 2)}
+                    <big class="bigbadge badge">B: {getWinTime(1, 2)}</big>
+                {/if}
 
-                    </li>
-                    <li class="list-group-item">
-                        <CarAndDriver number={standing.carNumbers[1]}  isWinner={isWinner(2,0)} phaseLetter=""  at={safeGetAt($driverMap,standing.carNumbers[0])} />
-                        {#if isWinner(2,0)}
-                            <big class="bigbadge badge">Overall: {getWinTime(2,0)}</big>
-                        {/if}
-                        {#if isWinner(2,1)}
-                            <big class="bigbadge badge">A: {getWinTime(2,1)}</big>
-                        {/if}
-                        {#if isWinner(2,2)}
-                            <big class="bigbadge badge">B: {getWinTime(2,2)}</big>
-                        {/if}
-                    </li>
+            </li>
+            <li class="list-group-item">
+                <CarAndDriver
+                    number={standing.carNumbers[1]}
+                    isWinner={isWinner(2, 0)}
+                    phaseLetter=""
+                    at={safeGetAt($driverMap, standing.carNumbers[0])} />
+                {#if isWinner(2, 0)}
+                    <big class="bigbadge badge">
+                        Overall: {getWinTime(2, 0)}
+                    </big>
+                {/if}
+                {#if isWinner(2, 1)}
+                    <big class="bigbadge badge">A: {getWinTime(2, 1)}</big>
+                {/if}
+                {#if isWinner(2, 2)}
+                    <big class="bigbadge badge">B: {getWinTime(2, 2)}</big>
+                {/if}
+            </li>
 
-                </ul>
-            </div>
-        </div>
-    
+        </ul>
+    </div>
+</div>

@@ -1,11 +1,9 @@
-<!-- @format -->
-
 <script>
     import { carFilter } from "./stores.js";
     import Icon from "fa-svelte";
     import { faFilter } from "@fortawesome/free-solid-svg-icons/faFilter";
     import { faBackspace } from "@fortawesome/free-solid-svg-icons/faBackspace";
-    import { tick } from 'svelte';
+    import { tick } from "svelte";
 
     let icon = faFilter;
     let editMode = false;
@@ -20,13 +18,19 @@
     };
 </script>
 
+<!-- @format -->
 {#if $carFilter || editMode}
-<span on:click="{toggleEdit}">
-  <Icon icon="{faBackspace}"> </Icon>
-</span>
-<input id="cfInput" type="number" maxLength="3" size="3" bind:value="{$carFilter}" />
+    <span on:click={toggleEdit}>
+        <Icon icon={faBackspace} />
+    </span>
+    <input
+        id="cfInput"
+        type="number"
+        maxLength="3"
+        size="3"
+        bind:value={$carFilter} />
 {:else}
-<span on:click="{toggleEdit}">
-  <Icon icon="{faFilter}"> </Icon>
-</span>
+    <span on:click={toggleEdit}>
+        <Icon icon={faFilter} />
+    </span>
 {/if}

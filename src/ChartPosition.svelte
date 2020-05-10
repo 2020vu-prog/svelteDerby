@@ -4,11 +4,11 @@
     import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { db } from './eventDb.js';
+    import { db } from "./eventDb.js";
     import axios from "axios";
 
     export let params = {};
-    var bposFromDexie = {}
+    var bposFromDexie = {};
     const loginForm = {};
 
     var mounted = false;
@@ -17,30 +17,33 @@
         await refreshDataFromDb();
     });
     const refreshDataFromDb = async (trigger) => {
-        console.log("refreshDataFromDb data:", trigger)
+        console.log("refreshDataFromDb data:", trigger);
 
-        bposFromDexie = await db.BracketPos.get(`${params.chartId}:${params.chartPosition}`);
-        console.log("refreshDataFromDb gave:", bposFromDexie)
+        bposFromDexie = await db.BracketPos.get(
+            `${params.chartId}:${params.chartPosition}`
+        );
+        console.log("refreshDataFromDb gave:", bposFromDexie);
         loginForm.carNumber1 = getPtcpFromEntity("A");
         loginForm.carNumber2 = getPtcpFromEntity("B");
         //TODO: bind and set status!
-        console.log("refreshDataFromDb form:", loginForm)
-
-    }
+        console.log("refreshDataFromDb form:", loginForm);
+    };
 
     const getPtcpFromEntity = (ab) => {
-        console.log("getPtcpFromEntity ab:", ab)
+        console.log("getPtcpFromEntity ab:", ab);
         if (bposFromDexie && bposFromDexie.pos) {
-            console.log("getPtcpFromEntity filtering:", ab)
-            const abMatch = bposFromDexie.pos.filter(entry => entry.id === ab);
-            console.log("getPtcpFromEntity filtered:", abMatch)
+            console.log("getPtcpFromEntity filtering:", ab);
+            const abMatch = bposFromDexie.pos.filter(
+                (entry) => entry.id === ab
+            );
+            console.log("getPtcpFromEntity filtered:", abMatch);
             if (abMatch) {
                 return abMatch[0].ptcp;
             }
         }
 
         return "";
-    }
+    };
     async function handleSubmit() {
         console.log("Adding:" + JSON.stringify(loginForm));
         const currentSession = await Auth.currentSession();
@@ -51,10 +54,18 @@
             orgIz: $raceConfig.orgIz,
             chartId: params.chartId,
             pos: [],
-            heatNumber: params.chartPosition
+            heatNumber: params.chartPosition,
         };
-        var seedAObject = { id: "A", status: document.getElementById("seedAType").value, ptcp: "" };
-        var seedBObject = { id: "B", status: document.getElementById("seedBType").value, ptcp: "" };
+        var seedAObject = {
+            id: "A",
+            status: document.getElementById("seedAType").value,
+            ptcp: "",
+        };
+        var seedBObject = {
+            id: "B",
+            status: document.getElementById("seedBType").value,
+            ptcp: "",
+        };
 
         if (seedAObject.status == "ptcp" || seedBObject.status == "forfeit") {
             seedAObject.ptcp = document.getElementById("car1").value;
@@ -70,11 +81,11 @@
 
         axios
             .post($raceConfig.baseUrl + "/addChartPosition", req)
-            .then(response => {
+            .then((response) => {
                 console.log("addChartPosition axios success");
                 pop();
             })
-            .catch(err => {
+            .catch((err) => {
                 console.log("addChartPosition failed: " + err);
             });
         loginForm.carNumber1 = "";
@@ -103,10 +114,14 @@
         }
         if (syncCounter >= 1) {
             document.getElementById("formSubmitButton").disabled = false;
-            console.log("syncAddButton SYNC with syncCounter at " + syncCounter);
+            console.log(
+                "syncAddButton SYNC with syncCounter at " + syncCounter
+            );
         } else {
             document.getElementById("formSubmitButton").disabled = true;
-            console.log("syncAddButton FAIL with syncCounter at " + syncCounter);
+            console.log(
+                "syncAddButton FAIL with syncCounter at " + syncCounter
+            );
         }
         document.getElementById("r1").innerHTML = getDriverName(
             loginForm.carNumber1
@@ -119,7 +134,7 @@
         }
     };
 
-    const getDriverName = number => {
+    const getDriverName = (number) => {
         console.log("gdn: " + number);
         if (number && $driverMap[number]) {
             return $driverMap[number].name;
@@ -142,7 +157,7 @@
     };
 
     const changeFocus = (carNumber, seedIdentifier) => {
-        console.log("changeFocus ", seedIdentifier, " ", carNumber)
+        console.log("changeFocus ", seedIdentifier, " ", carNumber);
         if (carNumber.toString().length == 3) {
             if (seedIdentifier == "A") {
                 document.getElementById("car2").focus();
@@ -151,7 +166,7 @@
                 syncAddButton(true);
             }
         }
-    }
+    };
 </script>
 
 <style>
@@ -178,16 +193,22 @@
         <div class="container">
             <div id="seedADiv">
                 <h3>{params.chartPosition}A</h3>
-                <select id="seedAType" on:change={()=> updateInputUI('A', document.getElementById('seedAType').value)}>
+                <select
+                    id="seedAType"
+                    on:change={() => updateInputUI('A', document.getElementById('seedAType').value)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
                 </select>
                 <div id="seedACarInput">
-                    <input id="car1" type="number" bind:value={loginForm.carNumber1} placeholder="Car Number 1"
-                        on:keyup={()=> {
-                    changeFocus(loginForm.carNumber1, "A")
-                    }} />
+                    <input
+                        id="car1"
+                        type="number"
+                        bind:value={loginForm.carNumber1}
+                        placeholder="Car Number 1"
+                        on:keyup={() => {
+                            changeFocus(loginForm.carNumber1, 'A');
+                        }} />
                     <p id="r1">Unknown Racer</p>
                 </div>
             </div>
@@ -198,16 +219,22 @@
         <div class="container">
             <div id="seedBDiv">
                 <h3>{params.chartPosition}B</h3>
-                <select id="seedBType" on:change={()=> updateInputUI('B', document.getElementById('seedBType').value)}>
+                <select
+                    id="seedBType"
+                    on:change={() => updateInputUI('B', document.getElementById('seedBType').value)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
                 </select>
                 <div id="seedBCarInput">
-                    <input id="car2" type="number" bind:value={loginForm.carNumber2} placeholder="Car Number 2"
-                        on:keyup={()=> {
-                    changeFocus(loginForm.carNumber2, "B")
-                    }} />
+                    <input
+                        id="car2"
+                        type="number"
+                        bind:value={loginForm.carNumber2}
+                        placeholder="Car Number 2"
+                        on:keyup={() => {
+                            changeFocus(loginForm.carNumber2, 'B');
+                        }} />
                     <p id="r2">Unknown Racer</p>
                 </div>
             </div>

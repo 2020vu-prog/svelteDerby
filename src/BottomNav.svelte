@@ -1,5 +1,5 @@
 <script>
-    import { showBottomNav } from './stores.js';
+    import { showBottomNav } from "./stores.js";
     /* Toggle between adding and removing the "responsive" class to the navbar when the user clicks on the icon */
     function myFunction() {
         var x = document.getElementById("myNavbar");
@@ -10,6 +10,7 @@
         }
     }
 </script>
+
 <style>
     /* Place the navbar at the bottom of the page, and make it stick */
     .navbar {
@@ -39,7 +40,7 @@
 
     /* Add a green background color to the active link */
     .navbar a.active {
-        background-color: #4CAF50;
+        background-color: #4caf50;
         color: white;
     }
 
@@ -48,11 +49,17 @@
         display: none;
     }
 </style>
+
 {#if $showBottomNav}
-<div class="navbar" id="myNavbar" style="z-index:20">
-    <a href="/#/RpList" class="active">Phases</a>
-    <a href="/#/RsList/History">Races</a>
-    <a href="/#/RsList/Pending">Pending</a>
-    <a href="javascript:void(0);" class="icon" on:click|preventDefault={myFunction}>&#9776;</a>
-</div>
+    <div class="navbar" id="myNavbar" style="z-index:20">
+        <a href="/#/RpList" class="active">Phases</a>
+        <a href="/#/RsList/History">Races</a>
+        <a href="/#/RsList/Pending">Pending</a>
+        <a
+            href="javascript:void(0);"
+            class="icon"
+            on:click|preventDefault={myFunction}>
+            &#9776;
+        </a>
+    </div>
 {/if}

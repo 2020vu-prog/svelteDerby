@@ -1,15 +1,15 @@
 <script>
-    import CarAndDriver from './CarAndDriver.svelte'
-    import { onMount } from 'svelte';
+    import CarAndDriver from "./CarAndDriver.svelte";
+    import { onMount } from "svelte";
 
-    import { racePhaseMap, driverMap, nextOnBlockKey } from './stores.js';
+    import { racePhaseMap, driverMap, nextOnBlockKey } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
     import { safeGetAt } from "./utils.js";
 
     export let refreshTime;
     export let phaseKey;
     export let at;
-    let racePhase = {}
+    let racePhase = {};
     let rp = racePhase;
     let hhmmss;
     let chartPosition;
@@ -21,38 +21,38 @@
         hhmmss = hhmmssFmt();
         chartPosition = getChartPosition();
         bgColor = getBgColor();
-    }
+    };
     $: {
-        console.log("rp changed:", at)
+        console.log("rp changed:", at);
         updateBoundVars(at);
     }
     //console.log("RacePhaseKey:", phaseKey)
     //console.log("RacePhase:", racePhase)
     const getBgColor = () => {
         if ($nextOnBlockKey === phaseKey) {
-
-
-            console.log("nob getBgColor key:" + JSON.stringify($nextOnBlockKey));
+            console.log(
+                "nob getBgColor key:" + JSON.stringify($nextOnBlockKey)
+            );
             console.log("nob refresh:", refreshTime);
 
             return racePhase.rs ? "Green" : "Red";
         } else {
             return "Gray";
-
         }
-    }
+    };
     const getChartPosition = () => {
         return "Adhoc";
-    }
+    };
     const hhmmssFmt = () => {
         // var time = new Date(racePhase.lastUpdate);
         var time = new Date(at);
         return (
-            ("0" + time.getHours()).slice(-2) + ":" +
-            ("0" + time.getMinutes()).slice(-2));
+            ("0" + time.getHours()).slice(-2) +
+            ":" +
+            ("0" + time.getMinutes()).slice(-2)
+        );
     };
     const isWinner = (lane) => {
-
         if (!racePhase.phaseResults) {
             return undefined;
         }
@@ -69,7 +69,6 @@
         }
     };
     const getWinTime = (lane) => {
-
         var phaseWinTime = racePhase.getPhaseDeltaMS();
         if (lane === 2) {
             phaseWinTime = phaseWinTime * -1;
@@ -81,47 +80,68 @@
     };
     const getPhaseIcon = (racePhase) => {
         if (racePhase.phaseResults) {
-            return undefined;  // No Phase icon for completed phase.
+            return undefined; // No Phase icon for completed phase.
         }
         return racePhase.phaseLiteral;
-    }
+    };
     const getPhaseLetter = (racePhase) => {
         return racePhase.phaseLiteral;
-    }
+    };
     const getTimerLink = (racePhase) => {
         if (racePhase.phaseResults) {
-            return undefined;  // No timerLink for completed phase.
+            return undefined; // No timerLink for completed phase.
         }
-        return "/ManualTimerAdd/" + racePhase.classKey + "/?carNumber1=" + String(rp.carNumbers[0]) + "&carNumber2=" + String(rp.carNumbers[1]);
-    }
+        return (
+            "/ManualTimerAdd/" +
+            racePhase.classKey +
+            "/?carNumber1=" +
+            String(rp.carNumbers[0]) +
+            "&carNumber2=" +
+            String(rp.carNumbers[1])
+        );
+    };
     onMount(async () => {
         updateBoundVars(at);
     });
-
 </script>
 
-{#if  refreshTime}
-        <div class="well well-sm " style="background: {bgColor}">
-            <div class="panel panel-info " >
-                <div class="panel-heading">Heat: {chartPosition}<span class="spanRight">{hhmmss}</span></div>
-
-                <ul class="list-group ">
-                    <li class="list-group-item ">
-                        <CarAndDriver number={rp.carNumbers[0]}  isWinner={isWinner(1,rp)} phaseLetter={getPhaseIcon(rp)}  timerLink={getTimerLink(rp)}  at={safeGetAt($driverMap,rp.carNumbers[0])}/>
-                        {#if isWinner(1,rp)}
-                            <big class="bigbadge badge">{getPhaseLetter(rp)}:{getWinTime(1,rp)} </big>
-                        {/if}
-                    </li>
-                    <li class="list-group-item">
-                        <CarAndDriver number={rp.carNumbers[1]}  isWinner={isWinner(2,rp)} phaseLetter={getPhaseIcon(rp)}  timerLink={getTimerLink(rp)}  at={safeGetAt($driverMap,rp.carNumbers[1])}/>
-                        {#if isWinner(2,rp)}
-                             <big class="bigbadge badge">{getPhaseLetter(rp)}:{getWinTime(2,rp)} </big>
-                         {/if}
-                    </li>
-
-                </ul>
+{#if refreshTime}
+    <div class="well well-sm " style="background: {bgColor}">
+        <div class="panel panel-info ">
+            <div class="panel-heading">
+                Heat: {chartPosition}
+                <span class="spanRight">{hhmmss}</span>
             </div>
+
+            <ul class="list-group ">
+                <li class="list-group-item ">
+                    <CarAndDriver
+                        number={rp.carNumbers[0]}
+                        isWinner={isWinner(1, rp)}
+                        phaseLetter={getPhaseIcon(rp)}
+                        timerLink={getTimerLink(rp)}
+                        at={safeGetAt($driverMap, rp.carNumbers[0])} />
+                    {#if isWinner(1, rp)}
+                        <big class="bigbadge badge">
+                            {getPhaseLetter(rp)}:{getWinTime(1, rp)}
+                        </big>
+                    {/if}
+                </li>
+                <li class="list-group-item">
+                    <CarAndDriver
+                        number={rp.carNumbers[1]}
+                        isWinner={isWinner(2, rp)}
+                        phaseLetter={getPhaseIcon(rp)}
+                        timerLink={getTimerLink(rp)}
+                        at={safeGetAt($driverMap, rp.carNumbers[1])} />
+                    {#if isWinner(2, rp)}
+                        <big class="bigbadge badge">
+                            {getPhaseLetter(rp)}:{getWinTime(2, rp)}
+                        </big>
+                    {/if}
+                </li>
+
+            </ul>
         </div>
-
-
+    </div>
 {/if}

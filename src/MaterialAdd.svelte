@@ -1,8 +1,8 @@
 <script>
-    import { push, pop, replace } from 'svelte-spa-router'
-    import { theme } from './stores.js'
+    import { push, pop, replace } from "svelte-spa-router";
+    import { theme } from "./stores.js";
     import { isUserAllowedRoutePath } from "./utils.js";
-    import { onMount } from 'svelte';
+    import { onMount } from "svelte";
 
     //const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
     //const { hasSvelteRoutePath } = require('../backend/modules/lambdaDerby/src/shared/PermissionLookup.js')
@@ -11,7 +11,9 @@
 
     var userHasPermission = false;
 
-    const chFunction = () => { push(clickHandleRoute) };
+    const chFunction = () => {
+        push(clickHandleRoute);
+    };
     onMount(async () => {
         userHasPermission = await isUserAllowedRoutePath(clickHandleRoute);
     });
@@ -25,6 +27,7 @@
     }
     */
 </script>
+
 <style>
     .fab {
         width: 1.5em;
@@ -50,6 +53,9 @@
         transform: scale(1.05);
     }
 </style>
+
 {#if userHasPermission}
-<div class="fab" style="background-color: {$theme};" on:click={chFunction}> + </div>
+    <div class="fab" style="background-color: {$theme};" on:click={chFunction}>
+        +
+    </div>
 {/if}

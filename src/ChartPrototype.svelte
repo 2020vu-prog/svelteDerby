@@ -27,7 +27,7 @@
             "11A": { left: "1150", top: "1055" },
             "11B": { left: "1150", top: "1125" },
             "502A": { left: "1506", top: "1164" },
-            "502B": { left: "1506", top: "1263" }
+            "502B": { left: "1506", top: "1263" },
         },
         seeds: ["01A", "02A", "03B", "04B", "02B", "01B"],
         progress: {
@@ -35,75 +35,75 @@
                 "#Round": "Championship7",
                 HeatNumber: "10",
                 WinnerDest: "(AWINS?Place1:11B)",
-                LoserDest: "(AWINS?Place2:11A)"
+                LoserDest: "(AWINS?Place2:11A)",
             },
             "11": {
                 "#Round": "Championship7",
                 HeatNumber: "11",
                 WinnerDest: "Place1",
-                LoserDest: "Place2"
+                LoserDest: "Place2",
             },
             "502": {
                 "#Round": "Runoff",
                 HeatNumber: "502",
                 WinnerDest: "Place5",
-                LoserDest: "Place6"
+                LoserDest: "Place6",
             },
             "01": {
                 "#Round": "Left1",
                 HeatNumber: "01",
                 WinnerDest: "03A",
-                LoserDest: "05A"
+                LoserDest: "05A",
             },
             "02": {
                 "#Round": "Left1",
                 HeatNumber: "02",
                 WinnerDest: "04A",
-                LoserDest: "05B"
+                LoserDest: "05B",
             },
             "03": {
                 "#Round": "Left2",
                 HeatNumber: "03",
                 WinnerDest: "08A",
-                LoserDest: "06A"
+                LoserDest: "06A",
             },
             "04": {
                 "#Round": "Left2",
                 HeatNumber: "04",
                 WinnerDest: "08B",
-                LoserDest: "06B"
+                LoserDest: "06B",
             },
             "05": {
                 "#Round": "Right3",
                 HeatNumber: "05",
                 WinnerDest: "07A",
-                LoserDest: "502A"
+                LoserDest: "502A",
             },
             "06": {
                 "#Round": "Right3",
                 HeatNumber: "06",
                 WinnerDest: "07B",
-                LoserDest: "502B"
+                LoserDest: "502B",
             },
             "07": {
                 "#Round": "Right4",
                 HeatNumber: "07",
                 WinnerDest: "09A",
-                LoserDest: "Place4"
+                LoserDest: "Place4",
             },
             "08": {
                 "#Round": "Left5",
                 HeatNumber: "08",
                 WinnerDest: "10A",
-                LoserDest: "09B"
+                LoserDest: "09B",
             },
             "09": {
                 "#Round": "Right6",
                 HeatNumber: "09",
                 WinnerDest: "10B",
-                LoserDest: "Place3"
-            }
-        }
+                LoserDest: "Place3",
+            },
+        },
     };
     let scale = 1;
     const gotoTimer = () => {
@@ -115,7 +115,11 @@
         var currWidth = myImg.clientWidth;
         var currHeight = myImg.clientHeight;
         console.log(
-            "Current width=" + currWidth + ", " + "Original height=" + currHeight
+            "Current width=" +
+                currWidth +
+                ", " +
+                "Original height=" +
+                currHeight
         );
         scale = 0.9 * scale;
         brackets2.imgPositions = brackets2.imgPositions; // force re-render?
@@ -136,17 +140,17 @@
 <div id="top" class="container" style="z-index: 8;">
 
     {#each Object.values(brackets2.imgPositions) as bracket, pos}
-    <ChartHotSpot
-    pos={Object.keys(brackets2.imgPositions)[pos]}
-      {scale}
-      left={bracket.left}
-      top={bracket.top} />
-  {/each}
-  <img
-    style="position: absolute; z-index: 1; top:0px;left:0px;"
-    id="sky"
-    src="/archive/charts/double06.png"
-    alt="double6"
-    on:click={() => gotoTimer()} />
+        <ChartHotSpot
+            pos={Object.keys(brackets2.imgPositions)[pos]}
+            {scale}
+            left={bracket.left}
+            top={bracket.top} />
+    {/each}
+    <img
+        style="position: absolute; z-index: 1; top:0px;left:0px;"
+        id="sky"
+        src="/archive/charts/double06.png"
+        alt="double6"
+        on:click={() => gotoTimer()} />
 
 </div>

@@ -1,6 +1,6 @@
-import Dexie from 'dexie';
+import Dexie from "dexie";
 
-const db = new Dexie('eventDb');
+const db = new Dexie("eventDb");
 
 db.version(11).stores({
     EventConfig: `SK`,
@@ -10,23 +10,19 @@ db.version(11).stores({
     BracketMetaData: `SK`,
     BracketPos: `SK`,
     EventHistory: `[PK+SK+at]`,
-    Foo: `SK`
+    Foo: `SK`,
 });
 
 //export dbTools ;
 export async function dbReset() {
-
-
     await db.delete();
     await db.open();
 }
 
-
-const localConfigDb = new Dexie('localConfigDb');
-
+const localConfigDb = new Dexie("localConfigDb");
 
 localConfigDb.version(6).stores({
-    LocalConfig: `KEY`
+    LocalConfig: `KEY`,
 });
 
-export { db, localConfigDb }
+export { db, localConfigDb };

@@ -1,9 +1,9 @@
 <script>
-    import { raceConfig } from './stores.js';
-    import { store } from './stores/auth.js'
-    import { Auth } from 'aws-amplify';
-    import { push, pop, replace } from 'svelte-spa-router'
-    import { onMount } from 'svelte';
+    import { raceConfig } from "./stores.js";
+    import { store } from "./stores/auth.js";
+    import { Auth } from "aws-amplify";
+    import { push, pop, replace } from "svelte-spa-router";
+    import { onMount } from "svelte";
 
     import axios from "axios";
 
@@ -15,7 +15,7 @@
     async function handleSubmit() {
         syncAddButton();
 
-        console.log("Adding:" + JSON.stringify(orgForm))
+        console.log("Adding:" + JSON.stringify(orgForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -24,46 +24,54 @@
             orgIz: $raceConfig.orgIz,
             lcl1: orgForm.lcl1,
             name: orgForm.name,
-        }
+        };
 
-        console.log("token:" + bearer)
+        console.log("token:" + bearer);
 
-        axios.defaults.headers.common['Authorization'] = bearer;
+        axios.defaults.headers.common["Authorization"] = bearer;
 
-        axios.post($raceConfig.baseUrl + '/addOrg', req)
+        axios
+            .post($raceConfig.baseUrl + "/addOrg", req)
             .then((response) => {
-                console.log("addOrg axios success")
+                console.log("addOrg axios success");
                 pop();
             })
             .catch((err) => {
-                console.log("addOrg failed: " + err)
-            })
+                console.log("addOrg failed: " + err);
+            });
         orgForm.name = "";
         orgForm.lcl1 = "true";
     }
-    const orgForm = {
-    }
+    const orgForm = {};
 
     const syncAddButton = () => {
-        if(!mounted) {
+        if (!mounted) {
             return;
         }
         orgForm.lcl1 = String(document.getElementById("lcl1").checked);
-        if (orgForm.name!="" && orgForm.name!=undefined) {
-            console.log("name: " + orgForm.name)
+        if (orgForm.name != "" && orgForm.name != undefined) {
+            console.log("name: " + orgForm.name);
             document.getElementById("formSubmitButton").disabled = false;
         } else {
             document.getElementById("formSubmitButton").disabled = true;
         }
-    }
+    };
 </script>
+
 <h3>Add Organization</h3>
 
 <form on:submit|preventDefault={handleSubmit}>
 
     <label>
         Name:
-        <input id="name" type="text" bind:value={orgForm.name} placeholder="Organization Name" on:keyup={() => {syncAddButton()}}/>
+        <input
+            id="name"
+            type="text"
+            bind:value={orgForm.name}
+            placeholder="Organization Name"
+            on:keyup={() => {
+                syncAddButton();
+            }} />
     </label>
     <label>
         LowCarLane1:
