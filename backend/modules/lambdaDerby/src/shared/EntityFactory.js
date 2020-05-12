@@ -176,7 +176,8 @@ entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
     }
     isPtcpValid(ab) {
         const po = this.getPtcpObject(ab);
-        return po && po.ptcp && po.disp === "ptcp";
+        // TODO: status is deprecated... get rid of it!
+        return po && po.ptcp && (po.disp === "ptcp" || po.status === "ptcp");
     }
     getPtcpObject(ab) {
         return this.pos ? this.pos[ab] : {};
@@ -200,7 +201,7 @@ entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
 };
 
 entityFactories["RacePhase"] = class RacePhase extends EntityBase {
-    static members = ["cn", "phr", "rs", "pl"];
+    static members = ["cn", "phr", "rs", "pl", "Bp"];
     static canBuild(json) {
         return json.PK && json.PK.endsWith(RacePhaseEid);
     }
@@ -215,6 +216,12 @@ entityFactories["RacePhase"] = class RacePhase extends EntityBase {
         if (!this.SK) {
             this.SK = new Date().getTime() + "";
         }
+    }
+    get bracketPos() {
+        return this.Bp;
+    }
+    set bracketPos(Bp) {
+        return (this.Bp = Bp);
     }
     set phaseResults(results) {
         this.phr = results;
@@ -244,7 +251,7 @@ entityFactories["RacePhase"] = class RacePhase extends EntityBase {
     }
 };
 entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
-    static members = ["cn", "ph1", "ph2"];
+    static members = ["cn", "ph1", "ph2", "Bp"];
     static eid = ":RS";
     static canBuild(json) {
         return json.PK && json.PK.endsWith(RaceStandingEid);
@@ -316,6 +323,12 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     getPhaseXDeltaMS(x) {
         if (!x) return undefined;
         return x[1] - x[0];
+    }
+    get bracketPos() {
+        return this.Bp;
+    }
+    set bracketPos(Bp) {
+        return (this.Bp = Bp);
     }
     get phase1DeltaMS() {
         return this.getPhaseXDeltaMS(this.phase1Results);

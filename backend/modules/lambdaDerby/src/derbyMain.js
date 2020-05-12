@@ -525,12 +525,13 @@ const fmtBulkPut = (json1) => {
             },
         };
         const uk = myP.partitionKey + ":" + myP.sortKey;
-        return [uk, putRequest];
+        return [uk, putRequest, myP];
     } else {
         console.log("addBulk ignored invalid:" + JSON.stringify(json1));
         return [null, null];
     }
 };
+
 const flushBulkRequests = async (requests) => {
     if (requests.length > 0) {
         var params = {
@@ -567,14 +568,16 @@ const addBulk = async (json) => {
     totalProcessed += await flushBulkRequests(Object.values(requests));
     return { status: "ok", detail: "BulkProcessed", count: totalProcessed };
 };
+
 const addSingle = async (json) => {
-    const [uk, putRequest] = fmtBulkPut(json);
+    const [uk, putRequest, entity] = fmtBulkPut(json);
     if (putRequest && uk) {
         await flushBulkRequests([putRequest]);
-        return { status: "ok" };
+        return { status: "ok", entity: entity };
     }
     return { error: "Invalid Request" };
 };
+
 const addPending2 = async (event) => {
     const eventKey = getEventKey(event);
     const cfg = await getConfig(eventKey);
@@ -701,6 +704,8 @@ const addBlocks = async (json) => {
     json["rs"] = rsFound[0].SK;
 
     json["pl"] = rsFound[0].getPhaseLiteral(json.cn);
+    if (rsFound[0].Bp) json["Bp"] = rsFound[0].Bp;
+
     return await addSingle(json);
 };
 
@@ -748,7 +753,25 @@ const addChartPosition = async (json) => {
         // update name.
     }
 
-    return await addSingle(json);
+    const posRC = await addSingle(json);
+
+    if (posRC.status == "ok" && posRC.entity) {
+        const posE = posRC.entity;
+        console.log("isReadyToAddPending:", posE.isReadyToAddPending);
+        if (posE.isReadyToAddPending) {
+            //TODO: already pending, or already complete???
+            await addPending2({
+                body: JSON.stringify({
+                    orgId: json.orgId,
+                    orgIz: json.orgIz,
+                    Bp: posE.SK,
+                    cn: [posE.getPtcpNumber("A"), posE.getPtcpNumber("B")],
+                }),
+            });
+            //TODO: leave some footprints in the butter so that the user knows what happened!
+        }
+    }
+    return posRC;
 };
 
 const addOrgConfig = async (json) => {

@@ -2,7 +2,22 @@ const {
     hasSvelteRoutePath,
 } = require("../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
 import { Auth } from "aws-amplify";
+import { db } from "./eventDb.js";
 
+export async function fmtChartPosition(RpRs) {
+    if (RpRs.bracketPos && RpRs.bracketPos.includes(":")) {
+        const [bmdKey, heat] = RpRs.bracketPos.split(":");
+        console.log("getting bmd:", bmdKey);
+
+        const bmd = await db.BracketMetaData.get(bmdKey);
+        console.log("found bmd:", bmd);
+        if (bmd) {
+            return `${bmd.bracketName} -- Heat: ${heat}`;
+        }
+    }
+
+    return "Heat: Adhoc";
+}
 export async function isUserAllowedRoutePath(routePath) {
     try {
         const user = await Auth.currentAuthenticatedUser();

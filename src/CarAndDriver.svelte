@@ -10,6 +10,7 @@
     let name = "";
     export let at;
     onMount(async () => {
+        console.log("CarAndDriver onMount:", number);
         name = getDriverName(number, at);
     });
     $: {

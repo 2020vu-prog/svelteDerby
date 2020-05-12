@@ -1,15 +1,21 @@
 <script>
     import CarAndDriver from "./CarAndDriver.svelte";
     import { standingsMap, driverMap } from "./stores.js";
-    import { safeGetAt } from "./utils.js";
-
+    import { safeGetAt, fmtChartPosition } from "./utils.js";
+    import { onMount } from "svelte";
     export let standingKey;
+
     export let refresh; // TODO: should probably use lastUpdate!
     console.log("standingKey", standingKey);
 
+    var chartPosition = "";
     const standing = $standingsMap[standingKey];
 
     console.log("refresh", refresh);
+
+    onMount(async () => {
+        chartPosition = await fmtChartPosition(standing);
+    });
     const hhmmss = () => {
         var time = new Date(standing.lastUpdate);
         return (
@@ -54,21 +60,19 @@
         }
         return phaseWinTime;
     };
+
 </script>
 
 <div class="well well-sm">
     <div class="panel panel-info">
         <div class="panel-heading">
-            Heat: {standing.chartPosition}
+            {chartPosition}
             <span class="spanRight">{hhmmss()}</span>
         </div>
 
         <ul class="list-group">
             <li class="list-group-item">
-                <CarAndDriver
-                    number={standing.carNumbers[0]}
-                    isWinner={isWinner(1, 0)}
-                    phaseLetter=""
+                <CarAndDriver number={standing.carNumbers[0]} isWinner={isWinner(1, 0)} phaseLetter=""
                     at={safeGetAt($driverMap, standing.carNumbers[0])} />
                 {#if isWinner(1, 0)}
                     <big class="bigbadge badge">

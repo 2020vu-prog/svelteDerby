@@ -4,7 +4,7 @@
 
     import { racePhaseMap, driverMap, nextOnBlockKey } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
-    import { safeGetAt } from "./utils.js";
+    import { safeGetAt, fmtChartPosition } from "./utils.js";
 
     export let refreshTime;
     export let phaseKey;
@@ -15,12 +15,13 @@
     let chartPosition;
     let bgColor;
 
-    const updateBoundVars = (at) => {
+    const updateBoundVars = async (at) => {
         racePhase = $racePhaseMap[phaseKey];
         rp = racePhase;
         hhmmss = hhmmssFmt();
-        chartPosition = getChartPosition();
         bgColor = getBgColor();
+        chartPosition = await fmtChartPosition(racePhase);
+
     };
     $: {
         console.log("rp changed:", at);
@@ -40,9 +41,7 @@
             return "Gray";
         }
     };
-    const getChartPosition = () => {
-        return "Adhoc";
-    };
+
     const hhmmssFmt = () => {
         // var time = new Date(racePhase.lastUpdate);
         var time = new Date(at);
@@ -102,6 +101,7 @@
     };
     onMount(async () => {
         updateBoundVars(at);
+
     });
 </script>
 
@@ -109,7 +109,7 @@
     <div class="well well-sm " style="background: {bgColor}">
         <div class="panel panel-info ">
             <div class="panel-heading">
-                Heat: {chartPosition}
+                {chartPosition}
                 <span class="spanRight">{hhmmss}</span>
             </div>
 
