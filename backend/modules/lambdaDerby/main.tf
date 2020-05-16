@@ -107,6 +107,7 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
 
 		"s3:ListObjects",
 		"s3:ListBucket",
+		"s3:GetObject",
 
 		"dynamodb:Query",
                 "dynamodb:BatchWriteItem",

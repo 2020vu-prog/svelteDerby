@@ -8,7 +8,7 @@ const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
 const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
 const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
 var jwt = require("jsonwebtoken");
-
+const TmpCache = require("./tmpCache.js");
 const configMap = {};
 
 const s3QueryChartTypes = async () => {
@@ -640,8 +640,12 @@ const applyFinishTime = async (json) => {
         }
         await addSingle(tgtRs);
 
-        if (tgtRs.isOverallTie()) {
-            await cloneRs(tgtRs);
+        if (tgtRs.isComplete()) {
+            if (tgtRs.isOverallTie()) {
+                await cloneRs(tgtRs);
+            } else {
+                await advanceChartPos(tgtRs);
+            }
         }
     } else {
         return {
@@ -653,6 +657,31 @@ const applyFinishTime = async (json) => {
     return {
         status: "ok",
     };
+};
+
+//TODO: revisit signature to allow recursive call w/o RS.
+const advanceChartPos = async (srcRs) => {
+    if (srcRs && srcRs.Bp) {
+    } else {
+        console.log("not a raceBracket RS");
+        return;
+    }
+    console.log("advanceChartPos: Bp:", srcRs.Bp);
+    const chartId = srcRs.Bp.replace(/:.*/, "");
+    const heatNumber = srcRs.Bp.replace(/.*:/, "");
+    const [mbd, combined] = await getCachedBmd(srcRs.orgId, chartId);
+    console.log("advanceChartPos: combined:", combined);
+    if (combined && combined.progress && combined.progress[heatNumber]) {
+        const progress = combined.progress[heatNumber];
+        const winnerDest = progress.WinnerDest;
+        const loserDest = progress.LoserDest;
+        await applyPtcpToChartPos(srcRs.cn[0], winnerDest); //TODO: get actual winner
+        await applyPtcpToChartPos(srcRs.cn[1], loserDest); //TODO: get actual loser
+    }
+};
+const applyPtcpToChartPos = async (ptcp, chartPos) => {
+    console.log("applyPtcpToChartPos: ptcp:", ptcp, " chartPos: ", chartPos);
+    //TODO: update DB!
 };
 
 const cloneRs = async (srcRs) => {
@@ -734,7 +763,26 @@ const addChartMetaData = async (json) => {
     console.log("addChartMetaData returning: ", rc);
     return rc;
 };
+const getCachedBmd = async (orgId, chartId) => {
+    const tmpCache = new TmpCache(AWS, ddbClient, s3);
 
+    const bmd = await tmpCache.getObject({
+        //PK: `${json.orgId}:Bmd`,
+        //SK: posRC.entity.chartId,
+        PK: `${orgId}:Bmd`,
+        SK: chartId,
+    });
+    console.log("found cached bmd:", bmd);
+    if (bmd) {
+        const combinedJson = await tmpCache.getObject({
+            Bucket: process.env.ChartS3BucketName,
+            Key: "data/brackets" + "/" + bmd.jsonPath,
+        });
+        console.log("found cached combined:", combinedJson);
+        return [bmd, combinedJson];
+    }
+    return [];
+};
 const addChartPosition = async (json) => {
     console.log("addChartPosition: " + JSON.stringify(json));
     json.PK = ":Bp"; // force BracketPosition
@@ -757,6 +805,8 @@ const addChartPosition = async (json) => {
 
     if (posRC.status == "ok" && posRC.entity) {
         const posE = posRC.entity;
+        await getCachedBmd(json.orgId, posE.chartId);
+
         console.log("isReadyToAddPending:", posE.isReadyToAddPending);
         if (posE.isReadyToAddPending) {
             //TODO: already pending, or already complete???
