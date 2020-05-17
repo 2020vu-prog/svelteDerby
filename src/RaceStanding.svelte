@@ -26,41 +26,14 @@
         //+ ":" + ("0" + time.getSeconds()).slice(-2));
     };
 
+
     const isWinner = (lane, phase) => {
-        var phaseWinTime = getPhaseWinTime(phase);
-        if (phaseWinTime == 0) {
-            return true;
-        }
+        return standing.isWinner(lane, phase);
+    }
 
-        if (lane === 1) {
-            return phaseWinTime > 0;
-        } else {
-            return phaseWinTime < 0;
-        }
-    };
-    const getPhaseWinTime = (phase) => {
-        if (phase === 1) {
-            return standing.phase1DeltaMS;
-        }
-        if (phase === 2) {
-            return standing.phase2DeltaMS;
-        }
-        if (phase === 0) {
-            return standing.phase1DeltaMS + standing.phase2DeltaMS;
-        }
-        return undefined;
-    };
     const getWinTime = (lane, phase) => {
-        var phaseWinTime = getPhaseWinTime(phase);
-        if (lane === 2) {
-            phaseWinTime = phaseWinTime * -1;
-        }
-        if (phaseWinTime == 0) {
-            return "Tied";
-        }
-        return phaseWinTime;
-    };
-
+        return standing.getWinTime(lane, phase);
+    }
 </script>
 
 <div class="well well-sm">

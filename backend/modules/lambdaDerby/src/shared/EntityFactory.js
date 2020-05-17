@@ -336,6 +336,41 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     get phase2DeltaMS() {
         return this.getPhaseXDeltaMS(this.phase2Results);
     }
+
+    isWinner(lane, phase) {
+        var phaseWinTime = this.getPhaseWinTime(phase);
+        if (phaseWinTime == 0) {
+            return true;
+        }
+
+        if (lane === 1) {
+            return phaseWinTime > 0;
+        } else {
+            return phaseWinTime < 0;
+        }
+    }
+    getPhaseWinTime(phase) {
+        if (phase === 1) {
+            return this.phase1DeltaMS;
+        }
+        if (phase === 2) {
+            return this.phase2DeltaMS;
+        }
+        if (phase === 0) {
+            return this.phase1DeltaMS + this.phase2DeltaMS;
+        }
+        return undefined;
+    }
+    getWinTime(lane, phase) {
+        var phaseWinTime = this.getPhaseWinTime(phase);
+        if (lane === 2) {
+            phaseWinTime = phaseWinTime * -1;
+        }
+        if (phaseWinTime == 0) {
+            return "Tied";
+        }
+        return phaseWinTime;
+    }
     get classType() {
         return "RaceStanding";
     }

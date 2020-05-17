@@ -678,7 +678,7 @@ const advanceChartPos = async (srcRs, bracketPos) => {
         bracketPos = await loadBracketPosFromRaceStanding(srcRs);
         console.log("advanceChartPos loaded bracketPos:", bracketPos);
     }
-    // TODO: move me around for varying inputs.
+
     if (!srcRs) {
         await addPendingFromChartPos(srcRs, bracketPos);
         return;
@@ -709,8 +709,29 @@ const advanceChartPos = async (srcRs, bracketPos) => {
     console.log("advanceChartPos: applying progress using: ", progress);
     const winnerDest = progress.WinnerDest;
     const loserDest = progress.LoserDest;
-    await applyPtcpToChartPos(srcRs.cn[0], winnerDest, bmd); //TODO: get actual winner
-    await applyPtcpToChartPos(srcRs.cn[1], loserDest, bmd); //TODO: get actual loser
+    let winnerCn = "";
+    let loserCn = "";
+    let winCount = 0;
+
+    if (srcRs.isWinner(1, 0)) {
+        //  the car that started in l1 for phase1 won overall.
+        winnerCn = srcRs.cn[0];
+        loserCn = srcRs.cn[1];
+        winCount++;
+    }
+
+    if (srcRs.isWinner(2, 0)) {
+        //  the car that started in l2 for phase1 won overall.
+        winnerCn = srcRs.cn[1];
+        loserCn = srcRs.cn[0];
+        winCount++;
+    }
+
+    // winCount will be 2 if there is overall tie.   don't advance.
+    if (winCount === 1) {
+        await applyPtcpToChartPos(winnerCn, winnerDest, bmd);
+        await applyPtcpToChartPos(loserCn, loserDest, bmd);
+    }
 };
 
 const loadRaceStandingFromBracketPos = async (bracketPos) => {
