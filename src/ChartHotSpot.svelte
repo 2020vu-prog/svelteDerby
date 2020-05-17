@@ -53,10 +53,14 @@
 
         rsFromDexie = await db.RaceStanding.get(bracketPosKey);
         console.log("refreshDataFromDb gave:", rsFromDexie);
-        const entityFactory = new EntityFactory({});
-        const rs = entityFactory.build(rsFromDexie);
-        if (rs.isComplete()) {
-            bracketClass = "complete";
+        if (rsFromDexie) {
+            const entityFactory = new EntityFactory({});
+            const rs = entityFactory.build(rsFromDexie);
+            if (rs.isComplete()) {
+                bracketClass = "complete";
+            } else {
+                bracketClass = "ready";
+            }
         }
         //await getChartImage(bmdFromDexie.imgPath);
         //await getChartImage(bmdFromDexie.jsonPath);
@@ -67,9 +71,11 @@
     div.ready {
         background: green;
     }
+
     div.pendingSeed {
         background: red;
     }
+
     div.complete {
         background: gray;
     }
