@@ -26,14 +26,13 @@
         //+ ":" + ("0" + time.getSeconds()).slice(-2));
     };
 
-
     const isWinner = (lane, phase) => {
         return standing.isWinner(lane, phase);
-    }
+    };
 
     const getWinTime = (lane, phase) => {
         return standing.getWinTime(lane, phase);
-    }
+    };
 </script>
 
 <div class="well well-sm">
@@ -45,7 +44,10 @@
 
         <ul class="list-group">
             <li class="list-group-item">
-                <CarAndDriver number={standing.carNumbers[0]} isWinner={isWinner(1, 0)} phaseLetter=""
+                <CarAndDriver
+                    number={standing.carNumbers[0]}
+                    isWinner={isWinner(1, 0)}
+                    phaseLetter=""
                     at={safeGetAt($driverMap, standing.carNumbers[0])} />
                 {#if isWinner(1, 0)}
                     <big class="bigbadge badge">

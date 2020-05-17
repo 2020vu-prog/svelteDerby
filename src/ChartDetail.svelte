@@ -56,24 +56,26 @@
             left: event.clientX,
             top: event.clientY,
             //chartPosition: $chartClickLoggerId,
-        }
+        };
         loggedImgPositions[$chartClickLoggerId] = m;
-        console.log(`loggedImagePos: ${$chartClickLoggerId}: `, loggedImgPositions);
+        console.log(
+            `loggedImagePos: ${$chartClickLoggerId}: `,
+            loggedImgPositions
+        );
         bumpPos();
         // imgSize();
     };
     const parsePos = (cp) => {
         const heatNumber = cp.replace(/[a-zA-Z]$/, "");
         const heatLetter = cp.replace(/^[0-9]*/, "");
-        return ([heatNumber, heatLetter])
-    }
+        return [heatNumber, heatLetter];
+    };
     const bumpPos = () => {
-        var [pos, letter] = parsePos($chartClickLoggerId)
+        var [pos, letter] = parsePos($chartClickLoggerId);
         pos = parseInt(pos, 10);
         if (letter === "A") {
             letter = "B";
-        }
-        else {
+        } else {
             letter = "A";
             pos++;
         }
@@ -82,17 +84,17 @@
             pos = `0${pos}`;
         }
         $chartClickLoggerId = `${pos}${letter}`;
-    }
+    };
     function imgSize() {
         var myImg = document.querySelector("#sky");
         var currWidth = myImg.clientWidth;
         var currHeight = myImg.clientHeight;
         console.log(
             "Current width=" +
-            currWidth +
-            ", " +
-            "Original height=" +
-            currHeight
+                currWidth +
+                ", " +
+                "Original height=" +
+                currHeight
         );
         scale = 0.9 * scale;
         brackets2.imgPositions = brackets2.imgPositions; // force re-render?
@@ -128,5 +130,5 @@
         alt="bracketImage"
         on:click={gotoTimer} />
 
-        <ChartClickLogger/>
+    <ChartClickLogger />
 </div>

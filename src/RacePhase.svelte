@@ -21,7 +21,6 @@
         hhmmss = hhmmssFmt();
         bgColor = getBgColor();
         chartPosition = await fmtChartPosition(racePhase);
-
     };
     $: {
         console.log("rp changed:", at);
@@ -101,7 +100,6 @@
     };
     onMount(async () => {
         updateBoundVars(at);
-
     });
 </script>
 

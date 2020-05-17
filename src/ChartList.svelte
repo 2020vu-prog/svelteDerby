@@ -9,7 +9,6 @@
     import { push, pop, replace } from "svelte-spa-router";
     import BottomNav from "./BottomNav.svelte";
 
-
     $: {
         refreshDataFromDb($doRefreshBlocks);
     }

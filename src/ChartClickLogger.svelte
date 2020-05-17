@@ -7,7 +7,7 @@
 </script>
 
 <!-- @format -->
-{#if $chartClickLoggerId }
+{#if $chartClickLoggerId}
     <input
         id="cclInput"
         type="string"
