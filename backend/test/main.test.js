@@ -187,8 +187,20 @@ test('postAddChartPosition should work ', () => {
             "orgIz": orgIz,
             "orgId": orgId,
             "chartId": testChartId,
-            // "heatPositionList": [{ "id": "A", "ptcp": "100" }],
-            "pos": [{ "id": "A", "ptcp": "100" }],
+            "pos": { "A":{ "ptcp": "100" ,"status":"ptcp"}},
+            "heatNumber": "01"
+        }
+    ).then(received => {
+        expect(received.data.status).toMatch(/ok/i);
+    });
+});
+test('postAddChartPosition should work ', () => {
+    return postData(`${CF}/addChartPosition`,
+        {
+            "orgIz": orgIz,
+            "orgId": orgId,
+            "chartId": testChartId,
+            "pos": { "B":{ "ptcp": "109" ,"status":"ptcp"}},
             "heatNumber": "01"
         }
     ).then(received => {

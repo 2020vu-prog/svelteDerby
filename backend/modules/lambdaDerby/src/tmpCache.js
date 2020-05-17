@@ -89,7 +89,7 @@ class TmpCache {
             const d = new StringDecoder("utf8");
 
             const rc = d.write(data.Body);
-            return rc;
+            return JSON.parse(rc);
         } catch (err) {
             console.log("s3 getBucket Error", err);
             console.log("s3 getBucket Params:", params);

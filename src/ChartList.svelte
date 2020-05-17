@@ -7,6 +7,8 @@
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
+    import BottomNav from "./BottomNav.svelte";
+
 
     $: {
         refreshDataFromDb($doRefreshBlocks);
@@ -42,6 +44,7 @@
 <div>
     <h4>Chart List</h4>
     <p />
+    <BottomNav />
     <MaterialAdd clickHandleRoute="/chartAdd" />
 
     {#each bmdFromDexie as bmd}

@@ -55,6 +55,7 @@
         <a href="/#/RpList" class="active">Phases</a>
         <a href="/#/RsList/History">Races</a>
         <a href="/#/RsList/Pending">Pending</a>
+        <a href="/#/chartList">Charts</a>
         <a
             href="javascript:void(0);"
             class="icon"

@@ -361,7 +361,11 @@ const ddbQueryPkSk = async (pk, sk) => {
         console.log("ddbQueryPkSk: ", data); // successful response
         const udata = unmarshallResultsToArray(data, new EntityFactory({}));
 
-        return udata;
+        if (udata && udata[0]) {
+            return udata[0]; // exact key lookup should not get multipe entries
+        } else {
+            return null;
+        }
     } catch (err) {
         console.log("ddbQueryPkSk failed: ", err, err.stack); // an error occurred
         throw err;
@@ -659,29 +663,116 @@ const applyFinishTime = async (json) => {
     };
 };
 
-//TODO: revisit signature to allow recursive call w/o RS.
-const advanceChartPos = async (srcRs) => {
-    if (srcRs && srcRs.Bp) {
-    } else {
-        console.log("not a raceBracket RS");
+// srcRs / bracketPos can be null.  Not both.
+const advanceChartPos = async (srcRs, bracketPos) => {
+    if (!srcRs && bracketPos) {
+        //populate srcRS
+        srcRs = await loadRaceStandingFromBracketPos(bracketPos);
+        console.log("advanceChartPos loaded srcRS:", srcRs);
+    } else if (srcRs && !bracketPos) {
+        //populate bracketPos
+        if (!srcRs.Bp) {
+            console.log("advanceChartPos: not a raceBracket RS");
+            return;
+        }
+        bracketPos = await loadBracketPosFromRaceStanding(srcRs);
+        console.log("advanceChartPos loaded bracketPos:", bracketPos);
+    }
+    // TODO: move me around for varying inputs.
+    if (!srcRs) {
+        await addPendingFromChartPos(srcRs, bracketPos);
         return;
     }
+
     console.log("advanceChartPos: Bp:", srcRs.Bp);
     const chartId = srcRs.Bp.replace(/:.*/, "");
     const heatNumber = srcRs.Bp.replace(/.*:/, "");
-    const [mbd, combined] = await getCachedBmd(srcRs.orgId, chartId);
+    const [bmd, combined] = await getCachedBmd(srcRs.orgId, chartId);
+    if (!combined) {
+        console.log("advanceChartPos: missing combined json");
+        return;
+    }
     console.log("advanceChartPos: combined:", combined);
-    if (combined && combined.progress && combined.progress[heatNumber]) {
-        const progress = combined.progress[heatNumber];
-        const winnerDest = progress.WinnerDest;
-        const loserDest = progress.LoserDest;
-        await applyPtcpToChartPos(srcRs.cn[0], winnerDest); //TODO: get actual winner
-        await applyPtcpToChartPos(srcRs.cn[1], loserDest); //TODO: get actual loser
+    if (!combined.progress) {
+        console.log("advanceChartPos: missing combined json progress");
+        return;
+    }
+    if (!combined.progress[heatNumber]) {
+        console.log(
+            "advanceChartPos: missing combined json progress for heat: ",
+            heatNumber
+        );
+        return;
+    }
+
+    const progress = combined.progress[heatNumber];
+    console.log("advanceChartPos: applying progress using: ", progress);
+    const winnerDest = progress.WinnerDest;
+    const loserDest = progress.LoserDest;
+    await applyPtcpToChartPos(srcRs.cn[0], winnerDest, bmd); //TODO: get actual winner
+    await applyPtcpToChartPos(srcRs.cn[1], loserDest, bmd); //TODO: get actual loser
+};
+
+const loadRaceStandingFromBracketPos = async (bracketPos) => {
+    //TODO: override RS add to use bracketPos SK for RS SK
+    return await ddbQueryPkSk(`${bracketPos.orgId}:RS`, bracketPos.SK);
+};
+const loadBracketPosFromRaceStanding = async (rs) => {
+    return await ddbQueryPkSk(`${rs.orgId}:Bp`, rs.Bp);
+};
+
+const addPendingFromChartPos = async (rs, bracketPos) => {
+    if (rs) {
+        console.log("addPendingFromChartPos: standing down, rs exists.");
+        return;
+    }
+
+    console.log("isReadyToAddPending:", bracketPos.isReadyToAddPending);
+    if (bracketPos.isReadyToAddPending) {
+        await addPending2({
+            body: JSON.stringify({
+                orgId: bracketPos.orgId,
+                orgIz: bracketPos.orgId.replace(/\..*/, ""), // TODO: unhack orgIz
+                Bp: bracketPos.SK,
+                //TODO: what about tie->rerace key??
+                SK: bracketPos.SK, // common SK for loadRaceStandingFromBracketPos
+                cn: [
+                    bracketPos.getPtcpNumber("A"),
+                    bracketPos.getPtcpNumber("B"),
+                ],
+            }),
+        });
+        //TODO: leave some footprints in the butter so that the user knows what happened!
     }
 };
-const applyPtcpToChartPos = async (ptcp, chartPos) => {
-    console.log("applyPtcpToChartPos: ptcp:", ptcp, " chartPos: ", chartPos);
-    //TODO: update DB!
+
+const applyPtcpToChartPos = async (ptcp, chartPos, bmd) => {
+    const heatLetter = chartPos.replace(/^[0-9]*/, "");
+    const heatNumber = chartPos.replace(/[a-zA-Z]*$/, "");
+
+    const sk = `${bmd.SK}:${heatNumber}`;
+    console.log("applyPtcpToChartPos: ptcp:", ptcp, " chartPos: ");
+    //const tgtBracketPos = await ddbQueryPkSk(`${bmd.orgId}:Bp`, sk);
+    //console.log("applyPtcpToChartPos: found:", tgtBracketPos);
+    const heatLetterValue = {
+        ptcp: ptcp,
+        disp: "ptcp",
+        status: "ptcp",
+    };
+    const tgtBracketPos = {
+        orgId: bmd.orgId,
+        orgIz: bmd.orgId.replace(/\..*/, ""), // TODO: unhack orgIz
+        chartId: bmd.SK,
+        pos: {},
+        heatNumber: heatNumber,
+    };
+    tgtBracketPos.pos[heatLetter] = heatLetterValue;
+    // this may recurse... (consider bye/forfeit/2nd racer advances, needs pending)
+    console.log(
+        "applyPtcpToChartPos: potential recursion into addOrUpdateChartPosition:",
+        tgtBracketPos
+    );
+    await addOrUpdateChartPosition(tgtBracketPos);
 };
 
 const cloneRs = async (srcRs) => {
@@ -750,8 +841,7 @@ const addChartMetaData = async (json) => {
     console.log("bmdFound", bmdFound);
     if (bmdFound.length == 0) {
         console.log("addChartMetaData add needed:", bmdFound);
-        // Add
-        //return await addSingle(json);
+        // fall thru to  Add
     } else {
         console.log("addChartMetaData update needed:", bmdFound);
         // update name.  TODO:  actual db update needed?
@@ -783,8 +873,9 @@ const getCachedBmd = async (orgId, chartId) => {
     }
     return [];
 };
-const addChartPosition = async (json) => {
-    console.log("addChartPosition: " + JSON.stringify(json));
+const addOrUpdateChartPosition = async (json) => {
+    console.log("addOrUpdateChartPosition: " + JSON.stringify(json));
+
     json.PK = ":Bp"; // force BracketPosition
     if (!json.SK) {
         json.SK = `${json.chartId}:${json.heatNumber}`;
@@ -792,34 +883,23 @@ const addChartPosition = async (json) => {
 
     const posFound = await ddbQueryPkSk(`${json.orgId}:Bp`, json.SK);
     console.log("posFound", posFound);
-    if (posFound.length == 0) {
-        console.log("addChartPosition add needed:", posFound);
+    if (!posFound) {
+        console.log("addOrUpdateChartPosition add needed:", posFound);
         // Add
         //return await addSingle(json);
     } else {
-        console.log("addChartPosition update needed:", posFound);
-        // update name.
+        console.log("addOrUpdateChartPosition update needed:", posFound);
+        const mergedPos = Object.assign(posFound.pos, json.pos);
+        console.log("addOrUpdateChartPosition mergedPos:", mergedPos);
+        json = posFound;
+        json.pos = mergedPos;
     }
 
     const posRC = await addSingle(json);
 
     if (posRC.status == "ok" && posRC.entity) {
         const posE = posRC.entity;
-        await getCachedBmd(json.orgId, posE.chartId);
-
-        console.log("isReadyToAddPending:", posE.isReadyToAddPending);
-        if (posE.isReadyToAddPending) {
-            //TODO: already pending, or already complete???
-            await addPending2({
-                body: JSON.stringify({
-                    orgId: json.orgId,
-                    orgIz: json.orgIz,
-                    Bp: posE.SK,
-                    cn: [posE.getPtcpNumber("A"), posE.getPtcpNumber("B")],
-                }),
-            });
-            //TODO: leave some footprints in the butter so that the user knows what happened!
-        }
+        await advanceChartPos(null, posE);
     }
     return posRC;
 };
@@ -913,7 +993,7 @@ const routeMap = {
     "/addChartPosition": {
         h: async (event) => {
             return buildResponse(
-                await addChartPosition(JSON.parse(event.body))
+                await addOrUpdateChartPosition(JSON.parse(event.body))
             );
         },
     },
