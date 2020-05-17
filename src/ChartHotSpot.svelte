@@ -1,9 +1,9 @@
 <script>
     import { push, pop, replace } from "svelte-spa-router";
-    import {onMount} from 'svelte';
+    import { onMount } from "svelte";
     import { db } from "./eventDb.js";
-    import {parseHeatPos} from './utils.js';
-const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+    import { parseHeatPos } from "./utils.js";
+    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let left;
     export let top;
@@ -26,15 +26,12 @@ const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityF
         scaledHeight = 30 * scale;
     };
     const gotoChartPos = () => {
-        push(
-            `/ChartPosition/${chartId}/${heatPos}?clickedOn=${pos}`
-        );
+        push(`/ChartPosition/${chartId}/${heatPos}?clickedOn=${pos}`);
     };
-    var heatPos,heatLetter;
+    var heatPos, heatLetter;
     onMount(async () => {
-            [heatPos, heatLetter] = parseHeatPos(pos);
-            refreshDataFromDb();
-
+        [heatPos, heatLetter] = parseHeatPos(pos);
+        refreshDataFromDb();
     });
     var bpFromDexie = {};
     var rsFromDexie = {};
@@ -45,22 +42,22 @@ const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityF
         bpFromDexie = await db.BracketPos.get(bracketPosKey);
         console.log("refreshDataFromDb gave:", bpFromDexie);
         if (bpFromDexie && bpFromDexie.pos && bpFromDexie.pos[heatLetter]) {
-            if (bpFromDexie.pos[heatLetter].status=="ptcp") {
+            if (bpFromDexie.pos[heatLetter].status == "ptcp") {
                 posHtml = ` - ${bpFromDexie.pos[heatLetter].ptcp}`;
-            } else if (bpFromDexie.pos[heatLetter].status=="bye") {
+            } else if (bpFromDexie.pos[heatLetter].status == "bye") {
                 posHtml = ` - Bye`;
-            } else if (bpFromDexie.pos[heatLetter].status=="forfeit") {
+            } else if (bpFromDexie.pos[heatLetter].status == "forfeit") {
                 posHtml = ` - ${bpFromDexie.pos[heatLetter].ptcp}(F)`;
             }
         }
 
-         rsFromDexie = await db.RaceStanding.get(bracketPosKey);
-         console.log("refreshDataFromDb gave:", rsFromDexie);
-          const entityFactory = new EntityFactory({});
-            const rs = entityFactory.build(rsFromDexie);
-         if (rs.isComplete()) {
-             bracketClass = "complete";
-         }
+        rsFromDexie = await db.RaceStanding.get(bracketPosKey);
+        console.log("refreshDataFromDb gave:", rsFromDexie);
+        const entityFactory = new EntityFactory({});
+        const rs = entityFactory.build(rsFromDexie);
+        if (rs.isComplete()) {
+            bracketClass = "complete";
+        }
         //await getChartImage(bmdFromDexie.imgPath);
         //await getChartImage(bmdFromDexie.jsonPath);
     };
@@ -71,12 +68,10 @@ const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityF
         background: green;
     }
     div.pendingSeed {
-                background: red;
-
+        background: red;
     }
     div.complete {
-                background: gray;
-
+        background: gray;
     }
 </style>
 
