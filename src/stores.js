@@ -19,6 +19,7 @@ export const raceConfig = writable({
     baseUrlCorsIssue: "https://d15zun4udup4ky.cloudfront.net/app",
     baseUrlOLD: "https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test",
 });
+export const chartClickLoggerId = writable("01A");
 
 const getPrefs = () => {
     var prefs = {};
@@ -28,6 +29,9 @@ const getPrefs = () => {
     unsubscribe();
     return prefs;
 };
+export function getChartCacheKey() {
+    return "2020May17";
+}
 export function getCacheKey() {
     var prefs = getPrefs();
     const expiresMS = new Date().getTime() - 5 * 60 * 1000; // 5 minutes ago

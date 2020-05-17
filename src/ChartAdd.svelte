@@ -4,7 +4,7 @@
     import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { getCacheKey } from "./stores.js";
+    import { getCacheKey, getChartCacheKey } from "./stores.js";
 
     import axios from "axios";
 
@@ -132,7 +132,7 @@
         const params = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
-            chris: "509d", // get rid of /public/data/brackets again.
+            chartCacheKey: getChartCacheKey(), //force invalidate cloudfront cache! 
             cacheKey: cacheKey,
         };
 
@@ -199,15 +199,11 @@
 </script>
 
 <svelte:head>
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"
-        on:load={jqLoaded}>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js" on:load={jqLoaded}>
 
     </script>
 </svelte:head>
-<link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
 
 <h3>Add Chart</h3>
 
@@ -220,10 +216,7 @@
     <p id="chartSelectedP">Chart Selected:</p>
     <label>
         ChartName:
-        <input
-            type="text"
-            bind:value={loginForm.chartName}
-            placeholder="Chart Name" />
+        <input type="text" bind:value={loginForm.chartName} placeholder="Chart Name" />
     </label>
     <button id="formSubmitButton" type="submit" disabled>Add</button>
 </form>

@@ -3,10 +3,13 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import axios from "axios";
+    import ChartClickLogger from "./ChartClickLogger.svelte";
+    import { chartClickLoggerId, getChartCacheKey } from "./stores.js";
 
     export let params = {};
+    const loggedImgPositions = {};
     var bmdFromDexie = {};
-    var bracketImgSrc = "/archive/charts/double06.png";
+    var bracketImgSrc = "/archive/charts/progessSpinner.png";
     onMount(async () => {
         refreshDataFromDb();
     });
@@ -21,8 +24,11 @@
         await getChartImage(bmdFromDexie.jsonPath);
     };
     const getChartImage = async (imgPath) => {
+        console.log("getChartImage", imgPath);
+
+        const chartCacheKey = getChartCacheKey();
         axios
-            .get("/data/brackets/" + imgPath)
+            .get(`/data/brackets/${imgPath}?cacheKey=${chartCacheKey}`)
             .then((response) => {
                 console.log("ChartDetail  axios success", response);
                 brackets2 = response.data;
@@ -42,20 +48,51 @@
     };
 
     let scale = 1;
-    const gotoTimer = () => {
-        console.log("gototimer");
-        imgSize();
+    const gotoTimer = (event) => {
+        //console.log("gototimer event:", event);
+        const m = {
+            //clientX: event.clientX,
+            //clientY: event.clientY,
+            left: event.clientX,
+            top: event.clientY,
+            //chartPosition: $chartClickLoggerId,
+        }
+        loggedImgPositions[$chartClickLoggerId] = m;
+        console.log(`loggedImagePos: ${$chartClickLoggerId}: `, loggedImgPositions);
+        bumpPos();
+        // imgSize();
     };
+    const parsePos = (cp) => {
+        const heatNumber = cp.replace(/[a-zA-Z]$/, "");
+        const heatLetter = cp.replace(/^[0-9]*/, "");
+        return ([heatNumber, heatLetter])
+    }
+    const bumpPos = () => {
+        var [pos, letter] = parsePos($chartClickLoggerId)
+        pos = parseInt(pos, 10);
+        if (letter === "A") {
+            letter = "B";
+        }
+        else {
+            letter = "A";
+            pos++;
+        }
+        pos = pos.toString();
+        if (pos.length == 1) {
+            pos = `0${pos}`;
+        }
+        $chartClickLoggerId = `${pos}${letter}`;
+    }
     function imgSize() {
         var myImg = document.querySelector("#sky");
         var currWidth = myImg.clientWidth;
         var currHeight = myImg.clientHeight;
         console.log(
             "Current width=" +
-                currWidth +
-                ", " +
-                "Original height=" +
-                currHeight
+            currWidth +
+            ", " +
+            "Original height=" +
+            currHeight
         );
         scale = 0.9 * scale;
         brackets2.imgPositions = brackets2.imgPositions; // force re-render?
@@ -89,6 +126,7 @@
         id="sky"
         src={bracketImgSrc}
         alt="bracketImage"
-        on:click={() => gotoTimer()} />
+        on:click={gotoTimer} />
 
+        <ChartClickLogger/>
 </div>
