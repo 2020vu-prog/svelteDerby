@@ -1,5 +1,9 @@
 <script>
     import { push, pop, replace } from "svelte-spa-router";
+    import {onMount} from 'svelte';
+    import { db } from "./eventDb.js";
+    import {parseHeatPos} from './utils.js';
+const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let left;
     export let top;
@@ -10,8 +14,9 @@
     let scaledLeft;
     let scaledWidth;
     let scaledHeight;
+    var bracketClass = "unknown";
     $: {
-        console.log("hotspot:", left, top, scale, pos);
+        console.log("hotspot:", left, top, scale, pos, chartId);
         recalc();
     }
     const recalc = () => {
@@ -21,25 +26,65 @@
         scaledHeight = 30 * scale;
     };
     const gotoChartPos = () => {
-        var unmodifiedHeatPos = pos;
-        var heatPos = pos.substring(0, pos.length - 1);
         push(
-            `/ChartPosition/${chartId}/${heatPos}?clickedOn=${unmodifiedHeatPos}`
+            `/ChartPosition/${chartId}/${heatPos}?clickedOn=${pos}`
         );
+    };
+    var heatPos,heatLetter;
+    onMount(async () => {
+            [heatPos, heatLetter] = parseHeatPos(pos);
+            refreshDataFromDb();
+
+    });
+    var bpFromDexie = {};
+    var rsFromDexie = {};
+    var posHtml = "";
+    const refreshDataFromDb = async (trigger) => {
+        const bracketPosKey = `${chartId}:${heatPos}`;
+        console.log("bracketPosKey: ", bracketPosKey);
+        bpFromDexie = await db.BracketPos.get(bracketPosKey);
+        console.log("refreshDataFromDb gave:", bpFromDexie);
+        if (bpFromDexie && bpFromDexie.pos && bpFromDexie.pos[heatLetter]) {
+            if (bpFromDexie.pos[heatLetter].status=="ptcp") {
+                posHtml = ` - ${bpFromDexie.pos[heatLetter].ptcp}`;
+            } else if (bpFromDexie.pos[heatLetter].status=="bye") {
+                posHtml = ` - Bye`;
+            } else if (bpFromDexie.pos[heatLetter].status=="forfeit") {
+                posHtml = ` - ${bpFromDexie.pos[heatLetter].ptcp}(F)`;
+            }
+        }
+
+         rsFromDexie = await db.RaceStanding.get(bracketPosKey);
+         console.log("refreshDataFromDb gave:", rsFromDexie);
+          const entityFactory = new EntityFactory({});
+            const rs = entityFactory.build(rsFromDexie);
+         if (rs.isComplete()) {
+             bracketClass = "complete";
+         }
+        //await getChartImage(bmdFromDexie.imgPath);
+        //await getChartImage(bmdFromDexie.jsonPath);
     };
 </script>
 
 <style>
-    div.overlay {
-        background: red;
+    div.ready {
+        background: green;
+    }
+    div.pendingSeed {
+                background: red;
+
+    }
+    div.complete {
+                background: gray;
+
     }
 </style>
 
 <div
-    class="overlay"
+    class="overlay {bracketClass}"
     id="myDIV"
     on:click={() => gotoChartPos()}
     style="position: absolute;width: {scaledWidth}px;height: {scaledHeight}px;z-index:
     2;left: {scaledLeft}px;top: {scaledTop}px;">
-    {pos}
+    {pos} {posHtml}
 </div>

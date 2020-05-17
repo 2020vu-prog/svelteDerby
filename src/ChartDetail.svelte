@@ -5,6 +5,7 @@
     import axios from "axios";
     import ChartClickLogger from "./ChartClickLogger.svelte";
     import { chartClickLoggerId, getChartCacheKey } from "./stores.js";
+    import {parseHeatPos} from "./utils.js";
 
     export let params = {};
     const loggedImgPositions = {};
@@ -65,13 +66,9 @@
         bumpPos();
         // imgSize();
     };
-    const parsePos = (cp) => {
-        const heatNumber = cp.replace(/[a-zA-Z]$/, "");
-        const heatLetter = cp.replace(/^[0-9]*/, "");
-        return [heatNumber, heatLetter];
-    };
+    
     const bumpPos = () => {
-        var [pos, letter] = parsePos($chartClickLoggerId);
+        var [pos, letter] = parseHeatPos($chartClickLoggerId);
         pos = parseInt(pos, 10);
         if (letter === "A") {
             letter = "B";

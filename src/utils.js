@@ -48,3 +48,8 @@ export function buildDate() {
 export function buildVersion() {
     return "[AIV]{version}[/AIV]";
 }
+export function parseHeatPos (cp) {
+    const heatNumber = cp.replace(/[a-zA-Z]$/, "");
+    const heatLetter = cp.replace(/^[0-9]*/, "");
+    return [heatNumber, heatLetter];
+}
