@@ -15,6 +15,7 @@
     var mounted = false;
     onMount(async () => {
         mounted = true;
+        resetForm();
         await refreshDataFromDb();
     });
     const refreshDataFromDb = async (trigger) => {
@@ -39,6 +40,7 @@
         } else {
             bposFromDexie = null;
         }
+        refreshDriverNames();
     };
 
     async function handleSubmit() {
@@ -84,50 +86,21 @@
             .catch((err) => {
                 console.log("addChartPosition failed: " + err);
             });
-        posForm.carNumber1 = "";
-        posForm.carNumber2 = "";
+        resetForm();
     }
 
-    const syncAddButton = (shouldEnableButton) => {
-        if (!mounted) {
-            return;
-        }
-        var syncCounter = 0;
-        if (document.getElementById("seedAType").value == "bye") {
-            syncCounter += 0.5;
-        } else {
-            if (posForm.carNumber1.toString().length >= 3) {
-                syncCounter += 0.5;
-            }
-        }
+    const resetForm = () => {
+        posForm.carNumber1 = "";
+        posForm.carNumber2 = "";
+    };
 
-        if (document.getElementById("seedBType").value == "bye") {
-            syncCounter += 0.5;
-        } else {
-            if (posForm.carNumber2.toString().length >= 3) {
-                syncCounter += 0.5;
-            }
-        }
-        if (syncCounter >= 1) {
-            document.getElementById("formSubmitButton").disabled = false;
-            console.log(
-                "syncAddButton SYNC with syncCounter at " + syncCounter
-            );
-        } else {
-            document.getElementById("formSubmitButton").disabled = true;
-            console.log(
-                "syncAddButton FAIL with syncCounter at " + syncCounter
-            );
-        }
+    const refreshDriverNames = () => {
         document.getElementById("r1").innerHTML = getDriverName(
             posForm.carNumber1
         );
         document.getElementById("r2").innerHTML = getDriverName(
             posForm.carNumber2
         );
-        if (shouldEnableButton == true) {
-            document.getElementById("formSubmitButton").focus();
-        }
     };
 
     const getDriverName = (number) => {
@@ -135,7 +108,7 @@
         if (number && $driverMap[number]) {
             return $driverMap[number].name;
         } else {
-            return "Unknown Racer";
+            return "";
         }
     };
 
@@ -149,17 +122,15 @@
                 "seed" + seedCharacter + "CarInput"
             ).style.display = "block";
         }
-        syncAddButton(false);
+        refreshDriverNames();
     };
 
     const changeFocus = (carNumber, seedIdentifier) => {
         console.log("changeFocus ", seedIdentifier, " ", carNumber);
+        refreshDriverNames();
         if (carNumber.toString().length == 3) {
             if (seedIdentifier == "A") {
                 document.getElementById("car2").focus();
-                syncAddButton();
-            } else if (seedIdentifier == "B") {
-                syncAddButton(true);
             }
         }
     };
@@ -205,7 +176,7 @@
                         on:keyup={() => {
                             changeFocus(posForm.carNumber1, 'A');
                         }} />
-                    <p id="r1">Unknown Racer</p>
+                    <p id="r1" />
                 </div>
             </div>
         </div>
@@ -231,7 +202,7 @@
                         on:keyup={() => {
                             changeFocus(posForm.carNumber2, 'B');
                         }} />
-                    <p id="r2">Unknown Racer</p>
+                    <p id="r2" />
                 </div>
             </div>
         </div>
@@ -240,5 +211,5 @@
     <br />
     <br />
 
-    <button id="formSubmitButton" type="submit" disabled>Add</button>
+    <button id="formSubmitButton" type="submit">Add</button>
 </form>
