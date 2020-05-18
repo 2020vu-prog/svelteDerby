@@ -61,7 +61,7 @@
         loggedImgPositions[$chartClickLoggerId] = m;
         console.log(
             `loggedImagePos: ${$chartClickLoggerId}: `,
-            loggedImgPositions
+            JSON.stringify(loggedImgPositions)
         );
         bumpPos();
         // imgSize();
