@@ -721,8 +721,8 @@ const advanceChartPos = async (srcRs, bracketPos) => {
     if (readyToCede) {
         console.log("advanceChartPos: readyToCede : ", readyToCede);
 
-        await applyPtcpToChartPos(readyToCede.loser, loserDest, bmd);
-        await applyPtcpToChartPos(readyToCede.winner, winnerDest, bmd);
+        await applyPtcpToChartPos(true, readyToCede.winner, winnerDest, bmd);
+        await applyPtcpToChartPos(false, readyToCede.loser, loserDest, bmd);
         return;
     }
 
@@ -746,8 +746,8 @@ const advanceChartPos = async (srcRs, bracketPos) => {
 
     // winCount will be 2 if there is overall tie.   don't advance.
     if (winCount === 1) {
-        await applyPtcpToChartPos(winnerPtcpObj, winnerDest, bmd);
-        await applyPtcpToChartPos(loserPtcpObj, loserDest, bmd);
+        await applyPtcpToChartPos(true, winnerPtcpObj, winnerDest, bmd);
+        await applyPtcpToChartPos(false, loserPtcpObj, loserDest, bmd);
     }
 };
 
@@ -788,25 +788,30 @@ const addPendingFromChartPos = async (rs, bracketPos) => {
     }
 };
 
-const getChartDestination = (destinationChartPos, srcHeatLetter) => {
+const getChartDestination = (destinationChartPos, srcHeatLetter, didWin) => {
     //allow syntax like:
     //WinnerDest: '(AWINS?Place1:11B)',
     //LoserDest: '(AWINS?Place2:11A)'
+    const aWins = srcHeatLetter === "A" ? didWin : !didWin;
+
     if (destinationChartPos.match(/AWINS?/)) {
         destinationChartPos = destinationChartPos.replace("(", "");
         destinationChartPos = destinationChartPos.replace(")", "");
         destinationChartPos = destinationChartPos.replace("AWINS?", "");
-        const [aWin, bWin] = destinationChartPos.split(":");
-        if (srcHeatLetter === "A") {
-            destinationChartPos = aWin;
+        const [aWinDest, bWinDest] = destinationChartPos.split(":");
+        //TODO: consider actual winner instead of just src!
+        if (aWins) {
+            destinationChartPos = aWinDest;
         } else {
-            destinationChartPos = bWin;
+            destinationChartPos = bWinDest;
         }
         console.log(
             "getChartDestination resolved conditional as: ",
             destinationChartPos,
             " srcHeatLetter: ",
-            srcHeatLetter
+            srcHeatLetter,
+            " aWins: ",
+            aWins
         );
     }
     const destHeatLetter = destinationChartPos.replace(/^[0-9]*/, "");
@@ -814,13 +819,19 @@ const getChartDestination = (destinationChartPos, srcHeatLetter) => {
 
     return [destHeatNumber, destHeatLetter];
 };
-const applyPtcpToChartPos = async (ptcpObject, destinationChartPos, bmd) => {
+const applyPtcpToChartPos = async (
+    didWin,
+    ptcpObject,
+    destinationChartPos,
+    bmd
+) => {
     const srcHeatLetter = ptcpObject.heatLetter;
     delete ptcpObject.heatLetter;
 
     const [destHeatNumber, destHeatLetter] = getChartDestination(
         destinationChartPos,
-        srcHeatLetter
+        srcHeatLetter,
+        didWin
     );
 
     const sk = `${bmd.SK}:${destHeatNumber}`;
