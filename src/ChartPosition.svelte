@@ -30,17 +30,15 @@
             bposFromDexie = entityFactory.build(jsonFromDexie);
             posForm.carNumber1 = bposFromDexie.getPtcpNumber("A");
             posForm.carNumber2 = bposFromDexie.getPtcpNumber("B");
-            //TODO: bind and set status!
-            console.log("refreshDataFromDb form:", posForm);
 
-            console.log(
-                "TODO: Connor Data: :",
-                bposFromDexie.getPtcpStatus("A")
-            );
+            posForm.seedAType = bposFromDexie.getPtcpStatus("A");
+            posForm.seedBType = bposFromDexie.getPtcpStatus("B");
+            updateInputUI("A", posForm.seedAType);
+            updateInputUI("B", posForm.seedBType);
+            console.log("refreshDataFromDb form:", posForm);
         } else {
             bposFromDexie = null;
         }
-        refreshDriverNames();
     };
 
     async function handleSubmit() {
@@ -56,15 +54,14 @@
             heatNumber: params.chartPosition,
         };
         var seedAObject = {
-            status: document.getElementById("seedAType").value,
+            status: posForm.seedAType,
             ptcp: "",
         };
         var seedBObject = {
-            status: document.getElementById("seedBType").value,
+            status: posForm.seedBType,
             ptcp: "",
         };
-
-        if (seedAObject.status == "ptcp" || seedBObject.status == "forfeit") {
+        if (seedAObject.status == "ptcp" || seedAObject.status == "forfeit") {
             seedAObject.ptcp = posForm.carNumber1.toString();
         }
 
@@ -91,16 +88,10 @@
 
     const resetForm = () => {
         posForm.carNumber1 = "";
-        posForm.carNumber2 = "";
-    };
+        posForm.seedAType = "ptcp";
 
-    const refreshDriverNames = () => {
-        document.getElementById("r1").innerHTML = getDriverName(
-            posForm.carNumber1
-        );
-        document.getElementById("r2").innerHTML = getDriverName(
-            posForm.carNumber2
-        );
+        posForm.carNumber2 = "";
+        posForm.seedBType = "ptcp";
     };
 
     const getDriverName = (number) => {
@@ -122,12 +113,10 @@
                 "seed" + seedCharacter + "CarInput"
             ).style.display = "block";
         }
-        refreshDriverNames();
     };
 
     const changeFocus = (carNumber, seedIdentifier) => {
         console.log("changeFocus ", seedIdentifier, " ", carNumber);
-        refreshDriverNames();
         if (carNumber.toString().length == 3) {
             if (seedIdentifier == "A") {
                 document.getElementById("car2").focus();
@@ -161,8 +150,8 @@
             <div id="seedADiv">
                 <h3>{params.chartPosition}A</h3>
                 <select
-                    id="seedAType"
-                    on:change={() => updateInputUI('A', document.getElementById('seedAType').value)}>
+                    bind:value={posForm.seedAType}
+                    on:change={() => updateInputUI('A', posForm.seedAType)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
@@ -176,7 +165,7 @@
                         on:keyup={() => {
                             changeFocus(posForm.carNumber1, 'A');
                         }} />
-                    <p id="r1" />
+                    <p>{getDriverName(posForm.carNumber1)}</p>
                 </div>
             </div>
         </div>
@@ -187,8 +176,8 @@
             <div id="seedBDiv">
                 <h3>{params.chartPosition}B</h3>
                 <select
-                    id="seedBType"
-                    on:change={() => updateInputUI('B', document.getElementById('seedBType').value)}>
+                    bind:value={posForm.seedBType}
+                    on:change={() => updateInputUI('B', posForm.seedBType)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
@@ -202,7 +191,7 @@
                         on:keyup={() => {
                             changeFocus(posForm.carNumber2, 'B');
                         }} />
-                    <p id="r2" />
+                    <p>{getDriverName(posForm.carNumber2)}</p>
                 </div>
             </div>
         </div>
@@ -211,5 +200,5 @@
     <br />
     <br />
 
-    <button id="formSubmitButton" type="submit">Add</button>
+    <button type="submit">Add</button>
 </form>
