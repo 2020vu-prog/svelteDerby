@@ -118,7 +118,8 @@
             {scale}
             left={bracket.left}
             top={bracket.top}
-            chartId={params.chartId} />
+            chartId={params.chartId}
+            isSeed={brackets2.seeds.indexOf(Object.keys(brackets2.imgPositions)[pos]) > -1 ? true : false} />
     {/each}
     <img
         style="position: absolute; z-index: 1; top:0px;left:0px;"
