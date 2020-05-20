@@ -10,6 +10,7 @@
     export let scale;
     export let pos;
     export let chartId;
+    export let isSeed;
     let scaledTop;
     let scaledLeft;
     let scaledWidth;
@@ -52,14 +53,27 @@
         }
 
         rsFromDexie = await db.RaceStanding.get(bracketPosKey);
-        console.log("refreshDataFromDb gave:", rsFromDexie);
+        console.log("isSeed: ", isSeed);
         if (rsFromDexie) {
             const entityFactory = new EntityFactory({});
             const rs = entityFactory.build(rsFromDexie);
-            if (rs.isComplete()) {
-                bracketClass = "complete";
+            if (!rs.cn || rs.cn.length < 2) {
+                if (isSeed) {
+                    bracketClass = "pendingSeed";
+                }
             } else {
-                bracketClass = "ready";
+                //we have 2 car numbers
+                if (!rs.ph1 && !rs.ph2) {
+                    bracketClass = "ready";
+                } else if (rs.ph1 && !rs.ph2) {
+                    bracketClass = "phaseOneComplete";
+                } else if (rs.isComplete()) {
+                    bracketClass = "complete";
+                }
+            }
+        } else {
+            if (isSeed) {
+                bracketClass = "pendingSeed";
             }
         }
         //await getChartImage(bmdFromDexie.imgPath);
@@ -68,6 +82,10 @@
 </script>
 
 <style>
+    div.overlay {
+        /* applied to all */
+        border: 1px solid black;
+    }
     div.ready {
         background: green;
     }
@@ -78,6 +96,9 @@
 
     div.complete {
         background: gray;
+    }
+    div.phaseOneComplete {
+        background: yellow;
     }
 </style>
 
