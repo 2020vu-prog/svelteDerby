@@ -30,7 +30,7 @@ const getPrefs = () => {
     return prefs;
 };
 export function getChartCacheKey() {
-    return "2020May17";
+    return "2020May17a";
 }
 export function getCacheKey() {
     var prefs = getPrefs();

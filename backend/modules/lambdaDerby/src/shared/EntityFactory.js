@@ -171,19 +171,87 @@ entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
     get heatPositionMap() {
         return this.pos;
     }
+
+    get isReadyToCedeUncontested() {
+        const preDeterminedLoserPo = {};
+        const winPo = {};
+        ["A", "B"].forEach((ab) => {
+            if (this.isPtcpKnown(ab)) {
+                winPo[ab] = this.getPtcpObject(ab);
+            }
+            if (this.isPtcpUncontested(ab)) {
+                preDeterminedLoserPo[ab] = this.getPtcpObject(ab);
+                delete winPo[ab];
+            }
+        });
+
+        // 2losers?   someone has to win...
+        if (Object.keys(preDeterminedLoserPo).length === 2) {
+            winPo.A = preDeterminedLoserPo.A; // arbitrary choice: TODO prioritize?
+            delete preDeterminedLoserPo.A;
+        }
+
+        if (
+            Object.keys(winPo).length === 1 &&
+            Object.keys(preDeterminedLoserPo).length === 1
+        ) {
+            return {
+                loser: Object.values(preDeterminedLoserPo)[0],
+                winner: Object.values(winPo)[0],
+            };
+        } else return null;
+    }
     get isReadyToAddPending() {
         return this.isPtcpValid("A") && this.isPtcpValid("B");
     }
     isPtcpValid(ab) {
         const po = this.getPtcpObject(ab);
+        return this.isPtcpDispMatch(po, "ptcp");
+    }
+    isPtcpDispMatch(ptcpObject, tgtDisp) {
+        const po = ptcpObject;
+        return po && (po.disp === tgtDisp || po.status === tgtDisp);
+    }
+    isPtcpUncontested(ab) {
+        const po = this.getPtcpObject(ab);
         // TODO: status is deprecated... get rid of it!
-        return po && po.ptcp && (po.disp === "ptcp" || po.status === "ptcp");
+        return (
+            this.isPtcpDispMatch(po, "bye") ||
+            this.isPtcpDispMatch(po, "forfeit")
+        );
+    }
+    isPtcpKnown(ab) {
+        const po = this.getPtcpObject(ab);
+        // TODO: status is deprecated... get rid of it!
+
+        // TODO: should  not have disp==="ptcp" w/o a participant... but that is sneaking in.
+        return (
+            (this.isPtcpDispMatch(po, "ptcp") && po.ptcp) ||
+            this.isPtcpDispMatch(po, "bye") ||
+            this.isPtcpDispMatch(po, "forfeit")
+        );
     }
     getPtcpObject(ab) {
         return this.pos ? this.pos[ab] : {};
     }
+
+    //safeToString
+    sts(o) {
+        return o ? o.toString() : null;
+    }
+
+    getPtcpObjectByPtcp(ptcp) {
+        var rc = {};
+        ["A", "B"].forEach((ab) => {
+            if (this.sts(this.getPtcpNumber(ab)) === this.sts(ptcp)) {
+                rc = this.getPtcpObject(ab);
+            }
+        });
+        return rc;
+    }
     getPtcpNumber(ab) {
-        return this.getPtcpObject(ab).ptcp;
+        const ptcpObject = this.getPtcpObject(ab);
+        return ptcpObject ? ptcpObject.ptcp : null;
     }
 
     //TODO: status->disp

@@ -593,7 +593,7 @@ const addPending2 = async (event) => {
     }
 
     const json = JSON.parse(event.body);
-    console.log("addPending2: " + JSON.stringify(json));
+    console.log("BEGIN: addPending2: " + JSON.stringify(json));
     json.PK = ":RS"; // force RaceStanding
 
     const alreadyExists = await ddbQueryRsAlreadyPending(json);
@@ -601,7 +601,7 @@ const addPending2 = async (event) => {
         return { error: "Pending2 already exists", status: "error" };
     }
 
-    if (cfg.lcl1) {
+    if (stringIsTrue(cfg.lcl1)) {
         //low car lane 1?
         json.cn.sort();
         console.log("addPending2: sorted: ", json.cn);
@@ -609,6 +609,9 @@ const addPending2 = async (event) => {
         console.log("addPending2: unsorted: ", json.cn);
     }
     return await addSingle(json);
+};
+const stringIsTrue = (stringValue) => {
+    return stringValue.toLowerCase() == "true" ? true : false;
 };
 
 const applyFinishTime = async (json) => {
@@ -665,6 +668,7 @@ const applyFinishTime = async (json) => {
 
 // srcRs / bracketPos can be null.  Not both.
 const advanceChartPos = async (srcRs, bracketPos) => {
+    console.log("BEGIN: advanceChartPos");
     if (!srcRs && bracketPos) {
         //populate srcRS
         srcRs = await loadRaceStandingFromBracketPos(bracketPos);
@@ -679,15 +683,16 @@ const advanceChartPos = async (srcRs, bracketPos) => {
         console.log("advanceChartPos loaded bracketPos:", bracketPos);
     }
 
-    if (!srcRs) {
+    if (!srcRs && bracketPos.isReadyToAddPending) {
         await addPendingFromChartPos(srcRs, bracketPos);
-        return;
+        // new pending with participants won't need to advance.
+        // fall thru to advance anyway to handle bye/forfeit.
     }
 
-    console.log("advanceChartPos: Bp:", srcRs.Bp);
-    const chartId = srcRs.Bp.replace(/:.*/, "");
-    const heatNumber = srcRs.Bp.replace(/.*:/, "");
-    const [bmd, combined] = await getCachedBmd(srcRs.orgId, chartId);
+    console.log("advanceChartPos: Bp:", bracketPos.SK);
+    const chartId = bracketPos.SK.replace(/:.*/, "");
+    const heatNumber = bracketPos.SK.replace(/.*:/, "");
+    const [bmd, combined] = await getCachedBmd(bracketPos.orgId, chartId);
     if (!combined) {
         console.log("advanceChartPos: missing combined json");
         return;
@@ -709,28 +714,40 @@ const advanceChartPos = async (srcRs, bracketPos) => {
     console.log("advanceChartPos: applying progress using: ", progress);
     const winnerDest = progress.WinnerDest;
     const loserDest = progress.LoserDest;
-    let winnerCn = "";
-    let loserCn = "";
+    let winnerPtcpObj = "";
+    let loserPtcpObj = "";
     let winCount = 0;
+    const readyToCede = bracketPos.isReadyToCedeUncontested;
+    if (readyToCede) {
+        console.log("advanceChartPos: readyToCede : ", readyToCede);
 
-    if (srcRs.isWinner(1, 0)) {
+        await applyPtcpToChartPos(readyToCede.loser, loserDest, bmd);
+        await applyPtcpToChartPos(readyToCede.winner, winnerDest, bmd);
+        return;
+    }
+
+    if (!srcRs) {
+        return;
+    }
+
+    if (srcRs.isComplete && srcRs.isWinner(1, 0)) {
         //  the car that started in l1 for phase1 won overall.
-        winnerCn = srcRs.cn[0];
-        loserCn = srcRs.cn[1];
+        winnerPtcpObj = bracketPos.getPtcpObjectByPtcp(srcRs.cn[0]);
+        loserPtcpObj = bracketPos.getPtcpObjectByPtcp(srcRs.cn[1]);
         winCount++;
     }
 
-    if (srcRs.isWinner(2, 0)) {
+    if (srcRs.isComplete && srcRs.isWinner(2, 0)) {
         //  the car that started in l2 for phase1 won overall.
-        winnerCn = srcRs.cn[1];
-        loserCn = srcRs.cn[0];
+        winnerPtcpObj = bracketPos.getPtcpObjectByPtcp(srcRs.cn[1]);
+        loserPtcpObj = bracketPos.getPtcpObjectByPtcp(srcRs.cn[0]);
         winCount++;
     }
 
     // winCount will be 2 if there is overall tie.   don't advance.
     if (winCount === 1) {
-        await applyPtcpToChartPos(winnerCn, winnerDest, bmd);
-        await applyPtcpToChartPos(loserCn, loserDest, bmd);
+        await applyPtcpToChartPos(winnerPtcpObj, winnerDest, bmd);
+        await applyPtcpToChartPos(loserPtcpObj, loserDest, bmd);
     }
 };
 
@@ -748,8 +765,12 @@ const addPendingFromChartPos = async (rs, bracketPos) => {
         return;
     }
 
-    console.log("isReadyToAddPending:", bracketPos.isReadyToAddPending);
+    console.log(
+        "BEGIN addPendingFromChartPos: isReadyToAddPending:",
+        bracketPos.isReadyToAddPending
+    );
     if (bracketPos.isReadyToAddPending) {
+        console.log("isReadyToAddPending Bp:", bracketPos);
         await addPending2({
             body: JSON.stringify({
                 orgId: bracketPos.orgId,
@@ -767,19 +788,19 @@ const addPendingFromChartPos = async (rs, bracketPos) => {
     }
 };
 
-const applyPtcpToChartPos = async (ptcp, chartPos, bmd) => {
+const applyPtcpToChartPos = async (ptcpObject, chartPos, bmd) => {
     const heatLetter = chartPos.replace(/^[0-9]*/, "");
     const heatNumber = chartPos.replace(/[a-zA-Z]*$/, "");
 
     const sk = `${bmd.SK}:${heatNumber}`;
-    console.log("applyPtcpToChartPos: ptcp:", ptcp, " chartPos: ");
+    console.log(
+        "BEGIN: applyPtcpToChartPos: ptcp:",
+        ptcpObject,
+        " chartPos: ",
+        chartPos
+    );
     //const tgtBracketPos = await ddbQueryPkSk(`${bmd.orgId}:Bp`, sk);
     //console.log("applyPtcpToChartPos: found:", tgtBracketPos);
-    const heatLetterValue = {
-        ptcp: ptcp,
-        disp: "ptcp",
-        status: "ptcp",
-    };
     const tgtBracketPos = {
         orgId: bmd.orgId,
         orgIz: bmd.orgId.replace(/\..*/, ""), // TODO: unhack orgIz
@@ -787,7 +808,7 @@ const applyPtcpToChartPos = async (ptcp, chartPos, bmd) => {
         pos: {},
         heatNumber: heatNumber,
     };
-    tgtBracketPos.pos[heatLetter] = heatLetterValue;
+    tgtBracketPos.pos[heatLetter] = ptcpObject;
     // this may recurse... (consider bye/forfeit/2nd racer advances, needs pending)
     console.log(
         "applyPtcpToChartPos: potential recursion into addOrUpdateChartPosition:",
@@ -895,7 +916,7 @@ const getCachedBmd = async (orgId, chartId) => {
     return [];
 };
 const addOrUpdateChartPosition = async (json) => {
-    console.log("addOrUpdateChartPosition: " + JSON.stringify(json));
+    console.log("BEGIN: addOrUpdateChartPosition: " + JSON.stringify(json));
 
     json.PK = ":Bp"; // force BracketPosition
     if (!json.SK) {
