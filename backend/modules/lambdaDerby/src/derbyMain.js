@@ -788,16 +788,47 @@ const addPendingFromChartPos = async (rs, bracketPos) => {
     }
 };
 
-const applyPtcpToChartPos = async (ptcpObject, chartPos, bmd) => {
-    const heatLetter = chartPos.replace(/^[0-9]*/, "");
-    const heatNumber = chartPos.replace(/[a-zA-Z]*$/, "");
+const getChartDestination = (destinationChartPos, srcHeatLetter) => {
+    //allow syntax like:
+    //WinnerDest: '(AWINS?Place1:11B)',
+    //LoserDest: '(AWINS?Place2:11A)'
+    if (destinationChartPos.match(/AWINS?/)) {
+        destinationChartPos = destinationChartPos.replace("(", "");
+        destinationChartPos = destinationChartPos.replace(")", "");
+        destinationChartPos = destinationChartPos.replace("AWINS?", "");
+        const [aWin, bWin] = destinationChartPos.split(":");
+        if (srcHeatLetter === "A") {
+            destinationChartPos = aWin;
+        } else {
+            destinationChartPos = bWin;
+        }
+        console.log(
+            "getChartDestination resolved conditional as: ",
+            destinationChartPos,
+            " srcHeatLetter: ",
+            srcHeatLetter
+        );
+    }
+    const destHeatLetter = destinationChartPos.replace(/^[0-9]*/, "");
+    const destHeatNumber = destinationChartPos.replace(/[a-zA-Z]*$/, "");
 
-    const sk = `${bmd.SK}:${heatNumber}`;
+    return [destHeatNumber, destHeatLetter];
+};
+const applyPtcpToChartPos = async (ptcpObject, destinationChartPos, bmd) => {
+    const srcHeatLetter = ptcpObject.heatLetter;
+    delete ptcpObject.heatLetter;
+
+    const [destHeatNumber, destHeatLetter] = getChartDestination(
+        destinationChartPos,
+        srcHeatLetter
+    );
+
+    const sk = `${bmd.SK}:${destHeatNumber}`;
     console.log(
         "BEGIN: applyPtcpToChartPos: ptcp:",
         ptcpObject,
-        " chartPos: ",
-        chartPos
+        " destinationChartPos: ",
+        destinationChartPos
     );
     //const tgtBracketPos = await ddbQueryPkSk(`${bmd.orgId}:Bp`, sk);
     //console.log("applyPtcpToChartPos: found:", tgtBracketPos);
@@ -806,9 +837,9 @@ const applyPtcpToChartPos = async (ptcpObject, chartPos, bmd) => {
         orgIz: bmd.orgId.replace(/\..*/, ""), // TODO: unhack orgIz
         chartId: bmd.SK,
         pos: {},
-        heatNumber: heatNumber,
+        heatNumber: destHeatNumber,
     };
-    tgtBracketPos.pos[heatLetter] = ptcpObject;
+    tgtBracketPos.pos[destHeatLetter] = ptcpObject;
     // this may recurse... (consider bye/forfeit/2nd racer advances, needs pending)
     console.log(
         "applyPtcpToChartPos: potential recursion into addOrUpdateChartPosition:",

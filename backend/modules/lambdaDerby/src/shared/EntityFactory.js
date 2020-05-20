@@ -232,7 +232,15 @@ entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
         );
     }
     getPtcpObject(ab) {
-        return this.pos ? this.pos[ab] : {};
+        if (this.pos) {
+            const ptcpObject = this.pos[ab];
+            if (ptcpObject) {
+                ptcpObject.heatLetter = ab; // not intended to be stored on DB, but used for conditional advance.
+            }
+            return ptcpObject;
+        } else {
+            return {};
+        }
     }
 
     //safeToString
