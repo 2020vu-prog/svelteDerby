@@ -13,6 +13,9 @@
     var mounted = false;
     var s3ChartTypes = false;
     var loginForm = {};
+
+    var chartSelected = "Chart Selected: ";
+
     $: {
         syncAddButton(loginForm.chartName);
     }
@@ -70,11 +73,9 @@
                             .$("#jstree_demo_div")
                             .jstree(true)
                             .toggle_node(data.node);
-                        document.getElementById("chartSelectedP").innerHTML =
-                            "Chart Selected: ";
+                        chartSelected = "Chart Selected: ";
                     }
-                    document.getElementById("chartSelectedP").innerHTML =
-                        "Chart Selected: " + String(data.selected);
+                    chartSelected = "Chart Selected: " + String(data.selected);
                     if (
                         data.selected &&
                         data.selected[0] &&
@@ -217,7 +218,7 @@
         Chart Type:
         <div id="jstree_demo_div" />
     </label>
-    <p id="chartSelectedP">Chart Selected:</p>
+    <p>{chartSelected}</p>
     <label>
         ChartName:
         <input

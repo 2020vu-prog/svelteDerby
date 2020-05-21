@@ -12,6 +12,7 @@
     let mounted = false;
     var lclCacheKey = 0;
     var ecFromDexie;
+    let themeSelected;
 
     const refreshDataFromDb = async (trigger) => {
         console.log("refreshDataFromDb data:", trigger);
@@ -53,7 +54,7 @@
         setCacheKey(lclCacheKey);
     }
     const updateTheme = async () => {
-        $theme = document.getElementById("themeSelector").value;
+        $theme = themeSelected;
         console.log("Updated theme to: " + $theme);
         let id = await localConfigDb["LocalConfig"].put({
             KEY: "theme",
@@ -69,18 +70,13 @@
             console.log("A " + String(element.value) + " B " + String($theme));
             if (String(element.value) == String($theme)) {
                 console.log("MATCH");
-                document.getElementById(
-                    "themeSelector"
-                ).value = document.querySelectorAll("option")[index].value;
-                //document.getElementById("themeSelector").value = "Red";
+                themeSelected = document.querySelectorAll("option")[index]
+                    .value;
                 console.log(
                     "label of option: " +
                         document.querySelectorAll("option")[index].value
                 );
-                console.log(
-                    "theme selector value: " +
-                        document.getElementById("themeSelector").value
-                );
+                console.log("theme selector value: " + themeSelected);
                 console.log(
                     "element to select: " +
                         document.querySelectorAll("option")[index]
@@ -133,7 +129,10 @@
     <input type="checkbox" bind:checked={$showBottomNav} />
 
     <label>Theme Color</label>
-    <select id="themeSelector" on:change={() => updateTheme()}>
+    <select
+        id="themeSelector"
+        bind:value={themeSelected}
+        on:change={() => updateTheme()}>
         <option class="colorOption" value="#4CAF50">Default (Green)</option>
         <option class="colorOption">Pink</option>
         <option class="colorOption" value="fuchsia">Light Purple</option>
