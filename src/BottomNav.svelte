@@ -1,5 +1,10 @@
 <script>
     import { showBottomNav } from "./stores.js";
+    import { location } from "svelte-spa-router";
+
+    $: {
+        console.log("current page is ", $location);
+    }
     /* Toggle between adding and removing the "responsive" class to the navbar when the user clicks on the icon */
     function myFunction() {
         var x = document.getElementById("myNavbar");
@@ -7,6 +12,15 @@
             x.className += " responsive";
         } else {
             x.className = "navbar";
+        }
+    }
+    function getHighlightClass(tabRoute, currentRoute) {
+        console.log("ghc: current page is ", $location);
+
+        if (currentRoute.includes(tabRoute)) {
+            return "highlighted";
+        } else {
+            return "otherNotHighlighted";
         }
     }
 </script>
@@ -32,14 +46,8 @@
         font-size: 17px;
     }
 
-    /* Change the color of links on hover */
-    .navbar a:hover {
-        background-color: #ddd;
-        color: black;
-    }
-
     /* Add a green background color to the active link */
-    .navbar a.active {
+    .navbar a.highlighted {
         background-color: #4caf50;
         color: white;
     }
@@ -52,10 +60,24 @@
 
 {#if $showBottomNav}
     <div class="navbar" id="myNavbar" style="z-index:20">
-        <a href="/#/RpList" class="active">Phases</a>
-        <a href="/#/RsList/History">Races</a>
-        <a href="/#/RsList/Pending">Pending</a>
-        <a href="/#/chartList">Charts</a>
+        <a href="/#/RpList" class={getHighlightClass('RpList', $location)}>
+            Phases
+        </a>
+        <a
+            href="/#/RsList/History"
+            class={getHighlightClass('RsList/History', $location)}>
+            Races
+        </a>
+        <a
+            href="/#/RsList/Pending"
+            class={getHighlightClass('RsList/Pending', $location)}>
+            Pending
+        </a>
+        <a
+            href="/#/chartList"
+            class={getHighlightClass('chartList', $location)}>
+            Charts
+        </a>
         <a
             href="javascript:void(0);"
             class="icon"
