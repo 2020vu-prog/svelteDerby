@@ -20,7 +20,6 @@
     import ManualTimerAdd from "./ManualTimerAdd.svelte";
     import RaceStandingAdd from "./RaceStandingAdd.svelte";
     import AboutPage from "./AboutPage.svelte";
-    import ChartPrototype from "./ChartPrototype.svelte";
     import ChartDetail from "./ChartDetail.svelte";
     import ChartPosition from "./ChartPosition.svelte";
 
@@ -47,7 +46,6 @@
         "/orgSelection": OrgSelection,
         "/orgAdd": OrgAdd,
         "/about": AboutPage,
-        "/chartPrototype": ChartPrototype,
         "/chartDetail/:chartId": ChartDetail,
         "/chartPosition/:chartId/:chartPosition": ChartPosition,
         "/chartList": ChartList,
@@ -81,11 +79,11 @@
                 text: "Pending Races",
                 clickHandler: () => navTo("/RsList/Pending"),
             },
-            { text: "Charts", clickHandler: () => navTo("/chartList") },
             {
-                text: "Chart Prototype",
-                clickHandler: () => navTo("/chartPrototype"),
+                text: "Charts",
+                clickHandler: () => navTo("/chartList"),
             },
+
             {
                 text: "Watch different event",
                 clickHandler: () => navTo("/orgSelection"),
