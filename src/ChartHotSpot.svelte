@@ -3,6 +3,7 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { parseHeatPos } from "./utils.js";
+    import { doRefreshBlocks } from "./stores.js";
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let left;
@@ -11,6 +12,7 @@
     export let pos;
     export let chartId;
     export let isSeed;
+
     let scaledTop;
     let scaledLeft;
     let scaledWidth;
@@ -19,6 +21,9 @@
     $: {
         console.log("hotspot:", left, top, scale, pos, chartId);
         recalc();
+    }
+    $: {
+        refreshDataFromDb($doRefreshBlocks);
     }
     const recalc = () => {
         scaledTop = top * scale;
@@ -86,6 +91,7 @@
         /* applied to all */
         border: 1px solid black;
     }
+
     div.ready {
         background: green;
     }
@@ -97,6 +103,7 @@
     div.complete {
         background: gray;
     }
+
     div.phaseOneComplete {
         background: yellow;
     }
