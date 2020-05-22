@@ -42,8 +42,8 @@
         line-height: 1.5em;
 
         position: fixed;
-        right: 50px;
-        bottom: 50px;
+        right: 25px;
+        bottom: 80px;
 
         z-index: 99;
     }

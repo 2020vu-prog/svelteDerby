@@ -1,28 +1,28 @@
 <script>
-    import { showBottomNav } from "./stores.js";
+    import { showBottomNav, theme } from "./stores.js";
     import { location } from "svelte-spa-router";
 
     $: {
         console.log("current page is ", $location);
     }
     /* Toggle between adding and removing the "responsive" class to the navbar when the user clicks on the icon */
-    function myFunction() {
+    const myFunction = () => {
         var x = document.getElementById("myNavbar");
         if (x.className === "navbar") {
             x.className += " responsive";
         } else {
             x.className = "navbar";
         }
-    }
-    function getHighlightClass(tabRoute, currentRoute) {
+    };
+    const getIsSelected = (tabRoute, currentRoute) => {
         console.log("ghc: current page is ", $location);
 
         if (currentRoute.includes(tabRoute)) {
-            return "highlighted";
+            return true;
         } else {
-            return "otherNotHighlighted";
+            return false;
         }
-    }
+    };
 </script>
 
 <style>
@@ -44,12 +44,7 @@
         padding: 14px 16px;
         text-decoration: none;
         font-size: 17px;
-    }
-
-    /* Add a green background color to the active link */
-    .navbar a.highlighted {
-        background-color: #4caf50;
-        color: white;
+        width: 25%;
     }
 
     /* Hide the link that should open and close the navbar on small screens */
@@ -60,22 +55,24 @@
 
 {#if $showBottomNav}
     <div class="navbar" id="myNavbar" style="z-index:20">
-        <a href="/#/RpList" class={getHighlightClass('RpList', $location)}>
+        <a
+            href="/#/RpList"
+            style="background-color: {getIsSelected('RpList', $location) ? $theme : '#333'}">
             Phases
         </a>
         <a
             href="/#/RsList/History"
-            class={getHighlightClass('RsList/History', $location)}>
+            style="background-color: {getIsSelected('RsList/History', $location) ? $theme : '#333'}">
             Races
         </a>
         <a
             href="/#/RsList/Pending"
-            class={getHighlightClass('RsList/Pending', $location)}>
+            style="background-color: {getIsSelected('RsList/Pending', $location) ? $theme : '#333'}">
             Pending
         </a>
         <a
             href="/#/chartList"
-            class={getHighlightClass('chartList', $location)}>
+            style="background-color: {getIsSelected('chartList', $location) ? $theme : '#333'}">
             Charts
         </a>
         <a

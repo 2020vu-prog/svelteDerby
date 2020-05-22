@@ -135,13 +135,12 @@
         on:change={() => updateTheme()}>
         <option class="colorOption" value="#4CAF50">Default (Green)</option>
         <option class="colorOption">Pink</option>
-        <option class="colorOption" value="fuchsia">Light Purple</option>
+        <option class="colorOption">Fuchsia</option>
         <option class="colorOption">Purple</option>
         <option class="colorOption">Blue</option>
-        <option class="colorOption" value="lightblue">Light Blue</option>
-        <option class="colorOption">Cyan</option>
-        <option class="colorOption">Yellow</option>
-        <option class="colorOption" value="lightsalmon">Light Orange</option>
+        <option class="colorOption" value="dodgerblue">Light Blue</option>
+        <option class="colorOption" value="gold">Yellow</option>
+        <option class="colorOption" value="#ffb366">Light Orange</option>
         <option class="colorOption">Orange</option>
         <option class="colorOption" value="saddlebrown">Brown</option>
         <option class="colorOption">Gray</option>
