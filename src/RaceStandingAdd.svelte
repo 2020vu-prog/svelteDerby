@@ -36,13 +36,15 @@
     });
     const changeFocus = (carNumber, seedIdentifier) => {
         console.log("changeFocus ", seedIdentifier, " ", carNumber);
-        if (carNumber.toString().length == 3) {
+        if (String(carNumber).length == 3) {
             if (seedIdentifier == "A") {
                 document.getElementById("cn2").focus();
-                syncAddButton();
+                syncAddButton(false);
             } else if (seedIdentifier == "B") {
                 syncAddButton(true);
             }
+        } else {
+            syncAddButton(false);
         }
     };
 
@@ -54,7 +56,10 @@
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
-            cn: [carNumberForm.car1 + "", carNumberForm.car2 + ""],
+            cn: [
+                String(carNumberForm.car1) + "",
+                String(carNumberForm.car2) + "",
+            ],
         };
 
         axios.defaults.headers.common["Authorization"] = bearer;
@@ -93,25 +98,24 @@
         if (!mounted) {
             return;
         }
-        if (
-            document.getElementById("cn1").value.toString().length >= 3 &&
-            document.getElementById("cn2").value.toString().length >= 3
-        ) {
-            document.getElementById("formSubmitButton").disabled = false;
-            console.log("sync add button SYNC");
+        if (carNumberForm.car1 && carNumberForm.car2) {
+            if (
+                String(carNumberForm.car1).length >= 3 &&
+                String(carNumberForm.car2).length >= 3
+            ) {
+                document.getElementById("formSubmitButton").disabled = false;
+                console.log("sync add button SYNC");
+            } else {
+                document.getElementById("formSubmitButton").disabled = true;
+                console.log("sync add button FAIL");
+            }
+
+            if (shouldEnableButton == true) {
+                document.getElementById("formSubmitButton").focus();
+            }
         } else {
             document.getElementById("formSubmitButton").disabled = true;
             console.log("sync add button FAIL");
-        }
-        document.getElementById("r1").innerHTML = getDriverName(
-            carNumberForm.car1
-        );
-        document.getElementById("r2").innerHTML = getDriverName(
-            carNumberForm.car2
-        );
-
-        if (shouldEnableButton == true) {
-            document.getElementById("formSubmitButton").focus();
         }
     };
     const getDriverName = (number) => {
@@ -131,24 +135,24 @@
         <input
             type="number"
             bind:value={carNumberForm.car1}
-            placeholder="Car1"
+            placeholder="Car 1"
             id="cn1"
             on:keyup={() => {
                 changeFocus(carNumberForm.car1, 'A');
             }} />
-        <p id="r1">Unknown Racer</p>
+        <p>{getDriverName(carNumberForm.car1)}</p>
     </label>
 
     <label>
         <input
             type="number"
             bind:value={carNumberForm.car2}
-            placeholder="Car2"
+            placeholder="Car 2"
             id="cn2"
             on:keyup={() => {
                 changeFocus(carNumberForm.car2, 'B');
             }} />
-        <p id="r2">Unknown Racer</p>
+        <p>{getDriverName(carNumberForm.car2)}</p>
     </label>
     <button id="formSubmitButton" type="submit" disabled>Add</button>
 </form>

@@ -26,7 +26,7 @@
         const req = {
             orgId: orgIz + "." + orgU,
             orgIz: orgIz,
-            lcl1: orgForm.lcl1,
+            lcl1: String(orgForm.lcl1),
             name: orgForm.name,
         };
 
@@ -52,8 +52,8 @@
             lcl1: true,
         };
     };
+    orgForm = getDefaultOrgForm();
     onMount(async () => {
-        orgForm = getDefaultOrgForm();
         mounted = true;
     });
 
@@ -61,7 +61,6 @@
         if (!mounted) {
             return;
         }
-        orgForm.lcl1 = String(document.getElementById("lcl1").checked);
         if (orgForm.name != "" && orgForm.name != undefined) {
             console.log("name: " + orgForm.name);
             document.getElementById("formSubmitButton").disabled = false;
@@ -88,7 +87,11 @@
     </label>
     <label>
         LowCarLane1:
-        <input type="checkbox" id="lcl1" on:change={syncAddButton()} checked />
+        <input
+            type="checkbox"
+            id="lcl1"
+            on:change={syncAddButton()}
+            bind:checked={orgForm.lcl1} />
     </label>
     <button id="formSubmitButton" type="submit" disabled>Add</button>
 </form>

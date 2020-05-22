@@ -25,7 +25,7 @@
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
-            number: loginForm.carNumber,
+            number: Number(loginForm.carNumber),
             name: loginForm.driverName,
         };
 
@@ -70,12 +70,17 @@
         if (!mounted) {
             return;
         }
-        if (
-            document.getElementById("carNumber").value.toString().length >= 3 &&
-            document.getElementById("driverName").value.toString() != ""
-        ) {
-            document.getElementById("formSubmitButton").disabled = false;
-            console.log("sync add button SYNC");
+        if (loginForm.carNumber && loginForm.driverName) {
+            if (
+                String(loginForm.carNumber).length >= 3 &&
+                loginForm.driverName.toString() != ""
+            ) {
+                document.getElementById("formSubmitButton").disabled = false;
+                console.log("sync add button SYNC");
+            } else {
+                document.getElementById("formSubmitButton").disabled = true;
+                console.log("sync add button FAIL");
+            }
         } else {
             document.getElementById("formSubmitButton").disabled = true;
             console.log("sync add button FAIL");
