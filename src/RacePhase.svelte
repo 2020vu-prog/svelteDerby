@@ -1,5 +1,6 @@
 <script>
     import CarAndDriver from "./CarAndDriver.svelte";
+    import InfoButton from "./InfoButton.svelte";
     import { onMount } from "svelte";
 
     import { racePhaseMap, driverMap, nextOnBlockKey } from "./stores.js";
@@ -101,14 +102,20 @@
     onMount(async () => {
         updateBoundVars(at);
     });
+    const shouldRender = (racePhase) => {
+        return !racePhase.del;
+    }
+
 </script>
 
-{#if refreshTime}
+{#if refreshTime && shouldRender(racePhase)}
     <div class="well well-sm " style="background: {bgColor}">
         <div class="panel panel-info ">
             <div class="panel-heading">
                 {chartPosition}
-                <span class="spanRight">{hhmmss}</span>
+                <span class="spanRight">{hhmmss}
+                    <InfoButton dbName="RacePhase" dbKey={phaseKey} />
+                </span>
             </div>
 
             <ul class="list-group ">

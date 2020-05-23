@@ -21,7 +21,7 @@ const cHelper = (pthis, props, optionalMembers) => {
 };
 
 class EntityBase {
-    static EntityBaseMembers = ["PK", "SK", "at", "by", "orgId", "TTL"];
+    static EntityBaseMembers = ["PK", "SK", "at", "by", "orgId", "TTL", "del"];
 
     constructor(props) {
         cHelper(this, props, this.constructor.EntityBaseMembers);
@@ -39,6 +39,12 @@ class EntityBase {
     }
     get lastUpdate() {
         return this.at;
+    }
+    get isDeleted() {
+        return this.del;
+    }
+    set isDeleted(del) {
+        this.del = del;
     }
 }
 const EventConfigLit = "EventConfig";

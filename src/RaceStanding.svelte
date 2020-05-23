@@ -1,5 +1,6 @@
 <script>
     import CarAndDriver from "./CarAndDriver.svelte";
+    import InfoButton from "./InfoButton.svelte";
     import { standingsMap, driverMap } from "./stores.js";
     import { safeGetAt, fmtChartPosition } from "./utils.js";
     import { onMount } from "svelte";
@@ -39,15 +40,13 @@
     <div class="panel panel-info">
         <div class="panel-heading">
             {chartPosition}
-            <span class="spanRight">{hhmmss()}</span>
+            <span class="spanRight">{hhmmss()}
+                <InfoButton dbName="RaceStanding" dbKey={standingKey} /></span>
         </div>
 
         <ul class="list-group">
             <li class="list-group-item">
-                <CarAndDriver
-                    number={standing.carNumbers[0]}
-                    isWinner={isWinner(1, 0)}
-                    phaseLetter=""
+                <CarAndDriver number={standing.carNumbers[0]} isWinner={isWinner(1, 0)} phaseLetter=""
                     at={safeGetAt($driverMap, standing.carNumbers[0])} />
                 {#if isWinner(1, 0)}
                     <big class="bigbadge badge">

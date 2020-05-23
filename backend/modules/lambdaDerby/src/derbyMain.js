@@ -438,9 +438,9 @@ const ddbQueryRsExistsAndPendingCheck = async (json) => {
  */
 const buildDdbCarFilter = (cnList, containsValues, qualifier = " OR ") => {
     var containsFilters = [];
-
+    var skipDeleteFilter = "attribute_not_exists(del) ";
     if (!cnList || cnList.length == 0) {
-        return "";
+        return skipDeleteFilter;
     }
     var i;
     for (i = 0; i < cnList.length; i++) {
@@ -448,7 +448,7 @@ const buildDdbCarFilter = (cnList, containsValues, qualifier = " OR ") => {
         containsValues[":cn" + i] = { S: cnList[i] };
     }
 
-    return "(" + containsFilters.join(qualifier) + ")";
+    return skipDeleteFilter + " AND (" + containsFilters.join(qualifier) + ")";
 };
 const buildKeyCondition = (pk, containsValues) => {
     containsValues[":pk"] = { S: pk };
@@ -870,6 +870,30 @@ const cloneRs = async (srcRs) => {
     return await addSingle(clone);
 };
 
+const deleteRacePhase = async (json) => {
+    console.log("deleteRacePhase: " + JSON.stringify(json));
+    const rpFound = await ddbQueryPkSk(`${json.orgId}:RP`, json.SK);
+    console.log("rpFound", rpFound);
+
+    //only allow delete on blocks.  no deleting historical data
+    if (!rpFound) {
+        return {
+            status: "error",
+            error: "Cannot delete RacePhase. Not found.",
+        };
+    }
+    if (rpFound.phr) {
+        return {
+            status: "error",
+            error: "Cannot delete RacePhase with results.",
+        };
+    }
+    rpFound.del = true;
+    return await addSingle(rpFound);
+};
+const deleteRaceStanding = async (json) => {
+    console.log("deleteRaceStanding: " + JSON.stringify(json));
+};
 const addBlocks = async (json) => {
     console.log("addBlocks: " + JSON.stringify(json));
     json.PK = ":RP"; // force RacePhase
@@ -1065,6 +1089,18 @@ const routeMap = {
     "/addBlocks": {
         h: async (event) => {
             return buildResponse(await addBlocks(JSON.parse(event.body)));
+        },
+    },
+    "/deleteRacePhase": {
+        h: async (event) => {
+            return buildResponse(await deleteRacePhase(JSON.parse(event.body)));
+        },
+    },
+    "/deleteRaceStanding": {
+        h: async (event) => {
+            return buildResponse(
+                await deleteRaceStanding(JSON.parse(event.body))
+            );
         },
     },
     "/addChart": {
