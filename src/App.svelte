@@ -1,8 +1,7 @@
 <script>
     import Router from "svelte-spa-router";
-    import { link } from "svelte-spa-router";
+    import { link, location } from "svelte-spa-router";
     import { push, pop, replace } from "svelte-spa-router";
-
     import { store as AuthStore } from "./stores/auth.js";
 
     import RaceStandingList from "./RaceStandingList.svelte";
@@ -152,6 +151,15 @@
             x.style.display = "block";
         }
     };
+
+    $: {
+        console.log(`collapsing menu for ${$location} change.`)
+        var x = document.getElementById("myLinks");
+        if (x) {
+            x.style.display = "none";
+        }
+    }
+
     const navTo = (route) => {
         console.log("routing:" + route);
         menuClickFunction();
