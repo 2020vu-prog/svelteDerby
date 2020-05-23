@@ -64,7 +64,6 @@
                 posHtml = ` - ${bpFromDexie.pos[heatLetter].ptcp}(F)`;
                 bracketClass = "haveForfeit";
             }
-
         }
 
         rsFromDexie = await db.RaceStanding.get(bracketPosKey);
@@ -111,7 +110,10 @@
     }
 </style>
 
-<div class="overlay {bracketClass}" id="myDIV" on:click={()=> gotoChartPos()}
+<div
+    class="overlay {bracketClass}"
+    id="myDIV"
+    on:click={() => gotoChartPos()}
     style="position: absolute;width: {scaledWidth}px;height: {scaledHeight}px;z-index:
     2;left: {scaledLeft}px;top: {scaledTop}px;">
     {pos} {posHtml}

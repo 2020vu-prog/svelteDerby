@@ -153,7 +153,7 @@
     };
 
     $: {
-        console.log(`collapsing menu for ${$location} change.`)
+        console.log(`collapsing menu for ${$location} change.`);
         var x = document.getElementById("myLinks");
         if (x) {
             x.style.display = "none";
