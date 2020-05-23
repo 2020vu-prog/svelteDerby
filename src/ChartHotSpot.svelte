@@ -47,14 +47,24 @@
         console.log("bracketPosKey: ", bracketPosKey);
         bpFromDexie = await db.BracketPos.get(bracketPosKey);
         console.log("refreshDataFromDb gave:", bpFromDexie);
+        if (isSeed) {
+            bracketClass = "pendingSeed";
+        }
+
         if (bpFromDexie && bpFromDexie.pos && bpFromDexie.pos[heatLetter]) {
             if (bpFromDexie.pos[heatLetter].status == "ptcp") {
                 posHtml = ` - ${bpFromDexie.pos[heatLetter].ptcp}`;
+                if (bpFromDexie.pos[heatLetter].ptcp) {
+                    bracketClass = "havePtcp";
+                }
             } else if (bpFromDexie.pos[heatLetter].status == "bye") {
                 posHtml = ` - Bye`;
+                bracketClass = "haveBye";
             } else if (bpFromDexie.pos[heatLetter].status == "forfeit") {
                 posHtml = ` - ${bpFromDexie.pos[heatLetter].ptcp}(F)`;
+                bracketClass = "haveForfeit";
             }
+
         }
 
         rsFromDexie = await db.RaceStanding.get(bracketPosKey);
@@ -62,25 +72,17 @@
         if (rsFromDexie) {
             const entityFactory = new EntityFactory({});
             const rs = entityFactory.build(rsFromDexie);
-            if (!rs.cn || rs.cn.length < 2) {
-                if (isSeed) {
-                    bracketClass = "pendingSeed";
-                }
-            } else {
-                //we have 2 car numbers
-                if (!rs.ph1 && !rs.ph2) {
-                    bracketClass = "ready";
-                } else if (rs.ph1 && !rs.ph2) {
-                    bracketClass = "phaseOneComplete";
-                } else if (rs.isComplete()) {
-                    bracketClass = "complete";
-                }
-            }
-        } else {
-            if (isSeed) {
-                bracketClass = "pendingSeed";
+
+            //we have 2 car numbers
+            if (!rs.ph1 && !rs.ph2) {
+                bracketClass = "ready";
+            } else if (rs.ph1 && !rs.ph2) {
+                bracketClass = "phaseOneComplete";
+            } else if (rs.isComplete()) {
+                bracketClass = "complete";
             }
         }
+
         //await getChartImage(bmdFromDexie.imgPath);
         //await getChartImage(bmdFromDexie.jsonPath);
     };
@@ -109,10 +111,7 @@
     }
 </style>
 
-<div
-    class="overlay {bracketClass}"
-    id="myDIV"
-    on:click={() => gotoChartPos()}
+<div class="overlay {bracketClass}" id="myDIV" on:click={()=> gotoChartPos()}
     style="position: absolute;width: {scaledWidth}px;height: {scaledHeight}px;z-index:
     2;left: {scaledLeft}px;top: {scaledTop}px;">
     {pos} {posHtml}
