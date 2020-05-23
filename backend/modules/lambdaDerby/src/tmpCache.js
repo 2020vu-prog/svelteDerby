@@ -86,8 +86,8 @@ class TmpCache {
         try {
             const data = await this.s3.getObject(params).promise();
             console.log("s3 getObject ok", data);
-            const d = new StringDecoder("utf8");
 
+            const d = new StringDecoder("utf8");
             const rc = d.write(data.Body);
             return JSON.parse(rc);
         } catch (err) {

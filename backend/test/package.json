@@ -4,17 +4,24 @@
   "description": "",
   "main": "mainTest.js",
   "scripts": {
-    "test": "jest"
+    "test": "node cognito/getToken.js && jest"
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testTimeout": 10000
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@aws-amplify/auth": "^2.1.6",
+    "amazon-cognito-identity-js": "^4.3.0",
+    "aws-sdk": "^2.683.0",
     "axios": "^0.19.2",
+    "jsonwebtoken": "^8.5.1",
+    "jwk-to-pem": "^2.0.3",
+    "node-fetch": "^2.6.0",
+    "request": "^2.88.2",
     "uuid": "^7.0.1"
   },
   "devDependencies": {

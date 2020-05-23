@@ -4,8 +4,15 @@ const { CF, getData, postData, getHHMMSS } = require("./common.js");
 const { v4: uuidv4 } = require('uuid');
 const testers = /2020vu|ConnorM/i
 
+const slowDrivers=true;
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const dmax=slowDrivers?800:520;
+
 const dloop = [];
-for (var x = 701; x < 730; x++) {
+for (var x = 501; x < dmax; x++) {
     dloop.push([x]);
 }
 
@@ -53,11 +60,13 @@ test('postAddParticipant: ', () => {
 });
 
 //test.each([[778],[ 776], [775]])('postAddParticipantLOOP: ', (carNumber) => {
-test.each(dloop)('postAddParticipantLOOP: ', (carNumber) => {
+test.each(dloop)('postAddParticipantLOOP: ', async (carNumber) => {
+    if(slowDrivers){
+       await sleep(2000);
+    }
     const hhmmss = getHHMMSS(new Date());
-    return postData(`${CF}/addParticipant`, { "orgIz": orgIz, "orgId": orgId, "number": "" + carNumber, "name": `Elmer ${carNumber} ${hhmmss}` }).then(received => {
+    const received=await postData(`${CF}/addParticipant`, { "orgIz": orgIz, "orgId": orgId, "number": "" + carNumber, "name": `Elmer ${carNumber} ${hhmmss}` });
         expect(received.data.status).toMatch(/ok/i);
-    });
 });
 
 test('postAddPending should work: ', () => {
