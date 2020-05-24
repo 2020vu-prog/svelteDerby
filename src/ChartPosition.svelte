@@ -58,14 +58,21 @@
                 status: posForm[ab].seedType,
                 ptcp: "",
             };
-            if (seedObject.status === "ptcp" || seedObject.status === "forfeit") {
+            if (
+                seedObject.status === "ptcp" ||
+                seedObject.status === "forfeit"
+            ) {
                 seedObject.ptcp = posForm[ab].carNumber.toString();
             }
 
-            if ((seedObject.ptcp && (seedObject.status === "ptcp" || seedObject.status === "forfeit")) || seedObject.status === "bye") {
+            if (
+                (seedObject.ptcp &&
+                    (seedObject.status === "ptcp" ||
+                        seedObject.status === "forfeit")) ||
+                seedObject.status === "bye"
+            ) {
                 req.pos[ab] = seedObject;
-
-            };
+            }
         });
 
         console.log("token:" + bearer);
@@ -88,9 +95,7 @@
         ["A", "B"].forEach((ab) => {
             posForm[ab].carNumber = "";
             posForm[ab].seedType = "ptcp";
-        }
-        );
-
+        });
     };
 
     const getDriverName = (number) => {
@@ -148,16 +153,22 @@
         <div class="container">
             <div id="seedADiv">
                 <h3>{params.chartPosition}A</h3>
-                <select bind:value={posForm.A.seedType} on:change={()=> updateInputUI('A', posForm.A.seedType)}>
+                <select
+                    bind:value={posForm.A.seedType}
+                    on:change={() => updateInputUI('A', posForm.A.seedType)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
                 </select>
                 <div id="seedACarInput">
-                    <input id="car1" type="number" bind:value={posForm.A.carNumber} placeholder="Car Number 1"
-                        on:keyup={()=> {
-                    changeFocus(posForm.A.carNumber, 'A');
-                    }} />
+                    <input
+                        id="car1"
+                        type="number"
+                        bind:value={posForm.A.carNumber}
+                        placeholder="Car Number 1"
+                        on:keyup={() => {
+                            changeFocus(posForm.A.carNumber, 'A');
+                        }} />
                     <p>{getDriverName(posForm.A.carNumber)}</p>
                 </div>
             </div>
@@ -168,16 +179,22 @@
         <div class="container">
             <div id="seedBDiv">
                 <h3>{params.chartPosition}B</h3>
-                <select bind:value={posForm.B.seedType} on:change={()=> updateInputUI('B', posForm.B.seedType)}>
+                <select
+                    bind:value={posForm.B.seedType}
+                    on:change={() => updateInputUI('B', posForm.B.seedType)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
                 </select>
                 <div id="seedBCarInput">
-                    <input id="car2" type="number" bind:value={posForm.B.carNumber} placeholder="Car Number 2"
-                        on:keyup={()=> {
-                    changeFocus(posForm.B.carNumber, 'B');
-                    }} />
+                    <input
+                        id="car2"
+                        type="number"
+                        bind:value={posForm.B.carNumber}
+                        placeholder="Car Number 2"
+                        on:keyup={() => {
+                            changeFocus(posForm.B.carNumber, 'B');
+                        }} />
                     <p>{getDriverName(posForm.B.carNumber)}</p>
                 </div>
             </div>
