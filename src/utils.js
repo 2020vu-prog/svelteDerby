@@ -53,3 +53,12 @@ export function parseHeatPos(cp) {
     const heatLetter = cp.replace(/^[0-9]*/, "");
     return [heatNumber, heatLetter];
 }
+export function hhmmssFmt(at) {
+    // var time = new Date(racePhase.lastUpdate);
+    var time = new Date(at);
+    return (
+        ("0" + time.getHours()).slice(-2) +
+        ":" +
+        ("0" + time.getMinutes()).slice(-2)
+    );
+}

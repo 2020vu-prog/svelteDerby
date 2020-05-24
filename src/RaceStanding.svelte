@@ -2,30 +2,32 @@
     import CarAndDriver from "./CarAndDriver.svelte";
     import InfoButton from "./InfoButton.svelte";
     import { standingsMap, driverMap } from "./stores.js";
-    import { safeGetAt, fmtChartPosition } from "./utils.js";
+    import { safeGetAt, fmtChartPosition, hhmmssFmt } from "./utils.js";
     import { onMount } from "svelte";
     export let standingKey;
+    export let at;
 
     export let refresh; // TODO: should probably use lastUpdate!
     console.log("standingKey", standingKey);
 
     var chartPosition = "";
-    const standing = $standingsMap[standingKey];
+    var standing = $standingsMap[standingKey];
+    var hhmmss = "";
 
     console.log("refresh", refresh);
 
-    onMount(async () => {
+    const updateBoundVars = async (at) => {
+        standing = $standingsMap[standingKey];
+        hhmmss = hhmmssFmt(at);
         chartPosition = await fmtChartPosition(standing);
-    });
-    const hhmmss = () => {
-        var time = new Date(standing.lastUpdate);
-        return (
-            ("0" + time.getHours()).slice(-2) +
-            ":" +
-            ("0" + time.getMinutes()).slice(-2)
-        );
-        //+ ":" + ("0" + time.getSeconds()).slice(-2));
     };
+    $: {
+        console.log("rp changed:", at);
+        updateBoundVars(at);
+    }
+    onMount(async () => {
+        updateBoundVars(at);
+    });
 
     const isWinner = (lane, phase) => {
         return standing.isWinner(lane, phase);
@@ -39,13 +41,13 @@
     };
 </script>
 
-{#if shouldRender(standing)}
+{#if shouldRender(standing, at)}
     <div class="well well-sm">
         <div class="panel panel-info">
             <div class="panel-heading">
                 {chartPosition}
                 <span class="spanRight">
-                    {hhmmss()}
+                    {hhmmss}
                     <InfoButton dbName="RaceStanding" dbKey={standingKey} />
                 </span>
             </div>
@@ -54,18 +56,18 @@
                 <li class="list-group-item">
                     <CarAndDriver
                         number={standing.carNumbers[0]}
-                        isWinner={isWinner(1, 0)}
+                        isWinner={isWinner(1, 0, at)}
                         phaseLetter=""
                         at={safeGetAt($driverMap, standing.carNumbers[0])} />
-                    {#if isWinner(1, 0)}
+                    {#if isWinner(1, 0, at)}
                         <big class="bigbadge badge">
                             Overall: {getWinTime(1, 0)}
                         </big>
                     {/if}
-                    {#if isWinner(1, 1)}
+                    {#if isWinner(1, 1, at)}
                         <big class="bigbadge badge">A: {getWinTime(1, 1)}</big>
                     {/if}
-                    {#if isWinner(1, 2)}
+                    {#if isWinner(1, 2, at)}
                         <big class="bigbadge badge">B: {getWinTime(1, 2)}</big>
                     {/if}
 
@@ -73,18 +75,18 @@
                 <li class="list-group-item">
                     <CarAndDriver
                         number={standing.carNumbers[1]}
-                        isWinner={isWinner(2, 0)}
+                        isWinner={isWinner(2, 0, at)}
                         phaseLetter=""
                         at={safeGetAt($driverMap, standing.carNumbers[0])} />
-                    {#if isWinner(2, 0)}
+                    {#if isWinner(2, 0, at)}
                         <big class="bigbadge badge">
                             Overall: {getWinTime(2, 0)}
                         </big>
                     {/if}
-                    {#if isWinner(2, 1)}
+                    {#if isWinner(2, 1, at)}
                         <big class="bigbadge badge">A: {getWinTime(2, 1)}</big>
                     {/if}
-                    {#if isWinner(2, 2)}
+                    {#if isWinner(2, 2, at)}
                         <big class="bigbadge badge">B: {getWinTime(2, 2)}</big>
                     {/if}
                 </li>

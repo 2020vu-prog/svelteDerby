@@ -75,6 +75,7 @@
         {#if filterMatches(standing, $carFilter, $doRefreshBlocks)}
             {#if typeFilter(standing, $doRefreshBlocks)}
                 <RaceStanding
+                    at={standing.at}
                     standingKey={standing.classKey}
                     refresh={doRefreshBlocks} />
             {/if}

@@ -5,7 +5,7 @@
 
     import { racePhaseMap, driverMap, nextOnBlockKey } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
-    import { safeGetAt, fmtChartPosition } from "./utils.js";
+    import { safeGetAt, fmtChartPosition, hhmmssFmt } from "./utils.js";
 
     export let refreshTime;
     export let phaseKey;
@@ -19,7 +19,7 @@
     const updateBoundVars = async (at) => {
         racePhase = $racePhaseMap[phaseKey];
         rp = racePhase;
-        hhmmss = hhmmssFmt();
+        hhmmss = hhmmssFmt(at);
         bgColor = getBgColor();
         chartPosition = await fmtChartPosition(racePhase);
     };
@@ -42,15 +42,6 @@
         }
     };
 
-    const hhmmssFmt = () => {
-        // var time = new Date(racePhase.lastUpdate);
-        var time = new Date(at);
-        return (
-            ("0" + time.getHours()).slice(-2) +
-            ":" +
-            ("0" + time.getMinutes()).slice(-2)
-        );
-    };
     const isWinner = (lane) => {
         if (!racePhase.phaseResults) {
             return undefined;
