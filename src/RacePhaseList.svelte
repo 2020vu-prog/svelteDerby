@@ -29,7 +29,11 @@
     };
     //loc &drb passed in to coerce svelte refesh screen
     const getRacePhases = (drb) => {
-        return Object.values(drb);
+        const rc = Object.values(drb);
+        rc.sort((a, b) => {
+            return b.at - a.at;
+        });
+        return rc;
     };
 </script>
 
