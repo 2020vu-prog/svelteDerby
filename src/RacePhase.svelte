@@ -104,8 +104,7 @@
     });
     const shouldRender = (racePhase) => {
         return !racePhase.del;
-    }
-
+    };
 </script>
 
 {#if refreshTime && shouldRender(racePhase)}
@@ -113,7 +112,8 @@
         <div class="panel panel-info ">
             <div class="panel-heading">
                 {chartPosition}
-                <span class="spanRight">{hhmmss}
+                <span class="spanRight">
+                    {hhmmss}
                     <InfoButton dbName="RacePhase" dbKey={phaseKey} />
                 </span>
             </div>

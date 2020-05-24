@@ -34,52 +34,62 @@
     const getWinTime = (lane, phase) => {
         return standing.getWinTime(lane, phase);
     };
+    const shouldRender = (raceStanding) => {
+        return !raceStanding.del;
+    };
 </script>
 
-<div class="well well-sm">
-    <div class="panel panel-info">
-        <div class="panel-heading">
-            {chartPosition}
-            <span class="spanRight">{hhmmss()}
-                <InfoButton dbName="RaceStanding" dbKey={standingKey} /></span>
+{#if shouldRender(standing)}
+    <div class="well well-sm">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                {chartPosition}
+                <span class="spanRight">
+                    {hhmmss()}
+                    <InfoButton dbName="RaceStanding" dbKey={standingKey} />
+                </span>
+            </div>
+
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <CarAndDriver
+                        number={standing.carNumbers[0]}
+                        isWinner={isWinner(1, 0)}
+                        phaseLetter=""
+                        at={safeGetAt($driverMap, standing.carNumbers[0])} />
+                    {#if isWinner(1, 0)}
+                        <big class="bigbadge badge">
+                            Overall: {getWinTime(1, 0)}
+                        </big>
+                    {/if}
+                    {#if isWinner(1, 1)}
+                        <big class="bigbadge badge">A: {getWinTime(1, 1)}</big>
+                    {/if}
+                    {#if isWinner(1, 2)}
+                        <big class="bigbadge badge">B: {getWinTime(1, 2)}</big>
+                    {/if}
+
+                </li>
+                <li class="list-group-item">
+                    <CarAndDriver
+                        number={standing.carNumbers[1]}
+                        isWinner={isWinner(2, 0)}
+                        phaseLetter=""
+                        at={safeGetAt($driverMap, standing.carNumbers[0])} />
+                    {#if isWinner(2, 0)}
+                        <big class="bigbadge badge">
+                            Overall: {getWinTime(2, 0)}
+                        </big>
+                    {/if}
+                    {#if isWinner(2, 1)}
+                        <big class="bigbadge badge">A: {getWinTime(2, 1)}</big>
+                    {/if}
+                    {#if isWinner(2, 2)}
+                        <big class="bigbadge badge">B: {getWinTime(2, 2)}</big>
+                    {/if}
+                </li>
+
+            </ul>
         </div>
-
-        <ul class="list-group">
-            <li class="list-group-item">
-                <CarAndDriver number={standing.carNumbers[0]} isWinner={isWinner(1, 0)} phaseLetter=""
-                    at={safeGetAt($driverMap, standing.carNumbers[0])} />
-                {#if isWinner(1, 0)}
-                    <big class="bigbadge badge">
-                        Overall: {getWinTime(1, 0)}
-                    </big>
-                {/if}
-                {#if isWinner(1, 1)}
-                    <big class="bigbadge badge">A: {getWinTime(1, 1)}</big>
-                {/if}
-                {#if isWinner(1, 2)}
-                    <big class="bigbadge badge">B: {getWinTime(1, 2)}</big>
-                {/if}
-
-            </li>
-            <li class="list-group-item">
-                <CarAndDriver
-                    number={standing.carNumbers[1]}
-                    isWinner={isWinner(2, 0)}
-                    phaseLetter=""
-                    at={safeGetAt($driverMap, standing.carNumbers[0])} />
-                {#if isWinner(2, 0)}
-                    <big class="bigbadge badge">
-                        Overall: {getWinTime(2, 0)}
-                    </big>
-                {/if}
-                {#if isWinner(2, 1)}
-                    <big class="bigbadge badge">A: {getWinTime(2, 1)}</big>
-                {/if}
-                {#if isWinner(2, 2)}
-                    <big class="bigbadge badge">B: {getWinTime(2, 2)}</big>
-                {/if}
-            </li>
-
-        </ul>
     </div>
-</div>
+{/if}

@@ -229,7 +229,9 @@
     const getNextOnBlockKeyFromRP = (rpTmp) => {
         console.log("rpTmp:", rpTmp);
         //TODO: sort after filter!
-        const onBlocks = Object.values(rpTmp).filter((rp) => !rp.phaseResults);
+        const onBlocks = Object.values(rpTmp)
+            .filter((rp) => !rp.phaseResults)
+            .filter((rp) => !rp.del);
         if (onBlocks.length > 0) {
             console.log("set new nob:", onBlocks[0]);
             return onBlocks[0].classKey;

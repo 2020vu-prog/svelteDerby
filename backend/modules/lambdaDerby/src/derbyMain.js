@@ -893,6 +893,32 @@ const deleteRacePhase = async (json) => {
 };
 const deleteRaceStanding = async (json) => {
     console.log("deleteRaceStanding: " + JSON.stringify(json));
+    const rsFound = await ddbQueryPkSk(`${json.orgId}:RS`, json.SK);
+    console.log("rsFound", rsFound);
+    var msg = "";
+
+    if (!rsFound) {
+        return {
+            status: "error",
+            error: "Cannot delete RaceStanding. Not found.",
+        };
+    }
+    if (rsFound.ph2) {
+        delete rsFound.ph2;
+        msg = "Deleted [B] phase.";
+    } else if (rsFound.ph1) {
+        delete rsFound.ph1;
+        msg = "Deleted [A] phase.";
+    } else {
+        rsFound.del = true;
+        msg = "Deleted pending race.";
+    }
+
+    const rc = await addSingle(rsFound);
+    if (rc.status === "ok") {
+        rc.text = msg;
+    }
+    return rc;
 };
 const addBlocks = async (json) => {
     console.log("addBlocks: " + JSON.stringify(json));
