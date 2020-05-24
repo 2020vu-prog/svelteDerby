@@ -127,7 +127,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
   default_root_object = "index.html"
 
 
-  //aliases = ["mysite.example.com", "yoursite.example.com"]
+  aliases = ["cf.derby.rr1.us"]
 
   default_cache_behavior {
     allowed_methods  = [ "GET", "HEAD", "OPTIONS" ]
@@ -233,7 +233,33 @@ resource "aws_cloudfront_distribution" "derbyApp" {
     Environment = "test"
   }
 
+  #viewer_certificate {
+  #  cloudfront_default_certificate = true
+  #}
   viewer_certificate {
-    cloudfront_default_certificate = true
+    #  cloudfront mandates that the key reside in US-EAST-1
+    acm_certificate_arn=	"arn:aws:acm:us-east-1:983366471359:certificate/f2960a90-d944-4c2a-96aa-f6bb861fed50"
+    minimum_protocol_version = "TLSv1.1_2016"
+    ssl_support_method = "sni-only"
   }
 }
+
+data "aws_route53_zone" "derby_zone" {
+  name = "derby.rr1.us"
+}      
+
+resource "aws_route53_record" "www_cf" {
+  zone_id = data.aws_route53_zone.derby_zone.zone_id
+  name    = "cf.derby.rr1.us"
+  type    = "A"
+
+
+
+  alias {
+    name = aws_cloudfront_distribution.derbyApp.domain_name
+    zone_id = aws_cloudfront_distribution.derbyApp.hosted_zone_id
+    evaluate_target_health = false
+
+  }
+}
+
