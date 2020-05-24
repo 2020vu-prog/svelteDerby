@@ -70,9 +70,10 @@
         console.log("isSeed: ", isSeed);
         if (rsFromDexie) {
             if (rsFromDexie.del) {
-                rsFromDexie=null;
-            }}
-            if (rsFromDexie) {
+                rsFromDexie = null;
+            }
+        }
+        if (rsFromDexie) {
             const entityFactory = new EntityFactory({});
             const rs = entityFactory.build(rsFromDexie);
 
