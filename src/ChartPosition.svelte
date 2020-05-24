@@ -10,7 +10,7 @@
 
     export let params = {};
     var bposFromDexie = null;
-    const posForm = {};
+    const posForm = { A: {}, B: {} };
 
     var mounted = false;
     onMount(async () => {
@@ -28,13 +28,12 @@
         if (jsonFromDexie) {
             const entityFactory = new EntityFactory({});
             bposFromDexie = entityFactory.build(jsonFromDexie);
-            posForm.carNumber1 = bposFromDexie.getPtcpNumber("A");
-            posForm.carNumber2 = bposFromDexie.getPtcpNumber("B");
+            ["A", "B"].forEach((ab) => {
+                posForm[ab].carNumber = bposFromDexie.getPtcpNumber(ab);
+                posForm[ab].seedType = bposFromDexie.getPtcpStatus(ab);
+                updateInputUI(ab, posForm[ab].seedType);
+            });
 
-            posForm.seedAType = bposFromDexie.getPtcpStatus("A");
-            posForm.seedBType = bposFromDexie.getPtcpStatus("B");
-            updateInputUI("A", posForm.seedAType);
-            updateInputUI("B", posForm.seedBType);
             console.log("refreshDataFromDb form:", posForm);
         } else {
             bposFromDexie = null;
@@ -53,23 +52,22 @@
             pos: {},
             heatNumber: params.chartPosition,
         };
-        var seedAObject = {
-            status: posForm.seedAType,
-            ptcp: "",
-        };
-        var seedBObject = {
-            status: posForm.seedBType,
-            ptcp: "",
-        };
-        if (seedAObject.status == "ptcp" || seedAObject.status == "forfeit") {
-            seedAObject.ptcp = posForm.carNumber1.toString();
-        }
 
-        if (seedBObject.status == "ptcp" || seedBObject.status == "forfeit") {
-            seedBObject.ptcp = posForm.carNumber2.toString();
-        }
-        req.pos["A"] = seedAObject;
-        req.pos["B"] = seedBObject;
+        ["A", "B"].forEach((ab) => {
+            var seedObject = {
+                status: posForm[ab].seedType,
+                ptcp: "",
+            };
+            if (seedObject.status === "ptcp" || seedObject.status === "forfeit") {
+                seedObject.ptcp = posForm[ab].carNumber.toString();
+            }
+
+            if ((seedObject.ptcp && (seedObject.status === "ptcp" || seedObject.status === "forfeit")) || seedObject.status === "bye") {
+                req.pos[ab] = seedObject;
+
+            };
+        });
+
         console.log("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
@@ -87,11 +85,12 @@
     }
 
     const resetForm = () => {
-        posForm.carNumber1 = "";
-        posForm.seedAType = "ptcp";
+        ["A", "B"].forEach((ab) => {
+            posForm[ab].carNumber = "";
+            posForm[ab].seedType = "ptcp";
+        }
+        );
 
-        posForm.carNumber2 = "";
-        posForm.seedBType = "ptcp";
     };
 
     const getDriverName = (number) => {
@@ -149,23 +148,17 @@
         <div class="container">
             <div id="seedADiv">
                 <h3>{params.chartPosition}A</h3>
-                <select
-                    bind:value={posForm.seedAType}
-                    on:change={() => updateInputUI('A', posForm.seedAType)}>
+                <select bind:value={posForm.A.seedType} on:change={()=> updateInputUI('A', posForm.A.seedType)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
                 </select>
                 <div id="seedACarInput">
-                    <input
-                        id="car1"
-                        type="number"
-                        bind:value={posForm.carNumber1}
-                        placeholder="Car Number 1"
-                        on:keyup={() => {
-                            changeFocus(posForm.carNumber1, 'A');
-                        }} />
-                    <p>{getDriverName(posForm.carNumber1)}</p>
+                    <input id="car1" type="number" bind:value={posForm.A.carNumber} placeholder="Car Number 1"
+                        on:keyup={()=> {
+                    changeFocus(posForm.A.carNumber, 'A');
+                    }} />
+                    <p>{getDriverName(posForm.A.carNumber)}</p>
                 </div>
             </div>
         </div>
@@ -175,23 +168,17 @@
         <div class="container">
             <div id="seedBDiv">
                 <h3>{params.chartPosition}B</h3>
-                <select
-                    bind:value={posForm.seedBType}
-                    on:change={() => updateInputUI('B', posForm.seedBType)}>
+                <select bind:value={posForm.B.seedType} on:change={()=> updateInputUI('B', posForm.B.seedType)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
                 </select>
                 <div id="seedBCarInput">
-                    <input
-                        id="car2"
-                        type="number"
-                        bind:value={posForm.carNumber2}
-                        placeholder="Car Number 2"
-                        on:keyup={() => {
-                            changeFocus(posForm.carNumber2, 'B');
-                        }} />
-                    <p>{getDriverName(posForm.carNumber2)}</p>
+                    <input id="car2" type="number" bind:value={posForm.B.carNumber} placeholder="Car Number 2"
+                        on:keyup={()=> {
+                    changeFocus(posForm.B.carNumber, 'B');
+                    }} />
+                    <p>{getDriverName(posForm.B.carNumber)}</p>
                 </div>
             </div>
         </div>
