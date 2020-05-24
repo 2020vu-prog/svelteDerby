@@ -40,8 +40,11 @@
     };
     //loc &drb passed in to coerce svelte refesh screen
     const getStandings = (loc, drb) => {
-        console.log("getStandings");
-        return Object.values($standingsMap);
+        const rc = Object.values($standingsMap);
+        rc.sort((a, b) => {
+            return b.at - a.at;
+        });
+        return rc;
     };
 </script>
 
