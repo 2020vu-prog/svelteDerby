@@ -77,7 +77,7 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
 
 const OrgConfigLit = "OrgConfig";
 entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
-    static members = ["lcl1"]; // lowCarlane1
+    static members = ["lcl1", "defaultTTL"]; // lowCarlane1
     static canBuild(json) {
         return json.PK && json.PK === OrgConfigLit;
     }

@@ -1062,13 +1062,19 @@ const addEventConfig = async (json, priorTtl) => {
         return { error: "Missing orgId" };
     }
 
+    const orgConfig = await ddbQueryPkSk(`OrgConfig`, json.orgIz);
+
     json.PK = "EventConfig"; // force
     json.SK = json.orgIz + ":" + json.orgId; // force
 
     // use prior ttl if found (API cannot change ttl of in progress event!)
+    if (!orgConfig.defaultTTL) {
+        orgConfig.defaultTTL = 3600 * 24 * 1;
+    }
+
     const newTtl = priorTtl
         ? priorTtl
-        : Math.round(new Date().getTime() / 1000) + 3600 * 24 * 1;
+        : Math.round(new Date().getTime() / 1000) + orgConfig.defaultTTL;
 
     json.TTL = newTtl;
 
