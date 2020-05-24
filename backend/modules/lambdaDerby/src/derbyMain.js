@@ -683,6 +683,12 @@ const advanceChartPos = async (srcRs, bracketPos) => {
         console.log("advanceChartPos loaded bracketPos:", bracketPos);
     }
 
+    if (srcRs) {
+        if (srcRs.del) {
+            srcRs = null;
+        }
+    }
+
     if (!srcRs && bracketPos.isReadyToAddPending) {
         await addPendingFromChartPos(srcRs, bracketPos);
         // new pending with participants won't need to advance.
