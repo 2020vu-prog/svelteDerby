@@ -58,6 +58,11 @@ resource "aws_iam_role" "iam_for_lambda_cca" {
   tags               = local.tags
 }
 
+resource "aws_cloudwatch_log_group" "sqsCcaLogRetention" {
+  name              = "/aws/lambda/sqsCcaMain"
+  retention_in_days = 5
+}
+
 resource "aws_lambda_function" "lambda" {
   function_name = "sqsCcaMain"
 

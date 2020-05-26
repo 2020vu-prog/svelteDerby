@@ -15,6 +15,7 @@ locals{
       ddbList= split("/",var.DynamoDbArn)
       DynamoDbTable= element(local.ddbList,length(local.ddbList)-1)
 
+      mainLambdaName="derbyMain"
       distDbList= split("/",var.DistDbArn)
       DistDbTable= element(local.distDbList,length(local.distDbList)-1)
       
@@ -66,8 +67,12 @@ resource "aws_iam_role" "iam_for_lambda" {
   tags=local.tags
 }
 
+resource "aws_cloudwatch_log_group" "derbyMainLogRetention" {
+  name              = "/aws/lambda/${local.mainLambdaName}"
+  retention_in_days = 5
+}
 resource "aws_lambda_function" "lambda" {
-  function_name = "derbyMain"
+  function_name = local.mainLambdaName
 
   filename         = data.archive_file.zip.output_path
   source_code_hash = data.archive_file.zip.output_base64sha256

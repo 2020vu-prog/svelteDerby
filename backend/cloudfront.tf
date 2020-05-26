@@ -1,6 +1,7 @@
 locals {
   s3_svelte_origin_id = "s3SvelteOrigin"
   s3_archive_origin_id = "s3ArchiveOrigin"
+  app_timer_origin_id = "lambdaTimerApiGateway"
     app_origin_id= "lambdaApiGateway"
 }
 resource "aws_s3_bucket" "svelteBucket" {
@@ -119,6 +120,20 @@ resource "aws_cloudfront_distribution" "derbyApp" {
 
     }
   }
+  origin {
+    domain_name = "290ayeoot6.execute-api.us-east-2.amazonaws.com"
+    origin_path = "/dev"
+	
+    origin_id   = local.app_timer_origin_id
+
+    custom_origin_config {
+         origin_protocol_policy = "https-only"
+         origin_ssl_protocols = ["TLSv1.2"]
+         http_port=80
+         https_port=443
+
+    }
+  }
 
 
   enabled             = true
@@ -193,6 +208,27 @@ resource "aws_cloudfront_distribution" "derbyApp" {
     min_ttl                = 0
     default_ttl            = 0
     max_ttl                = 31536000
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+  }
+  # Cache behavior with precedence 1(a)
+  ordered_cache_behavior {
+    path_pattern     = "/timer/*"
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = local.app_timer_origin_id
+
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
   }
