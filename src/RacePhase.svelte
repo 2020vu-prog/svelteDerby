@@ -1,5 +1,6 @@
 <script>
     import CarAndDriver from "./CarAndDriver.svelte";
+    import ComponentToolbar from "./ComponentToolbar.svelte";
     import InfoButton from "./InfoButton.svelte";
     import { onMount } from "svelte";
 
@@ -15,6 +16,7 @@
     let hhmmss;
     let chartPosition;
     let bgColor;
+    let showToolbar = false;
 
     const updateBoundVars = async (at) => {
         racePhase = $racePhaseMap[phaseKey];
@@ -96,6 +98,10 @@
     const shouldRender = (racePhase) => {
         return !racePhase.del;
     };
+    function toggleToolbar(event) {
+        console.log("info event: ", event.detail.text);
+        showToolbar = !showToolbar;
+    }
 </script>
 
 {#if refreshTime && shouldRender(racePhase)}
@@ -105,7 +111,7 @@
                 {chartPosition}
                 <span class="spanRight">
                     {hhmmss}
-                    <InfoButton dbName="RacePhase" dbKey={phaseKey} />
+                    <InfoButton on:message={toggleToolbar} dbName="RacePhase" dbKey={phaseKey} />
                 </span>
             </div>
 
@@ -139,5 +145,8 @@
 
             </ul>
         </div>
+    {#if showToolbar}
+    <ComponentToolbar dbName="RacePhase" dbKey={phaseKey}  />
+    {/if}
     </div>
 {/if}
