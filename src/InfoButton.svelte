@@ -3,17 +3,15 @@
     import { faInfo } from "@fortawesome/free-solid-svg-icons/faInfo";
     import Icon from "fa-svelte";
 
-    import { createEventDispatcher } from 'svelte';
+    import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();
 
     const didClick = () => {
-        dispatch('message', {
-            text: 'Info!'
+        dispatch("message", {
+            text: "Info!",
         });
-    }
-
-
+    };
 </script>
 
 <span on:click={didClick}>

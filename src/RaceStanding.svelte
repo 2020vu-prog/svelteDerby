@@ -3,7 +3,12 @@
     import InfoButton from "./InfoButton.svelte";
     import ComponentToolbar from "./ComponentToolbar.svelte";
     import { standingsMap, driverMap } from "./stores.js";
-    import { safeGetAt, fmtChartPosition, getBracketLink, hhmmssFmt } from "./utils.js";
+    import {
+        safeGetAt,
+        fmtChartPosition,
+        getBracketLink,
+        hhmmssFmt,
+    } from "./utils.js";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
     export let standingKey;
@@ -47,23 +52,21 @@
         showToolbar = !showToolbar;
     }
     const gotoBracket = () => {
-        if (getBracketLink(standing))
-            push(getBracketLink(standing))
-    }
-
+        if (getBracketLink(standing)) push(getBracketLink(standing));
+    };
 </script>
 
 {#if shouldRender(standing, at)}
     <div class="well well-sm">
         <div class="panel panel-info">
             <div class="panel-heading">
-                <span on:click={gotoBracket}>
-                    
-                {chartPosition}
-                </span>
+                <span on:click={gotoBracket}>{chartPosition}</span>
                 <span class="spanRight">
                     {hhmmss}
-                    <InfoButton on:message={toggleToolbar} dbName="RaceStanding" dbKey={standingKey} />
+                    <InfoButton
+                        on:message={toggleToolbar}
+                        dbName="RaceStanding"
+                        dbKey={standingKey} />
                 </span>
             </div>
 
@@ -108,8 +111,10 @@
             </ul>
         </div>
         {#if showToolbar}
-        <ComponentToolbar dbName="RaceStanding" dbKey={standingKey} 
-        bracketLink={getBracketLink(standing)} />
+            <ComponentToolbar
+                dbName="RaceStanding"
+                dbKey={standingKey}
+                bracketLink={getBracketLink(standing)} />
         {/if}
     </div>
 {/if}

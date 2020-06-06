@@ -1,5 +1,5 @@
 <script>
-    import { theme } from "./stores.js"
+    import { theme } from "./stores.js";
     import { raceConfig, statusMessage } from "./stores.js";
     import axios from "axios";
     import { Auth } from "aws-amplify";
@@ -16,11 +16,11 @@
     });
     /* Toggle between adding and removing the "responsive" class to the navbar when the user clicks on the icon */
     const myFunction = () => {
-        console.log("myFunction")
+        console.log("myFunction");
     };
     const doDelete = () => {
-        console.log("toolbar deleting", dbName, dbKey)
-        requestDelete(dbName, dbKey)
+        console.log("toolbar deleting", dbName, dbKey);
+        requestDelete(dbName, dbKey);
     };
 
     async function requestDelete() {
@@ -71,6 +71,7 @@
         push(bracketLink);
     };
 </script>
+
 <style>
     /* Place the navbar at the bottom of the page, and make it stick */
 
@@ -100,24 +101,25 @@
 
 <div class="navbar" id="myNavbar" style="z-index:20">
     {#if timerLink}
-    <a style="background-color: {$theme}"  on:click={() => gotoTimer()}>
-        Timer
-    </a>
+        <a style="background-color: {$theme}" on:click={() => gotoTimer()}>
+            Timer
+        </a>
     {/if}
-    <a style="background-color: {$theme}">
-        History
-    </a>
+    <a style="background-color: {$theme}">History</a>
 
     {#if bracketLink}
-    <a style="background-color: {$theme}"  on:click={() => gotoBracket()}>
-        Bracket
-    </a>
+        <a style="background-color: {$theme}" on:click={() => gotoBracket()}>
+            Bracket
+        </a>
     {/if}
 
     <a style="background-color: {$theme}" on:click|preventDefault={doDelete}>
         Delete
     </a>
-    <a href="javascript:void(0);" class="icon" on:click|preventDefault={myFunction}>
+    <a
+        href="javascript:void(0);"
+        class="icon"
+        on:click|preventDefault={myFunction}>
         &#9776;
     </a>
 </div>
