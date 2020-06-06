@@ -45,6 +45,15 @@
         console.log("info event: ", event.detail.text);
         showToolbar = !showToolbar;
     }
+    const getBracketLink = (standing) => {
+        if (!standing.Bp) {
+            return undefined; // No bracketLink for adhoc.
+        }
+        return (
+            "/ChartDetail/" +
+            standing.Bp.replace(/:.*/, "")
+        );
+    };
 </script>
 
 {#if shouldRender(standing, at)}
@@ -99,7 +108,8 @@
             </ul>
         </div>
         {#if showToolbar}
-        <ComponentToolbar dbName="RaceStanding" dbKey={standingKey}  />
+        <ComponentToolbar dbName="RaceStanding" dbKey={standingKey} 
+        bracketLink={getBracketLink(standing)} />
         {/if}
     </div>
 {/if}

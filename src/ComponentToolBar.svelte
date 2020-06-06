@@ -9,8 +9,10 @@
     export let dbName;
     export let dbKey;
     export let timerLink;
+    export let bracketLink;
     onMount(async () => {
         console.log("timerLink: ", timerLink);
+        console.log("bracketLink: ", bracketLink);
     });
     /* Toggle between adding and removing the "responsive" class to the navbar when the user clicks on the icon */
     const myFunction = () => {
@@ -62,10 +64,11 @@
     }
     const gotoTimer = () => {
         console.log("routing to:", timerLink);
-        //push("/drivers")
-
-        // push("/ManualTimerAdd/1583608357232")
         push(timerLink);
+    };
+    const gotoBracket = () => {
+        console.log("routing to bracket:", bracketLink);
+        push(bracketLink);
     };
 </script>
 <style>
@@ -97,7 +100,6 @@
 
 <div class="navbar" id="myNavbar" style="z-index:20">
     {#if timerLink}
-
     <a style="background-color: {$theme}"  on:click={() => gotoTimer()}>
         Timer
     </a>
@@ -105,9 +107,13 @@
     <a style="background-color: {$theme}">
         History
     </a>
-    <a style="background-color: {$theme}">
+
+    {#if bracketLink}
+    <a style="background-color: {$theme}"  on:click={() => gotoBracket()}>
         Bracket
     </a>
+    {/if}
+
     <a style="background-color: {$theme}" on:click|preventDefault={doDelete}>
         Delete
     </a>

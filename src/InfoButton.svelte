@@ -7,13 +7,12 @@
 
     const dispatch = createEventDispatcher();
 
-    export let dbName;
-    export let dbKey;
     const didClick = () => {
         dispatch('message', {
             text: 'Info!'
         });
     }
+
 
 </script>
 
