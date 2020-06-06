@@ -5,6 +5,7 @@
     import { standingsMap, driverMap } from "./stores.js";
     import { safeGetAt, fmtChartPosition, hhmmssFmt } from "./utils.js";
     import { onMount } from "svelte";
+    import { push, replace } from "svelte-spa-router";
     export let standingKey;
     export let at;
 
@@ -45,6 +46,9 @@
         console.log("info event: ", event.detail.text);
         showToolbar = !showToolbar;
     }
+    const gotoBracket = () => {
+        push(getBracketLink(standing))
+    }
     const getBracketLink = (standing) => {
         if (!standing.Bp) {
             return undefined; // No bracketLink for adhoc.
@@ -60,7 +64,10 @@
     <div class="well well-sm">
         <div class="panel panel-info">
             <div class="panel-heading">
+                <span on:click={gotoBracket}>
+                    
                 {chartPosition}
+                </span>
                 <span class="spanRight">
                     {hhmmss}
                     <InfoButton on:message={toggleToolbar} dbName="RaceStanding" dbKey={standingKey} />
