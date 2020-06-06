@@ -3,7 +3,7 @@
     import InfoButton from "./InfoButton.svelte";
     import ComponentToolbar from "./ComponentToolbar.svelte";
     import { standingsMap, driverMap } from "./stores.js";
-    import { safeGetAt, fmtChartPosition, hhmmssFmt } from "./utils.js";
+    import { safeGetAt, fmtChartPosition, getBracketLink, hhmmssFmt } from "./utils.js";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
     export let standingKey;
@@ -47,17 +47,10 @@
         showToolbar = !showToolbar;
     }
     const gotoBracket = () => {
-        push(getBracketLink(standing))
+        if (getBracketLink(standing))
+            push(getBracketLink(standing))
     }
-    const getBracketLink = (standing) => {
-        if (!standing.Bp) {
-            return undefined; // No bracketLink for adhoc.
-        }
-        return (
-            "/ChartDetail/" +
-            standing.Bp.replace(/:.*/, "")
-        );
-    };
+
 </script>
 
 {#if shouldRender(standing, at)}

@@ -3,10 +3,10 @@
     import ComponentToolbar from "./ComponentToolbar.svelte";
     import InfoButton from "./InfoButton.svelte";
     import { onMount } from "svelte";
-
+    import { push, replace } from "svelte-spa-router";
     import { racePhaseMap, driverMap, nextOnBlockKey } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
-    import { safeGetAt, fmtChartPosition, hhmmssFmt } from "./utils.js";
+    import { safeGetAt, fmtChartPosition, getBracketLink, hhmmssFmt } from "./utils.js";
 
     export let refreshTime;
     export let phaseKey;
@@ -102,13 +102,24 @@
         console.log("info event: ", event.detail.text);
         showToolbar = !showToolbar;
     }
+
+    const gotoBracket = () => {
+        if (getBracketLink(rp))
+            push(getBracketLink(rp))
+        else {
+            console.log("no bracket link")
+        }
+    }
 </script>
 
 {#if refreshTime && shouldRender(racePhase)}
     <div class="well well-sm " style="background: {bgColor}">
         <div class="panel panel-info ">
             <div class="panel-heading">
+                <span on:click={gotoBracket}>
+
                 {chartPosition}
+                </span>
                 <span class="spanRight">
                     {hhmmss}
                     <InfoButton on:message={toggleToolbar} dbName="RacePhase" dbKey={phaseKey} />
@@ -146,7 +157,9 @@
             </ul>
         </div>
     {#if showToolbar}
-    <ComponentToolbar dbName="RacePhase" dbKey={phaseKey}   timerLink={getTimerLink(rp)}/>
+    <ComponentToolbar dbName="RacePhase" dbKey={phaseKey}   timerLink={getTimerLink(rp)}
+    bracketLink={getBracketLink(rp)} />
+    />
     {/if}
     </div>
 {/if}
