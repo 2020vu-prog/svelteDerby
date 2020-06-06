@@ -146,7 +146,7 @@
             </ul>
         </div>
     {#if showToolbar}
-    <ComponentToolbar dbName="RacePhase" dbKey={phaseKey}  />
+    <ComponentToolbar dbName="RacePhase" dbKey={phaseKey}   timerLink={getTimerLink(rp)}/>
     {/if}
     </div>
 {/if}

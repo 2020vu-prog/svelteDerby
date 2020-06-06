@@ -1,6 +1,7 @@
 <script>
     import CarAndDriver from "./CarAndDriver.svelte";
     import InfoButton from "./InfoButton.svelte";
+    import ComponentToolbar from "./ComponentToolbar.svelte";
     import { standingsMap, driverMap } from "./stores.js";
     import { safeGetAt, fmtChartPosition, hhmmssFmt } from "./utils.js";
     import { onMount } from "svelte";
@@ -13,6 +14,7 @@
     var chartPosition = "";
     var standing = $standingsMap[standingKey];
     var hhmmss = "";
+    let showToolbar = false;
 
     console.log("refresh", refresh);
 
@@ -39,6 +41,10 @@
     const shouldRender = (raceStanding) => {
         return !raceStanding.del;
     };
+    function toggleToolbar(event) {
+        console.log("info event: ", event.detail.text);
+        showToolbar = !showToolbar;
+    }
 </script>
 
 {#if shouldRender(standing, at)}
@@ -48,7 +54,7 @@
                 {chartPosition}
                 <span class="spanRight">
                     {hhmmss}
-                    <InfoButton dbName="RaceStanding" dbKey={standingKey} />
+                    <InfoButton on:message={toggleToolbar} dbName="RaceStanding" dbKey={standingKey} />
                 </span>
             </div>
 
@@ -90,8 +96,10 @@
                         <big class="bigbadge badge">B: {getWinTime(2, 2)}</big>
                     {/if}
                 </li>
-
             </ul>
         </div>
+        {#if showToolbar}
+        <ComponentToolbar dbName="RaceStanding" dbKey={standingKey}  />
+        {/if}
     </div>
 {/if}
