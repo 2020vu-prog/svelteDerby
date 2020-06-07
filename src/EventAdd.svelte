@@ -90,7 +90,7 @@
         <input
             type="checkbox"
             id="lcl1"
-            on:change={syncAddButton()}
+            on:blur={syncAddButton()}
             bind:checked={orgForm.lcl1} />
     </label>
     <button id="formSubmitButton" type="submit" disabled>Add</button>

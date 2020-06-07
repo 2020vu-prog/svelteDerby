@@ -82,7 +82,7 @@
     }
 
     /* Style the links inside the navigation bar */
-    .navbar a {
+    .navbarItem {
         float: left;
         display: block;
         color: #f2f2f2;
@@ -92,34 +92,33 @@
         font-size: 12px;
         width: 25%;
     }
-
-    /* Hide the link that should open and close the navbar on small screens */
-    .navbar .icon {
-        display: none;
-    }
 </style>
 
 <div class="navbar" id="myNavbar" style="z-index:20">
     {#if timerLink}
-        <a style="background-color: {$theme}" on:click={() => gotoTimer()}>
+        <span
+            class="navbarItem"
+            style="background-color: {$theme}"
+            on:click={() => gotoTimer()}>
             Timer
-        </a>
+        </span>
     {/if}
-    <a style="background-color: {$theme}">History</a>
+    <span class="navbarItem" style="background-color: {$theme}">History</span>
 
     {#if bracketLink}
-        <a style="background-color: {$theme}" on:click={() => gotoBracket()}>
+        <span
+            class="navbarItem"
+            style="background-color: {$theme}"
+            on:click={() => gotoBracket()}>
             Bracket
-        </a>
+        </span>
     {/if}
 
-    <a style="background-color: {$theme}" on:click|preventDefault={doDelete}>
+    <span
+        class="navbarItem"
+        style="background-color: {$theme}"
+        on:click|preventDefault={doDelete}>
         Delete
-    </a>
-    <a
-        href="javascript:void(0);"
-        class="icon"
-        on:click|preventDefault={myFunction}>
-        &#9776;
-    </a>
+    </span>
+
 </div>

@@ -6,13 +6,14 @@
     import ChartClickLogger from "./ChartClickLogger.svelte";
     import { chartClickLoggerId, getChartCacheKey } from "./stores.js";
     import { parseHeatPos } from "./utils.js";
+    import * as animateScroll from "svelte-scrollto";
 
     export let params = {};
     const loggedImgPositions = {};
     var bmdFromDexie = {};
     var bracketImgSrc = "/archive/charts/progessSpinner.png";
     onMount(async () => {
-        refreshDataFromDb();
+        await refreshDataFromDb();
     });
     const refreshDataFromDb = async (trigger) => {
         console.log("refreshDataFromDb data:", trigger);
@@ -49,8 +50,10 @@
     };
 
     let scale = 1;
-    const gotoTimer = (event) => {
-        //console.log("gototimer event:", event);
+    const logClickPosition = (event) => {
+        console.log("animating");
+        animateScroll.scrollToBottom();
+
         const m = {
             //clientX: event.clientX,
             //clientY: event.clientY,
@@ -99,6 +102,11 @@
         myImg.style.width = brackets2.imgSize.width * scale + "px";
         myImg.style.height = brackets2.imgSize.height * scale + "px";
     }
+    const imgLoadComplete = () => {
+        console.log(`imgLoadComplete: `);
+        console.log("animating");
+        animateScroll.scrollToBottom();
+    };
 </script>
 
 <style>
@@ -122,11 +130,12 @@
             isSeed={brackets2.seeds.indexOf(Object.keys(brackets2.imgPositions)[pos]) > -1 ? true : false} />
     {/each}
     <img
+        on:load={imgLoadComplete}
         style="position: absolute; z-index: 1; top:0px;left:0px;"
         id="sky"
         src={bracketImgSrc}
         alt="bracketImage"
-        on:click={gotoTimer} />
+        on:click={logClickPosition} />
 
     <ChartClickLogger />
 </div>

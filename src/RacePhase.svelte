@@ -166,7 +166,6 @@
                 dbKey={phaseKey}
                 timerLink={getTimerLink(rp)}
                 bracketLink={getBracketLink(rp)} />
-            />
         {/if}
     </div>
 {/if}

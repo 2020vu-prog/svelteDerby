@@ -155,7 +155,7 @@
                 <h3>{params.chartPosition}A</h3>
                 <select
                     bind:value={posForm.A.seedType}
-                    on:change={() => updateInputUI('A', posForm.A.seedType)}>
+                    on:blur={() => updateInputUI('A', posForm.A.seedType)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
@@ -181,7 +181,7 @@
                 <h3>{params.chartPosition}B</h3>
                 <select
                     bind:value={posForm.B.seedType}
-                    on:change={() => updateInputUI('B', posForm.B.seedType)}>
+                    on:blur={() => updateInputUI('B', posForm.B.seedType)}>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
