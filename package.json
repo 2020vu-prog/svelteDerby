@@ -19,7 +19,6 @@
         "style-loader": "^0.23.1",
         "svelte": "^3.23.0",
         "svelte-loader": "2.13.3",
-        "svelte-scrollto": "^0.1.1",
         "webpack": "^4.43.0",
         "webpack-auto-inject-version": "^1.2.2",
         "webpack-cli": "^3.3.11",

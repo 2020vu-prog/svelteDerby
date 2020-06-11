@@ -6,7 +6,6 @@
     import ChartClickLogger from "./ChartClickLogger.svelte";
     import { chartClickLoggerId, getChartCacheKey } from "./stores.js";
     import { parseHeatPos } from "./utils.js";
-    import * as animateScroll from "svelte-scrollto";
 
     export let params = {};
     const loggedImgPositions = {};
@@ -34,6 +33,7 @@
             .then((response) => {
                 console.log("ChartDetail  axios success", response);
                 brackets2 = response.data;
+                checkAndActivateScroll();
             })
             .catch((err) => {
                 console.log("ChartDetail failed: " + err);
@@ -51,9 +51,6 @@
 
     let scale = 1;
     const logClickPosition = (event) => {
-        console.log("animating");
-        animateScroll.scrollToBottom();
-
         const m = {
             //clientX: event.clientX,
             //clientY: event.clientY,
@@ -104,8 +101,28 @@
     }
     const imgLoadComplete = () => {
         console.log(`imgLoadComplete: `);
-        console.log("animating");
-        animateScroll.scrollToBottom();
+        checkAndActivateScroll();
+    };
+
+    const getUrlVars = () => {
+        var vars = {};
+        var parts = window.location.href.replace(
+            /[?&]+([^=&]+)=([^&]*)/gi,
+            function (m, key, value) {
+                vars[key] = value;
+            }
+        );
+        return vars;
+    };
+
+    const checkAndActivateScroll = () => {
+        var URLscrollToVar = getUrlVars()["scrollTo"];
+        console.log("URLscrollToVar: ", URLscrollToVar);
+        if (URLscrollToVar) {
+            var x = brackets2.imgPositions[String(URLscrollToVar) + "A"].left;
+            var y = brackets2.imgPositions[String(URLscrollToVar) + "A"].top;
+            window.scrollTo(x, y);
+        }
     };
 </script>
 

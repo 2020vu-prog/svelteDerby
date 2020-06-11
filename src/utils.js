@@ -21,7 +21,7 @@ export async function fmtChartPosition(RpRs) {
 export function getBracketLink(RpRs) {
     if (RpRs.bracketPos && RpRs.bracketPos.includes(":")) {
         const [bmdKey, heat] = RpRs.bracketPos.split(":");
-        return "/ChartDetail/" + bmdKey;
+        return "/ChartDetail/" + bmdKey + "?scrollTo=" + String(heat);
     } else {
         return undefined; // No bracketLink for adhoc.
     }
