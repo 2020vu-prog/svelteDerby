@@ -90,7 +90,7 @@
         padding: 14px 16px;
         text-decoration: none;
         font-size: 12px;
-        width: 33.3%;
+        width: 25%;
         border: 3px solid black;
     }
 </style>

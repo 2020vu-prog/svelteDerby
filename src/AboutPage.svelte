@@ -132,7 +132,7 @@
     <select
         id="themeSelector"
         bind:value={themeSelected}
-        on:blur={() => updateTheme()}>
+        on:change={() => updateTheme()}>
         <option class="colorOption" value="#4CAF50">Default (Green)</option>
         <option class="colorOption">Pink</option>
         <option class="colorOption">Fuchsia</option>
