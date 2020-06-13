@@ -1,7 +1,32 @@
 locals {
   dbName="DerbyMain"
   distDbName="DerbyDist"
+  timerDbName="DerbyTimer"
   S3DistBucket="test-s3-dst-bucket-rr1-us"
+}
+resource "aws_dynamodb_table" "timer-dynamodb-table" {
+  name           = local.timerDbName
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "PK"
+  range_key      = "SK"
+  stream_enabled = false
+  attribute {
+    name = "PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "SK"
+    type = "N"
+  }
+  ttl {
+    attribute_name = "TTL"
+    enabled        = true
+  }
+  tags = {
+    Name           = local.timerDbName
+    DeployEnvironment = var.DeployEnvironment
+  }
 }
 resource "aws_dynamodb_table" "derby-dynamodb-table" {
   name           = local.dbName
