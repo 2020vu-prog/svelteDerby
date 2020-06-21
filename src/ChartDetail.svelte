@@ -12,7 +12,7 @@
     var bmdFromDexie = {};
     var bracketImgSrc = "/archive/charts/progessSpinner.png";
     onMount(async () => {
-        refreshDataFromDb();
+        await refreshDataFromDb();
     });
     const refreshDataFromDb = async (trigger) => {
         console.log("refreshDataFromDb data:", trigger);
@@ -33,6 +33,7 @@
             .then((response) => {
                 console.log("ChartDetail  axios success", response);
                 brackets2 = response.data;
+                checkAndActivateScroll();
             })
             .catch((err) => {
                 console.log("ChartDetail failed: " + err);
@@ -49,8 +50,7 @@
     };
 
     let scale = 1;
-    const gotoTimer = (event) => {
-        //console.log("gototimer event:", event);
+    const logClickPosition = (event) => {
         const m = {
             //clientX: event.clientX,
             //clientY: event.clientY,
@@ -99,6 +99,31 @@
         myImg.style.width = brackets2.imgSize.width * scale + "px";
         myImg.style.height = brackets2.imgSize.height * scale + "px";
     }
+    const imgLoadComplete = () => {
+        console.log(`imgLoadComplete: `);
+        checkAndActivateScroll();
+    };
+
+    const getUrlVars = () => {
+        var vars = {};
+        var parts = window.location.href.replace(
+            /[?&]+([^=&]+)=([^&]*)/gi,
+            function (m, key, value) {
+                vars[key] = value;
+            }
+        );
+        return vars;
+    };
+
+    const checkAndActivateScroll = () => {
+        var URLscrollToVar = getUrlVars()["scrollTo"];
+        console.log("URLscrollToVar: ", URLscrollToVar);
+        if (URLscrollToVar) {
+            var x = brackets2.imgPositions[String(URLscrollToVar) + "A"].left;
+            var y = brackets2.imgPositions[String(URLscrollToVar) + "A"].top;
+            window.scrollTo(x, y);
+        }
+    };
 </script>
 
 <style>
@@ -122,11 +147,12 @@
             isSeed={brackets2.seeds.indexOf(Object.keys(brackets2.imgPositions)[pos]) > -1 ? true : false} />
     {/each}
     <img
+        on:load={imgLoadComplete}
         style="position: absolute; z-index: 1; top:0px;left:0px;"
         id="sky"
         src={bracketImgSrc}
         alt="bracketImage"
-        on:click={gotoTimer} />
+        on:click={logClickPosition} />
 
     <ChartClickLogger />
 </div>

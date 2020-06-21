@@ -1,9 +1,16 @@
 <script>
     import CarAndDriver from "./CarAndDriver.svelte";
     import InfoButton from "./InfoButton.svelte";
+    import ComponentToolbar from "./ComponentToolbar.svelte";
     import { standingsMap, driverMap } from "./stores.js";
-    import { safeGetAt, fmtChartPosition, hhmmssFmt } from "./utils.js";
+    import {
+        safeGetAt,
+        fmtChartPosition,
+        getBracketLink,
+        hhmmssFmt,
+    } from "./utils.js";
     import { onMount } from "svelte";
+    import { push, replace } from "svelte-spa-router";
     export let standingKey;
     export let at;
 
@@ -13,6 +20,7 @@
     var chartPosition = "";
     var standing = $standingsMap[standingKey];
     var hhmmss = "";
+    let showToolbar = false;
 
     console.log("refresh", refresh);
 
@@ -39,16 +47,26 @@
     const shouldRender = (raceStanding) => {
         return !raceStanding.del;
     };
+    function toggleToolbar(event) {
+        console.log("info event: ", event.detail.text);
+        showToolbar = !showToolbar;
+    }
+    const gotoBracket = () => {
+        if (getBracketLink(standing)) push(getBracketLink(standing));
+    };
 </script>
 
 {#if shouldRender(standing, at)}
     <div class="well well-sm">
         <div class="panel panel-info">
             <div class="panel-heading">
-                {chartPosition}
+                <span on:click={gotoBracket}>{chartPosition}</span>
                 <span class="spanRight">
                     {hhmmss}
-                    <InfoButton dbName="RaceStanding" dbKey={standingKey} />
+                    <InfoButton
+                        on:message={toggleToolbar}
+                        dbName="RaceStanding"
+                        dbKey={standingKey} />
                 </span>
             </div>
 
@@ -90,8 +108,13 @@
                         <big class="bigbadge badge">B: {getWinTime(2, 2)}</big>
                     {/if}
                 </li>
-
             </ul>
         </div>
+        {#if showToolbar}
+            <ComponentToolbar
+                dbName="RaceStanding"
+                dbKey={standingKey}
+                bracketLink={getBracketLink(standing)} />
+        {/if}
     </div>
 {/if}

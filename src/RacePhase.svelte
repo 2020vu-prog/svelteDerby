@@ -1,11 +1,17 @@
 <script>
     import CarAndDriver from "./CarAndDriver.svelte";
+    import ComponentToolbar from "./ComponentToolbar.svelte";
     import InfoButton from "./InfoButton.svelte";
     import { onMount } from "svelte";
-
+    import { push, replace } from "svelte-spa-router";
     import { racePhaseMap, driverMap, nextOnBlockKey } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
-    import { safeGetAt, fmtChartPosition, hhmmssFmt } from "./utils.js";
+    import {
+        safeGetAt,
+        fmtChartPosition,
+        getBracketLink,
+        hhmmssFmt,
+    } from "./utils.js";
 
     export let refreshTime;
     export let phaseKey;
@@ -15,6 +21,7 @@
     let hhmmss;
     let chartPosition;
     let bgColor;
+    let showToolbar = false;
 
     const updateBoundVars = async (at) => {
         racePhase = $racePhaseMap[phaseKey];
@@ -96,16 +103,30 @@
     const shouldRender = (racePhase) => {
         return !racePhase.del;
     };
+    function toggleToolbar(event) {
+        console.log("info event: ", event.detail.text);
+        showToolbar = !showToolbar;
+    }
+
+    const gotoBracket = () => {
+        if (getBracketLink(rp)) push(getBracketLink(rp));
+        else {
+            console.log("no bracket link");
+        }
+    };
 </script>
 
 {#if refreshTime && shouldRender(racePhase)}
     <div class="well well-sm " style="background: {bgColor}">
         <div class="panel panel-info ">
             <div class="panel-heading">
-                {chartPosition}
+                <span on:click={gotoBracket}>{chartPosition}</span>
                 <span class="spanRight">
                     {hhmmss}
-                    <InfoButton dbName="RacePhase" dbKey={phaseKey} />
+                    <InfoButton
+                        on:message={toggleToolbar}
+                        dbName="RacePhase"
+                        dbKey={phaseKey} />
                 </span>
             </div>
 
@@ -139,5 +160,12 @@
 
             </ul>
         </div>
+        {#if showToolbar}
+            <ComponentToolbar
+                dbName="RacePhase"
+                dbKey={phaseKey}
+                timerLink={getTimerLink(rp)}
+                bracketLink={getBracketLink(rp)} />
+        {/if}
     </div>
 {/if}

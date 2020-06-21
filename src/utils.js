@@ -15,9 +15,18 @@ export async function fmtChartPosition(RpRs) {
             return `${bmd.bracketName} -- Heat: ${heat}`;
         }
     }
-
     return "Heat: Adhoc";
 }
+
+export function getBracketLink(RpRs) {
+    if (RpRs.bracketPos && RpRs.bracketPos.includes(":")) {
+        const [bmdKey, heat] = RpRs.bracketPos.split(":");
+        return "/ChartDetail/" + bmdKey + "?scrollTo=" + String(heat);
+    } else {
+        return undefined; // No bracketLink for adhoc.
+    }
+}
+
 export async function isUserAllowedRoutePath(routePath) {
     try {
         const user = await Auth.currentAuthenticatedUser();
