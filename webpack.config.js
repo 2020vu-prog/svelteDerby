@@ -40,6 +40,12 @@ module.exports = {
                 use: {
                     loader: "svelte-loader",
                     options: {
+                        onwarn: (warning, handleWarning) => {
+                            if (warning.toString().includes("A11y")) {
+                            } else {
+                                handleWarning(warning);
+                            }
+                        },
                         emitCss: true,
                         hotReload: true,
                     },
