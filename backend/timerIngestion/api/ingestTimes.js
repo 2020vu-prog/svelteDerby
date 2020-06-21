@@ -5,7 +5,7 @@ const AWS = require("aws-sdk");
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 const ddbPut = async (item) => {
-    var rc="Pending";
+    var rc = "Pending";
     const dbItem = {
         TableName: process.env.DERBY_TIMER_TABLE,
         Item: item,
@@ -20,26 +20,26 @@ const ddbPut = async (item) => {
         rc = "Error";
     }
     return rc;
-}
+};
 const getTimerInfo = (PK, dataList) => {
     const timestamp = new Date().getTime();
     return {
         PK: PK,
         SK: new Date().getTime(),
         dataList: dataList,
-        TTL: Math.floor(new Date().getTime() / 1000) + (6 * 3600),
+        TTL: Math.floor(new Date().getTime() / 1000) + 6 * 3600,
     };
 };
 
 module.exports.getUuid = async (event, context, callback) => {
-        console.log("getUuid: " + JSON.stringify(event));
-    const uuid=uuidv4();
+    console.log("getUuid: " + JSON.stringify(event));
+    const uuid = uuidv4();
     await ddbPut({
         PK: "registered",
         SK: parseInt(event.queryStringParameters.mac),
-	uuid: uuid,
-	hostname: event.queryStringParameters.hostname,
-        TTL: Math.floor(new Date().getTime() / 1000) + (6 * 3600),
+        uuid: uuid,
+        hostname: event.queryStringParameters.hostname,
+        TTL: Math.floor(new Date().getTime() / 1000) + 6 * 3600,
     });
     const response = {
         statusCode: 200,
