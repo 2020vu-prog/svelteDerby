@@ -1,0 +1,8 @@
+[
+
+{"microb": 48434403, "pinNumber": "17", "pinName": "lane1", "pubTime": 1592145367661, "seq": 1, "pinState": 1, "micros": 48434403, "pinType": "lane", "microPrev": 8431947},
+{"microb": 48451074, "pinNumber": "22", "pinName": "lane2", "pubTime": 1592145367677, "seq": 2, "pinState": 1, "micros": 48451074, "pinType": "lane", "microPrev": 8448696},
+{"microb": 48434403, "pinNumber": "17", "pinName": "lane1", "pubTime": 1592145367661, "seq": 1, "pinState": 0, "micros": 48834403, "pinType": "lane", "microPrev": 48431947},
+{"microb": 48451074, "pinNumber": "22", "pinName": "lane2", "pubTime": 1592145367677, "seq": 2, "pinState": 0, "micros": 48851074, "pinType": "lane", "microPrev": 48448696},
+{"microb": 41064581151, "pinNumber": "24", "pinName": "oneHz", "pubTime": 1592186394573, "seq": 20511, "pinState": 1, "micros": 41064581151, "pinType": "clock", "microPrev": 41062581146}
+ ]

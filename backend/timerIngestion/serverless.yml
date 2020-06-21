@@ -21,20 +21,24 @@ service: timerIngestion
 # frameworkVersion: "=X.X.X"
 
 provider:
-  name: aws
-  runtime: nodejs12.x
-  region: ${env:TF_VAR_AwsRegion}
+    name: aws
+    runtime: nodejs12.x
+    region: ${env:TF_VAR_AwsRegion}
+    httpApi:
+        id: 05wv6js1p4
 
-# you can overwrite defaults here
-#  stage: dev
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-      Resource: "*"
+    # you can overwrite defaults here
+    #  stage: dev
+    environment:
+        DERBY_TIMER_TABLE: DerbyTimer
+    iamRoleStatements:
+        - Effect: Allow
+          Action:
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+          Resource: "*"
 
 # you can add statements to the Lambda function's IAM Role here
 #  iamRoleStatements:
@@ -66,23 +70,20 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  getUuid:
-    handler: api/ingestTimes.getUuid
-    memorySize: 128
-    events:
-      - http:
-          path: timer/getUuid
-          method: get
-  ingestTimes:
-    handler: api/ingestTimes.submit
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-    events:
-      - http:
-          path: timer/ingestTimes
-          method: get
-
+    getUuid:
+        handler: api/ingestTimes.getUuid
+        memorySize: 128
+        events:
+            - http:
+                  path: /timer/getUuid
+                  method: get
+    ingestTimes:
+        handler: api/ingestTimes.submit
+        memorySize: 128
+        events:
+            - http:
+                  path: timer/ingestTimes
+                  method: post
 #    Define function environment variables here
 #    environment:
 #      variable2: value2

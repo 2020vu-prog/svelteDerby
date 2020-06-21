@@ -122,7 +122,8 @@ resource "aws_cloudfront_distribution" "derbyApp" {
     }
   }
   origin {
-    domain_name = "290ayeoot6.execute-api.us-east-2.amazonaws.com"
+    //domain_name = "290ayeoot6.execute-api.us-east-2.amazonaws.com"
+    domain_name = "cfxgbxl7d9.execute-api.us-east-2.amazonaws.com"
     origin_path = "/dev"
 	
     origin_id   = local.app_timer_origin_id
