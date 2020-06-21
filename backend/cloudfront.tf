@@ -1,3 +1,4 @@
+variable AcmArn {}
 locals {
   s3_svelte_origin_id = "s3SvelteOrigin"
   s3_archive_origin_id = "s3ArchiveOrigin"
@@ -274,7 +275,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
   #}
   viewer_certificate {
     #  cloudfront mandates that the key reside in US-EAST-1
-    acm_certificate_arn=	"arn:aws:acm:us-east-1:983366471359:certificate/f2960a90-d944-4c2a-96aa-f6bb861fed50"
+    acm_certificate_arn=var.AcmArn
     minimum_protocol_version = "TLSv1.1_2016"
     ssl_support_method = "sni-only"
   }
