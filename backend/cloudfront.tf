@@ -11,7 +11,7 @@ locals {
   s3_archive_origin_id = "s3ArchiveOrigin"
   app_timer_origin_id = "lambdaTimerApiGateway"
     app_origin_id= "lambdaApiGateway"
-  useRoute53DnsCount=0
+  useRoute53DnsCount= local.use_default_cert ? 0 : 1
   use_default_cert = var.AcmArn == ""
     invoke_host_temp=replace(aws_api_gateway_deployment.derbyMain.invoke_url,"https://","")
     invoke_host=replace(local.invoke_host_temp,"/\\/.*/","")
