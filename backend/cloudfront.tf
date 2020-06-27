@@ -1,9 +1,22 @@
 variable AcmArn {}
+variable DnsDomain {
+	default="derby.rr1.us"
+}
+
+variable DnsCloudfrontHostAlias {
+	default="cf"
+}
 locals {
   s3_svelte_origin_id = "s3SvelteOrigin"
   s3_archive_origin_id = "s3ArchiveOrigin"
   app_timer_origin_id = "lambdaTimerApiGateway"
     app_origin_id= "lambdaApiGateway"
+  useRoute53DnsCount=0
+  use_default_cert = var.AcmArn == ""
+    invoke_host_temp=replace(aws_api_gateway_deployment.derbyMain.invoke_url,"https://","")
+    invoke_host=replace(local.invoke_host_temp,"/\\/.*/","")
+  DnsCfAliasFq = "${var.DnsCloudfrontHostAlias}.${var.DnsDomain}"
+
 }
 resource "aws_s3_bucket" "svelteBucket" {
   bucket_prefix="svelte"
@@ -108,7 +121,8 @@ resource "aws_cloudfront_distribution" "derbyApp" {
 
   origin {
     //domain_name = aws_api_gateway_deployment.derbyMain.invoke_url
-    domain_name = "05wv6js1p4.execute-api.us-east-2.amazonaws.com"
+    //domain_name = "05wv6js1p4.execute-api.us-east-2.amazonaws.com"
+    domain_name = local.invoke_host
     origin_path = "/test"
 	
     origin_id   = local.app_origin_id
@@ -144,7 +158,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
   default_root_object = "index.html"
 
 
-  aliases = ["cf.derby.rr1.us"]
+  aliases = local.use_default_cert ? null : [local.DnsCfAliasFq]
 
   default_cache_behavior {
     allowed_methods  = [ "GET", "HEAD", "OPTIONS" ]
@@ -271,24 +285,33 @@ resource "aws_cloudfront_distribution" "derbyApp" {
     Environment = "test"
   }
 
+### https://discuss.hashicorp.com/t/how-do-write-an-if-else-block/2563/2
+viewer_certificate {
+    #  cloudfront mandates that the key reside in US-EAST-1
+  acm_certificate_arn            = local.use_default_cert ? null : var.AcmArn
+  minimum_protocol_version       = local.use_default_cert ? null : "TLSv1.1_2016"
+  ssl_support_method             = local.use_default_cert ? null : "sni-only"
+  cloudfront_default_certificate = local.use_default_cert
+}
   #viewer_certificate {
   #  cloudfront_default_certificate = true
   #}
-  viewer_certificate {
-    #  cloudfront mandates that the key reside in US-EAST-1
-    acm_certificate_arn=var.AcmArn
-    minimum_protocol_version = "TLSv1.1_2016"
-    ssl_support_method = "sni-only"
-  }
+  #viewer_certificate {
+  #  acm_certificate_arn=var.AcmArn
+  #  minimum_protocol_version = "TLSv1.1_2016"
+  #  ssl_support_method = "sni-only"
+  #}
 }
 
 data "aws_route53_zone" "derby_zone" {
-  name = "derby.rr1.us"
+  count=local.useRoute53DnsCount
+  name = var.DnsDomain
 }      
 
 resource "aws_route53_record" "www_cf" {
-  zone_id = data.aws_route53_zone.derby_zone.zone_id
-  name    = "cf.derby.rr1.us"
+  count=local.useRoute53DnsCount
+  zone_id = data.aws_route53_zone.derby_zone[0].zone_id
+  name    = local.DnsCfAliasFq
   type    = "A"
 
 
@@ -301,3 +324,10 @@ resource "aws_route53_record" "www_cf" {
   }
 }
 
+resource "local_file" "publish_bash_targets" {
+    filename = "${path.module}/../generatedTargets.sh"
+    content     = <<-EOT
+export DERBY_SPA_S3_BUCKET="${aws_s3_bucket.svelteBucket.id}"
+export DERBY_CLOUDFRONT="https://${aws_cloudfront_distribution.derbyApp.domain_name}"
+  EOT
+}

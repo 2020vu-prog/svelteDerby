@@ -1,11 +1,14 @@
 terraform.tfstate
 terraform.tfstate.backup
+/generatedTargets.sh
 amplify/
+amplify-backup/
 node_modules/
 /public/bundle.*
 /public/vendors.*.js
 /public/vendors.css
 /public/index.html
+/src/aws-exports.js
 build/
 .terraform/
 

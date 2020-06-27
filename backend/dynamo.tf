@@ -2,7 +2,7 @@ locals {
   dbName="DerbyMain"
   distDbName="DerbyDist"
   timerDbName="DerbyTimer"
-  S3DistBucket="test-s3-dst-bucket-rr1-us"
+  S3DistBucketPrefix="derby-dst-bucket"
 }
 resource "aws_dynamodb_table" "timer-dynamodb-table" {
   name           = local.timerDbName
@@ -79,7 +79,7 @@ resource "aws_dynamodb_table" "derby-distribution" {
   }
 }
 resource "aws_s3_bucket" "dstBucket" {
-  bucket = local.S3DistBucket
+  bucket_prefix = local.S3DistBucketPrefix
   acl    = "private"
 }
 module "derbyDynamoLambda" {
@@ -90,7 +90,7 @@ module "derbyDynamoLambda" {
   DynamoDbStreamArn=aws_dynamodb_table.derby-dynamodb-table.stream_arn
   DeployEnvironment=var.DeployEnvironment
   AwsRegion=var.AwsRegion
-  S3DistBucket = local.S3DistBucket
+  S3DistBucket = aws_s3_bucket.dstBucket.id
   S3DistBucketArn = aws_s3_bucket.dstBucket.arn
   
 }

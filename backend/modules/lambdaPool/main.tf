@@ -18,6 +18,13 @@ data "archive_file" "zip" {
   type        = "zip"
   source_dir = "${path.module}/src/"
   output_path = "tmp/build/poolMain.zip"
+  depends_on = [null_resource.install_npm_deps]
+}
+resource "null_resource" "install_npm_deps" {
+  provisioner "local-exec" {
+    command = "npm install"
+    working_dir = "${path.module}/src/"
+  }
 }
 
 data "aws_iam_policy_document" "policy" {

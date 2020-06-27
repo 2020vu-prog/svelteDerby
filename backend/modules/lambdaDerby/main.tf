@@ -26,21 +26,15 @@ data "archive_file" "zip" {
   //source_file = "${path.module}/src/derbyMain.js"
   source_dir = "${path.module}/src/"
   output_path = "tmp/build/derbyMain.zip"
+  depends_on = [null_resource.install_npm_deps]
 }
-/*
-resource "null_resource" "zip_the_node_folder" {
-  triggers = {
-    build_number = timestamp()
-  }
 
+resource "null_resource" "install_npm_deps" {
   provisioner "local-exec" {
-    command = "zip -r9 tmp/build/derbyMain.zip2 src"
-    working_dir = "${path.module}"
+    command = "npm install"
+    working_dir = "${path.module}/src/"
   }
-
-  depends_on = [null_resource.python_with_packages]
 }
-*/
 
 data "aws_iam_policy_document" "policy" {
   statement {
@@ -119,7 +113,8 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 "dynamodb:BatchGetItem",
                 "dynamodb:GetItem",
                 "dynamodb:PutItem",
-                "dynamodb:UpdateItem"
+                "dynamodb:UpdateItem",
+
         ]   
         resources = [
             "arn:aws:s3:::${var.ChartS3BucketName}",
@@ -130,6 +125,14 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 var.DistDbArn
         ]   
     }   
+    statement {
+        actions = [
+		"iot:AttachPrincipalPolicy",
+        ]
+        resources = [
+                "*"
+        ]
+    }
 }
 resource "aws_iam_policy" "cloudwatch_allow" {
     name = "cloudwatch_allow"

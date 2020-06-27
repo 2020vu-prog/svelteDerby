@@ -25,6 +25,16 @@ const s3QueryChartTypes = async () => {
     }
 };
 
+const attachPrincipalPolicy = async (policyName, principal) => {
+          try {
+		  const data = await new AWS.Iot().attachPrincipalPolicy({ policyName: policyName, principal: principal }).promise();
+		console.log("attachPrincipalPolicy Data", data);
+          }
+          catch(err){
+		console.log("attachPrincipalPolicy Error", err);
+          }
+       };
+
 const requestCCA = async (qsp, data) => {
     var params = {
         MessageGroupId: "orgId:" + qsp.orgId,
@@ -1196,6 +1206,24 @@ const routeMap = {
             return buildResponse(chartTypes, cacheControl);
         },
     },
+    "/requestMqttSubPermission": {
+        h: async (event) => {
+			
+			const qsp=event.queryStringParameters
+		    if (!qsp) {
+			qsp = {};
+		    }
+		if(! qsp.principal){
+			console.log("/requestMqttSubPermission : Unknown or missing principal");
+			const qr = { error: "Unknown or missing principal" };
+			return buildResponse(qr);
+		}
+
+		const policyName="SubToAnyTopic"; // should be pre-existing from terraform
+      		const data=await attachPrincipalPolicy(policyName, qsp.principal) ;
+            return buildResponse(data );
+        },
+    },
 };
 
 const buildResponse = (jsonObj, cacheControl = "no-cache") => {
@@ -1246,7 +1274,7 @@ exports.handler = async (event) => {
         return buildResponse(qr, "max-age=1807");
     }
 
-    const decoded = jwt.decode(event.headers.Authorization);
+    const decodedJwt = jwt.decode(event.headers.Authorization);
     const eventKey = getEventKey(event);
     const orgId = getOrgId(event);
     const orgIz = getOrgIz(event);
@@ -1254,12 +1282,12 @@ exports.handler = async (event) => {
 
     entityFactory = new EntityFactory({
         orgId: orgId,
-        by: decoded.email,
+        by: decodedJwt.email,
         TTL: defaultTTL,
     });
     console.log("Begin event", event);
 
-    const email = decoded.email;
+    const email = decodedJwt.email;
     if (email && hasServerRoutePath(email, routePath)) {
         console.log(`allowing access to ${routePath} for [${email}]`);
     } else {

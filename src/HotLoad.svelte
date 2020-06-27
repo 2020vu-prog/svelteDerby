@@ -16,6 +16,7 @@
     import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
     import { db, localConfigDb } from "./eventDb.js";
     import { onMount } from "svelte";
+    import aws_exports from "./aws-exports";
 
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -36,28 +37,59 @@
             clearStore();
         }
     }
-    const watchIot = () => {
+
+const requstPermissionHack=async (cognitoIdentityId)=>{
+	if(!cognitoIdentityId){
+		console.log("bypass rph. no id");
+	}
+        const currentSession = await Auth.currentSession();
+        const bearer = currentSession.idToken.jwtToken;
+
+        axios.defaults.headers.common["Authorization"] = bearer;
+        axios
+            .get(
+                $raceConfig.baseUrl +
+                    "/requestMqttSubPermission?orgId=" +
+                    $raceConfig.orgId +
+                    "&orgIz=" +
+                    $raceConfig.orgIz+
+		    "&principal=" +
+			cognitoIdentityId
+            )
+            .then((response) => {
+                console.log("requstPermissionHack:" + response.data.length);
+            })
+            .catch((err) => {
+                console.log("requstPermissionHack failed:",err);
+            });
+};
+    const watchIot = async () => {
         if (!$raceConfig.orgId) {
             console.log("watchIot : no org:  skip");
             return; // nothing to watch
         }
+
+        const ccSession = await Auth.currentSession();
+        console.log("auth ccSession :", ccSession);
+        const ccInfo = await Auth.currentCredentials();
+	var cognitoIdentityId="";
+        if (ccInfo && ccInfo.data) {
+            cognitoIdentityId = ccInfo.data.IdentityId;
+            console.log("auth ccInfo cognitoIdentityId:", cognitoIdentityId);
+        } else {
+            console.log("auth ccInfo empty:", ccInfo);
+        }
+
         if (activeIotWatch && !activeIotWatch.plugged) {
+	    await requstPermissionHack(cognitoIdentityId);
             Amplify.addPluggable(
                 new AWSIoTProvider({
-                    aws_pubsub_region: "us-east-2",
-                    aws_pubsub_endpoint:
-                        "wss://a1fobetfjrk30o-ats.iot.us-east-2.amazonaws.com/mqtt",
+                    aws_pubsub_region: aws_exports.aws_pubsub_region,
+                    aws_pubsub_endpoint: aws_exports.aws_pubsub_endpoint,
                 })
             );
             activeIotWatch.plugged = true; // first time only.
         }
-
-        /*
-        Auth.currentCredentials().then((info) => {
-          const cognitoIdentityId = info.data.IdentityId;
-          console.log("auth idid:", cognitoIdentityId)
-        });
-        */
 
         const topic = "derby/" + $raceConfig.orgId + "/dist";
 

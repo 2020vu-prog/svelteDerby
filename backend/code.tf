@@ -4,7 +4,6 @@
 */
 variable AwsRegion {}
 variable DeployEnvironment {}
-variable CognitoPoolArn {}
  provider "aws" {
   version = "~> 2.0"
 
@@ -92,7 +91,7 @@ resource "aws_api_gateway_authorizer" "require_pool" {
   name                   = "Require_id_pool"
   rest_api_id            = aws_api_gateway_rest_api.derbyApp.id
   type                   = "COGNITO_USER_POOLS"
-  provider_arns          = [ var.CognitoPoolArn ]
+  provider_arns          = [ aws_cognito_user_pool.derbyUserPool.arn]
 }
 
 output "base_url" {

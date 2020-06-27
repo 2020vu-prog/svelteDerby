@@ -44,6 +44,7 @@ addPermission(
         "/getRaceHistory",
         "/listChartTypes",
         "/addEventConfig",
+	"/requestMqttSubPermission",
     ],
     [
         "/orgAdd", // be careful with this one!
