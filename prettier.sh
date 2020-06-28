@@ -4,6 +4,7 @@ export jslist=$(echo  \
     src/*.svelte \
     src/*.js \
     backend/timerIngestion/api/*.js \
+    backend/modules/lambda*/src/*.js \
 )
 
 prettier --write --plugin-search-dir=. $jslist

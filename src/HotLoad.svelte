@@ -38,10 +38,10 @@
         }
     }
 
-const requstPermissionHack=async (cognitoIdentityId)=>{
-	if(!cognitoIdentityId){
-		console.log("bypass rph. no id");
-	}
+    const requstPermissionHack = async (cognitoIdentityId) => {
+        if (!cognitoIdentityId) {
+            console.log("bypass rph. no id");
+        }
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -52,17 +52,17 @@ const requstPermissionHack=async (cognitoIdentityId)=>{
                     "/requestMqttSubPermission?orgId=" +
                     $raceConfig.orgId +
                     "&orgIz=" +
-                    $raceConfig.orgIz+
-		    "&principal=" +
-			cognitoIdentityId
+                    $raceConfig.orgIz +
+                    "&principal=" +
+                    cognitoIdentityId
             )
             .then((response) => {
                 console.log("requstPermissionHack:" + response.data.length);
             })
             .catch((err) => {
-                console.log("requstPermissionHack failed:",err);
+                console.log("requstPermissionHack failed:", err);
             });
-};
+    };
     const watchIot = async () => {
         if (!$raceConfig.orgId) {
             console.log("watchIot : no org:  skip");
@@ -72,7 +72,7 @@ const requstPermissionHack=async (cognitoIdentityId)=>{
         const ccSession = await Auth.currentSession();
         console.log("auth ccSession :", ccSession);
         const ccInfo = await Auth.currentCredentials();
-	var cognitoIdentityId="";
+        var cognitoIdentityId = "";
         if (ccInfo && ccInfo.data) {
             cognitoIdentityId = ccInfo.data.IdentityId;
             console.log("auth ccInfo cognitoIdentityId:", cognitoIdentityId);
@@ -81,7 +81,7 @@ const requstPermissionHack=async (cognitoIdentityId)=>{
         }
 
         if (activeIotWatch && !activeIotWatch.plugged) {
-	    await requstPermissionHack(cognitoIdentityId);
+            await requstPermissionHack(cognitoIdentityId);
             Amplify.addPluggable(
                 new AWSIoTProvider({
                     aws_pubsub_region: aws_exports.aws_pubsub_region,

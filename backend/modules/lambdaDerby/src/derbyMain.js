@@ -26,14 +26,18 @@ const s3QueryChartTypes = async () => {
 };
 
 const attachPrincipalPolicy = async (policyName, principal) => {
-          try {
-		  const data = await new AWS.Iot().attachPrincipalPolicy({ policyName: policyName, principal: principal }).promise();
-		console.log("attachPrincipalPolicy Data", data);
-          }
-          catch(err){
-		console.log("attachPrincipalPolicy Error", err);
-          }
-       };
+    try {
+        const data = await new AWS.Iot()
+            .attachPrincipalPolicy({
+                policyName: policyName,
+                principal: principal,
+            })
+            .promise();
+        console.log("attachPrincipalPolicy Data", data);
+    } catch (err) {
+        console.log("attachPrincipalPolicy Error", err);
+    }
+};
 
 const requestCCA = async (qsp, data) => {
     var params = {
@@ -1208,20 +1212,21 @@ const routeMap = {
     },
     "/requestMqttSubPermission": {
         h: async (event) => {
-			
-			const qsp=event.queryStringParameters
-		    if (!qsp) {
-			qsp = {};
-		    }
-		if(! qsp.principal){
-			console.log("/requestMqttSubPermission : Unknown or missing principal");
-			const qr = { error: "Unknown or missing principal" };
-			return buildResponse(qr);
-		}
+            const qsp = event.queryStringParameters;
+            if (!qsp) {
+                qsp = {};
+            }
+            if (!qsp.principal) {
+                console.log(
+                    "/requestMqttSubPermission : Unknown or missing principal"
+                );
+                const qr = { error: "Unknown or missing principal" };
+                return buildResponse(qr);
+            }
 
-		const policyName="SubToAnyTopic"; // should be pre-existing from terraform
-      		const data=await attachPrincipalPolicy(policyName, qsp.principal) ;
-            return buildResponse(data );
+            const policyName = "SubToAnyTopic"; // should be pre-existing from terraform
+            const data = await attachPrincipalPolicy(policyName, qsp.principal);
+            return buildResponse(data);
         },
     },
 };
