@@ -1131,7 +1131,7 @@ const addTimerConfig = async (json, initialLoad) => {
         }
 
         // merge prior config to allow partial update.
-        json = Object.assign(json, prevTC);
+        json = Object.assign(prevTC, json);
     }
 
     json.PK = ":TimerConfig"; // force
