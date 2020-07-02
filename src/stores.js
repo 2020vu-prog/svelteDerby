@@ -12,12 +12,11 @@ export const driverMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlockKey = writable("");
 export const showBottomNav = writable(true);
+export const autoAnnounceResults = writable(false);
 export const raceConfig = writable({
     orgName: "",
     orgId: "",
     baseUrl: "/app",
-    baseUrlCorsIssue: "https://d15zun4udup4ky.cloudfront.net/app",
-    baseUrlOLD: "https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test",
 });
 export const chartClickLoggerId = writable("01A");
 

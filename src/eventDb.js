@@ -2,7 +2,7 @@ import Dexie from "dexie";
 
 const db = new Dexie("eventDb");
 
-db.version(11).stores({
+db.version(12).stores({
     EventConfig: `SK`,
     RaceStanding: `SK`,
     RacePhase: `SK`,
@@ -10,6 +10,7 @@ db.version(11).stores({
     BracketMetaData: `SK`,
     BracketPos: `SK`,
     EventHistory: `[PK+SK+at]`,
+    TimerConfig: "SK",
     Foo: `SK`,
 });
 

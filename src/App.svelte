@@ -21,6 +21,7 @@
     import AboutPage from "./AboutPage.svelte";
     import ChartDetail from "./ChartDetail.svelte";
     import ChartPosition from "./ChartPosition.svelte";
+    import TimerConfig from "./TimerConfig.svelte";
 
     import Login from "./Login.svelte";
     import HotLoad from "./HotLoad.svelte";
@@ -49,6 +50,7 @@
         "/chartPosition/:chartId/:chartPosition": ChartPosition,
         "/chartList": ChartList,
         "/chartAdd": ChartAdd,
+        "/timerConfig": TimerConfig,
         // '/raceStandingAdd': RaceStandingAdd,
     };
 
@@ -86,6 +88,11 @@
             {
                 text: "Watch different event",
                 clickHandler: () => navTo("/orgSelection"),
+                alwaysShow: true,
+            },
+            {
+                text: "Timer Config",
+                clickHandler: () => navTo("/timerConfig"),
                 alwaysShow: true,
             },
             {

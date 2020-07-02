@@ -25,7 +25,7 @@ const getTimerInfo = (PK, dataList) => {
     const timestamp = new Date().getTime();
     return {
         PK: PK,
-        SK: new Date().getTime(),
+        SK: new Date().toISOString(),
         dataList: dataList,
         TTL: Math.floor(new Date().getTime() / 1000) + 6 * 3600,
     };
@@ -36,7 +36,7 @@ module.exports.getUuid = async (event, context, callback) => {
     const uuid = uuidv4();
     await ddbPut({
         PK: "registered",
-        SK: parseInt(event.queryStringParameters.mac),
+        SK: event.queryStringParameters.mac,
         uuid: uuid,
         hostname: event.queryStringParameters.hostname,
         TTL: Math.floor(new Date().getTime() / 1000) + 6 * 3600,

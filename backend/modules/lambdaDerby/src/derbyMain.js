@@ -1,4 +1,6 @@
 "use strict";
+const crypto = require("crypto");
+
 const EntityFactory = require("./shared/EntityFactory.js");
 const { permissionMap } = require("./shared/permissionLits.js");
 const { hasServerRoutePath } = require("./shared/PermissionLookup.js");
@@ -101,7 +103,10 @@ const unmarshallResultsToArray = (data, factory) => {
     const rc = [];
     for (var i = 0; i < data.Items.length; i++) {
         var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
-        unmarshalled = promoteToObject(unmarshalled, factory);
+        if (factory) {
+            // don't use factory for timerDB
+            unmarshalled = promoteToObject(unmarshalled, factory);
+        }
         if (unmarshalled) {
             rc.push(unmarshalled);
         }
@@ -356,14 +361,14 @@ const ddbQueryRpDuplicateCheck = async (json) => {
         throw err;
     }
 };
-const ddbQueryPkSk = async (pk, sk) => {
+const ddbQueryPkSk = async (pk, sk, tableName = process.env.DynamoDbTable) => {
     const containsValues = {};
     containsValues[":pk"] = { S: pk };
     containsValues[":sk"] = { S: sk };
     const keyCondition = "PK = :pk and SK = :sk";
 
     var params = {
-        TableName: process.env.DynamoDbTable,
+        TableName: tableName,
         KeyConditionExpression: keyCondition,
         ReturnConsumedCapacity: "TOTAL",
         ExpressionAttributeValues: containsValues,
@@ -386,6 +391,34 @@ const ddbQueryPkSk = async (pk, sk) => {
     }
 };
 
+const ddbQueryPkAll = async (pk, tableName = process.env.DynamoDbTable) => {
+    const containsValues = {};
+    containsValues[":pk"] = { S: pk };
+    const keyCondition = "PK = :pk ";
+
+    var params = {
+        TableName: tableName,
+        KeyConditionExpression: keyCondition,
+        ReturnConsumedCapacity: "TOTAL",
+        ExpressionAttributeValues: containsValues,
+    };
+    console.log("ddbQueryPkAll query: " + JSON.stringify(params));
+
+    const factory =
+        tableName === process.env.DynamoDbTable
+            ? new EntityFactory({})
+            : undefined;
+    try {
+        var data = await ddbClient.query(params);
+        console.log("ddbQueryPkAll: raw:", data); // successful response
+        const udata = unmarshallResultsToArray(data, factory);
+        console.log("ddbQueryPkAll: unmar ", udata); // successful response
+        return udata;
+    } catch (err) {
+        console.log("ddbQueryPkAll failed: ", err, err.stack); // an error occurred
+        throw err;
+    }
+};
 //TODO: use ddbQueryPkSk
 const ddbQueryBracketMdExistsCheck = async (json) => {
     const containsValues = {};
@@ -1067,6 +1100,67 @@ const addOrgConfig = async (json) => {
 
     return await addSingle(json);
 };
+const getActiveTimers = async () => {
+    const timers = await ddbQueryPkAll("registered", process.env.TimerDbTable);
+    timers.forEach((timer) => {
+        const sha = crypto
+            .createHash("sha256")
+            .update(timer.uuid)
+            .digest("hex");
+        console.log("uuid:", timer.uuid, " sha: ", sha);
+        delete timer.uuid;
+        timer.sha = sha.substring(0, 6);
+    });
+    return timers;
+};
+const addTimerConfig = async (json, initialLoad) => {
+    if (!json.orgIz) {
+        return { error: "Missing orgIz" };
+    }
+    if (!json.orgId) {
+        return { error: "Missing orgId" };
+    }
+    var prevTC = {};
+    if (!initialLoad) {
+        const prevTC = await ddbQueryPkSk(
+            `${json.orgId}:TimerConfig`,
+            "TimerConfig"
+        );
+        if (!prevTC) {
+            return { error: "Missing Prev TimerConfig" };
+        }
+
+        // merge prior config to allow partial update.
+        json = Object.assign(json, prevTC);
+    }
+
+    json.PK = ":TimerConfig"; // force
+    if (!json.clearMS) {
+        json.clearMS = 3001;
+    }
+    if (!json.maxCarLenMS) {
+        json.maxCarLenMS = 601;
+    }
+    if (!json.minCarLenMS) {
+        json.minCarLenMS = 301;
+    }
+    if (!json.maxPerfCount) {
+        json.maxPerfCount = 1;
+    }
+    if (!json.lanes) {
+        json.lanes = ["lane1", "lane2"];
+    }
+    if (json.sha) {
+        if (!json.sha === json.sha) {
+            registerEventWithTimer();
+        }
+    }
+    return await addSingle(json);
+};
+const registerEventWithTimer = async () => {
+    //
+    console.log("TODO: registerEvent");
+};
 const addEventConfig = async (json, priorTtl) => {
     console.log("addEventConfig: " + JSON.stringify(json));
     if (!json.orgIz) {
@@ -1099,8 +1193,12 @@ const addEventConfig = async (json, priorTtl) => {
         TTL: json.TTL,
     });
 
-    return await addSingle(json);
+    const eventRC = await addSingle(json);
+
+    await addTimerConfig(json, true); // TODO: revisit default TimerConfig?
+    return eventRC;
 };
+
 const addParticipant2 = async (json) => {
     console.log("addParticipant2: " + JSON.stringify(json));
     json.PK = ":PTCP"; // force Participant
@@ -1128,6 +1226,18 @@ const getEventKey = (event) => {
     return getOrgIz(event) + ":" + getOrgId(event);
 };
 const routeMap = {
+    "/getActiveTimers": {
+        h: async (event) => {
+            return buildResponse(await getActiveTimers());
+        },
+    },
+    "/timerConfig": {
+        h: async (event) => {
+            return buildResponse(
+                await addTimerConfig(JSON.parse(event.body), false)
+            );
+        },
+    },
     "/addParticipant": {
         h: async (event) => {
             return buildResponse(await addParticipant2(JSON.parse(event.body)));

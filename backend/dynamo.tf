@@ -1,4 +1,5 @@
-locals {
+
+locals{
   dbName="DerbyMain"
   distDbName="DerbyDist"
   timerDbName="DerbyTimer"
@@ -17,7 +18,7 @@ resource "aws_dynamodb_table" "timer-dynamodb-table" {
 
   attribute {
     name = "SK"
-    type = "N"
+    type = "S"
   }
   ttl {
     attribute_name = "TTL"

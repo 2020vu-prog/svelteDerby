@@ -20,6 +20,11 @@ function addPermission(pname, serverRouteList, svelteRouteList) {
 }
 addPermission("CanAddParticipant", ["/addParticipant"], ["/driverAdd"]);
 addPermission(
+    "CanTimerConfig",
+    ["/timerConfig", "/getActiveTimers"],
+    ["/timerConfig"]
+);
+addPermission(
     "CanAddPending",
     ["/addPending"],
     ["/raceStandingAdd/RaceStanding"]
@@ -44,7 +49,7 @@ addPermission(
         "/getRaceHistory",
         "/listChartTypes",
         "/addEventConfig",
-	"/requestMqttSubPermission",
+        "/requestMqttSubPermission",
     ],
     [
         "/orgAdd", // be careful with this one!
