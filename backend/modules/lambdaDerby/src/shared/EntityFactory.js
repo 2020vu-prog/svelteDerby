@@ -4,6 +4,7 @@ const RaceStandingEid = ":RS";
 const ParticipantEid = ":PTCP";
 const BracketMetaDataEid = ":Bmd";
 const BracketPosEid = ":Bp";
+const TimerConfigEid = ":TimerConfig";
 const cHelper = (pthis, props, optionalMembers) => {
     //console.log (pthis.constructor.members) ;
 
@@ -482,7 +483,45 @@ entityFactories["Participant"] = class Participant extends EntityBase {
         return this.SK;
     }
 };
+/*
+params :{
+    clearMS:3000,
+    maxCarLenMS: 600,
+    minCarLenMS: 300,
+    maxPerfCount: 1,
+    lanes: ["lane1","lane2"]
+}
+*/
+entityFactories["TimerConfig"] = class TimerConfig extends EntityBase {
+    static members = [
+        "clearMS",
+        "maxCarLenMS",
+        "minCarLenMS",
+        "maxPerfCount",
+        "activeUuid",
+        "lanes",
+    ];
+    static eid = TimerConfigEid;
+    static canBuild(json) {
+        return json.PK && json.PK.endsWith(TimerConfigEid);
+    }
 
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK = this.orgId + TimerConfigEid;
+        this.SK = "TimerConfig";
+    }
+    get classType() {
+        return "TimerConfig";
+    }
+    get classKey() {
+        return this.SK;
+    }
+};
 class EntityFactory {
     propOverrides = {};
     constructor(propOverrides) {
