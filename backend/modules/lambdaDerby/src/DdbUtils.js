@@ -3,9 +3,28 @@ const EntityFactory = require("./shared/EntityFactory.js");
 class DdbUtils {
     ddbClient = null;
     AWS = null;
+    ddocClient = null;
     constructor(AWS, ddbClient) {
         this.ddbClient = ddbClient;
         this.AWS = AWS;
+        this.ddocClient = new this.AWS.DynamoDB.DocumentClient();
+    }
+    async ddbPut(item, tableName = process.env.DynamoDbTable) {
+        var rc = "Pending";
+        const dbItem = {
+            TableName: tableName,
+            Item: item,
+        };
+        try {
+            await this.ddocClient.put(dbItem).promise();
+
+            console.log("Added dbItem: " + JSON.stringify(dbItem));
+            rc = "OK";
+        } catch (err) {
+            console.log(err, err.stack); // an error occurred
+            rc = "Error";
+        }
+        return rc;
     }
     async ddbQueryPkSk(pk, sk, tableName = process.env.DynamoDbTable) {
         const containsValues = {};

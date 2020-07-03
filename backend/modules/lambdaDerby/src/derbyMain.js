@@ -1047,8 +1047,6 @@ const getActiveTimers = async () => {
 };
 const registeredTimerSha = (timer) => {
     const sha = crypto.createHash("sha256").update(timer.uuid).digest("hex");
-    //console.log("uuid:", timer.uuid, " sha: ", sha);
-    delete timer.uuid;
     //timer.sha = sha.substring(0, 6);
     timer.sha = sha;
 };
@@ -1098,16 +1096,17 @@ const addTimerConfig = async (json, initialLoad) => {
         if (json.sha === prevSha) {
             console.log("registerEvent: no sha change:", json.sha);
         } else {
-            registerEventWithTimer(json.sha);
+            await registerEventWithTimer(json);
         }
     } else {
         console.log("registerEvent: no sha found.");
     }
     return await addSingle(json);
 };
-const registerEventWithTimer = async (selectedSha) => {
+const registerEventWithTimer = async (timerConfigJson) => {
     //
-    console.log("TODO: registerEvent");
+    const selectedSha = timerConfigJson.sha;
+    console.log("registerEventWithTimer: ", timerConfigJson);
     const timers = await getActiveTimers();
     const selectedTimers = timers.filter((timer) => timer.sha === selectedSha);
     if (selectedTimers.length == 0) {
@@ -1117,6 +1116,12 @@ const registerEventWithTimer = async (selectedSha) => {
     const selectedTimer = selectedTimers[0];
 
     console.log("registerEventWithTimer: selectedTimer: ", selectedTimer);
+    const timerTableTc = Object.assign({}, timerConfigJson);
+    timerTableTc.PK = selectedTimer.uuid;
+    timerTableTc.SK = `!${timerConfigJson.orgId}`;
+    delete timerTableTc.sha;
+    console.log("registerEventWithTimer: registration: ", timerTableTc);
+    await ddbUtils.ddbPut(timerTableTc, process.env.TimerDbTable);
 };
 const addEventConfig = async (json, priorTtl) => {
     console.log("addEventConfig: " + JSON.stringify(json));
