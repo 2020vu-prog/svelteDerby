@@ -50,7 +50,7 @@
         axios
             .get(
                 $raceConfig.baseUrl +
-                    `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`
+                `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`
             )
             .then((response) => {
                 if (response.error) {
@@ -78,8 +78,7 @@
     }
     async function handleSubmit() {
         console.log("Adding:" + JSON.stringify(loginForm));
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
+
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -89,38 +88,44 @@
             minCarLenMS: loginForm.minCarLenMS,
             maxPerfCount: loginForm.maxPerfCount,
             lanes: loginForm.lames,
+            sha: loginForm.sha,
         };
 
-        console.log("token:" + bearer);
-
+        const currentSession = await Auth.currentSession();
+        const bearer = currentSession.idToken.jwtToken;
         axios.defaults.headers.common["Authorization"] = bearer;
 
-        axios
-            .post($raceConfig.baseUrl + "/timerConfig", req)
-            .then((response) => {
-                if (response.error) {
-                    //TODO: not working!?
-                    $statusMessage = {
-                        text: `TimerConfig Failed: ${response.error}.`,
-                        type: "error",
-                    };
-                } else {
-                    $statusMessage = {
-                        text: `TimerConfig Submitted.`,
-                        type: "success",
-                    };
-                }
-                pop();
-            })
-            .catch((err) => {
+        try {
+            const url = $raceConfig.baseUrl + "/timerConfig";
+            const response = await axios.post(url, req);
+            if (response.error) {
+                //TODO: not working!?
                 $statusMessage = {
-                    text: "TimerConfig error: " + err,
+                    text: `TimerConfig Failed: ${response.error}.`,
                     type: "error",
                 };
-                //console.log("driverAdd failed: " + err)
-            });
+            } else {
+                $statusMessage = {
+                    text: `TimerConfig Submitted.`,
+                    type: "success",
+                };
+            }
+            pop();
+            //console.log(response);
+        } catch (error) {
+            $statusMessage = {
+                text: "TimerConfig error: " + err,
+                type: "error",
+            };
+            console.log(error);
+        }
     }
+    async function clickActivateHost(timer) {
+        console.log("clickActivateHost", timer)
+        loginForm.sha = timer.sha;
 
+        await handleSubmit();
+    }
     const loginForm = {};
 </script>
 
@@ -131,37 +136,25 @@
 
     <label>
         ClearMS:
-        <input
-            type="number"
-            bind:value={loginForm.clearMS}
-            placeholder="3000" />
+        <input type="number" bind:value={loginForm.clearMS} placeholder="3000" />
     </label>
     <label>
         MaxCarLenMS:
-        <input
-            type="number"
-            bind:value={loginForm.maxCarLenMS}
-            placeholder="700" />
+        <input type="number" bind:value={loginForm.maxCarLenMS} placeholder="700" />
     </label>
     <label>
         MinCarLenMS:
-        <input
-            type="number"
-            bind:value={loginForm.minCarLenMS}
-            placeholder="300" />
+        <input type="number" bind:value={loginForm.minCarLenMS} placeholder="300" />
     </label>
     <label>
         Max Perf:
-        <input
-            type="number"
-            bind:value={loginForm.maxPerfCount}
-            placeholder="1" />
+        <input type="number" bind:value={loginForm.maxPerfCount} placeholder="1" />
     </label>
     {#each activeTimerList as activeTimer}
         <div class="well well-sm">
-            <div class="panel panel-info">
+            <div class="panel panel-info"  on:click={() => clickActivateHost(activeTimer)}>
                 <div class="panel-heading">
-                    <span>{activeTimer.hostname}</span>
+                    <span  >{activeTimer.hostname}</span>
                 </div>
             </div>
         </div>

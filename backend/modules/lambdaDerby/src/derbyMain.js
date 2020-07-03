@@ -11,7 +11,10 @@ const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
 const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
 var jwt = require("jsonwebtoken");
 const TmpCache = require("./tmpCache.js");
+const DdbUtils = require("./DdbUtils");
 const configMap = {};
+
+const ddbUtils = new DdbUtils(AWS, ddbClient);
 
 const s3QueryChartTypes = async () => {
     var params = {
@@ -361,64 +364,7 @@ const ddbQueryRpDuplicateCheck = async (json) => {
         throw err;
     }
 };
-const ddbQueryPkSk = async (pk, sk, tableName = process.env.DynamoDbTable) => {
-    const containsValues = {};
-    containsValues[":pk"] = { S: pk };
-    containsValues[":sk"] = { S: sk };
-    const keyCondition = "PK = :pk and SK = :sk";
 
-    var params = {
-        TableName: tableName,
-        KeyConditionExpression: keyCondition,
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddbQueryPkSk query: " + JSON.stringify(params));
-
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryPkSk: ", data); // successful response
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
-
-        if (udata && udata[0]) {
-            return udata[0]; // exact key lookup should not get multipe entries
-        } else {
-            return null;
-        }
-    } catch (err) {
-        console.log("ddbQueryPkSk failed: ", err, err.stack); // an error occurred
-        throw err;
-    }
-};
-
-const ddbQueryPkAll = async (pk, tableName = process.env.DynamoDbTable) => {
-    const containsValues = {};
-    containsValues[":pk"] = { S: pk };
-    const keyCondition = "PK = :pk ";
-
-    var params = {
-        TableName: tableName,
-        KeyConditionExpression: keyCondition,
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddbQueryPkAll query: " + JSON.stringify(params));
-
-    const factory =
-        tableName === process.env.DynamoDbTable
-            ? new EntityFactory({})
-            : undefined;
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryPkAll: raw:", data); // successful response
-        const udata = unmarshallResultsToArray(data, factory);
-        console.log("ddbQueryPkAll: unmar ", udata); // successful response
-        return udata;
-    } catch (err) {
-        console.log("ddbQueryPkAll failed: ", err, err.stack); // an error occurred
-        throw err;
-    }
-};
 //TODO: use ddbQueryPkSk
 const ddbQueryBracketMdExistsCheck = async (json) => {
     const containsValues = {};
@@ -806,10 +752,10 @@ const advanceChartPos = async (srcRs, bracketPos) => {
 
 const loadRaceStandingFromBracketPos = async (bracketPos) => {
     //TODO: override RS add to use bracketPos SK for RS SK
-    return await ddbQueryPkSk(`${bracketPos.orgId}:RS`, bracketPos.SK);
+    return await ddbUtils.ddbQueryPkSk(`${bracketPos.orgId}:RS`, bracketPos.SK);
 };
 const loadBracketPosFromRaceStanding = async (rs) => {
-    return await ddbQueryPkSk(`${rs.orgId}:Bp`, rs.Bp);
+    return await ddbUtils.ddbQueryPkSk(`${rs.orgId}:Bp`, rs.Bp);
 };
 
 const addPendingFromChartPos = async (rs, bracketPos) => {
@@ -925,7 +871,7 @@ const cloneRs = async (srcRs) => {
 
 const deleteRacePhase = async (json) => {
     console.log("deleteRacePhase: " + JSON.stringify(json));
-    const rpFound = await ddbQueryPkSk(`${json.orgId}:RP`, json.SK);
+    const rpFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:RP`, json.SK);
     console.log("rpFound", rpFound);
 
     //only allow delete on blocks.  no deleting historical data
@@ -946,7 +892,7 @@ const deleteRacePhase = async (json) => {
 };
 const deleteRaceStanding = async (json) => {
     console.log("deleteRaceStanding: " + JSON.stringify(json));
-    const rsFound = await ddbQueryPkSk(`${json.orgId}:RS`, json.SK);
+    const rsFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:RS`, json.SK);
     console.log("rsFound", rsFound);
     var msg = "";
 
@@ -1068,7 +1014,7 @@ const addOrUpdateChartPosition = async (json) => {
         json.SK = `${json.chartId}:${json.heatNumber}`;
     }
 
-    const posFound = await ddbQueryPkSk(`${json.orgId}:Bp`, json.SK);
+    const posFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:Bp`, json.SK);
     console.log("posFound", posFound);
     if (!posFound) {
         console.log("addOrUpdateChartPosition add needed:", posFound);
@@ -1101,17 +1047,24 @@ const addOrgConfig = async (json) => {
     return await addSingle(json);
 };
 const getActiveTimers = async () => {
-    const timers = await ddbQueryPkAll("registered", process.env.TimerDbTable);
-    timers.forEach((timer) => {
-        const sha = crypto
-            .createHash("sha256")
-            .update(timer.uuid)
-            .digest("hex");
-        console.log("uuid:", timer.uuid, " sha: ", sha);
-        delete timer.uuid;
-        timer.sha = sha.substring(0, 6);
-    });
+    const timers = await ddbUtils.ddbQueryPkAll(
+        "registered",
+        process.env.TimerDbTable
+    );
+    timers.forEach(registeredTimerSha);
+    timers.forEach(doNotPublishUuid);
+
     return timers;
+};
+const registeredTimerSha = (timer) => {
+    const sha = crypto.createHash("sha256").update(timer.uuid).digest("hex");
+    //console.log("uuid:", timer.uuid, " sha: ", sha);
+    delete timer.uuid;
+    //timer.sha = sha.substring(0, 6);
+    timer.sha = sha;
+};
+const doNotPublishUuid = (timer) => {
+    delete timer.uuid;
 };
 const addTimerConfig = async (json, initialLoad) => {
     if (!json.orgIz) {
@@ -1122,7 +1075,7 @@ const addTimerConfig = async (json, initialLoad) => {
     }
     var prevTC = {};
     if (!initialLoad) {
-        const prevTC = await ddbQueryPkSk(
+        const prevTC = await ddbUtils.ddbQueryPkSk(
             `${json.orgId}:TimerConfig`,
             "TimerConfig"
         );
@@ -1170,7 +1123,7 @@ const addEventConfig = async (json, priorTtl) => {
         return { error: "Missing orgId" };
     }
 
-    const orgConfig = await ddbQueryPkSk(`OrgConfig`, json.orgIz);
+    const orgConfig = await ddbUtils.ddbQueryPkSk(`OrgConfig`, json.orgIz);
 
     json.PK = "EventConfig"; // force
     json.SK = json.orgIz + ":" + json.orgId; // force
