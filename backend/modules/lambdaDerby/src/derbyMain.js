@@ -95,39 +95,6 @@ const create_UUID = () => {
     );
     return uuid;
 };
-const promoteToObject = (unmarshalled, factory) => {
-    if (factory) {
-        return factory.build(unmarshalled);
-    } else {
-        return unmarshalled;
-    }
-};
-const unmarshallResultsToArray = (data, factory) => {
-    const rc = [];
-    for (var i = 0; i < data.Items.length; i++) {
-        var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
-        if (factory) {
-            // don't use factory for timerDB
-            unmarshalled = promoteToObject(unmarshalled, factory);
-        }
-        if (unmarshalled) {
-            rc.push(unmarshalled);
-        }
-    }
-    return rc;
-};
-const unmarshallResultsToObject = (data, key, factory) => {
-    const rc = {};
-
-    for (var i = 0; i < data.Items.length; i++) {
-        var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
-        unmarshalled = promoteToObject(unmarshalled, factory);
-        if (unmarshalled) {
-            rc[unmarshalled[key]] = unmarshalled;
-        }
-    }
-    return rc;
-};
 
 const ddbQueryRaceHistory = async (qsp) => {
     if (!qsp) {
@@ -167,7 +134,7 @@ const ddbQueryRaceHistory = async (qsp) => {
         console.log("queryRaceHistory cc: ", cc); // successful response
         console.log("queryRaceHistory: ", data); // successful response
         console.log("queryRaceHistory: " + JSON.stringify(data)); // successful response
-        const rc = unmarshallResultsToArray(data);
+        const rc = ddbUtils.unmarshallResultsToArray(data);
 
         if (cc > 0.5 || data.Count >= limit) {
             console.log("queryRaceHistory: requesting CCA: ", cc);
@@ -196,7 +163,7 @@ const ddbQueryEventConfig = async (eventKey) => {
     try {
         var data = await ddbClient.query(params);
         console.log("ddbQueryEventConfig: ", data); // successful response
-        return unmarshallResultsToObject(data, "SK");
+        return ddbUtils.unmarshallResultsToObject(data, "SK");
     } catch (err) {
         console.log("ddbQueryEventConfig failed: ", err, err.stack); // an error occurred
     }
@@ -216,7 +183,7 @@ const ddbListEventConfigByOrg = async (orgIz) => {
     try {
         var data = await ddbClient.query(params);
         console.log("ddbQueryEventConfig: ", data); // successful response
-        return unmarshallResultsToObject(data, "SK");
+        return ddbUtils.unmarshallResultsToObject(data, "SK");
     } catch (err) {
         console.log("ddbQueryEventConfig failed: ", err, err.stack); // an error occurred
     }
@@ -235,7 +202,7 @@ const ddbQueryOrgConfig = async () => {
     try {
         var data = await ddbClient.query(params);
         console.log("ddbQueryOrgConfig: ", data); // successful response
-        return unmarshallResultsToObject(data, "SK");
+        return ddbUtils.unmarshallResultsToObject(data, "SK");
     } catch (err) {
         console.log("ddbQueryOrgConfig failed: ", err, err.stack); // an error occurred
     }
@@ -263,7 +230,10 @@ const ddbQueryRsByKey = async (json) => {
         var data = await ddbClient.query(params);
         console.log("ddbQueryRsByKey: ", data); // successful response
 
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+        const udata = ddbUtils.unmarshallResultsToArray(
+            data,
+            new EntityFactory({})
+        );
 
         return udata;
     } catch (err) {
@@ -294,7 +264,10 @@ const ddbQueryRpByKey = async (json) => {
         var data = await ddbClient.query(params);
         console.log("ddbQueryRpByKey: ", data); // successful response
 
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+        const udata = ddbUtils.unmarshallResultsToArray(
+            data,
+            new EntityFactory({})
+        );
 
         return udata.filter((rp) => !rp.phaseResults); // only return entries w/o results
     } catch (err) {
@@ -324,7 +297,10 @@ const ddbQueryRpNextOnBlocks = async (json) => {
         var data = await ddbClient.query(params);
         console.log("ddbQueryRpNextOnBlocks: ", data); // successful response
 
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+        const udata = ddbUtils.unmarshallResultsToArray(
+            data,
+            new EntityFactory({})
+        );
 
         return udata.filter((rp) => !rp.phaseResults).reverse(); // only return entries w/o results
     } catch (err) {
@@ -356,7 +332,10 @@ const ddbQueryRpDuplicateCheck = async (json) => {
         var data = await ddbClient.query(params);
         console.log("ddbQueryRpDuplicateCheck: ", data); // successful response
 
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+        const udata = ddbUtils.unmarshallResultsToArray(
+            data,
+            new EntityFactory({})
+        );
 
         return udata.filter((rp) => !rp.phaseResults); // only return entries w/o results
     } catch (err) {
@@ -388,7 +367,10 @@ const ddbQueryBracketMdExistsCheck = async (json) => {
     try {
         var data = await ddbClient.query(params);
         console.log("ddbQueryBracketMdExistsCheck: ", data); // successful response
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+        const udata = ddbUtils.unmarshallResultsToArray(
+            data,
+            new EntityFactory({})
+        );
 
         return udata;
     } catch (err) {
@@ -416,7 +398,10 @@ const ddbQueryRsExistsAndPendingCheck = async (json) => {
     try {
         var data = await ddbClient.query(params);
         console.log("ddbQueryRsExistsAndPendingCheck: ", data); // successful response
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
+        const udata = ddbUtils.unmarshallResultsToArray(
+            data,
+            new EntityFactory({})
+        );
 
         return udata.filter((rs) => rs.nextRace()); // only return entries that need to race
     } catch (err) {
@@ -1046,13 +1031,17 @@ const addOrgConfig = async (json) => {
 
     return await addSingle(json);
 };
+const getSanitizedTimers = async () => {
+    const timers = await getActiveTimers();
+    timers.forEach(doNotPublishUuid);
+    return timers;
+};
 const getActiveTimers = async () => {
     const timers = await ddbUtils.ddbQueryPkAll(
         "registered",
         process.env.TimerDbTable
     );
     timers.forEach(registeredTimerSha);
-    timers.forEach(doNotPublishUuid);
 
     return timers;
 };
@@ -1074,6 +1063,7 @@ const addTimerConfig = async (json, initialLoad) => {
         return { error: "Missing orgId" };
     }
     var prevTC = {};
+    var prevSha = "";
     if (!initialLoad) {
         const prevTC = await ddbUtils.ddbQueryPkSk(
             `${json.orgId}:TimerConfig`,
@@ -1083,6 +1073,7 @@ const addTimerConfig = async (json, initialLoad) => {
             return { error: "Missing Prev TimerConfig" };
         }
 
+        prevSha = prevTC.sha;
         // merge prior config to allow partial update.
         json = Object.assign(prevTC, json);
     }
@@ -1104,15 +1095,28 @@ const addTimerConfig = async (json, initialLoad) => {
         json.lanes = ["lane1", "lane2"];
     }
     if (json.sha) {
-        if (!json.sha === json.sha) {
-            registerEventWithTimer();
+        if (json.sha === prevSha) {
+            console.log("registerEvent: no sha change:", json.sha);
+        } else {
+            registerEventWithTimer(json.sha);
         }
+    } else {
+        console.log("registerEvent: no sha found.");
     }
     return await addSingle(json);
 };
-const registerEventWithTimer = async () => {
+const registerEventWithTimer = async (selectedSha) => {
     //
     console.log("TODO: registerEvent");
+    const timers = await getActiveTimers();
+    const selectedTimers = timers.filter((timer) => timer.sha === selectedSha);
+    if (selectedTimers.length == 0) {
+        console.log("registerEventWithTimer: sha not found: ", selectedSha);
+        return;
+    }
+    const selectedTimer = selectedTimers[0];
+
+    console.log("registerEventWithTimer: selectedTimer: ", selectedTimer);
 };
 const addEventConfig = async (json, priorTtl) => {
     console.log("addEventConfig: " + JSON.stringify(json));
@@ -1181,7 +1185,7 @@ const getEventKey = (event) => {
 const routeMap = {
     "/getActiveTimers": {
         h: async (event) => {
-            return buildResponse(await getActiveTimers());
+            return buildResponse(await getSanitizedTimers());
         },
     },
     "/timerConfig": {
