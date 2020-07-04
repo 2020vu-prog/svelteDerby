@@ -5,9 +5,11 @@ class DdbUtils {
     AWS = null;
     ddocClient = null;
     entityFactory = null;
-    constructor(AWS, ddbClient) {
+    sqs = null;
+    constructor(AWS, ddbClient, sqs) {
         this.ddbClient = ddbClient;
         this.AWS = AWS;
+        this.sqs = sqs;
         this.ddocClient = new this.AWS.DynamoDB.DocumentClient();
     }
     setEntityFactory(entityFactory) {
@@ -172,7 +174,7 @@ class DdbUtils {
 
             if (cc > 0.5 || data.Count >= limit) {
                 console.log("queryRaceHistory: requesting CCA: ", cc);
-                await requestCCA(qsp, data);
+                await this.requestCCA(qsp, data);
             } else {
                 console.log("queryRaceHistory: skipping CCA: ", cc);
             }
@@ -644,6 +646,35 @@ class DdbUtils {
             return { status: "ok", entity: entity };
         }
         return { error: "Invalid Request" };
+    }
+    async requestCCA(qsp, data) {
+        var params = {
+            MessageGroupId: "orgId:" + qsp.orgId,
+            MessageBody: JSON.stringify(qsp),
+            // MessageId: "Group1",  // Required for FIFO queues
+            QueueUrl: process.env.CcaQueueId,
+            MessageDeduplicationId: this.create_UUID(),
+        };
+        try {
+            console.log("SQS sending:", qsp);
+            const sent = await this.sqs.sendMessage(params).promise();
+            console.log("SQS send Success", sent.MessageId);
+        } catch (err) {
+            console.log("SQS send Error", err);
+        }
+    }
+
+    create_UUID() {
+        var dt = new Date().getTime();
+        var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+            /[xy]/g,
+            function (c) {
+                var r = (dt + Math.random() * 16) % 16 | 0;
+                dt = Math.floor(dt / 16);
+                return (c == "x" ? r : (r & 0x3) | 0x8).toString(16);
+            }
+        );
+        return uuid;
     }
 }
 

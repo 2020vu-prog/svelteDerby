@@ -500,6 +500,7 @@ entityFactories["TimerConfig"] = class TimerConfig extends EntityBase {
         "maxPerfCount",
         "activeUuid",
         "lanes",
+        "sha",
     ];
     static eid = TimerConfigEid;
     static canBuild(json) {

@@ -14,7 +14,7 @@ const TmpCache = require("./tmpCache.js");
 const DdbUtils = require("./DdbUtils");
 const configMap = {};
 
-const ddbUtils = new DdbUtils(AWS, ddbClient);
+const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
 
 const s3QueryChartTypes = async () => {
     var params = {
@@ -44,22 +44,6 @@ const attachPrincipalPolicy = async (policyName, principal) => {
     }
 };
 
-const requestCCA = async (qsp, data) => {
-    var params = {
-        MessageGroupId: "orgId:" + qsp.orgId,
-        MessageBody: JSON.stringify(qsp),
-        // MessageId: "Group1",  // Required for FIFO queues
-        QueueUrl: process.env.CcaQueueId,
-        MessageDeduplicationId: create_UUID(),
-    };
-    try {
-        console.log("SQS sending:", qsp);
-        const sent = await sqs.sendMessage(params).promise();
-        console.log("SQS send Success", sent.MessageId);
-    } catch (err) {
-        console.log("SQS send Error", err);
-    }
-};
 const getConfig = async (eventKey) => {
     if (configMap[eventKey]) {
         return configMap[eventKey];
@@ -82,19 +66,6 @@ const getTtl = async (eventKey) => {
     //return Math.round((new Date().getTime() / 1000) + config.ttlIncrement);
 };
 var entityFactory;
-
-const create_UUID = () => {
-    var dt = new Date().getTime();
-    var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-        /[xy]/g,
-        function (c) {
-            var r = (dt + Math.random() * 16) % 16 | 0;
-            dt = Math.floor(dt / 16);
-            return (c == "x" ? r : (r & 0x3) | 0x8).toString(16);
-        }
-    );
-    return uuid;
-};
 
 const addPending2 = async (event) => {
     const eventKey = getEventKey(event);
@@ -490,7 +461,7 @@ const addChartMetaData = async (json) => {
     console.log("addChartMetaData: " + JSON.stringify(json));
     json.PK = ":Bmd"; // force BracketMetaData
     if (!json.SK) {
-        const uu6 = create_UUID().substring(0, 6);
+        const uu6 = ddbUtils.create_UUID().substring(0, 6);
         json.SK = uu6;
     }
 
