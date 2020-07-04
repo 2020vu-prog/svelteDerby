@@ -50,7 +50,7 @@
         axios
             .get(
                 $raceConfig.baseUrl +
-                `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`
+                    `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`
             )
             .then((response) => {
                 if (response.error) {
@@ -78,7 +78,6 @@
     }
     async function handleSubmit() {
         console.log("Adding:" + JSON.stringify(loginForm));
-
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -121,7 +120,7 @@
         }
     }
     async function clickActivateHost(timer) {
-        console.log("clickActivateHost", timer)
+        console.log("clickActivateHost", timer);
         loginForm.sha = timer.sha;
 
         await handleSubmit();
@@ -136,25 +135,39 @@
 
     <label>
         ClearMS:
-        <input type="number" bind:value={loginForm.clearMS} placeholder="3000" />
+        <input
+            type="number"
+            bind:value={loginForm.clearMS}
+            placeholder="3000" />
     </label>
     <label>
         MaxCarLenMS:
-        <input type="number" bind:value={loginForm.maxCarLenMS} placeholder="700" />
+        <input
+            type="number"
+            bind:value={loginForm.maxCarLenMS}
+            placeholder="700" />
     </label>
     <label>
         MinCarLenMS:
-        <input type="number" bind:value={loginForm.minCarLenMS} placeholder="300" />
+        <input
+            type="number"
+            bind:value={loginForm.minCarLenMS}
+            placeholder="300" />
     </label>
     <label>
         Max Perf:
-        <input type="number" bind:value={loginForm.maxPerfCount} placeholder="1" />
+        <input
+            type="number"
+            bind:value={loginForm.maxPerfCount}
+            placeholder="1" />
     </label>
     {#each activeTimerList as activeTimer}
         <div class="well well-sm">
-            <div class="panel panel-info"  on:click={() => clickActivateHost(activeTimer)}>
+            <div
+                class="panel panel-info"
+                on:click={() => clickActivateHost(activeTimer)}>
                 <div class="panel-heading">
-                    <span  >{activeTimer.hostname}</span>
+                    <span>{activeTimer.hostname}</span>
                 </div>
             </div>
         </div>
