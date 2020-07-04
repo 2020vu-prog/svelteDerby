@@ -1,0 +1,222 @@
+[
+    {
+      "microb": 454431676,
+      "microPrev": 452431671,
+      "micros": 454431676,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886791816,
+      "seq": 278
+    },
+    {
+      "microb": 456431681,
+      "microPrev": 454431676,
+      "micros": 456431681,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886793817,
+      "seq": 279
+    },
+    {
+      "microb": 458431686,
+      "microPrev": 456431681,
+      "micros": 458431686,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886795818,
+      "seq": 280
+    },
+    {
+      "microb": 460431691,
+      "microPrev": 458431686,
+      "micros": 460431691,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886797817,
+      "seq": 281
+    },
+    {
+      "microb": 462431696,
+      "microPrev": 460431691,
+      "micros": 462431696,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886799817,
+      "seq": 282
+    },
+    {
+      "microb": 464431701,
+      "microPrev": 462431696,
+      "micros": 464431701,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886801817,
+      "seq": 283
+    },
+    {
+      "microb": 466431706,
+      "microPrev": 464431701,
+      "micros": 466431706,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886803817,
+      "seq": 284
+    },
+    {
+      "microb": 468431711,
+      "microPrev": 466431706,
+      "micros": 468431711,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886805818,
+      "seq": 285
+    },
+    {
+      "microb": 470431716,
+      "microPrev": 468431711,
+      "micros": 470431716,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886807816,
+      "seq": 286
+    },
+    {
+      "microb": 471050778,
+      "microPrev": 99833729,
+      "micros": 471050778,
+      "pinName": "lane1",
+      "pinNumber": "17",
+      "pinState": 1,
+      "pinType": "lane",
+      "pubTime": 1593886808434,
+      "seq": 287
+    },
+    {
+      "microb": 471073893,
+      "microPrev": 99800793,
+      "micros": 471073893,
+      "pinName": "lane2",
+      "pinNumber": "22",
+      "pinState": 1,
+      "pinType": "lane",
+      "pubTime": 1593886808457,
+      "seq": 288
+    },
+    {
+      "microb": 471410499,
+      "microPrev": 471050778,
+      "micros": 471410499,
+      "pinName": "lane1",
+      "pinNumber": "17",
+      "pinState": 0,
+      "pinType": "lane",
+      "pubTime": 1593886808795,
+      "seq": 289
+    },
+    {
+      "microb": 471429945,
+      "microPrev": 471073893,
+      "micros": 471429945,
+      "pinName": "lane2",
+      "pinNumber": "22",
+      "pinState": 0,
+      "pinType": "lane",
+      "pubTime": 1593886808816,
+      "seq": 290
+    },
+    {
+      "microb": 472431722,
+      "microPrev": 470431716,
+      "micros": 472431722,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886809817,
+      "seq": 291
+    },
+    {
+      "microb": 474431727,
+      "microPrev": 472431722,
+      "micros": 474431727,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886811817,
+      "seq": 292
+    },
+    {
+      "microb": 476431732,
+      "microPrev": 474431727,
+      "micros": 476431732,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886813817,
+      "seq": 293
+    },
+    {
+      "microb": 478431737,
+      "microPrev": 476431732,
+      "micros": 478431737,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886815817,
+      "seq": 294
+    },
+    {
+      "microb": 480431742,
+      "microPrev": 478431737,
+      "micros": 480431742,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886817817,
+      "seq": 295
+    },
+    {
+      "microb": 482431747,
+      "microPrev": 480431742,
+      "micros": 482431747,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886819817,
+      "seq": 296
+    },
+    {
+      "microb": 484431753,
+      "microPrev": 482431747,
+      "micros": 484431753,
+      "pinName": "oneHz",
+      "pinNumber": "24",
+      "pinState": 1,
+      "pinType": "clock",
+      "pubTime": 1593886821816,
+      "seq": 297
+    }
+  ]

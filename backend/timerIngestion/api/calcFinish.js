@@ -19,6 +19,7 @@ class CalcFinish {
     calcFinishMain(rawList) {
         const cBlocks = this.splitIntoCandidateBlocks(rawList);
         const finishList = cBlocks.map((cBlock) => this.mapValidFinish(cBlock));
+        console.log("finishList:", JSON.stringify(finishList));
         return finishList;
     }
     splitIntoCandidateBlocks(rawList) {
@@ -68,7 +69,8 @@ class CalcFinish {
             valid: false,
         };
         const lanePins = cBlock.filter((piPin) => {
-            piPin.pinName === lane;
+            //console.log("looking for :", lane, " in: ", piPin.pinName);
+            return piPin.pinName === lane;
         });
         if (lanePins.length == 0) {
             rlf.error = "No data for lane";

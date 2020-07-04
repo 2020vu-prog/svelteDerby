@@ -668,6 +668,7 @@ const addEventConfig = async (json, priorTtl) => {
         TTL: json.TTL,
     });
 
+    ddbUtils.setEntityFactory(entityFactory);
     const eventRC = await ddbUtils.addSingle(json);
 
     await addTimerConfig(json, true); // TODO: revisit default TimerConfig?
@@ -834,23 +835,6 @@ const buildResponse = (jsonObj, cacheControl = "no-cache") => {
 
 exports.handler = async (event) => {
     const dbArn = process.env.DynamoDbArn;
-
-    // Allow Cors
-    /*
-	if (event.httpMethod === "OPTIONS") {
-		var response = {
-			statusCode: 200,
-			headers: {
-				'Content-Type': 'text/html; charset=utf-8',
-				"Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Headers": "*",
-				"Access-Control-Allow-Methods": "POST, GET, OPTIONS"
-			}
-		}
-		callback(null, response)
-		return;
-	}
-	*/
 
     console.log("event.path: ", event.path);
 
