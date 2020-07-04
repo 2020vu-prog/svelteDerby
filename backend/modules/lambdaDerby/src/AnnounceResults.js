@@ -1,0 +1,62 @@
+const announceResults = async (tgtRs) => {
+    var rc = "";
+    var aPhaseMsg = "";
+    var aWinCarNumber = "";
+    var bWinCarNumber = "";
+    var overallWinCarNumber = "";
+    var aPhaseMsg = "";
+    var bPhaseMsg = "";
+    var overallMsg = "";
+    [aWinCarNumber, aPhaseMsg]=formatMsg("Phase AE ",tgtRs.carNumbers,tgtRs.phase1DeltaMS);
+
+    if (tgtRs.phase1DeltaMS && !tgtRs.phase2DeltaMS) {
+        rc += aPhaseMsg;
+        return rc;
+    }
+    if (tgtRs.phase2DeltaMS) {
+        [bWinCarNumber, bPhaseMsg]=formatMsg("Phase B ",tgtRs.carNumbers,tgtRs.phase2DeltaMS);
+        [overallWinCarNumber, overallMsg] = formatMsg("Overall", tgtRs.carNumbers, tgtRs.phase1DeltaMS+tgtRs.phase2DeltaMS)
+        rc += bPhaseMsg;
+        if (bWinCarNumber && aWinCarNumber && aWinCarNumber === bWinCarNumber) {
+            //double phase, no interjection
+        } else if (bWinCarNumber === overallWinCarNumber) {
+            rc += " That is enough ... " +  expandDigitsForSpeech(bWinCarNumber.toString());
+        } else {
+            rc += " However, that is not enough ... ");
+        }
+        rc += overallMsg;
+    }
+    return rc;
+}
+const expandDigitsForSpeech = (cn) => {
+    return cn.replace("", " ");
+}
+const formatMsg = (phaseDescriptor, cnArray, phaseResultMS) => {
+    var returnCarNumber = "";
+    var returnMessage = "";
+    if (phaseResultMS == 0) {
+        returnMessage += " THE " + phaseDescriptor + " Result is a Tie. ";
+    }
+    if (phaseResultMS < 0) {
+        returnCarNumber = cnArray[1];
+        returnMessage += formatMsgWithCar(returnCarNumber, phaseDescriptor, phaseResultMS);
+    }
+    if (phaseResultMS > 0) {
+        returnCarNumber = cnArray[0];
+        returnMessage += formatMsgWithCar(returnCarNumber, phaseDescriptor, phaseResultMS);
+    }
+    returnMessage += " ";
+    return [returnCarNumber, returnMessage];
+}
+const formatMsgWithCar = (winningCar, phaseDescriptor, phaseResultMS) => {
+    var rc = "";
+    const spokenCar = expandDigitsForSpeech(winningCar.toString());
+    const spokenDriver = getDrivenByPhoneticName(winningCar);
+    rc += `Your ${phaseDescriptor} Winner is Car ${spokenCar}, ${spokenDriver}`;
+    rc += " ... ";
+    const spokenTime = expandDigitsForSpeech(Math.abs(phaseResultMS));
+    //TODO: %03d
+    rc += ` The ${phaseDescriptor} time is ${spokenTime} `;
+    rc += " ... ";
+    return rc;
+}
