@@ -36,12 +36,14 @@ class CalcFinish {
                     curBlock.list = [];
                     curBlock.micros = 0;
                 }
-
-                if (candidate.pinType === "lane") {
-                    curBlock.list.push(candidate);
-                    curBlock.micros = candidate.micros;
-                }
             }
+            if (candidate.pinType === "lane") {
+                curBlock.list.push(candidate);
+                curBlock.micros = candidate.micros;
+            }
+        }
+        if (curBlock.list.length > 0) {
+            rc.push(curBlock.list);
         }
         return rc;
     }
