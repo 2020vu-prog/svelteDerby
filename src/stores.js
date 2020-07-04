@@ -12,6 +12,7 @@ export const driverMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlockKey = writable("");
 export const showBottomNav = writable(true);
+export const autoAnnounceResults = writable(false);
 export const raceConfig = writable({
     orgName: "",
     orgId: "",

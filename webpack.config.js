@@ -79,7 +79,7 @@ module.exports = {
         proxy: {
             "/app": {
                 target:
-                    "https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test",
+                    "https://z24xykma0c.execute-api.us-east-2.amazonaws.com/test",
                 changeOrigin: true,
             },
             "/archive": {
