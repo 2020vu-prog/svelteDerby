@@ -136,8 +136,8 @@ const applyFinishTime = async (json) => {
             tgtRs.phase2Results = json.phr.reverse();
         }
         await ddbUtils.addSingle(tgtRs);
-        announceResults.announceResults(tgtRs);
-
+        const paMessage = announceResults.announceResults(tgtRs);
+        console.log("paMessage:", paMessage);
         if (tgtRs.isComplete()) {
             if (tgtRs.isOverallTie()) {
                 await cloneRs(tgtRs);
