@@ -49,7 +49,7 @@ class AnnounceResults {
         return rc;
     }
     expandDigitsForSpeech(cn) {
-        return cn.replace("", " ");
+        return String(cn).replace("", " ");
     }
     formatMsg(phaseDescriptor, cnArray, phaseResultMS) {
         var returnCarNumber = "";
@@ -79,7 +79,7 @@ class AnnounceResults {
     formatMsgWithCar(winningCar, phaseDescriptor, phaseResultMS) {
         var rc = "";
         const spokenCar = this.expandDigitsForSpeech(winningCar.toString());
-        const spokenDriver = getDrivenByPhoneticName(winningCar);
+        const spokenDriver = this.getDrivenByPhoneticName(winningCar);
         rc += `Your ${phaseDescriptor} Winner is Car ${spokenCar}, ${spokenDriver}`;
         rc += " ... ";
         const spokenTime = this.expandDigitsForSpeech(Math.abs(phaseResultMS));
