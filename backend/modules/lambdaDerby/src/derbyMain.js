@@ -1,4 +1,6 @@
 "use strict";
+const crypto = require("crypto");
+
 const EntityFactory = require("./shared/EntityFactory.js");
 const { permissionMap } = require("./shared/permissionLits.js");
 const { hasServerRoutePath } = require("./shared/PermissionLookup.js");
@@ -9,7 +11,10 @@ const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
 const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
 var jwt = require("jsonwebtoken");
 const TmpCache = require("./tmpCache.js");
+const DdbUtils = require("./DdbUtils");
 const configMap = {};
+
+const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
 
 const s3QueryChartTypes = async () => {
     var params = {
@@ -39,28 +44,12 @@ const attachPrincipalPolicy = async (policyName, principal) => {
     }
 };
 
-const requestCCA = async (qsp, data) => {
-    var params = {
-        MessageGroupId: "orgId:" + qsp.orgId,
-        MessageBody: JSON.stringify(qsp),
-        // MessageId: "Group1",  // Required for FIFO queues
-        QueueUrl: process.env.CcaQueueId,
-        MessageDeduplicationId: create_UUID(),
-    };
-    try {
-        console.log("SQS sending:", qsp);
-        const sent = await sqs.sendMessage(params).promise();
-        console.log("SQS send Success", sent.MessageId);
-    } catch (err) {
-        console.log("SQS send Error", err);
-    }
-};
 const getConfig = async (eventKey) => {
     if (configMap[eventKey]) {
         return configMap[eventKey];
     }
 
-    var eConfig = await ddbQueryEventConfig(eventKey);
+    var eConfig = await ddbUtils.ddbQueryEventConfig(eventKey);
     if (eConfig[eventKey]) {
         configMap[eventKey] = eConfig[eventKey];
         return eConfig[eventKey];
@@ -78,524 +67,6 @@ const getTtl = async (eventKey) => {
 };
 var entityFactory;
 
-const create_UUID = () => {
-    var dt = new Date().getTime();
-    var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-        /[xy]/g,
-        function (c) {
-            var r = (dt + Math.random() * 16) % 16 | 0;
-            dt = Math.floor(dt / 16);
-            return (c == "x" ? r : (r & 0x3) | 0x8).toString(16);
-        }
-    );
-    return uuid;
-};
-const promoteToObject = (unmarshalled, factory) => {
-    if (factory) {
-        return factory.build(unmarshalled);
-    } else {
-        return unmarshalled;
-    }
-};
-const unmarshallResultsToArray = (data, factory) => {
-    const rc = [];
-    for (var i = 0; i < data.Items.length; i++) {
-        var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
-        unmarshalled = promoteToObject(unmarshalled, factory);
-        if (unmarshalled) {
-            rc.push(unmarshalled);
-        }
-    }
-    return rc;
-};
-const unmarshallResultsToObject = (data, key, factory) => {
-    const rc = {};
-
-    for (var i = 0; i < data.Items.length; i++) {
-        var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
-        unmarshalled = promoteToObject(unmarshalled, factory);
-        if (unmarshalled) {
-            rc[unmarshalled[key]] = unmarshalled;
-        }
-    }
-    return rc;
-};
-
-const ddbQueryRaceHistory = async (qsp) => {
-    if (!qsp) {
-        qsp = {};
-    }
-    var limit = parseInt(qsp.limit);
-
-    var cacheMaxSeconds = 7277;
-    if (!qsp.loMicros) {
-        qsp.loMicros = "1";
-    }
-    if (!qsp.hiMicros) {
-        qsp.hiMicros = new Date().getTime() * 1000 + "";
-        cacheMaxSeconds = 30;
-    }
-    if (isNaN(limit) || limit > 25) {
-        limit = 25;
-    }
-
-    var containsValues = {};
-    containsValues[":dp"] = { S: qsp.orgId };
-    containsValues[":loMicros"] = { N: qsp.loMicros };
-    containsValues[":hiMicros"] = { N: qsp.hiMicros };
-    var params = {
-        TableName: process.env.DistDbTable,
-        KeyConditionExpression:
-            "DP = :dp and DS BETWEEN :loMicros  and :hiMicros",
-        ReturnConsumedCapacity: "TOTAL",
-        Limit: limit,
-        ScanIndexForward: false, // sort descending
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("history query: " + JSON.stringify(params));
-    try {
-        var data = await ddbClient.query(params);
-        const cc = data.ConsumedCapacity.CapacityUnits;
-        console.log("queryRaceHistory cc: ", cc); // successful response
-        console.log("queryRaceHistory: ", data); // successful response
-        console.log("queryRaceHistory: " + JSON.stringify(data)); // successful response
-        const rc = unmarshallResultsToArray(data);
-
-        if (cc > 0.5 || data.Count >= limit) {
-            console.log("queryRaceHistory: requesting CCA: ", cc);
-            await requestCCA(qsp, data);
-        } else {
-            console.log("queryRaceHistory: skipping CCA: ", cc);
-        }
-
-        return [rc, cacheMaxSeconds];
-    } catch (err) {
-        console.log("queryRaceHistory failed: ", err, err.stack); // an error occurred
-    }
-    return [{ error: "Query History Failed" }, cacheMaxSeconds];
-};
-const ddbQueryEventConfig = async (eventKey) => {
-    var containsValues = {};
-    containsValues[":pk"] = { S: "EventConfig" };
-    containsValues[":sk"] = { S: eventKey };
-    var params = {
-        TableName: process.env.DynamoDbTable,
-        KeyConditionExpression: "PK = :pk" + " and  SK = :sk",
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddb query: " + JSON.stringify(params));
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryEventConfig: ", data); // successful response
-        return unmarshallResultsToObject(data, "SK");
-    } catch (err) {
-        console.log("ddbQueryEventConfig failed: ", err, err.stack); // an error occurred
-    }
-    return { error: "Query Failed" };
-};
-const ddbListEventConfigByOrg = async (orgIz) => {
-    var containsValues = {};
-    containsValues[":pk"] = { S: "EventConfig" };
-    containsValues[":sk"] = { S: orgIz + ":" };
-    var params = {
-        TableName: process.env.DynamoDbTable,
-        KeyConditionExpression: "PK = :pk" + " and  begins_with (SK, :sk)",
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddb query: " + JSON.stringify(params));
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryEventConfig: ", data); // successful response
-        return unmarshallResultsToObject(data, "SK");
-    } catch (err) {
-        console.log("ddbQueryEventConfig failed: ", err, err.stack); // an error occurred
-    }
-    return { error: "Query Failed" };
-};
-const ddbQueryOrgConfig = async () => {
-    var containsValues = {};
-    containsValues[":pk"] = { S: "OrgConfig" };
-    var params = {
-        TableName: process.env.DynamoDbTable,
-        KeyConditionExpression: "PK = :pk",
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddbQueryOrgConfig query : " + JSON.stringify(params));
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryOrgConfig: ", data); // successful response
-        return unmarshallResultsToObject(data, "SK");
-    } catch (err) {
-        console.log("ddbQueryOrgConfig failed: ", err, err.stack); // an error occurred
-    }
-    return { error: "Query OrgFailed" };
-};
-/*
- ** Lookup RP by exact PK/SK
- */
-const ddbQueryRsByKey = async (json) => {
-    const containsValues = {};
-    const keyCondition = buildKeyCondition(json.orgId + ":RS", containsValues);
-    containsValues[":sk"] = { S: json.SK };
-
-    var params = {
-        TableName: process.env.DynamoDbTable,
-        Limit: 20,
-        ScanIndexForward: false, // sort descending
-        KeyConditionExpression: keyCondition + " and  SK = :sk",
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddbQueryRsByKey query: " + JSON.stringify(params));
-
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryRsByKey: ", data); // successful response
-
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
-
-        return udata;
-    } catch (err) {
-        console.log("ddbQueryRsByKey failed: ", err, err.stack); // an error occurred
-        throw err;
-    }
-};
-/*
- ** Lookup RP by exact PK/SK
- */
-const ddbQueryRpByKey = async (json) => {
-    const containsValues = {};
-    const keyCondition = buildKeyCondition(json.orgId + ":RP", containsValues);
-    containsValues[":sk"] = { S: json.SK };
-
-    var params = {
-        TableName: process.env.DynamoDbTable,
-        Limit: 20,
-        ScanIndexForward: false, // sort descending
-        KeyConditionExpression: keyCondition + " and  SK = :sk",
-        FilterExpression: " attribute_not_exists (phr) ",
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddbQueryRpByKey query: " + JSON.stringify(params));
-
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryRpByKey: ", data); // successful response
-
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
-
-        return udata.filter((rp) => !rp.phaseResults); // only return entries w/o results
-    } catch (err) {
-        console.log("ddbQueryRpByKey failed: ", err, err.stack); // an error occurred
-        throw err;
-    }
-};
-/*
- **
- */
-const ddbQueryRpNextOnBlocks = async (json) => {
-    const containsValues = {};
-    const keyCondition = buildKeyCondition(json.orgId + ":RP", containsValues);
-
-    var params = {
-        TableName: process.env.DynamoDbTable,
-        Limit: 20,
-        ScanIndexForward: false, // sort descending
-        KeyConditionExpression: keyCondition,
-        FilterExpression: " attribute_not_exists (phr) ",
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddbQueryRpNextOnBlocks query: " + JSON.stringify(params));
-
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryRpNextOnBlocks: ", data); // successful response
-
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
-
-        return udata.filter((rp) => !rp.phaseResults).reverse(); // only return entries w/o results
-    } catch (err) {
-        console.log("ddbQueryRpNextOnBlocks failed: ", err, err.stack); // an error occurred
-        throw err;
-    }
-};
-/*
- ** Any given car should have at most one entry "on the blocks"
- */
-const ddbQueryRpDuplicateCheck = async (json) => {
-    const containsValues = {};
-    const carFIlterString = buildDdbCarFilter(json.cn, containsValues, " OR ");
-    const keyCondition = buildKeyCondition(json.orgId + ":RP", containsValues);
-
-    //TODO: verify interaction of limit and filter. is it desirable?  tolerable?
-    var params = {
-        TableName: process.env.DynamoDbTable,
-        Limit: 20,
-        ScanIndexForward: false, // sort descending
-        KeyConditionExpression: keyCondition,
-        FilterExpression: carFIlterString + " AND attribute_not_exists (phr) ",
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddbQueryRpDuplicateCheck query: " + JSON.stringify(params));
-
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryRpDuplicateCheck: ", data); // successful response
-
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
-
-        return udata.filter((rp) => !rp.phaseResults); // only return entries w/o results
-    } catch (err) {
-        console.log("ddbQueryRpDuplicateCheck failed: ", err, err.stack); // an error occurred
-        throw err;
-    }
-};
-const ddbQueryPkSk = async (pk, sk) => {
-    const containsValues = {};
-    containsValues[":pk"] = { S: pk };
-    containsValues[":sk"] = { S: sk };
-    const keyCondition = "PK = :pk and SK = :sk";
-
-    var params = {
-        TableName: process.env.DynamoDbTable,
-        KeyConditionExpression: keyCondition,
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddbQueryPkSk query: " + JSON.stringify(params));
-
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryPkSk: ", data); // successful response
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
-
-        if (udata && udata[0]) {
-            return udata[0]; // exact key lookup should not get multipe entries
-        } else {
-            return null;
-        }
-    } catch (err) {
-        console.log("ddbQueryPkSk failed: ", err, err.stack); // an error occurred
-        throw err;
-    }
-};
-
-//TODO: use ddbQueryPkSk
-const ddbQueryBracketMdExistsCheck = async (json) => {
-    const containsValues = {};
-    containsValues[":pk"] = { S: json.orgId + ":Bmd" };
-    containsValues[":sk"] = { S: json.SK };
-    const keyCondition = "PK = :pk and SK = :sk";
-    //const filterString = buildDdbCarFilter(json.cn, containsValues, " AND ");
-    //const keyCondition = buildKeyCondition(json.orgId + ":Bmd", containsValues);
-
-    var params = {
-        TableName: process.env.DynamoDbTable,
-        KeyConditionExpression: keyCondition,
-        //FilterExpression: filterString,
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log(
-        "ddbQueryBracketMdExistsCheck query: " + JSON.stringify(params)
-    );
-
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryBracketMdExistsCheck: ", data); // successful response
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
-
-        return udata;
-    } catch (err) {
-        console.log("ddbQueryBracketMdExistsCheck failed: ", err, err.stack); // an error occurred
-        throw err;
-    }
-};
-const ddbQueryRsExistsAndPendingCheck = async (json) => {
-    const containsValues = {};
-    const filterString = buildDdbCarFilter(json.cn, containsValues, " AND ");
-    const keyCondition = buildKeyCondition(json.orgId + ":RS", containsValues);
-
-    var params = {
-        TableName: process.env.DynamoDbTable,
-
-        KeyConditionExpression: keyCondition,
-        FilterExpression: filterString,
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log(
-        "ddbQueryRsExistsAndPendingCheck query: " + JSON.stringify(params)
-    );
-
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryRsExistsAndPendingCheck: ", data); // successful response
-        const udata = unmarshallResultsToArray(data, new EntityFactory({}));
-
-        return udata.filter((rs) => rs.nextRace()); // only return entries that need to race
-    } catch (err) {
-        console.log("ddbQueryRsExistsAndPendingCheck failed: ", err, err.stack); // an error occurred
-        throw err;
-    }
-};
-/*
- cnList: input carNumber list
- containsValues: object that will have car number values added to 
- qualifier: s/b " AND " or " OR "
- */
-const buildDdbCarFilter = (cnList, containsValues, qualifier = " OR ") => {
-    var containsFilters = [];
-    var skipDeleteFilter = "attribute_not_exists(del) ";
-    if (!cnList || cnList.length == 0) {
-        return skipDeleteFilter;
-    }
-    var i;
-    for (i = 0; i < cnList.length; i++) {
-        containsFilters[i] = "contains (cn, :cn" + i + ")";
-        containsValues[":cn" + i] = { S: cnList[i] };
-    }
-
-    return skipDeleteFilter + " AND (" + containsFilters.join(qualifier) + ")";
-};
-const buildKeyCondition = (pk, containsValues) => {
-    containsValues[":pk"] = { S: pk };
-    return "PK = :pk";
-};
-/*
- **
- */
-const ddbQueryRsAlreadyPending = async (json) => {
-    const containsValues = {};
-    const filterString = buildDdbCarFilter(json.cn, containsValues, " OR ");
-    const filterPendingString =
-        filterString + " AND attribute_not_exists(ph2) ";
-    const keyCondition = buildKeyCondition(json.orgId + ":RS", containsValues);
-
-    console.log("containsValues:", containsValues);
-    var params = {
-        TableName: process.env.DynamoDbTable,
-
-        KeyConditionExpression: keyCondition,
-        FilterExpression: filterPendingString,
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddb ddbQueryRsAlreadyPending: " + JSON.stringify(params));
-
-    try {
-        var data = await ddbClient.query(params);
-        console.log("ddbQueryRsAlreadyPending: " + data); // successful response
-        console.log("ddbQueryRsAlreadyPending: " + JSON.stringify(data)); // successful response
-        return data.Count;
-    } catch (err) {
-        console.log("queryRsAlreadyPending failed: ", err, err.stack); // an error occurred
-    }
-    return 99;
-};
-/*
- **
- */
-const ddbQueryRsContains = async (json) => {
-    const containsValues = {};
-    const filterString = buildDdbCarFilter(json.cn, containsValues, " OR ");
-    const keyCondition = buildKeyCondition(json.orgId + ":RS", containsValues);
-
-    console.log("containsValues:", containsValues);
-    var params = {
-        TableName: process.env.DynamoDbTable,
-
-        KeyConditionExpression: keyCondition,
-        FilterExpression: filterString,
-        ReturnConsumedCapacity: "TOTAL",
-        ExpressionAttributeValues: containsValues,
-    };
-    console.log("ddb query: " + JSON.stringify(params));
-
-    try {
-        var data = await ddbClient.query(params);
-        console.log("queryRsContains: " + data); // successful response
-        console.log("queryRsContains: " + JSON.stringify(data)); // successful response
-        return data.Count;
-    } catch (err) {
-        console.log("queryRsContains failed: ", err, err.stack); // an error occurred
-    }
-    return 99;
-};
-
-const fmtBulkPut = (json1) => {
-    const myP = entityFactory.build(json1);
-
-    if (myP) {
-        myP.preWrite();
-        console.log("addBulk pw:", myP);
-        var marshalled = AWS.DynamoDB.Converter.marshall(myP);
-        console.log("addBulk mar:", marshalled);
-        const putRequest = {
-            PutRequest: {
-                Item: marshalled,
-            },
-        };
-        const uk = myP.partitionKey + ":" + myP.sortKey;
-        return [uk, putRequest, myP];
-    } else {
-        console.log("addBulk ignored invalid:" + JSON.stringify(json1));
-        return [null, null];
-    }
-};
-
-const flushBulkRequests = async (requests) => {
-    if (requests.length > 0) {
-        var params = {
-            RequestItems: {
-                [process.env.DynamoDbTable]: requests,
-            },
-            ReturnConsumedCapacity: "TOTAL",
-        };
-        try {
-            var data = await ddbClient.batchWriteItem(params);
-
-            console.log("Added Bulk: " + JSON.stringify(data)); // successful response
-            return requests.length; // TODO get from TotalProcessed;
-        } catch (err) {
-            console.log(err, err.stack); // an error occurred
-            return 0;
-        }
-    }
-};
-const addBulk = async (json) => {
-    var requests = {}; // keyed by unique pk/sk to elimate duplicates.
-    var totalProcessed = 0;
-    for (var i = 0; i < json.length; i++) {
-        console.log("addBulk: " + i);
-        const [uk, putRequest] = fmtBulkPut(json[i]);
-        if (putRequest && uk) {
-            requests[uk] = putRequest;
-        }
-        if (Object.keys(requests).length > 20) {
-            totalProcessed += await flushBulkRequests(Object.values(requests));
-            requests = {};
-        }
-    }
-    totalProcessed += await flushBulkRequests(Object.values(requests));
-    return { status: "ok", detail: "BulkProcessed", count: totalProcessed };
-};
-
-const addSingle = async (json) => {
-    const [uk, putRequest, entity] = fmtBulkPut(json);
-    if (putRequest && uk) {
-        await flushBulkRequests([putRequest]);
-        return { status: "ok", entity: entity };
-    }
-    return { error: "Invalid Request" };
-};
-
 const addPending2 = async (event) => {
     const eventKey = getEventKey(event);
     const cfg = await getConfig(eventKey);
@@ -610,7 +81,7 @@ const addPending2 = async (event) => {
     console.log("BEGIN: addPending2: " + JSON.stringify(json));
     json.PK = ":RS"; // force RaceStanding
 
-    const alreadyExists = await ddbQueryRsAlreadyPending(json);
+    const alreadyExists = await ddbUtils.ddbQueryRsAlreadyPending(json);
     if (alreadyExists > 0) {
         return { error: "Pending2 already exists", status: "error" };
     }
@@ -622,7 +93,7 @@ const addPending2 = async (event) => {
     } else {
         console.log("addPending2: unsorted: ", json.cn);
     }
-    return await addSingle(json);
+    return await ddbUtils.addSingle(json);
 };
 const stringIsTrue = (stringValue) => {
     return stringValue.toLowerCase() == "true" ? true : false;
@@ -630,7 +101,7 @@ const stringIsTrue = (stringValue) => {
 
 const applyFinishTime = async (json) => {
     console.log("applyFinishTime 413: " + JSON.stringify(json));
-    const tgtRpList = await ddbQueryRpByKey(json);
+    const tgtRpList = await ddbUtils.ddbQueryRpByKey(json);
     if (tgtRpList.length == 0) {
         return {
             status: "error",
@@ -639,8 +110,11 @@ const applyFinishTime = async (json) => {
     }
     const tgtRp = tgtRpList[0];
     tgtRp.phr = json.phr; //TODO: verify client sent array of ints in "phr"
-    const rsPromise = ddbQueryRsByKey({ orgId: tgtRp.orgId, SK: tgtRp.rs });
-    const rpUpdatePromise = addSingle(tgtRp);
+    const rsPromise = ddbUtils.ddbQueryRsByKey({
+        orgId: tgtRp.orgId,
+        SK: tgtRp.rs,
+    });
+    const rpUpdatePromise = ddbUtils.addSingle(tgtRp);
     const [rsFoundList, rpUpdate] = await Promise.all([
         rsPromise,
         rpUpdatePromise,
@@ -659,7 +133,7 @@ const applyFinishTime = async (json) => {
         } else {
             tgtRs.phase2Results = json.phr.reverse();
         }
-        await addSingle(tgtRs);
+        await ddbUtils.addSingle(tgtRs);
 
         if (tgtRs.isComplete()) {
             if (tgtRs.isOverallTie()) {
@@ -773,10 +247,10 @@ const advanceChartPos = async (srcRs, bracketPos) => {
 
 const loadRaceStandingFromBracketPos = async (bracketPos) => {
     //TODO: override RS add to use bracketPos SK for RS SK
-    return await ddbQueryPkSk(`${bracketPos.orgId}:RS`, bracketPos.SK);
+    return await ddbUtils.ddbQueryPkSk(`${bracketPos.orgId}:RS`, bracketPos.SK);
 };
 const loadBracketPosFromRaceStanding = async (rs) => {
-    return await ddbQueryPkSk(`${rs.orgId}:Bp`, rs.Bp);
+    return await ddbUtils.ddbQueryPkSk(`${rs.orgId}:Bp`, rs.Bp);
 };
 
 const addPendingFromChartPos = async (rs, bracketPos) => {
@@ -887,12 +361,12 @@ const cloneRs = async (srcRs) => {
         by: srcRs.by,
     };
     console.log("cloneRs: ", JSON.stringify(clone));
-    return await addSingle(clone);
+    return await ddbUtils.addSingle(clone);
 };
 
 const deleteRacePhase = async (json) => {
     console.log("deleteRacePhase: " + JSON.stringify(json));
-    const rpFound = await ddbQueryPkSk(`${json.orgId}:RP`, json.SK);
+    const rpFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:RP`, json.SK);
     console.log("rpFound", rpFound);
 
     //only allow delete on blocks.  no deleting historical data
@@ -909,11 +383,11 @@ const deleteRacePhase = async (json) => {
         };
     }
     rpFound.del = true;
-    return await addSingle(rpFound);
+    return await ddbUtils.addSingle(rpFound);
 };
 const deleteRaceStanding = async (json) => {
     console.log("deleteRaceStanding: " + JSON.stringify(json));
-    const rsFound = await ddbQueryPkSk(`${json.orgId}:RS`, json.SK);
+    const rsFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:RS`, json.SK);
     console.log("rsFound", rsFound);
     var msg = "";
 
@@ -934,7 +408,7 @@ const deleteRaceStanding = async (json) => {
         msg = "Deleted pending race.";
     }
 
-    const rc = await addSingle(rsFound);
+    const rc = await ddbUtils.addSingle(rsFound);
     if (rc.status === "ok") {
         rc.text = msg;
     }
@@ -944,8 +418,8 @@ const addBlocks = async (json) => {
     console.log("addBlocks: " + JSON.stringify(json));
     json.PK = ":RP"; // force RacePhase
 
-    const waitRp = ddbQueryRpDuplicateCheck(json);
-    const waitRs = ddbQueryRsExistsAndPendingCheck(json);
+    const waitRp = ddbUtils.ddbQueryRpDuplicateCheck(json);
+    const waitRs = ddbUtils.ddbQueryRsExistsAndPendingCheck(json);
     const [rpFound, rsFound] = await Promise.all([waitRp, waitRs]);
     console.log("rpFound", rpFound);
     console.log("rsFound", rsFound);
@@ -980,18 +454,18 @@ const addBlocks = async (json) => {
     json["pl"] = rsFound[0].getPhaseLiteral(json.cn);
     if (rsFound[0].Bp) json["Bp"] = rsFound[0].Bp;
 
-    return await addSingle(json);
+    return await ddbUtils.addSingle(json);
 };
 
 const addChartMetaData = async (json) => {
     console.log("addChartMetaData: " + JSON.stringify(json));
     json.PK = ":Bmd"; // force BracketMetaData
     if (!json.SK) {
-        const uu6 = create_UUID().substring(0, 6);
+        const uu6 = ddbUtils.create_UUID().substring(0, 6);
         json.SK = uu6;
     }
 
-    const bmdFound = await ddbQueryBracketMdExistsCheck(json);
+    const bmdFound = await ddbUtils.ddbQueryBracketMdExistsCheck(json);
     console.log("bmdFound", bmdFound);
     if (bmdFound.length == 0) {
         console.log("addChartMetaData add needed:", bmdFound);
@@ -1001,7 +475,7 @@ const addChartMetaData = async (json) => {
         // update name.  TODO:  actual db update needed?
     }
 
-    const rc = await addSingle(json);
+    const rc = await ddbUtils.addSingle(json);
 
     rc.chartId = json.SK.replace(/:.*/, "");
     console.log("addChartMetaData returning: ", rc);
@@ -1035,12 +509,12 @@ const addOrUpdateChartPosition = async (json) => {
         json.SK = `${json.chartId}:${json.heatNumber}`;
     }
 
-    const posFound = await ddbQueryPkSk(`${json.orgId}:Bp`, json.SK);
+    const posFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:Bp`, json.SK);
     console.log("posFound", posFound);
     if (!posFound) {
         console.log("addOrUpdateChartPosition add needed:", posFound);
         // Add
-        //return await addSingle(json);
+        //return await ddbUtils.addSingle(json);
     } else {
         console.log("addOrUpdateChartPosition update needed:", posFound);
         const mergedPos = Object.assign(posFound.pos, json.pos);
@@ -1049,7 +523,7 @@ const addOrUpdateChartPosition = async (json) => {
         json.pos = mergedPos;
     }
 
-    const posRC = await addSingle(json);
+    const posRC = await ddbUtils.addSingle(json);
 
     if (posRC.status == "ok" && posRC.entity) {
         const posE = posRC.entity;
@@ -1065,7 +539,102 @@ const addOrgConfig = async (json) => {
     const by = entityFactory.propOverrides.by;
     entityFactory = new EntityFactory({ orgIz: json.orgIz, by: by });
 
-    return await addSingle(json);
+    return await ddbUtils.addSingle(json);
+};
+const getSanitizedTimers = async () => {
+    const timers = await getActiveTimers();
+    timers.forEach(doNotPublishUuid);
+    return timers;
+};
+const getActiveTimers = async () => {
+    const timers = await ddbUtils.ddbQueryPkAll(
+        "registered",
+        process.env.TimerDbTable
+    );
+    timers.forEach(registeredTimerSha);
+
+    return timers;
+};
+const registeredTimerSha = (timer) => {
+    const sha = crypto.createHash("sha256").update(timer.uuid).digest("hex");
+    //timer.sha = sha.substring(0, 6);
+    timer.sha = sha;
+};
+const doNotPublishUuid = (timer) => {
+    delete timer.uuid;
+};
+const addTimerConfig = async (json, initialLoad) => {
+    if (!json.orgIz) {
+        return { error: "Missing orgIz" };
+    }
+    if (!json.orgId) {
+        return { error: "Missing orgId" };
+    }
+    var prevTC = {};
+    var prevSha = "";
+    if (!initialLoad) {
+        const prevTC = await ddbUtils.ddbQueryPkSk(
+            `${json.orgId}:TimerConfig`,
+            "TimerConfig"
+        );
+        if (!prevTC) {
+            return { error: "Missing Prev TimerConfig" };
+        }
+
+        prevSha = prevTC.sha;
+        // merge prior config to allow partial update.
+        json = Object.assign(prevTC, json);
+    }
+
+    json.PK = ":TimerConfig"; // force
+    if (!json.clearMS) {
+        json.clearMS = 3001;
+    }
+    if (!json.maxCarLenMS) {
+        json.maxCarLenMS = 601;
+    }
+    if (!json.minCarLenMS) {
+        json.minCarLenMS = 301;
+    }
+    if (!json.maxPerfCount) {
+        json.maxPerfCount = 1;
+    }
+    if (!json.lanes) {
+        json.lanes = ["lane1", "lane2"];
+    }
+    if (json.sha) {
+        if (json.sha === prevSha) {
+            console.log("registerEvent: no sha change:", json.sha);
+        } else {
+            await registerEventWithTimer(json);
+        }
+    } else {
+        console.log("registerEvent: no sha found.");
+    }
+    return await ddbUtils.addSingle(json);
+};
+const registerEventWithTimer = async (timerConfigJson) => {
+    //
+    const selectedSha = timerConfigJson.sha;
+    console.log("registerEventWithTimer: ", timerConfigJson);
+    const timers = await getActiveTimers();
+    const selectedTimers = timers.filter((timer) => timer.sha === selectedSha);
+    if (selectedTimers.length == 0) {
+        console.log("registerEventWithTimer: sha not found: ", selectedSha);
+        return;
+    }
+    const selectedTimer = selectedTimers[0];
+
+    console.log("registerEventWithTimer: selectedTimer: ", selectedTimer);
+    const timerTableTc = Object.assign({}, timerConfigJson);
+    timerTableTc.PK = selectedTimer.uuid;
+    timerTableTc.SK = `^${timerConfigJson.orgId}`;
+    timerConfigJson.sha = timerTableTc.sha; // save on original --flows back to derbyMain Ddb
+
+    delete timerTableTc.sha;
+    console.log("registerEventWithTimer: registration: ", timerTableTc);
+
+    await ddbUtils.ddbPut(timerTableTc, process.env.TimerDbTable);
 };
 const addEventConfig = async (json, priorTtl) => {
     console.log("addEventConfig: " + JSON.stringify(json));
@@ -1076,7 +645,7 @@ const addEventConfig = async (json, priorTtl) => {
         return { error: "Missing orgId" };
     }
 
-    const orgConfig = await ddbQueryPkSk(`OrgConfig`, json.orgIz);
+    const orgConfig = await ddbUtils.ddbQueryPkSk(`OrgConfig`, json.orgIz);
 
     json.PK = "EventConfig"; // force
     json.SK = json.orgIz + ":" + json.orgId; // force
@@ -1099,12 +668,17 @@ const addEventConfig = async (json, priorTtl) => {
         TTL: json.TTL,
     });
 
-    return await addSingle(json);
+    ddbUtils.setEntityFactory(entityFactory);
+    const eventRC = await ddbUtils.addSingle(json);
+
+    await addTimerConfig(json, true); // TODO: revisit default TimerConfig?
+    return eventRC;
 };
+
 const addParticipant2 = async (json) => {
     console.log("addParticipant2: " + JSON.stringify(json));
     json.PK = ":PTCP"; // force Participant
-    return await addSingle(json);
+    return await ddbUtils.addSingle(json);
 };
 const getOrgId = (event) => {
     if (event.body) {
@@ -1128,6 +702,18 @@ const getEventKey = (event) => {
     return getOrgIz(event) + ":" + getOrgId(event);
 };
 const routeMap = {
+    "/getActiveTimers": {
+        h: async (event) => {
+            return buildResponse(await getSanitizedTimers());
+        },
+    },
+    "/timerConfig": {
+        h: async (event) => {
+            return buildResponse(
+                await addTimerConfig(JSON.parse(event.body), false)
+            );
+        },
+    },
     "/addParticipant": {
         h: async (event) => {
             return buildResponse(await addParticipant2(JSON.parse(event.body)));
@@ -1176,19 +762,21 @@ const routeMap = {
     },
     "/addBulk": {
         h: async (event) => {
-            return buildResponse(await addBulk(JSON.parse(event.body)));
+            return buildResponse(
+                await ddbUtils.addBulk(JSON.parse(event.body))
+            );
         },
     },
     "/ddbQuery": {
         h: async (event) => {
-            var qr = await ddbQueryRsContains(JSON.parse(event.body));
+            var qr = await ddbUtils.ddbQueryRsContains(JSON.parse(event.body));
             console.log("ddbQuery: " + qr);
             return buildResponse({ Count: qr });
         },
     },
     "/getNextOnBlocks": {
         h: async (event) => {
-            const nob = await ddbQueryRpNextOnBlocks(
+            const nob = await ddbUtils.ddbQueryRpNextOnBlocks(
                 event.queryStringParameters
             );
             return buildResponse(nob);
@@ -1196,7 +784,7 @@ const routeMap = {
     },
     "/getRaceHistory": {
         h: async (event) => {
-            var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(
+            var [qr, cacheMaxSeconds] = await ddbUtils.ddbQueryRaceHistory(
                 event.queryStringParameters
             );
             const cacheControl = "max-age=" + cacheMaxSeconds;
@@ -1248,33 +836,16 @@ const buildResponse = (jsonObj, cacheControl = "no-cache") => {
 exports.handler = async (event) => {
     const dbArn = process.env.DynamoDbArn;
 
-    // Allow Cors
-    /*
-	if (event.httpMethod === "OPTIONS") {
-		var response = {
-			statusCode: 200,
-			headers: {
-				'Content-Type': 'text/html; charset=utf-8',
-				"Access-Control-Allow-Origin": "*",
-				"Access-Control-Allow-Headers": "*",
-				"Access-Control-Allow-Methods": "POST, GET, OPTIONS"
-			}
-		}
-		callback(null, response)
-		return;
-	}
-	*/
-
     console.log("event.path: ", event.path);
 
     const routePath = event.path.replace(/^\/app/, "");
     if (routePath === "/listOrgEvents") {
-        const qr = await ddbListEventConfigByOrg(getOrgIz(event));
+        const qr = await ddbUtils.ddbListEventConfigByOrg(getOrgIz(event));
         console.log("getEventConfig 23232:", qr);
         return buildResponse(qr, "max-age=307");
     }
     if (routePath === "/listOrgConfig") {
-        const qr = await ddbQueryOrgConfig();
+        const qr = await ddbUtils.ddbQueryOrgConfig();
         console.log("listOrgConfig :", qr);
         return buildResponse(qr, "max-age=1807");
     }
@@ -1290,6 +861,7 @@ exports.handler = async (event) => {
         by: decodedJwt.email,
         TTL: defaultTTL,
     });
+    ddbUtils.setEntityFactory(entityFactory);
     console.log("Begin event", event);
 
     const email = decodedJwt.email;

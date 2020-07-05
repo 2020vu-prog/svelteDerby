@@ -1,5 +1,10 @@
 <script>
-    import { doRefreshBlocks, theme, showBottomNav } from "./stores.js";
+    import {
+        doRefreshBlocks,
+        theme,
+        showBottomNav,
+        autoAnnounceResults,
+    } from "./stores.js";
 
     import { buildVersion, buildDate } from "./utils.js";
     import { onMount } from "svelte";
@@ -127,6 +132,8 @@
         on:click={() => clickDisableCache()} />
     <label>Bottom NavBar</label>
     <input type="checkbox" bind:checked={$showBottomNav} />
+    <label>Auto Announce</label>
+    <input type="checkbox" bind:checked={$autoAnnounceResults} />
 
     <label>Theme Color</label>
     <select

@@ -79,15 +79,15 @@ module.exports = {
         proxy: {
             "/app": {
                 target:
-                    "https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test",
+                    "https://z24xykma0c.execute-api.us-east-2.amazonaws.com/test/",
                 changeOrigin: true,
             },
             "/archive": {
-                target: "https://d15zun4udup4ky.cloudfront.net",
+                target: "https://d27962ihtc8hvf.cloudfront.net",
                 changeOrigin: true,
             },
             "/data": {
-                target: "https://d15zun4udup4ky.cloudfront.net",
+                target: "https://d27962ihtc8hvf.cloudfront.net",
                 changeOrigin: true,
             },
         },

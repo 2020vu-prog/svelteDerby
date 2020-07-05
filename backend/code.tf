@@ -18,6 +18,7 @@ module "derbyMainLambda" {
     CcaQueueArn  = aws_sqs_queue.cacheAlignmentQueue.arn
   DynamoDbArn=aws_dynamodb_table.derby-dynamodb-table.arn
   DistDbArn=aws_dynamodb_table.derby-distribution.arn
+  TimerDbArn=aws_dynamodb_table.timer-dynamodb-table.arn
   DeployEnvironment=var.DeployEnvironment
   AwsRegion=var.AwsRegion
   

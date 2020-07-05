@@ -3,6 +3,7 @@ provider "archive" {}
 variable DeployEnvironment {}
 variable DynamoDbArn {}
 variable DistDbArn {}
+variable TimerDbArn {}
 variable AwsRegion {}
 variable   CcaQueueId  {}
 variable   CcaQueueArn  {}
@@ -16,8 +17,12 @@ locals{
       DynamoDbTable= element(local.ddbList,length(local.ddbList)-1)
 
       mainLambdaName="derbyMain"
+
       distDbList= split("/",var.DistDbArn)
       DistDbTable= element(local.distDbList,length(local.distDbList)-1)
+      
+      timerDbList= split("/",var.TimerDbArn)
+      TimerDbTable= element(local.timerDbList,length(local.timerDbList)-1)
       
 }
 
@@ -84,6 +89,10 @@ resource "aws_lambda_function" "lambda" {
 
       DistDbTable= local.DistDbTable
       DistDbArn= var.DistDbArn
+
+      TimerDbTable= local.TimerDbTable
+      TimerDbArn= var.TimerDbArn
+
       CcaQueueId =var.CcaQueueId 
       ChartS3BucketName  =  var.ChartS3BucketName  
       AwsRegion = var.AwsRegion
@@ -122,7 +131,8 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 "arn:aws:logs:*:*:*",
                 var.CcaQueueArn,
                 var.DynamoDbArn,
-                var.DistDbArn
+                var.DistDbArn,
+                var.TimerDbArn
         ]   
     }   
     statement {
