@@ -12,9 +12,11 @@ const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
 var jwt = require("jsonwebtoken");
 const TmpCache = require("./tmpCache.js");
 const DdbUtils = require("./DdbUtils");
+const AnnounceResults = require("./AnnounceResults");
 const configMap = {};
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
+const announceResults = new AnnounceResults();
 
 const s3QueryChartTypes = async () => {
     var params = {
@@ -134,6 +136,7 @@ const applyFinishTime = async (json) => {
             tgtRs.phase2Results = json.phr.reverse();
         }
         await ddbUtils.addSingle(tgtRs);
+        announceResults.announceResults(tgtRs);
 
         if (tgtRs.isComplete()) {
             if (tgtRs.isOverallTie()) {

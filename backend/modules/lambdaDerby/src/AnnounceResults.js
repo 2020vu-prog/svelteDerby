@@ -45,6 +45,7 @@ class AnnounceResults {
             }
             rc += overallMsg;
         }
+        console.log("ANNOUNCEMENT RESULT: ", rc);
         return rc;
     }
     expandDigitsForSpeech(cn) {
