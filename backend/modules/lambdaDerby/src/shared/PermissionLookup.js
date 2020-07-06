@@ -1,7 +1,11 @@
 "use strict";
 
 const { permissionMap, permissionMap2 } = require("./permissionLits.js");
-const powerUsers = ["REDACTED_PERMISSION_EMAIL", "REDACTED_PERMISSION_EMAIL"];
+const powerUsers = [
+    "REDACTED_PERMISSION_EMAIL",
+    "REDACTED_PERMISSION_EMAIL",
+    "REDACTED_PERMISSION_EMAIL",
+];
 const hasRoutePath = (routeType, userMail, serverRoutePath) => {
     const permKeys = module.exports.lookupUserPermissions(userMail);
     console.log("permKeys:", permKeys);
