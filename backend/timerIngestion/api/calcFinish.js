@@ -98,12 +98,12 @@ class CalcFinish {
 
         rlf.carLenMS = rlf.carLenMicros / 1000;
         if (rlf.carLenMS > this.timerConfig.maxCarLenMS) {
-            rlf.error = `CarLen [${rlf.clearMS}] greater than [${this.timerConfig.maxCarLenMS}]`;
+            rlf.error = `CarLen [${rlf.carLenMS}] greater than [${this.timerConfig.maxCarLenMS}]`;
             return rlf;
         }
 
         if (rlf.carLenMS < this.timerConfig.minCarLenMS) {
-            rlf.error = `CarLen [${rlf.clearMS}] less than [${this.timerConfig.minCarLenMS}]`;
+            rlf.error = `CarLen [${rlf.carLenMS}] less than [${this.timerConfig.minCarLenMS}]`;
             return rlf;
         }
 

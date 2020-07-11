@@ -571,7 +571,6 @@ const addTimerConfig = async (json, initialLoad) => {
         return { error: "Missing orgId" };
     }
     var prevTC = {};
-    var prevSha = "";
     if (!initialLoad) {
         const prevTC = await ddbUtils.ddbQueryPkSk(
             `${json.orgId}:TimerConfig`,
@@ -581,7 +580,6 @@ const addTimerConfig = async (json, initialLoad) => {
             return { error: "Missing Prev TimerConfig" };
         }
 
-        prevSha = prevTC.sha;
         // merge prior config to allow partial update.
         json = Object.assign(prevTC, json);
     }
@@ -603,13 +601,10 @@ const addTimerConfig = async (json, initialLoad) => {
         json.lanes = ["lane1", "lane2"];
     }
     if (json.sha) {
-        if (json.sha === prevSha) {
-            console.log("registerEvent: no sha change:", json.sha);
-        } else {
-            await registerEventWithTimer(json);
-        }
+        console.log("addTimerConfig: applying selected timer sha:", json.sha);
+        await registerEventWithTimer(json);
     } else {
-        console.log("registerEvent: no sha found.");
+        console.log("addTimerConfig: no sha found.");
     }
     return await ddbUtils.addSingle(json);
 };
@@ -833,7 +828,43 @@ const buildResponse = (jsonObj, cacheControl = "no-cache") => {
     };
 };
 
-exports.handler = async (event) => {
+async function snsApplyTimerHandler(event) {
+    var message = event.Records[0].Sns.Message;
+    console.log("applyTimerHandler Message received from SNS2:", message);
+    const json = JSON.parse(message);
+    if (json && json.timerConfig && json.deltas && json.deltas.length > 0) {
+        const timerConfig = json.timerConfig;
+        entityFactory = new EntityFactory({
+            orgId: timerConfig.orgId,
+            by: "rpi.local",
+            TTL: timerConfig.TTL,
+        });
+        ddbUtils.setEntityFactory(entityFactory);
+
+        const deltaLanes = json.deltas[0].lanes;
+        const nextOnBlocks = await ddbUtils.ddbQueryRpNextOnBlocks(
+            json.timerConfig // need orgId, orgIz
+        );
+        console.log("applyTimerHandler nob:", nextOnBlocks);
+        if (nextOnBlocks.length > 0) {
+            const rp = nextOnBlocks[0]; // TODO: get oldest!
+            const l1Micros = deltaLanes.lane1.noseMicros;
+            const l2Micros = deltaLanes.lane2.noseMicros;
+            const req = {
+                orgId: json.timerConfig.orgId,
+                orgIz: json.timerConfig.orgIz,
+                SK: rp.SK,
+                phr: [l1Micros, l2Micros],
+            };
+            console.log("applyTimerHandler formatted:", req);
+            const applied = await applyFinishTime(req);
+            console.log("applyTimerHandler rc:", applied);
+        }
+    } else {
+        console.log("applyTimerHandler invalid msg:", json);
+    }
+}
+async function apiGatewayHandler(event) {
     const dbArn = process.env.DynamoDbArn;
 
     console.log("event.path: ", event.path);
@@ -910,6 +941,20 @@ exports.handler = async (event) => {
         status: "unhandled",
         error: "Unhandled",
     });
+}
+exports.handler = async function (event) {
+    // console.log('Received event:', JSON.stringify(event, null, 4));
+    if (event && event.path) {
+        const response = await apiGatewayHandler(event);
+        return response;
+    }
+    if (event.Records[0].Sns) {
+        await snsApplyTimerHandler(event);
+        return "Success";
+    }
+
+    console.log("unknown event: ", event);
+    return "Error";
 };
 
 // changed.

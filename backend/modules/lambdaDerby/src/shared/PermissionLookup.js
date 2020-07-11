@@ -22,8 +22,9 @@ const hasRoutePath = (routeType, userMail, serverRoutePath) => {
 module.exports.lookupUserPermissions = (userMail) => {
     console.log("pmap2:", Object.keys(permissionMap2));
     var rc = [];
+
     powerUsers.forEach((pue) => {
-        if (pue === userMail) {
+        if (userMail && pue.toLowerCase() === userMail.toLowerCase()) {
             rc = [...Object.keys(permissionMap2)];
         }
     });

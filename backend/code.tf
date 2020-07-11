@@ -21,6 +21,16 @@ module "derbyMainLambda" {
   TimerDbArn=aws_dynamodb_table.timer-dynamodb-table.arn
   DeployEnvironment=var.DeployEnvironment
   AwsRegion=var.AwsRegion
+  ApplyTimerSnsArn =aws_sns_topic.TimerWinDeltaSns.arn
+  
+}
+module "lambdaTimerApply" {
+  source = "./modules/lambdaTimerApply"
+
+  DynamoDbArn=aws_dynamodb_table.derby-dynamodb-table.arn
+  DeployEnvironment=var.DeployEnvironment
+  AwsRegion=var.AwsRegion
+  ApplyTimerSnsArn =aws_sns_topic.TimerWinDeltaSns.arn
   
 }
 
