@@ -43,10 +43,18 @@ test("test basement json with large MinCarLen", () => {
     expect(candidates.length).toStrictEqual(1);
     const candidate = candidates[0];
     console.log("l1:", candidate);
-    expect(candidate.lanes.lane1.valid).toStrictEqual(true);
-    expect(candidate.lanes.lane2.valid).toStrictEqual(true);
-    const w =
-        candidate.lanes.lane1.noseMicros - candidate.lanes.lane2.noseMicros;
-    expect(w).toStrictEqual(-23115);
-    //expect(candidates).toStrictEqual([]); // WIP, test is broken});
+    expect(candidate.lanes.lane1.valid).toStrictEqual(false);
+    expect(candidate.lanes.lane2.valid).toStrictEqual(false);
+});
+test("test basement json with small MaxCarLen", () => {
+    const tcMax = Object.assign({}, timerConfig);
+    tcMax.maxCarLenMS = 3;
+    const calcFinish = new CalcFinish(tcMax);
+
+    const candidates = calcFinish.calcFinishMain(basementJson);
+    expect(candidates.length).toStrictEqual(1);
+    const candidate = candidates[0];
+    console.log("l1:", candidate);
+    expect(candidate.lanes.lane1.valid).toStrictEqual(false);
+    expect(candidate.lanes.lane2.valid).toStrictEqual(false);
 });

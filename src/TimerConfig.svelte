@@ -1,5 +1,5 @@
 <script>
-    import { raceConfig, statusMessage } from "./stores.js";
+    import { raceConfig, statusMessage, doRefreshBlocks } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
@@ -16,12 +16,15 @@
         getActiveTimers();
         await refreshDataFromDb();
     });
-    const refreshDataFromDb = async (trigger) => {
-        console.log("refreshDataFromDb data:", trigger);
+
+    $: refreshDataFromDb($doRefreshBlocks);
+
+    async function refreshDataFromDb(trigger) {
+        console.log("TimerConfig: refreshDataFromDb data:", trigger);
 
         tcFromDexie = await db.TimerConfig.get("TimerConfig");
 
-        console.log("refreshDataFromDb gave:", tcFromDexie);
+        console.log("TimerConfig: refreshDataFromDb gave:", tcFromDexie);
 
         Object.assign(loginForm, tcFromDexie);
 
@@ -30,7 +33,7 @@
         loginForm.minCarLenMS = loginForm.minCarLenMS;
         loginForm.maxPerfCount = loginForm.maxPerfCount;
         console.log("loginForm copied:", JSON.stringify(loginForm));
-    };
+    }
     async function getActiveTimers() {
         console.log("getActiveTimers:");
         const currentSession = await Auth.currentSession();

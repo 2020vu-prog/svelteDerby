@@ -2,13 +2,8 @@
 provider "archive" {}
 variable DeployEnvironment {}
 variable DynamoDbArn {}
-variable DistDbArn {}
-variable TimerDbArn {}
 variable AwsRegion {}
-variable   CcaQueueId  {}
-variable   CcaQueueArn  {}
-variable     ChartS3BucketName  {}
-variable ApplyTimerSnsArn{}
+variable ApplyTimerSnsArn {}
 locals{
   tags = {
     Environment = var.DeployEnvironment
@@ -17,36 +12,17 @@ locals{
       ddbList= split("/",var.DynamoDbArn)
       DynamoDbTable= element(local.ddbList,length(local.ddbList)-1)
 
-      mainLambdaName="derbyMain"
+      timerLambdaName="timerApplyFromSns"
 
-      distDbList= split("/",var.DistDbArn)
-      DistDbTable= element(local.distDbList,length(local.distDbList)-1)
       
-      timerDbList= split("/",var.TimerDbArn)
-      TimerDbTable= element(local.timerDbList,length(local.timerDbList)-1)
       
 }
-
-resource "aws_lambda_permission" "with_sns" {
-  statement_id  = "AllowExecutionFromSNS"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.lambda.function_name
-  principal     = "sns.amazonaws.com"
-  source_arn    = var.ApplyTimerSnsArn
-}
-
-resource "aws_sns_topic_subscription" "lambda_sns_sub" {
-  topic_arn = var.ApplyTimerSnsArn
-  protocol  = "lambda"
-  endpoint  = aws_lambda_function.lambda.arn
-}
-
 
 data "archive_file" "zip" {
   type        = "zip"
-  //source_file = "${path.module}/src/derbyMain.js"
+  //source_file = "${path.module}/src/applyTimerMain.js"
   source_dir = "${path.module}/src/"
-  output_path = "tmp/build/derbyMain.zip"
+  output_path = "tmp/build/applyTimerMain.zip"
   depends_on = [null_resource.install_npm_deps]
 }
 
@@ -65,7 +41,6 @@ data "aws_iam_policy_document" "policy" {
     principals {
       identifiers = [
          "lambda.amazonaws.com",
-         "edgelambda.amazonaws.com",
       ]
       type        = "Service"
     }
@@ -76,25 +51,40 @@ data "aws_iam_policy_document" "policy" {
 
 
 
+resource "aws_lambda_permission" "with_sns" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = var.ApplyTimerSnsArn
+}
+
+resource "aws_sns_topic_subscription" "lambda_sns_sub" {
+  topic_arn = var.ApplyTimerSnsArn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.lambda.arn
+}
+
 resource "aws_iam_role" "iam_for_lambda" {
-  name               = "iam_for_lambda"
+  name_prefix               = "iam_for_lambda"
   assume_role_policy = data.aws_iam_policy_document.policy.json
   tags=local.tags
 }
 
-resource "aws_cloudwatch_log_group" "derbyMainLogRetention" {
-  name              = "/aws/lambda/${local.mainLambdaName}"
+resource "aws_cloudwatch_log_group" "applyTimerMainLogRetention" {
+  name              = "/aws/lambda/${local.timerLambdaName}"
   retention_in_days = 5
 }
+
 resource "aws_lambda_function" "lambda" {
-  function_name = local.mainLambdaName
+  function_name = local.timerLambdaName
 
   filename         = data.archive_file.zip.output_path
   source_code_hash = data.archive_file.zip.output_base64sha256
 
   timeout = 4 // increased for bulkAdd
   role    = aws_iam_role.iam_for_lambda.arn
-  handler = "derbyMain.handler"
+  handler = "applyTimerMain.handler"
   runtime = "nodejs12.x"
   publish = true
   tags=local.tags
@@ -103,14 +93,8 @@ resource "aws_lambda_function" "lambda" {
       DynamoDbTable= local.DynamoDbTable
       DynamoDbArn= var.DynamoDbArn
 
-      DistDbTable= local.DistDbTable
-      DistDbArn= var.DistDbArn
 
-      TimerDbTable= local.TimerDbTable
-      TimerDbArn= var.TimerDbArn
-
-      CcaQueueId =var.CcaQueueId 
-      ChartS3BucketName  =  var.ChartS3BucketName  
+	ApplyTimerSnsArn = var.ApplyTimerSnsArn 
       AwsRegion = var.AwsRegion
     }
   }
@@ -127,12 +111,6 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
 
-		"sqs:SendMessage",
-
-		"s3:ListObjects",
-		"s3:ListBucket",
-		"s3:GetObject",
-
 		"dynamodb:Query",
                 "dynamodb:BatchWriteItem",
                 "dynamodb:BatchGetItem",
@@ -142,13 +120,8 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
 
         ]   
         resources = [
-            "arn:aws:s3:::${var.ChartS3BucketName}",
-            "arn:aws:s3:::${var.ChartS3BucketName}/*",
                 "arn:aws:logs:*:*:*",
-                var.CcaQueueArn,
                 var.DynamoDbArn,
-                var.DistDbArn,
-                var.TimerDbArn
         ]   
     }   
     statement {
@@ -161,7 +134,7 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
     }
 }
 resource "aws_iam_policy" "cloudwatch_allow" {
-    name = "cloudwatch_allow"
+    name_prefix = "cloudwatch_allow"
     path = "/"
     policy = data.aws_iam_policy_document.cloudwatch_allow_doc.json
 }

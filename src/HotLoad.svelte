@@ -189,6 +189,7 @@
             BracketMetaData: {},
             BracketPos: {},
             EventConfig: {},
+            TimerConfig: {},
         };
     };
 

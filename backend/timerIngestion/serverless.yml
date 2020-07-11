@@ -24,6 +24,8 @@ provider:
     name: aws
     runtime: nodejs12.x
     region: ${env:TF_VAR_AwsRegion}
+    provider:
+      logRetentionInDays: 5
     httpApi:
         id: 05wv6js1p4
 
@@ -31,6 +33,7 @@ provider:
     #  stage: dev
     environment:
         DERBY_TIMER_TABLE: DerbyTimer
+        TimerWinDeltaSns:  ${ssm:/sns/TimerWinDeltaSns/arn~true}
     iamRoleStatements:
         - Effect: Allow
           Action:
@@ -38,6 +41,10 @@ provider:
               - dynamodb:Scan
               - dynamodb:GetItem
               - dynamodb:PutItem
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - SNS:Publish
           Resource: "*"
 
 # you can add statements to the Lambda function's IAM Role here
