@@ -1,9 +1,9 @@
 #Round,HeatNumber,WinnerDest,LoserDest
 Left1,01,03A,05A
-Left1,02,04A,05B
+Left1,02,04A,06A
 
-Left2,03,08A,06A
-Left2,04,08B,06B
+Left2,03,08A,06B
+Left2,04,08B,05B
 
 Right3,05,07A,502A
 Right3,06,07B,502B
