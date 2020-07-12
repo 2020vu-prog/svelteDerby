@@ -29,8 +29,11 @@
     import { raceConfig, theme } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
+    import { isEmailAllowedRoutePath, getUserEmail } from "./utils.js";
+
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
+    var userEmail = "UnknownEmail";
     const routes = {
         // Exact path
         "/": RaceStandingList,
@@ -54,56 +57,64 @@
         // '/raceStandingAdd': RaceStandingAdd,
     };
 
-    $: buildMenuMap($AuthStore);
+    var isMounted = false;
     // empty menumap here seems to cause CSS issues!
     let menuMap = [
         {
             text: "Watch different event",
-            clickHandler: () => navTo("/orgSelection"),
+            menuRoute: "/orgSelection",
+
             alwaysShow: true,
         },
     ];
-    const buildMenuMap = () => {
+    $: buildMenuMap($AuthStore);
+    async function buildMenuMap() {
+        userEmail = await getUserEmail();
         const loginLabel =
             $AuthStore && $AuthStore.username
                 ? `Logout [${$AuthStore.username}]`
                 : "Login";
 
         menuMap = [
-            { text: "Drivers", clickHandler: () => navTo("/drivers") },
-            { text: "Phase History", clickHandler: () => navTo("/RpList") },
+            {
+                text: "Drivers",
+                menuRoute: "/drivers",
+            },
+            {
+                text: "Phase History",
+                menuRoute: "/RpList",
+            },
             {
                 text: "Race History",
-                clickHandler: () => navTo("/RsList/History"),
+                menuRoute: "/RsList/History",
             },
             {
                 text: "Pending Races",
-                clickHandler: () => navTo("/RsList/Pending"),
+                menuRoute: "/RsList/Pending",
             },
             {
                 text: "Charts",
-                clickHandler: () => navTo("/chartList"),
+                menuRoute: "/chartList",
             },
 
             {
                 text: "Watch different event",
-                clickHandler: () => navTo("/orgSelection"),
+                menuRoute: "/orgSelection",
                 alwaysShow: true,
             },
             {
                 text: "Timer Config",
-                clickHandler: () => navTo("/timerConfig"),
-                alwaysShow: true,
+                menuRoute: "/timerConfig",
             },
             {
                 text: "About",
-                clickHandler: () => navTo("/about"),
+                menuRoute: "/about",
                 alwaysShow: true,
             },
 
             {
                 text: loginLabel,
-                clickHandler: () => navTo("/login"),
+                menuRoute: "/login",
                 alwaysShow: true,
             },
         ];
@@ -129,7 +140,7 @@
     };
     onMount(async () => {
         console.log("mounted app");
-        buildMenuMap();
+        await buildMenuMap();
         const cfg = await db.EventConfig.toArray();
         console.log("config:", cfg);
 
@@ -140,10 +151,13 @@
             replace("/orgSelection");
         }
     });
-    const shouldDisplay = (menuOption, raceConfigParam) => {
+    const shouldDisplay = (email, menuOption, raceConfigParam) => {
         if (menuOption.alwaysShow) return true;
 
-        return raceConfigParam.orgIz && raceConfigParam.orgId;
+        //return raceConfigParam.orgIz && raceConfigParam.orgId;
+        console.log(`iuarp: ${email} `, isEmailAllowedRoutePath(email, menuOption.menuRoute))
+        return raceConfigParam.orgIz && raceConfigParam.orgId && isEmailAllowedRoutePath(email, menuOption.menuRoute)
+
     };
     const getTitle = (cfg) => {
         if (cfg && cfg.title) return cfg.title;
@@ -159,13 +173,7 @@
         }
     };
 
-    $: {
-        console.log(`collapsing menu for ${$location} change.`);
-        var x = document.getElementById("myLinks");
-        if (x) {
-            x.style.display = "none";
-        }
-    }
+
 
     const navTo = (route) => {
         console.log("routing:" + route);
@@ -223,10 +231,10 @@
         <div id="myLinks">
 
             {#each menuMap as menuOption}
-                {#if shouldDisplay(menuOption, $raceConfig)}
+                {#if shouldDisplay(userEmail,menuOption, $raceConfig)}
                     <a
-                        href="javascript:void(0);"
-                        on:click={menuOption.clickHandler}>
+                    on:click={() => navTo(menuOption.menuRoute)}
+                        >
                         {menuOption.text}
                     </a>
                 {/if}

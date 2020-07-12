@@ -27,21 +27,28 @@ export function getBracketLink(RpRs) {
     }
 }
 
+export function isEmailAllowedRoutePath(email, routePath) {
+    return email && hasSvelteRoutePath(email, routePath);
+}
 export async function isUserAllowedRoutePath(routePath) {
+    const email = await getUserEmail();
+    return isEmailAllowedRoutePath(email, routePath);
+}
+export async function getUserEmail() {
     try {
         const user = await Auth.currentAuthenticatedUser();
         const attributes = await Auth.userAttributes(user);
-        console.log("cognito attrs:", attributes);
+        console.log("getUserEmail cognito attrs:", attributes);
         const email = attributes
             .filter((a) => {
                 return a.Name === "email";
             })[0]
             .getValue();
-        console.log("cognito email:", email);
-        return email && hasSvelteRoutePath(email, routePath);
+        console.log("getUserEmail email:", email);
+        return email;
     } catch (err) {
-        console.log("isUserAllowedRoutePath", err);
-        return false;
+        console.log("getUserEmail", err);
+        return "unknownEmail";
     }
 }
 export function safeGetAt(map, key) {
