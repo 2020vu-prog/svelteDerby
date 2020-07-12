@@ -22,6 +22,9 @@ module "derbyMainLambda" {
   DeployEnvironment=var.DeployEnvironment
   AwsRegion=var.AwsRegion
   ApplyTimerSnsArn =aws_sns_topic.TimerWinDeltaSns.arn
+  PollyCompleteSnsArn =aws_sns_topic.PollyCompleteSns.arn
+  S3DistBucket = aws_s3_bucket.dstBucket.id
+  S3DistBucketArn = aws_s3_bucket.dstBucket.arn
   
 }
 module "lambdaTimerApply" {

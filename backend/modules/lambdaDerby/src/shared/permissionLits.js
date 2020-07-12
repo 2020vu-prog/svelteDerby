@@ -36,6 +36,11 @@ addPermission("ChartPosition", ["/addChartPosition"], []);
 addPermission("ManualFinishTime", ["/doApplyFinishTime"], ["/ManualTimerAdd"]);
 addPermission("CanDeleteBlocks", ["/deleteRacePhase"], ["/NotASvelteRouteYet"]);
 addPermission(
+    "CanInitiateAnnouncement",
+    ["/initiateAnnouncement"],
+    ["/Announce"]
+);
+addPermission(
     "CanDeleteStanding",
     ["/deleteRaceStanding"],
     ["/NotASvelteRouteYet"]

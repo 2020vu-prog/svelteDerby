@@ -38,6 +38,9 @@ resource "aws_sqs_queue" "TimerWinDeltaQ" {
 resource "aws_sns_topic" "TimerWinDeltaSns" {
   name = "TimerWinDeltaSns"
 }
+resource "aws_sns_topic" "PollyCompleteSns" {
+  name = "PollyCompleteSns"
+}
 resource "aws_ssm_parameter" "sns_pass_to_serverless" {
   name        = "/sns/TimerWinDeltaSns/arn"
 

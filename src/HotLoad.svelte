@@ -64,7 +64,7 @@
                 console.log("requstPermissionHack failed:", err);
             });
     };
-    const watchIot = async () => {
+    async function watchIot() {
         if (!$raceConfig.orgId) {
             console.log("watchIot : no org:  skip");
             return; // nothing to watch
@@ -115,8 +115,56 @@
             error: (error) => console.error("watchIot: AWS iot error:", error),
             close: () => console.log("watchIot: AWS iot Done"),
         });
-    };
+        syncAutoAnnounceSubscription();
+    }
 
+    // toggle subscription when prefs change.
+    $: syncAutoAnnounceSubscription($autoAnnounceResults);
+
+    async function syncAutoAnnounceSubscription() {
+        const paTopic = "derby/" + $raceConfig.orgId + "/pa";
+
+        if ($autoAnnounceResults) {
+            if (activeIotWatch.paSubscription) {
+                // no action needed.
+                console.log(`watchIot: ${paTopic} subscribe stand down`);
+            } else {
+                console.log(`watchIot: Subscribing ${paTopic}`);
+                activeIotWatch.paSubscription = PubSub.subscribe(
+                    paTopic
+                ).subscribe({
+                    next: async (data) => {
+                        console.log(
+                            `watchIot: ${paTopic} paMessage received`,
+                            data
+                        );
+                        console.log(
+                            `watchIot: ${paTopic} paMessage value`,
+                            data.value
+                        );
+                        announceFromMqtt(data.value);
+                    },
+                    error: (error) =>
+                        console.error(
+                            `watchIot: ${paTopic} AWS iot error:`,
+                            error
+                        ),
+                    close: () =>
+                        console.log(`watchIot: ${paTopic}  AWS iot Done`),
+                });
+            }
+        } else {
+            if (activeIotWatch.paSubscription) {
+                console.log(
+                    `watchIot: UnSubscribing ${activeIotWatch.paSubscription}`
+                );
+                activeIotWatch.paSubscription.unsubscribe();
+                delete activeIotWatch.paSubscription;
+            } else {
+                console.log(`watchIot: ${paTopic} unsubscribe stand down`);
+            }
+        }
+    }
     // called when a message arrives
 
     const sortBy = (field, reverse, primer) => {
@@ -282,6 +330,18 @@
             new Audio(incoming).play();
         }
     };
+    async function announceFromMqtt(mqMsg) {
+        console.log("mqMsg: ", mqMsg);
+        console.log(`mqMsg: ${mqMsg}`, mqMsg);
+        console.log(`mqMsg already parsed?: ${mqMsg.outputUri}`);
+        //const parsedMsg = JSON.parse(mqMsg);
+        const parsedMsg = mqMsg;
+        const bucket = mqMsg.outputUri.replace(/\/media\/.*/, "");
+        console.log(`paMessage bucket: ${bucket}`);
+        const path = mqMsg.outputUri.replace(bucket, "");
+        console.log(`paMessage path: ${path}`);
+        new Audio(path).play();
+    }
     const doRefresh = async () => {
         //await dbInit();
         console.log("old nobKey:", $nextOnBlockKey);

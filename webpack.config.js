@@ -86,6 +86,10 @@ module.exports = {
                 target: "https://d27962ihtc8hvf.cloudfront.net",
                 changeOrigin: true,
             },
+            "/media": {
+                target: "https://d27962ihtc8hvf.cloudfront.net",
+                changeOrigin: true,
+            },
             "/data": {
                 target: "https://d27962ihtc8hvf.cloudfront.net",
                 changeOrigin: true,

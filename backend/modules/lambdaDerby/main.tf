@@ -9,6 +9,10 @@ variable   CcaQueueId  {}
 variable   CcaQueueArn  {}
 variable     ChartS3BucketName  {}
 variable ApplyTimerSnsArn{}
+variable PollyCompleteSnsArn {}
+
+variable S3DistBucket {}
+variable S3DistBucketArn {}
 locals{
   tags = {
     Environment = var.DeployEnvironment
@@ -26,6 +30,9 @@ locals{
       TimerDbTable= element(local.timerDbList,length(local.timerDbList)-1)
       
 }
+data "aws_iot_endpoint" "mqtt" {
+  endpoint_type="iot:Data-ATS"
+}
 
 resource "aws_lambda_permission" "with_sns" {
   statement_id  = "AllowExecutionFromSNS"
@@ -35,8 +42,22 @@ resource "aws_lambda_permission" "with_sns" {
   source_arn    = var.ApplyTimerSnsArn
 }
 
+resource "aws_lambda_permission" "with_sns_polly" {
+  statement_id  = "AllowExecutionFromSNSviaPolly"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = var.PollyCompleteSnsArn
+}
+
 resource "aws_sns_topic_subscription" "lambda_sns_sub" {
   topic_arn = var.ApplyTimerSnsArn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.lambda.arn
+}
+
+resource "aws_sns_topic_subscription" "lambda_sns_sub_polly" {
+  topic_arn = var.PollyCompleteSnsArn
   protocol  = "lambda"
   endpoint  = aws_lambda_function.lambda.arn
 }
@@ -106,12 +127,18 @@ resource "aws_lambda_function" "lambda" {
       DistDbTable= local.DistDbTable
       DistDbArn= var.DistDbArn
 
+      // used to populate mp3
+      DstBucket     = var.S3DistBucket
+      DstBucketArn  = var.S3DistBucketArn
+
       TimerDbTable= local.TimerDbTable
       TimerDbArn= var.TimerDbArn
 
       CcaQueueId =var.CcaQueueId 
       ChartS3BucketName  =  var.ChartS3BucketName  
       AwsRegion = var.AwsRegion
+      PollyCompleteSnsArn=var.PollyCompleteSnsArn
+      IotEndpoint=data.aws_iot_endpoint.mqtt.endpoint_address
     }
   }
 
@@ -132,6 +159,8 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
 		"s3:ListObjects",
 		"s3:ListBucket",
 		"s3:GetObject",
+		"s3:PutObject",
+
 
 		"dynamodb:Query",
                 "dynamodb:BatchWriteItem",
@@ -144,6 +173,9 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
         resources = [
             "arn:aws:s3:::${var.ChartS3BucketName}",
             "arn:aws:s3:::${var.ChartS3BucketName}/*",
+            "arn:aws:s3:::${var.S3DistBucket}",
+            "arn:aws:s3:::${var.S3DistBucket}/*",
+
                 "arn:aws:logs:*:*:*",
                 var.CcaQueueArn,
                 var.DynamoDbArn,
@@ -154,6 +186,25 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
     statement {
         actions = [
 		"iot:AttachPrincipalPolicy",
+		"polly:StartSpeechSynthesisTask",
+        ]
+        resources = [
+                "*"
+        ]
+    }
+    statement {
+        actions = [
+              "SNS:Publish",
+        ]
+        resources = [
+	//PollyCompleteSnsArn
+                "*"
+        ]
+    }
+    statement {
+        actions = [
+                "iot:Connect",
+                "iot:Publish",
         ]
         resources = [
                 "*"

@@ -16,7 +16,7 @@ const AnnounceResults = require("./AnnounceResults");
 const configMap = {};
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
-const announceResults = new AnnounceResults();
+const announceResults = new AnnounceResults(AWS);
 
 const s3QueryChartTypes = async () => {
     var params = {
@@ -136,8 +136,15 @@ const applyFinishTime = async (json) => {
             tgtRs.phase2Results = json.phr.reverse();
         }
         await ddbUtils.addSingle(tgtRs);
+
         const paMessage = announceResults.announceResults(tgtRs);
         console.log("paMessage:", paMessage);
+        const paSubmit = await announceResults.submitToPolly(
+            paMessage,
+            json.orgId
+        );
+        console.log("paSubmit:", paSubmit);
+
         if (tgtRs.isComplete()) {
             if (tgtRs.isOverallTie()) {
                 await cloneRs(tgtRs);
@@ -676,6 +683,10 @@ const addEventConfig = async (json, priorTtl) => {
 const addParticipant2 = async (json) => {
     console.log("addParticipant2: " + JSON.stringify(json));
     json.PK = ":PTCP"; // force Participant
+    const paTask = await announceResults.submitToPolly(
+        "added driver: " + json.name,
+        json.orgId
+    );
     return await ddbUtils.addSingle(json);
 };
 const getOrgId = (event) => {
@@ -796,6 +807,19 @@ const routeMap = {
             return buildResponse(chartTypes, cacheControl);
         },
     },
+    "/initiateAnnouncement": {
+        h: async (event) => {
+            var json = JSON.parse(event.body);
+            var paMessage = json.paMessage;
+            var orgId = json.orgId;
+            const paTask = await announceResults.submitToPolly(
+                paMessage,
+                orgId
+            );
+            console.log("announceTask: " + paMessage + " gave: ", paTask);
+            return buildResponse({ paTask: paTask });
+        },
+    },
     "/requestMqttSubPermission": {
         h: async (event) => {
             const qsp = event.queryStringParameters;
@@ -831,10 +855,12 @@ const buildResponse = (jsonObj, cacheControl = "no-cache") => {
     };
 };
 
-async function snsApplyTimerHandler(event) {
-    var message = event.Records[0].Sns.Message;
-    console.log("applyTimerHandler Message received from SNS2:", message);
-    const json = JSON.parse(message);
+async function snsApplyTimerHandler(snsMessageJson) {
+    console.log(
+        "applyTimerHandler Message received from SNS2:",
+        snsMessageJson
+    );
+    const json = snsMessageJson;
     if (json && json.timerConfig && json.deltas && json.deltas.length > 0) {
         const timerConfig = json.timerConfig;
         entityFactory = new EntityFactory({
@@ -952,7 +978,18 @@ exports.handler = async function (event) {
         return response;
     }
     if (event.Records[0].Sns) {
-        await snsApplyTimerHandler(event);
+        var snsMessage = event.Records[0].Sns.Message;
+        const snsMessageJson = JSON.parse(snsMessage);
+
+        console.log("sns topic: : ", snsMessageJson.snsTopicArn);
+        console.log("sns polly: : ", process.env.PollyCompleteSnsArn);
+        if (snsMessageJson.snsTopicArn === process.env.PollyCompleteSnsArn) {
+            console.log("polly finished: ", snsMessageJson);
+            await announceResults.propagateIot(snsMessageJson);
+            return "Polly Success";
+        }
+
+        await snsApplyTimerHandler(snsMessageJson);
         return "Success";
     }
 
