@@ -142,19 +142,19 @@
 			"#Round": "Left1",
 			"HeatNumber": "02",
 			"WinnerDest": "04A",
-			"LoserDest": "05B"
+			"LoserDest": "06A"
 		},
 		"03": {
 			"#Round": "Left2",
 			"HeatNumber": "03",
 			"WinnerDest": "08A",
-			"LoserDest": "06A"
+			"LoserDest": "06B"
 		},
 		"04": {
 			"#Round": "Left2",
 			"HeatNumber": "04",
 			"WinnerDest": "08B",
-			"LoserDest": "06B"
+			"LoserDest": "05B"
 		},
 		"05": {
 			"#Round": "Right3",

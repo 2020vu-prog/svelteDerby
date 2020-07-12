@@ -61,7 +61,11 @@ addPermission(
         "/eventAdd",
     ]
 );
-
+addPermission(
+    "Anonymous",
+    ["/getRaceHistory", "/requestMqttSubPermission"],
+    ["/drivers", "/RpList", "/RsList/History", "/RsList/Pending", "/chartList"]
+);
 module.exports.permissionMap = {
     "/addParticipant": "d",
     "/addPending": "p",

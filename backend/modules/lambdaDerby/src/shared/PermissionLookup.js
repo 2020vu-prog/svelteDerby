@@ -21,15 +21,15 @@ const hasRoutePath = (routeType, userMail, serverRoutePath) => {
 };
 module.exports.lookupUserPermissions = (userMail) => {
     console.log("pmap2:", Object.keys(permissionMap2));
-    var rc = [];
-
+    var grantedPerms = { Anonymous: "value ignored" };
     powerUsers.forEach((pue) => {
         if (userMail && pue.toLowerCase() === userMail.toLowerCase()) {
-            rc = [...Object.keys(permissionMap2)];
+            grantedPerms = { ...permissionMap2 };
         }
     });
-    console.log(`permissions for ${userMail} -- `, rc);
-    return rc;
+    const granted = Object.keys(grantedPerms);
+    console.log(`granting permissions for ${userMail} -- `, granted);
+    return granted;
 };
 
 module.exports.hasSvelteRoutePath = (userMail, svelteRoutePath) => {
