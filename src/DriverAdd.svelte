@@ -9,7 +9,7 @@
     import axios from "axios";
     export let params = {};
     var mounted = false;
-    var mode = "Add"
+    var mode = "Add";
     onMount(async () => {
         console.log("mounted focus: ", params);
 
@@ -27,10 +27,11 @@
 
         console.log("driverAdd: refreshDataFromDb data:", trigger);
 
-        const ptcpFromDexie = await db.Participant.get(params.number.toString());
+        const ptcpFromDexie = await db.Participant.get(
+            params.number.toString()
+        );
 
         console.log("driverAdd: refreshDataFromDb gave:", ptcpFromDexie);
-
 
         updateBoundVars(ptcpFromDexie);
     }
@@ -119,19 +120,33 @@
 
     <label>
         Car Number:
-        <input id="carNumber" type="number" bind:value={driverForm.carNumber} placeholder="Car Number" on:keyup={()=> {
-        changeFocus(driverForm.carNumber, 'A');
-        }} />
+        <input
+            id="carNumber"
+            type="number"
+            bind:value={driverForm.carNumber}
+            placeholder="Car Number"
+            on:keyup={() => {
+                changeFocus(driverForm.carNumber, 'A');
+            }} />
     </label>
     <label>
         Driver:
-        <input id="driverName" type="text" bind:value={driverForm.driverName} placeholder="Driver Name" on:keyup={()=> {
-        changeFocus(null, 'B');
-        }} />
+        <input
+            id="driverName"
+            type="text"
+            bind:value={driverForm.driverName}
+            placeholder="Driver Name"
+            on:keyup={() => {
+                changeFocus(null, 'B');
+            }} />
     </label>
     <label>
         Phonetic:
-        <input id="sampa" type="text" bind:value={driverForm.sampa} placeholder="Phonetic name (sampa)" />
+        <input
+            id="sampa"
+            type="text"
+            bind:value={driverForm.sampa}
+            placeholder="Phonetic name (sampa)" />
     </label>
     <button id="formSubmitButton" type="submit" disabled>{mode}</button>
 </form>

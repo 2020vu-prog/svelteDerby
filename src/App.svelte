@@ -118,7 +118,7 @@
                 alwaysShow: true,
             },
         ];
-    };
+    }
     const reloadEvent = async (raceConfigParam) => {
         const start = new Date().getTime();
         const rpList = await db.RacePhase.toArray();
@@ -161,9 +161,15 @@
         if (menuOption.alwaysShow) return true;
 
         //return raceConfigParam.orgIz && raceConfigParam.orgId;
-        console.log(`iuarp: ${email} `, isEmailAllowedRoutePath(email, menuOption.menuRoute))
-        return raceConfigParam.orgIz && raceConfigParam.orgId && isEmailAllowedRoutePath(email, menuOption.menuRoute)
-
+        console.log(
+            `iuarp: ${email} `,
+            isEmailAllowedRoutePath(email, menuOption.menuRoute)
+        );
+        return (
+            raceConfigParam.orgIz &&
+            raceConfigParam.orgId &&
+            isEmailAllowedRoutePath(email, menuOption.menuRoute)
+        );
     };
     const getTitle = (cfg) => {
         if (cfg && cfg.title) return cfg.title;
@@ -178,8 +184,6 @@
             x.style.display = "block";
         }
     };
-
-
 
     const navTo = (route) => {
         console.log("routing:" + route);
@@ -237,10 +241,8 @@
         <div id="myLinks">
 
             {#each menuMap as menuOption}
-                {#if shouldDisplay(userEmail,menuOption, $raceConfig)}
-                    <a
-                    on:click={() => navTo(menuOption.menuRoute)}
-                        >
+                {#if shouldDisplay(userEmail, menuOption, $raceConfig)}
+                    <a on:click={() => navTo(menuOption.menuRoute)}>
                         {menuOption.text}
                     </a>
                 {/if}

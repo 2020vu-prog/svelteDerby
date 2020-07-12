@@ -4,7 +4,15 @@
     import MaterialAdd from "./MaterialAdd.svelte";
     import CarFilter from "./CarFilter.svelte";
     import { safeGetAt } from "./utils.js";
+    import { isEmailAllowedRoutePath, getUserEmail } from "./utils.js";
+    import { onMount } from "svelte";
 
+    var userEmail = "none";
+
+    onMount(async () => {
+        userEmail = await getUserEmail();
+        console.log(`DriverList userEmail: ${userEmail}`);
+    });
     const filterMatches = (driver, lclFilter) => {
         if (!lclFilter) return true;
         let re = new RegExp("^" + lclFilter);
@@ -13,8 +21,8 @@
     const getCarNumbersAsList = (driverMap) => {
         return Object.keys(driverMap);
     };
-    function isDriverEditable() {
-        return false; //TODO: consider user perms!
+    function isDriverEditable(paramEmail) {
+        return isEmailAllowedRoutePath(paramEmail, "/driverAdd");
     }
 </script>
 
@@ -34,7 +42,7 @@
                     number={carNumber}
                     at={safeGetAt($driverMap, carNumber)}
                     isWinner=""
-                    editable={isDriverEditable()}
+                    editable={isDriverEditable(userEmail)}
                     phaseLetter="" />
             </div>
         {/if}

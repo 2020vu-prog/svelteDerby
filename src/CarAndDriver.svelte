@@ -37,7 +37,7 @@
     };
 
     function editCarAndDriver() {
-        console.log("editCarAndDriver")
+        console.log("editCarAndDriver");
         push(`/driverAdd/${number}`);
     }
 </script>
@@ -57,16 +57,15 @@
 {/if}
 
 {#if editable}
-<span on:click={editCarAndDriver}>
-<big>
-    <b>{number}</b>
-</big>
-{name}
-</span>
-
+    <span on:click={editCarAndDriver}>
+        <big>
+            <b>{number}</b>
+        </big>
+        {name}
+    </span>
 {:else}
-<big>
-    <b>{number}</b>
-</big>
-{name}
+    <big>
+        <b>{number}</b>
+    </big>
+    {name}
 {/if}
