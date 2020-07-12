@@ -324,6 +324,7 @@
     };
     onMount(async () => {});
     const announce = () => {
+        return; // no test announcement
         if ($autoAnnounceResults) {
             const incoming =
                 "https://cf.derby.rr1.us/archive/media.d6c3656e-4bfc-494e-8f6b-f28cdb8761df.mp3";
