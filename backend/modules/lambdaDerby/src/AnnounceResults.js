@@ -1,9 +1,12 @@
 class AnnounceResults {
     AWS = null;
     iotdata;
+    ddbUtils = null;
+    namesByCarNumber = {};
 
-    constructor(AWS) {
+    constructor(AWS, ddbUtils) {
         this.AWS = AWS;
+        this.ddbUtils = ddbUtils;
     }
 
     // invoked on callback with known mp3 file.
@@ -61,7 +64,40 @@ class AnnounceResults {
             console.log("pollyTask err:", err); // successful response
         }
     }
-    announceResults(tgtRs) {
+    async formatAndSubmitAnnouncement(tgtRs, orgId) {
+        const paMessage = await this.formatAnnouncement(tgtRs, orgId);
+        console.log(`paMessage: ${orgId} ssml:`, paMessage);
+        const paSubmit = await this.submitToPolly(paMessage, orgId);
+        console.log("paSubmit:", paSubmit);
+    }
+    async lookupNames(cnList, orgId) {
+        const promises = [];
+        cnList.forEach((element) => {
+            promises.push(this.lookupName(element.toString(), orgId));
+        });
+        await Promise.all(promises);
+        console.log(`lookupNames: ${orgId} cars:`, this.namesByCarNumber);
+    }
+    async lookupName(carNumber, orgId) {
+        if (this.ddbUtils) {
+            const ptcp = await this.ddbUtils.ddbQueryPkSk(
+                `${orgId}:PTCP`,
+                carNumber
+            );
+            console.log(`lookupName: ${carNumber} org: ${orgId}`, ptcp);
+            if (ptcp && ptcp.sampa) {
+                this.namesByCarNumber[
+                    carNumber
+                ] = `<phoneme alphabet="sampa" ph="${ptcp.sampa}">${ptcp.name}</phoneme>`;
+            }
+            if (ptcp && ptcp.name) {
+                this.namesByCarNumber[carNumber] = ptcp.name;
+            }
+        } else {
+            console.log(`lookupName: missing name query ${carNumber}`);
+        }
+    }
+    async formatAnnouncement(tgtRs, orgId) {
         var rc = "";
         var aPhaseMsg = "";
         var aWinCarNumber = "";
@@ -70,19 +106,21 @@ class AnnounceResults {
         var aPhaseMsg = "";
         var bPhaseMsg = "";
         var overallMsg = "";
+
+        await this.lookupNames(tgtRs.carNumbers, orgId);
+
         [aWinCarNumber, aPhaseMsg] = this.formatMsg(
-            "Phase AE ",
+            `Phase <say-as interpret-as="characters">A</say-as>`,
             tgtRs.carNumbers,
             tgtRs.phase1DeltaMS
         );
 
         if (tgtRs.phase1DeltaMS && !tgtRs.phase2DeltaMS) {
             rc += aPhaseMsg;
-            return rc;
         }
         if (tgtRs.phase2DeltaMS) {
             [bWinCarNumber, bPhaseMsg] = this.formatMsg(
-                "Phase B ",
+                `Phase <say-as interpret-as="characters">B</say-as>`,
                 tgtRs.carNumbers,
                 tgtRs.phase2DeltaMS
             );
@@ -105,8 +143,10 @@ class AnnounceResults {
             }
             rc += overallMsg;
         }
-        console.log("ANNOUNCEMENT RESULT: ", rc);
-        return `<speak>${rc}</speak>`;
+
+        const ssml = `<speak>${rc}</speak>`;
+        console.log("ANNOUNCEMENT RESULT ssml: ", ssml);
+        return ssml;
     }
     expandDigitsForSpeech(cn) {
         //return String(cn).replace("", " ");
@@ -152,11 +192,11 @@ class AnnounceResults {
     }
 
     getDrivenByPhoneticName(winningCar) {
-        var phoneticName = ""; //racerCache.lookupPhoneticName(winningCar);
+        var phoneticName = this.namesByCarNumber[winningCar.toString()];
         //TODO: lookup phoenetic name
         // lousy hack for missing phonetic name on db.
         if (phoneticName) {
-            return ` driven by ${phoneticName} `;
+            return `<break strength="weak"/> driven by ${phoneticName} `;
         }
         return "";
     }

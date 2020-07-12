@@ -16,7 +16,7 @@ const AnnounceResults = require("./AnnounceResults");
 const configMap = {};
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
-const announceResults = new AnnounceResults(AWS);
+const announceResults = new AnnounceResults(AWS, ddbUtils);
 
 const s3QueryChartTypes = async () => {
     var params = {
@@ -137,21 +137,19 @@ const applyFinishTime = async (json) => {
         }
         await ddbUtils.addSingle(tgtRs);
 
-        const paMessage = announceResults.announceResults(tgtRs);
-        console.log("paMessage:", paMessage);
-        const paSubmit = await announceResults.submitToPolly(
-            paMessage,
-            json.orgId
+        const finishPromises = [];
+        finishPromises.push(
+            announceResults.formatAndSubmitAnnouncement(tgtRs, tgtRs.orgId)
         );
-        console.log("paSubmit:", paSubmit);
 
         if (tgtRs.isComplete()) {
             if (tgtRs.isOverallTie()) {
-                await cloneRs(tgtRs);
+                finishPromises.push(cloneRs(tgtRs));
             } else {
-                await advanceChartPos(tgtRs);
+                finishPromises.push(advanceChartPos(tgtRs));
             }
         }
+        await Promise.all(finishPromises);
     } else {
         return {
             status: "error",
