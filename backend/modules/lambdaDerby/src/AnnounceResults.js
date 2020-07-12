@@ -85,12 +85,12 @@ class AnnounceResults {
                 carNumber
             );
             console.log(`lookupName: ${carNumber} org: ${orgId}`, ptcp);
-            if (ptcp && ptcp.sampa) {
+            if (false) {
+            } else if (ptcp && ptcp.sampa) {
                 this.namesByCarNumber[
                     carNumber
-                ] = `<phoneme alphabet="sampa" ph="${ptcp.sampa}">${ptcp.name}</phoneme>`;
-            }
-            if (ptcp && ptcp.name) {
+                ] = `<phoneme alphabet="x-sampa" ph="${ptcp.sampa}">${ptcp.name}</phoneme>`;
+            } else if (ptcp && ptcp.name) {
                 this.namesByCarNumber[carNumber] = ptcp.name;
             }
         } else {

@@ -462,7 +462,7 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     }
 };
 entityFactories["Participant"] = class Participant extends EntityBase {
-    static members = ["name", "number"];
+    static members = ["name", "number", "sampa"];
     static eid = ":PTCP";
     static canBuild(json) {
         return json.PK && json.PK.endsWith(ParticipantEid);
