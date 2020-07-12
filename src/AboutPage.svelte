@@ -31,6 +31,13 @@
         if (mounted) {
         }
     }
+    $: {
+        localConfigDb["LocalConfig"].put({
+            KEY: "autoAnnounceResults",
+            autoAnnounceResults: $autoAnnounceResults,
+            changed: new Date().getTime(),
+        });
+    }
     onMount(async () => {
         //console.log("prefs:", $prefStore)
         if (getCacheKey()) {

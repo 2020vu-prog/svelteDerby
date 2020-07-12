@@ -50,7 +50,7 @@ class AnnounceResults {
             OutputS3KeyPrefix: `media/${orgId}/msg`,
             SampleRate: "8000",
             SnsTopicArn: process.env.PollyCompleteSnsArn,
-            TextType: "text",
+            TextType: "ssml",
         };
         try {
             const pollyTask = await polly
@@ -99,25 +99,24 @@ class AnnounceResults {
             ) {
                 //double phase, no interjection
             } else if (bWinCarNumber === overallWinCarNumber) {
-                rc +=
-                    " That is enough ... " +
-                    this.expandDigitsForSpeech(bWinCarNumber.toString());
+                rc += " That is enough <p/> ";
             } else {
-                rc += " However, that is not enough ... ";
+                rc += " However, that is not enough <p/> ";
             }
             rc += overallMsg;
         }
         console.log("ANNOUNCEMENT RESULT: ", rc);
-        return rc;
+        return `<speak>${rc}</speak>`;
     }
     expandDigitsForSpeech(cn) {
-        return String(cn).replace("", " ");
+        //return String(cn).replace("", " ");
+        return `<say-as interpret-as="characters" >${cn}</say-as>`;
     }
     formatMsg(phaseDescriptor, cnArray, phaseResultMS) {
         var returnCarNumber = "";
         var returnMessage = "";
         if (phaseResultMS == 0) {
-            returnMessage += " THE " + phaseDescriptor + " Result is a Tie. ";
+            returnMessage += " The " + phaseDescriptor + " Result is a Tie. ";
         }
         if (phaseResultMS < 0) {
             returnCarNumber = cnArray[1];
@@ -143,11 +142,12 @@ class AnnounceResults {
         const spokenCar = this.expandDigitsForSpeech(winningCar.toString());
         const spokenDriver = this.getDrivenByPhoneticName(winningCar);
         rc += `Your ${phaseDescriptor} Winner is Car ${spokenCar}, ${spokenDriver}`;
-        rc += " ... ";
-        const spokenTime = this.expandDigitsForSpeech(Math.abs(phaseResultMS));
-        //TODO: %03d
+        rc += " <p/> ";
+        const spokenTime = this.expandDigitsForSpeech(
+            Math.abs(phaseResultMS).toString().padStart(3, "0")
+        );
         rc += ` The ${phaseDescriptor} time is ${spokenTime} `;
-        rc += " ... ";
+        rc += " <p/> ";
         return rc;
     }
 

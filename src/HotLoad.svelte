@@ -15,7 +15,7 @@
     import { Auth } from "aws-amplify";
     import Amplify, { PubSub } from "aws-amplify";
     import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
-    import { db, localConfigDb } from "./eventDb.js";
+    import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import aws_exports from "./aws-exports";
 
@@ -337,11 +337,14 @@
         console.log(`mqMsg already parsed?: ${mqMsg.outputUri}`);
         //const parsedMsg = JSON.parse(mqMsg);
         const parsedMsg = mqMsg;
-        const bucket = mqMsg.outputUri.replace(/\/media\/.*/, "");
-        console.log(`paMessage bucket: ${bucket}`);
-        const path = mqMsg.outputUri.replace(bucket, "");
-        console.log(`paMessage path: ${path}`);
-        new Audio(path).play();
+        const mediaMatch = mqMsg.outputUri.match(/\/media\/.*/);
+        if (mediaMatch && mediaMatch[0]) {
+            const path = mediaMatch[0];
+            console.log(`paMessage path: ${path}`);
+            new Audio(path).play();
+        } else {
+            console.log(`paMessage MISSING path`);
+        }
     }
     const doRefresh = async () => {
         //await dbInit();

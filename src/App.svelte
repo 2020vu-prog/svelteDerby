@@ -26,7 +26,7 @@
     import Login from "./Login.svelte";
     import HotLoad from "./HotLoad.svelte";
     //import CognitoAuth from "./CognitoAuth.svelte";
-    import { raceConfig, theme } from "./stores.js";
+    import { raceConfig, theme, autoAnnounceResults } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -126,6 +126,12 @@
         if (dexieTheme && dexieTheme.bgColor) {
             $theme = dexieTheme.bgColor;
         }
+        const autoAnnounceJson = await localConfigDb["LocalConfig"].get({
+            KEY: "autoAnnounceResults",
+        });
+        console.log(`app aar:`, autoAnnounceJson);
+        $autoAnnounceResults =
+            autoAnnounceJson && autoAnnounceJson.autoAnnounceResults;
     };
     onMount(async () => {
         console.log("mounted app");
