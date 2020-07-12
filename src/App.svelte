@@ -40,7 +40,7 @@
         "/login": Login,
         "/ManualTimerAdd/:rpKey": ManualTimerAdd,
         "/raceStandingAdd/:type": RaceStandingAdd,
-        "/driverAdd": DriverAdd,
+        "/driverAdd/:number?": DriverAdd,
         "/eventSelection/:orgIz": EventSelection,
         "/eventAdd/:orgIz": EventAdd,
         "/orgSelection": OrgSelection,

@@ -13,6 +13,9 @@
     const getCarNumbersAsList = (driverMap) => {
         return Object.keys(driverMap);
     };
+    function isDriverEditable() {
+        return false; //TODO: consider user perms!
+    }
 </script>
 
 <div>
@@ -31,6 +34,7 @@
                     number={carNumber}
                     at={safeGetAt($driverMap, carNumber)}
                     isWinner=""
+                    editable={isDriverEditable()}
                     phaseLetter="" />
             </div>
         {/if}

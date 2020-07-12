@@ -7,10 +7,11 @@
     export let phaseLetter;
     export let timerLink;
     export let number;
+    export let editable;
     let name = "";
     export let at;
     onMount(async () => {
-        console.log("CarAndDriver onMount:", number);
+        console.log(`CarAndDriver onMount: ${number} editable: ${editable}`);
         name = getDriverName(number, at);
     });
     $: {
@@ -34,6 +35,11 @@
             return " ";
         }
     };
+
+    function editCarAndDriver() {
+        console.log("editCarAndDriver")
+        push(`/driverAdd/${number}`);
+    }
 </script>
 
 {#if isWinner}
@@ -49,7 +55,18 @@
         width="25px"
         style="visibility:hidden" />
 {/if}
+
+{#if editable}
+<span on:click={editCarAndDriver}>
 <big>
     <b>{number}</b>
 </big>
 {name}
+</span>
+
+{:else}
+<big>
+    <b>{number}</b>
+</big>
+{name}
+{/if}
