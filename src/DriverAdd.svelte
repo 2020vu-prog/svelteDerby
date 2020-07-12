@@ -27,6 +27,7 @@
             orgIz: $raceConfig.orgIz,
             number: Number(loginForm.carNumber),
             name: loginForm.driverName,
+            sampa: loginForm.sampa,
         };
 
         console.log("token:" + bearer);
@@ -113,6 +114,14 @@
             on:keyup={() => {
                 changeFocus(null, 'B');
             }} />
+    </label>
+    <label>
+        Phonetic:
+        <input
+            id="sampa"
+            type="text"
+            bind:value={loginForm.sampa}
+            placeholder="Phonetic name (sampa)" />
     </label>
     <button id="formSubmitButton" type="submit" disabled>Add</button>
 </form>

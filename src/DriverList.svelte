@@ -31,6 +31,7 @@
                     number={carNumber}
                     at={safeGetAt($driverMap, carNumber)}
                     isWinner=""
+                    editable=true
                     phaseLetter="" />
             </div>
         {/if}
