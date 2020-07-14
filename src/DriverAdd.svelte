@@ -6,8 +6,12 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
 
+    import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
+    import Icon from "fa-svelte";
+
     import axios from "axios";
     export let params = {};
+    var showPhoeneticInfo = false;
     var mounted = false;
     var mode = "Add";
     onMount(async () => {
@@ -130,7 +134,7 @@
             }} />
     </label>
     <label>
-        Driver:
+        Driver Name:
         <input
             id="driverName"
             type="text"
@@ -141,12 +145,29 @@
             }} />
     </label>
     <label>
-        Phonetic:
+        Phonetic Name (optional)
+        <span on:click={() => (showPhoeneticInfo = true)}>
+            <Icon icon={faQuestionCircle} />
+        </span>
+        :
         <input
             id="sampa"
             type="text"
             bind:value={driverForm.sampa}
-            placeholder="Phonetic name (sampa)" />
+            placeholder="Phonetic name (SAMPA)" />
     </label>
+    {#if showPhoeneticInfo}
+        <p>
+            The phoentic name field uses a plain-text version of the IPA
+            (International Phoentic Alphabet) called SAMPA. For an english to
+            SAMPA chart click
+            <a
+                target="_blank"
+                href="https://en.wikipedia.org/wiki/SAMPA_chart_for_English">
+                here
+            </a>
+            .
+        </p>
+    {/if}
     <button id="formSubmitButton" type="submit" disabled>{mode}</button>
 </form>
