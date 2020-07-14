@@ -9,12 +9,12 @@
 
     var activeTimerList = [];
     var tcFromDexie = {};
+    var activeTimerSha;
     var mounted = false;
     onMount(async () => {
         console.log("mounted focus");
         mounted = true;
         getActiveTimers();
-        await refreshDataFromDb();
     });
 
     $: refreshDataFromDb($doRefreshBlocks);
@@ -32,6 +32,9 @@
         loginForm.maxCarLenMS = loginForm.maxCarLenMS;
         loginForm.minCarLenMS = loginForm.minCarLenMS;
         loginForm.maxPerfCount = loginForm.maxPerfCount;
+        if (tcFromDexie.sha) {
+            activeTimerSha = tcFromDexie.sha;
+        }
         console.log("loginForm copied:", JSON.stringify(loginForm));
     }
     async function getActiveTimers() {
@@ -78,6 +81,7 @@
                     type: "error",
                 };
             });
+        await refreshDataFromDb();
     }
     async function handleSubmit() {
         console.log("Adding:" + JSON.stringify(loginForm));
@@ -126,15 +130,33 @@
         console.log("clickActivateHost", timer);
         loginForm.sha = timer.sha;
 
-        await handleSubmit();
+        //await handleSubmit();
     }
     const loginForm = {};
+
+    const timerShaMatchCheck = (timerToCheck) => {
+        if (activeTimerSha && timerToCheck.sha) {
+            if (activeTimerSha === timerToCheck.sha) {
+                console.log("MATCH ", timerToCheck.sha, " ", activeTimerSha);
+                return true;
+            } else {
+                console.log(
+                    "NOT A MATCH ",
+                    timerToCheck.sha,
+                    " ",
+                    activeTimerSha
+                );
+                return false;
+            }
+        }
+    };
 </script>
 
 <h3>Timer Config</h3>
+<br />
 
 <form on:submit|preventDefault={handleSubmit}>
-    <button id="formSubmitButton" type="submit">Update</button>
+    <h4>Auto-Apply Preferences</h4>
 
     <label>
         ClearMS:
@@ -164,15 +186,21 @@
             bind:value={loginForm.maxPerfCount}
             placeholder="1" />
     </label>
+    <br />
+    <h4>Timer Selection</h4>
     {#each activeTimerList as activeTimer}
-        <div class="well well-sm">
-            <div
-                class="panel panel-info"
-                on:click={() => clickActivateHost(activeTimer)}>
-                <div class="panel-heading">
-                    <span>{activeTimer.hostname}</span>
-                </div>
-            </div>
-        </div>
+        <input
+            checked={timerShaMatchCheck(activeTimer)}
+            type="radio"
+            id={activeTimer.sha}
+            name="activeTimerOption"
+            on:click={() => clickActivateHost(activeTimer)} />
+        <label style="display: inline" for={activeTimer.sha}>
+            {activeTimer.hostname}
+        </label>
+        <br />
+        <br />
     {/each}
+
+    <button id="formSubmitButton" type="submit">Update</button>
 </form>
