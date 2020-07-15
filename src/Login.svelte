@@ -30,6 +30,15 @@
         localStorage.clear(); //clears everything in localStorage
         logout();
     }
+
+
+    const signInAnonymously = () => {
+        logout();
+        $loginFormState.username = "Anonymous";
+        $loginFormState.password = "DERBYderby12345!";
+        mode = "signin";
+        handleSubmit();
+    }
 </script>
 
 <style>
@@ -190,6 +199,8 @@
                 </label>
             {/if}
             <button type="submit">Submit</button>
+
+            <button on:click={()=> signInAnonymously()}>Sign in Anonymously</button>
         </form>
     </div>
 {/if}
