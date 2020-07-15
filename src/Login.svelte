@@ -7,6 +7,8 @@
         loginFormState,
         logout,
     } from "./stores/auth.js";
+    import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
+
     let mode = localStorage.getItem("svelteLoginMode") || "signup";
     let isSigningIn = mode === "signin";
     let promise; // nothing to start with
@@ -29,15 +31,6 @@
     function doLogOut() {
         localStorage.clear(); //clears everything in localStorage
         logout();
-    }
-
-
-    const signInAnonymously = () => {
-        logout();
-        $loginFormState.username = "Anonymous";
-        $loginFormState.password = "DERBYderby12345!";
-        mode = "signin";
-        handleSubmit();
     }
 </script>
 
@@ -199,8 +192,8 @@
                 </label>
             {/if}
             <button type="submit">Submit</button>
-
-            <button on:click={()=> signInAnonymously()}>Sign in Anonymously</button>
+            <br />
+            <AutoAnonymousLogin />
         </form>
     </div>
 {/if}

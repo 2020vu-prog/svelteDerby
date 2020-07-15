@@ -6,7 +6,11 @@
     import { Auth } from "aws-amplify";
     import axios from "axios";
     import { push, pop, replace } from "svelte-spa-router";
-    import { getCacheKey } from "./stores.js";
+    import { getCacheKey, beginAnonymousLogin } from "./stores.js";
+
+    import { store } from "./stores/auth.js";
+    import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
+
 
     var orgMap = {};
     $: {
@@ -37,14 +41,25 @@
     };
 
     onMount(async () => {
+        await logUserInIfNecessary();
         refreshOrgMap();
     });
+
+    async function logUserInIfNecessary() {
+        if (!$store) {
+            console.log(
+                "User is not logged in, so we will sign them in anonymously."
+            );
+            $beginAnonymousLogin = true;
+        }
+    }
 </script>
 
 <div>
     <MaterialAdd clickHandleRoute="/orgAdd" />
 
     <h4>Organization List</h4>
+    <AutoAnonymousLogin display="false" on:loginComplete={refreshOrgMap} />
     <p />
 
     {#each getOrgsAsList(orgMap) as orgIz}
@@ -54,4 +69,5 @@
             <a href="javascript:void(0);">{orgIz}</a>
         </div>
     {/each}
+
 </div>
