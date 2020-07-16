@@ -11,7 +11,6 @@
     import { store } from "./stores/auth.js";
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
 
-
     var orgMap = {};
     $: {
         console.log("bound orgMap: ", orgMap);

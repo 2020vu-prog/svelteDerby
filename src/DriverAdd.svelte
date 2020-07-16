@@ -154,16 +154,14 @@
             id="sampa"
             type="text"
             bind:value={driverForm.sampa}
-            placeholder="Phonetic name (SAMPA)" />
+            placeholder="Phonetic name (X-SAMPA)" />
     </label>
     {#if showPhoeneticInfo}
         <p>
             The phoentic name field uses a plain-text version of the IPA
-            (International Phoentic Alphabet) called SAMPA. For an english to
-            SAMPA chart click
-            <a
-                target="_blank"
-                href="https://en.wikipedia.org/wiki/SAMPA_chart_for_English">
+            (International Phoentic Alphabet) called X-SAMPA. For an english to
+            X-SAMPA chart click
+            <a target="_blank" href="https://en.wikipedia.org/wiki/X-SAMPA">
                 here
             </a>
             .
