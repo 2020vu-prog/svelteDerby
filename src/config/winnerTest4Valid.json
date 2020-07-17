@@ -1,0 +1,299 @@
+[
+    {
+        "valid": true,
+        "lanes": {
+            "lane1": {
+                "valid": true,
+                "noseMicros": 538723484221,
+                "tailMicros": 538723574481,
+                "carLenMicros": 90260,
+                "carLenMS": 90.26
+            },
+            "lane2": {
+                "valid": true,
+                "noseMicros": 538723491311,
+                "tailMicros": 538723583596,
+                "carLenMicros": 92285,
+                "carLenMS": 92.285
+            }
+        },
+        "cBlock": [
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 449686010349,
+                "pubTime": 1594954968763,
+                "microb": 538723484221,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 538723484221,
+                "seq": 269395
+            },
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 449686005129,
+                "pubTime": 1594954968787,
+                "microb": 538723491311,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 538723491311,
+                "seq": 269396
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 538723484221,
+                "pubTime": 1594954968853,
+                "microb": 538723574481,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 538723574481,
+                "seq": 269397
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 538723491311,
+                "pubTime": 1594954968877,
+                "microb": 538723583596,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 538723583596,
+                "seq": 269398
+            }
+        ]
+    },
+    {
+        "valid": true,
+        "lanes": {
+            "lane1": {
+                "valid": true,
+                "noseMicros": 538730548574,
+                "tailMicros": 538730629224,
+                "carLenMicros": 80650,
+                "carLenMS": 80.65
+            },
+            "lane2": {
+                "valid": true,
+                "noseMicros": 538730539638,
+                "tailMicros": 538730621789,
+                "carLenMicros": 82151,
+                "carLenMS": 82.151
+            }
+        },
+        "cBlock": [
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 538723583596,
+                "pubTime": 1594954975818,
+                "microb": 538730539638,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 538730539638,
+                "seq": 269402
+            },
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 538723574481,
+                "pubTime": 1594954975841,
+                "microb": 538730548574,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 538730548574,
+                "seq": 269403
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 538730539638,
+                "pubTime": 1594954975900,
+                "microb": 538730621789,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 538730621789,
+                "seq": 269404
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 538730548574,
+                "pubTime": 1594954975924,
+                "microb": 538730629224,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 538730629224,
+                "seq": 269405
+            }
+        ]
+    },
+    {
+        "valid": true,
+        "lanes": {
+            "lane1": {
+                "valid": true,
+                "noseMicros": 538807365913,
+                "tailMicros": 538807436153,
+                "carLenMicros": 70240,
+                "carLenMS": 70.24
+            },
+            "lane2": {
+                "valid": true,
+                "noseMicros": 538807371388,
+                "tailMicros": 538807442673,
+                "carLenMicros": 71285,
+                "carLenMS": 71.285
+            }
+        },
+        "cBlock": [
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 538730629224,
+                "pubTime": 1594955052644,
+                "microb": 538807365913,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 538807365913,
+                "seq": 269445
+            },
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 538730621789,
+                "pubTime": 1594955052667,
+                "microb": 538807371388,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 538807371388,
+                "seq": 269446
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 538807365913,
+                "pubTime": 1594955052714,
+                "microb": 538807436153,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 538807436153,
+                "seq": 269447
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 538807371388,
+                "pubTime": 1594955052738,
+                "microb": 538807442673,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 538807442673,
+                "seq": 269448
+            }
+        ]
+    },
+    {
+        "valid": true,
+        "lanes": {
+            "lane1": {
+                "valid": true,
+                "noseMicros": 538815647059,
+                "tailMicros": 538815734839,
+                "carLenMicros": 87780,
+                "carLenMS": 87.78
+            },
+            "lane2": {
+                "valid": true,
+                "noseMicros": 538815638859,
+                "tailMicros": 538815726084,
+                "carLenMicros": 87225,
+                "carLenMS": 87.225
+            }
+        },
+        "cBlock": [
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 538807442673,
+                "pubTime": 1594955060917,
+                "microb": 538815638859,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 538815638859,
+                "seq": 269453
+            },
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 538807436153,
+                "pubTime": 1594955060941,
+                "microb": 538815647059,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 538815647059,
+                "seq": 269454
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 538815638859,
+                "pubTime": 1594955061004,
+                "microb": 538815726084,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 538815726084,
+                "seq": 269455
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 538815647059,
+                "pubTime": 1594955061028,
+                "microb": 538815734839,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 538815734839,
+                "seq": 269456
+            }
+        ]
+    },
+    {
+        "valid": false,
+        "lanes": {
+            "lane1": { "valid": false, "error": "No data for lane" },
+            "lane2": {
+                "valid": true,
+                "noseMicros": 539084890291,
+                "tailMicros": 539085465557,
+                "carLenMicros": 575266,
+                "carLenMS": 575.266
+            }
+        },
+        "cBlock": [
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 538815726084,
+                "pubTime": 1594955330167,
+                "microb": 539084890291,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 539084890291,
+                "seq": 269591
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 539084890291,
+                "pubTime": 1594955330742,
+                "microb": 539085465557,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 539085465557,
+                "seq": 269593
+            }
+        ]
+    }
+]

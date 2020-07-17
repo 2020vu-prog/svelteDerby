@@ -1,0 +1,256 @@
+[
+    {
+        "valid": false,
+        "lanes": {
+            "lane1": {
+                "valid": false,
+                "error": "lane flickered before finish"
+            },
+            "lane2": {
+                "valid": true,
+                "noseMicros": 449682334089,
+                "tailMicros": 449682399625,
+                "carLenMicros": 65536,
+                "carLenMS": 65.536
+            }
+        },
+        "cBlock": [
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 449678511130,
+                "pubTime": 1594865928001,
+                "microb": 449682334089,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 449682334089,
+                "seq": 224867
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 449682328194,
+                "pubTime": 1594865928031,
+                "microb": 449682393474,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 449682393474,
+                "seq": 224868
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 449682334089,
+                "pubTime": 1594865928057,
+                "microb": 449682399625,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 449682399625,
+                "seq": 224869
+            }
+        ]
+    },
+    {
+        "valid": true,
+        "lanes": {
+            "lane1": {
+                "valid": true,
+                "noseMicros": 449685955324,
+                "tailMicros": 449686010349,
+                "carLenMicros": 55025,
+                "carLenMS": 55.025
+            },
+            "lane2": {
+                "valid": true,
+                "noseMicros": 449685949073,
+                "tailMicros": 449686005129,
+                "carLenMicros": 56056,
+                "carLenMS": 56.056
+            }
+        },
+        "cBlock": [
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 449682399625,
+                "pubTime": 1594865931569,
+                "microb": 449685949073,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 449685949073,
+                "seq": 224872
+            },
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 449682393474,
+                "pubTime": 1594865931594,
+                "microb": 449685955324,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 449685955324,
+                "seq": 224873
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 449685949073,
+                "pubTime": 1594865931624,
+                "microb": 449686005129,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 449686005129,
+                "seq": 224874
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 449685955324,
+                "pubTime": 1594865931648,
+                "microb": 449686010349,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 449686010349,
+                "seq": 224875
+            }
+        ]
+    },
+    {
+        "valid": false,
+        "lanes": {
+            "lane1": {
+                "valid": false,
+                "noseMicros": 449675667747,
+                "tailMicros": 449678517925,
+                "carLenMicros": 2850178,
+                "carLenMS": 2850.178,
+                "error": "CarLen [2850.178] greater than [1888]"
+            },
+            "lane2": {
+                "valid": false,
+                "noseMicros": 449675672069,
+                "tailMicros": 449678511130,
+                "carLenMicros": 2839061,
+                "carLenMS": 2839.061,
+                "error": "CarLen [2839.061] greater than [1888]"
+            }
+        },
+        "cBlock": [
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 448093160692,
+                "pubTime": 1594865921287,
+                "microb": 449675667747,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 449675667747,
+                "seq": 224855
+            },
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 448093150427,
+                "pubTime": 1594865921312,
+                "microb": 449675672069,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 449675672069,
+                "seq": 224856
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 449675667747,
+                "pubTime": 1594865921340,
+                "microb": 449675721972,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 449675721972,
+                "seq": 224857
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 449675672069,
+                "pubTime": 1594865921366,
+                "microb": 449675727227,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 449675727227,
+                "seq": 224858
+            },
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 449675727227,
+                "pubTime": 1594865924076,
+                "microb": 449678457199,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 449678457199,
+                "seq": 224860
+            },
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 449675721972,
+                "pubTime": 1594865924100,
+                "microb": 449678461779,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 449678461779,
+                "seq": 224861
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 449678457199,
+                "pubTime": 1594865924130,
+                "microb": 449678511130,
+                "pinNumber": "22",
+                "pinName": "lane2",
+                "micros": 449678511130,
+                "seq": 224862
+            },
+            {
+                "pinState": 0,
+                "pinType": "lane",
+                "microPrev": 449678461779,
+                "pubTime": 1594865924154,
+                "microb": 449678517925,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 449678517925,
+                "seq": 224863
+            }
+        ]
+    },
+    {
+        "valid": false,
+        "lanes": {
+            "lane1": {
+                "valid": false,
+                "noseMicros": 449682328194,
+                "tailMicros": 449682328194,
+                "carLenMicros": 0,
+                "carLenMS": 0,
+                "error": "CarLen [0] less than [3]"
+            },
+            "lane2": { "valid": false, "error": "No data for lane" }
+        },
+        "cBlock": [
+            {
+                "pinState": 1,
+                "pinType": "lane",
+                "microPrev": 449678517925,
+                "pubTime": 1594865927946,
+                "microb": 449682328194,
+                "pinNumber": "17",
+                "pinName": "lane1",
+                "micros": 449682328194,
+                "seq": 224866
+            }
+        ]
+    }
+]

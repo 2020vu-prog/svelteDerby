@@ -8,8 +8,6 @@
         console.log("rtl: mounted : ", laneJson);
         //laneCalc = JSON.parse(laneJson);
         console.log("rto: mounted : ", laneCalc);
-
-
     });
     function getCarLenMillis() {
         return laneCalc.carLenMS ? laneCalc.carLenMS : "None";
@@ -18,6 +16,7 @@
         return laneCalc.error ? laneCalc.error : "";
     }
 </script>
+
 <style>
     .errorMessage {
         background: papayawhip;
@@ -25,10 +24,9 @@
         padding: 1rem;
     }
 </style>
-<p /> {lane} CarLength: {getCarLenMillis()}
-{#if getLaneError()}
-<p class="errorMessage">
 
-Error: {getLaneError()}
-</p>
+<p />
+{lane} CarLength: {getCarLenMillis()}
+{#if getLaneError()}
+    <p class="errorMessage">Error: {getLaneError()}</p>
 {/if}
