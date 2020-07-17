@@ -21,8 +21,8 @@ function addPermission(pname, serverRouteList, svelteRouteList) {
 addPermission("CanAddParticipant", ["/addParticipant"], ["/driverAdd"]);
 addPermission(
     "CanTimerConfig",
-    ["/timerConfig", "/getActiveTimers"],
-    ["/timerConfig"]
+    ["/timerConfig", "/getActiveTimers", "/getTimerHistory"],
+    ["/timerConfig", "/rawTimerList"]
 );
 addPermission(
     "CanAddPending",

@@ -131,6 +131,43 @@ class DdbUtils {
         return rc;
     }
 
+    async getTimerConfigByOrgId(orgId) {
+        const timerConfig = await this.ddbQueryPkSk(
+            `${orgId}:TimerConfig`,
+            "TimerConfig"
+        );
+        return timerConfig;
+    }
+    async ddbQueryTimerHistoryByUuid(uuid) {
+        var containsValues = {};
+        containsValues[":pk"] = { S: uuid };
+        const loIso = new Date(new Date().getTime() - 1000 * 900).toISOString();
+        containsValues[":loIso"] = { S: loIso };
+        var params = {
+            TableName: process.env.TimerDbTable,
+            KeyConditionExpression: "PK = :pk and SK > :loIso  ",
+            ReturnConsumedCapacity: "TOTAL",
+            ScanIndexForward: false, // sort descending
+            ExpressionAttributeValues: containsValues,
+        };
+        console.log("history query: " + JSON.stringify(params));
+        try {
+            var data = await this.ddbClient.query(params);
+            const cc = data.ConsumedCapacity.CapacityUnits;
+            console.log("ddbQueryTimerHistoryByUuid cc: ", cc); // successful response
+            console.log("ddbQueryTimerHistoryByUuid: ", data); // successful response
+            console.log("ddbQueryTimerHistoryByUuid: " + JSON.stringify(data)); // successful response
+            const rc = this.unmarshallResultsToArray(data);
+
+            return rc;
+        } catch (err) {
+            console.log("ddbQueryTimerHistoryByUuid failed: ", err, err.stack); // an error occurred
+        }
+        return {
+            error: "ddbQueryTimerHistoryByUuid Failed",
+        };
+    }
+
     // Migrated july 3 2020
     async ddbQueryRaceHistory(qsp) {
         if (!qsp) {

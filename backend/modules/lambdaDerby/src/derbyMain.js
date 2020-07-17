@@ -554,7 +554,28 @@ const getSanitizedTimers = async () => {
     timers.forEach(doNotPublishUuid);
     return timers;
 };
-const getActiveTimers = async () => {
+
+async function queryTimerHistoryByOrgId(qsp) {
+    const [activeTimers, timerConfig] = await Promise.all([
+        getActiveTimers(),
+        ddbUtils.getTimerConfigByOrgId(qsp.orgId),
+    ]);
+    if (!timerConfig) {
+        return { error: "queryTimerHistoryByOrgId Missing timerConfig" };
+    }
+    var selectedTimerUuid = undefined;
+    activeTimers.forEach((timer) => {
+        if (timer.sha === timerConfig.sha) selectedTimerUuid = timer.uuid;
+    });
+    console.log(
+        `queryTimerHistoryByOrgId selectedTimerUuid ${selectedTimerUuid} `
+    );
+    if (!selectedTimerUuid) {
+        return { error: "Missing selectedTimerUuid" };
+    }
+    return await ddbUtils.ddbQueryTimerHistoryByUuid(selectedTimerUuid);
+}
+async function getActiveTimers() {
     const timers = await ddbUtils.ddbQueryPkAll(
         "registered",
         process.env.TimerDbTable
@@ -562,7 +583,7 @@ const getActiveTimers = async () => {
     timers.forEach(registeredTimerSha);
 
     return timers;
-};
+}
 const registeredTimerSha = (timer) => {
     const sha = crypto.createHash("sha256").update(timer.uuid).digest("hex");
     //timer.sha = sha.substring(0, 6);
@@ -796,6 +817,14 @@ const routeMap = {
             );
             const cacheControl = "max-age=" + cacheMaxSeconds;
             return buildResponse(qr, cacheControl);
+        },
+    },
+    "/getTimerHistory": {
+        h: async (event) => {
+            var qr = await queryTimerHistoryByOrgId(
+                event.queryStringParameters
+            );
+            return buildResponse(qr);
         },
     },
     "/listChartTypes": {

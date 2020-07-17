@@ -18,6 +18,7 @@
     import OrgAdd from "./OrgAdd.svelte";
     import ManualTimerAdd from "./ManualTimerAdd.svelte";
     import RaceStandingAdd from "./RaceStandingAdd.svelte";
+    import RawTimerList from "./RawTimerList.svelte";
     import AboutPage from "./AboutPage.svelte";
     import ChartDetail from "./ChartDetail.svelte";
     import ChartPosition from "./ChartPosition.svelte";
@@ -54,6 +55,7 @@
         "/chartList": ChartList,
         "/chartAdd": ChartAdd,
         "/timerConfig": TimerConfig,
+        "/rawTimerList": RawTimerList,
         // '/raceStandingAdd': RaceStandingAdd,
     };
 
@@ -105,6 +107,10 @@
             {
                 text: "Timer Config",
                 menuRoute: "/timerConfig",
+            },
+            {
+                text: "Raw Timer List",
+                menuRoute: "/rawTimerList",
             },
             {
                 text: "About",
