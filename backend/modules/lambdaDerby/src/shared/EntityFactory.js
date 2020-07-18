@@ -316,7 +316,8 @@ entityFactories["RacePhase"] = class RacePhase extends EntityBase {
     getPhaseDeltaMS() {
         if (!this.phr) return undefined;
         const deltaMicros = this.phr[1] - this.phr[0];
-        return Math.floor(deltaMicros / 1000);
+        console.log(`getPhaseDeltaMicros ${deltaMicros}`);
+        return Math.round(deltaMicros / 1000);
     }
     get carNumbers() {
         return this.cn;
@@ -407,7 +408,9 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     getPhaseXDeltaMS(x) {
         if (!x) return undefined;
         const deltaMicros = x[1] - x[0];
-        return Math.floor(deltaMicros / 1000);
+
+        console.log(`phaseXDeltaMicros ${deltaMicros}`);
+        return Math.round(deltaMicros / 1000);
     }
     get bracketPos() {
         return this.Bp;

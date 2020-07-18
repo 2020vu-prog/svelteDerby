@@ -132,7 +132,7 @@
             const wtMicros =
                 winnerDelta.lanes.lane2.noseMicros -
                 winnerDelta.lanes.lane1.noseMicros;
-            return Math.floor(wtMicros / 1000);
+            return Math.round(wtMicros / 1000);
         }
         return undefined;
     }
