@@ -23,8 +23,8 @@
         console.log("mounted focus: ", params);
 
         mounted = true;
-        refreshDataFromServer();
-        //testJson4Valid();
+        //refreshDataFromServer();
+        testJson4Valid();
         //testJson();
     });
     function testJson() {
@@ -122,17 +122,17 @@
         }
     }
     function getWinLane(winnerDelta) {
-        const wt = getWinTime(winnerDelta);
+        const wt = getWinTimeMs(winnerDelta);
         if (wt > 0) return "Lane1";
         if (wt < 0) return "Lane2";
         return "";
     }
-    function getWinTime(winnerDelta) {
+    function getWinTimeMs(winnerDelta) {
         if (winnerDelta.valid) {
-            const wt =
+            const wtMicros =
                 winnerDelta.lanes.lane2.noseMicros -
                 winnerDelta.lanes.lane1.noseMicros;
-            return wt;
+            return Math.floor(wtMicros / 1000);
         }
         return undefined;
     }
@@ -159,9 +159,9 @@
                 <div class="panel-heading">
                     <span class="spanRight">{getHHMMSS(winnerDelta)}</span>
                 </div>
-                {#if getWinTime(winnerDelta)}
+                {#if getWinTimeMs(winnerDelta)}
                     <p class="successMessage">
-                        Winner: {getWinLane(winnerDelta)} Time: {Math.abs(getWinTime(winnerDelta))}
+                        Winner: {getWinLane(winnerDelta)} Time: {Math.abs(getWinTimeMs(winnerDelta))}
                     </p>
                 {/if}
                 <RawTimerLane

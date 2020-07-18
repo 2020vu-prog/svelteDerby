@@ -30,7 +30,10 @@
 
             SK: params.rpKey,
 
-            phr: [Number(resultForm.lane1), Number(resultForm.lane2)].reverse(),
+            phr: [
+                getResultMicros(resultForm.lane1),
+                getResultMicros(resultForm.lane2),
+            ].reverse(),
         };
 
         axios.defaults.headers.common["Authorization"] = bearer;
@@ -56,6 +59,9 @@
         }
         resultForm.lane1 = "0";
         resultForm.lane2 = "0";
+    }
+    function getResultMicros(resultMillis) {
+        return Number(resultMillis) * 1000;
     }
     const resultForm = {
         lane1: "0",
