@@ -23,8 +23,8 @@
         console.log("mounted focus: ", params);
 
         mounted = true;
-        //refreshDataFromServer();
-        testJson4Valid();
+        refreshDataFromServer();
+        //testJson4Valid();
         //testJson();
     });
     function testJson() {
