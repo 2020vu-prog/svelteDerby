@@ -27,6 +27,7 @@
             orgId: orgIz + "." + orgU,
             orgIz: orgIz,
             lcl1: String(orgForm.lcl1),
+            pendingRule: orgForm.pending1Race ? "1Race" : "1Pair",
             name: orgForm.name,
         };
 
@@ -50,6 +51,7 @@
         return {
             name: "",
             lcl1: true,
+            pending1Race: true,
         };
     };
     orgForm = getDefaultOrgForm();
@@ -92,6 +94,13 @@
             id="lcl1"
             on:change={syncAddButton()}
             bind:checked={orgForm.lcl1} />
+    </label>
+    <label>
+        Limit Pending 1 Race At a Time:
+        <input
+            type="checkbox"
+            id="pending1Race"
+            bind:checked={orgForm.pending1Race} />
     </label>
     <button id="formSubmitButton" type="submit" disabled>Add</button>
 </form>

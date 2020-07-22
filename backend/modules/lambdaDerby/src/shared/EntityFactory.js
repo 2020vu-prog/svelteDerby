@@ -52,6 +52,7 @@ const EventConfigLit = "EventConfig";
 entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
     static members = [
         "lcl1", // lowCarlane1
+        "pendingRule", // "1Race", "1Pair"
         "orgIz", // Org Id (pending refactor)
         "name",
     ];
@@ -67,6 +68,10 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
         this.PK = EventConfigLit;
 
         this.SK = this.orgIz + ":" + this.orgId;
+        if (false) {
+        } else if (this.pendingRule === "1Race") {
+        } else if (this.pendingRule === "1Pair") {
+        } else this.pendingRule = "1Race"; // default is 1Race
     }
     get classType() {
         return EventConfigLit;
@@ -78,7 +83,11 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
 
 const OrgConfigLit = "OrgConfig";
 entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
-    static members = ["lcl1", "defaultTTL"]; // lowCarlane1
+    static members = [
+        "lcl1", // lowCarlane1
+        "pendingRule", // "1Race", "1Pair"
+        "defaultTTL",
+    ];
     static canBuild(json) {
         return json.PK && json.PK === OrgConfigLit;
     }

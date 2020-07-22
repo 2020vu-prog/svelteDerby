@@ -544,12 +544,15 @@ class DdbUtils {
     /*
      **
      */
-    async ddbQueryRsAlreadyPending(json) {
+    async ddbQueryRsAlreadyPending(json, pendingRule) {
+        // legacy check is " OR " (car can only be in 1Race at a time) --default
+        // new feature is " AND " (car can only be in 1Pair at a time)
+        const conjuction = pendingRule === "1Pair" ? " AND " : " OR ";
         const containsValues = {};
         const filterString = this.buildDdbCarFilter(
             json.cn,
             containsValues,
-            " OR "
+            conjuction
         );
         const filterPendingString =
             filterString + " AND attribute_not_exists(ph2) ";
@@ -558,7 +561,6 @@ class DdbUtils {
             containsValues
         );
 
-        console.log("containsValues:", containsValues);
         var params = {
             TableName: process.env.DynamoDbTable,
 
@@ -594,7 +596,6 @@ class DdbUtils {
             containsValues
         );
 
-        console.log("containsValues:", containsValues);
         var params = {
             TableName: process.env.DynamoDbTable,
 

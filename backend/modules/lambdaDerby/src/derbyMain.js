@@ -83,7 +83,10 @@ const addPending2 = async (event) => {
     console.log("BEGIN: addPending2: " + JSON.stringify(json));
     json.PK = ":RS"; // force RaceStanding
 
-    const alreadyExists = await ddbUtils.ddbQueryRsAlreadyPending(json);
+    const alreadyExists = await ddbUtils.ddbQueryRsAlreadyPending(
+        json,
+        cfg.pendingRule
+    );
     if (alreadyExists > 0) {
         return { error: "Pending2 already exists", status: "error" };
     }
