@@ -78,3 +78,9 @@ export function hhmmssFmt(at) {
         ("0" + time.getMinutes()).slice(-2)
     );
 }
+export function participantFocusCompletion(ptcp) {
+    return ptcp && ptcp.toString().length == 3;
+}
+export function participantValid(ptcp) {
+    return ptcp && ptcp.toString().length >= 2;
+}

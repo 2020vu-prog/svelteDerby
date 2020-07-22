@@ -4,6 +4,7 @@
     import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
+    import { participantValid, participantFocusCompletion } from "./utils.js";
 
     import axios from "axios";
     export let params = {};
@@ -34,9 +35,9 @@
         document.getElementById("cn1").focus();
         mounted = true;
     });
-    const changeFocus = (carNumber, seedIdentifier) => {
+    function changeFocus(carNumber, seedIdentifier) {
         console.log("changeFocus ", seedIdentifier, " ", carNumber);
-        if (String(carNumber).length == 3) {
+        if (participantFocusCompletion(carNumber)) {
             if (seedIdentifier == "A") {
                 document.getElementById("cn2").focus();
                 syncAddButton(false);
@@ -46,7 +47,7 @@
         } else {
             syncAddButton(false);
         }
-    };
+    }
 
     async function handleSubmit() {
         console.log("Adding:" + JSON.stringify(carNumberForm));
@@ -94,30 +95,24 @@
         carNumberForm.car2 = "";
     }
     const carNumberForm = {};
-    const syncAddButton = (shouldEnableButton) => {
+    function syncAddButton(advanceFocusToSubmit) {
         if (!mounted) {
             return;
         }
-        if (carNumberForm.car1 && carNumberForm.car2) {
-            if (
-                String(carNumberForm.car1).length >= 3 &&
-                String(carNumberForm.car2).length >= 3
-            ) {
-                document.getElementById("formSubmitButton").disabled = false;
-                console.log("sync add button SYNC");
-            } else {
-                document.getElementById("formSubmitButton").disabled = true;
-                console.log("sync add button FAIL");
-            }
-
-            if (shouldEnableButton == true) {
+        if (
+            participantValid(carNumberForm.car1) &&
+            participantValid(carNumberForm.car2)
+        ) {
+            document.getElementById("formSubmitButton").disabled = false;
+            console.log("sync add button SYNC");
+            if (advanceFocusToSubmit == true) {
                 document.getElementById("formSubmitButton").focus();
             }
         } else {
             document.getElementById("formSubmitButton").disabled = true;
             console.log("sync add button FAIL");
         }
-    };
+    }
     const getDriverName = (number) => {
         console.log("gdn: " + number);
         if (number && $driverMap[number]) {

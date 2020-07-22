@@ -5,7 +5,7 @@
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
-
+    import { participantValid, participantFocusCompletion } from "./utils.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import Icon from "fa-svelte";
 
@@ -89,7 +89,7 @@
 
     const changeFocus = (carNumber, textboxIdentifier) => {
         if (textboxIdentifier == "A") {
-            if (carNumber.toString().length == 3) {
+            if (participantFocusCompletion(carNumber)) {
                 document.getElementById("driverName").focus();
             }
         }
@@ -102,7 +102,7 @@
         }
         if (driverForm.carNumber && driverForm.driverName) {
             if (
-                String(driverForm.carNumber).length >= 3 &&
+                participantValid(driverForm.carNumber) &&
                 driverForm.driverName.toString() != ""
             ) {
                 document.getElementById("formSubmitButton").disabled = false;

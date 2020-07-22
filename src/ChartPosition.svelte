@@ -1,11 +1,13 @@
 <script>
-    import { raceConfig, driverMap } from "./stores.js";
+    import { raceConfig, driverMap, statusMessage } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import axios from "axios";
+    import { participantValid, participantFocusCompletion } from "./utils.js";
+
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let params = {};
@@ -53,16 +55,26 @@
             heatNumber: params.chartPosition,
         };
 
+        var validCount = 0;
         ["A", "B"].forEach((ab) => {
             var seedObject = {
                 status: posForm[ab].seedType,
                 ptcp: "",
             };
+
             if (
                 seedObject.status === "ptcp" ||
                 seedObject.status === "forfeit"
             ) {
-                seedObject.ptcp = posForm[ab].carNumber.toString();
+                if (participantValid(posForm[ab].carNumber)) {
+                    seedObject.ptcp = posForm[ab].carNumber.toString();
+                } else {
+                    $statusMessage = {
+                        text: `Invalid Participant: [${posForm[ab].carNumber}]`,
+                        type: "error",
+                    };
+                    return;
+                }
             }
 
             if (
@@ -73,8 +85,12 @@
             ) {
                 req.pos[ab] = seedObject;
             }
+            validCount++;
         });
 
+        if (validCount < 2) {
+            return;
+        }
         console.log("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
@@ -121,7 +137,7 @@
 
     const changeFocus = (carNumber, seedIdentifier) => {
         console.log("changeFocus ", seedIdentifier, " ", carNumber);
-        if (carNumber.toString().length == 3) {
+        if (participantFocusCompletion(carNumber)) {
             if (seedIdentifier == "A") {
                 document.getElementById("car2").focus();
             }
