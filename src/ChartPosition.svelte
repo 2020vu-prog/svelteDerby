@@ -1,5 +1,11 @@
 <script>
-    import { raceConfig, driverMap, statusMessage } from "./stores.js";
+    import RaceStanding from "./RaceStanding.svelte";
+    import {
+        raceConfig,
+        driverMap,
+        doRefreshBlocks,
+        statusMessage,
+    } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
@@ -9,24 +15,40 @@
     import { participantValid, participantFocusCompletion } from "./utils.js";
 
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+    import { isUserAllowedRoutePath } from "./utils.js";
 
     export let params = {};
     var bposFromDexie = null;
+    var rsFromDexie = null;
     const posForm = { A: {}, B: {} };
+    var editable = false;
 
     var mounted = false;
     onMount(async () => {
         mounted = true;
         resetForm();
-        await refreshDataFromDb();
+        await refreshChartFromDb();
+        await refreshStandingFromDb();
+        editable = await isUserAllowedRoutePath("/addChartPosition");
     });
-    const refreshDataFromDb = async (trigger) => {
-        console.log("refreshDataFromDb data:", trigger);
+    $: {
+        refreshStandingFromDb($doRefreshBlocks);
+    }
+    $: {
+        if (editable) {
+            posForm.A.input.disabled = false;
+            posForm.B.input.disabled = false;
+            posForm.A.select.disabled = false;
+            posForm.B.select.disabled = false;
+        }
+    }
+    const refreshChartFromDb = async (trigger) => {
+        console.log("refreshChartFromDb data:", trigger);
 
         const jsonFromDexie = await db.BracketPos.get(
             `${params.chartId}:${params.chartPosition}`
         );
-        console.log("refreshDataFromDb gave:", jsonFromDexie);
+        console.log("refreshChartFromDb gave:", jsonFromDexie);
         if (jsonFromDexie) {
             const entityFactory = new EntityFactory({});
             bposFromDexie = entityFactory.build(jsonFromDexie);
@@ -36,9 +58,31 @@
                 updateInputUI(ab, posForm[ab].seedType);
             });
 
-            console.log("refreshDataFromDb form:", posForm);
+            console.log("refreshChartFromDb form:", posForm);
         } else {
             bposFromDexie = null;
+        }
+    };
+
+    /*
+    $: {
+        refreshStandingFromDb($doRefreshBlocks)
+    }
+    */
+    const refreshStandingFromDb = async (trigger) => {
+        console.log("refreshStandingFromDb data:", trigger);
+
+        const jsonFromDexie = await db.RaceStanding.get(
+            `${params.chartId}:${params.chartPosition}`
+        );
+        console.log("refreshStandingFromDb gave:", jsonFromDexie);
+        if (jsonFromDexie) {
+            const entityFactory = new EntityFactory({});
+            rsFromDexie = entityFactory.build(jsonFromDexie);
+
+            console.log("refreshStandingFromDb form:", posForm);
+        } else {
+            rsFromDexie = null;
         }
     };
 
@@ -123,23 +167,16 @@
         }
     };
 
-    const updateInputUI = (seedCharacter, value) => {
-        if (value == "bye") {
-            document.getElementById(
-                "seed" + seedCharacter + "CarInput"
-            ).style.display = "none";
-        } else {
-            document.getElementById(
-                "seed" + seedCharacter + "CarInput"
-            ).style.display = "block";
-        }
-    };
+    function updateInputUI(ab, value) {
+        const displayStyle = value === "bye" ? "none" : "block";
+        posForm[ab].input.style.display = displayStyle;
+    }
 
     const changeFocus = (carNumber, seedIdentifier) => {
         console.log("changeFocus ", seedIdentifier, " ", carNumber);
         if (participantFocusCompletion(carNumber)) {
             if (seedIdentifier == "A") {
-                document.getElementById("car2").focus();
+                posForm.B.input.focus();
             }
         }
     };
@@ -170,21 +207,24 @@
             <div id="seedADiv">
                 <h3>{params.chartPosition}A</h3>
                 <select
+                    bind:this={posForm.A.select}
                     bind:value={posForm.A.seedType}
-                    on:change={() => updateInputUI('A', posForm.A.seedType)}>
+                    on:change={() => updateInputUI('A', posForm.A.seedType)}
+                    disabled>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
                 </select>
                 <div id="seedACarInput">
                     <input
-                        id="car1"
                         type="number"
+                        bind:this={posForm.A.input}
                         bind:value={posForm.A.carNumber}
                         placeholder="Car Number 1"
                         on:keyup={() => {
                             changeFocus(posForm.A.carNumber, 'A');
-                        }} />
+                        }}
+                        disabled />
                     <p>{getDriverName(posForm.A.carNumber)}</p>
                 </div>
             </div>
@@ -196,21 +236,25 @@
             <div id="seedBDiv">
                 <h3>{params.chartPosition}B</h3>
                 <select
+                    bind:this={posForm.B.select}
                     bind:value={posForm.B.seedType}
-                    on:change={() => updateInputUI('B', posForm.B.seedType)}>
+                    on:change={() => updateInputUI('B', posForm.B.seedType)}
+                    disabled>
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
                 </select>
                 <div id="seedBCarInput">
                     <input
-                        id="car2"
                         type="number"
+                        bind:this={posForm.B.input}
                         bind:value={posForm.B.carNumber}
                         placeholder="Car Number 2"
                         on:keyup={() => {
                             changeFocus(posForm.B.carNumber, 'B');
-                        }} />
+                        }}
+                        disabled />
+
                     <p>{getDriverName(posForm.B.carNumber)}</p>
                 </div>
             </div>
@@ -220,5 +264,11 @@
     <br />
     <br />
 
-    <button type="submit">Add</button>
+    {#if editable}
+        <button type="submit">Add</button>
+    {/if}
+
+    {#if rsFromDexie}
+        <RaceStanding at={rsFromDexie.at} standingKey={rsFromDexie.classKey} />
+    {/if}
 </form>

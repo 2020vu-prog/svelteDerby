@@ -32,7 +32,9 @@ addPermission(
 addPermission("CanAddBlocks", ["/addBlocks"], ["/raceStandingAdd/RacePhase"]);
 // TODO: qualify with metadata!
 addPermission("CanAddChart", ["/addChart"], ["/chartAdd"]);
-addPermission("ChartPosition", ["/addChartPosition"], []);
+
+// svelte /addChartPosition is not a svelte route, but is used with isUserAllowedRoutePath()
+addPermission("ChartPosition", ["/addChartPosition"], ["/addChartPosition"]);
 addPermission("ManualFinishTime", ["/doApplyFinishTime"], ["/ManualTimerAdd"]);
 addPermission("CanDeleteBlocks", ["/deleteRacePhase"], ["/NotASvelteRouteYet"]);
 addPermission(

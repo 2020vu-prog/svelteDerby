@@ -14,15 +14,12 @@
     export let standingKey;
     export let at;
 
-    export let refresh; // TODO: should probably use lastUpdate!
     console.log("standingKey", standingKey);
 
     var chartPosition = "";
     var standing = $standingsMap[standingKey];
     var hhmmss = "";
     let showToolbar = false;
-
-    console.log("refresh", refresh);
 
     const updateBoundVars = async (at) => {
         standing = $standingsMap[standingKey];
