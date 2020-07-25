@@ -27,6 +27,10 @@
     var btnClass = "btn-danger";
     const activeIotWatch = {};
 
+    var refreshInProgressButton = false;
+    var refreshInProgressMq = false;
+    var refreshInProgressCca = false;
+
     //TODO: these should happen consecutively.
     // always clearStore() before doRefresh()
     $: {
@@ -185,6 +189,7 @@
 
     const loadCcaHistory = async (s3Path, histP) => {
         console.log("LoadCca begin.");
+        refreshInProgressCca = true;
 
         try {
             // baseUrl is /app.   archives are at root.
@@ -192,18 +197,21 @@
                 $raceConfig.baseUrl + "/../" + s3Path
             );
             console.log("LoadCca finished:", response);
-            parseAndApply(response, false, histP); // don't recurse into another CCA load
+            await parseAndApply(response, false, histP); // don't recurse into another CCA load
         } catch (err) {
             console.log("LoadCca failed:", err);
         }
+        refreshInProgressCca = false;
     };
     const applyFromMqMsg = async (json) => {
+        refreshInProgressMq = true;
         const hist = getHistFromStore();
         const entityFactory = new EntityFactory({});
         const e = entityFactory.build(json);
         console.log("Entity from mq:", e);
         await applyEntityToHist(e, hist);
         applyHistToStore(hist);
+        refreshInProgressMq = false;
     };
     const applyHistToStore = (hist) => {
         $driverMap = hist.Participant;
@@ -244,7 +252,7 @@
     /*
      **
      */
-    const parseAndApply = async (response, doLoadCca, histP) => {
+    async function parseAndApply(response, doLoadCca, histP) {
         console.log("parseAndApply:", doLoadCca, histP);
         const startTime = new Date().getTime();
         const entityFactory = new EntityFactory({});
@@ -285,7 +293,7 @@
         };
 
         return hist;
-    };
+    }
     const applyEntityToHist = async (e, hist) => {
         console.log("entity", e);
         const sk = e.classKey;
@@ -347,6 +355,7 @@
         }
     }
     const doRefresh = async () => {
+        refreshInProgressButton = true;
         //await dbInit();
         console.log("old nobKey:", $nextOnBlockKey);
         const currentSession = await Auth.currentSession();
@@ -360,28 +369,29 @@
         watchIot();
 
         axios.defaults.headers.common["Authorization"] = bearer;
-        axios
-            .get(
-                $raceConfig.baseUrl +
-                    "/getRaceHistory?orgId=" +
-                    $raceConfig.orgId +
-                    "&orgIz=" +
-                    $raceConfig.orgIz
-            )
-            .then((response) => {
-                console.log("history:" + response.data.length);
-                //console.log("history:",response.data);
-                parseAndApply(response, true);
-            })
-            .catch((err) => {
-                console.log(err);
-            });
+        const url =
+            $raceConfig.baseUrl +
+            "/getRaceHistory?orgId=" +
+            $raceConfig.orgId +
+            "&orgIz=" +
+            $raceConfig.orgIz;
+        try {
+            const response = await axios.get(url);
+            console.log("history:" + response.data.length);
+            //console.log("history:",response.data);
+            await parseAndApply(response, true);
+            refreshInProgressButton = false;
+        } catch (err) {
+            console.log(err);
+        }
     };
 </script>
 
-<button
-    class="btn {btnClass}"
-    type="button"
-    on:click|preventDefault={doRefresh}>
-    Refresh
-</button>
+{#if !refreshInProgressButton && !refreshInProgressMq && !refreshInProgressCca}
+    <button
+        class="btn {btnClass}"
+        type="button"
+        on:click|preventDefault={doRefresh}>
+        Refresh
+    </button>
+{/if}
