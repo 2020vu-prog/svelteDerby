@@ -8,8 +8,8 @@ const fs = require('fs');
 global.fetch = require('node-fetch');
 
 const poolData = {    
-UserPoolId : "us-east-2_gHYAogcpy",
-ClientId : "755hlhpgiomc38j11um13euoae" // Your client id here
+UserPoolId : "us-east-2_iksOg1OJe",
+ClientId : "5u75gsnn9883r7pnpnm894c2tg" // Your client id here
 }; 
 const pool_region = 'us-east-2';
 

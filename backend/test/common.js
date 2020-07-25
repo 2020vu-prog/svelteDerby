@@ -1,5 +1,6 @@
 module.exports.FOO = "bar";
-module.exports.CF = "https://d15zun4udup4ky.cloudfront.net/app"
+//module.exports.CF = "https://d15zun4udup4ky.cloudfront.net/app"
+module.exports.CF = "https://cf.derby.rr1.us/app"
 //const CF="https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
 
 const fs = require('fs');

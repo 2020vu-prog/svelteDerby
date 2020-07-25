@@ -4,7 +4,7 @@ const { CF, getData, postData, getHHMMSS } = require("./common.js");
 const { v4: uuidv4 } = require('uuid');
 const testers = /2020vu|ConnorM/i
 
-const slowDrivers=true;
+const slowDrivers=false;
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -19,10 +19,10 @@ for (var x = 501; x < dmax; x++) {
 
 
 const orgU = uuidv4().substring(0, 5);
-const orgId = "test." + orgU;
+const orgIz = "Test";
+const orgId = `${orgIz}.${orgU}`;
 
 
-const orgIz = "test";
 
 test('listOrgConfig: ', () => {
     return getData(`${CF}/listOrgConfig`).then(data => {
@@ -48,7 +48,7 @@ test('getRaceConfig: ', () => {
 test('listChartTypes: ', () => {
     return getData(`${CF}/listChartTypes?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
         expect(Object.keys(data).length).toBeGreaterThan(0);
-        console.log("s3listdata: ", data);
+        //console.log("s3listdata: ", data);
     });
 });
 
@@ -121,7 +121,7 @@ var timerSkBPhase = "";
 
 test('getNextOnBlocks: ', () => {
     return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
-        console.log("nextOnBlocks:", data);
+        //console.log("nextOnBlocks:", data);
         expect(data[0].by).toMatch(testers);
         expect(data.length).toEqual(1);
         timerSkAPhase = data[0].SK;
@@ -129,7 +129,7 @@ test('getNextOnBlocks: ', () => {
 });
 
 test('applyFinishTime: should succeed', () => {
-    console.log("applyFinishTime:", timerSkAPhase);
+    //console.log("applyFinishTime:", timerSkAPhase);
     return postData(`${CF}/doApplyFinishTime`, { "orgIz": orgIz, "orgId": orgId, SK: timerSkAPhase, phr: [0, 33] }).then(received => {
         expect(received.data.status).toMatch(/ok/i);
     });
@@ -162,7 +162,7 @@ test('getNextOnBlocks: should be B phase key', () => {
 });
 
 test('applyFinishTime: (B Phase) should succeed', () => {
-    console.log("applyFinishTime:", timerSkBPhase);
+    //console.log("applyFinishTime:", timerSkBPhase);
     return postData(`${CF}/doApplyFinishTime`, { "orgIz": orgIz, "orgId": orgId, SK: timerSkBPhase, phr: [44, 0] }).then(received => {
         expect(received.data.status).toMatch(/ok/i);
     });
