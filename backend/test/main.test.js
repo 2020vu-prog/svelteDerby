@@ -4,7 +4,7 @@ const { CF, getData, postData, getHHMMSS } = require("./common.js");
 const { v4: uuidv4 } = require('uuid');
 const testers = /2020vu|ConnorM/i
 
-const slowDrivers=false;
+const slowDrivers=true;
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }

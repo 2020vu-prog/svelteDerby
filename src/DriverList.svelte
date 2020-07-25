@@ -8,10 +8,11 @@
     import { onMount } from "svelte";
 
     var userEmail = "none";
-
+    var editable = false;
     onMount(async () => {
         userEmail = await getUserEmail();
         console.log(`DriverList userEmail: ${userEmail}`);
+        editable = isDriverEditable(userEmail);
     });
     const filterMatches = (driver, lclFilter) => {
         if (!lclFilter) return true;
@@ -42,7 +43,7 @@
                     number={carNumber}
                     at={safeGetAt($driverMap, carNumber)}
                     isWinner=""
-                    editable={isDriverEditable(userEmail)}
+                    editable={editable}
                     phaseLetter="" />
             </div>
         {/if}
