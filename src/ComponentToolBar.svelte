@@ -10,6 +10,7 @@
     export let dbKey;
     export let timerLink;
     export let bracketLink;
+    const mediaLink = "/spMediaList";
     onMount(async () => {
         console.log("timerLink: ", timerLink);
         console.log("bracketLink: ", bracketLink);
@@ -61,6 +62,9 @@
                 type: "error",
             };
         }
+    }
+    async function gotoListMedia() {
+        push(mediaLink);
     }
     const gotoTimer = () => {
         console.log("routing to:", timerLink);
@@ -121,5 +125,10 @@
         on:click|preventDefault={doDelete}>
         Delete
     </span>
-
+    <span
+        class="navbarItem"
+        style="background-color: {$theme}"
+        on:click|preventDefault={gotoListMedia}>
+        Media
+    </span>
 </div>

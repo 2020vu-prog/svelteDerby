@@ -57,6 +57,7 @@ addPermission(
         "/listChartTypes",
         "/addEventConfig",
         "/requestMqttSubPermission",
+        "/listMediaPrefix",
     ],
     [
         "/orgAdd", // be careful with this one!

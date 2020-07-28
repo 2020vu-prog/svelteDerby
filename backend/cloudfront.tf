@@ -290,7 +290,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
       }
     }
 
-    min_ttl                = 0
+    min_ttl                = 86400
     default_ttl            = 86400
     max_ttl                = 31536000
     compress               = true

@@ -23,6 +23,7 @@
     import ChartDetail from "./ChartDetail.svelte";
     import ChartPosition from "./ChartPosition.svelte";
     import TimerConfig from "./TimerConfig.svelte";
+    import MediaList from "./MediaList.svelte";
 
     import Login from "./Login.svelte";
     import HotLoad from "./HotLoad.svelte";
@@ -56,6 +57,7 @@
         "/chartAdd": ChartAdd,
         "/timerConfig": TimerConfig,
         "/rawTimerList": RawTimerList,
+        "/spMediaList": MediaList,
         // '/raceStandingAdd': RaceStandingAdd,
     };
 

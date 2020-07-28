@@ -31,7 +31,24 @@ const s3QueryChartTypes = async () => {
         return { error: "s3 list buckets Failed" };
     }
 };
+async function s3QueryMediaPrefix() {
+    const allKeys = await getAllKeys({
+        Bucket: process.env.DstBucket,
+        Prefix: "media/",
+    });
+    console.log("s3QueryMediaPrefix: ", allKeys);
+    return allKeys;
+}
+async function getAllKeys(params, allKeys = []) {
+    const response = await s3.listObjectsV2(params).promise();
+    response.Contents.forEach((obj) => allKeys.push(obj.Key));
 
+    if (response.NextContinuationToken) {
+        params.ContinuationToken = response.NextContinuationToken;
+        await getAllKeys(params, allKeys); // RECURSIVE CALL
+    }
+    return allKeys;
+}
 const attachPrincipalPolicy = async (policyName, principal) => {
     try {
         const data = await new AWS.Iot()
@@ -142,7 +159,7 @@ const applyFinishTime = async (json) => {
 
         const finishPromises = [];
         finishPromises.push(
-            announceResults.formatAndSubmitAnnouncement(tgtRs, tgtRs.orgId)
+            announceResults.formatAndSubmitAnnouncement(tgtRs, tgtRp)
         );
 
         if (tgtRs.isComplete()) {
@@ -828,6 +845,13 @@ const routeMap = {
                 event.queryStringParameters
             );
             return buildResponse(qr);
+        },
+    },
+    "/listMediaPrefix": {
+        h: async (event) => {
+            var qr = await s3QueryMediaPrefix(event.queryStringParameters);
+            const cacheControl = "max-age=" + 15;
+            return buildResponse(qr, cacheControl);
         },
     },
     "/listChartTypes": {

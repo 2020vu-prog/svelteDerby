@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 class AnnounceResults {
     AWS = null;
     iotdata;
@@ -37,7 +39,7 @@ class AnnounceResults {
             return { error: err };
         }
     }
-    async submitToPolly(msg, orgId) {
+    async submitToPolly(msg, orgId, mediaPrefix) {
         if (!this.AWS) {
             console.log("Polly unavailable. AWS is null");
             return;
@@ -51,6 +53,7 @@ class AnnounceResults {
             Engine: "standard",
             LanguageCode: "en-US",
             OutputS3KeyPrefix: `media/${orgId}/msg`,
+            //OutputS3KeyPrefix: `media/${mediaPrefix}/polly`,
             SampleRate: "8000",
             SnsTopicArn: process.env.PollyCompleteSnsArn,
             TextType: "ssml",
@@ -64,11 +67,34 @@ class AnnounceResults {
             console.log("pollyTask err:", err); // successful response
         }
     }
-    async formatAndSubmitAnnouncement(tgtRs, orgId) {
+    async formatAndSubmitAnnouncement(tgtRs, tgtRp) {
+        const orgId = tgtRs.orgId;
+        const mediaPrefix = this.getMediaPrefix(tgtRp);
+
         const paMessage = await this.formatAnnouncement(tgtRs, orgId);
         console.log(`paMessage: ${orgId} ssml:`, paMessage);
-        const paSubmit = await this.submitToPolly(paMessage, orgId);
+        const paSubmit = await this.submitToPolly(
+            paMessage,
+            orgId,
+            mediaPrefix
+        );
         console.log("paSubmit:", paSubmit);
+    }
+    getMediaPrefix(tgtRp) {
+        var prefixSeed = 0;
+        if (tgtRp && tgtRp.phr && tgtRp.phr.length > 0) {
+            prefixSeed = Math.min(...tgtRp.phr);
+        }
+        if (prefixSeed == 0) {
+            prefixSeed = tgtRp.SK;
+        }
+        const sha = crypto
+            .createHash("sha256")
+            .update(prefixSeed)
+            .digest("hex");
+        return `SHA_${sha}`;
+
+        //return sha.toString().replaceAll(/=/g, "");
     }
     async lookupNames(cnList, orgId) {
         const promises = [];
