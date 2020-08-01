@@ -21,6 +21,7 @@ locals{
 	accountId = data.aws_caller_identity.current.account_id
 	IotArn="arn:aws:iot:${var.AwsRegion}:${local.accountId}"
 
+      zipFile         = "${path.module}/src/package.zip"
       
 }
 
@@ -31,12 +32,6 @@ data "aws_iot_endpoint" "mqtt" {
   endpoint_type="iot:Data-ATS"
 }
 
-data "archive_file" "zip" {
-  type        = "zip"
-  source_dir = "${path.module}/src/"
-  output_path = "tmp/build/dynamoMain.zip"
-  depends_on = [null_resource.install_npm_deps]
-}
 resource "null_resource" "install_npm_deps" {
   provisioner "local-exec" {
     command = "npm install"
@@ -76,8 +71,8 @@ resource "aws_cloudwatch_log_group" "dynamoMainLogRetention" {
 resource "aws_lambda_function" "lambda" {
   function_name = "dynamoMain"
 
-  filename         = data.archive_file.zip.output_path
-  source_code_hash = data.archive_file.zip.output_base64sha256
+  filename         = local.zipFile
+  source_code_hash = filebase64sha256(local.zipFile)
 
   role    = aws_iam_role.iam_for_lambda_dynamo.arn
   handler = "dynamoMain.handler"

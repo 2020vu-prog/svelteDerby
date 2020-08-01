@@ -4,7 +4,8 @@
   "description": "",
   "main": "derbyMain.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postpack": "tarball=$(npm list --depth 0 | sed 's/@/-/g; s/ .*/.tgz/g; 1q;'); tar -tf $tarball | sed 's/^package\\///' | zip -@r package; rm $tarball"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +15,11 @@
     "csv-parse": "^4.8.7",
     "jsonwebtoken": "^8.5.1",
     "jwk-to-pem": "^2.0.3"
-  }
+  },
+  "bundledDependencies": [
+    "@aws-sdk/client-dynamodb-v2-node",
+    "csv-parse",
+    "jsonwebtoken",
+    "jwk-to-pem"
+  ]
 }

@@ -21,6 +21,7 @@ locals {
   accountId   = data.aws_caller_identity.current.account_id
   IotArn      = "arn:aws:iot:${var.AwsRegion}:${local.accountId}"
 
+      zipFile         = "${path.module}/src/package.zip"
 
 }
 
@@ -28,12 +29,6 @@ locals {
 data "aws_caller_identity" "current" {}
 
 
-data "archive_file" "sqsCcaMain" {
-  type        = "zip"
-  source_dir  = "${path.module}/src/"
-  output_path = "tmp/build/sqsCcaMain.zip"
-  depends_on = [null_resource.install_npm_deps]
-}
 resource "null_resource" "install_npm_deps" {
   provisioner "local-exec" {
     command = "npm install"
@@ -73,8 +68,8 @@ resource "aws_cloudwatch_log_group" "sqsCcaLogRetention" {
 resource "aws_lambda_function" "lambda" {
   function_name = "sqsCcaMain"
 
-  filename         = data.archive_file.sqsCcaMain.output_path
-  source_code_hash = data.archive_file.sqsCcaMain.output_base64sha256
+  filename         = local.zipFile
+  source_code_hash = filebase64sha256(local.zipFile)
 
   role    = aws_iam_role.iam_for_lambda_cca.arn
   handler = "ccaMain.handler"

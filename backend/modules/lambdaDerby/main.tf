@@ -28,6 +28,7 @@ locals{
       
       timerDbList= split("/",var.TimerDbArn)
       TimerDbTable= element(local.timerDbList,length(local.timerDbList)-1)
+      zipFile         = "${path.module}/src/package.zip"
       
 }
 data "aws_iot_endpoint" "mqtt" {
@@ -63,13 +64,6 @@ resource "aws_sns_topic_subscription" "lambda_sns_sub_polly" {
 }
 
 
-data "archive_file" "zip" {
-  type        = "zip"
-  //source_file = "${path.module}/src/derbyMain.js"
-  source_dir = "${path.module}/src/"
-  output_path = "tmp/build/derbyMain.zip"
-  depends_on = [null_resource.install_npm_deps]
-}
 
 resource "null_resource" "install_npm_deps" {
   provisioner "local-exec" {
@@ -110,8 +104,8 @@ resource "aws_cloudwatch_log_group" "derbyMainLogRetention" {
 resource "aws_lambda_function" "lambda" {
   function_name = local.mainLambdaName
 
-  filename         = data.archive_file.zip.output_path
-  source_code_hash = data.archive_file.zip.output_base64sha256
+  filename         = local.zipFile
+  source_code_hash = filebase64sha256(local.zipFile)
 
   timeout = 4 // increased for bulkAdd
   role    = aws_iam_role.iam_for_lambda.arn

@@ -27,15 +27,6 @@ module "derbyMainLambda" {
   S3DistBucketArn = aws_s3_bucket.dstBucket.arn
   
 }
-module "lambdaTimerApply" {
-  source = "./modules/lambdaTimerApply"
-
-  DynamoDbArn=aws_dynamodb_table.derby-dynamodb-table.arn
-  DeployEnvironment=var.DeployEnvironment
-  AwsRegion=var.AwsRegion
-  ApplyTimerSnsArn =aws_sns_topic.TimerWinDeltaSns.arn
-  
-}
 
  resource "aws_api_gateway_resource" "proxy" {
    rest_api_id = aws_api_gateway_rest_api.derbyApp.id
