@@ -19,7 +19,8 @@ export const raceConfig = writable({
     orgId: "",
     baseUrl: "/app",
 });
-export const chartClickLoggerId = writable("01A");
+export const chartClickLoggerId = writable("");
+export const chartClickLoggerShow = writable(false);
 
 const getPrefs = () => {
     var prefs = {};
@@ -30,7 +31,8 @@ const getPrefs = () => {
     return prefs;
 };
 export function getChartCacheKey() {
-    return "2020May17a";
+    //return require("./config/doNotEditChartKey.json").chartKey;
+    return new Date().getTime().toString();
 }
 export function getCacheKey() {
     var prefs = getPrefs();

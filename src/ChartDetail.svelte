@@ -4,11 +4,16 @@
     import { db } from "./eventDb.js";
     import axios from "axios";
     import ChartClickLogger from "./ChartClickLogger.svelte";
-    import { chartClickLoggerId, getChartCacheKey } from "./stores.js";
+    import {
+        chartClickLoggerId,
+        chartClickLoggerShow,
+        getChartCacheKey,
+    } from "./stores.js";
     import { parseHeatPos } from "./utils.js";
 
     export let params = {};
     const loggedImgPositions = {};
+    var showChartClickLogger = false;
     var bmdFromDexie = {};
     var bracketImgSrc = "/archive/charts/progessSpinner.png";
     onMount(async () => {
@@ -20,7 +25,8 @@
         bmdFromDexie = await db.BracketMetaData.get(params.chartId);
         console.log("refreshDataFromDb gave:", bmdFromDexie);
 
-        bracketImgSrc = "/data/brackets/" + bmdFromDexie.imgPath;
+        const chartCacheKey = getChartCacheKey();
+        bracketImgSrc = `/data/brackets/${bmdFromDexie.imgPath}?cacheKey=${chartCacheKey}`;
         //await getChartImage(bmdFromDexie.imgPath);
         await getChartImage(bmdFromDexie.jsonPath);
     };
@@ -31,8 +37,9 @@
         axios
             .get(`/data/brackets/${imgPath}?cacheKey=${chartCacheKey}`)
             .then((response) => {
-                console.log("ChartDetail  axios success", response);
+                console.log("ChartDetail  brackets2 axios success", response);
                 brackets2 = response.data;
+
                 checkAndActivateScroll();
             })
             .catch((err) => {
@@ -51,6 +58,10 @@
 
     let scale = 1;
     const logClickPosition = (event) => {
+        if (!$chartClickLoggerId) {
+            //don't do anything when empty... enables panMove
+            return;
+        }
         const m = {
             //clientX: event.clientX,
             //clientY: event.clientY,
@@ -59,6 +70,9 @@
             //chartPosition: $chartClickLoggerId,
         };
         loggedImgPositions[$chartClickLoggerId] = m;
+        brackets2.imgPositions[$chartClickLoggerId] = m;
+        brackets2.imgPositions = brackets2.imgPositions; // force re-render?
+
         console.log(
             `loggedImagePos: ${$chartClickLoggerId}: `,
             JSON.stringify(loggedImgPositions)
@@ -115,6 +129,13 @@
         return vars;
     };
 
+    function hotMoved(event, posKey) {
+        console.log("hotMoved:" + event + " posKey:" + posKey);
+        console.log("hotMoved top:" + event.detail.top);
+        console.log("hotMoved left:" + event.detail.left);
+        brackets2.imgPositions[posKey].top = event.detail.top;
+        brackets2.imgPositions[posKey].left = event.detail.left;
+    }
     const checkAndActivateScroll = () => {
         var URLscrollToVar = getUrlVars()["scrollTo"];
         console.log("URLscrollToVar: ", URLscrollToVar);
@@ -124,18 +145,23 @@
             window.scrollTo(x, y);
         }
     };
+    function copyJson() {
+        console.log("CD: copyJson");
+        navigator.clipboard.writeText(JSON.stringify(brackets2));
+    }
 </script>
 
 <style>
     div.container {
         width: 100%;
         height: 30px;
-        background: blue;
     }
 </style>
 
-<h3 style="z-index: 9;">Chart Name: {params.chartId}</h3>
-<div id="top" class="container" style="z-index: 8;">
+<h3 style="text-align:center;z-index: 9;">
+    Chart Name: {bmdFromDexie.bracketName}
+</h3>
+<div id="top" class="container" style="position: absolute; z-index: 8;">
 
     {#each Object.values(brackets2.imgPositions) as bracket, pos}
         <ChartHotSpot
@@ -144,15 +170,17 @@
             left={bracket.left}
             top={bracket.top}
             chartId={params.chartId}
+            on:hotMove={(e) => hotMoved(e, Object.keys(brackets2.imgPositions)[pos])}
+            isPannable={$chartClickLoggerShow}
             isSeed={brackets2.seeds.indexOf(Object.keys(brackets2.imgPositions)[pos]) > -1 ? true : false} />
     {/each}
     <img
         on:load={imgLoadComplete}
-        style="position: absolute; z-index: 1; top:0px;left:0px;"
+        style="position: relative; z-index: 1; "
         id="sky"
         src={bracketImgSrc}
         alt="bracketImage"
         on:click={logClickPosition} />
 
-    <ChartClickLogger />
+    <ChartClickLogger on:copyJson={copyJson} />
 </div>

@@ -6,6 +6,7 @@ const powerUsers = [
     "REDACTED_PERMISSION_EMAIL",
     "REDACTED_PERMISSION_EMAIL",
 ];
+const starterUsers = ["REDACTED_PERMISSION_EMAIL"];
 const hasRoutePath = (routeType, userMail, serverRoutePath) => {
     const permKeys = module.exports.lookupUserPermissions(userMail);
     console.log("permKeys:", permKeys);
@@ -20,13 +21,20 @@ const hasRoutePath = (routeType, userMail, serverRoutePath) => {
     return rc;
 };
 module.exports.lookupUserPermissions = (userMail) => {
-    console.log("pmap2:", Object.keys(permissionMap2));
+    //console.log("pmap2:", Object.keys(permissionMap2));
     var grantedPerms = { Anonymous: "value ignored" };
     powerUsers.forEach((pue) => {
         if (userMail && pue.toLowerCase() === userMail.toLowerCase()) {
             grantedPerms = { ...permissionMap2 };
         }
     });
+
+    starterUsers.forEach((pue) => {
+        if (userMail && pue.toLowerCase() === userMail.toLowerCase()) {
+            grantedPerms.CanAddBlocks = permissionMap2.CanAddBlocks;
+        }
+    });
+
     const granted = Object.keys(grantedPerms);
     console.log(`granting permissions for ${userMail} -- `, granted);
     return granted;

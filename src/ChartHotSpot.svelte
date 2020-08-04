@@ -4,6 +4,8 @@
     import { db } from "./eventDb.js";
     import { parseHeatPos } from "./utils.js";
     import { doRefreshBlocks } from "./stores.js";
+    import { pannable } from "./pannable.js";
+    import { createEventDispatcher } from "svelte";
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let left;
@@ -12,6 +14,8 @@
     export let pos;
     export let chartId;
     export let isSeed;
+    export let isPannable;
+    const dispatch = createEventDispatcher();
 
     let scaledTop;
     let scaledLeft;
@@ -90,6 +94,25 @@
         //await getChartImage(bmdFromDexie.imgPath);
         //await getChartImage(bmdFromDexie.jsonPath);
     };
+    function handlePanStart() {
+        console.log("chs panStart  ");
+    }
+    function handlePanMove(event) {
+        console.log(
+            "chs panMove x: " + event.detail.dx + " y:" + event.detail.dy
+        );
+        left = parseInt(event.detail.dx, 10) + parseInt(left, 10);
+        top = parseInt(event.detail.dy, 10) + parseInt(top, 10);
+    }
+    function handlePanEnd(event) {
+        console.log("chs panEnd : " + event);
+        // note syntax difference b/t node.dispatch() and createEventDispatcher()
+        dispatch("hotMove", {
+            top: top,
+            left: left,
+        });
+        console.log("chs panMoved.");
+    }
 </script>
 
 <style>
@@ -115,11 +138,25 @@
     }
 </style>
 
-<div
-    class="overlay {bracketClass}"
-    id="myDIV"
-    on:click={() => gotoChartPos()}
-    style="position: absolute;width: {scaledWidth}px;height: {scaledHeight}px;z-index:
-    2;left: {scaledLeft}px;top: {scaledTop}px;">
-    {pos} {posHtml}
-</div>
+{#if isPannable}
+    <div
+        class="overlay {bracketClass}"
+        id="myDIV"
+        use:pannable
+        on:panstart={handlePanStart}
+        on:panmove={handlePanMove}
+        on:panend={handlePanEnd}
+        style="position: absolute;width: {scaledWidth}px;height: {scaledHeight}px;z-index:
+        2;left: {scaledLeft}px;top: {scaledTop}px;">
+        {pos} {posHtml}
+    </div>
+{:else}
+    <div
+        class="overlay {bracketClass}"
+        id="myDIV"
+        on:click={() => gotoChartPos()}
+        style="position: absolute;width: {scaledWidth}px;height: {scaledHeight}px;z-index:
+        2;left: {scaledLeft}px;top: {scaledTop}px;">
+        {pos} {posHtml}
+    </div>
+{/if}
