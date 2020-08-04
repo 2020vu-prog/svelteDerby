@@ -1,5 +1,10 @@
 <script>
-    import { raceConfig, driverMap, statusMessage } from "./stores.js";
+    import {
+        raceConfig,
+        driverMap,
+        statusMessage,
+        nextOnBlockKey,
+    } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
@@ -50,6 +55,17 @@
     }
 
     async function handleSubmit() {
+        const endPoint = unMapType("endPoint");
+
+        if (endPoint == "/addBlocks" && $nextOnBlockKey.length > 0) {
+            $statusMessage = {
+                text:
+                    "You cannot add a race to the blocks when the blocks are already occupied.",
+                type: "error",
+            };
+            return;
+        }
+
         console.log("Adding:" + JSON.stringify(carNumberForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
@@ -65,7 +81,6 @@
 
         axios.defaults.headers.common["Authorization"] = bearer;
 
-        const endPoint = unMapType("endPoint");
         spinner = true;
         try {
             const response = await axios.post(
