@@ -64,23 +64,21 @@
         axios.defaults.headers.common["Authorization"] = bearer;
 
         const newPtcp = driverForm.carNumber;
-        axios
-            .post($raceConfig.baseUrl + "/addParticipant", req)
-            .then((response) => {
-                $statusMessage = {
-                    text: `Driver [${newPtcp}] Added.`,
-                    type: "success",
-                };
-                //console.log("driverAdd axios success")
-                pop();
-            })
-            .catch((err) => {
-                $statusMessage = {
-                    text: "driverAdd failed: " + err,
-                    type: "error",
-                };
-                //console.log("driverAdd failed: " + err)
-            });
+        const url = $raceConfig.baseUrl + "/addParticipant";
+        try {
+            const response = await axios.post(url, req);
+            $statusMessage = {
+                text: `Driver [${newPtcp}] Added.`,
+                type: "success",
+            };
+            pop();
+        } catch (error) {
+            $statusMessage = {
+                text: "driverAdd failed: " + error,
+                type: "error",
+            };
+            //console.log("driverAdd failed: " + err)
+        }
         driverForm.driverName = "";
         driverForm.carNumber = "";
     }
@@ -116,6 +114,45 @@
             console.log("sync add button FAIL");
         }
     };
+    async function requestSpeech() {
+        var speakMe = `Driver name is ${driverForm.driverName}`;
+        if (driverForm.sampa) {
+            speakMe = `Driver name is <phoneme alphabet="x-sampa" ph="${driverForm.sampa}">${driverForm.driverName}</phoneme>`;
+        }
+        const ssml = `<speak>${speakMe}</speak>`;
+        console.log("requesting speech");
+        console.log(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
+        const currentSession = await Auth.currentSession();
+        const bearer = currentSession.idToken.jwtToken;
+
+        const req = {
+            orgId: $raceConfig.orgId,
+            orgIz: $raceConfig.orgIz,
+            ssml: ssml,
+        };
+
+        console.log("token:" + bearer);
+
+        axios.defaults.headers.common["Authorization"] = bearer;
+
+        const newPtcp = driverForm.carNumber;
+        const url = $raceConfig.baseUrl + "/requestTts";
+        try {
+            const response = await axios.post(url, req);
+            console.log("speech: ", response);
+            $statusMessage = {
+                text: `Speech Processed.`,
+                type: "success",
+            };
+            new Audio(`/${response.data.speechMp3}`).play();
+        } catch (error) {
+            $statusMessage = {
+                text: "speak failed: " + error,
+                type: "error",
+            };
+            //console.log("driverAdd failed: " + err)
+        }
+    }
 </script>
 
 <h3>{mode} Driver</h3>
@@ -168,4 +205,7 @@
         </p>
     {/if}
     <button id="formSubmitButton" type="submit" disabled>{mode}</button>
+    <button id="speakButton" type="button" on:click={requestSpeech}>
+        Speak
+    </button>
 </form>

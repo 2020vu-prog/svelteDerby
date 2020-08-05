@@ -723,7 +723,7 @@ const addEventConfig = async (json, priorTtl) => {
     return eventRC;
 };
 
-const addParticipant2 = async (json) => {
+async function addParticipant2(json) {
     console.log("addParticipant2: " + JSON.stringify(json));
     json.PK = ":PTCP"; // force Participant
     const paTask = await announceResults.submitToPolly(
@@ -731,7 +731,7 @@ const addParticipant2 = async (json) => {
         json.orgId
     );
     return await ddbUtils.addSingle(json);
-};
+}
 const getOrgId = (event) => {
     if (event.body) {
         return JSON.parse(event.body).orgId;
@@ -876,6 +876,16 @@ const routeMap = {
             );
             console.log("announceTask: " + paMessage + " gave: ", paTask);
             return buildResponse({ paTask: paTask });
+        },
+    },
+    "/requestTts": {
+        h: async (event) => {
+            var json = JSON.parse(event.body);
+            var ssml = json.ssml;
+            var orgId = json.orgId;
+            const speechMp3 = await announceResults.submitToPolly(ssml, orgId);
+            console.log("requestTts: " + ssml + " gave: ", speechMp3);
+            return buildResponse({ speechMp3: speechMp3 });
         },
     },
     "/requestMqttSubPermission": {
@@ -1043,7 +1053,7 @@ exports.handler = async function (event) {
         console.log("sns polly: : ", process.env.PollyCompleteSnsArn);
         if (snsMessageJson.snsTopicArn === process.env.PollyCompleteSnsArn) {
             console.log("polly finished: ", snsMessageJson);
-            await announceResults.propagateIot(snsMessageJson);
+            await announceResults.propagateIotFromSns(snsMessageJson);
             return "Polly Success";
         }
 

@@ -11,25 +11,31 @@ class AnnounceResults {
         this.ddbUtils = ddbUtils;
     }
 
-    // invoked on callback with known mp3 file.
-    async propagateIot(json) {
+    async propagateIotFromSns(json) {
         console.log("Iot Begin broadcast:", json);
         var orgId = json.outputUri.replace(/.*media\//, "");
         console.log(`orgId1: ${orgId}`);
         orgId = orgId.replace(/\/.*/, "");
         console.log(`orgId2: ${orgId}`);
+        await this.propagateIotGeneric(orgId, json.outputUri);
+    }
+
+    // invoked on callback with known mp3 file.
+    async propagateIotGeneric(orgId, mp3Path) {
         if (!this.iotdata) {
             // first time
             this.iotdata = new this.AWS.IotData({
                 endpoint: process.env.IotEndpoint,
             });
         }
+        const payload = { outputUri: "/" + mp3Path };
         const params = {
             topic: `derby/${orgId}/pa`,
-            payload: JSON.stringify(json),
+            payload: JSON.stringify(payload),
             qos: 0,
         };
         try {
+            console.log("Iot PA broadcast request:", params);
             var data = await this.iotdata.publish(params).promise();
             console.log("Iot PA broadcast Success.", params);
             return { status: "ok", detail: "Published" };
@@ -45,26 +51,44 @@ class AnnounceResults {
             return;
         }
         var polly = new this.AWS.Polly({ apiVersion: "2016-06-10" });
+        //OutputS3BucketName: process.env.DstBucket /*required */,
+        //OutputS3KeyPrefix: `media/${orgId}/msg`,
+        //SnsTopicArn: process.env.PollyCompleteSnsArn,
         var params = {
-            OutputFormat: "mp3",
-            OutputS3BucketName: process.env.DstBucket /*required */,
-            Text: msg,
-            VoiceId: "Joanna",
             Engine: "standard",
             LanguageCode: "en-US",
-            OutputS3KeyPrefix: `media/${orgId}/msg`,
-            //OutputS3KeyPrefix: `media/${mediaPrefix}/polly`,
+            OutputFormat: "mp3",
             SampleRate: "8000",
-            SnsTopicArn: process.env.PollyCompleteSnsArn,
+            Text: msg,
             TextType: "ssml",
+            VoiceId: "Joanna",
         };
         try {
-            const pollyTask = await polly
-                .startSpeechSynthesisTask(params)
-                .promise();
-            console.log("pollyTask ok:", pollyTask); // successful response
+            const pollySpeech = await polly.synthesizeSpeech(params).promise();
+            console.log(`pollySpeech ok: ${pollySpeech.RequestCharacters}`); // successful response
+            const s3 = new this.AWS.S3({ apiVersion: "2006-03-01" });
+
+            const now = new Date().getTime();
+            var s3Params = {
+                Body: pollySpeech.AudioStream,
+                Bucket: process.env.DstBucket,
+                Key: `media/${orgId}/msg/${now}.mp3`,
+            };
+
+            console.log(`pollySpeech s3 saving:`, s3Params); // successful response
+            const data = await s3.putObject(s3Params).promise();
+            console.log(`pollySpeech s3 saved:`, data); // successful response
+
+            return s3Params.Key;
+            /*
+            data = {
+                AudioStream: <Binary String>, 
+                ContentType: "audio/mpeg", 
+                RequestCharacters: 37
+               }
+               */
         } catch (err) {
-            console.log("pollyTask err:", err); // successful response
+            console.log("pollySpeech err:", err); // successful response
         }
     }
     async formatAndSubmitAnnouncement(tgtRs, tgtRp) {
@@ -73,12 +97,13 @@ class AnnounceResults {
 
         const paMessage = await this.formatAnnouncement(tgtRs, orgId);
         console.log(`paMessage: ${orgId} ssml:`, paMessage);
-        const paSubmit = await this.submitToPolly(
+        const mp3ObjectPath = await this.submitToPolly(
             paMessage,
             orgId,
             mediaPrefix
         );
-        console.log("paSubmit:", paSubmit);
+        console.log("mp3ObjectPath:", mp3ObjectPath);
+        await this.propagateIotGeneric(orgId, mp3ObjectPath);
     }
     getMediaPrefix(tgtRp) {
         var prefixSeed = 0;

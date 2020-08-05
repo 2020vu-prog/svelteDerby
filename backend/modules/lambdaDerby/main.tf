@@ -181,6 +181,7 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
         actions = [
 		"iot:AttachPrincipalPolicy",
 		"polly:StartSpeechSynthesisTask",
+		"polly:SynthesizeSpeech",
         ]
         resources = [
                 "*"

@@ -1,1 +1,176 @@
-{"imgSize":{"height":1650,"width":1275},"imgPositions":{"01A":{"left":4,"top":284},"01B":{"left":3,"top":387},"02A":{"left":3,"top":431},"02B":{"left":3,"top":532},"03A":{"left":0,"top":609},"03B":{"left":0,"top":710},"04A":{"left":2,"top":747},"04B":{"left":0,"top":855},"05A":{"left":1444,"top":308},"05B":{"left":1451,"top":425},"06A":{"left":1458,"top":520},"06B":{"left":1446,"top":635},"07A":{"left":204,"top":336},"07B":{"left":209,"top":476},"08A":{"left":195,"top":665},"08B":{"left":199,"top":797},"09A":{"left":1256,"top":356},"09B":{"left":1258,"top":462},"10A":{"left":1257,"top":567},"10B":{"left":1264,"top":678},"11A":{"left":1109,"top":429},"11B":{"left":1111,"top":626},"12A":{"left":348,"top":428},"12B":{"left":347,"top":726},"13A":{"left":968,"top":541},"13B":{"left":971,"top":676},"14A":{"left":490,"top":555},"14B":{"left":829,"top":619},"15A":{"left":794,"top":800},"15B":{"left":795,"top":868},"501A":{"left":1265,"top":1012},"501B":{"left":1265,"top":1079},"502A":{"left":1116,"top":907},"502B":{"left":1115,"top":979},"Place1":{"left":121,"top":929},"Place2":{"left":121,"top":962},"Place3":{"left":123,"top":997},"Place4":{"left":121,"top":1032},"Place5":{"left":115,"top":1065},"Place6":{"left":119,"top":1100},"Place7":{"left":114,"top":1134},"Place8":{"left":115,"top":1178}},"seeds":["01A","02A","03A","04A","04B","02B","03B","01B"],"progress":{"10":{"#Round":"L7","HeatNumber":"10","WinnerDest":"11B","LoserDest":"502B"},"11":{"#Round":"L6","HeatNumber":"11","WinnerDest":"13A","LoserDest":"Place4"},"12":{"#Round":"W3","HeatNumber":"12","WinnerDest":"14A","LoserDest":"13B"},"13":{"#Round":"L5","HeatNumber":"13","WinnerDest":"14B","LoserDest":"Place3"},"14":{"#Round":"Championship4","HeatNumber":"14","WinnerDest":"(AWINS?Place1:15B)","LoserDest":"(AWINS?Place2:15A)"},"15":{"#Round":"Championship4","HeatNumber":"15","WinnerDest":"Place1","LoserDest":"Place2"},"501":{"#Round":"Runoff","HeatNumber":"501","WinnerDest":"Place7","LoserDest":"Place8"},"502":{"#Round":"Runoff","HeatNumber":"502","WinnerDest":"Place5","LoserDest":"Place6"},"01":{"#Round":"W1","HeatNumber":"01","WinnerDest":"07A","LoserDest":"05A"},"02":{"#Round":"W1","HeatNumber":"02","WinnerDest":"07B","LoserDest":"05B"},"03":{"#Round":"W1","HeatNumber":"03","WinnerDest":"08A","LoserDest":"06A"},"04":{"#Round":"W1","HeatNumber":"04","WinnerDest":"08B","LoserDest":"06B"},"07":{"#Round":"W2","HeatNumber":"07","WinnerDest":"12A","LoserDest":"10B"},"08":{"#Round":"W2","HeatNumber":"08","WinnerDest":"12B","LoserDest":"09B"},"05":{"#Round":"L8","HeatNumber":"05","WinnerDest":"09A","LoserDest":"501A"},"06":{"#Round":"L8","HeatNumber":"06","WinnerDest":"10A","LoserDest":"501B"},"09":{"#Round":"L7","HeatNumber":"09","WinnerDest":"11A","LoserDest":"502A"}}}
+{
+    "imgSize": {
+        "height": 1650,
+        "width": 1275
+    },
+    "imgPositions": {
+        "01A": {
+            "left": 25,
+            "top": 268
+        },
+        "01B": {
+            "left": 25,
+            "top": 376
+        },
+        "02A": {
+            "left": 25,
+            "top": 412
+        },
+        "02B": {
+            "left": 25,
+            "top": 519
+        },
+        "03A": {
+            "left": 25,
+            "top": 590
+        },
+        "03B": {
+            "left": 25,
+            "top": 697
+        },
+        "04A": {
+            "left": 25,
+            "top": 733
+        },
+        "04B": {
+            "left": 25,
+            "top": 842
+        },
+        "05A": {
+            "left": 1423,
+            "top": 287
+        },
+        "05B": {
+            "left": 1431,
+            "top": 420
+        },
+        "06A": {
+            "left": 1423,
+            "top": 502
+        },
+        "06B": {
+            "left": 1430,
+            "top": 635
+        },
+        "07A": {
+            "left": 200,
+            "top": 324
+        },
+        "07B": {
+            "left": 200,
+            "top": 465
+        },
+        "08A": {
+            "left": 200,
+            "top": 646
+        },
+        "08B": {
+            "left": 199,
+            "top": 788
+        },
+        "09A": {
+            "left": 1278,
+            "top": 341
+        },
+        "09B": {
+            "left": 1311,
+            "top": 449
+        },
+        "10A": {
+            "left": 1278,
+            "top": 556
+        },
+        "10B": {
+            "left": 1311,
+            "top": 665
+        },
+        "11A": {
+            "left": 1135,
+            "top": 412
+        },
+        "11B": {
+            "left": 1135,
+            "top": 609
+        },
+        "12A": {
+            "left": 344,
+            "top": 413
+        },
+        "12B": {
+            "left": 344,
+            "top": 719
+        },
+        "13A": {
+            "left": 992,
+            "top": 520
+        },
+        "13B": {
+            "left": 1027,
+            "top": 662
+        },
+        "14A": {
+            "left": 490,
+            "top": 555
+        },
+        "14B": {
+            "left": 847,
+            "top": 592
+        },
+        "15A": {
+            "left": 814,
+            "top": 789
+        },
+        "15B": {
+            "left": 814,
+            "top": 869
+        },
+        "501A": {
+            "left": 1281,
+            "top": 998
+        },
+        "501B": {
+            "left": 1281,
+            "top": 1070
+        },
+        "502A": {
+            "left": 1137,
+            "top": 891
+        },
+        "502B": {
+            "left": 1137,
+            "top": 970
+        },
+        "Place1": {
+            "left": 128,
+            "top": 926
+        },
+        "Place2": {
+            "left": 128,
+            "top": 961
+        },
+        "Place3": {
+            "left": 128,
+            "top": 997
+        },
+        "Place4": {
+            "left": 128,
+            "top": 1032
+        },
+        "Place5": {
+            "left": 128,
+            "top": 1068
+        },
+        "Place6": {
+            "left": 128,
+            "top": 1104
+        },
+        "Place7": {
+            "left": 128,
+            "top": 1141
+        },
+        "Place8": {
+            "left": 128,
+            "top": 1176
+        }
+    }
+}
