@@ -223,12 +223,12 @@
     };
     function copyJson() {
         console.log("CD: copyJson");
-        const jsonClone = JSON.stringifyt(brackets2);
+        const jsonClone = JSON.stringify(brackets2);
         const bracketClone = JSON.parse(jsonClone);
         delete bracketClone.imgPositions.seedx;
         delete bracketClone.seeds;
         delete bracketClone.progress;
-        navigator.clipboard.writeText(JSON.stringify(bracketsClone));
+        navigator.clipboard.writeText(JSON.stringify(bracketClone));
     }
     const jqLoaded = () => {
         console.log("jqloaded");
