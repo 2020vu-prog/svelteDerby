@@ -10,7 +10,7 @@
     export let dbKey;
     export let timerLink;
     export let bracketLink;
-    const mediaLink = "/spMediaList";
+    const mediaLink = `/spMediaList/${dbName}/${dbKey}`;
     onMount(async () => {
         console.log("timerLink: ", timerLink);
         console.log("bracketLink: ", bracketLink);

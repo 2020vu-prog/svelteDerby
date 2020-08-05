@@ -16,7 +16,12 @@
     var showChartClickLogger = false;
     var bmdFromDexie = {};
     var bracketImgSrc = "/archive/charts/progessSpinner.png";
+    var mounted = false;
+    var imageLoaded = false;
+    var jsReady = false;
     onMount(async () => {
+        mounted = true;
+        tryBuild();
         await refreshDataFromDb();
     });
     const refreshDataFromDb = async (trigger) => {
@@ -44,6 +49,10 @@
             })
             .catch((err) => {
                 console.log("ChartDetail failed: " + err);
+                if (!$chartClickLoggerId) {
+                    //don't do anything when empty... enables panMove
+                    return;
+                }
             });
     };
     console.log("chartDetail params:", params);
@@ -57,17 +66,18 @@
     };
 
     let scale = 1;
-    const logClickPosition = (event) => {
+    function logClickXY(x, y) {
         if (!$chartClickLoggerId) {
             //don't do anything when empty... enables panMove
             return;
         }
+        // todo: this SUCKS... hardcoded header size?
+        y = y - 130;
         const m = {
-            //clientX: event.clientX,
-            //clientY: event.clientY,
-            left: event.clientX,
-            top: event.clientY,
-            //chartPosition: $chartClickLoggerId,
+            //left: event.clientX,
+            //top: event.clientY,
+            left: x,
+            top: y,
         };
         loggedImgPositions[$chartClickLoggerId] = m;
         brackets2.imgPositions[$chartClickLoggerId] = m;
@@ -78,10 +88,74 @@
             JSON.stringify(loggedImgPositions)
         );
         bumpPos();
-        // imgSize();
-    };
+    }
+    function logClickPosition(event) {
+        if (!$chartClickLoggerId) {
+            //don't do anything when empty... enables panMove
+            return;
+        }
+        const [px, py] = iim(event);
 
+        // imgSize();
+    }
+    var thisChartImage;
+    function iim(e) {
+        console.log(
+            `thisChartImage: pagex: ${event.pageX} pageY: ${event.pageY}`
+        );
+        console.log("thisChartImage:", thisChartImage);
+
+        const bounds = thisChartImage.getBoundingClientRect();
+        var left = bounds.left;
+        var top = bounds.top;
+        var x = event.pageX - left;
+        var y = event.pageY - top;
+        var cw = thisChartImage.clientWidth;
+        var ch = thisChartImage.clientHeight;
+        var iw = thisChartImage.naturalWidth;
+        var ih = thisChartImage.naturalHeight;
+        var px = (x / cw) * iw;
+        var py = (y / ch) * ih;
+        console.log(
+            "click on " +
+                thisChartImage.tagName +
+                " at pixel (" +
+                px +
+                "," +
+                py +
+                ") mouse pos (" +
+                x +
+                "," +
+                y +
+                ") relative to boundingClientRect at (" +
+                left +
+                "," +
+                top +
+                ") client image size: " +
+                cw +
+                " x " +
+                ch +
+                " natural image size: " +
+                iw +
+                " x " +
+                ih
+        );
+
+        return [px, py];
+    }
+
+    function bumpPlace() {
+        var placeNumber = $chartClickLoggerId.replace(/^[a-zA-Z]*/, "");
+        placeNumber = parseInt(placeNumber, 10);
+        placeNumber++;
+
+        $chartClickLoggerId = `Place${placeNumber}`;
+    }
     const bumpPos = () => {
+        if ($chartClickLoggerId.startsWith("Place")) {
+            bumpPlace();
+            return;
+        }
         var [pos, letter] = parseHeatPos($chartClickLoggerId);
         pos = parseInt(pos, 10);
         if (letter === "A") {
@@ -97,7 +171,7 @@
         $chartClickLoggerId = `${pos}${letter}`;
     };
     function imgSize() {
-        var myImg = document.querySelector("#sky");
+        var myImg = document.querySelector("#bracketImage");
         var currWidth = myImg.clientWidth;
         var currHeight = myImg.clientHeight;
         console.log(
@@ -116,6 +190,8 @@
     const imgLoadComplete = () => {
         console.log(`imgLoadComplete: `);
         checkAndActivateScroll();
+        imageLoaded = true;
+        tryBuild();
     };
 
     const getUrlVars = () => {
@@ -147,8 +223,31 @@
     };
     function copyJson() {
         console.log("CD: copyJson");
-        navigator.clipboard.writeText(JSON.stringify(brackets2));
+        const jsonClone = JSON.stringifyt(brackets2);
+        const bracketClone = JSON.parse(jsonClone);
+        delete bracketClone.imgPositions.seedx;
+        delete bracketClone.seeds;
+        delete bracketClone.progress;
+        navigator.clipboard.writeText(JSON.stringify(bracketsClone));
     }
+    const jqLoaded = () => {
+        console.log("jqloaded");
+        jsReady = true;
+        tryBuild();
+    };
+    const tryBuild = () => {
+        if (mounted && jsReady && imageLoaded) {
+            console.log("GO");
+            jQuery("#bracketImage").on("click", function (event) {
+                var x = event.pageX - this.offsetLeft;
+                var y = event.pageY - this.offsetTop;
+                console.log(
+                    "jquery X Coordinate: " + x + " Y Coordinate: " + y
+                );
+                logClickXY(x, y);
+            });
+        }
+    };
 </script>
 
 <style>
@@ -158,6 +257,13 @@
     }
 </style>
 
+<svelte:head>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"
+        on:load={jqLoaded}>
+
+    </script>
+</svelte:head>
 <h3 style="text-align:center;z-index: 9;">
     Chart Name: {bmdFromDexie.bracketName}
 </h3>
@@ -177,9 +283,10 @@
     <img
         on:load={imgLoadComplete}
         style="position: relative; z-index: 1; "
-        id="sky"
+        id="bracketImage"
         src={bracketImgSrc}
         alt="bracketImage"
+        bind:this={thisChartImage}
         on:click={logClickPosition} />
 
     <ChartClickLogger on:copyJson={copyJson} />

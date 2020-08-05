@@ -57,7 +57,7 @@
         "/chartAdd": ChartAdd,
         "/timerConfig": TimerConfig,
         "/rawTimerList": RawTimerList,
-        "/spMediaList": MediaList,
+        "/spMediaList/:dbName/:dbKey": MediaList,
         // '/raceStandingAdd': RaceStandingAdd,
     };
 

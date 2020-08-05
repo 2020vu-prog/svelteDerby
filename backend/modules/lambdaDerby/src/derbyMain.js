@@ -31,12 +31,16 @@ const s3QueryChartTypes = async () => {
         return { error: "s3 list buckets Failed" };
     }
 };
-async function s3QueryMediaPrefix() {
-    const allKeys = await getAllKeys({
+async function s3QueryMediaPrefix(queryStringParameters) {
+    const prefix = queryStringParameters.prefix
+        ? queryStringParameters.prefix
+        : "";
+    const params = {
         Bucket: process.env.DstBucket,
-        Prefix: "media/",
-    });
-    console.log("s3QueryMediaPrefix: ", allKeys);
+        Prefix: `media/${prefix}`,
+    };
+    const allKeys = await getAllKeys(params);
+    console.log("s3QueryMediaPrefix: ", params, allKeys);
     return allKeys;
 }
 async function getAllKeys(params, allKeys = []) {

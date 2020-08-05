@@ -13,3 +13,4 @@ build/
 .terraform/
 
 .DS_Store
+src/config/doNotEditChartKey.json

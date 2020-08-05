@@ -154,7 +154,7 @@
 
 <h3>Timer Config</h3>
 <br />
-
+<div on:click={() => replace('/spMediaList/*/*')}>List All Media</div>
 <form on:submit|preventDefault={handleSubmit}>
     <h4>Auto-Apply Preferences</h4>
 
