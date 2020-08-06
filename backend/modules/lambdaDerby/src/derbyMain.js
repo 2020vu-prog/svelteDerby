@@ -163,7 +163,7 @@ const applyFinishTime = async (json) => {
 
         const finishPromises = [];
         finishPromises.push(
-            announceResults.formatAndSubmitAnnouncement(tgtRs, tgtRp)
+            announceResults.formatAndSubmitResults(tgtRs, tgtRp)
         );
 
         if (tgtRs.isComplete()) {
@@ -446,7 +446,7 @@ const deleteRaceStanding = async (json) => {
     }
     return rc;
 };
-const addBlocks = async (json) => {
+async function addBlocks(json) {
     console.log("addBlocks: " + JSON.stringify(json));
     json.PK = ":RP"; // force RacePhase
 
@@ -486,8 +486,15 @@ const addBlocks = async (json) => {
     json["pl"] = rsFound[0].getPhaseLiteral(json.cn);
     if (rsFound[0].Bp) json["Bp"] = rsFound[0].Bp;
 
-    return await ddbUtils.addSingle(json);
-};
+    const rpResult = await ddbUtils.addSingle(json);
+    console.log("addBlocks tgtRp:", rpResult);
+
+    await announceResults.formatAndSubmitNextOnBlocks(
+        rsFound[0],
+        rpResult.entity
+    );
+    return rpResult;
+}
 
 const addChartMetaData = async (json) => {
     console.log("addChartMetaData: " + JSON.stringify(json));
