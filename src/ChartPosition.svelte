@@ -54,7 +54,10 @@
             bposFromDexie = entityFactory.build(jsonFromDexie);
             ["A", "B"].forEach((ab) => {
                 posForm[ab].carNumber = bposFromDexie.getPtcpNumber(ab);
-                posForm[ab].seedType = bposFromDexie.getPtcpStatus(ab);
+                if (bposFromDexie.getPtcpStatus(ab)) {
+                    // don't update seedType to null!
+                    posForm[ab].seedType = bposFromDexie.getPtcpStatus(ab);
+                }
                 updateInputUI(ab, posForm[ab].seedType);
             });
 
@@ -106,18 +109,21 @@
                 ptcp: "",
             };
 
+            console.log("Initialized seedObject:", seedObject);
             if (
                 seedObject.status === "ptcp" ||
                 seedObject.status === "forfeit"
             ) {
-                if (participantValid(posForm[ab].carNumber)) {
+                if (participantValid(posForm[ab].carNumber === "")) {
+                    // let empty racers through bracket mgmt.  they may not be known yet.
+                } else if (participantValid(posForm[ab].carNumber)) {
                     seedObject.ptcp = posForm[ab].carNumber.toString();
                 } else {
                     $statusMessage = {
                         text: `Invalid Participant: [${posForm[ab].carNumber}]`,
                         type: "error",
                     };
-                    return;
+                    return; // return from closure [AB]
                 }
             }
 
@@ -127,7 +133,10 @@
                         seedObject.status === "forfeit")) ||
                 seedObject.status === "bye"
             ) {
+                console.log("Good seedObject:", seedObject);
                 req.pos[ab] = seedObject;
+            } else {
+                console.log("Skip seedObject:", seedObject);
             }
             validCount++;
         });
