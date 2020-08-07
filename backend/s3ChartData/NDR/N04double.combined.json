@@ -1,0 +1,130 @@
+{
+	"imgSize": {
+		"height": 1700,
+		"width": 2200
+	},
+	"imgPositions": {
+		"01A": {
+			"left": 80,
+			"top": 116
+		},
+		"01B": {
+			"left": 78,
+			"top": 336
+		},
+		"02A": {
+			"left": 81,
+			"top": 491
+		},
+		"02B": {
+			"left": 79,
+			"top": 713
+		},
+		"03A": {
+			"left": 1109,
+			"top": 208
+		},
+		"03B": {
+			"left": 1109,
+			"top": 462
+		},
+		"04A": {
+			"left": 294,
+			"top": 211
+		},
+		"04B": {
+			"left": 290,
+			"top": 587
+		},
+		"05A": {
+			"left": 907,
+			"top": 338
+		},
+		"05B": {
+			"left": 910,
+			"top": 587
+		},
+		"06A": {
+			"left": 488,
+			"top": 399
+		},
+		"06B": {
+			"left": 697,
+			"top": 463
+		},
+		"07A": {
+			"left": 681,
+			"top": 648
+		},
+		"07B": {
+			"left": 685,
+			"top": 773
+		},
+		"Place1": {
+			"left": 1326,
+			"top": 647
+		},
+		"Place2": {
+			"left": 1327,
+			"top": 713
+		},
+		"Place3": {
+			"left": 1327,
+			"top": 775
+		},
+		"Place4": {
+			"left": 1326,
+			"top": 839
+		}
+	},
+	"seeds": [
+		"01A",
+		"02A",
+		"02B",
+		"01B"
+	],
+	"progress": {
+		"01": {
+			"#Round": "Left1",
+			"HeatNumber": "01",
+			"WinnerDest": "04A",
+			"LoserDest": "03A"
+		},
+		"02": {
+			"#Round": "Left1",
+			"HeatNumber": "02",
+			"WinnerDest": "04B",
+			"LoserDest": "03B"
+		},
+		"03": {
+			"#Round": "Right2",
+			"HeatNumber": "03",
+			"WinnerDest": "05A",
+			"LoserDest": "Place4"
+		},
+		"04": {
+			"#Round": "Left3",
+			"HeatNumber": "04",
+			"WinnerDest": "06A",
+			"LoserDest": "05B"
+		},
+		"05": {
+			"#Round": "Right4",
+			"HeatNumber": "05",
+			"WinnerDest": "06B",
+			"LoserDest": "Place3"
+		},
+		"06": {
+			"#Round": "Championship5",
+			"HeatNumber": "06",
+			"WinnerDest": "(AWINS?Place1:07A)",
+			"LoserDest": "(AWINS?Place2:07B)"
+		},
+		"07": {
+			"#Round": "Championship5",
+			"HeatNumber": "07",
+			"WinnerDest": "Place1",
+			"LoserDest": "Place2"
+		}
+	}
+}
