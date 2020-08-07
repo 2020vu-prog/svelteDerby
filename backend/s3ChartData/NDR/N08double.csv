@@ -1,31 +1,38 @@
 #Round,HeatNumber,WinnerDest,LoserDest
-Left1,01,03A,05A
-Left1,02,04A,06A
+Left1,01,07A,05A
+Left1,02,07B,05B
+Left1,03,08A,06A
+Left1,04,08B,06B
 
-Left2,03,08A,06B
-Left2,04,08B,05B
+Right2,05,09A,501A
+Right2,06,10A,501B
 
-Right3,05,07A,502A
-Right3,06,07B,502B
+Left3,07,11A,10B
+Left3,08,11B,09B
 
-Right4,07,09A,Place4
+Right4,09,12A,502A
+Right4,10,12B,502B
 
-Left5,08,10A,09B
-Right6,09,10B,Place3
+Left5,11,14A,13B
 
-Championship7,10,(AWINS?Place1:11B),(AWINS?Place2:11A)
-Championship7,11,Place1,Place2
+Right6,12,13A,Place4
 
+Right7,13,14B,Place3
+
+Championship8,14,(AWINS?Place1:15A),(AWINS?Place2:15B)
+Championship8,15,Place1,Place2
+
+Runoff,501,Place7,Place8
 Runoff,502,Place5,Place6
 
 Seed1,01A
 Seed2,02A
-Seed3,03B
-Seed4,04B
-Seed5,02B
-Seed6,01B
-Seed7,03A
-Seed8,04A
+Seed3,03A
+Seed4,04A
+Seed5,04B
+Seed6,03B
+Seed7,02B
+Seed8,01B
 
 
 
