@@ -935,8 +935,14 @@ async function snsApplyTimerHandler(snsMessageJson) {
         "applyTimerHandler Message received from SNS2:",
         snsMessageJson
     );
+    console.log(
+        "applyTimerHandler Message received from SNS2:",
+        snsMessageJson
+    );
     const json = snsMessageJson;
     if (json && json.timerConfig && json.deltas && json.deltas.length > 0) {
+        // sns gave us a timer config.  use that instead of
+        //   waiting for another dynamo read
         const timerConfig = json.timerConfig;
         entityFactory = new EntityFactory({
             orgId: timerConfig.orgId,
@@ -949,6 +955,31 @@ async function snsApplyTimerHandler(snsMessageJson) {
         const nextOnBlocks = await ddbUtils.ddbQueryRpNextOnBlocks(
             json.timerConfig // need orgId, orgIz
         );
+        const candidateBlock = json.deltas[0].cBlock;
+
+        if (candidateBlock && candidateBlock[0]) {
+            const firstCblock = candidateBlock[0]; // first block is close enough for this edit
+            console.log(
+                "auditCblock: first candidateBlock: ",
+                firstCblock,
+                " vs: ",
+                nextOnBlocks
+            );
+            if (firstCblock.pubTime < nextOnBlocks.at) {
+                console.log(
+                    "auditCblock: ignoring finishTime that is older than nextOnBlocks"
+                );
+                return;
+            } else {
+                console.log(
+                    "auditCblock: allowing finishTime that is newer than nextOnBlocks"
+                );
+            }
+        } else {
+            console.log("auditCblock: finishTime not Audited.  missing cblock");
+        }
+        // TODO: do not apply times from an sns event prior to
+        //    the racephase add time
         console.log("applyTimerHandler nob:", nextOnBlocks);
         if (nextOnBlocks.length > 0) {
             const rp = nextOnBlocks[0]; // TODO: get oldest!

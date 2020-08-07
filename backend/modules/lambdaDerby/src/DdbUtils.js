@@ -141,7 +141,9 @@ class DdbUtils {
     async ddbQueryTimerHistoryByUuid(uuid) {
         var containsValues = {};
         containsValues[":pk"] = { S: uuid };
-        const loIso = new Date(new Date().getTime() - 1000 * 900).toISOString();
+        const loIso = new Date(
+            new Date().getTime() - 1000 * 1800
+        ).toISOString();
         containsValues[":loIso"] = { S: loIso };
         var params = {
             TableName: process.env.TimerDbTable,

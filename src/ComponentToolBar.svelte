@@ -125,10 +125,12 @@
         on:click|preventDefault={doDelete}>
         Delete
     </span>
-    <span
-        class="navbarItem"
-        style="background-color: {$theme}"
-        on:click|preventDefault={gotoListMedia}>
-        Media
-    </span>
+    {#if dbName === 'RacePhase'}
+        <span
+            class="navbarItem"
+            style="background-color: {$theme}"
+            on:click|preventDefault={gotoListMedia}>
+            Media
+        </span>
+    {/if}
 </div>
