@@ -7,4 +7,4 @@ function die {
 echo syncing to bucket: $BucketName
 
 pwd
-aws s3 sync ./s3ChartData  s3://$BucketName/data/brackets
+aws s3 sync ./s3ChartData  s3://$BucketName/data/brackets --delete

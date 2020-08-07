@@ -280,7 +280,8 @@ entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
 
     //TODO: status->disp
     getPtcpStatus(ab) {
-        return this.getPtcpObject(ab).status;
+        const ptcpObject = this.getPtcpObject(ab);
+        return ptcpObject ? ptcpObject.status : null;
     }
     formatSK(chartId, heatNumber) {
         SK = `${chartId}:${heatNumber}`;
