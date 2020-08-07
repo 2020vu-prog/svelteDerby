@@ -133,7 +133,7 @@ class AnnounceResults {
         }
         const sha = crypto
             .createHash("sha256")
-            .update(prefixSeed)
+            .update(prefixSeed.toString())
             .digest("hex");
         return `SHA_${sha}`;
 
