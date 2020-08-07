@@ -161,10 +161,15 @@ const applyFinishTime = async (json) => {
         }
         await ddbUtils.addSingle(tgtRs);
 
-        const finishPromises = [];
+        var finishPromises = [];
         finishPromises.push(
             announceResults.formatAndSubmitResults(tgtRs, tgtRp)
         );
+
+        // TODO: cloneRS messes with announcement on tie when there is a bracket
+        await Promise.all(finishPromises);
+        finishPromises = [];
+        //End TODO:
 
         if (tgtRs.isComplete()) {
             if (tgtRs.isOverallTie()) {
@@ -385,16 +390,27 @@ const applyPtcpToChartPos = async (
     await addOrUpdateChartPosition(tgtBracketPos);
 };
 
-const cloneRs = async (srcRs) => {
-    const clone = {
-        PK: ":RS", // force RacePhase
-        cn: srcRs.cn,
-        orgId: srcRs.orgId,
-        by: srcRs.by,
-    };
-    console.log("cloneRs: ", JSON.stringify(clone));
-    return await ddbUtils.addSingle(clone);
-};
+//TODO: put this method in RS object!
+function isRaceStandingAdhoc(srcRs) {
+    return !srcRs.SK.includes(":");
+}
+async function cloneRs(srcRs) {
+    if (isRaceStandingAdhoc(srcRs)) {
+        const clone = {
+            PK: ":RS", // force RaceStanding
+            cn: srcRs.cn,
+            orgId: srcRs.orgId,
+            by: srcRs.by,
+        };
+        console.log("cloneRs: ", JSON.stringify(clone));
+        return await ddbUtils.addSingle(clone);
+    } else {
+        // don't generate a new key if this RS is tied to the charts!
+        delete srcRs.ph1;
+        delete srcRs.ph2;
+        return await ddbUtils.addSingle(srcRs);
+    }
+}
 
 const deleteRacePhase = async (json) => {
     console.log("deleteRacePhase: " + JSON.stringify(json));
