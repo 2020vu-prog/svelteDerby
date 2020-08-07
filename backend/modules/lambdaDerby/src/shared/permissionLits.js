@@ -70,7 +70,7 @@ addPermission(
 );
 addPermission(
     "Anonymous",
-    ["/getRaceHistory", "/requestMqttSubPermission"],
+    ["/getRaceHistory", "/requestMqttSubPermission", "/listMediaPrefix"],
     ["/drivers", "/RpList", "/RsList/History", "/RsList/Pending", "/chartList"]
 );
 module.exports.permissionMap = {
