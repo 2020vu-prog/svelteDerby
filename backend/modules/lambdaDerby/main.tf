@@ -107,7 +107,7 @@ resource "aws_lambda_function" "lambda" {
   filename         = local.zipFile
   source_code_hash = filebase64sha256(local.zipFile)
 
-  timeout = 4 // increased for bulkAdd
+  timeout = 10 // increased for bulkAdd
   role    = aws_iam_role.iam_for_lambda.arn
   handler = "derbyMain.handler"
   runtime = "nodejs12.x"
