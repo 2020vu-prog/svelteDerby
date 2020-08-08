@@ -31,8 +31,8 @@ const getPrefs = () => {
     return prefs;
 };
 export function getChartCacheKey() {
-    //return require("./config/doNotEditChartKey.json").chartKey;
-    return new Date().getTime().toString();
+    return require("./config/doNotEditChartKey.json").chartKey;
+    //return new Date().getTime().toString();
 }
 export function getCacheKey() {
     var prefs = getPrefs();

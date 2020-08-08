@@ -104,6 +104,10 @@
 
         var validCount = 0;
         ["A", "B"].forEach((ab) => {
+            // this should probably happen on load
+            if (!posForm[ab].seedType) {
+                posForm[ab].seedType = "ptcp";
+            }
             var seedObject = {
                 status: posForm[ab].seedType,
                 ptcp: "",
@@ -114,11 +118,15 @@
                 seedObject.status === "ptcp" ||
                 seedObject.status === "forfeit"
             ) {
-                if (participantValid(posForm[ab].carNumber === "")) {
-                    // let empty racers through bracket mgmt.  they may not be known yet.
+                if (!posForm[ab].carNumber) {
+                    console.log("allow empty preSeed:", posForm[ab]);
+                    // let empty/null/undefined racers through bracket mgmt.  they may not be known yet.
                 } else if (participantValid(posForm[ab].carNumber)) {
+                    console.log("valid preSeed:", posForm[ab]);
+
                     seedObject.ptcp = posForm[ab].carNumber.toString();
                 } else {
+                    console.log("invalid preSeed:", posForm[ab]);
                     $statusMessage = {
                         text: `Invalid Participant: [${posForm[ab].carNumber}]`,
                         type: "error",
