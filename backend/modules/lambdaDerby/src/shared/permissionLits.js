@@ -44,7 +44,7 @@ addPermission("CanDeleteBlocks", ["/deleteRacePhase"], ["/NotASvelteRouteYet"]);
 addPermission(
     "CanInitiateAnnouncement",
     ["/initiateAnnouncement"],
-    ["/Announce"]
+    ["/ManualAnnouncement"]
 );
 addPermission(
     "CanDeleteStanding",

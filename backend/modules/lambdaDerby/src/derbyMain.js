@@ -893,12 +893,17 @@ const routeMap = {
             var json = JSON.parse(event.body);
             var paMessage = json.paMessage;
             var orgId = json.orgId;
-            const paTask = await announceResults.submitToPolly(
+            const mp3ObjectPath = await announceResults.submitToPolly(
                 paMessage,
                 orgId
             );
-            console.log("announceTask: " + paMessage + " gave: ", paTask);
-            return buildResponse({ paTask: paTask });
+            console.log(
+                "announceTask: " + paMessage + " gave: ",
+                mp3ObjectPath
+            );
+            console.log("initiateAnnouncement:", mp3ObjectPath);
+            await announceResults.propagateIotGeneric(orgId, mp3ObjectPath);
+            return buildResponse({ announced: mp3ObjectPath });
         },
     },
     "/requestTts": {

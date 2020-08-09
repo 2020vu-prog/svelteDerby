@@ -17,6 +17,7 @@
     import OrgSelection from "./OrgSelection.svelte";
     import OrgAdd from "./OrgAdd.svelte";
     import ManualTimerAdd from "./ManualTimerAdd.svelte";
+    import ManualAnnouncement from "./ManualAnnouncement.svelte";
     import RaceStandingAdd from "./RaceStandingAdd.svelte";
     import RawTimerList from "./RawTimerList.svelte";
     import AboutPage from "./AboutPage.svelte";
@@ -45,6 +46,7 @@
         "/drivers": DriverList,
         "/login": Login,
         "/ManualTimerAdd/:rpKey": ManualTimerAdd,
+        "/ManualAnnouncement": ManualAnnouncement,
         "/raceStandingAdd/:type": RaceStandingAdd,
         "/driverAdd/:number?": DriverAdd,
         "/eventSelection/:orgIz": EventSelection,
@@ -101,6 +103,10 @@
             {
                 text: "Charts",
                 menuRoute: "/chartList",
+            },
+            {
+                text: "Manual Announcement",
+                menuRoute: "/ManualAnnouncement",
             },
 
             {
