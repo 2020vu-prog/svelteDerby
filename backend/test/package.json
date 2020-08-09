@@ -4,7 +4,7 @@
   "description": "",
   "main": "mainTest.js",
   "scripts": {
-    "test": "node cognito/getToken.js && jest"
+    "test": "node cognito/getToken.js && jest --bail"
   },
   "jest": {
     "testEnvironment": "node",

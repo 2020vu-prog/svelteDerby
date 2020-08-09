@@ -142,7 +142,7 @@ class DdbUtils {
         var containsValues = {};
         containsValues[":pk"] = { S: uuid };
         const loIso = new Date(
-            new Date().getTime() - 1000 * 1800
+            new Date().getTime() - 1000 * 3600 * 10
         ).toISOString();
         containsValues[":loIso"] = { S: loIso };
         var params = {

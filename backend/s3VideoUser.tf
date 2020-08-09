@@ -59,11 +59,42 @@ resource "aws_iot_policy" "grafikaSubToAnyTopic" {
 EOF
 }
 
+resource "aws_iot_policy" "rpiPubToAnyTopic" {
+  name = "RpiPubToAnyTopic"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "iot:Publish",
+        "iot:Subscribe",
+        "iot:Connect",
+        "iot:Receive"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_iot_certificate" "grafika_cert" {
   active = true
 }
 
-resource "aws_iot_policy_attachment" "att" {
+resource "aws_iot_policy_attachment" "grafika_att" {
   policy = aws_iot_policy.grafikaSubToAnyTopic.name
   target = aws_iot_certificate.grafika_cert.arn
+}
+ 
+
+resource "aws_iot_certificate" "rpi_cert" {
+  active = true
+}
+resource "aws_iot_policy_attachment" "rpi_att" {
+  policy = aws_iot_policy.rpiPubToAnyTopic.name
+  target = aws_iot_certificate.rpi_cert.arn
 }
