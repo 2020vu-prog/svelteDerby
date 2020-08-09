@@ -25,6 +25,7 @@
     import TimerConfig from "./TimerConfig.svelte";
     import MediaList from "./MediaList.svelte";
 
+    import ForceReloadPage from "./ForceReloadPage.svelte";
     import Login from "./Login.svelte";
     import HotLoad from "./HotLoad.svelte";
     //import CognitoAuth from "./CognitoAuth.svelte";
@@ -58,6 +59,7 @@
         "/timerConfig": TimerConfig,
         "/rawTimerList": RawTimerList,
         "/spMediaList/:dbName/:dbKey": MediaList,
+        "/forceReloadPage": ForceReloadPage,
         // '/raceStandingAdd': RaceStandingAdd,
     };
 

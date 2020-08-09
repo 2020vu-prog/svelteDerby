@@ -11,10 +11,28 @@
     import RacePhase from "./RacePhase.svelte";
     import CarFilter from "./CarFilter.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
-    import { location } from "svelte-spa-router";
     import BottomNav from "./BottomNav.svelte";
-
+    import { onMount } from "svelte";
     export let params = {};
+    import { location, replace, push } from "svelte-spa-router";
+
+    var mounted = false;
+    onMount(async () => {
+        mounted = true;
+        console.log("RaceStanding list: ", location);
+    });
+
+    //workaround for svelte optimization on page reload
+    $: {
+        potentialReload($doRefreshBlocks);
+    }
+    function potentialReload(unusedButImportant) {
+        if (mounted) {
+            console.log("routing to force reload b/c ", $doRefreshBlocks);
+
+            push(`/forceReloadPage`);
+        }
+    }
 
     const getTitle = () => {
         console.log("mounted type:", params.type);
