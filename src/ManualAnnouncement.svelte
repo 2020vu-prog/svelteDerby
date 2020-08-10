@@ -51,11 +51,18 @@
     }
     var announceText = "";
 </script>
+
 <div style="width: 100%; text-align: center;">
     <h3>Manual Announcement</h3>
 </div>
 <form>
     <label for="announcement">Announcement:</label>
-    <input type="text" id="announcement" name="announcement" bind:value={announceText}><br><br>
-    <input type="button" value="Announce" on:click={doAnnounce}>
+    <input
+        type="text"
+        id="announcement"
+        name="announcement"
+        bind:value={announceText} />
+    <br />
+    <br />
+    <input type="button" value="Announce" on:click={doAnnounce} />
 </form>

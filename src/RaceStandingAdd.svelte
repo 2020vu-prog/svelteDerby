@@ -149,16 +149,26 @@
 
 <form on:submit|preventDefault={handleSubmit}>
     <label>
-        <input type="number" bind:value={carNumberForm.car1} placeholder="Car 1" id="cn1" on:keyup={()=> {
-        changeFocus(carNumberForm.car1, 'A');
-        }} />
+        <input
+            type="number"
+            bind:value={carNumberForm.car1}
+            placeholder="Car 1"
+            id="cn1"
+            on:keyup={() => {
+                changeFocus(carNumberForm.car1, 'A');
+            }} />
         <p>{getDriverName(carNumberForm.car1)}</p>
     </label>
 
     <label>
-        <input type="number" bind:value={carNumberForm.car2} placeholder="Car 2" id="cn2" on:keyup={()=> {
-        changeFocus(carNumberForm.car2, 'B');
-        }} />
+        <input
+            type="number"
+            bind:value={carNumberForm.car2}
+            placeholder="Car 2"
+            id="cn2"
+            on:keyup={() => {
+                changeFocus(carNumberForm.car2, 'B');
+            }} />
         <p>{getDriverName(carNumberForm.car2)}</p>
     </label>
     <button id="formSubmitButton" type="submit" disabled>Add</button>
