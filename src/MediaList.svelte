@@ -1,6 +1,6 @@
 <script>
     import { doRefreshBlocks } from "./stores.js";
-    import { isEmailAllowedRoutePath, getUserEmail } from "./utils.js";
+    import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
     import { raceConfig, statusMessage } from "./stores.js";
     import { Auth } from "aws-amplify";

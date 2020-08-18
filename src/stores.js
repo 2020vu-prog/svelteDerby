@@ -2,6 +2,8 @@ import axios from "axios";
 
 import { writable, readable } from "svelte/store";
 import { storeAuth } from "./stores/auth.js";
+export const userEmail = writable("noEmail");
+
 export const theme = writable("#4CAF50");
 export const statusMessage = writable({});
 export const prefStore = writable({ initial: 1, disableCache: 2 });

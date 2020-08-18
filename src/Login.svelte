@@ -7,7 +7,9 @@
         loginFormState,
         logout,
     } from "./stores/auth.js";
+    import { userEmail } from "./stores.js";
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
+    import { getUserEmail } from "./utils.js";
 
     let mode = localStorage.getItem("svelteLoginMode") || "signup";
     let isSigningIn = mode === "signin";
@@ -25,12 +27,21 @@
         } else if (mode === "confirm") {
             promise = confirmSignUp();
         } else {
-            promise = signIn();
+            promise = signIn().then(() => {
+                storeUserEmail(); //not awaited.  TODO: refactor promises
+                console.log("loaded user email after signIn:", $userEmail);
+            });
         }
+    }
+    async function storeUserEmail() {
+        console.log("storeUserEmail begin");
+        $userEmail = await getUserEmail();
+        console.log("storeUserEmail done", $userEmail);
     }
     function doLogOut() {
         localStorage.clear(); //clears everything in localStorage
         logout();
+        $userEmail = "";
     }
 </script>
 
@@ -40,12 +51,14 @@
         color: red;
         padding: 1rem;
     }
+
     form {
         display: flex;
         flex-direction: column;
         width: 300px;
         margin: 0 auto;
     }
+
     label {
         text-align: left;
         display: flex;
@@ -53,9 +66,11 @@
         margin: 0 0 1em 0;
         justify-content: space-between;
     }
+
     button[type="submit"] {
         grid-column: 1 / 3;
     }
+
     /* The switch - the box around the slider */
     .switch {
         position: relative;

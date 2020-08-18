@@ -1,10 +1,11 @@
 <script>
     import { theme } from "./stores.js";
-    import { raceConfig, statusMessage } from "./stores.js";
+    import { raceConfig, statusMessage, userEmail } from "./stores.js";
     import axios from "axios";
     import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
+    import { isEmailAllowedRoutePath } from "./utils.js";
 
     export let dbName;
     export let dbKey;
@@ -74,6 +75,19 @@
         console.log("routing to bracket:", bracketLink);
         push(bracketLink);
     };
+    function isManualTimerAllowed() {
+        return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
+    }
+    function isDeleteAllowed() {
+        var protectedPath = "/unknownPath";
+        if (dbName === "RacePhase") {
+            protectedPath = "/sveltePermissionCanDeleteBlocks";
+        }
+        if (dbName === "RaceStanding") {
+            protectedPath = "/sveltePermissionCanDeleteStanding";
+        }
+        return isEmailAllowedRoutePath($userEmail, protectedPath);
+    }
 </script>
 
 <style>
@@ -100,7 +114,7 @@
 </style>
 
 <div class="navbar" id="myNavbar" style="z-index:20">
-    {#if timerLink}
+    {#if timerLink && isManualTimerAllowed()}
         <span
             class="navbarItem"
             style="background-color: {$theme}"
@@ -119,12 +133,14 @@
         </span>
     {/if}
 
-    <span
-        class="navbarItem"
-        style="background-color: {$theme}"
-        on:click|preventDefault={doDelete}>
-        Delete
-    </span>
+    {#if isDeleteAllowed()}
+        <span
+            class="navbarItem"
+            style="background-color: {$theme}"
+            on:click|preventDefault={doDelete}>
+            Delete
+        </span>
+    {/if}
     {#if dbName === 'RacePhase'}
         <span
             class="navbarItem"

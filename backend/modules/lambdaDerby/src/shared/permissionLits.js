@@ -40,7 +40,11 @@ addPermission("CanAddChart", ["/addChart"], ["/chartAdd"]);
 // svelte /addChartPosition is not a svelte route, but is used with isUserAllowedRoutePath()
 addPermission("ChartPosition", ["/addChartPosition"], ["/addChartPosition"]);
 addPermission("ManualFinishTime", ["/doApplyFinishTime"], ["/ManualTimerAdd"]);
-addPermission("CanDeleteBlocks", ["/deleteRacePhase"], ["/NotASvelteRouteYet"]);
+addPermission(
+    "CanDeleteBlocks",
+    ["/deleteRacePhase"],
+    ["/sveltePermissionCanDeleteBlocks"]
+);
 addPermission(
     "CanInitiateAnnouncement",
     ["/initiateAnnouncement"],
@@ -49,7 +53,7 @@ addPermission(
 addPermission(
     "CanDeleteStanding",
     ["/deleteRaceStanding"],
-    ["/NotASvelteRouteYet"]
+    ["/sveltePermissionCanDeleteStanding"]
 );
 addPermission(
     "TODO",

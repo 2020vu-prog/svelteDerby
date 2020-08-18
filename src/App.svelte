@@ -30,14 +30,18 @@
     import Login from "./Login.svelte";
     import HotLoad from "./HotLoad.svelte";
     //import CognitoAuth from "./CognitoAuth.svelte";
-    import { raceConfig, theme, autoAnnounceResults } from "./stores.js";
+    import {
+        raceConfig,
+        theme,
+        autoAnnounceResults,
+        userEmail,
+    } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
     import { isEmailAllowedRoutePath, getUserEmail } from "./utils.js";
 
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
-    var userEmail = "UnknownEmail";
     const routes = {
         // Exact path
         "/": RaceStandingList,
@@ -76,8 +80,10 @@
         },
     ];
     $: buildMenuMap($AuthStore);
+
     async function buildMenuMap() {
-        userEmail = await getUserEmail();
+        $userEmail = await getUserEmail();
+
         const loginLabel =
             $AuthStore && $AuthStore.username
                 ? `Logout [${$AuthStore.username}]`
@@ -257,7 +263,7 @@
         <div id="myLinks">
 
             {#each menuMap as menuOption}
-                {#if shouldDisplay(userEmail, menuOption, $raceConfig)}
+                {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
                     <a on:click={() => navTo(menuOption.menuRoute)}>
                         {menuOption.text}
                     </a>
