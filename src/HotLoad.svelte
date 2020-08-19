@@ -54,12 +54,12 @@
         axios
             .get(
                 $raceConfig.baseUrl +
-                "/requestMqttSubPermission?orgId=" +
-                $raceConfig.orgId +
-                "&orgIz=" +
-                $raceConfig.orgIz +
-                "&principal=" +
-                cognitoIdentityId
+                    "/requestMqttSubPermission?orgId=" +
+                    $raceConfig.orgId +
+                    "&orgIz=" +
+                    $raceConfig.orgIz +
+                    "&principal=" +
+                    cognitoIdentityId
             )
             .then((response) => {
                 console.log("requstPermissionHack:" + response.data.length);
@@ -134,8 +134,8 @@
     $: syncAutoAnnounceSubscription($autoAnnounceResults);
 
     async function syncAutoAnnounceSubscription() {
-        if (activeIotWatch && activeIotWatch.plugged) { }
-        else {
+        if (activeIotWatch && activeIotWatch.plugged) {
+        } else {
             console.log("syncAutoAnnounceSubscription skipping, not ready");
             return;
         }
@@ -196,11 +196,11 @@
     const sortBy = (field, reverse, primer) => {
         var key = primer
             ? function (x) {
-                return primer(x[field]);
-            }
+                  return primer(x[field]);
+              }
             : function (x) {
-                return x[field];
-            };
+                  return x[field];
+              };
 
         reverse = !reverse ? 1 : -1;
 
