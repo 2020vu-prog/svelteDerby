@@ -4,14 +4,12 @@
         driverMap,
         statusMessage,
         nextOnBlockKey,
+        getAxios,
     } from "./stores.js";
-    import { store } from "./stores/auth.js";
-    import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
     import { participantValid, participantFocusCompletion } from "./utils.js";
 
-    import axios from "axios";
     export let params = {};
     let spinner = undefined; // empty to start.
     console.log("RaceStandingAdd", params);
@@ -67,8 +65,6 @@
         }
 
         console.log("Adding:" + JSON.stringify(carNumberForm));
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -81,10 +77,11 @@
 
         //no double click
         document.getElementById("formSubmitButton").disabled = true;
-        axios.defaults.headers.common["Authorization"] = bearer;
+        console.log("axios:", $getAxios);
 
         spinner = true;
         try {
+            const axios = await $getAxios();
             const response = await axios.post(
                 $raceConfig.baseUrl + endPoint,
                 req

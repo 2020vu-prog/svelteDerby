@@ -24,7 +24,7 @@
     const nextPhaseTopic = "nextPhase";
     const iosTriggerTopic = "iosTrigger";
     var client;
-    var btnClass = "btn-danger";
+    var btnClass = "btn-success";
     const activeIotWatch = {};
 
     var refreshInProgressButton = false;
@@ -111,13 +111,21 @@
         activeIotWatch.subbedTopic = topic;
         activeIotWatch.subscription = PubSub.subscribe(topic).subscribe({
             next: async (data) => {
+                btnClass = "btn-success";
+
                 console.log("watchIot: Message received", data);
                 console.log("watchIot: Message value", data.value);
                 announce();
                 await applyFromMqMsg(data.value);
             },
-            error: (error) => console.error("watchIot: AWS iot error:", error),
-            close: () => console.log("watchIot: AWS iot Done"),
+            error: (error) => {
+                btnClass = "btn-danger";
+                console.error("watchIot: AWS iot error:", error);
+            },
+            close: () => {
+                btnClass = "btn-warning";
+                console.log("watchIot: AWS iot Done");
+            },
         });
         syncAutoAnnounceSubscription();
     }
@@ -148,11 +156,12 @@
                         );
                         announceFromMqtt(data.value);
                     },
-                    error: (error) =>
+                    error: (error) => {
                         console.error(
                             `watchIot: ${paTopic} AWS iot error:`,
                             error
-                        ),
+                        );
+                    },
                     close: () =>
                         console.log(`watchIot: ${paTopic}  AWS iot Done`),
                 });
@@ -295,11 +304,16 @@
         return hist;
     }
     const applyEntityToHist = async (e, hist) => {
-        console.log("entity", e);
+        console.log(new Date().toTimeString(), " entitx", e);
         const sk = e.classKey;
         const pk = e.classType;
 
+        const key = { PK: pk, SK: sk, at: e.at };
+        //const got = await db["EventHistory"].get({ PK: pk, SK: sk, at: e.at });
+        //console.log(key, `Maybe EventHistory  got ${got}`);
+
         const idh = await db["EventHistory"].put(e);
+
         console.log(`Added EventHistory with id ${idh}`);
         const tblHist = hist[pk];
 

@@ -4,6 +4,7 @@
         theme,
         showBottomNav,
         autoAnnounceResults,
+        developerMode,
     } from "./stores.js";
 
     import { buildVersion, buildDate } from "./utils.js";
@@ -11,7 +12,6 @@
     import { getCacheKey, setCacheKey } from "./stores.js";
     import { db, localConfigDb } from "./eventDb.js";
     import BottomNav from "./BottomNav.svelte";
-    //import { prefStore } from './stores.js';
 
     let disableCache = false;
     let mounted = false;
@@ -33,13 +33,13 @@
     }
     $: {
         localConfigDb["LocalConfig"].put({
-            KEY: "autoAnnounceResults",
+            KEY: "userPrefs",
             autoAnnounceResults: $autoAnnounceResults,
+            developerMode: $developerMode,
             changed: new Date().getTime(),
         });
     }
     onMount(async () => {
-        //console.log("prefs:", $prefStore)
         if (getCacheKey()) {
             disableCache = true;
         } else {
@@ -55,7 +55,7 @@
         console.log("check do");
         if (!disableCache) {
             // negated test, b/c clickhandler called before bind value :-(
-            //$prefStore.disableCache = new Date().getTime();
+            //$.disableCache = new Date().getTime();
             lclCacheKey = new Date().getTime();
         } else {
             //$prefStore.disableCache = 0;
@@ -97,6 +97,13 @@
             }
         });
     };
+    var devClickCount = 0;
+    function devClick() {
+        if (devClickCount++ > 8) {
+            console.log("devmodeA");
+            $developerMode = true;
+        }
+    }
 </script>
 
 <style>
@@ -167,7 +174,7 @@
     <b />
     <b />
     <label>Build Version</label>
-    <span>{buildVersion()}</span>
+    <span on:click={devClick}>{buildVersion()}</span>
 
     <label>Build Date</label>
     <span>{buildDate()}</span>

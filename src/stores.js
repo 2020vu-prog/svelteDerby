@@ -1,7 +1,15 @@
-import axios from "axios";
+import axiosCommon from "axios";
+
+import { Auth } from "aws-amplify";
+const jwt = require("jsonwebtoken");
+const semver = require("semver");
+
+var bearer = "";
 
 import { writable, readable } from "svelte/store";
 import { storeAuth } from "./stores/auth.js";
+import { buildVersion } from "./utils.js";
+
 export const userEmail = writable("noEmail");
 
 export const theme = writable("#4CAF50");
@@ -14,6 +22,7 @@ export const driverMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlockKey = writable("");
 export const showBottomNav = writable(true);
+export const developerMode = writable(false);
 export const autoAnnounceResults = writable(false);
 export const beginAnonymousLogin = writable(false);
 export const raceConfig = writable({
@@ -23,7 +32,10 @@ export const raceConfig = writable({
 });
 export const chartClickLoggerId = writable("");
 export const chartClickLoggerShow = writable(false);
-
+function axSet(setF) {
+    return () => {};
+}
+export const getAxios = readable(getAxiosCommon, axSet);
 const getPrefs = () => {
     var prefs = {};
     const unsubscribe = prefStore.subscribe((value) => {
@@ -53,9 +65,54 @@ export function setCacheKey(newKey) {
     prefs.disableCache = newKey;
     prefStore.set(prefs);
 }
+axiosCommon.interceptors.response.use(
+    (response) => {
+        if (response.status === 401) {
+            console.log("AINT: You are not authorized");
+        }
+        if (response.status === 200 && response.headers["x-client-minimum"]) {
+            console.log("AINT: headers: ", response.headers);
+            if (
+                semver.lt(buildVersion(), response.headers["x-client-minimum"])
+            ) {
+                location.reload();
+            }
+        }
+        console.log("AINT: ", response);
+        return response;
+    },
+    (error) => {
+        console.log("AINT error: ", error);
+        if (error.response && error.response.data) {
+            return Promise.reject(error.response.data);
+        }
+        return Promise.reject(error.message);
+    }
+);
+async function getAxiosCommon() {
+    //TODO: flush bearer token when email changes
+    if (bearer) {
+        var decoded = jwt.decode(bearer);
+        console.log("decoded jwt:", decoded);
+        const now = new Date().getTime() / 1000;
+        if (decoded && decoded.exp && decoded.exp > now + 30) {
+            console.log("getAxiosCommon re-using token");
+        } else {
+            console.log("getAxiosCommon expiring token");
+            bearer = "";
+        }
+    }
+    if (!bearer) {
+        const currentSession = await Auth.currentSession();
+        bearer = currentSession.idToken.jwtToken;
+        axiosCommon.defaults.headers.common["Authorization"] = bearer;
+    }
+    console.log("bearer:", bearer);
+    return axiosCommon;
+}
 
 export const doRefreshOLD = () => {
-    axios
+    axiosCommon
         .get("./data/driver.json")
         .then((response) => {
             console.log("drivers:" + response.data.length);
@@ -73,7 +130,7 @@ export const doRefreshOLD = () => {
 
     //const racerUrl="http://s3.amazonaws.com/chicago2019oct-s3derbyracedata-vtp3oauyufv6/data/racer.json.gz?nocache=1580673517399";
     const racerUrl = "./data/rs.json";
-    axios
+    axiosCommon
         .get(racerUrl)
         .then((response) => {
             console.log(response.data.length);

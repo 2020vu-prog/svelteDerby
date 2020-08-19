@@ -6,7 +6,11 @@
     import { Auth } from "aws-amplify";
     import axios from "axios";
     import { push, pop, replace } from "svelte-spa-router";
-    import { getCacheKey, beginAnonymousLogin } from "./stores.js";
+    import {
+        getCacheKey,
+        beginAnonymousLogin,
+        developerMode,
+    } from "./stores.js";
 
     import { store } from "./stores/auth.js";
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
@@ -17,7 +21,13 @@
     }
 
     const getOrgsAsList = (orgList) => {
-        return Object.keys(orgList);
+        if ($developerMode) {
+            return Object.keys(orgList);
+        } else {
+            return Object.keys(orgList).filter(
+                (orgName) => !orgName.startsWith("Test")
+            );
+        }
     };
     const refreshOrgMap = async () => {
         console.log("refreshOrgMap:");

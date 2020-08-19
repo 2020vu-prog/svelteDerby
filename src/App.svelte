@@ -35,6 +35,7 @@
         theme,
         autoAnnounceResults,
         userEmail,
+        developerMode,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -159,12 +160,12 @@
         if (dexieTheme && dexieTheme.bgColor) {
             $theme = dexieTheme.bgColor;
         }
-        const autoAnnounceJson = await localConfigDb["LocalConfig"].get({
-            KEY: "autoAnnounceResults",
+        const userPrefs = await localConfigDb["LocalConfig"].get({
+            KEY: "userPrefs",
         });
-        console.log(`app aar:`, autoAnnounceJson);
-        $autoAnnounceResults =
-            autoAnnounceJson && autoAnnounceJson.autoAnnounceResults;
+        console.log(`app userPrefs:`, userPrefs);
+        $autoAnnounceResults = userPrefs && userPrefs.autoAnnounceResults;
+        $developerMode = userPrefs && userPrefs.developerMode;
     };
     onMount(async () => {
         console.log("mounted app");

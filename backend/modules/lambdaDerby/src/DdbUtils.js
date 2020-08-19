@@ -1,4 +1,5 @@
 const EntityFactory = require("./shared/EntityFactory.js");
+const skipDeleteFilter = "attribute_not_exists(del) ";
 
 class DdbUtils {
     ddbClient = null;
@@ -6,6 +7,7 @@ class DdbUtils {
     ddocClient = null;
     entityFactory = null;
     sqs = null;
+
     constructor(AWS, ddbClient, sqs) {
         this.ddbClient = ddbClient;
         this.AWS = AWS;
@@ -335,7 +337,7 @@ class DdbUtils {
             Limit: 20,
             ScanIndexForward: false, // sort descending
             KeyConditionExpression: keyCondition + " and  SK = :sk",
-            FilterExpression: " attribute_not_exists (phr) ",
+            FilterExpression: ` ${skipDeleteFilter} AND attribute_not_exists (phr) `,
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
@@ -371,7 +373,7 @@ class DdbUtils {
             Limit: 20,
             ScanIndexForward: false, // sort descending
             KeyConditionExpression: keyCondition,
-            FilterExpression: " attribute_not_exists (phr) ",
+            FilterExpression: `${skipDeleteFilter} AND attribute_not_exists (phr) `,
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
