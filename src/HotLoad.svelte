@@ -54,12 +54,12 @@
         axios
             .get(
                 $raceConfig.baseUrl +
-                    "/requestMqttSubPermission?orgId=" +
-                    $raceConfig.orgId +
-                    "&orgIz=" +
-                    $raceConfig.orgIz +
-                    "&principal=" +
-                    cognitoIdentityId
+                "/requestMqttSubPermission?orgId=" +
+                $raceConfig.orgId +
+                "&orgIz=" +
+                $raceConfig.orgIz +
+                "&principal=" +
+                cognitoIdentityId
             )
             .then((response) => {
                 console.log("requstPermissionHack:" + response.data.length);
@@ -134,47 +134,60 @@
     $: syncAutoAnnounceSubscription($autoAnnounceResults);
 
     async function syncAutoAnnounceSubscription() {
+        if (activeIotWatch && activeIotWatch.plugged) { }
+        else {
+            console.log("syncAutoAnnounceSubscription skipping, not ready");
+            return;
+        }
         const paTopic = "derby/" + $raceConfig.orgId + "/pa";
-
+        console.log(`syncAutoAnnounceSubscription: ${$autoAnnounceResults} `);
         if ($autoAnnounceResults) {
             if (activeIotWatch.paSubscription) {
                 // no action needed.
-                console.log(`watchIot: ${paTopic} subscribe stand down`);
+                console.log(
+                    `syncAutoAnnounceSubscription: ${paTopic} subscribe stand down`
+                );
             } else {
-                console.log(`watchIot: Subscribing ${paTopic}`);
+                console.log(
+                    `syncAutoAnnounceSubscription: Subscribing ${paTopic}`
+                );
                 activeIotWatch.paSubscription = PubSub.subscribe(
                     paTopic
                 ).subscribe({
                     next: async (data) => {
                         console.log(
-                            `watchIot: ${paTopic} paMessage received`,
+                            `syncAutoAnnounceSubscription: ${paTopic} paMessage received`,
                             data
                         );
                         console.log(
-                            `watchIot: ${paTopic} paMessage value`,
+                            `syncAutoAnnounceSubscription: ${paTopic} paMessage value`,
                             data.value
                         );
                         announceFromMqtt(data.value);
                     },
                     error: (error) => {
                         console.error(
-                            `watchIot: ${paTopic} AWS iot error:`,
+                            `syncAutoAnnounceSubscription: ${paTopic} AWS iot error:`,
                             error
                         );
                     },
                     close: () =>
-                        console.log(`watchIot: ${paTopic}  AWS iot Done`),
+                        console.log(
+                            `syncAutoAnnounceSubscription: ${paTopic}  AWS iot Done`
+                        ),
                 });
             }
         } else {
             if (activeIotWatch.paSubscription) {
                 console.log(
-                    `watchIot: UnSubscribing ${activeIotWatch.paSubscription}`
+                    `syncAutoAnnounceSubscription: UnSubscribing ${activeIotWatch.paSubscription}`
                 );
                 activeIotWatch.paSubscription.unsubscribe();
                 delete activeIotWatch.paSubscription;
             } else {
-                console.log(`watchIot: ${paTopic} unsubscribe stand down`);
+                console.log(
+                    `syncAutoAnnounceSubscription: ${paTopic} unsubscribe stand down`
+                );
             }
         }
     }
@@ -183,11 +196,11 @@
     const sortBy = (field, reverse, primer) => {
         var key = primer
             ? function (x) {
-                  return primer(x[field]);
-              }
+                return primer(x[field]);
+            }
             : function (x) {
-                  return x[field];
-              };
+                return x[field];
+            };
 
         reverse = !reverse ? 1 : -1;
 
@@ -344,7 +357,11 @@
             return {};
         }
     };
-    onMount(async () => {});
+    var mounted = false;
+
+    onMount(async () => {
+        mounted = true;
+    });
     const announce = () => {
         return; // no test announcement
         if ($autoAnnounceResults) {
