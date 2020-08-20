@@ -5,6 +5,7 @@
         showBottomNav,
         autoAnnounceResults,
         developerMode,
+        pendingSortAlgorithm,
     } from "./stores.js";
 
     import { buildVersion, buildDate } from "./utils.js";
@@ -32,12 +33,21 @@
         }
     }
     $: {
-        localConfigDb["LocalConfig"].put({
+        const prefs = {
             KEY: "userPrefs",
             autoAnnounceResults: $autoAnnounceResults,
             developerMode: $developerMode,
+            pendingSortAlgorithm: $pendingSortAlgorithm,
             changed: new Date().getTime(),
-        });
+            changedFmt: new Date().toLocaleTimeString(),
+        };
+        updatePrefsWhenMounted(prefs);
+    }
+    function updatePrefsWhenMounted(prefs) {
+        if (mounted) {
+            console.log("About updating userPrefs:", mounted, prefs);
+            localConfigDb["LocalConfig"].put(prefs);
+        }
     }
     onMount(async () => {
         if (getCacheKey()) {
@@ -166,7 +176,11 @@
         <option class="colorOption" value="saddlebrown">Brown</option>
         <option class="colorOption">Gray</option>
     </select>
-
+    <label>Sort Pending</label>
+    <select bind:value={$pendingSortAlgorithm}>
+        <option class="colorOption">Age</option>
+        <option class="colorOption">Heat</option>
+    </select>
     <b />
     <b />
     <b />

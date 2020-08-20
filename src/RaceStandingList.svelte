@@ -6,6 +6,7 @@
         driverMap,
         carFilter,
         doRefreshBlocks,
+        pendingSortAlgorithm,
     } from "./stores.js";
     import RaceStanding from "./RaceStanding.svelte";
     import RacePhase from "./RacePhase.svelte";
@@ -57,13 +58,36 @@
         return standing.carNumbers.filter((cn) => cn.match(re)).length > 0;
     };
     //loc &drb passed in to coerce svelte refesh screen
-    const getStandings = (loc, drb) => {
+    function getStandings(loc, drb) {
         const rc = Object.values($standingsMap);
-        rc.sort((a, b) => {
-            return b.at - a.at;
-        });
+        const sortBy = getSortAlgorithm();
+        rc.sort(sortBy);
         return rc;
-    };
+    }
+    function getSortAlgorithm() {
+        if (params.type === "Pending") {
+            return $pendingSortAlgorithm === "Heat" ? sortByHeat : sortByAt;
+        } else {
+            return sortByAt; // history is always sorted by age.
+        }
+    }
+
+    function sortByAt(a, b) {
+        return b.at - a.at;
+    }
+    function sortByHeat(a, b) {
+        const aKey = getHeatSortKey(a);
+        const bKey = getHeatSortKey(b);
+        return aKey - bKey;
+    }
+    function getHeatSortKey(rs) {
+        if (rs.bracketPos && rs.bracketPos.includes(":")) {
+            const [bmdKey, heat] = rs.bracketPos.split(":");
+            return parseInt(heat, 10);
+        } else {
+            return rs.at;
+        }
+    }
 </script>
 
 <style>

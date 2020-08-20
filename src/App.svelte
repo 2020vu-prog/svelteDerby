@@ -36,6 +36,7 @@
         autoAnnounceResults,
         userEmail,
         developerMode,
+        pendingSortAlgorithm,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -166,6 +167,9 @@
         console.log(`app userPrefs:`, userPrefs);
         $autoAnnounceResults = userPrefs && userPrefs.autoAnnounceResults;
         $developerMode = userPrefs && userPrefs.developerMode;
+        if (userPrefs && userPrefs.pendingSortAlgorithm) {
+            $pendingSortAlgorithm = userPrefs && userPrefs.pendingSortAlgorithm;
+        }
     };
     onMount(async () => {
         console.log("mounted app");
