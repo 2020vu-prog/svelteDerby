@@ -137,6 +137,16 @@
     div.settings select {
         width: min-content;
     }
+
+    /* https://stackoverflow.com/questions/3779534/how-do-i-disable-text-selection-with-css-or-javascript */
+    .noselect {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
 </style>
 
 <div class="settings">
@@ -176,10 +186,12 @@
         <option class="colorOption" value="saddlebrown">Brown</option>
         <option class="colorOption">Gray</option>
     </select>
-    <label>Sort Pending</label>
+    <label style="max-width: 110px; word-wrap: break-word">
+        Sort Pending Races By
+    </label>
     <select bind:value={$pendingSortAlgorithm}>
-        <option class="colorOption">Age</option>
-        <option class="colorOption">Heat</option>
+        <option class="sortOption">Age</option>
+        <option class="sortOption">Heat</option>
     </select>
     <b />
     <b />
@@ -188,7 +200,7 @@
     <b />
     <b />
     <label>Build Version</label>
-    <span on:click={devClick}>{buildVersion()}</span>
+    <span class="noselect" on:click={devClick}>{buildVersion()}</span>
 
     <label>Build Date</label>
     <span>{buildDate()}</span>
