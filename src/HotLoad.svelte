@@ -209,7 +209,7 @@
         };
     };
 
-    const loadCcaHistory = async (s3Path, histP) => {
+    const loadCcaHistory = async (s3Path, pendingBulk, histP) => {
         console.log("LoadCca begin.");
         refreshInProgressCca = true;
 
@@ -219,7 +219,7 @@
                 $raceConfig.baseUrl + "/../" + s3Path
             );
             console.log("LoadCca finished:", response);
-            await parseAndApply(response, false, histP); // don't recurse into another CCA load
+            await parseAndApply(response, false, pendingBulk, histP); // don't recurse into another CCA load
         } catch (err) {
             console.log("LoadCca failed:", err);
         }
@@ -231,7 +231,9 @@
         const entityFactory = new EntityFactory({});
         const e = entityFactory.build(json);
         console.log("Entity from mq:", e);
-        await applyEntityToHist(e, hist);
+        const pendingBulk = {};
+        await applyEntityToHist(e, hist, pendingBulk);
+        await flushPendingBulk(pendingBulk);
         applyHistToStore(hist);
         refreshInProgressMq = false;
     };
@@ -274,7 +276,7 @@
     /*
      **
      */
-    async function parseAndApply(response, doLoadCca, histP) {
+    async function parseAndApply(response, doLoadCca, pendingBulk, histP) {
         console.log("parseAndApply:", doLoadCca, histP);
         const startTime = new Date().getTime();
         const entityFactory = new EntityFactory({});
@@ -294,11 +296,11 @@
             const json = response.data[i];
             const e = entityFactory.build(json);
             if (e != null) {
-                await applyEntityToHist(e, hist);
+                await applyEntityToHist(e, hist, pendingBulk);
             } else {
                 console.log("wtf json: ", json);
                 if (doLoadCca && json.PK === "CCA" && json.s3) {
-                    await loadCcaHistory(json.s3, hist);
+                    await loadCcaHistory(json.s3, pendingBulk, hist);
                 }
             }
         }
@@ -316,7 +318,8 @@
 
         return hist;
     }
-    const applyEntityToHist = async (e, hist) => {
+
+    async function applyEntityToHist(e, hist, pendingBulk) {
         console.log(new Date().toTimeString(), " entitx", e);
         const sk = e.classKey;
         const pk = e.classType;
@@ -325,9 +328,10 @@
         //const got = await db["EventHistory"].get({ PK: pk, SK: sk, at: e.at });
         //console.log(key, `Maybe EventHistory  got ${got}`);
 
-        const idh = await db["EventHistory"].put(e);
+        //const idh = await db["EventHistory"].put(e);
 
-        console.log(`Added EventHistory with id ${idh}`);
+        //console.log(`Added EventHistory with id ${idh}`);
+        addPendingBulk(pendingBulk, "EventHistory", e);
         const tblHist = hist[pk];
 
         if (!tblHist) {
@@ -337,12 +341,29 @@
         if (tblHist[sk] && tblHist[sk].lastUpdate > e.lastUpdate) {
         } else {
             tblHist[sk] = e;
-            if (db[e.classType]) {
-                const id = await db[e.classType].put(e);
-                console.log(`Added ${e.classType} with id ${id}`);
+            addPendingBulk(pendingBulk, e.classType, e);
+            //const id = await db[e.classType].put(e);
+            //console.log(`Added ${e.classType} with id ${id}`);
+        }
+    }
+    async function flushPendingBulk(pendingBulk) {
+        for (const [tblName, pendingList] of Object.entries(pendingBulk)) {
+            if (db[tblName]) {
+                console.log(`flushPending begin: ${tblName}`);
+                await db[tblName].bulkPut(pendingList);
+                console.log(`flushPending done: ${tblName}`);
+            } else {
+                console.log(`flushPending skipping: ${tblName}`);
             }
         }
-    };
+    }
+
+    function addPendingBulk(pendingBulk, tblName, e) {
+        if (!pendingBulk[tblName]) {
+            pendingBulk[tblName] = [];
+        }
+        pendingBulk[tblName].push(e);
+    }
 
     const getNextOnBlockKeyFromRP = (rpTmp) => {
         console.log("rpTmp:", rpTmp);
@@ -410,7 +431,9 @@
             const response = await axios.get(url);
             console.log("history:" + response.data.length);
             //console.log("history:",response.data);
-            await parseAndApply(response, true);
+            const pendingBulk = {};
+            await parseAndApply(response, true, pendingBulk);
+            await flushPendingBulk(pendingBulk);
             refreshInProgressButton = false;
         } catch (err) {
             console.log(err);
@@ -425,4 +448,6 @@
         on:click|preventDefault={doRefresh}>
         Refresh
     </button>
+{:else}
+    <img alt="noflag" src="data/circles.svg" width="25px" />
 {/if}
