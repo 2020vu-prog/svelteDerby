@@ -14,6 +14,7 @@
     var showPhoeneticInfo = false;
     var mounted = false;
     var mode = "Add";
+    var submitDisabled = true;
     onMount(async () => {
         console.log("mounted focus: ", params);
 
@@ -103,14 +104,14 @@
                 participantValid(driverForm.carNumber) &&
                 driverForm.driverName.toString() != ""
             ) {
-                document.getElementById("formSubmitButton").disabled = false;
+                submitDisabled = false;
                 console.log("sync add button SYNC");
             } else {
-                document.getElementById("formSubmitButton").disabled = true;
+                submitDisabled = true;
                 console.log("sync add button FAIL");
             }
         } else {
-            document.getElementById("formSubmitButton").disabled = true;
+            submitDisabled = true;
             console.log("sync add button FAIL");
         }
     };
@@ -204,8 +205,6 @@
             .
         </p>
     {/if}
-    <button id="formSubmitButton" type="submit" disabled>{mode}</button>
-    <button id="speakButton" type="button" on:click={requestSpeech}>
-        Speak
-    </button>
+    <button type="submit" disabled={submitDisabled}>{mode}</button>
+    <button type="button" on:click={requestSpeech}>Speak</button>
 </form>
