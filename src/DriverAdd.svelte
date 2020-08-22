@@ -1,4 +1,5 @@
 <script>
+    import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig, statusMessage } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
@@ -15,6 +16,8 @@
     var mounted = false;
     var mode = "Add";
     var submitDisabled = true;
+    var submitSpinning = false;
+    var speakSpinning = false;
     onMount(async () => {
         console.log("mounted focus: ", params);
 
@@ -66,6 +69,7 @@
 
         const newPtcp = driverForm.carNumber;
         const url = $raceConfig.baseUrl + "/addParticipant";
+        submitSpinning = true;
         try {
             const response = await axios.post(url, req);
             $statusMessage = {
@@ -74,6 +78,7 @@
             };
             pop();
         } catch (error) {
+            submitSpinning = false;
             $statusMessage = {
                 text: "driverAdd failed: " + error,
                 type: "error",
@@ -116,6 +121,7 @@
         }
     };
     async function requestSpeech() {
+        speakSpinning = true;
         var speakMe = `Driver name is ${driverForm.driverName}`;
         if (driverForm.sampa) {
             speakMe = `Driver name is <phoneme alphabet="x-sampa" ph="${driverForm.sampa}">${driverForm.driverName}</phoneme>`;
@@ -145,13 +151,18 @@
                 text: `Speech Processed.`,
                 type: "success",
             };
-            new Audio(`/${response.data.speechMp3}`).play();
+            const audio = new Audio(`/${response.data.speechMp3}`);
+            audio.onended = function () {
+                speakSpinning = false;
+            };
+            audio.play();
         } catch (error) {
             $statusMessage = {
                 text: "speak failed: " + error,
                 type: "error",
             };
             //console.log("driverAdd failed: " + err)
+        } finally {
         }
     }
 </script>
@@ -205,6 +216,13 @@
             .
         </p>
     {/if}
-    <button type="submit" disabled={submitDisabled}>{mode}</button>
-    <button type="button" on:click={requestSpeech}>Speak</button>
+    <SpinnerButton on:click={requestSpeech} spinning={speakSpinning}>
+        Speak
+    </SpinnerButton>
+    <SpinnerButton
+        disabled={submitDisabled}
+        on:click={handleSubmit}
+        spinning={submitSpinning}>
+        {mode}
+    </SpinnerButton>
 </form>
