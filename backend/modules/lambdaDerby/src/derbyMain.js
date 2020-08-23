@@ -1044,9 +1044,12 @@ async function apiGatewayHandler(event) {
     const orgIz = getOrgIz(event);
     const defaultTTL = await getTtl(eventKey);
 
+    const by = decodedJwt["cognito:username"]
+        ? decodedJwt["cognito:username"]
+        : decodedJwt.email;
     entityFactory = new EntityFactory({
         orgId: orgId,
-        by: decodedJwt.email,
+        by: by,
         TTL: defaultTTL,
     });
     ddbUtils.setEntityFactory(entityFactory);

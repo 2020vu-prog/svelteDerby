@@ -23,6 +23,19 @@ resource "aws_s3_bucket" "svelteBucket" {
   acl    = "private"
 
 }
+resource "aws_s3_bucket" "cdnLogBucket" {
+  bucket_prefix="svelte-cdn-logs"
+  force_destroy=true
+  acl    = "private"
+  lifecycle_rule {
+    enabled = true
+
+    abort_incomplete_multipart_upload_days=2
+    expiration {
+      days = 90
+    }
+  }
+}
 data "aws_iam_policy_document" "s3_svelte_policy" {
   statement {
     actions   = ["s3:GetObject"]
@@ -329,6 +342,11 @@ viewer_certificate {
   #  minimum_protocol_version = "TLSv1.1_2016"
   #  ssl_support_method = "sni-only"
   #}
+  logging_config {
+    include_cookies = false
+    bucket          = "${aws_s3_bucket.cdnLogBucket.id}.s3.amazonaws.com"
+    prefix          = "svelte"
+  }
 }
 
 data "aws_route53_zone" "derby_zone" {
