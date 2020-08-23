@@ -1,0 +1,3 @@
+[submodule "icons/SVG-Loaders"]
+	path = icons/SVG-Loaders
+	url = https://github.com/SamHerbert/SVG-Loaders.git
