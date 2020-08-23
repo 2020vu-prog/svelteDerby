@@ -409,11 +409,15 @@
 
         audioPlaying = true;
         const audio = new Audio(pendingAudioList.shift());
-        audio.onended = function () {
+        audio.onended = async function () {
+            await sleep(2000);
             audioPlaying = false;
             triggerAudioPlayer(); // won't do anything unless requests were queued up while playing
         };
         audio.play();
+    }
+    function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
     const doRefresh = async () => {
         refreshInProgressButton = true;
