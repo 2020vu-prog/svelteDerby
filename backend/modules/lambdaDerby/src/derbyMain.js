@@ -946,7 +946,7 @@ const buildResponse = (jsonObj, cacheControl = "no-cache") => {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
             "Cache-Control": cacheControl,
-            "x-client-minimum": "1.0.3",
+            "x-client-minimum": "1.0.7",
         },
         body: JSON.stringify(jsonObj),
     };
