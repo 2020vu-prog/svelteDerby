@@ -32,7 +32,14 @@
         overflow: hidden;
         position: fixed;
         bottom: 0;
+        left: 0;
         width: 100%;
+
+        /* override body padding */
+        padding: 0px;
+        /* override bootstrap margin*/
+        margin: 0px;
+        margin-bottom: 0px;
     }
 
     /* Style the links inside the navigation bar */

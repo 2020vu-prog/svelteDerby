@@ -257,29 +257,27 @@
     }
 </style>
 
-<body>
-    <!-- Top Navigation Menu -->
-    <div class="topnav" style="z-index: 20;">
-        <a href="#home" style="background-color: {$theme}" class="active">
-            {getTitle($raceConfig)}&nbsp;
-            <HotLoad />
-        </a>
-        <!-- Navigation links (hidden by default) -->
-        <div id="myLinks">
+<!-- Top Navigation Menu -->
+<div class="topnav" style="z-index: 20;">
+    <a href="#home" style="background-color: {$theme}" class="active">
+        {getTitle($raceConfig)}&nbsp;
+        <HotLoad />
+    </a>
+    <!-- Navigation links (hidden by default) -->
+    <div id="myLinks">
 
-            {#each menuMap as menuOption}
-                {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
-                    <a on:click={() => navTo(menuOption.menuRoute)}>
-                        {menuOption.text}
-                    </a>
-                {/if}
-            {/each}
-        </div>
-        <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->
-        <a href="javascript:void(0);" class="icon" on:click={menuClickFunction}>
-            <i class="fa fa-bars" />
-        </a>
+        {#each menuMap as menuOption}
+            {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
+                <a on:click={() => navTo(menuOption.menuRoute)}>
+                    {menuOption.text}
+                </a>
+            {/if}
+        {/each}
     </div>
-    <StatusMessage />
-    <Router {routes} />
-</body>
+    <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->
+    <a href="javascript:void(0);" class="icon" on:click={menuClickFunction}>
+        <i class="fa fa-bars" />
+    </a>
+</div>
+<StatusMessage />
+<Router {routes} />
