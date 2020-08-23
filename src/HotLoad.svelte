@@ -115,7 +115,6 @@
 
                 console.log("watchIot: Message received", data);
                 console.log("watchIot: Message value", data.value);
-                announce();
                 await applyFromMqMsg(data.value);
             },
             error: (error) => {
@@ -379,18 +378,11 @@
         }
     };
     var mounted = false;
+    const pendingAudioList = [];
 
     onMount(async () => {
         mounted = true;
     });
-    const announce = () => {
-        return; // no test announcement
-        if ($autoAnnounceResults) {
-            const incoming =
-                "https://cf.derby.rr1.us/archive/media.d6c3656e-4bfc-494e-8f6b-f28cdb8761df.mp3";
-            new Audio(incoming).play();
-        }
-    };
     async function announceFromMqtt(mqMsg) {
         console.log("mqMsg: ", mqMsg);
         console.log(`mqMsg: ${mqMsg}`, mqMsg);
@@ -401,10 +393,27 @@
         if (mediaMatch && mediaMatch[0]) {
             const path = mediaMatch[0];
             console.log(`paMessage path: ${path}`);
-            new Audio(path).play();
+            queueAudio(path);
         } else {
             console.log(`paMessage MISSING path`);
         }
+    }
+    function queueAudio(path) {
+        pendingAudioList.push(path);
+        triggerAudioPlayer();
+    }
+    var audioPlaying = false;
+    function triggerAudioPlayer() {
+        if (pendingAudioList.length == 0) return; // no-op.
+        if (audioPlaying) return; // no concurrent audio players!
+
+        audioPlaying = true;
+        const audio = new Audio(pendingAudioList.shift());
+        audio.onended = function () {
+            audioPlaying = false;
+            triggerAudioPlayer(); // won't do anything unless requests were queued up while playing
+        };
+        audio.play();
     }
     const doRefresh = async () => {
         refreshInProgressButton = true;
