@@ -3,7 +3,6 @@
     import CarAndDriver from "./CarAndDriver.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
     import { safeGetAt } from "./utils.js";
-    import { prefStore } from "./stores.js";
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";

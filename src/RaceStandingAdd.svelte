@@ -1,4 +1,5 @@
 <script>
+    import SpinnerButton from "./SpinnerButton.svelte";
     import {
         raceConfig,
         driverMap,
@@ -11,9 +12,11 @@
     import { participantValid, participantFocusCompletion } from "./utils.js";
 
     export let params = {};
-    let spinner = undefined; // empty to start.
     console.log("RaceStandingAdd", params);
     var mounted = false;
+    var submitFocused = false;
+    var submitDisabled = true;
+    var submitSpinning = false;
     const typeVars = {
         RaceStanding: {
             title: "Add Pending Race",
@@ -39,7 +42,7 @@
         mounted = true;
     });
     function changeFocus(carNumber, seedIdentifier) {
-        console.log("changeFocus ", seedIdentifier, " ", carNumber);
+        //console.log("changeFocus ", seedIdentifier, " ", carNumber);
         if (participantFocusCompletion(carNumber)) {
             if (seedIdentifier == "A") {
                 document.getElementById("cn2").focus();
@@ -76,10 +79,12 @@
         };
 
         //no double click
-        document.getElementById("formSubmitButton").disabled = true;
         console.log("axios:", $getAxios);
 
-        spinner = true;
+        if (submitSpinning) {
+            return; // ignore possible double click (ui should have been disable, so this is a safety net)
+        }
+        submitSpinning = true;
         try {
             const axios = await $getAxios();
             const response = await axios.post(
@@ -89,29 +94,30 @@
             console.log("add response", response);
 
             if (response.data.error) {
-                //re-enable
-                document.getElementById("formSubmitButton").disabled = false;
-
                 console.log("add failed", response);
                 $statusMessage = {
                     text: response.data.error,
                     type: "error",
                 };
             } else {
+                await sleep(1000); // verify spinner
                 pop();
             }
         } catch (err) {
-            //re-enable
-            document.getElementById("formSubmitButton").disabled = false;
             $statusMessage = {
                 text: err,
                 type: "error",
             };
+        } finally {
+            //re-enable
+            submitSpinning = false;
         }
-        spinner = false;
 
-        carNumberForm.car1 = "";
-        carNumberForm.car2 = "";
+        //carNumberForm.car1 = "";
+        //carNumberForm.car2 = "";
+    }
+    function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
     const carNumberForm = {};
     function syncAddButton(advanceFocusToSubmit) {
@@ -122,18 +128,18 @@
             participantValid(carNumberForm.car1) &&
             participantValid(carNumberForm.car2)
         ) {
-            document.getElementById("formSubmitButton").disabled = false;
-            console.log("sync add button SYNC");
+            //console.log("sync add button SYNC");
+
+            submitDisabled = false;
             if (advanceFocusToSubmit == true) {
-                document.getElementById("formSubmitButton").focus();
+                submitFocused = true;
             }
         } else {
-            document.getElementById("formSubmitButton").disabled = true;
-            console.log("sync add button FAIL");
+            submitDisabled = true;
+            //console.log("sync add button FAIL");
         }
     }
     const getDriverName = (number) => {
-        console.log("gdn: " + number);
         if (number && $driverMap[number]) {
             return $driverMap[number].name;
         } else {
@@ -144,7 +150,7 @@
 
 <h3>{title}</h3>
 
-<form on:submit|preventDefault={handleSubmit}>
+<form>
     <label>
         <input
             type="number"
@@ -168,5 +174,11 @@
             }} />
         <p>{getDriverName(carNumberForm.car2)}</p>
     </label>
-    <button id="formSubmitButton" type="submit" disabled>Add</button>
+    <SpinnerButton
+        disabled={submitDisabled}
+        on:click={handleSubmit}
+        spinning={submitSpinning}
+        focused={submitFocused}>
+        Add
+    </SpinnerButton>
 </form>

@@ -6,6 +6,7 @@
         autoAnnounceResults,
         developerMode,
         pendingSortAlgorithm,
+        statusMessage,
     } from "./stores.js";
 
     import { buildVersion, buildDate } from "./utils.js";
@@ -112,6 +113,10 @@
         if (devClickCount++ > 8) {
             console.log("devmodeA");
             $developerMode = true;
+            $statusMessage = {
+                text: `Developer Mode Enabled.`,
+                type: "success",
+            };
         }
     }
 </script>
