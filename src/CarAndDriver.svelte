@@ -25,7 +25,9 @@
         //push("/drivers")
 
         // push("/ManualTimerAdd/1583608357232")
-        push(timerLink);
+        if (timerLink) {
+            push(timerLink);
+        }
     };
     const getDriverName = (number) => {
         //console.log("gdn: "+carNumber)

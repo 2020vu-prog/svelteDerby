@@ -13,6 +13,7 @@
     import DriverAdd from "./DriverAdd.svelte";
     import EventSelection from "./EventSelection.svelte";
     import EventAdd from "./EventAdd.svelte";
+    import HistoryList from "./HistoryList.svelte";
 
     import OrgSelection from "./OrgSelection.svelte";
     import OrgAdd from "./OrgAdd.svelte";
@@ -57,6 +58,7 @@
         "/driverAdd/:number?": DriverAdd,
         "/eventSelection/:orgIz": EventSelection,
         "/eventAdd/:orgIz": EventAdd,
+        "/historyList/:PK/:SK": HistoryList,
         "/orgSelection": OrgSelection,
         "/orgAdd": OrgAdd,
         "/about": AboutPage,

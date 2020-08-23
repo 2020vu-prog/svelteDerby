@@ -11,11 +11,16 @@
         fmtChartPosition,
         getBracketLink,
         hhmmssFmt,
+        getHistoryEntity,
     } from "./utils.js";
 
     export let refreshTime;
     export let phaseKey;
     export let at;
+    export let source = "storePhaseMap";
+    export let historyPK = "";
+    let mounted = false;
+    let boundVars = false;
     let racePhase = {};
     let rp = racePhase;
     let hhmmss;
@@ -23,16 +28,29 @@
     let bgColor;
     let showToolbar = false;
 
-    const updateBoundVars = async (at) => {
-        racePhase = $racePhaseMap[phaseKey];
+    function isHistory() {
+        return source === "EventHistory";
+    }
+    const updateBoundVars = async (at, force) => {
+        if (mounted || force) {
+        } else {
+            return; // neuter the $:{} reload on "at" changed before mount
+        }
+        boundVars = false;
+        if (isHistory()) {
+            racePhase = await getHistoryEntity(historyPK, phaseKey, at);
+        } else {
+            racePhase = $racePhaseMap[phaseKey];
+        }
         rp = racePhase;
         hhmmss = hhmmssFmt(at);
         bgColor = getBgColor();
         chartPosition = await fmtChartPosition(racePhase);
+        boundVars = true;
     };
     $: {
         console.log("rp changed:", at);
-        updateBoundVars(at);
+        updateBoundVars(at, false);
     }
     //console.log("RacePhaseKey:", phaseKey)
     //console.log("RacePhase:", racePhase)
@@ -88,6 +106,9 @@
         if (racePhase.phaseResults) {
             return undefined; // No timerLink for completed phase.
         }
+        if (isHistory()) {
+            return undefined; // No timerLink for history.
+        }
         return (
             "/ManualTimerAdd/" +
             racePhase.classKey +
@@ -98,9 +119,14 @@
         );
     };
     onMount(async () => {
-        updateBoundVars(at);
+        console.log("RacePhase unt");
+        updateBoundVars(at, true);
+        mounted = true;
     });
     const shouldRender = (racePhase) => {
+        if (!boundVars) {
+            return false;
+        }
         return !racePhase.del;
     };
     function toggleToolbar(event) {
@@ -116,17 +142,19 @@
     };
 </script>
 
-{#if refreshTime && shouldRender(racePhase)}
+{#if refreshTime && shouldRender(rp, boundVars)}
     <div class="well well-sm " style="background: {bgColor}">
         <div class="panel panel-info ">
             <div class="panel-heading">
                 <span on:click={gotoBracket}>{chartPosition}</span>
                 <span class="spanRight">
                     {hhmmss}
-                    <InfoButton
-                        on:message={toggleToolbar}
-                        dbName="RacePhase"
-                        dbKey={phaseKey} />
+                    {#if !isHistory()}
+                        <InfoButton
+                            on:message={toggleToolbar}
+                            dbName="RacePhase"
+                            dbKey={phaseKey} />
+                    {/if}
                 </span>
             </div>
 
@@ -160,6 +188,7 @@
 
             </ul>
         </div>
+        {#if isHistory()}User: {rp.by}{/if}
         {#if showToolbar}
             <ComponentToolbar
                 dbName="RacePhase"

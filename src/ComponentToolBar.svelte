@@ -75,6 +75,18 @@
         console.log("routing to bracket:", bracketLink);
         push(bracketLink);
     };
+    function gotoHistory() {
+        console.log("routing to history:");
+        var pkSuffix = "";
+        if (dbName === "RacePhase") {
+            pkSuffix = "RP";
+        }
+        if (dbName === "RaceStanding") {
+            pkSuffix = "RS";
+        }
+        const PK = `${$raceConfig.orgId}:${pkSuffix}`;
+        push(`/historyList/${PK}/${dbKey}`);
+    }
     function isManualTimerAllowed() {
         return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
     }
@@ -122,7 +134,12 @@
             Timer
         </span>
     {/if}
-    <span class="navbarItem" style="background-color: {$theme}">History</span>
+    <span
+        class="navbarItem"
+        style="background-color: {$theme}"
+        on:click={gotoHistory}>
+        History
+    </span>
 
     {#if bracketLink}
         <span

@@ -3,7 +3,18 @@ const {
 } = require("../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
 import { Auth } from "aws-amplify";
 import { db } from "./eventDb.js";
+const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
+export async function getHistoryEntity(PK, SK, at) {
+    const key = { PK: PK, SK: SK, at: at };
+    console.log("getHistoryEntity", key);
+    const entityFromDb = await db.EventHistory.get(key);
+
+    const entityFactory = new EntityFactory({});
+    const rc = entityFactory.build(entityFromDb);
+    console.log("getHistoryEntity gave:", rc);
+    return rc;
+}
 export async function fmtChartPosition(RpRs) {
     if (RpRs.bracketPos && RpRs.bracketPos.includes(":")) {
         const [bmdKey, heat] = RpRs.bracketPos.split(":");
