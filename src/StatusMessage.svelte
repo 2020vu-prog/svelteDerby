@@ -63,13 +63,23 @@
         color: black;
         padding: 1rem;
     }
+
+    .toasty {
+        z-index: 50;
+        overflow: hidden;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+    }
 </style>
 
-{#each messages as message}
-    {#if message.type === 'error'}
-        <p class="errorMessage">{message.text}</p>
-    {/if}
-    {#if message.type === 'success'}
-        <p class="successMessage">{message.text}</p>
-    {/if}
-{/each}
+<div class="toasty">
+    {#each messages as message}
+        {#if message.type === 'error'}
+            <p class="errorMessage">{message.text}</p>
+        {/if}
+        {#if message.type === 'success'}
+            <p class="successMessage">{message.text}</p>
+        {/if}
+    {/each}
+</div>
