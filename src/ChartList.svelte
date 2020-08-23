@@ -42,7 +42,6 @@
 <div>
     <h4>Chart List</h4>
     <p />
-    <BottomNav />
     <MaterialAdd clickHandleRoute="/chartAdd" />
 
     {#each bmdFromDexie as bmd}
@@ -50,4 +49,5 @@
             {bmd.bracketName}
         </div>
     {/each}
+    <BottomNav />
 </div>

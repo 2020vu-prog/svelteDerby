@@ -97,7 +97,6 @@
 <main>
 
     <h4>Next On Blocks</h4>
-    <BottomNav />
 
     {#if params.type === 'Pending'}
         <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
@@ -126,4 +125,5 @@
             {/if}
         {/if}
     {/each}
+    <BottomNav />
 </main>

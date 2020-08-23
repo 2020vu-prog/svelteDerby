@@ -44,7 +44,6 @@
 <main>
 
     <MaterialAdd clickHandleRoute="/raceStandingAdd/RacePhase" />
-    <BottomNav />
 
     <h4>
         Race Phases
@@ -59,4 +58,6 @@
                 at={racePhase.at} />
         {/if}
     {/each}
+    <BottomNav />
+
 </main>

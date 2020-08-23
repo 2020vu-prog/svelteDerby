@@ -1,10 +1,35 @@
 <script>
+    /*
+     ** this component should be added to the Bottom of the page.
+     **   it will install a placeholder div so that bottom nav does not obscure scrolling.
+     **   When scrolled to max bottom, the bottomNav placeholder should end up exactly underneath(z wise)
+     **   the actual nav bar.    since placeholder is empty, nothing is obscured.
+     **
+     */
     import { showBottomNav, theme } from "./stores.js";
     import { location } from "svelte-spa-router";
 
+    import { onMount } from "svelte";
+    var mounted = false;
+    var thisBottomNav;
+    var placeholderHeight = "0px";
+
+    onMount(async () => {
+        mounted = true;
+    });
     $: {
         console.log("current page is ", $location);
     }
+    $: {
+        var bottomNavHeight = 0;
+        if ($showBottomNav && mounted && thisBottomNav) {
+            bottomNavHeight = thisBottomNav.offsetHeight;
+        }
+        placeholderHeight = `${bottomNavHeight}px`;
+
+        console.log("placeholderHeight: ", placeholderHeight);
+    }
+
     /* Toggle between adding and removing the "responsive" class to the navbar when the user clicks on the icon */
     const myFunction = () => {
         var x = document.getElementById("myNavbar");
@@ -61,7 +86,14 @@
 </style>
 
 {#if $showBottomNav}
-    <div class="navbar" id="myNavbar" style="z-index:20">
+    <div
+        class="bottomNavScrollPlaceholder"
+        style="height: {placeholderHeight};" />
+    <div
+        bind:this={thisBottomNav}
+        class="navbar"
+        id="myNavbar"
+        style="z-index:20">
         <a
             href="/#/RpList"
             style="background-color: {getIsSelected('RpList', $location) ? $theme : '#333'}">
