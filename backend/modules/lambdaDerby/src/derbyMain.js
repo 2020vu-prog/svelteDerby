@@ -45,7 +45,10 @@ async function s3QueryMediaPrefix(queryStringParameters) {
 }
 async function getAllKeys(params, allKeys = []) {
     const response = await s3.listObjectsV2(params).promise();
-    response.Contents.forEach((obj) => allKeys.push(obj.Key));
+    console.log("getAllKeys count:", response.Contents.length);
+    response.Contents.forEach((obj) =>
+        allKeys.push({ Key: obj.Key, LastModified: obj.LastModified })
+    );
 
     if (response.NextContinuationToken) {
         params.ContinuationToken = response.NextContinuationToken;
@@ -946,7 +949,7 @@ const buildResponse = (jsonObj, cacheControl = "no-cache") => {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
             "Cache-Control": cacheControl,
-            "x-client-minimum": "1.0.7",
+            "x-client-minimum": "1.0.9",
         },
         body: JSON.stringify(jsonObj),
     };

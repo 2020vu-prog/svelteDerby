@@ -1,4 +1,5 @@
 <script>
+    import SpinnerButton from "./SpinnerButton.svelte";
     import { doRefreshBlocks } from "./stores.js";
     import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
@@ -10,9 +11,11 @@
 
     export let params = {};
 
+    var loadingMedia = true;
     var rpFromDexie;
     var mediaList = [];
     var selectedVideo;
+    var selectedAudio;
     const SKIP_PREFIX = "_SKIP_";
     const ALL_PREFIX = "_ALL_";
     onMount(async () => {
@@ -20,11 +23,13 @@
             rpFromDexie = await db.RacePhase.get(params.dbKey);
             console.log("rpFromDexie:", rpFromDexie);
 
-            mediaList = await listMedia(getMediaPrefix(rpFromDexie));
+            mediaList = await listAndSortMedia(getMediaPrefix(rpFromDexie));
+            loadingMedia = false;
             return;
         }
         if (params.dbName === "*") {
-            mediaList = await listMedia(ALL_PREFIX); // get all!
+            mediaList = await listAndSortMedia(ALL_PREFIX); // get all!
+            loadingMedia = false;
             return;
         }
     });
@@ -36,6 +41,13 @@
             }
         }
         return SKIP_PREFIX;
+    }
+    async function listAndSortMedia(prefixSeed) {
+        const listM = await listMedia(prefixSeed);
+        listM.sort(function (a, b) {
+            return b.LastModified.localeCompare(a.LastModified);
+        });
+        return listM;
     }
     async function listMedia(prefixSeed) {
         if (!prefixSeed) {
@@ -75,14 +87,16 @@
         return [];
     }
     async function playMedia(key) {
+        selectedVideo = null;
+        selectedAudio = null;
+        await tick();
         if (key.toString().endsWith(".mp3"))
-            new Audio(getMediaHref(key)).play();
+            //new Audio(getMediaHref(key)).play();
+            selectedAudio = key;
         else {
             //document.location = getMediaHref(key);
-            selectedVideo = null;
-            await tick();
 
-            selectedVideo = getMediaHref(key);
+            selectedVideo = key;
         }
     }
     function getMediaHref(key) {
@@ -92,13 +106,10 @@
 
 <div>
     <h4>Media List</h4>
-
-    {#if selectedVideo}
-        <video width="320" height="240" autoplay controls>
-            <source src={selectedVideo} type="video/mp4" />
-            Your browser does not support the video tag.
-        </video>
+    {#if loadingMedia}
+        <SpinnerButton spinning={loadingMedia}>Loading</SpinnerButton>
     {/if}
+
     {#if mediaList}
         <p />
         {#if mediaList.length == 0}
@@ -107,8 +118,27 @@
             {#each mediaList as mediaItem}
                 <div
                     class="panel panel-info"
-                    on:click={() => playMedia(mediaItem)}>
-                    {mediaItem}
+                    on:click={() => playMedia(mediaItem.Key)}>
+                    {mediaItem.Key}
+                    <p />
+                    {mediaItem.LastModified}
+                    {#if selectedVideo === mediaItem.Key}
+                        <video width="320" height="240" autoplay controls>
+                            <source
+                                src={getMediaHref(selectedVideo)}
+                                type="video/mp4" />
+                            Your browser does not support the video tag.
+                        </video>
+                    {/if}
+                    {#if selectedAudio === mediaItem.Key}
+                        <audio controls>
+                            <source
+                                src={getMediaHref(selectedAudio)}
+                                type="audio/mpeg" />
+                            Your browser does not support the audio element.
+                        </audio>
+                    {/if}
+
                 </div>
             {/each}
         {/if}
