@@ -1,4 +1,5 @@
 <script>
+    import { statusMessage, } from "./stores.js"
     var recordButton = [];
     var mediaRecorder = [];
     var recordedBlobs = [];
@@ -23,7 +24,11 @@
             handleGotMedia(stream, snum);
         } catch (e) {
             console.error("navigator.getUserMedia error:", e);
-            errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+            $statusMessage = {
+                text: e,
+                type: "error",
+            };
+            //errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
         }
     }
     var mainStream;
@@ -50,8 +55,10 @@
         downloadPending = new Date().getTime();
         mediaRecorder[snum].stop();
     }
+    //const mimeType = "video/webm";
+    //const videoCodecs = "codecs=vp9";
     const mimeType = "video/webm";
-    const videoCodecs = "codecs=vp9";
+    const videoCodecs = "codecs=vp8";
     const fileExt = mimeType.split('/')[1];
     function beginDownload(snum) {
         const blob = new Blob(recordedBlobs[snum], { type: mimeType });
@@ -94,7 +101,8 @@
             //clearInterval(timerHandle);
             recordStream(mainStream, snum);
         };
-        mediaRecorder[snum].start(1000);
+        //mediaRecorder[snum].start(1000);
+        mediaRecorder[snum].start();
         console.log("recordStream done", snum);
     }
 </script>
