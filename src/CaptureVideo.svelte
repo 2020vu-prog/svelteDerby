@@ -2,6 +2,8 @@
     var recordButton = [];
     var mediaRecorder = [];
     var recordedBlobs = [];
+    var downloadPending;
+    var nextSnum = 0; // 2 streams.  this will toggle b/t 0,1
     var timerHandle;
     async function doStart(snum) {
         const constraints = {
@@ -33,14 +35,19 @@
         const gumVideo = document.querySelector(`video#gum${snum}`);
         gumVideo.srcObject = stream;
         recordStream(stream, 0);
-        //    recordStream(stream, 1);
+        recordStream(stream, 1);
         mainStream = stream;
 
         timerHandle = setInterval(myTimer, 10000);
     }
     function myTimer() {
-        const snum = 0;
-        console.log("timer");
+        const snum = nextSnum;
+        nextSnum++;
+        if (nextSnum >= mediaRecorder.length) {
+            nextSnum = 0;
+        }
+        console.log(`timer ${snum} next: ${nextSnum}`);
+        downloadPending = new Date().getTime();
         mediaRecorder[snum].stop();
     }
     function beginDownload(snum) {
@@ -76,7 +83,11 @@
             if (event.data && event.data.size > 0) {
                 recordedBlobs[snum].push(event.data);
             }
-            beginDownload(snum);
+
+            if (downloadPending) {
+                beginDownload(snum, downloadPending);
+                downloadPending = undefined;
+            }
             //clearInterval(timerHandle);
             recordStream(mainStream, snum);
         };
@@ -89,5 +100,5 @@
 
 <video id="gum0" playsinline autoplay muted />
 <video id="gum1" playsinline autoplay muted />
-<button bind:this={recordButton[0]} on:click={() => doStart(0)}>Record1</button>
-<button bind:this={recordButton[1]} on:click={() => doStart(1)}>Record2</button>
+<button bind:this={recordButton[0]} on:click={()=> doStart(0)}>Record1</button>
+<button bind:this={recordButton[1]} on:click={()=> doStart(1)}>Record2</button>
