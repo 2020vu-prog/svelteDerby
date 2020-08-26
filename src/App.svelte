@@ -4,6 +4,7 @@
     import { push, pop, replace } from "svelte-spa-router";
     import { store as AuthStore } from "./stores/auth.js";
 
+    import CaptureVideo from "./CaptureVideo.svelte";
     import RaceStandingList from "./RaceStandingList.svelte";
     import RacePhaseList from "./RacePhaseList.svelte";
     import ChartList from "./ChartList.svelte";
@@ -70,6 +71,7 @@
         "/rawTimerList": RawTimerList,
         "/spMediaList/:dbName/:dbKey": MediaList,
         "/forceReloadPage": ForceReloadPage,
+        "/captureVideo": CaptureVideo,
         // '/raceStandingAdd': RaceStandingAdd,
     };
 
@@ -138,6 +140,11 @@
                 alwaysShow: true,
             },
 
+            {
+                text: "Capture Video",
+                menuRoute: "/captureVideo",
+                alwaysShow: true,
+            },
             {
                 text: loginLabel,
                 menuRoute: "/login",
