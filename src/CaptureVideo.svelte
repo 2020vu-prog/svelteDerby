@@ -50,13 +50,16 @@
         downloadPending = new Date().getTime();
         mediaRecorder[snum].stop();
     }
+    const mimeType = "video/webm";
+    const videoCodecs = "codecs=vp9";
+    const fileExt = mimeType.split('/')[1];
     function beginDownload(snum) {
-        const blob = new Blob(recordedBlobs[snum], { type: "video/webm" });
+        const blob = new Blob(recordedBlobs[snum], { type: mimeType });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.style.display = "none";
         a.href = url;
-        a.download = "test.webm";
+        a.download = `test.${fileExt}`;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => {
@@ -66,7 +69,7 @@
     }
     function recordStream(stream, snum) {
         console.log("recordStream", stream, snum);
-        var options = { mimeType: "video/webm; codecs=vp9" };
+        var options = { mimeType: `${mimeType}; ${videoCodecs}` };
         recordedBlobs[snum] = [];
         mediaRecorder[snum] = new MediaRecorder(stream, options);
 
