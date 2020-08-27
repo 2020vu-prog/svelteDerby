@@ -1,5 +1,5 @@
 <script>
-    import { statusMessage, } from "./stores.js"
+    import { statusMessage } from "./stores.js";
     var recordButton = [];
     var mediaRecorder = [];
     var recordedBlobs = [];
@@ -9,8 +9,12 @@
     async function doStart(snum) {
         const constraints = {
             video: {
-                width: 1280,
-                height: 720,
+                //width: 1280,
+                //height: 720,
+                width: 320,
+                height: 240,
+                frameRate: { ideal: 15, max: 30 },
+                facingMode: "environment",
             },
         };
         console.log("Using media constraints:", constraints);
@@ -59,7 +63,7 @@
     //const videoCodecs = "codecs=vp9";
     const mimeType = "video/webm";
     const videoCodecs = "codecs=vp8";
-    const fileExt = mimeType.split('/')[1];
+    const fileExt = mimeType.split("/")[1];
     function beginDownload(snum) {
         const blob = new Blob(recordedBlobs[snum], { type: mimeType });
         const url = window.URL.createObjectURL(blob);
@@ -111,5 +115,5 @@
 
 <video id="gum0" playsinline autoplay muted />
 <video id="gum1" playsinline autoplay muted />
-<button bind:this={recordButton[0]} on:click={()=> doStart(0)}>Record1</button>
-<button bind:this={recordButton[1]} on:click={()=> doStart(1)}>Record2</button>
+<button bind:this={recordButton[0]} on:click={() => doStart(0)}>Record1</button>
+<button bind:this={recordButton[1]} on:click={() => doStart(1)}>Record2</button>
