@@ -1,12 +1,66 @@
 <script>
-    import { statusMessage } from "./stores.js";
-    var recordButton = [];
+    import SpinnerButton from "./SpinnerButton.svelte";
+    import { statusMessage, getAxios, raceConfig } from "./stores.js";
     var mediaRecorder = [];
     var recordedBlobs = [];
     var downloadPending;
     var nextSnum = 0; // 2 streams.  this will toggle b/t 0,1
     var timerHandle;
-    async function doStart(snum) {
+    var recordSpinning = false;
+    var captureSpinning = false;
+    async function doCapture(videoData) {
+        captureSpinning = true;
+        try {
+            const endPoint = "/requestS3PutObjectUrl";
+            const axios = await $getAxios();
+            const req = {
+                key: "media/ZZZ_" + new Date().getTime().toString(),
+                orgId: $raceConfig.orgId,
+                orgIz: $raceConfig.orgIz,
+            };
+            const response = await axios.get($raceConfig.baseUrl + endPoint, {
+                params: req,
+            });
+            console.log("requestS3PutObjectUrl response", response);
+            if (response.data.signedUrl) {
+                const options = {
+                    headers: {
+                        "Content-Type": mimeType,
+                    },
+                };
+
+                const axiosGeneric = axios.create({
+                    headers: { "X-Custom-Header": "none" },
+                });
+
+                delete axiosGeneric.defaults.headers.common["Authorization"];
+                const putRc = await axiosGeneric.put(
+                    response.data.signedUrl,
+                    videoData,
+                    options
+                );
+                console.log("s3PutResponse", putRc);
+            }
+            if (response.data.error) {
+                console.log("requestS3PutObjectUrl failed", response);
+                $statusMessage = {
+                    text: response.data.error,
+                    type: "error",
+                };
+            } else {
+            }
+        } catch (err) {
+            $statusMessage = {
+                text: err,
+                type: "error",
+            };
+        } finally {
+            captureSpinning = false;
+        }
+    }
+    async function doStart() {
+        const snum = 0;
+        recordSpinning = true;
         const constraints = {
             video: {
                 //width: 1280,
@@ -37,7 +91,6 @@
     }
     var mainStream;
     function handleGotMedia(stream, snum) {
-        recordButton[snum].disabled = false;
         console.log("getUserMedia() got stream:", stream);
         window.stream = stream;
 
@@ -64,6 +117,10 @@
     const mimeType = "video/webm";
     const videoCodecs = "codecs=vp8";
     const fileExt = mimeType.split("/")[1];
+    function beginUpload(snum) {
+        const blob = new Blob(recordedBlobs[snum]);
+        doCapture(blob);
+    }
     function beginDownload(snum) {
         const blob = new Blob(recordedBlobs[snum], { type: mimeType });
         const url = window.URL.createObjectURL(blob);
@@ -99,7 +156,8 @@
             }
 
             if (downloadPending) {
-                beginDownload(snum, downloadPending);
+                //beginDownload(snum, downloadPending);
+                beginUpload(snum, downloadPending);
                 downloadPending = undefined;
             }
             //clearInterval(timerHandle);
@@ -115,5 +173,9 @@
 
 <video id="gum0" playsinline autoplay muted />
 <video id="gum1" playsinline autoplay muted />
-<button bind:this={recordButton[0]} on:click={() => doStart(0)}>Record1</button>
-<button bind:this={recordButton[1]} on:click={() => doStart(1)}>Record2</button>
+<SpinnerButton on:click={doStart} spinning={recordSpinning}>
+    Record
+</SpinnerButton>
+<SpinnerButton on:click={doCapture} spinning={captureSpinning}>
+    Capture
+</SpinnerButton>

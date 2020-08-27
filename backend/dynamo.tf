@@ -82,6 +82,22 @@ resource "aws_dynamodb_table" "derby-distribution" {
 resource "aws_s3_bucket" "dstBucket" {
   bucket_prefix = local.S3DistBucketPrefix
   acl    = "private"
+  cors_rule {
+          allowed_headers = [
+              "*",
+            ] 
+           allowed_methods = [
+               "PUT",
+               "POST",
+               "DELETE",
+               "GET",
+            ] 
+           allowed_origins = [
+               "*",
+            ] 
+           expose_headers  = []
+           max_age_seconds = 0 
+        }
 }
 module "derbyDynamoLambda" {
   source = "./modules/lambdaDynamo"

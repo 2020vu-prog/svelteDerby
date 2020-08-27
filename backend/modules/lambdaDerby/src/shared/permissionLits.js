@@ -55,6 +55,7 @@ addPermission(
     ["/deleteRaceStanding"],
     ["/sveltePermissionCanDeleteStanding"]
 );
+addPermission("CanCaptureVideo", ["/requestS3PutObjectUrl"], ["/captureVideo"]);
 addPermission(
     "TODO",
     [

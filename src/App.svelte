@@ -143,7 +143,6 @@
             {
                 text: "Capture Video",
                 menuRoute: "/captureVideo",
-                alwaysShow: true,
             },
             {
                 text: loginLabel,

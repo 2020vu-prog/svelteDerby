@@ -938,6 +938,29 @@ const routeMap = {
             return buildResponse(data);
         },
     },
+    "/requestS3PutObjectUrl": {
+        h: async (event) => {
+            const qsp = event.queryStringParameters;
+            if (!qsp) {
+                qsp = {};
+            }
+            if (!qsp.key) {
+                console.log("/requestS3PutObjectUrl : Unknown or missing key");
+                const qr = { error: "Unknown or missing key" };
+                return buildResponse(qr);
+            }
+
+            var params = {
+                Expires: 600, // allow for slow video upload
+                Bucket: process.env.DstBucket,
+                Key: qsp.key,
+            };
+            var signedUrl = s3.getSignedUrl("putObject", params);
+            console.log("The signed URL is", signedUrl);
+
+            return buildResponse({ signedUrl: signedUrl });
+        },
+    },
 };
 
 const buildResponse = (jsonObj, cacheControl = "no-cache") => {
