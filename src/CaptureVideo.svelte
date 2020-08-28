@@ -9,6 +9,7 @@
     var timerHandle;
     var recordSpinning = false;
     var captureSpinning = false;
+    var captureDisabled = true;
     async function doCapture(videoData) {
         try {
             const endPoint = "/requestS3PutObjectUrl";
@@ -100,15 +101,21 @@
         recordStream(stream, 1);
         mainStream = stream;
 
-        timerHandle = setInterval(myTimer, 10000);
+        timerHandle = setInterval(myTimer, 2500);
     }
+    var videoRefreshCount = 0;
     async function doCaptureAndUpload() {
-        captureSpinning = true;
+        captureSpinning = true; // reset after upload ok
+        captureDisabled = true; // reset after 2 timer cycles
         uploadPending = new Date().getTime();
         captureOldest(); // stop oldest and upload it
+        videoRefreshCount = 0;
     }
     function myTimer() {
         captureOldest(); // keep video clips short
+        if (videoRefreshCount++ > 1) {
+            captureDisabled = false;
+        }
     }
     function captureOldest() {
         const snum = nextSnum;
@@ -145,7 +152,10 @@
     }
     function recordStream(stream, snum) {
         console.log("recordStream", stream, snum);
-        var options = { mimeType: `${mimeType}; ${videoCodecs}` };
+        var options = {
+            mimeType: `${mimeType}; ${videoCodecs}`,
+            videoBitsPerSecond: 1000000,
+        };
         recordedBlobs[snum] = [];
         mediaRecorder[snum] = new MediaRecorder(stream, options);
 
@@ -187,6 +197,9 @@
 <SpinnerButton on:click={doStart} spinning={recordSpinning}>
     Record
 </SpinnerButton>
-<SpinnerButton on:click={doCaptureAndUpload} spinning={captureSpinning}>
+<SpinnerButton
+    on:click={doCaptureAndUpload}
+    spinning={captureSpinning}
+    disabled={captureDisabled}>
     Capture&Upload
 </SpinnerButton>
