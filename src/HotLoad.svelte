@@ -9,6 +9,7 @@
         carFilter,
         statusMessage,
         autoAnnounceResults,
+        mqttTriggerVideoCapture,
     } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { raceConfig } from "./stores.js";
@@ -394,6 +395,7 @@
             const path = mediaMatch[0];
             console.log(`paMessage path: ${path}`);
             queueAudio(path);
+            $mqttTriggerVideoCapture = new Date().getTime();
         } else {
             console.log(`paMessage MISSING path`);
         }

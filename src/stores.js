@@ -25,6 +25,8 @@ export const showBottomNav = writable(true);
 export const developerMode = writable(false);
 export const pendingSortAlgorithm = writable("Age");
 export const autoAnnounceResults = writable(false);
+export const mqttTimerSubscribe = writable(false);
+export const mqttTriggerVideoCapture = writable(0);
 export const beginAnonymousLogin = writable(false);
 export const raceConfig = writable({
     orgName: "",

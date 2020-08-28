@@ -1,6 +1,11 @@
 <script>
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { statusMessage, getAxios, raceConfig } from "./stores.js";
+    import {
+        statusMessage,
+        getAxios,
+        raceConfig,
+        mqttTriggerVideoCapture,
+    } from "./stores.js";
     var mediaRecorder = [];
     var recordedBlobs = [];
     var downloadPending;
@@ -106,10 +111,17 @@
         timerHandle = setInterval(myTimer, 2500);
     }
     var videoRefreshCount = 0;
-    async function doCaptureAndUpload() {
+    $: {
+        doCaptureAndUpload($mqttTriggerVideoCapture);
+    }
+    async function doCaptureAndUpload(uploadKey) {
+        if (captureDisabled) {
+            console.log("doCaptureAndUpload: skipping, not armed");
+            return;
+        }
         captureSpinning = true; // reset after upload ok
         captureDisabled = true; // reset after 2 timer cycles
-        uploadPending = new Date().getTime();
+        uploadPending = uploadKey ? uploadKey : new Date().getTime();
         captureOldest(); // stop oldest and upload it
         videoRefreshCount = 0;
     }
