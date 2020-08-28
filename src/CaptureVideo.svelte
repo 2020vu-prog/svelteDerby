@@ -4,12 +4,12 @@
     var mediaRecorder = [];
     var recordedBlobs = [];
     var downloadPending;
+    var uploadPending;
     var nextSnum = 0; // 2 streams.  this will toggle b/t 0,1
     var timerHandle;
     var recordSpinning = false;
     var captureSpinning = false;
     async function doCapture(videoData) {
-        captureSpinning = true;
         try {
             const endPoint = "/requestS3PutObjectUrl";
             const axios = await $getAxios();
@@ -102,14 +102,22 @@
 
         timerHandle = setInterval(myTimer, 10000);
     }
+    async function doCaptureAndUpload() {
+        captureSpinning = true;
+        uploadPending = new Date().getTime();
+        captureOldest(); // stop oldest and upload it
+    }
     function myTimer() {
+        captureOldest(); // keep video clips short
+    }
+    function captureOldest() {
         const snum = nextSnum;
         nextSnum++;
         if (nextSnum >= mediaRecorder.length) {
             nextSnum = 0;
         }
         console.log(`timer ${snum} next: ${nextSnum}`);
-        downloadPending = new Date().getTime();
+        //downloadPending = new Date().getTime();
         mediaRecorder[snum].stop();
     }
     //const mimeType = "video/webm";
@@ -155,9 +163,12 @@
                 recordedBlobs[snum].push(event.data);
             }
 
+            if (uploadPending) {
+                beginUpload(snum, uploadPending);
+                uploadPending = undefined;
+            }
             if (downloadPending) {
-                //beginDownload(snum, downloadPending);
-                beginUpload(snum, downloadPending);
+                beginDownload(snum, downloadPending);
                 downloadPending = undefined;
             }
             //clearInterval(timerHandle);
@@ -176,6 +187,6 @@
 <SpinnerButton on:click={doStart} spinning={recordSpinning}>
     Record
 </SpinnerButton>
-<SpinnerButton on:click={doCapture} spinning={captureSpinning}>
-    Capture
+<SpinnerButton on:click={doCaptureAndUpload} spinning={captureSpinning}>
+    Capture&Upload
 </SpinnerButton>
