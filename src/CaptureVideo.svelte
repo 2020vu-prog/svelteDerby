@@ -15,7 +15,9 @@
             const endPoint = "/requestS3PutObjectUrl";
             const axios = await $getAxios();
             const req = {
-                key: "media/ZZZ_" + new Date().getTime().toString(),
+                key:
+                    `media/${$raceConfig.orgId}/ZZZ_` +
+                    new Date().getTime().toString(),
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
             };

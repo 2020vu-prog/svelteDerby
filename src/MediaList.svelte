@@ -57,7 +57,8 @@
             return [];
         }
         if (prefixSeed === ALL_PREFIX) {
-            prefixSeed = "";
+            //prefixSeed = "";
+            prefixSeed = $raceConfig.orgId;
         }
         //console.log(`listMedia: ${dbName} ${dbKey}`);
         console.log(`listMedia: `);
