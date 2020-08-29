@@ -44,25 +44,40 @@
             }
         } catch (e) {
             $statusMessage = {
-                text: response.data.error,
+                text: e,
                 type: "error",
             };
         }
     }
+
+    async function doTestAnnouncement() {
+        announceText = "Test Announcement";
+        await doAnnounce();
+    }
+
     var announceText = "";
 </script>
 
 <div style="width: 100%; text-align: center;">
     <h3>Manual Announcement</h3>
 </div>
+<h4>Plain Text Announcement</h4>
 <form>
     <label for="announcement">Announcement:</label>
-    <input
+    <textarea
+        rows="5"
         type="text"
         id="announcement"
         name="announcement"
-        bind:value={announceText} />
+        bind:value={announceText}
+        style="width: 100%;" />
     <br />
     <br />
     <input type="button" value="Announce" on:click={doAnnounce} />
 </form>
+
+<hr />
+
+<h4>Test Announcement</h4>
+<br />
+<button on:click={doTestAnnouncement}>Test Announcement</button>
