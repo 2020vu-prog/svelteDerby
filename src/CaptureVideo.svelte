@@ -17,7 +17,15 @@
     var captureDisabled = true;
     var resolution = "640x480";
     var frameRate = "15";
-    async function doCapture(videoData, uploadKey) {
+    var videoBitsPerSecond = "1000000";
+
+    function clickedCapture() {
+
+        const now = new Date().getTime();
+        doCaptureAndUpload(`${now}-TestClick`);
+    }
+
+    async function beginCapture(videoData, uploadKey) {
         $statusMessage = {
             text: `Beginning upload.`,
             type: "success",
@@ -119,7 +127,7 @@
                 text: e,
                 type: "error",
             };
-            //errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+            //errorMsgElement.innerHTML = `navigator.getUserMedia error: ${ e.toString() }`;
         }
     }
     var mainStream;
@@ -137,7 +145,7 @@
     }
     var videoRefreshCount = 0;
     $: {
-        doCaptureAndUpload($mqttTriggerVideoCapture);
+        doCaptureAndUpload(`MQTT-${$mqttTriggerVideoCapture}`);
     }
     function isString(x) {
         return Object.prototype.toString.call(x) === "[object String]";
@@ -149,8 +157,7 @@
         }
         captureSpinning = true; // reset after upload ok
         captureDisabled = true; // reset after 2 timer cycles
-        uploadPending =
-            uploadKey && isString(uploadKey) ? uploadKey : new Date().getTime();
+        uploadPending = uploadKey;
         console.log("uploadPending:", uploadKey);
         captureOldest(); // stop oldest and upload it
         videoRefreshCount = 0;
@@ -178,7 +185,7 @@
     const fileExt = mimeType.split("/")[1];
     function beginUpload(snum, uploadKey) {
         const blob = new Blob(recordedBlobs[snum]);
-        doCapture(blob, uploadPending);
+        beginCapture(blob, uploadPending);
     }
     function beginDownload(snum) {
         const blob = new Blob(recordedBlobs[snum], { type: mimeType });
@@ -198,7 +205,7 @@
         console.log("recordStream", stream, snum);
         var options = {
             mimeType: `${mimeType}; ${videoCodecs}`,
-            videoBitsPerSecond: 1000000,
+            videoBitsPerSecond: parseInt(videoBitsPerSecond, 10),
         };
         recordedBlobs[snum] = [];
         mediaRecorder[snum] = new MediaRecorder(stream, options);
@@ -250,12 +257,15 @@
     <option>15</option>
     <option>30</option>
 </select>
+<label>videoBitsPerSecond</label>
+<select bind:value={videoBitsPerSecond}>
+    <option>500000</option>
+    <option>1000000</option>
+    <option>8000000</option>
+</select>
 <SpinnerButton on:click={doStart} spinning={recordSpinning}>
     Record
 </SpinnerButton>
-<SpinnerButton
-    on:click={doCaptureAndUpload}
-    spinning={captureSpinning}
-    disabled={captureDisabled}>
+<SpinnerButton on:click={clickedCapture} spinning={captureSpinning} disabled={captureDisabled}>
     Capture&Upload
 </SpinnerButton>
