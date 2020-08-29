@@ -20,7 +20,7 @@
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import aws_exports from "./aws-exports";
-
+    const { v4: uuidv4 } = require("uuid");
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     const nextPhaseTopic = "nextPhase";
@@ -144,13 +144,47 @@
             "timerSubscription",
             $mqttTimerSubscribe,
             timerTopic,
-            potentialVideoCapture
+            potentialCaptureJ
         );
     }
     function potentialVideoCapture(mqMsg) {
         console.log("timermqMsg: ", mqMsg);
         console.log(`timerMsg: ${mqMsg}`, mqMsg);
         //$mqttTriggerVideoCapture = new Date().getTime().toString();
+    }
+    function potentialCaptureJ(json) {
+        console.log("potentialCaptureJ: ", json);
+        var timerKey;
+        if (json.microb) {
+            timerKey = "MQTT-" + json.microb;
+        } else {
+            timerKey = "MQTT-" + uuidv4();
+        }
+        if (json.pinType) {
+            const pinType = json.pinType;
+            console.log(`potentialCapture: pinType: ${pinType}`);
+
+            if (pinType === "lane") {
+                if (!shouldThrottle()) {
+                    $mqttTriggerVideoCapture = timerKey;
+                }
+            }
+        }
+    }
+
+    /*
+    Only request capture once every 15 seconds...
+    * safety valve for flickering photoeye.
+    * capture on first transition of finish only.  
+    */
+    var recentCapture = 0;
+    function shouldThrottle() {
+        const now = new Date().getTime();
+        if (recentCapture + 15000 > now) {
+            return true;
+        }
+        recentCapture = now;
+        return false;
     }
 
     async function syncAutoAnnounceSubscription() {

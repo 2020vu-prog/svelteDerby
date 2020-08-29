@@ -21,6 +21,7 @@
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
     const tag = "CaptureVideo";
+    var perspective = "Finish";
 
     onDestroy(() => {
         $mqttTimerSubscribe = false;
@@ -45,7 +46,7 @@
     }
     function clickedCapture() {
         const now = new Date().getTime();
-        doCaptureAndUpload(`${now}-TestClick`);
+        deferredCapture(`${now}-TestClick`);
     }
 
     async function beginCapture(videoData, uploadKey) {
@@ -58,7 +59,7 @@
             const endPoint = "/requestS3PutObjectUrl";
             const axios = await $getAxios();
             const req = {
-                key: `media/${$raceConfig.orgId}/${uploadKey}`,
+                key: `media/${$raceConfig.orgId}/${uploadKey}-${perspective}`,
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
             };
@@ -169,20 +170,32 @@
     }
     var videoRefreshCount = 0;
     $: {
-        doCaptureAndUpload(`MQTT-${$mqttTriggerVideoCapture}`);
+        deferredCapture(`${$mqttTriggerVideoCapture}`);
     }
     function isString(x) {
         return Object.prototype.toString.call(x) === "[object String]";
     }
+    /*
+     **  capture was observed to quit prior to cars breaking photo eye
+     **  this is due to last frame captured too old.
+     **  defer initiation of capture for a bit too allow some extra frames at the end
+     **  (this may also help ui issues with slider and accidentally triggering download when viewing)
+     */
+    function deferredCapture(uploadKey) {
+        setTimeout(() => {
+            doCaptureAndUpload(uploadKey);
+        }, 300);
+    }
     async function doCaptureAndUpload(uploadKey) {
+        const tag = "doCaptureAndUpload";
         if (captureDisabled) {
-            console.log("doCaptureAndUpload: skipping, not armed");
+            console.log(`${tag}: skipping, not armed`);
             return;
         }
         captureSpinning = true; // reset after upload ok
         captureDisabled = true; // reset after 2 timer cycles
         uploadPending = uploadKey;
-        console.log("uploadPending:", uploadKey);
+        console.log(`${tag} uploadPending: ${uploadKey}`);
         captureOldest(); // stop oldest and upload it
         videoRefreshCount = 0;
     }
@@ -293,6 +306,9 @@
     <option>1000000</option>
     <option>8000000</option>
 </select>
+<label>Perspective</label>
+<input bind:value={perspective} />
+<p />
 <SpinnerButton on:click={doStart} spinning={recordSpinning}>
     Record
 </SpinnerButton>
