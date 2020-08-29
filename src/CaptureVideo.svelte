@@ -15,6 +15,8 @@
     var recordSpinning = false;
     var captureSpinning = false;
     var captureDisabled = true;
+    var resolution = "640x480";
+    var frameRate = "15";
     async function doCapture(videoData, uploadKey) {
         $statusMessage = {
             text: `Beginning upload.`,
@@ -79,6 +81,16 @@
             captureSpinning = false;
         }
     }
+    function parseRez() {
+        console.log("parseRez:", resolution);
+        return resolution.split("x");
+    }
+    function getVideoHeight() {
+        return parseRez()[1];
+    }
+    function getVideoWidth() {
+        return parseRez()[0];
+    }
     async function doStart() {
         const snum = 0;
         recordSpinning = true;
@@ -86,9 +98,9 @@
             video: {
                 //width: 1280,
                 //height: 720,
-                width: 320,
-                height: 240,
-                frameRate: { ideal: 15, max: 30 },
+                width: getVideoWidth(),
+                height: getVideoHeight(),
+                frameRate: { ideal: parseInt(frameRate, 10), max: 30 },
                 facingMode: "environment",
             },
         };
@@ -225,7 +237,19 @@
 <h1>Capture Video</h1>
 
 <video id="gum0" playsinline autoplay muted />
-<video id="gum1" playsinline autoplay muted />
+<label>Resolution</label>
+<select bind:value={resolution}>
+    <option>320x240</option>
+    <option>640x480</option>
+    <option>720x576</option>
+    <option>1920x1080</option>
+</select>
+<label>Frame Rate</label>
+<select bind:value={frameRate}>
+    <option>5</option>
+    <option>15</option>
+    <option>30</option>
+</select>
 <SpinnerButton on:click={doStart} spinning={recordSpinning}>
     Record
 </SpinnerButton>
