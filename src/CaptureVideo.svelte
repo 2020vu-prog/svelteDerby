@@ -129,8 +129,6 @@
         recordSpinning = true;
         const constraints = {
             video: {
-                //width: 1280,
-                //height: 720,
                 width: getVideoWidth(),
                 height: getVideoHeight(),
                 frameRate: { ideal: parseInt(frameRate, 10), max: 30 },
