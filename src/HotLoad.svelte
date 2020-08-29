@@ -139,6 +139,7 @@
     async function syncVideoCaptureSubscription() {
         const tag = "tag:syncVideoCaptureSubscription";
 
+        // TODO: use race timer id instead of wildcard in topic.   don't fire capture for other timers!!!
         const timerTopic = "derby/+/rpi/+";
         syncSubscription(
             "timerSubscription",
