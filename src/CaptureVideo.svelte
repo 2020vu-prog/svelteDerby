@@ -1,10 +1,12 @@
 <script>
+    import { onDestroy } from "svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
     import {
         statusMessage,
         getAxios,
         raceConfig,
         mqttTriggerVideoCapture,
+        mqttTimerSubscribe,
     } from "./stores.js";
     var mediaRecorder = [];
     var recordedBlobs = [];
@@ -18,9 +20,30 @@
     var resolution = "640x480";
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
+    const tag = "CaptureVideo";
 
+    onDestroy(() => {
+        $mqttTimerSubscribe = false;
+        if (timerHandle) {
+            clearInterval(timerHandle);
+            timerHandle = undefined;
+        }
+        if (mainStream) {
+            stopBothVideoAndAudio(mainStream);
+            mainStream = undefined;
+        }
+        mediaRecorder.forEach((mr) => mr.stop());
+        console.log(`${tag} onDestroy done`);
+    });
+    // stop both mic and camera
+    function stopBothVideoAndAudio(stream) {
+        stream.getTracks().forEach(function (track) {
+            if (track.readyState == "live") {
+                track.stop();
+            }
+        });
+    }
     function clickedCapture() {
-
         const now = new Date().getTime();
         doCaptureAndUpload(`${now}-TestClick`);
     }
@@ -100,6 +123,7 @@
         return parseRez()[0];
     }
     async function doStart() {
+        $mqttTimerSubscribe = true;
         const snum = 0;
         recordSpinning = true;
         const constraints = {
@@ -202,6 +226,11 @@
         }, 100);
     }
     function recordStream(stream, snum) {
+        if (!stream) {
+            console.log("recordStream skipping. no stream");
+            return;
+        }
+
         console.log("recordStream", stream, snum);
         var options = {
             mimeType: `${mimeType}; ${videoCodecs}`,
@@ -233,6 +262,7 @@
                 downloadPending = undefined;
             }
             //clearInterval(timerHandle);
+
             recordStream(mainStream, snum);
         };
         //mediaRecorder[snum].start(1000);
@@ -266,6 +296,9 @@
 <SpinnerButton on:click={doStart} spinning={recordSpinning}>
     Record
 </SpinnerButton>
-<SpinnerButton on:click={clickedCapture} spinning={captureSpinning} disabled={captureDisabled}>
+<SpinnerButton
+    on:click={clickedCapture}
+    spinning={captureSpinning}
+    disabled={captureDisabled}>
     Capture&Upload
 </SpinnerButton>

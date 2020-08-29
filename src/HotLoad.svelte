@@ -9,6 +9,7 @@
         carFilter,
         statusMessage,
         autoAnnounceResults,
+        mqttTimerSubscribe,
         mqttTriggerVideoCapture,
     } from "./stores.js";
     import { store } from "./stores/auth.js";
@@ -128,68 +129,90 @@
             },
         });
         syncAutoAnnounceSubscription();
+        syncVideoCaptureSubscription();
     }
 
     // toggle subscription when prefs change.
     $: syncAutoAnnounceSubscription($autoAnnounceResults);
+    $: syncVideoCaptureSubscription($mqttTimerSubscribe);
+
+    async function syncVideoCaptureSubscription() {
+        const tag = "tag:syncVideoCaptureSubscription";
+
+        const timerTopic = "derby/+/rpi/+";
+        syncSubscription(
+            "timerSubscription",
+            $mqttTimerSubscribe,
+            timerTopic,
+            potentialVideoCapture
+        );
+    }
+    function potentialVideoCapture(mqMsg) {
+        console.log("timermqMsg: ", mqMsg);
+        console.log(`timerMsg: ${mqMsg}`, mqMsg);
+        //$mqttTriggerVideoCapture = new Date().getTime().toString();
+    }
 
     async function syncAutoAnnounceSubscription() {
+        const tag = "tag:syncAutoAnnounceSubscription";
+
+        const paTopic = "derby/" + $raceConfig.orgId + "/pa";
+        syncSubscription(
+            "paSubscription",
+            $autoAnnounceResults,
+            paTopic,
+            announceFromMqtt
+        );
+    }
+    async function syncSubscription(
+        subscriptionName,
+        subEnabled,
+        topicP,
+        onMsg
+    ) {
+        const tag = "tag:syncSubscription:" + subscriptionName;
         if (activeIotWatch && activeIotWatch.plugged) {
         } else {
-            console.log("syncAutoAnnounceSubscription skipping, not ready");
+            console.log(`${tag} skipping, not ready`);
             return;
         }
-        const paTopic = "derby/" + $raceConfig.orgId + "/pa";
-        console.log(`syncAutoAnnounceSubscription: ${$autoAnnounceResults} `);
-        if ($autoAnnounceResults) {
-            if (activeIotWatch.paSubscription) {
+        console.log(`${tag}: ${subEnabled} `);
+        if (subEnabled) {
+            if (activeIotWatch[subscriptionName]) {
                 // no action needed.
-                console.log(
-                    `syncAutoAnnounceSubscription: ${paTopic} subscribe stand down`
-                );
+                console.log(`${tag}: ${topicP} subscribe stand down`);
             } else {
-                console.log(
-                    `syncAutoAnnounceSubscription: Subscribing ${paTopic}`
+                console.log(`${tag}: Subscribing ${topicP}`);
+                activeIotWatch[subscriptionName] = await mySubscribe(
+                    topicP,
+                    onMsg
                 );
-                activeIotWatch.paSubscription = PubSub.subscribe(
-                    paTopic
-                ).subscribe({
-                    next: async (data) => {
-                        console.log(
-                            `syncAutoAnnounceSubscription: ${paTopic} paMessage received`,
-                            data
-                        );
-                        console.log(
-                            `syncAutoAnnounceSubscription: ${paTopic} paMessage value`,
-                            data.value
-                        );
-                        announceFromMqtt(data.value);
-                    },
-                    error: (error) => {
-                        console.error(
-                            `syncAutoAnnounceSubscription: ${paTopic} AWS iot error:`,
-                            error
-                        );
-                    },
-                    close: () =>
-                        console.log(
-                            `syncAutoAnnounceSubscription: ${paTopic}  AWS iot Done`
-                        ),
-                });
             }
         } else {
-            if (activeIotWatch.paSubscription) {
+            if (activeIotWatch[subscriptionName]) {
                 console.log(
-                    `syncAutoAnnounceSubscription: UnSubscribing ${activeIotWatch.paSubscription}`
+                    `${tag}: UnSubscribing ${activeIotWatch[subscriptionName]}`
                 );
-                activeIotWatch.paSubscription.unsubscribe();
-                delete activeIotWatch.paSubscription;
+                activeIotWatch[subscriptionName].unsubscribe();
+                delete activeIotWatch[subscriptionName];
             } else {
-                console.log(
-                    `syncAutoAnnounceSubscription: ${paTopic} unsubscribe stand down`
-                );
+                console.log(`${tag}: ${topicP} unsubscribe stand down`);
             }
         }
+    }
+    async function mySubscribe(topicP, onMsg) {
+        const tag = "tag:mySubscribe";
+        return PubSub.subscribe(topicP).subscribe({
+            next: async (data) => {
+                console.log(`${tag}: ${topicP} paMessage received`, data);
+                console.log(`${tag}: ${topicP} paMessage value`, data.value);
+                onMsg(data.value);
+            },
+            error: (error) => {
+                console.error(`${tag}: ${topicP} AWS iot error:`, error);
+            },
+            close: () => console.log(`${tag}: ${topicP}  AWS iot Done`),
+        });
     }
     // called when a message arrives
 
@@ -395,7 +418,6 @@
             const path = mediaMatch[0];
             console.log(`paMessage path: ${path}`);
             queueAudio(path);
-            $mqttTriggerVideoCapture = new Date().getTime().toString();
         } else {
             console.log(`paMessage MISSING path`);
         }
