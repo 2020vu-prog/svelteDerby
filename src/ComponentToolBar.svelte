@@ -1,6 +1,7 @@
 <script>
-    import { theme } from "./stores.js";
+    import { theme, driverMap } from "./stores.js";
     import { raceConfig, statusMessage, userEmail } from "./stores.js";
+
     import axios from "axios";
     import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
@@ -11,6 +12,8 @@
     export let dbKey;
     export let timerLink;
     export let bracketLink;
+    export let cn;
+
     const mediaLink = `/spMediaList/${dbName}/${dbKey}`;
     onMount(async () => {
         console.log("timerLink: ", timerLink);
@@ -64,6 +67,72 @@
             };
         }
     }
+
+    async function requestAnnouncement() {
+        var announceText = "";
+
+        var carsAndOrDrivers = ["", ""];
+        carsAndOrDrivers.forEach(function (carAndOrDriver, index) {
+            var carAndOrDriver = `<say-as interpret-as="characters" >${cn[index]}</say-as>`;
+
+            if (getDriverName(cn[index]) != "Unknown Racer") {
+                carAndOrDriver += ` driven by ${getDriverName(cn[index])}`;
+            }
+
+            carsAndOrDrivers[index] = carAndOrDriver;
+        });
+
+        announceText = `Car ${carsAndOrDrivers[0]} and car ${carsAndOrDrivers[1]} you need to race.....`;
+        announceText += `Car ${carsAndOrDrivers[0]} and car ${carsAndOrDrivers[1]} you need to race`;
+
+        console.log(`doAnnounce: ${announceText} `);
+        const currentSession = await Auth.currentSession();
+        const bearer = currentSession.idToken.jwtToken;
+
+        const req = {
+            orgId: $raceConfig.orgId,
+            orgIz: $raceConfig.orgIz,
+            paMessage: `<speak>${announceText}</speak>`,
+        };
+
+        axios.defaults.headers.common["Authorization"] = bearer;
+
+        const endpoint = "/initiateAnnouncement";
+
+        try {
+            const response = await axios.post(
+                $raceConfig.baseUrl + endpoint,
+                req
+            );
+            if (response.data.status === "error") {
+                $statusMessage = {
+                    text: response.data.error,
+                    type: response.data.status,
+                };
+            } else {
+                $statusMessage = {
+                    text: `Announcement Requested.`,
+                    type: "success",
+                };
+                announceText = "";
+            }
+        } catch (e) {
+            $statusMessage = {
+                text: e,
+                type: "error",
+            };
+        }
+    }
+
+    const getDriverName = (number) => {
+        //console.log("gdn: "+carNumber)
+        if (number && $driverMap[number]) {
+            return $driverMap[number].name;
+        } else {
+            return "Unknown Racer";
+        }
+    };
+
     async function gotoListMedia() {
         push(mediaLink);
     }
@@ -89,6 +158,9 @@
     }
     function isManualTimerAllowed() {
         return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
+    }
+    function isAnnounceAllowed() {
+        return isEmailAllowedRoutePath($userEmail, "/ManualAnnouncement");
     }
     function isDeleteAllowed() {
         var protectedPath = "/unknownPath";
@@ -164,6 +236,15 @@
             style="background-color: {$theme}"
             on:click|preventDefault={gotoListMedia}>
             Media
+        </span>
+    {/if}
+
+    {#if window.location.href.includes('RsList/Pending') && isAnnounceAllowed()}
+        <span
+            class="navbarItem"
+            style="background-color: {$theme}"
+            on:click|preventDefault={requestAnnouncement}>
+            Announce
         </span>
     {/if}
 </div>

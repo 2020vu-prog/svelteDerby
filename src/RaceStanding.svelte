@@ -111,7 +111,8 @@
             <ComponentToolbar
                 dbName="RaceStanding"
                 dbKey={standingKey}
-                bracketLink={getBracketLink(standing)} />
+                bracketLink={getBracketLink(standing)}
+                cn={standing.carNumbers} />
         {/if}
     </div>
 {/if}

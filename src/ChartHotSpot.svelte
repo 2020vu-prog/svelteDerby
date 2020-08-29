@@ -3,7 +3,7 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { parseHeatPos } from "./utils.js";
-    import { doRefreshBlocks } from "./stores.js";
+    import { doRefreshBlocks, driverMap } from "./stores.js";
     import { pannable } from "./pannable.js";
     import { createEventDispatcher } from "svelte";
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -57,7 +57,9 @@
 
         if (bpFromDexie && bpFromDexie.pos && bpFromDexie.pos[heatLetter]) {
             if (bpFromDexie.pos[heatLetter].status == "ptcp") {
-                posHtml = ` - ${bpFromDexie.pos[heatLetter].ptcp}`;
+                posHtml = ` - ${
+                    bpFromDexie.pos[heatLetter].ptcp
+                } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}`;
                 if (bpFromDexie.pos[heatLetter].ptcp) {
                     bracketClass = "havePtcp";
                 }
@@ -65,7 +67,9 @@
                 posHtml = ` - Bye`;
                 bracketClass = "haveBye";
             } else if (bpFromDexie.pos[heatLetter].status == "forfeit") {
-                posHtml = ` - ${bpFromDexie.pos[heatLetter].ptcp}(F)`;
+                posHtml = ` - ${
+                    bpFromDexie.pos[heatLetter].ptcp
+                } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}(F)`;
                 bracketClass = "haveForfeit";
             }
         }
@@ -113,6 +117,14 @@
         });
         console.log("chs panMoved.");
     }
+
+    const getDriverName = (number) => {
+        if (number && $driverMap[number]) {
+            return $driverMap[number].name;
+        } else {
+            return " ";
+        }
+    };
 </script>
 
 <style>
