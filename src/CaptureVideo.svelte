@@ -15,14 +15,17 @@
     var recordSpinning = false;
     var captureSpinning = false;
     var captureDisabled = true;
-    async function doCapture(videoData) {
+    async function doCapture(videoData, uploadKey) {
+        $statusMessage = {
+            text: `Beginning upload.`,
+            type: "success",
+            key: uploadKey,
+        };
         try {
             const endPoint = "/requestS3PutObjectUrl";
             const axios = await $getAxios();
             const req = {
-                key:
-                    `media/${$raceConfig.orgId}/ZZZ_` +
-                    new Date().getTime().toString(),
+                key: `media/${$raceConfig.orgId}/${uploadKey}`,
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
             };
@@ -40,6 +43,11 @@
                 const axiosGeneric = axios.create({
                     headers: { "X-Custom-Header": "none" },
                 });
+                $statusMessage = {
+                    text: `Beginning upload s3.`,
+                    type: "success",
+                    key: uploadKey,
+                };
 
                 delete axiosGeneric.defaults.headers.common["Authorization"];
                 const putRc = await axiosGeneric.put(
@@ -48,6 +56,11 @@
                     options
                 );
                 console.log("s3PutResponse", putRc);
+                $statusMessage = {
+                    text: `Completed upload s3 ${videoData.size}`,
+                    type: "success",
+                    key: uploadKey,
+                };
             }
             if (response.data.error) {
                 console.log("requestS3PutObjectUrl failed", response);
@@ -114,6 +127,9 @@
     $: {
         doCaptureAndUpload($mqttTriggerVideoCapture);
     }
+    function isString(x) {
+        return Object.prototype.toString.call(x) === "[object String]";
+    }
     async function doCaptureAndUpload(uploadKey) {
         if (captureDisabled) {
             console.log("doCaptureAndUpload: skipping, not armed");
@@ -121,7 +137,9 @@
         }
         captureSpinning = true; // reset after upload ok
         captureDisabled = true; // reset after 2 timer cycles
-        uploadPending = uploadKey ? uploadKey : new Date().getTime();
+        uploadPending =
+            uploadKey && isString(uploadKey) ? uploadKey : new Date().getTime();
+        console.log("uploadPending:", uploadKey);
         captureOldest(); // stop oldest and upload it
         videoRefreshCount = 0;
     }
@@ -146,9 +164,9 @@
     const mimeType = "video/webm";
     const videoCodecs = "codecs=vp8";
     const fileExt = mimeType.split("/")[1];
-    function beginUpload(snum) {
+    function beginUpload(snum, uploadKey) {
         const blob = new Blob(recordedBlobs[snum]);
-        doCapture(blob);
+        doCapture(blob, uploadPending);
     }
     function beginDownload(snum) {
         const blob = new Blob(recordedBlobs[snum], { type: mimeType });

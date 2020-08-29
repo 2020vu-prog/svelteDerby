@@ -395,7 +395,7 @@
             const path = mediaMatch[0];
             console.log(`paMessage path: ${path}`);
             queueAudio(path);
-            $mqttTriggerVideoCapture = new Date().getTime();
+            $mqttTriggerVideoCapture = new Date().getTime().toString();
         } else {
             console.log(`paMessage MISSING path`);
         }

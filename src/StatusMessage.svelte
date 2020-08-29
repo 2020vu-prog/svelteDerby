@@ -12,11 +12,24 @@
             if (!$statusMessage.type) {
                 $statusMessage.type = "error";
             }
-            messages.push({
+            const newMsg = {
                 text: $statusMessage.text,
                 type: $statusMessage.type,
                 TTL: getTtl($statusMessage),
+                key: $statusMessage.key,
+            };
+            var prior;
+            messages.forEach((msg, index) => {
+                if (msg.key && msg.key === $statusMessage.key) {
+                    prior = index;
+                }
             });
+
+            if (typeof prior !== "undefined") {
+                messages[prior] = { ...newMsg }; // replace existing msg
+            } else {
+                messages.push(newMsg); // add new msg
+            }
             messages = messages;
             clearLater(getDurationMs($statusMessage));
             $statusMessage = {};
