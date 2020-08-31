@@ -16,8 +16,8 @@ const pool_region = 'us-east-2';
 const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 function Login() {
     var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-        Username : 'clc4',
-        Password : 'Clc.12345',
+        Username : process.env.TEST_USER,
+        Password : process.env.TEST_PASSWORD,
     });
 
     var userData = {

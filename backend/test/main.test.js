@@ -2,7 +2,8 @@
 
 const { CF, getData, postData, getHHMMSS } = require("./common.js");
 const { v4: uuidv4 } = require('uuid');
-const testers = /2020vu|ConnorM/i
+const testers = new RegExp(process.env.TEST_USER);
+
 
 const slowDrivers=false;
 function sleep(ms) {

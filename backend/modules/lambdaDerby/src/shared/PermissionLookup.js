@@ -2,6 +2,7 @@
 
 const { permissionMap, permissionMap2 } = require("./permissionLits.js");
 const powerUsers = [
+    "REDACTED_PERMISSION_EMAIL", // jest tests
     "REDACTED_PERMISSION_EMAIL",
     "REDACTED_PERMISSION_EMAIL",
     "REDACTED_PERMISSION_EMAIL",
