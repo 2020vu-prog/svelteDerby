@@ -371,6 +371,7 @@ class DdbUtils {
         var params = {
             TableName: process.env.DynamoDbTable,
             Limit: 20,
+            ConsistentRead: true, // consistent for timer apply safety!
             ScanIndexForward: false, // sort descending
             KeyConditionExpression: keyCondition,
             FilterExpression: `${skipDeleteFilter} AND attribute_not_exists (phr) `,

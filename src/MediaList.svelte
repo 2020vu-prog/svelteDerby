@@ -37,7 +37,7 @@
         if (racePhase && racePhase.phr && racePhase.phr.length) {
             const prefixSeed = Math.min(...racePhase.phr);
             if (prefixSeed > 0) {
-                return "MQTT-" + prefixSeed.toString();
+                return `${$raceConfig.orgId}/MQTT-${prefixSeed.toString()}`;
             }
         }
         return SKIP_PREFIX;
