@@ -1,11 +1,13 @@
 <script>
-    import { isUserAllowedRoutePath } from "./utils.js";
+    import { isEmailAllowedRoutePath } from "./utils.js";
     import { createEventDispatcher } from "svelte";
     import { onMount } from "svelte";
+
     import {
         chartClickLoggerId,
         chartClickLoggerShow,
         theme,
+        userEmail,
     } from "./stores.js";
     var showFab = false;
     const dispatch = createEventDispatcher();
@@ -22,7 +24,7 @@
         dispatch("copyJson", {});
     }
     onMount(async () => {
-        showFab = await isUserAllowedRoutePath("/timerConfig");
+        showFab = await isEmailAllowedRoutePath($userEmail, "/timerConfig");
     });
 </script>
 

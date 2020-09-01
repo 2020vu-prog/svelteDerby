@@ -1,7 +1,7 @@
 <script>
     import { push, pop, replace } from "svelte-spa-router";
-    import { theme } from "./stores.js";
-    import { isUserAllowedRoutePath } from "./utils.js";
+    import { theme, userEmail } from "./stores.js";
+    import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
 
     //const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
@@ -15,7 +15,10 @@
         push(clickHandleRoute);
     };
     onMount(async () => {
-        userHasPermission = await isUserAllowedRoutePath(clickHandleRoute);
+        userHasPermission = await isEmailAllowedRoutePath(
+            $userEmail,
+            clickHandleRoute
+        );
     });
     /*
     const userHasPermission = () => {

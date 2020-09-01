@@ -5,6 +5,7 @@
         driverMap,
         doRefreshBlocks,
         statusMessage,
+        userEmail,
     } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
@@ -15,7 +16,7 @@
     import { participantValid, participantFocusCompletion } from "./utils.js";
 
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
-    import { isUserAllowedRoutePath } from "./utils.js";
+    import { isEmailAllowedRoutePath } from "./utils.js";
 
     export let params = {};
     var bposFromDexie = null;
@@ -29,7 +30,10 @@
         resetForm();
         await refreshChartFromDb();
         await refreshStandingFromDb();
-        editable = await isUserAllowedRoutePath("/addChartPosition");
+        editable = await isEmailAllowedRoutePath(
+            $userEmail,
+            "/addChartPosition"
+        );
     });
     $: {
         refreshStandingFromDb($doRefreshBlocks);

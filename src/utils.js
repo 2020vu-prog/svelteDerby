@@ -46,6 +46,7 @@ export async function isUserAllowedRoutePath(routePath) {
     return isEmailAllowedRoutePath(email, routePath);
 }
 export async function getUserEmail() {
+    console.log("getUserEmail");
     try {
         const user = await Auth.currentAuthenticatedUser();
         const attributes = await Auth.userAttributes(user);
