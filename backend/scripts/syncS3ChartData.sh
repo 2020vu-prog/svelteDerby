@@ -7,4 +7,7 @@ function die {
 echo syncing to bucket: $BucketName
 
 pwd
-aws s3 sync ./s3ChartData  s3://$BucketName/data/brackets --delete
+aws s3 sync \
+        --cache-control 'max-age=604800' \
+	./s3ChartData  \
+	s3://$BucketName/data/brackets --delete

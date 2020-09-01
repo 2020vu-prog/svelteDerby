@@ -16,7 +16,7 @@
     const loggedImgPositions = {};
     var showChartClickLogger = false;
     var bmdFromDexie = {};
-    var bracketImgSrc = "/archive/charts/progessSpinner.png";
+    var bracketImgSrc = "data/circles.svg";
     var mounted = false;
     var imageLoaded = false;
     var jsReady = false;

@@ -2,6 +2,9 @@
 function s3Push {
 	source ./generatedTargets.sh
 	bucket=$DERBY_SPA_S3_BUCKET
+	echo "########"
+	echo "######## Begin no-cache"
+	echo "########"
 	aws s3 sync $QUIET  \
 		--cache-control 'no-cache' \
 		--exclude bundle.*.js \
@@ -9,6 +12,9 @@ function s3Push {
 		./public/ s3://$bucket
 
 	echo now sync remaining...
+	echo "########"
+	echo "######## Begin cache 604800"
+	echo "########"
 	aws s3 sync $QUIET   \
 		--cache-control 'max-age=604800' \
 		./public/ s3://$bucket
