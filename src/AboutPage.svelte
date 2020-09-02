@@ -19,12 +19,14 @@
     let mounted = false;
     var lclCacheKey = 0;
     var ecFromDexie;
+    var histCountFromDexie = "";
     let themeSelected;
 
     const refreshDataFromDb = async (trigger) => {
         console.log("refreshDataFromDb data:", trigger);
 
         ecFromDexie = await db.EventConfig.toArray();
+        histCountFromDexie = (await db.EventHistory.count()).toString();
     };
     $: {
         refreshDataFromDb($doRefreshBlocks);
@@ -162,6 +164,10 @@
 
         <label>Archive Pending</label>
         <span>{new Date(ecFromDexie[0].TTL * 1000).toLocaleString()}</span>
+    {/if}
+    {#if histCountFromDexie}
+        <label>Db Count</label>
+        <span>{histCountFromDexie}</span>
     {/if}
 
     <label>Disable Cache</label>

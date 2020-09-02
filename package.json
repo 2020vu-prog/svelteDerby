@@ -1,6 +1,6 @@
 {
     "name": "svelte-app",
-    "version": "1.0.13",
+    "version": "1.0.14",
     "devDependencies": {
         "@babel/core": "^7.10.2",
         "@babel/plugin-proposal-class-properties": "^7.10.1",
