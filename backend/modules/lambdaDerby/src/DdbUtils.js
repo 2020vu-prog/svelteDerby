@@ -185,7 +185,7 @@ class DdbUtils {
         }
         if (!qsp.hiMicros) {
             qsp.hiMicros = new Date().getTime() * 1000 + "";
-            cacheMaxSeconds = 30;
+            cacheMaxSeconds = 7; // would prefer longer, pending resolution of mqtt issues.
         }
         if (isNaN(limit) || limit > 25) {
             limit = 25;
