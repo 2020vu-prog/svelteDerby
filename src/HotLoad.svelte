@@ -11,6 +11,7 @@
         autoAnnounceResults,
         mqttTimerSubscribe,
         mqttTriggerVideoCapture,
+        timerState,
     } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { raceConfig } from "./stores.js";
@@ -145,13 +146,24 @@
             "timerSubscription",
             $mqttTimerSubscribe,
             timerTopic,
-            potentialCaptureJ
+            onTimerMqttData
         );
     }
-    function potentialVideoCapture(mqMsg) {
-        console.log("timermqMsg: ", mqMsg);
-        console.log(`timerMsg: ${mqMsg}`, mqMsg);
-        //$mqttTriggerVideoCapture = new Date().getTime().toString();
+    function onTimerMqttData(json) {
+        potentialCaptureJ(json);
+        publishTimerState(json);
+    }
+    function publishTimerState(json) {
+        //{"microb": 26520205700, "pinNumber": "24", "pinName": "oneHz", "pubTime": 1598832946117, "seq": 13413, "pinState": 1, "micros": 26520205700, "pinType": "clock", "microP
+        if (json.pinType) {
+            const pinType = json.pinType;
+            const pinName = json.pinName;
+            const pinState = json.pinState;
+            if (pinType === "lane") {
+                $timerState[pinName] = pinState;
+                $timerState = $timerState;
+            }
+        }
     }
     function potentialCaptureJ(json) {
         console.log("potentialCaptureJ: ", json);

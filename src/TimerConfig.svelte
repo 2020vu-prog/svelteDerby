@@ -6,6 +6,7 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import axios from "axios";
+    import SpinnerButton from "./SpinnerButton.svelte";
 
     var activeTimerList = [];
     var tcFromDexie = {};
@@ -154,7 +155,13 @@
 
 <h3>Timer Config</h3>
 <br />
-<div on:click={() => replace('/spMediaList/*/*')}>List All Media</div>
+<SpinnerButton on:click={() => push('/spMediaList/*/*')}>
+    List All Media
+</SpinnerButton>
+<SpinnerButton on:click={() => push('/timerAlignment')}>
+    Timer Alignment
+</SpinnerButton>
+
 <form on:submit|preventDefault={handleSubmit}>
     <h4>Auto-Apply Preferences</h4>
 

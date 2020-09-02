@@ -8,6 +8,7 @@ aws s3 sync $QUIET  \
 	--exclude bundle.*.js \
 	--exclude vendors.*.js \
 	--exclude *.svg \
+	--exclude *.mp3 \
 	--exclude favicon.png \
 	./public/ s3://$bucket
 

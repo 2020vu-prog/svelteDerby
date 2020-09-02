@@ -28,6 +28,7 @@ export const autoAnnounceResults = writable(false);
 export const mqttTimerSubscribe = writable(false);
 export const mqttTriggerVideoCapture = writable(0);
 export const beginAnonymousLogin = writable(false);
+export const timerState = writable({});
 export const raceConfig = writable({
     orgName: "",
     orgId: "",

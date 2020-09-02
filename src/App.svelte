@@ -26,6 +26,7 @@
     import ChartDetail from "./ChartDetail.svelte";
     import ChartPosition from "./ChartPosition.svelte";
     import TimerConfig from "./TimerConfig.svelte";
+    import TimerAlignment from "./TimerAlignment.svelte";
     import MediaList from "./MediaList.svelte";
 
     import ForceReloadPage from "./ForceReloadPage.svelte";
@@ -68,6 +69,7 @@
         "/chartList": ChartList,
         "/chartAdd": ChartAdd,
         "/timerConfig": TimerConfig,
+        "/timerAlignment": TimerAlignment,
         "/rawTimerList": RawTimerList,
         "/spMediaList/:dbName/:dbKey": MediaList,
         "/forceReloadPage": ForceReloadPage,

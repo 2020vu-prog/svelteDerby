@@ -1,7 +1,7 @@
 <script>
     import SpinnerButton from "./SpinnerButton.svelte";
     import { doRefreshBlocks } from "./stores.js";
-    import { isEmailAllowedRoutePath } from "./utils.js";
+    import { hhmmssFmt, isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
     import { raceConfig, statusMessage } from "./stores.js";
     import { Auth } from "aws-amplify";
@@ -103,6 +103,11 @@
     function getMediaHref(key) {
         return `/${key}`;
     }
+    function getMediaHHMMSS(mediaItem) {
+        console.log("LMOD:", mediaItem.LastModified);
+        console.log("LMOD parsed:", Date.parse(mediaItem.LastModified));
+        return hhmmssFmt(Date.parse(mediaItem.LastModified));
+    }
 </script>
 
 <div>
@@ -122,7 +127,7 @@
                     on:click={() => playMedia(mediaItem.Key)}>
                     {mediaItem.Key}
                     <p />
-                    {mediaItem.LastModified}
+                    {getMediaHHMMSS(mediaItem)}
                     {#if selectedVideo === mediaItem.Key}
                         <video width="320" height="240" autoplay controls>
                             <source
