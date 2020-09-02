@@ -665,9 +665,9 @@ class DdbUtils {
     async addBulk(json) {
         var requests = {}; // keyed by unique pk/sk to elimate duplicates.
         var totalProcessed = 0;
-        for (var i = 0; i < json.length; i++) {
+        for (var i = 0; i < json.bulk.length; i++) {
             console.log("addBulk: " + i);
-            const [uk, putRequest] = this.fmtBulkPut(json[i]);
+            const [uk, putRequest] = this.fmtBulkPut(json.bulk[i]);
             if (putRequest && uk) {
                 requests[uk] = putRequest;
             }
