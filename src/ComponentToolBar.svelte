@@ -82,8 +82,8 @@
             carsAndOrDrivers[index] = carAndOrDriver;
         });
 
-        announceText = `Car ${carsAndOrDrivers[0]} and car ${carsAndOrDrivers[1]} you need to race.....`;
-        announceText += `Car ${carsAndOrDrivers[0]} and car ${carsAndOrDrivers[1]} you need to race`;
+        announceText = `Car ${carsAndOrDrivers[0]} and car ${carsAndOrDrivers[1]} please report to your cars, it is time to race.....`;
+        announceText += `Car ${carsAndOrDrivers[0]} and car ${carsAndOrDrivers[1]} please report to your cars, it is time to race`;
 
         console.log(`doAnnounce: ${announceText} `);
         const currentSession = await Auth.currentSession();
