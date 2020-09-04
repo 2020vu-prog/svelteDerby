@@ -59,7 +59,7 @@
             const endPoint = "/requestS3PutObjectUrl";
             const axios = await $getAxios();
             const req = {
-                key: `media/${$raceConfig.orgId}/${uploadKey}-${perspective}`,
+                key: `${uploadKey}-${perspective}.webm`,
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
             };

@@ -1,5 +1,6 @@
 "use strict";
 const crypto = require("crypto");
+const path = require("path");
 
 const EntityFactory = require("./shared/EntityFactory.js");
 const { permissionMap } = require("./shared/permissionLits.js");
@@ -950,10 +951,20 @@ const routeMap = {
                 return buildResponse(qr);
             }
 
+            const orgId = getOrgId(event);
+            var bucket = "";
+            var key = "";
+            if (process.env.s3VideoWatch && true) {
+                bucket = process.env.s3VideoWatch;
+                key = `inputs/${orgId}-${qsp.key}`; // watch bucket won't see sub dirs :-(
+            } else {
+                bucket = process.env.DstBucket;
+                key = `media/${orgId}/${qsp.key}`;
+            }
             var params = {
                 Expires: 600, // allow for slow video upload
-                Bucket: process.env.DstBucket,
-                Key: qsp.key,
+                Bucket: bucket,
+                Key: key,
             };
             var signedUrl = s3.getSignedUrl("putObject", params);
             console.log("The signed URL is", signedUrl);
@@ -1138,8 +1149,9 @@ exports.handler = async function (event) {
         var snsMessage = event.Records[0].Sns.Message;
         const snsMessageJson = JSON.parse(snsMessage);
 
+        console.log("sns message: : ", snsMessageJson);
         console.log("sns topic: : ", snsMessageJson.snsTopicArn);
-        console.log("sns polly: : ", process.env.PollyCompleteSnsArn);
+        console.log("sns polly arn: : ", process.env.PollyCompleteSnsArn);
         if (snsMessageJson.snsTopicArn === process.env.PollyCompleteSnsArn) {
             console.log("polly finished: ", snsMessageJson);
             await announceResults.propagateIotFromSns(snsMessageJson);
@@ -1148,6 +1160,35 @@ exports.handler = async function (event) {
 
         await snsApplyTimerHandler(snsMessageJson);
         return "Success";
+    }
+    if (event.Records[0].s3) {
+        const s3Event = event.Records[0].s3;
+        console.log("s3 trigger:", s3Event);
+
+        var basefile = path.basename(s3Event.object.key);
+        const tgtFile = basefile.replace("-", "/");
+        const s3CopyParams = {
+            CopySource: encodeURI(
+                `/${s3Event.bucket.name}/${s3Event.object.key}`
+            ),
+            Key: `media/${tgtFile}`,
+            Bucket: process.env.DstBucket,
+        };
+        console.log("s3 mp4 copyParams:", s3CopyParams);
+        const s3copyDone = await s3.copyObject(s3CopyParams).promise();
+        console.log("s3 mp4 copyDone:", s3copyDone);
+
+        const webmSrcKey = `inputs/${basefile}`.replace(".mp4", ".webm");
+        const webmTgtKey = tgtFile.replace(".mp4", ".webm");
+        const s3CopyParamsWebm = {
+            CopySource: encodeURI(`/${process.env.s3VideoWatch}/${webmSrcKey}`),
+            Key: `media/${webmTgtKey}`,
+            Bucket: process.env.DstBucket,
+        };
+        console.log("s3 webm copyParams:", s3CopyParamsWebm);
+        const s3copyDoneWebm = await s3.copyObject(s3CopyParamsWebm).promise();
+        console.log("s3 webm copyDone:", s3copyDoneWebm);
+        return "s3 success";
     }
 
     console.log("unknown event: ", event);

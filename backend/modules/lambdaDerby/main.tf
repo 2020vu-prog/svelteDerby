@@ -10,6 +10,8 @@ variable   CcaQueueArn  {}
 variable     ChartS3BucketName  {}
 variable ApplyTimerSnsArn{}
 variable PollyCompleteSnsArn {}
+variable s3VideoWatch {}
+variable s3VideoDone {}
 
 variable S3DistBucket {}
 variable S3DistBucketArn {}
@@ -29,6 +31,11 @@ locals{
       timerDbList= split("/",var.TimerDbArn)
       TimerDbTable= element(local.timerDbList,length(local.timerDbList)-1)
       zipFile         = "${path.module}/src/package.zip"
+ 
+	s3VideoWatch=var.s3VideoWatch
+	s3VideoDone=var.s3VideoDone
+
+
       
 }
 data "aws_iot_endpoint" "mqtt" {
@@ -50,6 +57,14 @@ resource "aws_lambda_permission" "with_sns_polly" {
   principal     = "sns.amazonaws.com"
   source_arn    = var.PollyCompleteSnsArn
 }
+resource "aws_lambda_permission" "allow_vod_bucket" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = "arn:aws:s3:::${local.s3VideoDone}"
+}
+
 
 resource "aws_sns_topic_subscription" "lambda_sns_sub" {
   topic_arn = var.ApplyTimerSnsArn
@@ -62,6 +77,19 @@ resource "aws_sns_topic_subscription" "lambda_sns_sub_polly" {
   protocol  = "lambda"
   endpoint  = aws_lambda_function.lambda.arn
 }
+
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket = local.s3VideoDone
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.lambda.arn
+    events              = ["s3:ObjectCreated:*"]
+    filter_suffix       = ".mp4"
+  }
+
+  depends_on = [aws_lambda_permission.allow_vod_bucket]
+}
+
 
 
 
@@ -133,6 +161,9 @@ resource "aws_lambda_function" "lambda" {
       AwsRegion = var.AwsRegion
       PollyCompleteSnsArn=var.PollyCompleteSnsArn
       IotEndpoint=data.aws_iot_endpoint.mqtt.endpoint_address
+
+	s3VideoWatch=local.s3VideoWatch
+	s3VideoDone=local.s3VideoDone
     }
   }
 
@@ -167,8 +198,16 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
         resources = [
             "arn:aws:s3:::${var.ChartS3BucketName}",
             "arn:aws:s3:::${var.ChartS3BucketName}/*",
+
             "arn:aws:s3:::${var.S3DistBucket}",
             "arn:aws:s3:::${var.S3DistBucket}/*",
+
+
+            "arn:aws:s3:::${local.s3VideoDone}",
+            "arn:aws:s3:::${local.s3VideoDone}/*",
+
+            "arn:aws:s3:::${local.s3VideoWatch}",
+            "arn:aws:s3:::${local.s3VideoWatch}/*",
 
                 "arn:aws:logs:*:*:*",
                 var.CcaQueueArn,

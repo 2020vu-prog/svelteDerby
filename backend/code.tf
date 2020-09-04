@@ -25,6 +25,8 @@ module "derbyMainLambda" {
   PollyCompleteSnsArn =aws_sns_topic.PollyCompleteSns.arn
   S3DistBucket = aws_s3_bucket.dstBucket.id
   S3DistBucketArn = aws_s3_bucket.dstBucket.arn
+  s3VideoWatch = module.vodTranscode.WatchFolderBucket
+  s3VideoDone = module.vodTranscode.MediaBucket
   
 }
 
