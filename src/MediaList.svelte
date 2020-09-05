@@ -3,7 +3,7 @@
     import { doRefreshBlocks } from "./stores.js";
     import { hhmmssFmt, isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
-    import { raceConfig, statusMessage } from "./stores.js";
+    import { raceConfig, statusMessage, mediaFileType } from "./stores.js";
     import { Auth } from "aws-amplify";
     import axios from "axios";
     import { tick } from "svelte";
@@ -16,6 +16,7 @@
     var mediaList = [];
     var selectedVideo;
     var selectedAudio;
+    var linkFrom = "";
     const SKIP_PREFIX = "_SKIP_";
     const ALL_PREFIX = "_ALL_";
     onMount(async () => {
@@ -28,6 +29,7 @@
             return;
         }
         if (params.dbName === "*") {
+            linkFrom = ALL_PREFIX;
             mediaList = await listAndSortMedia(ALL_PREFIX); // get all!
             loadingMedia = false;
             return;
@@ -108,6 +110,25 @@
         console.log("LMOD parsed:", Date.parse(mediaItem.LastModified));
         return hhmmssFmt(Date.parse(mediaItem.LastModified));
     }
+    function getDisplayName(key) {
+        if (linkFrom == ALL_PREFIX) {
+            return key;
+        } else {
+            return key.replace(/.*\//, "");
+        }
+    }
+    function getMediaItems(mediaList) {
+        return mediaList.filter((item) => shouldDisplayMediaItem(item));
+    }
+    function shouldDisplayMediaItem(item) {
+        //return true;
+        if (!$mediaFileType) return true;
+
+        const lcType = $mediaFileType.toString().toLowerCase();
+
+        const lcKey = item.Key.toLowerCase();
+        return lcKey.endsWith(lcType) || lcKey.endsWith("mp3");
+    }
 </script>
 
 <div>
@@ -121,11 +142,11 @@
         {#if mediaList.length == 0}
             <b>No Matches yet</b>
         {:else}
-            {#each mediaList as mediaItem}
+            {#each getMediaItems(mediaList) as mediaItem}
                 <div
                     class="panel panel-info"
                     on:click={() => playMedia(mediaItem.Key)}>
-                    {mediaItem.Key}
+                    {getDisplayName(mediaItem.Key)}
                     <p />
                     {getMediaHHMMSS(mediaItem)}
                     {#if selectedVideo === mediaItem.Key}

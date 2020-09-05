@@ -24,6 +24,7 @@ export const nextOnBlockKey = writable("");
 export const showBottomNav = writable(true);
 export const developerMode = writable(false);
 export const pendingSortAlgorithm = writable("Age");
+export const mediaFileType = writable(getDefaultFileFormat());
 export const autoAnnounceResults = writable(false);
 export const mqttTimerSubscribe = writable(false);
 export const mqttTriggerVideoCapture = writable(0);
@@ -163,4 +164,11 @@ const sortBy = (field, reverse, primer) => {
         return (a = key(a)), (b = key(b)), reverse * ((a > b) - (b > a));
     };
 };
+function getDefaultFileFormat() {
+    const iOS = navigator.userAgent.match(/(iPad|iPhone|iPod)/i) ? true : false;
+    if (iOS) {
+        return "Mp4";
+    }
+    return "Webm";
+}
 //doRefresh();

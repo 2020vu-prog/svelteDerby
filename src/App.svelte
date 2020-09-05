@@ -40,6 +40,7 @@
         userEmail,
         developerMode,
         pendingSortAlgorithm,
+        mediaFileType,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -179,6 +180,9 @@
         $developerMode = userPrefs && userPrefs.developerMode;
         if (userPrefs && userPrefs.pendingSortAlgorithm) {
             $pendingSortAlgorithm = userPrefs && userPrefs.pendingSortAlgorithm;
+        }
+        if (userPrefs && userPrefs.mediaFileType) {
+            $mediaFileType = userPrefs && userPrefs.mediaFileType;
         }
     };
     onMount(async () => {

@@ -6,6 +6,7 @@
         autoAnnounceResults,
         developerMode,
         pendingSortAlgorithm,
+        mediaFileType,
         statusMessage,
     } from "./stores.js";
 
@@ -41,6 +42,7 @@
             autoAnnounceResults: $autoAnnounceResults,
             developerMode: $developerMode,
             pendingSortAlgorithm: $pendingSortAlgorithm,
+            mediaFileType: $mediaFileType,
             changed: new Date().getTime(),
             changedFmt: new Date().toLocaleTimeString(),
         };
@@ -203,6 +205,14 @@
     <select bind:value={$pendingSortAlgorithm}>
         <option class="sortOption">Age</option>
         <option class="sortOption">Heat</option>
+    </select>
+    <label style="max-width: 110px; word-wrap: break-word">
+        Media file format
+    </label>
+    <select bind:value={$mediaFileType}>
+        <option>Webm</option>
+        <option>Mp4</option>
+        <option value="">*</option>
     </select>
     <b />
     <b />
