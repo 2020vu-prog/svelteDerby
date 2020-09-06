@@ -175,9 +175,13 @@
         }
         if (json.pinType) {
             const pinType = json.pinType;
+            const pinState = json.pinState;
             console.log(`potentialCapture: pinType: ${pinType}`);
 
-            if (pinType === "lane") {
+            // mqtt message being processed out of sequence??
+            // RacePhase only sees leading edge of car.  don't capture video on a trailing edge event!
+            // (It should be throttled if it is recv'd in correct order, but that didn't happen)
+            if (pinType === "lane" && pinState === 1) {
                 if (!shouldThrottle()) {
                     $mqttTriggerVideoCapture = timerKey;
                 }
