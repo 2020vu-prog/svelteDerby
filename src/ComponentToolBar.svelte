@@ -25,7 +25,10 @@
     };
     const doDelete = () => {
         console.log("toolbar deleting", dbName, dbKey);
-        requestDelete(dbName, dbKey);
+        var result = confirm("Proceed with delete?");
+        if (result) {
+            requestDelete(dbName, dbKey);
+        }
     };
 
     async function requestDelete() {
