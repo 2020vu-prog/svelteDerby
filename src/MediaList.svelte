@@ -39,7 +39,7 @@
         const rc = [];
         if (racePhase && racePhase.phr && racePhase.phr.length) {
             //const prefixSeed = Math.min(...racePhase.phr);
-            const psList = [...racePhase.phr]
+            const psList = [...racePhase.phr];
             psList.sort(function (a, b) {
                 return a - b;
             });
