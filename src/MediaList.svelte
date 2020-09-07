@@ -30,28 +30,44 @@
         }
         if (params.dbName === "*") {
             linkFrom = ALL_PREFIX;
-            mediaList = await listAndSortMedia(ALL_PREFIX); // get all!
+            mediaList = await listAndSortMedia([ALL_PREFIX]); // get all!
             loadingMedia = false;
             return;
         }
     });
     function getMediaPrefix(racePhase) {
+        const rc = [];
         if (racePhase && racePhase.phr && racePhase.phr.length) {
-            const prefixSeed = Math.min(...racePhase.phr);
-            if (prefixSeed > 0) {
-                return `${$raceConfig.orgId}/MQTT-${prefixSeed.toString()}`;
-            }
+            //const prefixSeed = Math.min(...racePhase.phr);
+            const psList = [...racePhase.phr]
+            psList.sort(function (a, b) {
+                return a - b;
+            });
+            psList
+                .filter((ps) => ps > 0)
+                .forEach((prefixSeed) => {
+                    rc.push(
+                        `${$raceConfig.orgId}/MQTT-${prefixSeed.toString()}`
+                    );
+                });
         }
-        return SKIP_PREFIX;
+        if (rc.length == 0) {
+            rc.push(SKIP_PREFIX);
+        }
+        return rc;
     }
-    async function listAndSortMedia(prefixSeed) {
-        const listM = await listMedia(prefixSeed);
+    async function listAndSortMedia(prefixSeedList) {
+        const listM = [];
+        for (var i = 0; i < prefixSeedList.length; i++) {
+            listM.push(...(await listMedia(prefixSeedList[i], i)));
+        }
+
         listM.sort(function (a, b) {
             return b.LastModified.localeCompare(a.LastModified);
         });
         return listM;
     }
-    async function listMedia(prefixSeed) {
+    async function listMedia(prefixSeed, i) {
         if (!prefixSeed) {
             return [];
         }
@@ -59,7 +75,6 @@
             return [];
         }
         if (prefixSeed === ALL_PREFIX) {
-            //prefixSeed = "";
             prefixSeed = $raceConfig.orgId;
         }
         //console.log(`listMedia: ${dbName} ${dbKey}`);
@@ -71,6 +86,7 @@
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
             prefix: prefixSeed,
+            iSrc: i,
         };
 
         axios.defaults.headers.common["Authorization"] = bearer;
