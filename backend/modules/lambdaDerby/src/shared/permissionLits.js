@@ -71,7 +71,6 @@ addPermission(
     [
         "/orgAdd", // be careful with this one!
         "/eventAdd",
-        "/dataExport",
     ]
 );
 addPermission(
