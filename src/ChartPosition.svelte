@@ -140,10 +140,9 @@
             }
 
             if (
-                (seedObject.ptcp &&
-                    (seedObject.status === "ptcp" ||
-                        seedObject.status === "forfeit")) ||
-                seedObject.status === "bye"
+                (seedObject.ptcp && seedObject.status === "forfeit") ||
+                seedObject.status === "bye" ||
+                seedObject.status === "ptcp" // allow empty ptcp (waiting for bracket prgress)
             ) {
                 console.log("Good seedObject:", seedObject);
                 req.pos[ab] = seedObject;

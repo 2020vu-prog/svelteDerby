@@ -222,7 +222,9 @@ entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
     }
     isPtcpValid(ab) {
         const po = this.getPtcpObject(ab);
-        return this.isPtcpDispMatch(po, "ptcp");
+        // ptcp objects aren't valid without a carnumber (po.ptcp)
+        // use case:   undo a :Bp that had advanced, and revert it back to waiting.
+        return this.isPtcpDispMatch(po, "ptcp") && po.ptcp;
     }
     isPtcpDispMatch(ptcpObject, tgtDisp) {
         const po = ptcpObject;
