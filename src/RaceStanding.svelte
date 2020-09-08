@@ -39,7 +39,7 @@
     };
 
     const getWinTime = (lane, phase) => {
-        return standing.getWinTime(lane, phase);
+        return standing.getWinTime(lane, phase).toString().padStart(3, "0");
     };
     const shouldRender = (raceStanding) => {
         return !raceStanding.del;

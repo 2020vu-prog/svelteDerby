@@ -91,7 +91,7 @@
         if (phaseWinTime == 0) {
             return "Tied";
         }
-        return phaseWinTime;
+        return phaseWinTime.toString().padStart(3, "0");
     };
     const getPhaseIcon = (racePhase) => {
         if (racePhase.phaseResults) {
