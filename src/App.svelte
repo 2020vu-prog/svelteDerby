@@ -8,6 +8,7 @@
     import RaceStandingList from "./RaceStandingList.svelte";
     import RacePhaseList from "./RacePhaseList.svelte";
     import ChartList from "./ChartList.svelte";
+    import DataExport from "./DataExport.svelte";
     import StatusMessage from "./StatusMessage.svelte";
     import ChartAdd from "./ChartAdd.svelte";
     import DriverList from "./DriverList.svelte";
@@ -68,6 +69,7 @@
         "/chartDetail/:chartId": ChartDetail,
         "/chartPosition/:chartId/:chartPosition": ChartPosition,
         "/chartList": ChartList,
+        "/dataExport": DataExport,
         "/chartAdd": ChartAdd,
         "/timerConfig": TimerConfig,
         "/timerAlignment": TimerAlignment,
@@ -146,6 +148,10 @@
             {
                 text: "Capture Video",
                 menuRoute: "/captureVideo",
+            },
+            {
+                text: "Data Export",
+                menuRoute: "/dataExport",
             },
             {
                 text: loginLabel,
