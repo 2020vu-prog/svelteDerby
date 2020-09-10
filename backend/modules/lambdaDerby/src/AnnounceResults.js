@@ -1,5 +1,8 @@
 const crypto = require("crypto");
 
+function isDefined(x) {
+    return !(typeof x === "undefined" || x === null);
+}
 class AnnounceResults {
     AWS = null;
     iotdata;
@@ -201,10 +204,10 @@ class AnnounceResults {
             tgtRs.phase1DeltaMS
         );
 
-        if (tgtRs.phase1DeltaMS && !tgtRs.phase2DeltaMS) {
+        if (isDefined(tgtRs.phase1DeltaMS) && !isDefined(tgtRs.phase2DeltaMS)) {
             rc += aPhaseMsg;
         }
-        if (tgtRs.phase2DeltaMS) {
+        if (isDefined(tgtRs.phase2DeltaMS)) {
             [bWinCarNumber, bPhaseMsg] = this.formatResultMsg(
                 this.expandPhaseForSpeech("B"),
                 tgtRs.carNumbers,
@@ -222,6 +225,8 @@ class AnnounceResults {
                 aWinCarNumber === bWinCarNumber
             ) {
                 //double phase, no interjection
+            } else if (!aWinCarNumber && !bWinCarNumber) {
+                // overall tie. leave out "enough"  (either way).  no interjection
             } else if (bWinCarNumber === overallWinCarNumber) {
                 rc += " That is enough <p/> ";
             } else {
