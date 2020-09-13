@@ -1,4 +1,6 @@
 "use strict";
+const clientMinimumVersion = "1.1.0";
+const derbyMainVersion = "1.1.0";
 const crypto = require("crypto");
 const path = require("path");
 
@@ -983,7 +985,8 @@ const buildResponse = (jsonObj, cacheControl = "no-cache") => {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
             "Cache-Control": cacheControl,
-            "x-client-minimum": "1.0.15",
+            "x-client-minimum": clientMinimumVersion,
+            "x-derby-main-version": derbyMainVersion,
         },
         body: JSON.stringify(jsonObj),
     };
