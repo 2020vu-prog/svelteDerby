@@ -394,18 +394,10 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     get carNumbers() {
         return this.cn;
     }
-    get overallResults() {
-        const rc = [];
-        if (this.isComplete()) {
-            for (var i = 0; i < this.carNumbers.length; i++) {
-                rc[i] = this.phase1Results[i] + this.phase2Results[i];
-            }
-        }
-        return rc;
-    }
+
     isOverallTie() {
-        const distinctResults = [...new Set(this.overallResults)];
-        return distinctResults.length == 1;
+        const overall = this.phase1DeltaMS + this.phase2DeltaMS;
+        return overall == 0;
     }
     hasResults() {
         return this.carNumbers && this.phase1Results;
