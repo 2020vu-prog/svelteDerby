@@ -7,6 +7,7 @@
         carFilter,
         doRefreshBlocks,
         pendingSortAlgorithm,
+        uiPageSize,
     } from "./stores.js";
     import RaceStanding from "./RaceStanding.svelte";
     import RacePhase from "./RacePhase.svelte";
@@ -58,11 +59,14 @@
         return standing.carNumbers.filter((cn) => cn.match(re)).length > 0;
     };
     //loc &drb passed in to coerce svelte refesh screen
-    function getStandings(loc, drb) {
+    function getStandings(loc, carFilter, drb) {
         const rc = Object.values($standingsMap);
         const sortBy = getSortAlgorithm();
         rc.sort(sortBy);
-        return rc;
+        return rc
+            .filter((rs) => filterMatches(rs, carFilter, drb))
+            .filter((rs) => typeFilter(rs, drb))
+            .slice(0, $uiPageSize);
     }
     function getSortAlgorithm() {
         if (params.type === "Pending") {
@@ -115,15 +119,11 @@
         <CarFilter />
     </h4>
 
-    {#each getStandings($location, $doRefreshBlocks) as standing}
-        {#if filterMatches(standing, $carFilter, $doRefreshBlocks)}
-            {#if typeFilter(standing, $doRefreshBlocks)}
-                <RaceStanding
-                    at={standing.at}
-                    standingKey={standing.classKey}
-                    refresh={doRefreshBlocks} />
-            {/if}
-        {/if}
+    {#each getStandings($location, $carFilter, $doRefreshBlocks) as standing}
+        <RaceStanding
+            at={standing.at}
+            standingKey={standing.classKey}
+            refresh={doRefreshBlocks} />
     {/each}
     <BottomNav />
 </main>

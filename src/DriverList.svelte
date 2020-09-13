@@ -4,6 +4,7 @@
         driverMap,
         carFilter,
         doRefreshBlocks,
+        uiPageSize,
     } from "./stores.js";
     import CarAndDriver from "./CarAndDriver.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
@@ -22,8 +23,10 @@
         let re = new RegExp("^" + lclFilter);
         return String(driver).match(re);
     };
-    const getCarNumbersAsList = (driverMap) => {
-        return Object.keys(driverMap);
+    const getCarNumbersAsList = (driverMap, carFilter) => {
+        return Object.keys(driverMap)
+            .filter((carNumber) => filterMatches(carNumber, carFilter))
+            .slice(0, $uiPageSize);
     };
     function isDriverEditable(paramEmail) {
         return isEmailAllowedRoutePath(paramEmail, "/driverAdd");
@@ -39,7 +42,7 @@
     <p />
     <MaterialAdd clickHandleRoute="/driverAdd" />
 
-    {#each getCarNumbersAsList($driverMap) as carNumber}
+    {#each getCarNumbersAsList($driverMap, $carFilter) as carNumber}
         {#if filterMatches(carNumber, $carFilter)}
             <div class="panel panel-info">
                 <CarAndDriver

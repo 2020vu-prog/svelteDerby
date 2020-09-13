@@ -8,6 +8,7 @@
         pendingSortAlgorithm,
         mediaFileType,
         statusMessage,
+        uiPageSize,
     } from "./stores.js";
 
     import { buildVersion, buildDate } from "./utils.js";
@@ -22,6 +23,7 @@
     var ecFromDexie;
     var histCountFromDexie = "";
     let themeSelected;
+    var selectedPageSize = undefined;
 
     const refreshDataFromDb = async (trigger) => {
         console.log("refreshDataFromDb data:", trigger);
@@ -32,13 +34,11 @@
     $: {
         refreshDataFromDb($doRefreshBlocks);
     }
-    $: {
-        if (mounted) {
-        }
-    }
+
     $: {
         const prefs = {
             KEY: "userPrefs",
+            uiPageSize: $uiPageSize,
             autoAnnounceResults: $autoAnnounceResults,
             developerMode: $developerMode,
             pendingSortAlgorithm: $pendingSortAlgorithm,
@@ -65,7 +65,19 @@
         mounted = true;
         refreshDataFromDb();
         updateColorSelector();
+        if ($uiPageSize) {
+            selectedPageSize = $uiPageSize.toString();
+        } else {
+            selectedPageSize = "All";
+        }
     });
+    function mapSelectedUiPageSize() {
+        if (selectedPageSize === "All") {
+            $uiPageSize = undefined;
+        } else {
+            $uiPageSize = parseInt(selectedPageSize, 10);
+        }
+    }
     async function clickDisableCache() {
         console.log("check do");
         if (!disableCache) {
@@ -213,6 +225,15 @@
         <option>Webm</option>
         <option>Mp4</option>
         <option value="">*</option>
+    </select>
+    <label style="max-width: 110px; word-wrap: break-word">UI Page Limit</label>
+    <select bind:value={selectedPageSize} on:change={mapSelectedUiPageSize}>
+        <option>All</option>
+        <option>200</option>
+        <option>100</option>
+        <option>50</option>
+        <option>25</option>
+        <option>5</option>
     </select>
     <b />
     <b />

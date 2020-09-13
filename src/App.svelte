@@ -39,6 +39,7 @@
         autoAnnounceResults,
         userEmail,
         developerMode,
+        uiPageSize,
         pendingSortAlgorithm,
         mediaFileType,
     } from "./stores.js";
@@ -182,7 +183,10 @@
             $pendingSortAlgorithm = userPrefs && userPrefs.pendingSortAlgorithm;
         }
         if (userPrefs && userPrefs.mediaFileType) {
-            $mediaFileType = userPrefs && userPrefs.mediaFileType;
+            $mediaFileType = userPrefs.mediaFileType;
+        }
+        if (userPrefs && userPrefs.uiPageSize) {
+            $uiPageSize = userPrefs.uiPageSize;
         }
     };
     onMount(async () => {

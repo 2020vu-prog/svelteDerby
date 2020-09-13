@@ -4,6 +4,7 @@
         racePhaseMap,
         carFilter,
         doRefreshBlocks,
+        uiPageSize,
     } from "./stores.js";
     import RacePhase from "./RacePhase.svelte";
     import CarFilter from "./CarFilter.svelte";
@@ -28,12 +29,14 @@
         return phase.carNumbers.filter((cn) => cn.match(re)).length > 0;
     };
     //loc &drb passed in to coerce svelte refesh screen
-    const getRacePhases = (drb) => {
+    const getRacePhases = (drb, lclFilter, nobKey) => {
         const rc = Object.values(drb);
         rc.sort((a, b) => {
             return b.at - a.at;
         });
-        return rc;
+        return rc
+            .filter((rp) => filterMatchesX(rp, lclFilter, nobKey))
+            .slice(0, $uiPageSize);
     };
 </script>
 
@@ -50,13 +53,11 @@
         <CarFilter />
     </h4>
 
-    {#each getRacePhases($racePhaseMap) as racePhase}
-        {#if filterMatchesX(racePhase, $carFilter, $nextOnBlockKey)}
-            <RacePhase
-                refreshTime={$doRefreshBlocks}
-                phaseKey={racePhase.classKey}
-                at={racePhase.at} />
-        {/if}
+    {#each getRacePhases($racePhaseMap, $carFilter, $nextOnBlockKey) as racePhase}
+        <RacePhase
+            refreshTime={$doRefreshBlocks}
+            phaseKey={racePhase.classKey}
+            at={racePhase.at} />
     {/each}
     <BottomNav />
 
