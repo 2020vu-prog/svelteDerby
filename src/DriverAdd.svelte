@@ -210,7 +210,9 @@
             The phoentic name field uses a plain-text version of the IPA
             (International Phoentic Alphabet) called X-SAMPA. For an english to
             X-SAMPA chart click
-            <a target="_blank" href="https://en.wikipedia.org/wiki/X-SAMPA">
+            <a
+                target="_blank"
+                href="https://docs.aws.amazon.com/polly/latest/dg/ph-table-english-uk.html">
                 here
             </a>
             .
