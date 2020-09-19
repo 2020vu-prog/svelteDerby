@@ -1,5 +1,6 @@
 <script>
     import axios from "axios";
+    import SpinnerButton from "./SpinnerButton.svelte";
     import {
         driverMap,
         nextOnBlockKey,
@@ -529,13 +530,9 @@
     };
 </script>
 
-{#if !refreshInProgressButton && !refreshInProgressMq && !refreshInProgressCca}
-    <button
-        class="btn {btnClass}"
-        type="button"
-        on:click|preventDefault={doRefresh}>
-        Refresh
-    </button>
-{:else}
-    <img alt="noflag" src="data/circles.svg" width="25px" />
-{/if}
+<SpinnerButton
+    on:click={doRefresh}
+    spinning={refreshInProgressButton || refreshInProgressMq || refreshInProgressCca}
+    {btnClass}>
+    Refresh
+</SpinnerButton>

@@ -1,5 +1,5 @@
 <script>
-    import { raceConfig } from "./stores.js";
+    import { raceConfig, setCacheKey } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
@@ -39,6 +39,7 @@
             .post($raceConfig.baseUrl + "/addEventConfig", req)
             .then((response) => {
                 console.log("addEventConfig axios success");
+                setCacheKey(new Date().getTime()); // force disable cache to expose new event on local browser.
                 pop();
             })
             .catch((err) => {

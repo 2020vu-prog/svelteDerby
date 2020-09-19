@@ -5,7 +5,7 @@
     export let disabled = false;
     export let spinning = false;
     export let focused = false;
-    const btnClass = "";
+    export let btnClass = "";
     var thisButton;
     var mounted = false;
     onMount(async () => {
@@ -31,7 +31,7 @@
 </script>
 
 <button
-    style="background-color: {$theme}; color: white"
+    style=" border: 1px solid black; background-color: {$theme}; color: white"
     disabled={disabled || spinning}
     class="btn {btnClass}"
     bind:this={thisButton}
