@@ -1,5 +1,5 @@
 #!/bin/bash
-function s3Push {
+function s3PushOLD {
 	source ./generatedTargets.sh
 	bucket=$DERBY_SPA_S3_BUCKET
 	echo "########"
@@ -21,4 +21,4 @@ function s3Push {
 	echo cloudfront endpoint: $DERBY_CLOUDFRONT
 }
 
-npm i &&  npm run build && s3Push
+npm i &&  npm run build && ./s3Push.sh
