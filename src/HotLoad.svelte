@@ -499,7 +499,6 @@
     }
     const doRefresh = async () => {
         refreshInProgressButton = true;
-        ecFromDexie = await db.EventConfig.toArray();
         //await dbInit();
         console.log("old nobKey:", $nextOnBlockKey);
         const currentSession = await Auth.currentSession();
@@ -526,6 +525,7 @@
             const pendingBulk = {};
             await parseAndApply(response, true, pendingBulk);
             await flushPendingBulk(pendingBulk);
+            ecFromDexie = await db.EventConfig.toArray();
             refreshInProgressButton = false;
         } catch (err) {
             console.log(err);
