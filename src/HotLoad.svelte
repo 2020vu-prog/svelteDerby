@@ -35,6 +35,7 @@
     var refreshInProgressMq = false;
     var refreshInProgressCca = false;
 
+    var ecFromDexie = [];
     //TODO: these should happen consecutively.
     // always clearStore() before doRefresh()
     $: {
@@ -457,6 +458,7 @@
     const pendingAudioList = [];
 
     onMount(async () => {
+        ecFromDexie = await db.EventConfig.toArray();
         mounted = true;
     });
     async function announceFromMqtt(mqMsg) {
@@ -497,6 +499,7 @@
     }
     const doRefresh = async () => {
         refreshInProgressButton = true;
+        ecFromDexie = await db.EventConfig.toArray();
         //await dbInit();
         console.log("old nobKey:", $nextOnBlockKey);
         const currentSession = await Auth.currentSession();
@@ -528,11 +531,23 @@
             console.log(err);
         }
     };
+    function isArchived(ttlSecondsUnusedSvelteTrigger) {
+        if (ecFromDexie && ecFromDexie[0] && ecFromDexie[0].TTL) {
+            return ecFromDexie[0].TTL * 1000 < new Date().getTime();
+        }
+        return true;
+    }
 </script>
 
-<SpinnerButton
-    on:click={doRefresh}
-    spinning={refreshInProgressButton || refreshInProgressMq || refreshInProgressCca}
-    {btnClass}>
-    Refresh
-</SpinnerButton>
+{#if isArchived(ecFromDexie)}
+    <SpinnerButton spinning={false} disabled={true}>
+        Race Archived
+    </SpinnerButton>
+{:else}
+    <SpinnerButton
+        on:click={doRefresh}
+        spinning={refreshInProgressButton || refreshInProgressMq || refreshInProgressCca}
+        {btnClass}>
+        Refresh
+    </SpinnerButton>
+{/if}
