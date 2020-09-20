@@ -3,6 +3,8 @@ const {
 } = require("../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
 import { Auth } from "aws-amplify";
 import { db } from "./eventDb.js";
+import { userEmail } from "./stores.js";
+
 const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
 export async function getHistoryEntity(PK, SK, at) {
@@ -49,6 +51,7 @@ export async function getUserEmail() {
     console.log("getUserEmail");
     try {
         const user = await Auth.currentAuthenticatedUser();
+        console.log("getUserEmail cognito user:", user);
         const attributes = await Auth.userAttributes(user);
         console.log("getUserEmail cognito attrs:", attributes);
         const email = attributes
@@ -59,8 +62,9 @@ export async function getUserEmail() {
         console.log("getUserEmail email:", email);
         return email;
     } catch (err) {
-        console.log("getUserEmail", err);
-        return "unknownEmail";
+        console.log("getUserEmail error:", err);
+        userEmail.set(""); // update userEmail store
+        return "";
     }
 }
 export function safeGetAt(map, key) {

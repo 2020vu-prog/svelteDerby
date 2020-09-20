@@ -10,9 +10,9 @@
         getCacheKey,
         beginAnonymousLogin,
         developerMode,
+        userEmail,
     } from "./stores.js";
 
-    import { store } from "./stores/auth.js";
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
 
     var orgMap = {};
@@ -55,7 +55,7 @@
     });
 
     async function logUserInIfNecessary() {
-        if (!$store) {
+        if (!$userEmail) {
             console.log(
                 "User is not logged in, so we will sign them in anonymously."
             );

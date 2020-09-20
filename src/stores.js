@@ -10,7 +10,7 @@ import { writable, readable } from "svelte/store";
 import { storeAuth } from "./stores/auth.js";
 import { buildVersion } from "./utils.js";
 
-export const userEmail = writable("noEmail");
+export const userEmail = writable("");
 
 export const theme = writable("#4CAF50");
 export const statusMessage = writable({});
