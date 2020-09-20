@@ -580,11 +580,30 @@ class DdbUtils {
             var data = await this.ddbClient.query(params);
             console.log("ddbQueryRsAlreadyPending: " + data); // successful response
             console.log("ddbQueryRsAlreadyPending: " + JSON.stringify(data)); // successful response
-            return data.Count;
+            if (data.Count > 0) {
+                return this.fmtPendingError(data, json.cn);
+            }
+            return ""; // no errors.
         } catch (err) {
             console.log("queryRsAlreadyPending failed: ", err, err.stack); // an error occurred
         }
-        return 99;
+        // if there was an error, lambda will  fail.   that is ok here.  nothing returned
+    }
+    fmtPendingError(data, cnList) {
+        console.log("fmtPendingError looking:", cnList);
+        const offenders = {};
+        cnList.forEach((tgtCn) => {
+            data.Items.forEach((item) => {
+                item.cn.L.forEach((itemCn) => {
+                    if (tgtCn === itemCn.S) {
+                        console.log("fmtPendingError found offender:", tgtCn);
+                        offenders[tgtCn] = "Already Pending";
+                    }
+                });
+            });
+        });
+
+        return Object.keys(offenders).join(",");
     }
     /*
      **

@@ -162,13 +162,19 @@
         axios
             .post($raceConfig.baseUrl + "/addChartPosition", req)
             .then((response) => {
-                console.log("addChartPosition axios success");
-                pop();
+                console.log("addChartPosition axios success ", response);
+                if (response.data.error) {
+                    $statusMessage = {
+                        text: response.data.error,
+                        type: "error",
+                    };
+                } else {
+                    pop();
+                }
             })
             .catch((err) => {
                 console.log("addChartPosition failed: " + err);
             });
-        resetForm();
     }
 
     const resetForm = () => {

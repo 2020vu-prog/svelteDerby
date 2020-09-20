@@ -20,7 +20,7 @@ const configMap = {};
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
 const announceResults = new AnnounceResults(AWS, ddbUtils);
-
+let globalErrorList = [];
 const s3QueryChartTypes = async () => {
     var params = {
         Bucket: process.env.ChartS3BucketName,
@@ -110,12 +110,15 @@ const addPending2 = async (event) => {
     console.log("BEGIN: addPending2: " + JSON.stringify(json));
     json.PK = ":RS"; // force RaceStanding
 
-    const alreadyExists = await ddbUtils.ddbQueryRsAlreadyPending(
+    const alreadyExistsMessage = await ddbUtils.ddbQueryRsAlreadyPending(
         json,
         cfg.pendingRule
     );
-    if (alreadyExists > 0) {
-        return { error: "Pending2 already exists", status: "error" };
+    if (alreadyExistsMessage) {
+        return {
+            error: `Pending already exists: ${alreadyExistsMessage}`,
+            status: "error",
+        };
     }
 
     if (stringIsTrue(cfg.lcl1)) {
@@ -221,7 +224,7 @@ const advanceChartPos = async (srcRs, bracketPos) => {
     }
 
     if (!srcRs && bracketPos.isReadyToAddPending) {
-        await addPendingFromChartPos(srcRs, bracketPos);
+        const pendingRC = await addPendingFromChartPos(srcRs, bracketPos);
         // new pending with participants won't need to advance.
         // fall thru to advance anyway to handle bye/forfeit.
     }
@@ -308,7 +311,7 @@ const addPendingFromChartPos = async (rs, bracketPos) => {
     );
     if (bracketPos.isReadyToAddPending) {
         console.log("isReadyToAddPending Bp:", bracketPos);
-        await addPending2({
+        const pendingRC = await addPending2({
             body: JSON.stringify({
                 orgId: bracketPos.orgId,
                 orgIz: bracketPos.orgId.replace(/\..*/, ""), // TODO: unhack orgIz
@@ -321,7 +324,9 @@ const addPendingFromChartPos = async (rs, bracketPos) => {
                 ],
             }),
         });
-        //TODO: leave some footprints in the butter so that the user knows what happened!
+        if (pendingRC && pendingRC.error) {
+            globalErrorList.push(pendingRC);
+        }
     }
 };
 
@@ -831,9 +836,15 @@ const routeMap = {
     },
     "/addChartPosition": {
         h: async (event) => {
-            return buildResponse(
-                await addOrUpdateChartPosition(JSON.parse(event.body))
+            globalErrorList = []; // TODO: re-visit multiple low level error messages from advanceChartPos
+            const localMsg = await addOrUpdateChartPosition(
+                JSON.parse(event.body)
             );
+            if (globalErrorList && globalErrorList.length > 0) {
+                return buildResponse(globalErrorList[0]);
+            } else {
+                return buildResponse(localMsg);
+            }
         },
     },
     "/doApplyFinishTime": {
