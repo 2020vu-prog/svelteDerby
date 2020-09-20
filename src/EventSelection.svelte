@@ -76,7 +76,7 @@
 <div>
     <MaterialAdd clickHandleRoute="/eventAdd/{params.orgIz}" />
 
-    <h4>EventSelection for {params.orgIz}</h4>
+    <h4>EventSelection for {decodeURIComponent(params.orgIz)}</h4>
 
     <p />
 
