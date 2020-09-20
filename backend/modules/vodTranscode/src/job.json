@@ -14,9 +14,9 @@
               }
             },
             "VideoDescription": {
-              "Width": 1280,
+              "Width": 640,
               "ScalingBehavior": "DEFAULT",
-              "Height": 720,
+              "Height": 480,
               "TimecodeInsertion": "DISABLED",
               "AntiAlias": "ENABLED",
               "Sharpness": 50,
@@ -36,9 +36,12 @@
                   "TemporalAdaptiveQuantization": "ENABLED",
                   "FlickerAdaptiveQuantization": "DISABLED",
                   "EntropyEncoding": "CABAC",
-                  "Bitrate": 3000000,
                   "FramerateControl": "INITIALIZE_FROM_SOURCE",
-                  "RateControlMode": "CBR",
+                  "RateControlMode": "QVBR",
+                  "MaxBitrate": 1000000,
+                  "QvbrSettings": {
+                    "QvbrQualityLevel": 7
+                  },
                   "CodecProfile": "MAIN",
                   "Telecine": "NONE",
                   "MinIInterval": 0,
