@@ -1,6 +1,6 @@
 "use strict";
-const clientMinimumVersion = "1.1.0";
-const derbyMainVersion = "1.1.0";
+const clientMinimumVersion = "1.1.3";
+const derbyMainVersion = "1.1.1";
 const crypto = require("crypto");
 const path = require("path");
 
