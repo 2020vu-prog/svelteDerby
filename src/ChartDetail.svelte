@@ -1,5 +1,4 @@
 <script>
-    import BottomNav from "./BottomNav.svelte";
     import ChartHotSpot from "./ChartHotSpot.svelte";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -292,4 +291,3 @@
 
     <ChartClickLogger on:copyJson={copyJson} />
 </div>
-<BottomNav />

@@ -79,11 +79,6 @@
 
     .toasty {
         z-index: 50;
-        overflow: hidden;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
     }
 </style>
 

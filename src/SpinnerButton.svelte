@@ -31,15 +31,20 @@
     function getThemeCss(theme, btnClass) {
         if (btnClass) {
             return ""; // no theme if using btnClass
-        }
-        else {
+        } else {
             return `background-color: ${theme}`;
         }
     }
 </script>
 
-<button style=" border: 1px solid black; {getThemeCss($theme, btnClass)}; color: white" disabled={disabled || spinning}
-    class="btn {btnClass}" bind:this={thisButton} type="button" on:click={doClick}>
+<button
+    style=" border: 1px solid black; {getThemeCss($theme, btnClass)}; color:
+    white"
+    disabled={disabled || spinning}
+    class="btn {btnClass}"
+    bind:this={thisButton}
+    type="button"
+    on:click={doClick}>
     <slot />
     {#if spinning}
         <img alt="spinner" src="data/circles.svg" width="25px" />

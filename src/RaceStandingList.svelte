@@ -13,7 +13,6 @@
     import RacePhase from "./RacePhase.svelte";
     import CarFilter from "./CarFilter.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
-    import BottomNav from "./BottomNav.svelte";
     import { onMount } from "svelte";
     export let params = {};
     import { location, replace, push } from "svelte-spa-router";
@@ -125,5 +124,4 @@
             standingKey={standing.classKey}
             refresh={doRefreshBlocks} />
     {/each}
-    <BottomNav />
 </main>

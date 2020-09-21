@@ -6,7 +6,6 @@
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
-    import BottomNav from "./BottomNav.svelte";
 
     $: {
         refreshDataFromDb($doRefreshBlocks);
@@ -49,5 +48,4 @@
             {bmd.bracketName}
         </div>
     {/each}
-    <BottomNav />
 </div>

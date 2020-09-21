@@ -4,11 +4,11 @@
     import { push, pop, replace } from "svelte-spa-router";
     import { store as AuthStore } from "./stores/auth.js";
 
+    import BottomNav from "./BottomNav.svelte";
     import CaptureVideo from "./CaptureVideo.svelte";
     import RaceStandingList from "./RaceStandingList.svelte";
     import RacePhaseList from "./RacePhaseList.svelte";
     import ChartList from "./ChartList.svelte";
-    import StatusMessage from "./StatusMessage.svelte";
     import ChartAdd from "./ChartAdd.svelte";
     import DriverList from "./DriverList.svelte";
     import DriverAdd from "./DriverAdd.svelte";
@@ -297,5 +297,5 @@
         <i class="fa fa-bars" />
     </a>
 </div>
-<StatusMessage />
 <Router {routes} />
+<BottomNav />
