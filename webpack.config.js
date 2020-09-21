@@ -106,7 +106,8 @@ module.exports = {
         }),
 
         new MiniCssExtractPlugin({
-            filename: "[name].css",
+            filename: "[name].[hash].css",
+            chunkFilename: "[id].[hash].css",
         }),
         new HtmlWebpackPlugin({
             hash: false,

@@ -5,6 +5,7 @@ amplify/
 amplify-backup/
 node_modules/
 /public/bundle.*
+/public/*.*.css
 /public/vendors.*.js
 /public/vendors.css
 /public/index.html

@@ -5,6 +5,7 @@ echo "### push no-cache"
 echo "###"
 aws s3 sync $QUIET  \
 	--cache-control 'no-cache' \
+	--exclude *.*.css \
 	--exclude bundle.*.js \
 	--exclude vendors.*.js \
 	--exclude *.svg \
