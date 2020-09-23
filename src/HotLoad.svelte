@@ -12,6 +12,7 @@
         autoAnnounceResults,
         mqttTimerSubscribe,
         mqttTriggerVideoCapture,
+        mqttEnabled,
         timerState,
     } from "./stores.js";
     import { store } from "./stores/auth.js";
@@ -28,7 +29,7 @@
     const nextPhaseTopic = "nextPhase";
     const iosTriggerTopic = "iosTrigger";
     var client;
-    var btnClass = "btn-success";
+    var btnClass = "btn-info";
     const activeIotWatch = {};
 
     var refreshInProgressButton = false;
@@ -42,6 +43,10 @@
         console.log("Race config changed. refreshing.");
         doRefresh($raceConfig); // call doRefresh if/when RaceConfig changes.
     }
+    $: {
+        watchIot($mqttEnabled);
+    }
+
     $: {
         if ($doRefreshBlocks < 0) {
             clearStore();
@@ -78,6 +83,12 @@
             console.log("watchIot : no org:  skip");
             return; // nothing to watch
         }
+        if (!$mqttEnabled) {
+            console.log("watchIot : not enabled:  skip", $mqttEnabled);
+            btnClass = "btn-info";
+            return; // nothing to watch
+        }
+        console.log("watchIot : do mqtt:  ", $mqttEnabled);
 
         const ccSession = await Auth.currentSession();
         console.log("auth ccSession :", ccSession);
@@ -114,6 +125,7 @@
         }
         console.log("watchIot: Subscribing to:", topic);
         activeIotWatch.subbedTopic = topic;
+        btnClass = "btn-success";
         activeIotWatch.subscription = PubSub.subscribe(topic).subscribe({
             next: async (data) => {
                 btnClass = "btn-success";
@@ -461,6 +473,7 @@
         ecFromDexie = await db.EventConfig.toArray();
         mounted = true;
     });
+
     async function announceFromMqtt(mqMsg) {
         console.log("mqMsg: ", mqMsg);
         console.log(`mqMsg: ${mqMsg}`, mqMsg);

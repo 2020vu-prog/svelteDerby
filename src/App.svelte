@@ -40,8 +40,10 @@
         userEmail,
         developerMode,
         uiPageSize,
+        mqttEnabled,
         pendingSortAlgorithm,
         mediaFileType,
+        statusMessage,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -188,6 +190,9 @@
         if (userPrefs && userPrefs.uiPageSize) {
             $uiPageSize = userPrefs.uiPageSize;
         }
+        if (userPrefs && userPrefs.mqttEnabled) {
+            $mqttEnabled = userPrefs.mqttEnabled;
+        }
     };
     onMount(async () => {
         console.log("mounted app");
@@ -235,6 +240,14 @@
         menuClickFunction();
         replace(route);
     };
+    function onPageShow() {
+        /*
+        $statusMessage = {
+            text: `onPageShow`,
+            type: "success",
+        };
+        */
+    }
 </script>
 
 <style>
@@ -275,6 +288,7 @@
     }
 </style>
 
+<svelte:window on:pageshow={onPageShow} />
 <!-- Top Navigation Menu -->
 <div class="topnav" style="z-index: 20;">
     <a href="#home" style="background-color: {$theme}" class="active">

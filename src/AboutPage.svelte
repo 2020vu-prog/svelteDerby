@@ -9,6 +9,7 @@
         mediaFileType,
         statusMessage,
         uiPageSize,
+        mqttEnabled,
     } from "./stores.js";
 
     import { buildVersion, buildDate } from "./utils.js";
@@ -43,6 +44,7 @@
             developerMode: $developerMode,
             pendingSortAlgorithm: $pendingSortAlgorithm,
             mediaFileType: $mediaFileType,
+            mqttEnabled: $mqttEnabled,
             changed: new Date().getTime(),
             changedFmt: new Date().toLocaleTimeString(),
         };
@@ -168,6 +170,11 @@
         -ms-user-select: none;
         user-select: none;
     }
+
+    .labelWrap {
+        max-width: 110px;
+        word-wrap: break-word;
+    }
 </style>
 
 <div class="settings">
@@ -189,10 +196,15 @@
         type="checkbox"
         bind:checked={disableCache}
         on:click={() => clickDisableCache()} />
+
     <label>Bottom NavBar</label>
     <input type="checkbox" bind:checked={$showBottomNav} />
+
     <label>Auto Announce</label>
     <input type="checkbox" bind:checked={$autoAnnounceResults} />
+
+    <label class="labelWrap">Auto Refresh</label>
+    <input type="checkbox" bind:checked={$mqttEnabled} />
 
     <label>Theme Color</label>
     <select
@@ -211,22 +223,18 @@
         <option class="colorOption" value="saddlebrown">Brown</option>
         <option class="colorOption">Gray</option>
     </select>
-    <label style="max-width: 110px; word-wrap: break-word">
-        Sort Pending Races By
-    </label>
+    <label class="labelWrap">Sort Pending Races By</label>
     <select bind:value={$pendingSortAlgorithm}>
         <option class="sortOption">Age</option>
         <option class="sortOption">Heat</option>
     </select>
-    <label style="max-width: 110px; word-wrap: break-word">
-        Media file format
-    </label>
+    <label class="labelWrap">Media file format</label>
     <select bind:value={$mediaFileType}>
         <option>Webm</option>
         <option>Mp4</option>
         <option value="">*</option>
     </select>
-    <label style="max-width: 110px; word-wrap: break-word">UI Page Limit</label>
+    <label class="labelWrap">UI Page Limit</label>
     <select bind:value={selectedPageSize} on:change={mapSelectedUiPageSize}>
         <option>All</option>
         <option>200</option>

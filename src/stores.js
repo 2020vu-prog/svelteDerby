@@ -27,6 +27,7 @@ export const pendingSortAlgorithm = writable("Age");
 export const mediaFileType = writable(getDefaultFileFormat());
 export const autoAnnounceResults = writable(false);
 export const mqttTimerSubscribe = writable(false);
+export const mqttEnabled = writable(false);
 export const mqttTriggerVideoCapture = writable(0);
 export const beginAnonymousLogin = writable(false);
 export const timerState = writable({});
