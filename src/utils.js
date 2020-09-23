@@ -3,8 +3,8 @@ const {
 } = require("../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
 import { Auth } from "aws-amplify";
 import { db } from "./eventDb.js";
-import { userEmail } from "./stores.js";
-
+import { userEmail, statusMessage } from "./stores.js";
+import { logout } from "./stores/auth.js";
 const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
 export async function getHistoryEntity(PK, SK, at) {
@@ -64,6 +64,11 @@ export async function getUserEmail() {
     } catch (err) {
         console.log("getUserEmail error:", err);
         userEmail.set(""); // update userEmail store
+        logout(); // cognito thinks we aren't logged in.  sync the store
+        statusMessage.set({
+            text: `Please login to use this system.`,
+            type: "error",
+        });
         return "";
     }
 }
