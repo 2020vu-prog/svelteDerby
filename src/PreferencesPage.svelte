@@ -1,0 +1,293 @@
+<script>
+    import {
+        theme,
+        showBottomNav,
+        autoAnnounceResults,
+        pendingSortAlgorithm,
+        mediaFileType,
+        uiPageSize,
+        mqttEnabled,
+    } from "./stores.js";
+
+    $: {
+        document.documentElement.style.setProperty(
+            `--themeFromJS`,
+            `${$theme}`
+        );
+    }
+
+    import { onMount } from "svelte";
+    import { getCacheKey, setCacheKey } from "./stores.js";
+    import { db, localConfigDb } from "./eventDb.js";
+    import BottomNav from "./BottomNav.svelte";
+    import { push } from "svelte-spa-router";
+
+    let disableCache = false;
+    let mounted = false;
+    var lclCacheKey = 0;
+    let themeSelected;
+    var selectedPageSize = undefined;
+
+    $: {
+        const prefs = {
+            KEY: "userPrefs",
+            uiPageSize: $uiPageSize,
+            autoAnnounceResults: $autoAnnounceResults,
+            pendingSortAlgorithm: $pendingSortAlgorithm,
+            mediaFileType: $mediaFileType,
+            mqttEnabled: $mqttEnabled,
+            changed: new Date().getTime(),
+            changedFmt: new Date().toLocaleTimeString(),
+        };
+        updatePrefsWhenMounted(prefs);
+    }
+    function updatePrefsWhenMounted(prefs) {
+        if (mounted) {
+            console.log("About updating userPrefs:", mounted, prefs);
+            localConfigDb["LocalConfig"].put(prefs);
+        }
+    }
+    onMount(async () => {
+        if (getCacheKey()) {
+            disableCache = true;
+        } else {
+            disableCache = false;
+        }
+        console.log("mounting :", disableCache);
+
+        mounted = true;
+        updateColorSelector();
+        if ($uiPageSize) {
+            selectedPageSize = $uiPageSize.toString();
+        } else {
+            selectedPageSize = "All";
+        }
+    });
+    function mapSelectedUiPageSize() {
+        if (selectedPageSize === "All") {
+            $uiPageSize = undefined;
+        } else {
+            $uiPageSize = parseInt(selectedPageSize, 10);
+        }
+    }
+    async function clickDisableCache() {
+        console.log("check do");
+        if (!disableCache) {
+            // negated test, b/c clickhandler called before bind value :-(
+            //$.disableCache = new Date().getTime();
+            lclCacheKey = new Date().getTime();
+        } else {
+            //$prefStore.disableCache = 0;
+            lclCacheKey = 0;
+        }
+        // console.log("Disable cache now:", $prefStore.disableCache)
+        console.log("mounted&bound Disable cache now:", lclCacheKey);
+        setCacheKey(lclCacheKey);
+    }
+    const updateTheme = async () => {
+        $theme = themeSelected;
+        console.log("Updated theme to: " + $theme);
+        let id = await localConfigDb["LocalConfig"].put({
+            KEY: "theme",
+            bgColor: $theme,
+        });
+    };
+
+    const updateColorSelector = () => {
+        var colorOptions = [];
+        colorOptions = document.getElementsByClassName("colorOption");
+        console.log("ucsBegin: " + $theme);
+        Array.from(colorOptions).forEach(function (element, index, array) {
+            console.log("A " + String(element.value) + " B " + String($theme));
+            if (String(element.value) == String($theme)) {
+                console.log("MATCH");
+                themeSelected = document.querySelectorAll("option")[index]
+                    .value;
+                console.log(
+                    "label of option: " +
+                        document.querySelectorAll("option")[index].value
+                );
+                console.log("theme selector value: " + themeSelected);
+                console.log(
+                    "element to select: " +
+                        document.querySelectorAll("option")[index]
+                );
+                return;
+            }
+        });
+    };
+</script>
+
+<style>
+    :root {
+        --themeFromJS: "black";
+    }
+    div.singularSettingDiv {
+        display: inline;
+    }
+    h4 {
+        display: inline;
+    }
+    input[type="checkbox"],
+    select {
+        float: right;
+        margin-right: 10px;
+    }
+    hr {
+        border: 1px solid var(--themeFromJS);
+    }
+    input[type="checkbox"] {
+        transform: scale(2);
+    }
+</style>
+
+<div class="settings">
+
+    <h1>Preferences</h1>
+    <hr />
+
+    <br />
+    <h2>Functionality</h2>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4>Auto Announce</h4>
+        <input type="checkbox" bind:checked={$autoAnnounceResults} />
+        <h6>
+            This toggles whether or not your device will automatically announce
+            race results and cars on the blocks.
+        </h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4 class="">Auto Refresh</h4>
+        <input type="checkbox" bind:checked={$mqttEnabled} />
+    </div>
+    <h6>
+        This toggles whether or not your device will automatically receive new
+        data. Turning this off will improve device battery life. If you do turn
+        this off, you will have to press the refresh button in order to receive
+        new data.
+    </h6>
+    <hr />
+
+    <br />
+    <h2>Aesthetics</h2>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4>Bottom NavBar</h4>
+        <input type="checkbox" bind:checked={$showBottomNav} />
+        <h6>
+            This this toggles whether the bottom nav is shown or hidden on
+            <strong>all screens.</strong>
+        </h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4>Theme Color</h4>
+        <select
+            id="themeSelector"
+            bind:value={themeSelected}
+            on:change={() => updateTheme()}>
+            <option class="colorOption" value="#4CAF50">Default (Green)</option>
+            <option class="colorOption">Pink</option>
+            <option class="colorOption">Fuchsia</option>
+            <option class="colorOption">Purple</option>
+            <option class="colorOption">Blue</option>
+            <option class="colorOption" value="dodgerblue">Light Blue</option>
+            <option class="colorOption" value="gold">Yellow</option>
+            <option class="colorOption" value="#ffb366">Light Orange</option>
+            <option class="colorOption">Orange</option>
+            <option class="colorOption" value="saddlebrown">Brown</option>
+            <option class="colorOption">Gray</option>
+        </select>
+        <h6>
+            Here you can decide what color you want for your user interface.
+        </h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4 class="">Sort Pending Races By</h4>
+        <select bind:value={$pendingSortAlgorithm}>
+            <option class="sortOption">Age</option>
+            <option class="sortOption">Heat</option>
+        </select>
+        <h6>
+            Here you can decide how you would like your pending race screen to
+            be sorted. It defaults to Age (newest to oldest) but can also be set
+            to heat, which will group like-numbered heats of different brackets
+            together.
+        </h6>
+    </div>
+    <hr />
+
+    <br />
+    <h2>Other Settings</h2>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4 class="">UI Page Limit</h4>
+        <select bind:value={selectedPageSize} on:change={mapSelectedUiPageSize}>
+            <option>All</option>
+            <option>200</option>
+            <option>100</option>
+            <option>50</option>
+            <option>25</option>
+            <option>5</option>
+        </select>
+        <h6>
+            This limits the number of elements(phases, heats, or drivers) and
+            should only be necessary when dealing with an extremely large race.
+        </h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4 class="">Media file format</h4>
+        <select bind:value={$mediaFileType}>
+            <option>Webm</option>
+            <option>Mp4</option>
+            <option value="">*</option>
+        </select>
+        <h6>
+            This adjusts which files appear when you view a race phase's media.
+            It should automatically be set to whatever is most compatible for
+            your device.
+        </h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4>Disable Cache</h4>
+        <input
+            type="checkbox"
+            bind:checked={disableCache}
+            on:click={() => clickDisableCache()} />
+        <h6>
+            This is used when selecting a race created within the last 5
+            minutes.
+        </h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4 class="">About</h4>
+        <button
+            style="float: right; margin-right: 10px;"
+            on:click={() => push('/about')}>
+            About Page
+        </button>
+        <h6>
+            Click the 'About Page' button to be redirected to the about page
+            where you can find information about the race you are viewing and
+            the version of the software you are running.
+        </h6>
+    </div>
+    <hr />
+
+    <BottomNav />
+</div>
