@@ -8,6 +8,8 @@
     import { push, replace } from "svelte-spa-router";
     import { isEmailAllowedRoutePath } from "./utils.js";
 
+    import { db } from "./eventDb.js";
+
     export let dbName;
     export let dbKey;
     export let timerLink;
@@ -23,16 +25,33 @@
     const myFunction = () => {
         console.log("myFunction");
     };
-    const doDelete = () => {
-        console.log("toolbar deleting", dbName, dbKey);
-        var result = confirm("Proceed with delete?");
-        if (result) {
-            requestDelete(dbName, dbKey);
-        }
-    };
 
-    async function requestDelete() {
-        console.log(`requestDelete: ${dbName} ${dbKey}`);
+    async function maybeDelete() {
+        console.log("toolbar maybeDelete key", dbName, dbKey);
+        const tgt = await db[dbName].get(dbKey);
+        console.log("toolbar maybeDelete tgt", tgt);
+        var tgtName = "";
+        if (dbName === "RacePhase") {
+            tgtName = "Blocks";
+        } else if (dbName === "RaceStanding" && tgt.ph2) {
+            tgtName = "B-Phase";
+        } else if (dbName === "RaceStanding" && tgt.ph1) {
+            tgtName = "A-Phase";
+        } else if (dbName === "RaceStanding") {
+            tgtName = "Pending";
+        }
+        // used to test "invalid request"
+        //tgtName = `${tgtName}X`
+        if (tgtName) {
+            var result = confirm(`Proceed with [${tgtName}] delete? `);
+            if (result) {
+                doDelete(dbName, dbKey, tgtName);
+            }
+        }
+    }
+
+    async function doDelete(dbName, dbKey, tgtName) {
+        console.log(`doDelete: ${dbName} ${dbKey}`);
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -40,6 +59,7 @@
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
             SK: dbKey,
+            tgtName: tgtName,
         };
 
         axios.defaults.headers.common["Authorization"] = bearer;
@@ -229,7 +249,7 @@
         <span
             class="navbarItem"
             style="background-color: {$theme}"
-            on:click|preventDefault={doDelete}>
+            on:click|preventDefault={maybeDelete}>
             Delete
         </span>
     {/if}

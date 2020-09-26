@@ -1,6 +1,6 @@
 "use strict";
-const clientMinimumVersion = "1.1.3";
-const derbyMainVersion = "1.1.1";
+const clientMinimumVersion = "1.1.7";
+const derbyMainVersion = "1.1.2";
 const crypto = require("crypto");
 const path = require("path");
 
@@ -456,15 +456,21 @@ const deleteRaceStanding = async (json) => {
             error: "Cannot delete RaceStanding. Not found.",
         };
     }
-    if (rsFound.ph2) {
+    if (false) {
+    } else if (rsFound.ph2 && rsFound.ph1 && json.tgtName === "B-Phase") {
         delete rsFound.ph2;
         msg = "Deleted [B] phase.";
-    } else if (rsFound.ph1) {
+    } else if (!rsFound.ph2 && rsFound.ph1 && json.tgtName === "A-Phase") {
         delete rsFound.ph1;
         msg = "Deleted [A] phase.";
-    } else {
+    } else if (!rsFound.ph2 && !rsFound.ph1 && json.tgtName === "Pending") {
         rsFound.del = true;
         msg = "Deleted pending race.";
+    } else {
+        return {
+            status: "error",
+            error: "Invalid request",
+        };
     }
 
     const rc = await ddbUtils.addSingle(rsFound);
