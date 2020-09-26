@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const EntityFactory = require("./shared/EntityFactory.js");
 
 function isDefined(x) {
     return !(typeof x === "undefined" || x === null);
@@ -157,14 +158,9 @@ class AnnounceResults {
                 carNumber
             );
             console.log(`lookupName: ${carNumber} org: ${orgId}`, ptcp);
-            if (false) {
-            } else if (ptcp && ptcp.sampa) {
-                this.namesByCarNumber[
-                    carNumber
-                ] = `<phoneme alphabet="x-sampa" ph="${ptcp.sampa}">${ptcp.name}</phoneme>`;
-            } else if (ptcp && ptcp.name) {
-                this.namesByCarNumber[carNumber] = ptcp.name;
-            }
+            const entityFactory = new EntityFactory({});
+            var ptcpEntity = entityFactory.build(ptcp);
+            this.namesByCarNumber[carNumber] = ptcpEntity.ssmlName;
         } else {
             console.log(`lookupName: missing name query ${carNumber}`);
         }
@@ -288,8 +284,8 @@ class AnnounceResults {
         return rc;
     }
 
-    getDrivenByPhoneticName(winningCar) {
-        var phoneticName = this.namesByCarNumber[winningCar.toString()];
+    getDrivenByPhoneticName(carNumber) {
+        var phoneticName = this.namesByCarNumber[carNumber.toString()];
         //TODO: lookup phoenetic name
         // lousy hack for missing phonetic name on db.
         if (phoneticName) {

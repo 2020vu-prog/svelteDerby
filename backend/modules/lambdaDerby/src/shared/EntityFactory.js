@@ -471,7 +471,7 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     }
 };
 entityFactories["Participant"] = class Participant extends EntityBase {
-    static members = ["name", "number", "sampa"];
+    static members = ["name", "number", "pName", "pType"];
     static eid = ":PTCP";
     static canBuild(json) {
         return json.PK && json.PK.endsWith(ParticipantEid);
@@ -490,6 +490,27 @@ entityFactories["Participant"] = class Participant extends EntityBase {
     }
     get classKey() {
         return this.SK;
+    }
+    set phoneticName(pName) {
+        return (this.pName = pName);
+    }
+    get phoneticName() {
+        return this.pName;
+    }
+    set phoneticType(pType) {
+        return (this.pType = pType);
+    }
+    get phoneticType() {
+        return this.pType;
+    }
+    get ssmlName() {
+        if (this.pType === "X-SAMPA") {
+            return `<phoneme alphabet="x-sampa" ph="${this.pName}">${this.name}</phoneme>`;
+        } else if (this.pType === "English") {
+            return this.pName;
+        } else {
+            return this.name;
+        }
     }
 };
 /*

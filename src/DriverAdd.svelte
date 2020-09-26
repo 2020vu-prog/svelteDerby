@@ -9,10 +9,11 @@
     import { participantValid, participantFocusCompletion } from "./utils.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import Icon from "fa-svelte";
+    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     import axios from "axios";
     export let params = {};
-    var showPhoeneticInfo = false;
+    var showPhoneticInfo = false;
     var mounted = false;
     var mode = "Add";
     var submitDisabled = true;
@@ -28,7 +29,8 @@
             text: `Ready to ${mode} Driver`,
             type: "success",
         };
-        refreshDataFromDb();
+        await refreshDataFromDb();
+        syncAddButton();
     });
     async function refreshDataFromDb(trigger) {
         if (!params.number) return;
@@ -60,7 +62,8 @@
             orgIz: $raceConfig.orgIz,
             number: Number(driverForm.carNumber),
             name: driverForm.driverName,
-            sampa: driverForm.sampa,
+            pName: driverForm.pName,
+            pType: driverForm.pType,
         };
 
         console.log("token:" + bearer);
@@ -85,11 +88,9 @@
             };
             //console.log("driverAdd failed: " + err)
         }
-        driverForm.driverName = "";
-        driverForm.carNumber = "";
     }
 
-    const driverForm = {};
+    const driverForm = { pType: "None" };
 
     const changeFocus = (carNumber, textboxIdentifier) => {
         if (textboxIdentifier == "A") {
@@ -120,13 +121,22 @@
             console.log("sync add button FAIL");
         }
     };
+    function getLocalSSML() {
+        var mockUpDriverObject = {
+            number: Number(driverForm.carNumber),
+            name: driverForm.driverName,
+            pName: driverForm.pName,
+            pType: driverForm.pType,
+            PK: ":PTCP",
+        };
+        const entityFactory = new EntityFactory({});
+        var ptcpEntity = entityFactory.build(mockUpDriverObject);
+        return ptcpEntity.ssmlName;
+    }
     async function requestSpeech() {
         speakSpinning = true;
-        var speakMe = `Driver name is ${driverForm.driverName}`;
-        if (driverForm.sampa) {
-            speakMe = `Driver name is <phoneme alphabet="x-sampa" ph="${driverForm.sampa}">${driverForm.driverName}</phoneme>`;
-        }
-        const ssml = `<speak>${speakMe}</speak>`;
+
+        const ssml = `<speak>Driver name is ${getLocalSSML()}</speak>`;
         console.log("requesting speech");
         console.log(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
         const currentSession = await Auth.currentSession();
@@ -194,21 +204,30 @@
             }} />
     </label>
     <label>
-        Phonetic Name (optional)
-        <span on:click={() => (showPhoeneticInfo = true)}>
-            <Icon icon={faQuestionCircle} />
-        </span>
-        :
-        <input
-            id="sampa"
-            type="text"
-            bind:value={driverForm.sampa}
-            placeholder="Phonetic name (X-SAMPA)" />
+        Phonetic Name Type:
+        <select bind:value={driverForm.pType}>
+            <option>None</option>
+            <option>X-SAMPA</option>
+            <option>English</option>
+        </select>
     </label>
-    {#if showPhoeneticInfo}
+    {#if driverForm.pType != 'None'}
+        <label>
+            Phonetic Name
+            <span on:click={() => (showPhoneticInfo = true)}>
+                <Icon icon={faQuestionCircle} />
+            </span>
+            :
+            <input
+                type="text"
+                bind:value={driverForm.pName}
+                placeholder={`Phonetic name (${driverForm.pType})`} />
+        </label>
+    {/if}
+    {#if showPhoneticInfo && driverForm.pType == 'X-SAMPA'}
         <p>
-            The phoentic name field uses a plain-text version of the IPA
-            (International Phoentic Alphabet) called X-SAMPA. For an english to
+            The phonetic name field uses a plain-text version of the IPA
+            (International Phonetic Alphabet) called X-SAMPA. For an english to
             X-SAMPA chart click
             <a
                 target="_blank"

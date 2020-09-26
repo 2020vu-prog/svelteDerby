@@ -7,6 +7,7 @@
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
     import { isEmailAllowedRoutePath } from "./utils.js";
+    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     import { db } from "./eventDb.js";
 
@@ -90,23 +91,28 @@
             };
         }
     }
-
+    async function carAndDriverSSML(carNumber) {
+        var rc = `<say-as interpret-as="characters" >${carNumber}</say-as>`;
+        const ptcpFromDexie = await db.Participant.get(carNumber.toString());
+        if (ptcpFromDexie) {
+            const entityFactory = new EntityFactory({});
+            var ptcpEntity = entityFactory.build(ptcpFromDexie);
+            if (ptcpEntity.ssmlName) {
+                rc += ` driven by ${ptcpEntity.ssmlName}`;
+            }
+        }
+        return rc;
+    }
     async function requestAnnouncement() {
         var announceText = "";
-
         var carsAndOrDrivers = ["", ""];
-        carsAndOrDrivers.forEach(function (carAndOrDriver, index) {
-            var carAndOrDriver = `<say-as interpret-as="characters" >${cn[index]}</say-as>`;
 
-            if (getDriverName(cn[index]) != "Unknown Racer") {
-                carAndOrDriver += ` driven by ${getDriverName(cn[index])}`;
-            }
+        for (var i = 0; i < cn.length; i++) {
+            carsAndOrDrivers[i] = await carAndDriverSSML(cn[i]);
+        }
 
-            carsAndOrDrivers[index] = carAndOrDriver;
-        });
-
-        announceText = `Car ${carsAndOrDrivers[0]} and car ${carsAndOrDrivers[1]} please report to your cars, it is time to race.....`;
-        announceText += `Car ${carsAndOrDrivers[0]} and car ${carsAndOrDrivers[1]} please report to your cars, it is time to race`;
+        announceText = `Car ${carsAndOrDrivers[0]}, and car ${carsAndOrDrivers[1]}, please report to your cars, it is time to race.....`;
+        announceText += `Car ${carsAndOrDrivers[0]}, and car ${carsAndOrDrivers[1]}, please report to your cars, it is time to race`;
 
         console.log(`doAnnounce: ${announceText} `);
         const currentSession = await Auth.currentSession();
@@ -146,15 +152,6 @@
             };
         }
     }
-
-    const getDriverName = (number) => {
-        //console.log("gdn: "+carNumber)
-        if (number && $driverMap[number]) {
-            return $driverMap[number].name;
-        } else {
-            return "Unknown Racer";
-        }
-    };
 
     async function gotoListMedia() {
         push(mediaLink);
