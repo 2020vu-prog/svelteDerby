@@ -158,9 +158,11 @@ class AnnounceResults {
                 carNumber
             );
             console.log(`lookupName: ${carNumber} org: ${orgId}`, ptcp);
-            const entityFactory = new EntityFactory({});
-            var ptcpEntity = entityFactory.build(ptcp);
-            this.namesByCarNumber[carNumber] = ptcpEntity.ssmlName;
+            if (ptcp) {
+                const entityFactory = new EntityFactory({});
+                var ptcpEntity = entityFactory.build(ptcp);
+                this.namesByCarNumber[carNumber] = ptcpEntity.ssmlName;
+            }
         } else {
             console.log(`lookupName: missing name query ${carNumber}`);
         }
