@@ -1,7 +1,7 @@
 function potentialBuild {
 	pwd
 	ls -l 
-	(cd src && 	npm pack)
+	(cd src && 	[[ -s package.json ]] && npm pack)
 }
 function main {
 	for dir in modules/*/src
