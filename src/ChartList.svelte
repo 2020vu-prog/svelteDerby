@@ -1,6 +1,5 @@
 <script>
     import { driverMap, doRefreshBlocks } from "./stores.js";
-    import CarAndDriver from "./CarAndDriver.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
     import { safeGetAt } from "./utils.js";
     import { db } from "./eventDb.js";

@@ -12,6 +12,7 @@
     import { safeGetAt } from "./utils.js";
     import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
+    import { push } from "svelte-spa-router";
 
     var editable = false;
     onMount(async () => {
@@ -31,6 +32,12 @@
     function isDriverEditable(paramEmail) {
         return isEmailAllowedRoutePath(paramEmail, "/driverAdd");
     }
+    function editCarAndDriver(number) {
+        if (editable) {
+            console.log("editCarAndDriver");
+            push(`/driverAdd/${number}`);
+        }
+    }
 </script>
 
 <div>
@@ -44,12 +51,13 @@
 
     {#each getCarNumbersAsList($driverMap, $carFilter) as carNumber}
         {#if filterMatches(carNumber, $carFilter)}
-            <div class="panel panel-info">
+            <div
+                class="panel panel-info"
+                on:click={() => editCarAndDriver(carNumber)}>
                 <CarAndDriver
                     number={carNumber}
                     at={safeGetAt($driverMap, carNumber)}
                     isWinner=""
-                    {editable}
                     phaseLetter="" />
             </div>
         {/if}
