@@ -63,7 +63,7 @@
             number: Number(driverForm.carNumber),
             name: driverForm.driverName,
             pName: driverForm.pName,
-            pType: driverForm.pType,
+            pType: driverForm.pType ? driverForm.pType : undefined,
         };
 
         console.log("token:" + bearer);
@@ -90,7 +90,7 @@
         }
     }
 
-    const driverForm = { pType: "None" };
+    const driverForm = { pType: undefined };
 
     const changeFocus = (carNumber, textboxIdentifier) => {
         if (textboxIdentifier == "A") {
@@ -206,12 +206,12 @@
     <label>
         Phonetic Name Type:
         <select bind:value={driverForm.pType}>
-            <option>None</option>
+            <option value="">None</option>
             <option>X-SAMPA</option>
             <option>English</option>
         </select>
     </label>
-    {#if driverForm.pType != 'None'}
+    {#if driverForm.pType}
         <label>
             Phonetic Name
             <span on:click={() => (showPhoneticInfo = true)}>
