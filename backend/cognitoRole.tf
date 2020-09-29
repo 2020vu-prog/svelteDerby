@@ -6,7 +6,7 @@ locals {
 }
 
 resource "aws_iam_role" "authenticated" {
-  name = "cognito_authenticated"
+  name_prefix = "cognito_authenticated_"
 
   assume_role_policy = <<EOF
 {

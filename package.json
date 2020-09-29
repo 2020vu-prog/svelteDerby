@@ -26,7 +26,7 @@
     },
     "scripts": {
         "buildX": "npm version patch && cross-env NODE_ENV=production webpack",
-        "build": "cross-env NODE_ENV=production webpack",
+        "build": "./devEnv.sh && cross-env NODE_ENV=production webpack",
         "dev": "./devEnv.sh && webpack-dev-server --content-base public",
         "amplify-modelgen": "node amplify/scripts/amplify-modelgen.js",
         "amplify-push": "node amplify/scripts/amplify-push.js"

@@ -70,6 +70,8 @@
             if (response.data.signedUrl) {
                 const options = {
                     headers: {
+                        // Content-Type MUST match the params in getSignedHeader on backend!
+                        // US-East-1 didn't care, but US-West-2 did...  gave us a 403 on PUT when mis-matched.
                         "Content-Type": mimeType,
                     },
                 };

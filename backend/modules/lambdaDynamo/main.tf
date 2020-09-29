@@ -59,7 +59,7 @@ data "aws_iam_policy_document" "policy" {
 
 
 resource "aws_iam_role" "iam_for_lambda_dynamo" {
-  name               = "iam_for_lambda_dynamo"
+  name_prefix        = "iam_for_lambda_dynamo_"
   assume_role_policy = data.aws_iam_policy_document.policy.json
   tags=local.tags
 }
@@ -138,7 +138,7 @@ data "aws_iam_policy_document" "dynamo_allow_doc" {
     }   
 }
 resource "aws_iam_policy" "dynamo_allow" {
-    name = "dynamo_allow"
+    name_prefix = "dynamo_allow_"
     path = "/"
     policy = data.aws_iam_policy_document.dynamo_allow_doc.json
 }

@@ -19,8 +19,9 @@ locals {
 
 }
 resource "aws_s3_bucket" "svelteBucket" {
-  bucket_prefix="svelte"
+  bucket_prefix="svelte-static-"
   acl    = "private"
+  force_destroy=true
 
 }
 resource "aws_s3_bucket" "cdnLogBucket" {

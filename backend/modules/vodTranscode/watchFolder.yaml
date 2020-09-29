@@ -5,17 +5,15 @@ Description:
   Creates an S3 watchfolder and automated video conversion workflow  
 
 Parameters:
+  LambdaSrcBucket:
+    Description: s3 bucket with lambda src
+    Type: String
   NotifcationEmail:
     Description: Email address for SNS notifications
     Type: String
     Default: elementalrodeo@gmail.com
     AllowedPattern: "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$"
 
-Mappings:
-  SourceCode:
-    General:
-      S3Bucket: "ohio.rr1.us"
-      KeyPrefix: "vodTranscode"
 
 Resources:
 
@@ -161,8 +159,8 @@ Resources:
       Handler: convert.handler
       Role: !GetAtt LambdaRole.Arn
       Code:
-        S3Bucket: "ohio.rr1.us"
-        S3Key: !Join ["/", [!FindInMap ["SourceCode", "General", "KeyPrefix"],  "lambda.zip"]]
+        S3Bucket: !Ref LambdaSrcBucket
+        S3Key: "vodTranscode/lambda.zip"
       Environment:
         Variables:
           DestinationBucket: !Ref MediaBucket

@@ -120,7 +120,7 @@ data "aws_iam_policy_document" "policy" {
 
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name               = "iam_for_lambda"
+  name_prefix               = "iam_for_lambda_"
   assume_role_policy = data.aws_iam_policy_document.policy.json
   tags=local.tags
 }
@@ -246,7 +246,7 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
     }
 }
 resource "aws_iam_policy" "cloudwatch_allow" {
-    name = "cloudwatch_allow"
+    name_prefix = "cloudwatch_allow_"
     path = "/"
     policy = data.aws_iam_policy_document.cloudwatch_allow_doc.json
 }

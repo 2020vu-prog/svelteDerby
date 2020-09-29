@@ -980,13 +980,15 @@ const routeMap = {
                 bucket = process.env.DstBucket;
                 key = `media/${orgId}/${qsp.key}`;
             }
+            const mimeType = "video/webm";
             var params = {
                 Expires: 600, // allow for slow video upload
                 Bucket: bucket,
                 Key: key,
+                ContentType: mimeType,
             };
             var signedUrl = s3.getSignedUrl("putObject", params);
-            console.log("The signed URL is", signedUrl);
+            console.log("For params:", params, " The signed URL is", signedUrl);
 
             return buildResponse({ signedUrl: signedUrl });
         },

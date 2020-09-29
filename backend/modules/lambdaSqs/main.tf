@@ -55,7 +55,7 @@ data "aws_iam_policy_document" "policy" {
 
 
 resource "aws_iam_role" "iam_for_lambda_cca" {
-  name               = "iam_for_lambda_cca"
+  name_prefix        = "iam_for_lambda_cca_"
   assume_role_policy = data.aws_iam_policy_document.policy.json
   tags               = local.tags
 }
@@ -138,7 +138,7 @@ data "aws_iam_policy_document" "sqs_allow_doc" {
   }
 }
 resource "aws_iam_policy" "ccaMain_allow" {
-  name   = "ccaMain_allow"
+  name_prefix   = "ccaMain_allow_"
   path   = "/"
   policy = data.aws_iam_policy_document.sqs_allow_doc.json
 }
