@@ -62,6 +62,11 @@
             $beginAnonymousLogin = true;
         }
     }
+    function getOrgName(orgIz) {
+        if (orgMap[orgIz].orgName) {
+            return orgMap[orgIz].orgName;
+        } else return orgIz;
+    }
 </script>
 
 <div>
@@ -75,7 +80,7 @@
         <div
             class="panel panel-info"
             on:click={() => replace('/eventSelection/' + orgIz)}>
-            <a href="javascript:void(0);">{orgIz}</a>
+            <a href="javascript:void(0);">{getOrgName(orgIz)}</a>
         </div>
     {/each}
 

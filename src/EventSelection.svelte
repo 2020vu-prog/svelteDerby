@@ -12,9 +12,9 @@
 
     export let params = {};
 
-    var orgMap = {};
+    var eventMap = {};
     $: {
-        console.log("bound orgMap: ", orgMap);
+        console.log("bound eventMap: ", eventMap);
     }
 
     const getOrgsAsList = (orgList) => {
@@ -39,7 +39,7 @@
             .then((response) => {
                 console.log("refreshOrgMap length:" + response.data.length);
                 console.log("refreshOrgMap:", response.data);
-                orgMap = response.data;
+                eventMap = response.data;
             })
             .catch((err) => {
                 console.log(err);
@@ -80,9 +80,9 @@
 
     <p />
 
-    {#each getOrgsAsList(orgMap) as orgConfig}
-        <div class="panel panel-info" on:click={() => doSelect(orgConfig)}>
-            <a href="javascript:void(0);">{getRaceName(orgConfig)}</a>
+    {#each getOrgsAsList(eventMap) as eventConfig}
+        <div class="panel panel-info" on:click={() => doSelect(eventConfig)}>
+            <a href="javascript:void(0);">{getRaceName(eventConfig)}</a>
         </div>
     {/each}
 </div>
