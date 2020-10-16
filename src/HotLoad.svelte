@@ -26,6 +26,7 @@
     const { v4: uuidv4 } = require("uuid");
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
+    var pageLoadTimeMs = 0;
     const nextPhaseTopic = "nextPhase";
     const iosTriggerTopic = "iosTrigger";
     var client;
@@ -137,12 +138,16 @@
             error: (error) => {
                 btnClass = "btn-danger";
                 console.error("watchIot: AWS iot error:", error);
+                potentialReloadPage();
             },
             close: () => {
                 btnClass = "btn-warning";
                 console.log("watchIot: AWS iot Done");
             },
         });
+
+        potentialReloadPage(); //test standdown
+
         syncAutoAnnounceSubscription();
         syncVideoCaptureSubscription();
     }
@@ -151,6 +156,15 @@
     $: syncAutoAnnounceSubscription($autoAnnounceResults);
     $: syncVideoCaptureSubscription($mqttTimerSubscribe);
 
+    function potentialReloadPage() {
+        console.log("potentialReloadPage: begin");
+        const oneMinute = 60 * 1000;
+        const now = new Date().getTime();
+        if (now > pageLoadTimeMs + oneMinute) {
+            console.log("potentialReloadPage: fired");
+            location.reload();
+        }
+    }
     async function syncVideoCaptureSubscription() {
         const tag = "tag:syncVideoCaptureSubscription";
 
@@ -470,6 +484,7 @@
     const pendingAudioList = [];
 
     onMount(async () => {
+        pageLoadTimeMs = new Date().getTime();
         ecFromDexie = await db.EventConfig.toArray();
         mounted = true;
     });
