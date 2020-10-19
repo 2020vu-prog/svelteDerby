@@ -118,10 +118,7 @@
         <CarFilter />
     </h4>
 
-    {#each getStandings($location, $carFilter, $doRefreshBlocks) as standing}
-        <RaceStanding
-            at={standing.at}
-            standingKey={standing.classKey}
-            refresh={doRefreshBlocks} />
+    {#each getStandings($location, $carFilter, $doRefreshBlocks) as standing (standing.at)}
+        <RaceStanding {standing} refresh={doRefreshBlocks} />
     {/each}
 </main>

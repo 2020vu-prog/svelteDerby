@@ -11,34 +11,31 @@
     } from "./utils.js";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
-    export let standingKey;
-    export let at;
-
-    console.log("standingKey", standingKey);
+    export let standing;
 
     var chartPosition = "";
-    var standing = $standingsMap[standingKey];
     var hhmmss = "";
+    var at = standing.at;
     let showToolbar = false;
 
-    const updateBoundVars = async (at) => {
-        standing = $standingsMap[standingKey];
-        hhmmss = hhmmssFmt(at);
+    const updateBoundVars = async (paramStanding) => {
+        at = standing.at;
+        hhmmss = hhmmssFmt(standing.at);
         chartPosition = await fmtChartPosition(standing);
     };
     $: {
         console.log("rp changed:", at);
-        updateBoundVars(at);
+        updateBoundVars(standing);
     }
     onMount(async () => {
-        updateBoundVars(at);
+        updateBoundVars(standing);
     });
 
     const isWinner = (lane, phase) => {
         return standing.isWinner(lane, phase);
     };
 
-    const getWinTime = (lane, phase) => {
+    const getWinTime = (lane, phase, at) => {
         return standing.getWinTime(lane, phase).toString().padStart(3, "0");
     };
     const shouldRender = (raceStanding) => {
@@ -63,7 +60,7 @@
                     <InfoButton
                         on:message={toggleToolbar}
                         dbName="RaceStanding"
-                        dbKey={standingKey} />
+                        dbKey={standing.classKey} />
                 </span>
             </div>
 
@@ -76,14 +73,18 @@
                         at={safeGetAt($driverMap, standing.carNumbers[0])} />
                     {#if isWinner(1, 0, at)}
                         <big class="bigbadge badge">
-                            Overall: {getWinTime(1, 0)}
+                            Overall: {getWinTime(1, 0, at)}
                         </big>
                     {/if}
                     {#if isWinner(1, 1, at)}
-                        <big class="bigbadge badge">A: {getWinTime(1, 1)}</big>
+                        <big class="bigbadge badge">
+                            A: {getWinTime(1, 1, at)}
+                        </big>
                     {/if}
                     {#if isWinner(1, 2, at)}
-                        <big class="bigbadge badge">B: {getWinTime(1, 2)}</big>
+                        <big class="bigbadge badge">
+                            B: {getWinTime(1, 2, at)}
+                        </big>
                     {/if}
 
                 </li>
@@ -92,17 +93,21 @@
                         number={standing.carNumbers[1]}
                         isWinner={isWinner(2, 0, at)}
                         phaseLetter=""
-                        at={safeGetAt($driverMap, standing.carNumbers[0])} />
+                        at={safeGetAt($driverMap, standing.carNumbers[1])} />
                     {#if isWinner(2, 0, at)}
                         <big class="bigbadge badge">
-                            Overall: {getWinTime(2, 0)}
+                            Overall: {getWinTime(2, 0, at)}
                         </big>
                     {/if}
                     {#if isWinner(2, 1, at)}
-                        <big class="bigbadge badge">A: {getWinTime(2, 1)}</big>
+                        <big class="bigbadge badge">
+                            A: {getWinTime(2, 1, at)}
+                        </big>
                     {/if}
                     {#if isWinner(2, 2, at)}
-                        <big class="bigbadge badge">B: {getWinTime(2, 2)}</big>
+                        <big class="bigbadge badge">
+                            B: {getWinTime(2, 2, at)}
+                        </big>
                     {/if}
                 </li>
             </ul>
@@ -110,7 +115,7 @@
         {#if showToolbar}
             <ComponentToolbar
                 dbName="RaceStanding"
-                dbKey={standingKey}
+                dbKey={standing.classKey}
                 bracketLink={getBracketLink(standing)}
                 cn={standing.carNumbers} />
         {/if}
