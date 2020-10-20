@@ -151,6 +151,7 @@
 
     <p />
 
+    <!-- TODO: add keyed each block -->
     {#each winnerDeltas.reverse() as winnerDelta}
         <div
             class="well well-sm "

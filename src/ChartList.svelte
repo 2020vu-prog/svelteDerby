@@ -35,6 +35,12 @@
         console.log("navToChartDetail:", bmd);
         push("/ChartDetail/" + bmd.SK);
     };
+    function getSortedBmd(bmdFromDexie) {
+        bmdFromDexie.sort((a, b) => {
+            return a.bracketName.toLowerCase().localeCompare(b.bracketName.toLowerCase());
+        })
+        return bmdFromDexie;
+    }
 </script>
 
 <div>
@@ -42,7 +48,7 @@
     <p />
     <MaterialAdd clickHandleRoute="/chartAdd" />
 
-    {#each bmdFromDexie as bmd}
+    {#each getSortedBmd(bmdFromDexie) as bmd (bmd.at)}
         <div class="panel panel-info" on:click={() => navToChartDetail(bmd)}>
             {bmd.bracketName}
         </div>

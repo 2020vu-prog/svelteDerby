@@ -52,7 +52,7 @@
         <CarFilter />
     </h4>
 
-    {#each getRacePhases($racePhaseMap, $carFilter, $nextOnBlockKey) as racePhase}
+    {#each getRacePhases($racePhaseMap, $carFilter, $nextOnBlockKey) as racePhase (racePhase.at)}
         <RacePhase
             refreshTime={$doRefreshBlocks}
             phaseKey={racePhase.classKey}

@@ -158,7 +158,7 @@
         {#if mediaList.length == 0}
             <b>No Matches yet</b>
         {:else}
-            {#each getMediaItems(mediaList) as mediaItem}
+            {#each getMediaItems(mediaList) as mediaItem (mediaItem.Key)}
                 <div
                     class="panel panel-info"
                     on:click={() => playMedia(mediaItem.Key)}>

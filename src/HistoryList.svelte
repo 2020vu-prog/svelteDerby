@@ -35,7 +35,7 @@
 
 <div>
     <h4>History</h4>
-    {#each history as racePhase}
+    {#each history as racePhase (racePhase.at)}
         <RacePhase
             source="EventHistory"
             historyPK={params.PK}

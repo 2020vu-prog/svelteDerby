@@ -49,7 +49,7 @@
     <p />
     <MaterialAdd clickHandleRoute="/driverAdd" />
 
-    {#each getCarNumbersAsList($driverMap, $carFilter) as carNumber}
+    {#each getCarNumbersAsList($driverMap, $carFilter) as carNumber (carNumber)}
         {#if filterMatches(carNumber, $carFilter)}
             <div
                 class="panel panel-info"
