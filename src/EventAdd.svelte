@@ -1,4 +1,5 @@
 <script>
+    import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig, setCacheKey } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
@@ -10,6 +11,9 @@
     export let params = {};
 
     var mounted = false;
+
+    var submitDisabled = true;
+    var submitSpinning = false;
 
     async function handleSubmit() {
         syncAddButton();
@@ -31,6 +35,8 @@
             name: orgForm.name,
         };
 
+        submitSpinning = true;
+
         console.log("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
@@ -43,6 +49,7 @@
                 pop();
             })
             .catch((err) => {
+                submitSpinning = false;
                 console.log("addEventConfig failed: " + err);
             });
         orgForm = getDefaultOrgForm();
@@ -66,16 +73,16 @@
         }
         if (orgForm.name != "" && orgForm.name != undefined) {
             console.log("name: " + orgForm.name);
-            document.getElementById("formSubmitButton").disabled = false;
+            submitDisabled = false;
         } else {
-            document.getElementById("formSubmitButton").disabled = true;
+            submitDisabled = true;
         }
     };
 </script>
 
 <h3>Add Event</h3>
 
-<form on:submit|preventDefault={handleSubmit}>
+<form>
 
     <label>
         Name:
@@ -103,5 +110,10 @@
             id="pending1Race"
             bind:checked={orgForm.pending1Race} />
     </label>
-    <button id="formSubmitButton" type="submit" disabled>Add</button>
+    <SpinnerButton
+        disabled={submitDisabled}
+        on:click={handleSubmit}
+        spinning={submitSpinning}>
+        Add
+    </SpinnerButton>
 </form>

@@ -1,4 +1,5 @@
 <script>
+    import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
@@ -13,6 +14,9 @@
     var mounted = false;
     var s3ChartTypes = false;
     var loginForm = {};
+
+    var submitDisabled = true;
+    var submitSpinning = false;
 
     var chartSelected = "Chart Selected: ";
 
@@ -105,6 +109,7 @@
             bracketName: loginForm.chartName,
         };
 
+        submitSpinning = true;
         console.log("token:" + bearer);
 
         axios
@@ -114,6 +119,7 @@
                 pop();
             })
             .catch((err) => {
+                submitSpinning = false;
                 console.log("addChart failed: " + err);
             });
         loginForm.chartName = "";
@@ -123,9 +129,7 @@
         if (!mounted) {
             return;
         }
-        const doEnable = loginForm.bracketSelected && loginForm.chartName;
-        document.getElementById("formSubmitButton").disabled = !doEnable;
-        console.log("sync add button isEnabled:" + doEnable);
+        submitDisabled = !(loginForm.bracketSelected && loginForm.chartName);
     }
     // embedded script link: https://www.nielsvandermolen.com/external-javascript-sveltejs/
     const getChartDataFromServer = async () => {
@@ -212,7 +216,7 @@
 
 <h3>Add Chart</h3>
 
-<form on:submit|preventDefault={handleSubmit}>
+<form>
 
     <label>
         Chart Type:
@@ -226,5 +230,10 @@
             bind:value={loginForm.chartName}
             placeholder="Chart Name" />
     </label>
-    <button id="formSubmitButton" type="submit" disabled>Add</button>
+    <SpinnerButton
+        disabled={submitDisabled}
+        on:click={handleSubmit}
+        spinning={submitSpinning}>
+        Add
+    </SpinnerButton>
 </form>

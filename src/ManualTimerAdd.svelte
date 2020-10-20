@@ -1,4 +1,5 @@
 <script>
+    import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig, statusMessage, driverMap } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
@@ -8,7 +9,8 @@
     import axios from "axios";
     export let params = {};
 
-    let spinner = undefined; // empty to start.
+    var submitDisabled = false;
+    var submitSpinning = false;
 
     console.log("ManualTimeAdd", params);
 
@@ -40,11 +42,13 @@
 
         const endPoint = "/doApplyFinishTime";
         try {
+            submitSpinning = true;
             const response = await axios.post(
                 $raceConfig.baseUrl + endPoint,
                 req
             );
             if (response.data.error) {
+                submitSpinning = false;
                 console.log("add failed", response);
                 $statusMessage = {
                     text: response.data.error,
@@ -111,7 +115,7 @@
     <h3>Manual Timing Results</h3>
 </div>
 
-<form on:submit|preventDefault={handleSubmit}>
+<form>
 
     <div class="row">
 
@@ -147,7 +151,12 @@
 
     </div>
     <div style="width: 100%; text-align: center;">
-        <button type="submit">Apply Time</button>
+        <SpinnerButton
+            disabled={submitDisabled}
+            on:click={handleSubmit}
+            spinning={submitSpinning}>
+            Apply Time
+        </SpinnerButton>
     </div>
 
 </form>

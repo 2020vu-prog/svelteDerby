@@ -12,6 +12,10 @@
     var tcFromDexie = {};
     var activeTimerSha;
     var mounted = false;
+
+    var submitDisabled = false;
+    var submitSpinning = false;
+
     onMount(async () => {
         console.log("mounted focus");
         mounted = true;
@@ -103,6 +107,7 @@
         axios.defaults.headers.common["Authorization"] = bearer;
 
         try {
+            submitSpinning = true;
             const url = $raceConfig.baseUrl + "/timerConfig";
             const response = await axios.post(url, req);
             if (response.error) {
@@ -162,7 +167,7 @@
     Timer Alignment
 </SpinnerButton>
 
-<form on:submit|preventDefault={handleSubmit}>
+<form>
     <h4>Auto-Apply Preferences</h4>
 
     <label>
@@ -209,5 +214,10 @@
         <br />
     {/each}
 
-    <button id="formSubmitButton" type="submit">Update</button>
+    <SpinnerButton
+        disabled={submitDisabled}
+        on:click={handleSubmit}
+        spinning={submitSpinning}>
+        Update
+    </SpinnerButton>
 </form>

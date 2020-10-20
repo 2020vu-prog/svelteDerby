@@ -179,7 +179,7 @@
 
 <h3>{mode} Driver</h3>
 
-<form on:submit|preventDefault={handleSubmit}>
+<form>
 
     <label>
         Car Number:

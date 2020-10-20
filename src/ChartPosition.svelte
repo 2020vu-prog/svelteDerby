@@ -1,4 +1,5 @@
 <script>
+    import SpinnerButton from "./SpinnerButton.svelte";
     import RaceStanding from "./RaceStanding.svelte";
     import {
         raceConfig,
@@ -23,6 +24,9 @@
     var rsFromDexie = null;
     const posForm = { A: {}, B: {} };
     var editable = false;
+
+    var submitDisabled = false;
+    var submitSpinning = false;
 
     var mounted = false;
     onMount(async () => {
@@ -157,6 +161,8 @@
         }
         console.log("token:" + bearer);
 
+        submitSpinning = true;
+
         axios.defaults.headers.common["Authorization"] = bearer;
 
         axios
@@ -173,6 +179,7 @@
                 }
             })
             .catch((err) => {
+                submitSpinning = false;
                 console.log("addChartPosition failed: " + err);
             });
     }
@@ -226,7 +233,7 @@
 </style>
 
 <h2>Heat: {params.chartPosition}</h2>
-<form on:submit|preventDefault={handleSubmit}>
+<form>
 
     <div class="card">
         <div class="container">
@@ -291,7 +298,12 @@
     <br />
 
     {#if editable}
-        <button type="submit">Add</button>
+        <SpinnerButton
+            disabled={submitDisabled}
+            on:click={handleSubmit}
+            spinning={submitSpinning}>
+            Add
+        </SpinnerButton>
     {/if}
 
     {#if rsFromDexie}
