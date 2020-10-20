@@ -37,8 +37,10 @@
     };
     function getSortedBmd(bmdFromDexie) {
         bmdFromDexie.sort((a, b) => {
-            return a.bracketName.toLowerCase().localeCompare(b.bracketName.toLowerCase());
-        })
+            return a.bracketName
+                .toLowerCase()
+                .localeCompare(b.bracketName.toLowerCase());
+        });
         return bmdFromDexie;
     }
 </script>
