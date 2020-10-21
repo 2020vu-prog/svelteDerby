@@ -3,6 +3,7 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import RacePhase from "./RacePhase.svelte";
+    import RaceStanding from "./RaceStanding.svelte";
 
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -35,12 +36,17 @@
 
 <div>
     <h4>History</h4>
-    {#each history as racePhase (racePhase.at)}
-        <RacePhase
-            source="EventHistory"
-            historyPK={params.PK}
-            refreshTime="1"
-            phaseKey={racePhase.classKey}
-            at={racePhase.at} />
+    {#each history as entity (entity.at)}
+        {#if entity.PK.endsWith(':RP')}
+            <RacePhase
+                source="EventHistory"
+                historyPK={params.PK}
+                refreshTime="1"
+                phaseKey={entity.classKey}
+                at={entity.at} />
+        {/if}
+        {#if entity.PK.endsWith(':RS')}
+            <RaceStanding standing={entity} source="EventHistory" />
+        {/if}
     {/each}
 </div>

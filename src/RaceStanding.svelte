@@ -12,6 +12,7 @@
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
     export let standing;
+    export let source = "Unknown";
 
     var chartPosition = "";
     var hhmmss = "";
@@ -31,6 +32,9 @@
         updateBoundVars(standing);
     });
 
+    function isHistory() {
+        return source === "EventHistory";
+    }
     const isWinner = (lane, phase) => {
         return standing.isWinner(lane, phase);
     };
@@ -57,10 +61,12 @@
                 <span on:click={gotoBracket}>{chartPosition}</span>
                 <span class="spanRight">
                     {hhmmss}
-                    <InfoButton
-                        on:message={toggleToolbar}
-                        dbName="RaceStanding"
-                        dbKey={standing.classKey} />
+                    {#if !isHistory()}
+                        <InfoButton
+                            on:message={toggleToolbar}
+                            dbName="RaceStanding"
+                            dbKey={standing.classKey} />
+                    {/if}
                 </span>
             </div>
 
@@ -112,6 +118,7 @@
                 </li>
             </ul>
         </div>
+        {#if isHistory()}User: {standing.by}{/if}
         {#if showToolbar}
             <ComponentToolbar
                 dbName="RaceStanding"
