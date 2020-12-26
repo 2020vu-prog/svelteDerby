@@ -159,18 +159,7 @@
             },
         ];
     }
-    const reloadEvent = async (raceConfigParam) => {
-        const start = new Date().getTime();
-        const rpList = await db.RacePhase.toArray();
-        const rsList = await db.RaceStanding.toArray();
-        const ptcptList = await db.Participant.toArray();
-        const entityFactory = new EntityFactory({});
-        const done = new Date().getTime();
-        const elapsed = done - start;
-        console.log("dexie reload took", elapsed);
-        raceConfigParam.baseUrl = "/app";
-        raceConfigParam.title = raceConfigParam.name;
-        $raceConfig = raceConfigParam;
+    async function reloadUserPrefs() {
         const dexieTheme = await localConfigDb["LocalConfig"].get({
             KEY: "theme",
         });
@@ -180,7 +169,7 @@
         const userPrefs = await localConfigDb["LocalConfig"].get({
             KEY: "userPrefs",
         });
-        console.log(`app userPrefs:`, userPrefs);
+        console.log(`reloadUserPrefs:`, userPrefs);
         $autoAnnounceResults = userPrefs && userPrefs.autoAnnounceResults;
         $developerMode = userPrefs && userPrefs.developerMode;
         if (userPrefs && userPrefs.pendingSortAlgorithm) {
@@ -195,6 +184,21 @@
         if (userPrefs && userPrefs.mqttEnabled) {
             $mqttEnabled = userPrefs.mqttEnabled;
         }
+
+        //$userEmail = await getUserEmail();
+    }
+    const reloadEvent = async (raceConfigParam) => {
+        const start = new Date().getTime();
+        const rpList = await db.RacePhase.toArray();
+        const rsList = await db.RaceStanding.toArray();
+        const ptcptList = await db.Participant.toArray();
+        const entityFactory = new EntityFactory({});
+        const done = new Date().getTime();
+        const elapsed = done - start;
+        console.log("dexie reload took", elapsed);
+        raceConfigParam.baseUrl = "/app";
+        raceConfigParam.title = raceConfigParam.name;
+        $raceConfig = raceConfigParam;
     };
     onMount(async () => {
         console.log("mounted app");
@@ -202,6 +206,7 @@
         const cfg = await db.EventConfig.toArray();
         console.log("config:", cfg);
 
+        await reloadUserPrefs();
         if (cfg.length) {
             await reloadEvent(cfg[0]);
             replace("/RpList");
