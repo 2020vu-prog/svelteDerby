@@ -45,10 +45,13 @@
         pendingSortAlgorithm,
         mediaFileType,
         statusMessage,
+        beginAnonymousLogin,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
     import { isEmailAllowedRoutePath, getUserEmail } from "./utils.js";
+
+    import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
 
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -93,7 +96,11 @@
             alwaysShow: true,
         },
     ];
-    $: buildMenuMap($AuthStore);
+    $: {
+        if (isMounted) {
+            buildMenuMap($AuthStore);
+        }
+    }
 
     async function buildMenuMap() {
         $userEmail = await getUserEmail();
@@ -203,6 +210,7 @@
     onMount(async () => {
         console.log("mounted app");
         await buildMenuMap();
+        await logUserInIfNecessary();
         const cfg = await db.EventConfig.toArray();
         console.log("config:", cfg);
 
@@ -213,6 +221,7 @@
         } else {
             replace("/orgSelection");
         }
+        isMounted = true;
     });
     const shouldDisplay = (email, menuOption, raceConfigParam) => {
         if (menuOption.alwaysShow) return true;
@@ -255,6 +264,15 @@
         };
         */
     }
+
+    async function logUserInIfNecessary() {
+        if (!$userEmail) {
+            console.log(
+                "User is not logged in, so we will sign them in anonymously."
+            );
+            $beginAnonymousLogin = true;
+        }
+    }
 </script>
 
 <style>
@@ -296,6 +314,9 @@
 </style>
 
 <svelte:window on:pageshow={onPageShow} />
+
+<AutoAnonymousLogin display="false" />
+
 <!-- Top Navigation Menu -->
 <div class="topnav" style="z-index: 20;">
     <a href="#home" style="background-color: {$theme}" class="active">

@@ -13,7 +13,8 @@
         userEmail,
     } from "./stores.js";
 
-    import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
+    //Populate org list if user is logged in automatically as anonymous
+    $: refreshOrgMap($userEmail);
 
     var orgMap = {};
     $: {
@@ -50,18 +51,9 @@
     };
 
     onMount(async () => {
-        await logUserInIfNecessary();
         refreshOrgMap();
     });
 
-    async function logUserInIfNecessary() {
-        if (!$userEmail) {
-            console.log(
-                "User is not logged in, so we will sign them in anonymously."
-            );
-            $beginAnonymousLogin = true;
-        }
-    }
     function getOrgName(orgIz) {
         if (orgMap[orgIz].orgName) {
             return orgMap[orgIz].orgName;
@@ -73,7 +65,6 @@
     <MaterialAdd clickHandleRoute="/orgAdd" />
 
     <h4>Organization List</h4>
-    <AutoAnonymousLogin display="false" on:loginComplete={refreshOrgMap} />
     <p />
 
     {#each getOrgsAsList(orgMap) as orgIz}
