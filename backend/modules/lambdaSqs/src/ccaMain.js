@@ -108,7 +108,7 @@ const unmarshallResultsToArray = (data, factory) => {
     }
     return rc;
 };
-const ddbQueryRaceHistory = async (qsp) => {
+async function ddbQueryRaceHistory(qsp) {
     var containsValues = {};
     containsValues[":dp"] = { S: qsp.orgId };
     var params = {
@@ -132,11 +132,17 @@ const ddbQueryRaceHistory = async (qsp) => {
         console.log("queryRaceHistory failed: ", err, err.stack); // an error occurred
     }
     return [{ error: "Query History Failed" }, cacheMaxSeconds];
-};
-const putS3 = async (msg, items) => {
+}
+function getPutObjectName(msg) {
+    if (msg.ccType === "CCF") {
+        return "archive/" + msg.orgIz + "/" + msg.orgId + "/archive.json";
+    } else {
+        return "archive/" + msg.orgIz + "/" + msg.orgId + "/" + now + ".json";
+    }
+}
+async function putS3(msg, items) {
     const now = new Date().getTime();
-    const putObjectName =
-        "archive/" + msg.orgIz + "/" + msg.orgId + "/" + now + ".json";
+    const putObjectName = getPutObjectName(msg);
     var params = {
         Body: JSON.stringify(items),
         Key: putObjectName,
@@ -161,7 +167,7 @@ const putS3 = async (msg, items) => {
     } catch (err) {
         console.log("s3put failed:", err); // successful response
     }
-};
+}
 const getS3 = async (keys) => {
     //TODO: handle multiple keys and concatenate??  (shouldn't happen)
     if (keys && keys.length > 0) {

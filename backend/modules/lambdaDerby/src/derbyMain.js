@@ -1,6 +1,6 @@
 "use strict";
-const clientMinimumVersion = "1.1.12";
-const derbyMainVersion = "1.1.4";
+const clientMinimumVersion = "1.1.16";
+const derbyMainVersion = "1.1.6";
 const crypto = require("crypto");
 const path = require("path");
 
@@ -15,10 +15,13 @@ const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
 var jwt = require("jsonwebtoken");
 const TmpCache = require("./tmpCache.js");
 const DdbUtils = require("./DdbUtils");
+const ArchiveUtils = require("./ArchiveUtils");
 const AnnounceResults = require("./AnnounceResults");
 const configMap = {};
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
+const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
+
 const announceResults = new AnnounceResults(AWS, ddbUtils);
 let globalErrorList = [];
 const s3QueryChartTypes = async () => {
@@ -1080,12 +1083,18 @@ async function snsApplyTimerHandler(snsMessageJson) {
         console.log("applyTimerHandler invalid msg:", json);
     }
 }
+
 async function apiGatewayHandler(event) {
     const dbArn = process.env.DynamoDbArn;
 
     console.log("event.path: ", event.path);
 
     const routePath = event.path.replace(/^\/app/, "");
+    if (routePath === "/testArchive") {
+        await archiveUtils.processExpiringEventConfig();
+        return buildResponse({ tested: "ok" });
+    }
+
     if (routePath === "/listOrgEvents") {
         const qr = await ddbUtils.ddbListEventConfigByOrg(getOrgIz(event));
         console.log("getEventConfig 23232:", qr);
@@ -1162,7 +1171,7 @@ async function apiGatewayHandler(event) {
     });
 }
 exports.handler = async function (event) {
-    // console.log('Received event:', JSON.stringify(event, null, 4));
+    console.log("Received event:", JSON.stringify(event, null, 4));
     if (event && event.path) {
         const response = await apiGatewayHandler(event);
         return response;
@@ -1172,6 +1181,15 @@ exports.handler = async function (event) {
         const snsMessageJson = JSON.parse(snsMessage);
 
         console.log("sns message: : ", snsMessageJson);
+        // ugly workaround for cron events not invoking lambda directly
+        //   12/2020 pressing polly sns topic back into use to deliver the cron event for archival
+        if (snsMessageJson && snsMessageJson.source === "aws.events") {
+            console.log("handling archive poll from cron");
+            await archiveUtils.processExpiringEventConfig();
+
+            return;
+        }
+
         console.log("sns topic: : ", snsMessageJson.snsTopicArn);
         console.log("sns polly arn: : ", process.env.PollyCompleteSnsArn);
         if (snsMessageJson.snsTopicArn === process.env.PollyCompleteSnsArn) {

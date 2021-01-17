@@ -215,7 +215,7 @@ class DdbUtils {
 
             if (cc > 0.5 || data.Count >= limit) {
                 console.log("queryRaceHistory: requesting CCA: ", cc);
-                await this.requestCCA(qsp, data);
+                await this.requestCC(qsp, "CCA");
             } else {
                 console.log("queryRaceHistory: skipping CCA: ", cc);
             }
@@ -709,7 +709,8 @@ class DdbUtils {
         }
         return { error: "Invalid Request" };
     }
-    async requestCCA(qsp, data) {
+    async requestCC(qsp, ccType = "CCA") {
+        qsp.ccType = ccType;
         var params = {
             MessageGroupId: "orgId:" + qsp.orgId,
             MessageBody: JSON.stringify(qsp),

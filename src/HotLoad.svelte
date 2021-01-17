@@ -537,26 +537,30 @@
             return;
         }
 
-        watchIot();
+        if ($raceConfig.archived === "true") {
+            await loadArchivedData();
+        } else {
+            watchIot();
 
-        axios.defaults.headers.common["Authorization"] = bearer;
-        const url =
-            $raceConfig.baseUrl +
-            "/getRaceHistory?orgId=" +
-            $raceConfig.orgId +
-            "&orgIz=" +
-            $raceConfig.orgIz;
-        try {
-            const response = await axios.get(url);
-            console.log("history:" + response.data.length);
-            //console.log("history:",response.data);
-            const pendingBulk = {};
-            await parseAndApply(response, true, pendingBulk);
-            await flushPendingBulk(pendingBulk);
-            ecFromDexie = await db.EventConfig.toArray();
-            refreshInProgressButton = false;
-        } catch (err) {
-            console.log(err);
+            axios.defaults.headers.common["Authorization"] = bearer;
+            const url =
+                $raceConfig.baseUrl +
+                "/getRaceHistory?orgId=" +
+                $raceConfig.orgId +
+                "&orgIz=" +
+                $raceConfig.orgIz;
+            try {
+                const response = await axios.get(url);
+                console.log("history:" + response.data.length);
+                //console.log("history:",response.data);
+                const pendingBulk = {};
+                await parseAndApply(response, true, pendingBulk);
+                await flushPendingBulk(pendingBulk);
+                ecFromDexie = await db.EventConfig.toArray();
+                refreshInProgressButton = false;
+            } catch (err) {
+                console.log(err);
+            }
         }
     };
     function isArchived(ttlSecondsUnusedSvelteTrigger) {
@@ -564,6 +568,33 @@
             return ecFromDexie[0].TTL * 1000 < new Date().getTime();
         }
         return true;
+    }
+
+    async function loadArchivedData() {
+        console.log("LoadArchive begin.");
+        refreshInProgressCca = true;
+
+        var s3Path =
+            "/archive/" +
+            $raceConfig.orgIz +
+            "/" +
+            $raceConfig.orgId +
+            "/archive.json";
+
+        try {
+            const response = await axios.get(
+                $raceConfig.baseUrl + "/.." + s3Path
+            );
+            console.log("LoadArchive finished:", response);
+            const hist = getHistFromStore();
+            const pendingBulk = {};
+            await parseAndApply(response, false, pendingBulk, hist);
+            await flushPendingBulk(pendingBulk);
+            applyHistToStore(hist);
+        } catch (err) {
+            console.log("LoadArchive failed:", err);
+        }
+        refreshInProgressCca = false;
     }
 </script>
 

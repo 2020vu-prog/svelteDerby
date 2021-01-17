@@ -55,6 +55,7 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
         "pendingRule", // "1Race", "1Pair"
         "orgIz", // Org Id (pending refactor)
         "name",
+        "archived",
     ];
     static canBuild(json) {
         return json.PK && json.PK === EventConfigLit;

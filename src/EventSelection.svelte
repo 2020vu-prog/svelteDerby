@@ -1,28 +1,39 @@
 <script>
-    import { nextOnBlockKey, racePhaseMap, doRefreshBlocks } from "./stores.js";
+    import {
+        nextOnBlockKey,
+        racePhaseMap,
+        doRefreshBlocks,
+        raceConfig,
+        getCacheKey,
+    } from "./stores.js";
+
+    import SpinnerButton from "./SpinnerButton.svelte";
 
     import MaterialAdd from "./MaterialAdd.svelte";
-    import { raceConfig } from "./stores.js";
     import { onMount } from "svelte";
     import { Auth } from "aws-amplify";
     import axios from "axios";
     import { push, pop, replace } from "svelte-spa-router";
     import { db, dbReset } from "./eventDb.js";
-    import { getCacheKey } from "./stores.js";
 
     export let params = {};
 
+    var currentViewMode = "Unknown";
+
     var eventMap = {};
+    var selectedEventMap = {};
     $: {
         console.log("bound eventMap: ", eventMap);
     }
 
-    const getOrgsAsList = (orgList) => {
-        const orgs = Object.values(orgList);
-        orgs.sort((a, b) => {
+    const getOrgEventsAsList = (viewMode) => {
+        populateSelectedEventMap(currentViewMode);
+
+        const orgEvents = Object.values(selectedEventMap);
+        orgEvents.sort((a, b) => {
             return getRaceName(a).localeCompare(getRaceName(b));
         });
-        return orgs;
+        return orgEvents;
     };
     const refreshOrgMap = async () => {
         console.log("refreshOrgMap:");
@@ -40,6 +51,7 @@
                 console.log("refreshOrgMap length:" + response.data.length);
                 console.log("refreshOrgMap:", response.data);
                 eventMap = response.data;
+                currentViewMode = "Active";
             })
             .catch((err) => {
                 console.log(err);
@@ -71,6 +83,35 @@
     const getRaceName = (config) => {
         return config.name ? config.name : config.orgId;
     };
+
+    function getInactiveMode(ignoredParamater) {
+        return currentViewMode === "Active" ? "Archived" : "Active";
+    }
+
+    function populateSelectedEventMap(viewMode) {
+        //Stack Overflow https://stackoverflow.com/questions/5072136/javascript-filter-for-objects/37616104
+        Object.filter = (obj, predicate) =>
+            Object.fromEntries(Object.entries(obj).filter(predicate));
+
+        console.log("eventMap: ", eventMap);
+
+        var filtered = {};
+        if (viewMode === "Active") {
+            filtered = Object.filter(
+                eventMap,
+                ([eventKey, eventValue]) => !eventValue.archived
+            );
+        }
+        if (viewMode === "Archived") {
+            filtered = Object.filter(
+                eventMap,
+                ([eventKey, eventValue]) => eventValue.archived
+            );
+        }
+
+        console.log("filteredEventMap: ", filtered);
+        selectedEventMap = filtered;
+    }
 </script>
 
 <div>
@@ -80,9 +121,23 @@
 
     <p />
 
-    {#each getOrgsAsList(eventMap) as eventConfig}
-        <div class="panel panel-info" on:click={() => doSelect(eventConfig)}>
-            <a href="javascript:void(0);">{getRaceName(eventConfig)}</a>
+    {#if currentViewMode != 'Unknown'}
+        <div>
+
+            {#each getOrgEventsAsList(currentViewMode) as eventConfig}
+                <div
+                    class="panel panel-info"
+                    on:click={() => doSelect(eventConfig)}>
+                    <a href="javascript:void(0);">{getRaceName(eventConfig)}</a>
+                </div>
+            {/each}
         </div>
-    {/each}
+
+        <hr />
+        <SpinnerButton on:click={() => (currentViewMode = getInactiveMode())}>
+            View {getInactiveMode(currentViewMode)} Races
+        </SpinnerButton>
+    {:else}
+        <p>Loading Events...</p>
+    {/if}
 </div>
