@@ -5,6 +5,7 @@
         doRefreshBlocks,
         raceConfig,
         getCacheKey,
+        clearOldStatusMessages,
     } from "./stores.js";
 
     import SpinnerButton from "./SpinnerButton.svelte";
@@ -77,6 +78,7 @@
         config.title = getRaceName(config);
 
         $raceConfig = config;
+        $clearOldStatusMessages = true;
 
         replace("/RpList");
     };

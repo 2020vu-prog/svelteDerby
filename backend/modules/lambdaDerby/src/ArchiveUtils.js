@@ -45,8 +45,16 @@ class ArchiveUtils {
 
             this.ddbUtils.setEntityFactory(entityFactory);
             await this.ddbUtils.addSingle(eventEntity);
+
+            console.log("sleeping begin:-(");
+            await this.sleep(3000); //   :-( Need archive flag update to propagate to DerbyDst BEFORE sending CCF
+            console.log("sleeping done :-(");
+
             await this.ddbUtils.requestCC(evt, "CCF"); //CCFinal
         }
+    }
+    sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 }
 module.exports = ArchiveUtils;

@@ -14,9 +14,9 @@
         mqttTriggerVideoCapture,
         mqttEnabled,
         timerState,
+        raceConfig,
     } from "./stores.js";
     import { store } from "./stores/auth.js";
-    import { raceConfig } from "./stores.js";
     import { Auth } from "aws-amplify";
     import Amplify, { PubSub } from "aws-amplify";
     import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
@@ -52,6 +52,10 @@
         if ($doRefreshBlocks < 0) {
             clearStore();
         }
+    }
+
+    $: if (ecFromDexie) {
+        checkIfRaceFrozenAndDisplayMessage($raceConfig);
     }
 
     const requstPermissionHack = async (cognitoIdentityId) => {
@@ -487,6 +491,7 @@
         pageLoadTimeMs = new Date().getTime();
         ecFromDexie = await db.EventConfig.toArray();
         mounted = true;
+        checkIfRaceFrozenAndDisplayMessage();
     });
 
     async function announceFromMqtt(mqMsg) {
@@ -534,6 +539,7 @@
         if ($raceConfig.orgId && $raceConfig.orgIz) {
         } else {
             console.log("no selected race");
+            refreshInProgressButton = false;
             return;
         }
 
@@ -557,19 +563,51 @@
                 await parseAndApply(response, true, pendingBulk);
                 await flushPendingBulk(pendingBulk);
                 ecFromDexie = await db.EventConfig.toArray();
-                refreshInProgressButton = false;
             } catch (err) {
                 console.log(err);
             }
         }
+        refreshInProgressButton = false;
     };
     function isArchived(ttlSecondsUnusedSvelteTrigger) {
-        if (ecFromDexie && ecFromDexie[0] && ecFromDexie[0].TTL) {
-            return ecFromDexie[0].TTL * 1000 < new Date().getTime();
-        }
-        return true;
+        console.log("isArchived passed ecFromDexie: ", ecFromDexie);
+        return ecFromDexie && ecFromDexie[0] && ecFromDexie[0].archived;
     }
-
+    function checkIfRaceFrozenAndDisplayMessage() {
+        if (
+            ecFromDexie &&
+            ecFromDexie[0] &&
+            ecFromDexie[0].TTL &&
+            !ecFromDexie[0].archived
+        ) {
+            const freezeWarningSeconds = 3600;
+            var secondsUntilArchive =
+                ecFromDexie[0].TTL - Math.floor(new Date().getTime() / 1000);
+            console.log("Seconds until archive: ", secondsUntilArchive);
+            if (secondsUntilArchive < 0) {
+                return;
+            }
+            if (secondsUntilArchive < freezeWarningSeconds) {
+                $statusMessage = {
+                    text:
+                        `This race is frozen. It will archive at: ` +
+                        new Date(ecFromDexie[0].TTL * 1000),
+                    type: "archiveWarning",
+                    key: "archiveWarning",
+                    TTL: secondsUntilArchive * 1000 + new Date().getTime(),
+                };
+            } else {
+                var timerDueMs =
+                    (secondsUntilArchive - freezeWarningSeconds) * 1000;
+                console.log(
+                    "Not time to archive race yet, checking again in " +
+                        timerDueMs +
+                        " ms."
+                );
+                setTimeout(checkIfRaceFrozenAndDisplayMessage, timerDueMs);
+            }
+        }
+    }
     async function loadArchivedData() {
         console.log("LoadArchive begin.");
         refreshInProgressCca = true;
@@ -591,6 +629,7 @@
             await parseAndApply(response, false, pendingBulk, hist);
             await flushPendingBulk(pendingBulk);
             applyHistToStore(hist);
+            ecFromDexie = await db.EventConfig.toArray();
         } catch (err) {
             console.log("LoadArchive failed:", err);
         }
@@ -598,7 +637,7 @@
     }
 </script>
 
-{#if isArchived(ecFromDexie)}
+{#if isArchived(ecFromDexie, $raceConfig)}
     <SpinnerButton spinning={false} disabled={true}>
         Race Archived
     </SpinnerButton>

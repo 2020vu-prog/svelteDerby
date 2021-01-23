@@ -14,6 +14,7 @@ export const userEmail = writable("");
 
 export const theme = writable("#4CAF50");
 export const statusMessage = writable({});
+export const clearOldStatusMessages = writable(false);
 export const prefStore = writable({ initial: 1, disableCache: 2 });
 export const doRefreshBlocks = writable(0);
 export const standingsMap = writable({});
