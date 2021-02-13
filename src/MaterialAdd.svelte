@@ -4,9 +4,6 @@
     import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
 
-    //const EntityFactory = require('../backend/modules/lambdaDerby/src/shared/EntityFactory.js')
-    //const { hasSvelteRoutePath } = require('../backend/modules/lambdaDerby/src/shared/PermissionLookup.js')
-    //export let permission;
     export let clickHandleRoute;
 
     var userHasPermission = false;
@@ -20,15 +17,6 @@
             clickHandleRoute
         );
     });
-    /*
-    const userHasPermission = () => {
-
-        const effectiveUserPerms = hasSvelteRoutePath("2020vu@gmail.com", clickHandleRoute);
-        console.log("hasSvelteRoutePath:", effectiveUserPerms)
-        //return true;
-        return effectiveUserPerms;
-    }
-    */
 </script>
 
 <style>

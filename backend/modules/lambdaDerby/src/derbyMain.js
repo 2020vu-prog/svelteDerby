@@ -1124,7 +1124,7 @@ async function apiGatewayHandler(event) {
     console.log("Begin event", event);
 
     const email = decodedJwt.email;
-    if (email && hasServerRoutePath(email, routePath)) {
+    if (email && hasServerRoutePath(orgIz, email, routePath)) {
         console.log(`allowing access to ${routePath} for [${email}]`);
     } else {
         console.log(`prohibiting access to ${routePath} for [${email}]`);

@@ -3,8 +3,14 @@ const {
 } = require("../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
 import { Auth } from "aws-amplify";
 import { db } from "./eventDb.js";
-import { userEmail, statusMessage } from "./stores.js";
+import {
+    userEmail,
+    statusMessage,
+    raceConfig as raceConfigStore,
+} from "./stores.js";
 import { logout } from "./stores/auth.js";
+import { get } from "svelte/store";
+
 const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
 export async function getHistoryEntity(PK, SK, at) {
@@ -41,7 +47,8 @@ export function getBracketLink(RpRs) {
 }
 
 export function isEmailAllowedRoutePath(email, routePath) {
-    return email && hasSvelteRoutePath(email, routePath);
+    const raceConfig = get(raceConfigStore);
+    return email && hasSvelteRoutePath(raceConfig.orgIz, email, routePath);
 }
 export async function isUserAllowedRoutePath(routePath) {
     const email = await getUserEmail();

@@ -1,15 +1,18 @@
 "use strict";
 
 const { permissionMap, permissionMap2 } = require("./permissionLits.js");
-const powerUsers = [
-    "REDACTED_PERMISSION_EMAIL", // jest tests
-    "REDACTED_PERMISSION_EMAIL",
-    "REDACTED_PERMISSION_EMAIL",
-    "REDACTED_PERMISSION_EMAIL",
-];
-const starterUsers = ["REDACTED_PERMISSION_EMAIL"];
-const hasRoutePath = (routeType, userMail, serverRoutePath) => {
-    const permKeys = module.exports.lookupUserPermissions(userMail);
+const powerPerms = { ...permissionMap2 };
+const starterPerms = { CanAddBlocks: true };
+const orgUserPermMap = {
+    "test:REDACTED_PERMISSION_EMAIL": powerPerms, // jest tests
+    "test60:REDACTED_PERMISSION_EMAIL": powerPerms, // jest tests
+    ":REDACTED_PERMISSION_EMAIL": powerPerms,
+    ":REDACTED_PERMISSION_EMAIL": powerPerms,
+    ":REDACTED_PERMISSION_EMAIL": powerPerms,
+    ":REDACTED_PERMISSION_EMAIL": starterPerms,
+};
+function hasRoutePath(routeType, orgIz, userMail, serverRoutePath) {
+    const permKeys = lookupUserPermissions(orgIz, userMail);
     console.log("permKeys:", permKeys);
     var rc = false;
     permKeys.forEach((permKey) => {
@@ -20,32 +23,30 @@ const hasRoutePath = (routeType, userMail, serverRoutePath) => {
     });
     console.log(`permissions for ${userMail}  ${serverRoutePath} -- `, rc);
     return rc;
-};
-module.exports.lookupUserPermissions = (userMail) => {
+}
+function lookupUserPermissions(orgIz, userMail) {
     //console.log("pmap2:", Object.keys(permissionMap2));
-    var grantedPerms = { Anonymous: "value ignored" };
-    powerUsers.forEach((pue) => {
-        if (userMail && pue.toLowerCase() === userMail.toLowerCase()) {
-            grantedPerms = { ...permissionMap2 };
-        }
-    });
+    var grantedPerms = {};
 
-    starterUsers.forEach((pue) => {
-        if (userMail && pue.toLowerCase() === userMail.toLowerCase()) {
-            grantedPerms.CanAddBlocks = permissionMap2.CanAddBlocks;
-        }
-    });
+    const k1 = `${orgIz}:${userMail}`.toLowerCase();
+    const k2 = `:${userMail}`.toLowerCase(); // sysadmin?
 
+    if (orgUserPermMap[k1]) {
+        grantedPerms = orgUserPermMap[k1];
+    }
+    if (orgUserPermMap[k2]) {
+        grantedPerms = orgUserPermMap[k2];
+    }
+
+    grantedPerms.Anonymous = "value ignored";
     const granted = Object.keys(grantedPerms);
     console.log(`granting permissions for ${userMail} -- `, granted);
     return granted;
-};
+}
 
-module.exports.hasSvelteRoutePath = (userMail, svelteRoutePath) => {
-    return hasRoutePath("svelte", userMail, svelteRoutePath);
+module.exports.hasSvelteRoutePath = (orgIz, userMail, svelteRoutePath) => {
+    return hasRoutePath("svelte", orgIz, userMail, svelteRoutePath);
 };
-module.exports.hasServerRoutePath = (userMail, serverRoutePath) => {
-    return hasRoutePath("server", userMail, serverRoutePath);
+module.exports.hasServerRoutePath = (orgIz, userMail, serverRoutePath) => {
+    return hasRoutePath("server", orgIz, userMail, serverRoutePath);
 };
-
-//module.exports = { lookupUserPermissions }
