@@ -4,6 +4,8 @@ const { permissionMap, permissionMap2 } = require("./permissionLits.js");
 const powerPerms = { ...permissionMap2 };
 const starterPerms = { CanAddBlocks: true };
 const orgUserPermMap = {
+    "test:REDACTED_PERMISSION_EMAIL": powerPerms, // john harmon, Akron Local org
+
     "test:REDACTED_PERMISSION_EMAIL": powerPerms, // jest tests
     "test60:REDACTED_PERMISSION_EMAIL": powerPerms, // jest tests
     ":REDACTED_PERMISSION_EMAIL": powerPerms,
