@@ -1,6 +1,6 @@
 "use strict";
 const clientMinimumVersion = "1.1.17";
-const derbyMainVersion = "1.1.7";
+const derbyMainVersion = "1.1.8";
 const crypto = require("crypto");
 const path = require("path");
 
@@ -89,14 +89,21 @@ const getConfig = async (eventKey) => {
 
     return undefined;
 };
-const getTtl = async (eventKey) => {
-    const config = await getConfig(eventKey);
+const getTtl = async (config) => {
     if (config) {
         return config.TTL;
     }
     return null;
     //return Math.round((new Date().getTime() / 1000) + config.ttlIncrement);
 };
+function frozenOrArchived(config) {
+    console.log("function frozenOrArchived passed ", config);
+    if (!config) {
+        return false;
+    }
+    const configEntity = entityFactory.build(config);
+    return configEntity.checkIfFrozenOrArchived()["status"];
+}
 var entityFactory;
 
 const addPending2 = async (event) => {
@@ -798,6 +805,7 @@ const getEventKey = (event) => {
 };
 const routeMap = {
     "/getActiveTimers": {
+        allowFrozen: true,
         h: async (event) => {
             return buildResponse(await getSanitizedTimers());
         },
@@ -869,6 +877,7 @@ const routeMap = {
         },
     },
     "/ddbQuery": {
+        allowFrozen: true,
         h: async (event) => {
             var qr = await ddbUtils.ddbQueryRsContains(JSON.parse(event.body));
             console.log("ddbQuery: " + qr);
@@ -876,6 +885,7 @@ const routeMap = {
         },
     },
     "/getNextOnBlocks": {
+        allowFrozen: true,
         h: async (event) => {
             const nob = await ddbUtils.ddbQueryRpNextOnBlocks(
                 event.queryStringParameters
@@ -884,6 +894,7 @@ const routeMap = {
         },
     },
     "/getRaceHistory": {
+        allowFrozen: true,
         h: async (event) => {
             var [qr, cacheMaxSeconds] = await ddbUtils.ddbQueryRaceHistory(
                 event.queryStringParameters
@@ -893,6 +904,7 @@ const routeMap = {
         },
     },
     "/getTimerHistory": {
+        allowFrozen: true,
         h: async (event) => {
             var qr = await queryTimerHistoryByOrgId(
                 event.queryStringParameters
@@ -901,6 +913,7 @@ const routeMap = {
         },
     },
     "/listMediaPrefix": {
+        allowFrozen: true,
         h: async (event) => {
             var qr = await s3QueryMediaPrefix(event.queryStringParameters);
             const cacheControl = "max-age=" + 15;
@@ -908,6 +921,7 @@ const routeMap = {
         },
     },
     "/listChartTypes": {
+        allowFrozen: true,
         h: async (event) => {
             var chartTypes = await s3QueryChartTypes();
             const cacheControl = "max-age=" + 3600 * 24 * 7;
@@ -1110,7 +1124,8 @@ async function apiGatewayHandler(event) {
     const eventKey = getEventKey(event);
     const orgId = getOrgId(event);
     const orgIz = getOrgIz(event);
-    const defaultTTL = await getTtl(eventKey);
+    const config = await getConfig(eventKey);
+    const defaultTTL = await getTtl(config);
 
     const by = decodedJwt["cognito:username"]
         ? decodedJwt["cognito:username"]
@@ -1156,6 +1171,11 @@ async function apiGatewayHandler(event) {
             " object:",
             routeMap[routePath]
         );
+        if (!routeMap[routePath].allowFrozen && frozenOrArchived(config)) {
+            return buildResponse({
+                error: "Can't edit a frozen/archived race",
+            });
+        }
 
         const phandler = routeMap[routePath].h;
         console.log("routeMap handling: " + phandler);

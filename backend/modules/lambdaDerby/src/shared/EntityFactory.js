@@ -80,6 +80,21 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
     get classKey() {
         return this.orgId;
     }
+    checkIfFrozenOrArchived() {
+        var rc = { status: "" };
+        rc.freezeWarningSeconds = 3600;
+        rc.secondsUntilArchive =
+            this.TTL - Math.floor(new Date().getTime() / 1000);
+        console.log("Seconds until archive: ", rc.secondsUntilArchive);
+        if (rc.secondsUntilArchive < 0) {
+            rc.status = "archived";
+        }
+        if (rc.secondsUntilArchive < rc.freezeWarningSeconds) {
+            rc.status = "frozen";
+        }
+
+        return rc;
+    }
 };
 
 const OrgConfigLit = "OrgConfig";

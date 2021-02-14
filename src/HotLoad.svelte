@@ -580,30 +580,25 @@
             ecFromDexie[0].TTL &&
             !ecFromDexie[0].archived
         ) {
-            const freezeWarningSeconds = 3600;
-            var secondsUntilArchive =
-                ecFromDexie[0].TTL - Math.floor(new Date().getTime() / 1000);
-            console.log("Seconds until archive: ", secondsUntilArchive);
-            if (secondsUntilArchive < 0) {
-                return;
-            }
-            if (secondsUntilArchive < freezeWarningSeconds) {
+            const entityFactory = new EntityFactory({});
+            const eventConfigEntity = entityFactory.build(ecFromDexie[0]);
+            const faReturn = eventConfigEntity.checkIfFrozenOrArchived();
+            if (faReturn["status"] == "frozen") {
                 $statusMessage = {
                     text:
                         `This race is frozen. It will archive at: ` +
                         new Date(ecFromDexie[0].TTL * 1000),
                     type: "archiveWarning",
                     key: "archiveWarning",
-                    TTL: secondsUntilArchive * 1000 + new Date().getTime(),
+                    TTL:
+                        faReturn.secondsUntilArchive * 1000 +
+                        new Date().getTime(),
                 };
-            } else {
+            } else if (faReturn["status"] == "") {
                 var timerDueMs =
-                    (secondsUntilArchive - freezeWarningSeconds) * 1000;
-                console.log(
-                    "Not time to archive race yet, checking again in " +
-                        timerDueMs +
-                        " ms."
-                );
+                    (faReturn.secondsUntilArchive -
+                        faReturn.freezeWarningSeconds) *
+                    1000;
                 setTimeout(checkIfRaceFrozenAndDisplayMessage, timerDueMs);
             }
         }
