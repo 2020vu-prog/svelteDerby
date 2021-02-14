@@ -14,11 +14,21 @@
 
     console.log("ManualTimeAdd", params);
 
+    function validateTimerData(laneX) {
+        if (laneX.toString().includes(".")) {
+            $statusMessage = {
+                text: `Invalid Input: [${laneX}] (do not include decimal for time).`,
+                type: "error",
+            };
+            return false;
+        }
+        return true;
+    }
+
     async function handleSubmit() {
         console.log("Manual Timer:" + JSON.stringify(resultForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
-
         if (resultForm.lane1 == "0") {
             resultForm.lane1 = 0;
         }
@@ -26,6 +36,15 @@
             resultForm.lane2 = 0;
         }
 
+        var errorCount = 0;
+
+        [resultForm.lane1, resultForm.lane2].forEach((laneX) => {
+            validateTimerData(laneX) || errorCount++;
+        });
+        console.log("mta errorCount:", errorCount);
+        if (errorCount > 0) {
+            return;
+        }
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
