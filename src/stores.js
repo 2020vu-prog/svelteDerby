@@ -6,7 +6,7 @@ const semver = require("semver");
 
 var bearer = "";
 
-import { writable, readable } from "svelte/store";
+import { writable, readable, get as getStore } from "svelte/store";
 import { storeAuth } from "./stores/auth.js";
 import { buildVersion } from "./utils.js";
 
@@ -45,20 +45,11 @@ function axSet(setF) {
     return () => {};
 }
 export const getAxios = readable(getAxiosCommon, axSet);
-const getPrefs = () => {
-    var prefs = {};
-    const unsubscribe = prefStore.subscribe((value) => {
-        prefs = value;
-    });
-    unsubscribe();
-    return prefs;
-};
 export function getChartCacheKey() {
     return require("./config/doNotEditChartKey.json").chartKey;
-    //return new Date().getTime().toString();
 }
 export function getCacheKey() {
-    var prefs = getPrefs();
+    var prefs = getStore(prefStore);
     const expiresMS = new Date().getTime() - 5 * 60 * 1000; // 5 minutes ago
     console.log("getCacheKey:", expiresMS, " pref:", prefs.disableCache);
     if (prefs.disableCache && prefs.disableCache > expiresMS) {
@@ -69,7 +60,7 @@ export function getCacheKey() {
 }
 
 export function setCacheKey(newKey) {
-    var prefs = getPrefs();
+    var prefs = getStore(prefStore);
 
     prefs.disableCache = newKey;
     prefStore.set(prefs);
@@ -120,39 +111,6 @@ async function getAxiosCommon() {
     return axiosCommon;
 }
 
-export const doRefreshOLD = () => {
-    axiosCommon
-        .get("./data/driver.json")
-        .then((response) => {
-            console.log("drivers:" + response.data.length);
-            const driverTmp = {};
-            response.data.forEach(function (driver) {
-                driverTmp[driver.carNumber] = driver;
-            });
-            driverMap.set(driverTmp);
-            console.log("did set driverMap");
-            doRefreshBlocks.set(new Date().getTime());
-        })
-        .catch((err) => {
-            console.log(err);
-        });
-
-    //const racerUrl="http://s3.amazonaws.com/chicago2019oct-s3derbyracedata-vtp3oauyufv6/data/racer.json.gz?nocache=1580673517399";
-    const racerUrl = "./data/rs.json";
-    axiosCommon
-        .get(racerUrl)
-        .then((response) => {
-            console.log(response.data.length);
-            const sortedStandings = response.data.sort(
-                sortBy("lastUpdateMS", true, parseInt)
-            );
-            standings.set(sortedStandings);
-            console.log("did set standings");
-        })
-        .catch((err) => {
-            console.log(err);
-        });
-};
 const sortBy = (field, reverse, primer) => {
     var key = primer
         ? function (x) {

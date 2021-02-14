@@ -173,12 +173,18 @@
         if (dexieTheme && dexieTheme.bgColor) {
             $theme = dexieTheme.bgColor;
         }
+        const developerPrefs = await localConfigDb["LocalConfig"].get({
+            KEY: "developerPrefs",
+        });
+        console.log(`reloaddeveloperPrefs:`, developerPrefs);
+
+        $developerMode = developerPrefs && developerPrefs.developerMode;
+
         const userPrefs = await localConfigDb["LocalConfig"].get({
             KEY: "userPrefs",
         });
         console.log(`reloadUserPrefs:`, userPrefs);
         $autoAnnounceResults = userPrefs && userPrefs.autoAnnounceResults;
-        $developerMode = userPrefs && userPrefs.developerMode;
         if (userPrefs && userPrefs.pendingSortAlgorithm) {
             $pendingSortAlgorithm = userPrefs && userPrefs.pendingSortAlgorithm;
         }

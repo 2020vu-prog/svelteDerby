@@ -37,7 +37,7 @@
 
     $: {
         const prefs = {
-            KEY: "userPrefs",
+            KEY: "developerPrefs",
             developerMode: $developerMode,
             changed: new Date().getTime(),
             changedFmt: new Date().toLocaleTimeString(),
@@ -46,7 +46,7 @@
     }
     function updatePrefsWhenMounted(prefs) {
         if (mounted) {
-            console.log("About updating userPrefs:", mounted, prefs);
+            console.log("About updating developerPrefs:", mounted, prefs);
             localConfigDb["LocalConfig"].put(prefs);
         }
     }
@@ -88,9 +88,11 @@
     div.singularSettingDiv {
         display: inline;
     }
+
     h4 {
         display: inline;
     }
+
     hr {
         border: 1px solid var(--themeFromJS);
     }
