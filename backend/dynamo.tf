@@ -54,6 +54,18 @@ resource "aws_dynamodb_table" "derby-dynamodb-table" {
     DeployEnvironment = var.DeployEnvironment
   }
 }
+resource "null_resource" "seed_derby_orgs" {
+
+  provisioner "local-exec" {
+    command = "scripts/seedDerbyOrgs.sh"
+    working_dir = path.module
+    environment = {
+    	TableName= aws_dynamodb_table.derby-dynamodb-table.name
+    }
+  }
+
+  depends_on = [ aws_s3_bucket.svelteBucket ]
+}
 resource "aws_dynamodb_table" "derby-distribution" {
   name           = local.distDbName
   billing_mode   = "PAY_PER_REQUEST"
