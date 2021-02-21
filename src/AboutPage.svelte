@@ -160,10 +160,10 @@
         <h6>{buildDate()}</h6>
     </div>
     <hr />
-
+    <br />
     {#if $developerMode}
         <h2>Developer Info</h2>
-
+        <hr />
         <div class="singularSettingDiv">
             <h4>Developer Logs</h4>
             <input type="checkbox" bind:checked={$developerLogging} />

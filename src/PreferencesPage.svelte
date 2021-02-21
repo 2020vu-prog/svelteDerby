@@ -279,22 +279,22 @@
             minutes.
         </h6>
     </div>
-    <hr />
+    <div on:click={() => push('/about')}>
+        <hr />
 
-    <div class="singularSettingDiv" on:click={() => push('/about')}>
-        <h4 class="">About</h4>
-        <button
-            style="float: right; margin-right: 10px;"
-            on:click={() => push('/about')}>
-            About Page
-        </button>
-        <h6>
-            Click here to be redirected to the about page where you can find
-            information about the race you are viewing and the version of the
-            software you are running.
-        </h6>
+        <div class="singularSettingDiv">
+            <h4 class="">About</h4>
+            <button style="float: right; margin-right: 10px;">
+                About Page
+            </button>
+            <h6>
+                Click here to be redirected to the about page where you can find
+                information about the race you are viewing and the version of
+                the software you are running.
+            </h6>
+        </div>
+        <hr />
     </div>
-    <hr />
 
     <BottomNav />
 </div>
