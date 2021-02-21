@@ -103,7 +103,7 @@
     input[type="checkbox"] {
         transform: scale(2);
         float: right;
-        margin-right: 10px
+        margin-right: 10px;
     }
 </style>
 

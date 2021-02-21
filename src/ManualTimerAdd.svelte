@@ -43,7 +43,7 @@
         [resultForm.lane1, resultForm.lane2].forEach((laneX) => {
             validateTimerData(laneX) || errorCount++;
         });
-        console.log("mta errorCount:", errorCount);
+        log("mta errorCount:", errorCount);
         if (errorCount > 0) {
             return;
         }
