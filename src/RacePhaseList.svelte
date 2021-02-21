@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import {
         nextOnBlockKey,
         racePhaseMap,
@@ -10,13 +12,13 @@
     import CarFilter from "./CarFilter.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
 
-    $: console.log(`DC: NOB:`, $nextOnBlockKey);
-    $: console.log(`DC: rpm:`, $racePhaseMap);
-    $: console.log("DC: doRefreshChanged :", $doRefreshBlocks);
+    $: log(`DC: NOB:`, $nextOnBlockKey);
+    $: log(`DC: rpm:`, $racePhaseMap);
+    $: log("DC: doRefreshChanged :", $doRefreshBlocks);
 
     const filterMatchesX = (phase, lclFilter, nobKey) => {
         const fm = filterMatches(phase, lclFilter, nobKey);
-        console.log("filterMatch:", fm);
+        log("filterMatch:", fm);
         return fm;
     };
     const filterMatches = (phase, lclFilter, nobKey) => {

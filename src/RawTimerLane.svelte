@@ -1,13 +1,15 @@
 <script>
+    import log from "roarr";
+
     import { onMount } from "svelte";
 
     export let laneJson;
     export let lane;
     const laneCalc = JSON.parse(laneJson);
     onMount(async () => {
-        console.log("rtl: mounted : ", laneJson);
+        log("rtl: mounted : ", laneJson);
         //laneCalc = JSON.parse(laneJson);
-        console.log("rto: mounted : ", laneCalc);
+        log("rto: mounted : ", laneCalc);
     });
     function getCarLenMillis() {
         return laneCalc.carLenMS ? laneCalc.carLenMS : "None";

@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -23,7 +25,7 @@
     let scaledHeight;
     var bracketClass = "unknown";
     $: {
-        console.log("hotspot:", left, top, scale, pos, chartId);
+        log("hotspot:", left, top, scale, pos, chartId);
         recalc();
     }
     $: {
@@ -48,9 +50,9 @@
     var posHtml = "";
     const refreshDataFromDb = async (trigger) => {
         const bracketPosKey = `${chartId}:${heatPos}`;
-        console.log("bracketPosKey: ", bracketPosKey);
+        log("bracketPosKey: ", bracketPosKey);
         bpFromDexie = await db.BracketPos.get(bracketPosKey);
-        console.log("refreshDataFromDb gave:", bpFromDexie);
+        log("refreshDataFromDb gave:", bpFromDexie);
         if (isSeed) {
             bracketClass = "pendingSeed";
         }
@@ -75,7 +77,7 @@
         }
 
         rsFromDexie = await db.RaceStanding.get(bracketPosKey);
-        console.log("isSeed: ", isSeed);
+        log("isSeed: ", isSeed);
         if (rsFromDexie) {
             if (rsFromDexie.del) {
                 rsFromDexie = null;
@@ -99,23 +101,21 @@
         //await getChartImage(bmdFromDexie.jsonPath);
     };
     function handlePanStart() {
-        console.log("chs panStart  ");
+        log("chs panStart  ");
     }
     function handlePanMove(event) {
-        console.log(
-            "chs panMove x: " + event.detail.dx + " y:" + event.detail.dy
-        );
+        log("chs panMove x: " + event.detail.dx + " y:" + event.detail.dy);
         left = parseInt(event.detail.dx, 10) + parseInt(left, 10);
         top = parseInt(event.detail.dy, 10) + parseInt(top, 10);
     }
     function handlePanEnd(event) {
-        console.log("chs panEnd : " + event);
+        log("chs panEnd : " + event);
         // note syntax difference b/t node.dispatch() and createEventDispatcher()
         dispatch("hotMove", {
             top: top,
             left: left,
         });
-        console.log("chs panMoved.");
+        log("chs panMoved.");
     }
 
     const getDriverName = (number) => {

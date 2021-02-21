@@ -1,4 +1,6 @@
 "use strict";
+import log from "roarr";
+
 /*
 timerConfig :{
     clearMS:3000,
@@ -19,7 +21,7 @@ class CalcFinish {
     calcFinishMain(rawList) {
         const cBlocks = this.splitIntoCandidateBlocks(rawList);
         const finishList = cBlocks.map((cBlock) => this.mapValidFinish(cBlock));
-        console.log("finishList:", JSON.stringify(finishList));
+        log("finishList:", JSON.stringify(finishList));
         return finishList;
     }
     splitIntoCandidateBlocks(rawList) {
@@ -69,7 +71,7 @@ class CalcFinish {
             valid: false,
         };
         const lanePins = cBlock.filter((piPin) => {
-            //console.log("looking for :", lane, " in: ", piPin.pinName);
+            //log("looking for :", lane, " in: ", piPin.pinName);
             return piPin.pinName === lane;
         });
         if (lanePins.length == 0) {

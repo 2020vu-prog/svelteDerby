@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import {
         theme,
         showBottomNav,
@@ -43,7 +45,7 @@
     }
     function updatePrefsWhenMounted(prefs) {
         if (mounted) {
-            console.log("About updating userPrefs:", mounted, prefs);
+            log("About updating userPrefs:", mounted, prefs);
             localConfigDb["LocalConfig"].put(prefs);
         }
     }
@@ -53,7 +55,7 @@
         } else {
             disableCache = false;
         }
-        console.log("mounting :", disableCache);
+        log("mounting :", disableCache);
 
         mounted = true;
         updateColorSelector();
@@ -71,7 +73,7 @@
         }
     }
     async function clickDisableCache() {
-        console.log("check do");
+        log("check do");
         if (!disableCache) {
             // negated test, b/c clickhandler called before bind value :-(
             //$.disableCache = new Date().getTime();
@@ -80,13 +82,13 @@
             //$prefStore.disableCache = 0;
             lclCacheKey = 0;
         }
-        // console.log("Disable cache now:", $prefStore.disableCache)
-        console.log("mounted&bound Disable cache now:", lclCacheKey);
+        // log("Disable cache now:", $prefStore.disableCache)
+        log("mounted&bound Disable cache now:", lclCacheKey);
         setCacheKey(lclCacheKey);
     }
     const updateTheme = async () => {
         $theme = themeSelected;
-        console.log("Updated theme to: " + $theme);
+        log("Updated theme to: " + $theme);
         let id = await localConfigDb["LocalConfig"].put({
             KEY: "theme",
             bgColor: $theme,
@@ -96,19 +98,19 @@
     const updateColorSelector = () => {
         var colorOptions = [];
         colorOptions = document.getElementsByClassName("colorOption");
-        console.log("ucsBegin: " + $theme);
+        log("ucsBegin: " + $theme);
         Array.from(colorOptions).forEach(function (element, index, array) {
-            console.log("A " + String(element.value) + " B " + String($theme));
+            log("A " + String(element.value) + " B " + String($theme));
             if (String(element.value) == String($theme)) {
-                console.log("MATCH");
+                log("MATCH");
                 themeSelected = document.querySelectorAll("option")[index]
                     .value;
-                console.log(
+                log(
                     "label of option: " +
                         document.querySelectorAll("option")[index].value
                 );
-                console.log("theme selector value: " + themeSelected);
-                console.log(
+                log("theme selector value: " + themeSelected);
+                log(
                     "element to select: " +
                         document.querySelectorAll("option")[index]
                 );
@@ -122,20 +124,25 @@
     :root {
         --themeFromJS: "black";
     }
+
     div.singularSettingDiv {
         display: inline;
     }
+
     h4 {
         display: inline;
     }
+
     input[type="checkbox"],
     select {
         float: right;
         margin-right: 10px;
     }
+
     hr {
         border: 1px solid var(--themeFromJS);
     }
+
     input[type="checkbox"] {
         transform: scale(2);
     }
@@ -180,7 +187,7 @@
         <h4>Bottom NavBar</h4>
         <input type="checkbox" bind:checked={$showBottomNav} />
         <h6>
-            This this toggles whether the bottom nav is shown or hidden on
+            This toggles whether the bottom nav is shown or hidden on
             <strong>all screens.</strong>
         </h6>
     </div>

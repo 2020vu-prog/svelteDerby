@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { signIn, loginFormState, logout } from "./stores/auth.js";
     import { createEventDispatcher } from "svelte";
     import { beginAnonymousLogin } from "./stores.js";
@@ -13,7 +15,7 @@
         $loginFormState.password = "DERBYderby12345!";
         $beginAnonymousLogin = false;
         let promise = signIn().then(() => {
-            console.log("login complete");
+            log("login complete");
             dispatch("loginComplete");
         });
     };

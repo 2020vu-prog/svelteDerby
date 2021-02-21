@@ -1,9 +1,12 @@
 <script>
+    import log from "roarr";
+
     import {
         doRefreshBlocks,
         theme,
         showBottomNav,
         developerMode,
+        developerLogging,
         statusMessage,
     } from "./stores.js";
     $: {
@@ -26,7 +29,7 @@
     var histCountFromDexie = "";
 
     const refreshDataFromDb = async (trigger) => {
-        console.log("refreshDataFromDb data:", trigger);
+        log("refreshDataFromDb data:", trigger);
 
         ecFromDexie = await db.EventConfig.toArray();
         histCountFromDexie = (await db.EventHistory.count()).toString();
@@ -46,12 +49,12 @@
     }
     function updatePrefsWhenMounted(prefs) {
         if (mounted) {
-            console.log("About updating developerPrefs:", mounted, prefs);
+            log("About updating developerPrefs:", mounted, prefs);
             localConfigDb["LocalConfig"].put(prefs);
         }
     }
     onMount(async () => {
-        console.log("mounting");
+        log("mounting");
 
         mounted = true;
         refreshDataFromDb();
@@ -60,7 +63,7 @@
     var devClickCount = 0;
     function devClick() {
         if (devClickCount++ > 8) {
-            console.log("devmodeA");
+            log("devmodeA");
             $developerMode = true;
             $statusMessage = {
                 text: `Developer Mode Enabled.`,
@@ -95,6 +98,12 @@
 
     hr {
         border: 1px solid var(--themeFromJS);
+    }
+
+    input[type="checkbox"] {
+        transform: scale(2);
+        float: right;
+        margin-right: 10px
     }
 </style>
 
@@ -151,6 +160,20 @@
         <h6>{buildDate()}</h6>
     </div>
     <hr />
+
+    {#if $developerMode}
+        <h2>Developer Info</h2>
+
+        <div class="singularSettingDiv">
+            <h4>Developer Logs</h4>
+            <input type="checkbox" bind:checked={$developerLogging} />
+            <h6>
+                This toggles whether the Developer logs are emitted
+                <strong>all screens.</strong>
+            </h6>
+        </div>
+        <hr />
+    {/if}
 
     <BottomNav />
 </div>

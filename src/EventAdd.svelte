@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig, setCacheKey } from "./stores.js";
     import { store } from "./stores/auth.js";
@@ -18,13 +20,13 @@
     async function handleSubmit() {
         syncAddButton();
 
-        console.log("Adding:" + JSON.stringify(orgForm), " to: ", $raceConfig);
+        log("Adding:" + JSON.stringify(orgForm), " to: ", $raceConfig);
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
         const orgU = uuidv4().substring(0, 5);
         const orgIz = params.orgIz;
         if (!orgIz) {
-            console.log("Cannot add w/o org");
+            log("Cannot add w/o org");
             return;
         }
         const req = {
@@ -37,20 +39,20 @@
 
         submitSpinning = true;
 
-        console.log("token:" + bearer);
+        log("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
 
         axios
             .post($raceConfig.baseUrl + "/addEventConfig", req)
             .then((response) => {
-                console.log("addEventConfig axios success");
+                log("addEventConfig axios success");
                 setCacheKey(new Date().getTime()); // force disable cache to expose new event on local browser.
                 pop();
             })
             .catch((err) => {
                 submitSpinning = false;
-                console.log("addEventConfig failed: " + err);
+                log("addEventConfig failed: " + err);
             });
         orgForm = getDefaultOrgForm();
     }
@@ -72,7 +74,7 @@
             return;
         }
         if (orgForm.name != "" && orgForm.name != undefined) {
-            console.log("name: " + orgForm.name);
+            log("name: " + orgForm.name);
             submitDisabled = false;
         } else {
             submitDisabled = true;

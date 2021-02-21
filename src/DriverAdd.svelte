@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig, statusMessage } from "./stores.js";
     import { store } from "./stores/auth.js";
@@ -20,7 +22,7 @@
     var submitSpinning = false;
     var speakSpinning = false;
     onMount(async () => {
-        console.log("mounted focus: ", params);
+        log("mounted focus: ", params);
 
         mode = params.number ? "Update" : "Add";
         document.getElementById("carNumber").focus();
@@ -35,25 +37,25 @@
     async function refreshDataFromDb(trigger) {
         if (!params.number) return;
 
-        console.log("driverAdd: refreshDataFromDb data:", trigger);
+        log("driverAdd: refreshDataFromDb data:", trigger);
 
         const ptcpFromDexie = await db.Participant.get(
             params.number.toString()
         );
 
-        console.log("driverAdd: refreshDataFromDb gave:", ptcpFromDexie);
+        log("driverAdd: refreshDataFromDb gave:", ptcpFromDexie);
 
         updateBoundVars(ptcpFromDexie);
     }
     const updateBoundVars = async (ptcpFromDexie) => {
         Object.assign(driverForm, ptcpFromDexie);
-        console.log("driverAdd: updateBoundVars gave:", driverForm);
+        log("driverAdd: updateBoundVars gave:", driverForm);
         driverForm.carNumber = ptcpFromDexie.number;
         driverForm.driverName = ptcpFromDexie.name;
         driverForm.sampa = ptcpFromDexie.sampa;
     };
     async function handleSubmit() {
-        console.log(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
+        log(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -66,7 +68,7 @@
             pType: driverForm.pType ? driverForm.pType : undefined,
         };
 
-        console.log("token:" + bearer);
+        log("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
 
@@ -86,7 +88,7 @@
                 text: "driverAdd failed: " + error,
                 type: "error",
             };
-            //console.log("driverAdd failed: " + err)
+            //log("driverAdd failed: " + err)
         }
     }
 
@@ -111,14 +113,14 @@
                 driverForm.driverName.toString() != ""
             ) {
                 submitDisabled = false;
-                console.log("sync add button SYNC");
+                log("sync add button SYNC");
             } else {
                 submitDisabled = true;
-                console.log("sync add button FAIL");
+                log("sync add button FAIL");
             }
         } else {
             submitDisabled = true;
-            console.log("sync add button FAIL");
+            log("sync add button FAIL");
         }
     };
     function getLocalSSML() {
@@ -137,8 +139,8 @@
         speakSpinning = true;
 
         const ssml = `<speak>Driver name is ${getLocalSSML()}</speak>`;
-        console.log("requesting speech");
-        console.log(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
+        log("requesting speech");
+        log(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -148,7 +150,7 @@
             ssml: ssml,
         };
 
-        console.log("token:" + bearer);
+        log("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
 
@@ -156,7 +158,7 @@
         const url = $raceConfig.baseUrl + "/requestTts";
         try {
             const response = await axios.post(url, req);
-            console.log("speech: ", response);
+            log("speech: ", response);
             $statusMessage = {
                 text: `Speech Processed.`,
                 type: "success",
@@ -171,7 +173,7 @@
                 text: "speak failed: " + error,
                 type: "error",
             };
-            //console.log("driverAdd failed: " + err)
+            //log("driverAdd failed: " + err)
         } finally {
         }
     }

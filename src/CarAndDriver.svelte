@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { driverMap } from "./stores.js";
     import { push, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
@@ -10,17 +12,17 @@
     let name = "";
     export let at;
     onMount(async () => {
-        console.log(`CarAndDriver onMount: ${number} `);
+        log(`CarAndDriver onMount: ${number} `);
         name = getDriverName(number, at);
     });
     $: {
-        console.log("lookup modified DN:", number);
+        log("lookup modified DN:", number);
         name = getDriverName(number, at);
     }
 
-    //console.log("timerLink",timerLink);
+    //log("timerLink",timerLink);
     const gotoTimer = () => {
-        console.log("routing to:", timerLink);
+        log("routing to:", timerLink);
         //push("/drivers")
 
         // push("/ManualTimerAdd/1583608357232")
@@ -29,7 +31,7 @@
         }
     };
     const getDriverName = (number) => {
-        //console.log("gdn: "+carNumber)
+        //log("gdn: "+carNumber)
         if (number && $driverMap[number]) {
             return $driverMap[number].name;
         } else {

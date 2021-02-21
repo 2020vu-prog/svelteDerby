@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { carFilter } from "./stores.js";
     import Icon from "fa-svelte";
     import { faFilter } from "@fortawesome/free-solid-svg-icons/faFilter";
@@ -8,7 +10,7 @@
     let icon = faFilter;
     let editMode = false;
     const toggleEdit = async () => {
-        console.log("toggle:", editMode);
+        log("toggle:", editMode);
         $carFilter = "";
         editMode = !editMode;
         if (editMode) {

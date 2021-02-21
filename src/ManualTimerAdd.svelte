@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig, statusMessage, driverMap } from "./stores.js";
     import { store } from "./stores/auth.js";
@@ -12,7 +14,7 @@
     var submitDisabled = false;
     var submitSpinning = false;
 
-    console.log("ManualTimeAdd", params);
+    log("ManualTimeAdd", params);
 
     function validateTimerData(laneX) {
         if (laneX.toString().includes(".")) {
@@ -26,7 +28,7 @@
     }
 
     async function handleSubmit() {
-        console.log("Manual Timer:" + JSON.stringify(resultForm));
+        log("Manual Timer:" + JSON.stringify(resultForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
         if (resultForm.lane1 == "0") {
@@ -68,17 +70,17 @@
             );
             if (response.data.error) {
                 submitSpinning = false;
-                console.log("add failed", response);
+                log("add failed", response);
                 $statusMessage = {
                     text: response.data.error,
                     type: "error",
                 };
             } else {
-                console.log(endPoint + " axios success");
+                log(endPoint + " axios success");
                 pop();
             }
         } catch (err) {
-            console.log(endPoint + " failed: " + err);
+            log(endPoint + " failed: " + err);
         }
         resultForm.lane1 = "0";
         resultForm.lane2 = "0";
@@ -106,7 +108,7 @@
     var carNumber2 = getUrlVars()["carNumber2"];
 
     const getDriverName = (number) => {
-        console.log("gdn: " + number);
+        log("gdn: " + number);
         if (number && $driverMap[number]) {
             return $driverMap[number].name;
         } else {

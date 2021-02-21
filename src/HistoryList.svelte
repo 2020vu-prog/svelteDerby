@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import Dexie from "dexie";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -22,12 +24,12 @@
         });
         history.sort(sortByAt);
         history = history;
-        console.log("history:", history);
+        log("history:", history);
 
         const where = { PK: params.PK, SK: params.SK };
-        console.log("where:", where);
+        log("where:", where);
         const got = db.EventHistory.where(where);
-        console.log("got:", got);
+        log("got:", got);
     });
     function sortByAt(a, b) {
         return b.at - a.at;

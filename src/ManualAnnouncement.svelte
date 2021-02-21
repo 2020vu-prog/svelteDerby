@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { raceConfig, statusMessage, driverMap } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
@@ -11,7 +13,7 @@
             return;
         }
 
-        console.log(`doAnnounce: ${announceText} `);
+        log(`doAnnounce: ${announceText} `);
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 

@@ -1,3 +1,5 @@
+import log from "roarr";
+
 const {
     hasSvelteRoutePath,
 } = require("../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
