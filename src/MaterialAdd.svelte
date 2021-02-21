@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { push, pop, replace } from "svelte-spa-router";
     import { theme, userEmail } from "./stores.js";
     import { isEmailAllowedRoutePath } from "./utils.js";

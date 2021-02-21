@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import {
         store,
         signUp,
@@ -29,14 +31,14 @@
         } else {
             promise = signIn().then(() => {
                 storeUserEmail(); //not awaited.  TODO: refactor promises
-                console.log("loaded user email after signIn:", $userEmail);
+                log("loaded user email after signIn:", $userEmail);
             });
         }
     }
     async function storeUserEmail() {
-        console.log("storeUserEmail begin");
+        log("storeUserEmail begin");
         $userEmail = await getUserEmail();
-        console.log("storeUserEmail done", $userEmail);
+        log("storeUserEmail done", $userEmail);
     }
     function doLogOut() {
         localStorage.clear(); //clears everything in localStorage

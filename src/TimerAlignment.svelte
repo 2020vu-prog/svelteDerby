@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import {
         mqttTimerSubscribe,
         timerState,
@@ -31,9 +33,9 @@
     });
     function syncState() {
         for (let [lane, laneState] of Object.entries($timerState)) {
-            console.log("TimerCalibration:", lane, " LS: ", laneState);
+            log("TimerCalibration:", lane, " LS: ", laneState);
             if (laneStatusList[lane]) {
-                console.log("TimerCalibrationi2222:", lane, " LS: ", laneState);
+                log("TimerCalibrationi2222:", lane, " LS: ", laneState);
 
                 laneStatusList[lane].blocked = laneState == 0 ? false : true;
 
@@ -52,7 +54,7 @@
         const audioSrc = ls.src[1];
         if (audioSrc && !ls.playing && ls.checked && ls.blocked) {
             ls.playing = true;
-            console.log("TimerCalibration audio:", audioSrc);
+            log("TimerCalibration audio:", audioSrc);
             const audio = new Audio(audioSrc);
             audio.onended = async function () {
                 ls.playing = false;

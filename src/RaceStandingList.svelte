@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import {
         nextOnBlockKey,
         standingsMap,
@@ -20,7 +22,7 @@
     var mounted = false;
     onMount(async () => {
         mounted = true;
-        console.log("RaceStanding list: ", location);
+        log("RaceStanding list: ", location);
     });
 
     //workaround for svelte optimization on page reload
@@ -29,18 +31,18 @@
     }
     function potentialReload(unusedButImportant) {
         if (mounted) {
-            console.log("routing to force reload b/c ", $doRefreshBlocks);
+            log("routing to force reload b/c ", $doRefreshBlocks);
 
             push(`/forceReloadPage`);
         }
     }
 
     const getTitle = () => {
-        console.log("mounted type:", params.type);
+        log("mounted type:", params.type);
         return params.type === "Pending" ? "Pending Races" : "Race History";
     };
     const typeFilter = (standing) => {
-        console.log(" type filter:", params.type);
+        log(" type filter:", params.type);
 
         if (params.type === "Pending") {
             return standing.isPending();
@@ -50,7 +52,7 @@
         }
     };
     const filterMatches = (standing, lclFilter) => {
-        console.log("filterMatches", standing);
+        log("filterMatches", standing);
 
         if (!lclFilter) return true;
         let re = new RegExp("^" + lclFilter);

@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig } from "./stores.js";
     import { store } from "./stores/auth.js";
@@ -24,7 +26,7 @@
         syncAddButton(loginForm.chartName);
     }
     const jqLoaded = () => {
-        console.log("jqloaded");
+        log("jqloaded");
         jsReady = true;
         const jsTreeUrl =
             "https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js";
@@ -32,7 +34,7 @@
         tryBuild();
     };
     const jsTreeLoaded = () => {
-        console.log("jstreeloaded");
+        log("jstreeloaded");
         treeReady = true;
         tryBuild();
     };
@@ -43,7 +45,7 @@
     });
     const tryBuild = () => {
         if (treeReady && mounted && jsReady && s3ChartTypes) {
-            console.log("GO");
+            log("GO");
             //  window.$(function () { window.$('#jstree_demo_div').jstree(); });
             /*
             const testData = {
@@ -67,7 +69,7 @@
             window
                 .$("#jstree_demo_div")
                 .on("changed.jstree", function (e, data) {
-                    console.log(data.selected);
+                    log(data.selected);
                     if (data.node.children.length > 0) {
                         window
                             .$("#jstree_demo_div")
@@ -94,7 +96,7 @@
         }
     };
     async function handleSubmit() {
-        console.log("Adding:" + JSON.stringify(loginForm));
+        log("Adding:" + JSON.stringify(loginForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
         axios.defaults.headers.common["Authorization"] = bearer;
@@ -110,17 +112,17 @@
         };
 
         submitSpinning = true;
-        console.log("token:" + bearer);
+        log("token:" + bearer);
 
         axios
             .post($raceConfig.baseUrl + "/addChart", req)
             .then((response) => {
-                console.log("addChart axios success");
+                log("addChart axios success");
                 pop();
             })
             .catch((err) => {
                 submitSpinning = false;
-                console.log("addChart failed: " + err);
+                log("addChart failed: " + err);
             });
         loginForm.chartName = "";
         loginForm.bracketSelected = "";
@@ -147,12 +149,12 @@
         axios
             .get($raceConfig.baseUrl + "/listChartTypes", { params: params })
             .then((response) => {
-                console.log("listChartTypes:" + response.data);
+                log("listChartTypes:" + response.data);
                 s3ChartTypes = response.data;
                 tryBuild();
             })
             .catch((err) => {
-                console.log(err);
+                log(err);
             });
     };
     const getKeys = (json) => {
@@ -160,7 +162,7 @@
         const parents = {};
         json.forEach(function (item) {
             var simpleKey = item.Key.replace("data/brackets/", "");
-            console.log("simpleKey:", simpleKey);
+            log("simpleKey:", simpleKey);
             if (!/.png/i.test(simpleKey)) {
                 return;
             }
@@ -183,7 +185,7 @@
         rc.sort((a, b) => {
             return a.id.length - b.id.length;
         });
-        console.log(rc);
+        log(rc);
         return rc;
     };
     const formatItem = (structureArray) => {
@@ -197,7 +199,7 @@
         } else {
             treeItem.parent = "#";
         }
-        console.log("format item ", structureArray, " gave: ", treeItem);
+        log("format item ", structureArray, " gave: ", treeItem);
 
         return treeItem;
     };

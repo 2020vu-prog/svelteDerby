@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { driverMap, doRefreshBlocks } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
     import { safeGetAt } from "./utils.js";
@@ -15,24 +17,24 @@
         refreshDataFromDb();
     });
     const refreshDataFromDb = async (trigger) => {
-        console.log("refreshDataFromDb data:", trigger);
+        log("refreshDataFromDb data:", trigger);
 
         bmdFromDexie = await db.BracketMetaData.toArray();
     };
     const getBmdAsList = (driverMap) => {
         const rc = [];
         db.BracketMetaData.each((bmd) => {
-            console.log("bmd from dexie: ", bmd), rc.push(bmd);
+            log("bmd from dexie: ", bmd), rc.push(bmd);
         });
 
-        console.log("bmd rc:", rc);
+        log("bmd rc:", rc);
         return rc;
         //const bmdArray= db.BracketMetaData.toArray();
-        //console.log("bmdArray:",bmdArray)
+        //log("bmdArray:",bmdArray)
         //return bmdArray;
     };
     const navToChartDetail = (bmd) => {
-        console.log("navToChartDetail:", bmd);
+        log("navToChartDetail:", bmd);
         push("/ChartDetail/" + bmd.SK);
     };
     function getSortedBmd(bmdFromDexie) {

@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import SpinnerButton from "./SpinnerButton.svelte";
     import { doRefreshBlocks } from "./stores.js";
     import { hhmmssFmt, isEmailAllowedRoutePath } from "./utils.js";
@@ -22,7 +24,7 @@
     onMount(async () => {
         if (params.dbName === "RacePhase") {
             rpFromDexie = await db.RacePhase.get(params.dbKey);
-            console.log("rpFromDexie:", rpFromDexie);
+            log("rpFromDexie:", rpFromDexie);
 
             mediaList = await listAndSortMedia(getMediaPrefix(rpFromDexie));
             loadingMedia = false;
@@ -77,8 +79,8 @@
         if (prefixSeed === ALL_PREFIX) {
             prefixSeed = $raceConfig.orgId;
         }
-        //console.log(`listMedia: ${dbName} ${dbKey}`);
-        console.log(`listMedia: `);
+        //log(`listMedia: ${dbName} ${dbKey}`);
+        log(`listMedia: `);
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -92,16 +94,16 @@
         axios.defaults.headers.common["Authorization"] = bearer;
 
         try {
-            console.log("listmedia about to", req);
+            log("listmedia about to", req);
             const endpoint = "/listMediaPrefix";
             const response = await axios.get($raceConfig.baseUrl + endpoint, {
                 params: req,
             });
-            console.log("media:", response);
-            console.log("media:", response.data.length);
+            log("media:", response);
+            log("media:", response.data.length);
             return response.data;
         } catch (err) {
-            console.log("listmedia failed", err);
+            log("listmedia failed", err);
         }
         return [];
     }
@@ -122,8 +124,8 @@
         return `/${key}`;
     }
     function getMediaHHMMSS(mediaItem) {
-        console.log("LMOD:", mediaItem.LastModified);
-        console.log("LMOD parsed:", Date.parse(mediaItem.LastModified));
+        log("LMOD:", mediaItem.LastModified);
+        log("LMOD parsed:", Date.parse(mediaItem.LastModified));
         return hhmmssFmt(Date.parse(mediaItem.LastModified));
     }
     function getDisplayName(key) {

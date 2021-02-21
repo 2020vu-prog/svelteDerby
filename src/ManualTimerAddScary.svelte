@@ -10,10 +10,10 @@
 
     let spinner = undefined; // empty to start.
 
-    console.log("ManualTimeAdd", params);
+    log("ManualTimeAdd", params);
 
     async function handleSubmit() {
-        console.log("Manual Timer:" + JSON.stringify(resultForm));
+        log("Manual Timer:" + JSON.stringify(resultForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -42,17 +42,17 @@
                 req
             );
             if (response.data.error) {
-                console.log("add failed", response);
+                log("add failed", response);
                 $statusMessage = {
                     text: response.data.error,
                     type: "error",
                 };
             } else {
-                console.log(endPoint + " axios success");
+                log(endPoint + " axios success");
                 pop();
             }
         } catch (err) {
-            console.log(endPoint + " failed: " + err);
+            log(endPoint + " failed: " + err);
         }
         resultForm.lane1 = undefined;
         resultForm.lane2 = undefined;

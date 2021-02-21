@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import Router from "svelte-spa-router";
     import { link, location } from "svelte-spa-router";
     import { push, pop, replace } from "svelte-spa-router";
@@ -40,6 +42,7 @@
         autoAnnounceResults,
         userEmail,
         developerMode,
+        developerLogging,
         uiPageSize,
         mqttEnabled,
         pendingSortAlgorithm,
@@ -52,9 +55,22 @@
     import { isEmailAllowedRoutePath, getUserEmail } from "./utils.js";
 
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
+    import { ROARR } from "roarr";
 
+    enableRoarr(true, "hardcode");
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
+    function enableRoarr(doEnable, rsn) {
+        if (doEnable) {
+            console.log(`roarr log On ${doEnable} ${rsn}`);
+            ROARR.write = (message) => {
+                console.log("r-log:", JSON.parse(message).message);
+            };
+        } else {
+            console.log(`roarr log Off ${doEnable} ${rsn}`);
+            ROARR.write = (message) => {};
+        }
+    }
     const routes = {
         // Exact path
         "/": RaceStandingList,
@@ -100,6 +116,9 @@
         if (isMounted) {
             buildMenuMap($AuthStore);
         }
+    }
+    $: {
+        enableRoarr($developerLogging, "store");
     }
 
     async function buildMenuMap() {
@@ -176,14 +195,14 @@
         const developerPrefs = await localConfigDb["LocalConfig"].get({
             KEY: "developerPrefs",
         });
-        console.log(`reloaddeveloperPrefs:`, developerPrefs);
+        log(`reloaddeveloperPrefs:`, developerPrefs);
 
         $developerMode = developerPrefs && developerPrefs.developerMode;
 
         const userPrefs = await localConfigDb["LocalConfig"].get({
             KEY: "userPrefs",
         });
-        console.log(`reloadUserPrefs:`, userPrefs);
+        log(`reloadUserPrefs:`, userPrefs);
         $autoAnnounceResults = userPrefs && userPrefs.autoAnnounceResults;
         if (userPrefs && userPrefs.pendingSortAlgorithm) {
             $pendingSortAlgorithm = userPrefs && userPrefs.pendingSortAlgorithm;
@@ -208,17 +227,17 @@
         const entityFactory = new EntityFactory({});
         const done = new Date().getTime();
         const elapsed = done - start;
-        console.log("dexie reload took", elapsed);
+        log("dexie reload took", elapsed);
         raceConfigParam.baseUrl = "/app";
         raceConfigParam.title = raceConfigParam.name;
         $raceConfig = raceConfigParam;
     };
     onMount(async () => {
-        console.log("mounted app");
+        log("mounted app");
         await buildMenuMap();
         await logUserInIfNecessary();
         const cfg = await db.EventConfig.toArray();
-        console.log("config:", cfg);
+        log("config:", cfg);
 
         await reloadUserPrefs();
         if (cfg.length) {
@@ -233,7 +252,7 @@
         if (menuOption.alwaysShow) return true;
 
         //return raceConfigParam.orgIz && raceConfigParam.orgId;
-        console.log(
+        log(
             `iuarp: ${email} `,
             isEmailAllowedRoutePath(email, menuOption.menuRoute)
         );
@@ -258,7 +277,7 @@
     };
 
     const navTo = (route) => {
-        console.log("routing:" + route);
+        log("routing:" + route);
         menuClickFunction();
         replace(route);
     };
@@ -273,9 +292,7 @@
 
     async function logUserInIfNecessary() {
         if (!$userEmail) {
-            console.log(
-                "User is not logged in, so we will sign them in anonymously."
-            );
+            log("User is not logged in, so we will sign them in anonymously.");
             $beginAnonymousLogin = true;
         }
     }

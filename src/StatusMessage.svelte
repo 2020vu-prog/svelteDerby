@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import {
         statusMessage,
         raceConfig,
@@ -21,7 +23,7 @@
     function clearAllMessages() {
         $clearOldStatusMessages = false;
         messages = [];
-        console.log("StatusMessage RC cam: ", $raceConfig);
+        log("StatusMessage RC cam: ", $raceConfig);
         //This message is used to coerce the empty list to repaint.
         $statusMessage = {
             text: `New race selected.`,
@@ -30,12 +32,12 @@
     }
 
     onMount(async () => {
-        console.log("StatuaMessage.svelte mounting");
-        console.log("StatusMessage RC: ", $raceConfig);
+        log("StatuaMessage.svelte mounting");
+        log("StatusMessage RC: ", $raceConfig);
     });
 
     $: {
-        console.log(`triggered by statusMessage change: `, $statusMessage);
+        log(`triggered by statusMessage change: `, $statusMessage);
         if ($statusMessage && $statusMessage.text) {
             if (!$statusMessage.type) {
                 $statusMessage.type = "error";
@@ -68,7 +70,7 @@
     const clearNow = () => {
         const now = new Date().getTime();
         messages = messages.filter((msg) => {
-            console.log("clearNow:", msg);
+            log("clearNow:", msg);
             return msg.TTL > now;
         });
     };
@@ -90,7 +92,7 @@
     };
     const getTtl = (statusMessage) => {
         if (statusMessage.TTL) {
-            console.log("HAS A TTL");
+            log("HAS A TTL");
             return statusMessage.TTL;
         } else {
             return new Date().getTime() + getDurationMs(statusMessage);

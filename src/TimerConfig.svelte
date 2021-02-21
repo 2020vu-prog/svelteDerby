@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { raceConfig, statusMessage, doRefreshBlocks } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
@@ -17,7 +19,7 @@
     var submitSpinning = false;
 
     onMount(async () => {
-        console.log("mounted focus");
+        log("mounted focus");
         mounted = true;
         getActiveTimers();
     });
@@ -25,11 +27,11 @@
     $: refreshDataFromDb($doRefreshBlocks);
 
     async function refreshDataFromDb(trigger) {
-        console.log("TimerConfig: refreshDataFromDb data:", trigger);
+        log("TimerConfig: refreshDataFromDb data:", trigger);
 
         tcFromDexie = await db.TimerConfig.get("TimerConfig");
 
-        console.log("TimerConfig: refreshDataFromDb gave:", tcFromDexie);
+        log("TimerConfig: refreshDataFromDb gave:", tcFromDexie);
 
         Object.assign(loginForm, tcFromDexie);
 
@@ -40,10 +42,10 @@
         if (tcFromDexie.sha) {
             activeTimerSha = tcFromDexie.sha;
         }
-        console.log("loginForm copied:", JSON.stringify(loginForm));
+        log("loginForm copied:", JSON.stringify(loginForm));
     }
     async function getActiveTimers() {
-        console.log("getActiveTimers:");
+        log("getActiveTimers:");
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -52,7 +54,7 @@
             orgIz: $raceConfig.orgIz,
         };
 
-        console.log("token:" + bearer);
+        log("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
         const orgIz = $raceConfig.orgIz;
@@ -65,7 +67,7 @@
             )
             .then((response) => {
                 if (response.error) {
-                    console.log("getActiveTimers:", response);
+                    log("getActiveTimers:", response);
                     //TODO: not working!?
                     $statusMessage = {
                         text: `getActiveTimers Failed: ${response.error}.`,
@@ -77,7 +79,7 @@
                         type: "success",
                     };
                     activeTimerList = response.data;
-                    console.log("activeTimerList: ", activeTimerList);
+                    log("activeTimerList: ", activeTimerList);
                 }
             })
             .catch((err) => {
@@ -89,7 +91,7 @@
         await refreshDataFromDb();
     }
     async function handleSubmit() {
-        console.log("Adding:" + JSON.stringify(loginForm));
+        log("Adding:" + JSON.stringify(loginForm));
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -123,17 +125,17 @@
                 };
             }
             pop();
-            //console.log(response);
+            //log(response);
         } catch (error) {
             $statusMessage = {
                 text: "TimerConfig error: " + err,
                 type: "error",
             };
-            console.log(error);
+            log(error);
         }
     }
     async function clickActivateHost(timer) {
-        console.log("clickActivateHost", timer);
+        log("clickActivateHost", timer);
         loginForm.sha = timer.sha;
 
         //await handleSubmit();
@@ -143,15 +145,10 @@
     const timerShaMatchCheck = (timerToCheck) => {
         if (activeTimerSha && timerToCheck.sha) {
             if (activeTimerSha === timerToCheck.sha) {
-                console.log("MATCH ", timerToCheck.sha, " ", activeTimerSha);
+                log("MATCH ", timerToCheck.sha, " ", activeTimerSha);
                 return true;
             } else {
-                console.log(
-                    "NOT A MATCH ",
-                    timerToCheck.sha,
-                    " ",
-                    activeTimerSha
-                );
+                log("NOT A MATCH ", timerToCheck.sha, " ", activeTimerSha);
                 return false;
             }
         }

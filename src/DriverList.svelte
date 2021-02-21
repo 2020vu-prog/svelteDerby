@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import {
         userEmail,
         driverMap,
@@ -16,7 +18,7 @@
 
     var editable = false;
     onMount(async () => {
-        console.log(`DriverList userEmail: ${$userEmail}`);
+        log(`DriverList userEmail: ${$userEmail}`);
         editable = isDriverEditable($userEmail);
     });
     const filterMatches = (driver, lclFilter) => {
@@ -34,7 +36,7 @@
     }
     function editCarAndDriver(number) {
         if (editable) {
-            console.log("editCarAndDriver");
+            log("editCarAndDriver");
             push(`/driverAdd/${number}`);
         }
     }

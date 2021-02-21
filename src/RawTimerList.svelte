@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { raceConfig, statusMessage } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
@@ -20,7 +22,7 @@
     var timerConfig;
     const hhmmss = "hhmmss";
     onMount(async () => {
-        console.log("mounted focus: ", params);
+        log("mounted focus: ", params);
 
         mounted = true;
         refreshDataFromServer();
@@ -29,25 +31,25 @@
     });
     function testJson() {
         winnerDeltas = require("./config/winnerTest.json");
-        console.log("testJson winnerDeltas:", winnerDeltas);
+        log("testJson winnerDeltas:", winnerDeltas);
     }
     function testJson4Valid() {
         winnerDeltas = require("./config/winnerTest4Valid.json");
 
-        console.log("testJson4Valid winnerDeltas:", winnerDeltas);
+        log("testJson4Valid winnerDeltas:", winnerDeltas);
     }
     async function refreshDataFromServer(trigger) {
-        console.log("rawTimer: refreshDataFromDb data:", trigger);
+        log("rawTimer: refreshDataFromDb data:", trigger);
 
         timerHistoryList = await getTimerHistory();
-        console.log("rawTimer: refreshDataFromDb gave:", timerHistoryList);
+        log("rawTimer: refreshDataFromDb gave:", timerHistoryList);
 
         const flatHistory = flattenHistory(timerHistoryList);
 
         const calcFinish = new CalcFinish(timerConfig);
         winnerDeltas = calcFinish.calcFinishMain(flatHistory);
 
-        console.log("winnerDeltas: ", JSON.stringify(winnerDeltas));
+        log("winnerDeltas: ", JSON.stringify(winnerDeltas));
         updateBoundVars(timerHistoryList);
     }
 
@@ -60,22 +62,22 @@
             if (record.SK.startsWith("^")) {
                 //timerConfig = entityFactory.build(record);
                 timerConfig = record;
-                console.log("timerConfig: ", timerConfig);
+                log("timerConfig: ", timerConfig);
             }
         });
         flatHistoryList.sort((a, b) => {
             return a.microb - b.microb;
         });
-        console.log("sorted flat:", flatHistoryList);
+        log("sorted flat:", flatHistoryList);
 
         return flatHistoryList;
     }
 
     const updateBoundVars = async (timerHistoryList) => {
-        console.log("rawTimer: updateBoundVars gave:", timerHistoryList);
+        log("rawTimer: updateBoundVars gave:", timerHistoryList);
     };
     async function getTimerHistory() {
-        console.log(`getTimerHistory: `);
+        log(`getTimerHistory: `);
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -84,7 +86,7 @@
             orgIz: $raceConfig.orgIz,
         };
 
-        console.log("token:" + bearer);
+        log("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
 
@@ -100,7 +102,7 @@
             };
             return data;
         } catch (error) {
-            console.log(error);
+            log(error);
             $statusMessage = {
                 text: "rawTimer failed: " + err,
                 type: "error",
@@ -108,7 +110,7 @@
         }
     }
     function getHHMMSS(winnerDelta) {
-        console.log("pubtime: ", winnerDelta.cBlock[0].pubTime);
+        log("pubtime: ", winnerDelta.cBlock[0].pubTime);
         const pubbed = new Date(
             winnerDelta.cBlock[0].pubTime
         ).toLocaleTimeString();

@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { createEventDispatcher } from "svelte";
     import { theme } from "./stores.js";
     import { onMount } from "svelte";
@@ -9,17 +11,13 @@
     var thisButton;
     var mounted = false;
     onMount(async () => {
-        console.log("SpinnerButton:", focused);
+        log("SpinnerButton:", focused);
         mounted = true;
     });
     $: {
-        console.log("SpinnerButton: potential focus.", focused);
+        log("SpinnerButton: potential focus.", focused);
         if (focused && mounted) {
-            console.log(
-                "SpinnerButton: requesting focus.",
-                focused,
-                thisButton
-            );
+            log("SpinnerButton: requesting focus.", focused, thisButton);
             thisButton.focus();
         }
     }

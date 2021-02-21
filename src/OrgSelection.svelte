@@ -1,4 +1,6 @@
 <script>
+    import log from "roarr";
+
     import { doRefreshBlocks } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
     import { raceConfig } from "./stores.js";
@@ -18,7 +20,7 @@
 
     var orgMap = {};
     $: {
-        console.log("bound orgMap: ", orgMap);
+        log("bound orgMap: ", orgMap);
     }
 
     const getOrgsAsList = (orgList) => {
@@ -31,7 +33,7 @@
         }
     };
     const refreshOrgMap = async () => {
-        console.log("refreshOrgMap:");
+        log("refreshOrgMap:");
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -41,12 +43,12 @@
         axios
             .get($raceConfig.baseUrl + `/listOrgConfig?cacheKey=${cacheKey}`)
             .then((response) => {
-                console.log("refreshOrgMap length:" + response.data.length);
-                console.log("refreshOrgMap:", response.data);
+                log("refreshOrgMap length:" + response.data.length);
+                log("refreshOrgMap:", response.data);
                 orgMap = response.data;
             })
             .catch((err) => {
-                console.log(err);
+                log(err);
             });
     };
 

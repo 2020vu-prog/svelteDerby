@@ -1,3 +1,5 @@
+import log from "roarr";
+
 import axiosCommon from "axios";
 
 import { Auth } from "aws-amplify";
@@ -9,6 +11,19 @@ var bearer = "";
 import { writable, readable, get as getStore } from "svelte/store";
 import { storeAuth } from "./stores/auth.js";
 import { buildVersion } from "./utils.js";
+/*
+function persistWritable(key, dflt) {
+    const initial = localStorage.getItem(key);
+    const ival = initial === null ? dflt : initial;
+    const rc = writable(ival);
+    rc.subscribe((val) => localStorage.setItem(key, val));
+    return rc;
+}
+*/
+
+function parseBool(val) {
+    return val === true || val === "true";
+}
 
 export const userEmail = writable("");
 
@@ -24,6 +39,16 @@ export const carFilter = writable("");
 export const nextOnBlockKey = writable("");
 export const showBottomNav = writable(true);
 export const developerMode = writable(false);
+//export const developerLogging = writable(false);
+//export const developerLogging = persistWritable("developerLogging", false);
+export const developerLogging = writable(
+    parseBool(localStorage.getItem("developerLogging"))
+);
+developerLogging.subscribe((val) => {
+    console.log("tripped", val);
+    localStorage.setItem("developerLogging", val);
+});
+
 export const pendingSortAlgorithm = writable("Age");
 export const mediaFileType = writable(getDefaultFileFormat());
 export const autoAnnounceResults = writable(false);
