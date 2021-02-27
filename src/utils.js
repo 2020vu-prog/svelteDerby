@@ -1,4 +1,4 @@
-import log from "roarr";
+import log from "loglevel";
 
 const {
     hasSvelteRoutePath,
@@ -17,21 +17,21 @@ const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityF
 
 export async function getHistoryEntity(PK, SK, at) {
     const key = { PK: PK, SK: SK, at: at };
-    console.log("getHistoryEntity", key);
+    log.debug("getHistoryEntity", key);
     const entityFromDb = await db.EventHistory.get(key);
 
     const entityFactory = new EntityFactory({});
     const rc = entityFactory.build(entityFromDb);
-    console.log("getHistoryEntity gave:", rc);
+    log.debug("getHistoryEntity gave:", rc);
     return rc;
 }
 export async function fmtChartPosition(RpRs) {
     if (RpRs.bracketPos && RpRs.bracketPos.includes(":")) {
         const [bmdKey, heat] = RpRs.bracketPos.split(":");
-        console.log("getting bmd:", bmdKey);
+        log.debug("getting bmd:", bmdKey);
 
         const bmd = await db.BracketMetaData.get(bmdKey);
-        console.log("found bmd:", bmd);
+        log.debug("found bmd:", bmd);
         if (bmd) {
             return `${bmd.bracketName} -- Heat: ${heat}`;
         }
@@ -57,21 +57,21 @@ export async function isUserAllowedRoutePath(routePath) {
     return isEmailAllowedRoutePath(email, routePath);
 }
 export async function getUserEmail() {
-    console.log("getUserEmail");
+    log.debug("getUserEmail");
     try {
         const user = await Auth.currentAuthenticatedUser();
-        console.log("getUserEmail cognito user:", user);
+        log.debug("getUserEmail cognito user:", user);
         const attributes = await Auth.userAttributes(user);
-        console.log("getUserEmail cognito attrs:", attributes);
+        log.debug("getUserEmail cognito attrs:", attributes);
         const email = attributes
             .filter((a) => {
                 return a.Name === "email";
             })[0]
             .getValue();
-        console.log("getUserEmail email:", email);
+        log.debug("getUserEmail email:", email);
         return email;
     } catch (err) {
-        console.log("getUserEmail error:", err);
+        log.debug("getUserEmail error:", err);
         userEmail.set(""); // update userEmail store
         logout(); // cognito thinks we aren't logged in.  sync the store
         statusMessage.set({

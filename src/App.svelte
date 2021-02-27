@@ -55,7 +55,7 @@
     import { isEmailAllowedRoutePath, getUserEmail } from "./utils.js";
 
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
-    import { ROARR } from "roarr";
+    //import { ROARR } from "roarr";
 
     //enableRoarr(true, "hardcode");
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -120,6 +120,13 @@
         }
     }
     $: {
+        if ($developerLogging) {
+            log.setLevel(log.levels.TRACE)
+        }
+        else {
+
+            log.setLevel(log.levels.ERROR)
+        }
         //enableRoarr($developerLogging, "store");
     }
 

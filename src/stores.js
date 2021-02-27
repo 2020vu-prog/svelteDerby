@@ -1,4 +1,4 @@
-import log from "roarr";
+import log from "loglevel";
 
 import axiosCommon from "axios";
 
@@ -45,7 +45,7 @@ export const developerLogging = writable(
     parseBool(localStorage.getItem("developerLogging"))
 );
 developerLogging.subscribe((val) => {
-    console.log("tripped", val);
+    log.debug("tripped", val);
     localStorage.setItem("developerLogging", val);
 });
 
@@ -76,7 +76,7 @@ export function getChartCacheKey() {
 export function getCacheKey() {
     var prefs = getStore(prefStore);
     const expiresMS = new Date().getTime() - 5 * 60 * 1000; // 5 minutes ago
-    console.log("getCacheKey:", expiresMS, " pref:", prefs.disableCache);
+    log.debug("getCacheKey:", expiresMS, " pref:", prefs.disableCache);
     if (prefs.disableCache && prefs.disableCache > expiresMS) {
         return prefs.disableCache + "";
     } else {
@@ -93,21 +93,21 @@ export function setCacheKey(newKey) {
 axiosCommon.interceptors.response.use(
     (response) => {
         if (response.status === 401) {
-            console.log("AINT: You are not authorized");
+            log.debug("AINT: You are not authorized");
         }
         if (response.status === 200 && response.headers["x-client-minimum"]) {
-            console.log("AINT: headers: ", response.headers);
+            log.debug("AINT: headers: ", response.headers);
             if (
                 semver.lt(buildVersion(), response.headers["x-client-minimum"])
             ) {
                 location.reload();
             }
         }
-        console.log("AINT: ", response);
+        log.debug("AINT: ", response);
         return response;
     },
     (error) => {
-        console.log("AINT error: ", error);
+        log.debug("AINT error: ", error);
         if (error.response && error.response.data) {
             return Promise.reject(error.response.data);
         }
@@ -118,12 +118,12 @@ async function getAxiosCommon() {
     //TODO: flush bearer token when email changes
     if (bearer) {
         var decoded = jwt.decode(bearer);
-        console.log("decoded jwt:", decoded);
+        log.debug("decoded jwt:", decoded);
         const now = new Date().getTime() / 1000;
         if (decoded && decoded.exp && decoded.exp > now + 30) {
-            console.log("getAxiosCommon re-using token");
+            log.debug("getAxiosCommon re-using token");
         } else {
-            console.log("getAxiosCommon expiring token");
+            log.debug("getAxiosCommon expiring token");
             bearer = "";
         }
     }
@@ -132,7 +132,7 @@ async function getAxiosCommon() {
         bearer = currentSession.idToken.jwtToken;
         axiosCommon.defaults.headers.common["Authorization"] = bearer;
     }
-    console.log("bearer:", bearer);
+    log.debug("bearer:", bearer);
     return axiosCommon;
 }
 

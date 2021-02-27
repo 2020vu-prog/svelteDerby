@@ -1,5 +1,5 @@
 "use strict";
-import log from "roarr";
+import log from "loglevel";
 
 /*
 timerConfig :{
@@ -21,7 +21,7 @@ class CalcFinish {
     calcFinishMain(rawList) {
         const cBlocks = this.splitIntoCandidateBlocks(rawList);
         const finishList = cBlocks.map((cBlock) => this.mapValidFinish(cBlock));
-        log("finishList:", JSON.stringify(finishList));
+        log.debug("finishList:", JSON.stringify(finishList));
         return finishList;
     }
     splitIntoCandidateBlocks(rawList) {
@@ -71,7 +71,7 @@ class CalcFinish {
             valid: false,
         };
         const lanePins = cBlock.filter((piPin) => {
-            //log("looking for :", lane, " in: ", piPin.pinName);
+            //log.debug("looking for :", lane, " in: ", piPin.pinName);
             return piPin.pinName === lane;
         });
         if (lanePins.length == 0) {

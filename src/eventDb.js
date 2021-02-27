@@ -1,4 +1,4 @@
-import log from "roarr";
+import log from "loglevel";
 
 import Dexie from "dexie";
 
