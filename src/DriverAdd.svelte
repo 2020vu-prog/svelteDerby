@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig, statusMessage } from "./stores.js";
@@ -22,7 +22,7 @@
     var submitSpinning = false;
     var speakSpinning = false;
     onMount(async () => {
-        log("mounted focus: ", params);
+        log.debug("mounted focus: ", params);
 
         mode = params.number ? "Update" : "Add";
         document.getElementById("carNumber").focus();
@@ -37,25 +37,25 @@
     async function refreshDataFromDb(trigger) {
         if (!params.number) return;
 
-        log("driverAdd: refreshDataFromDb data:", trigger);
+        log.debug("driverAdd: refreshDataFromDb data:", trigger);
 
         const ptcpFromDexie = await db.Participant.get(
             params.number.toString()
         );
 
-        log("driverAdd: refreshDataFromDb gave:", ptcpFromDexie);
+        log.debug("driverAdd: refreshDataFromDb gave:", ptcpFromDexie);
 
         updateBoundVars(ptcpFromDexie);
     }
     const updateBoundVars = async (ptcpFromDexie) => {
         Object.assign(driverForm, ptcpFromDexie);
-        log("driverAdd: updateBoundVars gave:", driverForm);
+        log.debug("driverAdd: updateBoundVars gave:", driverForm);
         driverForm.carNumber = ptcpFromDexie.number;
         driverForm.driverName = ptcpFromDexie.name;
         driverForm.sampa = ptcpFromDexie.sampa;
     };
     async function handleSubmit() {
-        log(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
+        log.debug(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -68,7 +68,7 @@
             pType: driverForm.pType ? driverForm.pType : undefined,
         };
 
-        log("token:" + bearer);
+        log.debug("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
 
@@ -88,7 +88,7 @@
                 text: "driverAdd failed: " + error,
                 type: "error",
             };
-            //log("driverAdd failed: " + err)
+            //log.debug("driverAdd failed: " + err)
         }
     }
 
@@ -113,14 +113,14 @@
                 driverForm.driverName.toString() != ""
             ) {
                 submitDisabled = false;
-                log("sync add button SYNC");
+                log.debug("sync add button SYNC");
             } else {
                 submitDisabled = true;
-                log("sync add button FAIL");
+                log.debug("sync add button FAIL");
             }
         } else {
             submitDisabled = true;
-            log("sync add button FAIL");
+            log.debug("sync add button FAIL");
         }
     };
     function getLocalSSML() {
@@ -139,8 +139,8 @@
         speakSpinning = true;
 
         const ssml = `<speak>Driver name is ${getLocalSSML()}</speak>`;
-        log("requesting speech");
-        log(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
+        log.debug("requesting speech");
+        log.debug(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -150,7 +150,7 @@
             ssml: ssml,
         };
 
-        log("token:" + bearer);
+        log.debug("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
 
@@ -158,7 +158,7 @@
         const url = $raceConfig.baseUrl + "/requestTts";
         try {
             const response = await axios.post(url, req);
-            log("speech: ", response);
+            log.debug("speech: ", response);
             $statusMessage = {
                 text: `Speech Processed.`,
                 type: "success",
@@ -173,7 +173,7 @@
                 text: "speak failed: " + error,
                 type: "error",
             };
-            //log("driverAdd failed: " + err)
+            //log.debug("driverAdd failed: " + err)
         } finally {
         }
     }

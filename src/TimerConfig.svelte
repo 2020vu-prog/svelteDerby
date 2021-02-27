@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import { raceConfig, statusMessage, doRefreshBlocks } from "./stores.js";
     import { store } from "./stores/auth.js";
@@ -19,7 +19,7 @@
     var submitSpinning = false;
 
     onMount(async () => {
-        log("mounted focus");
+        log.debug("mounted focus");
         mounted = true;
         getActiveTimers();
     });
@@ -27,11 +27,11 @@
     $: refreshDataFromDb($doRefreshBlocks);
 
     async function refreshDataFromDb(trigger) {
-        log("TimerConfig: refreshDataFromDb data:", trigger);
+        log.debug("TimerConfig: refreshDataFromDb data:", trigger);
 
         tcFromDexie = await db.TimerConfig.get("TimerConfig");
 
-        log("TimerConfig: refreshDataFromDb gave:", tcFromDexie);
+        log.debug("TimerConfig: refreshDataFromDb gave:", tcFromDexie);
 
         Object.assign(loginForm, tcFromDexie);
 
@@ -42,10 +42,10 @@
         if (tcFromDexie.sha) {
             activeTimerSha = tcFromDexie.sha;
         }
-        log("loginForm copied:", JSON.stringify(loginForm));
+        log.debug("loginForm copied:", JSON.stringify(loginForm));
     }
     async function getActiveTimers() {
-        log("getActiveTimers:");
+        log.debug("getActiveTimers:");
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -54,7 +54,7 @@
             orgIz: $raceConfig.orgIz,
         };
 
-        log("token:" + bearer);
+        log.debug("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
         const orgIz = $raceConfig.orgIz;
@@ -67,7 +67,7 @@
             )
             .then((response) => {
                 if (response.error) {
-                    log("getActiveTimers:", response);
+                    log.debug("getActiveTimers:", response);
                     //TODO: not working!?
                     $statusMessage = {
                         text: `getActiveTimers Failed: ${response.error}.`,
@@ -79,7 +79,7 @@
                         type: "success",
                     };
                     activeTimerList = response.data;
-                    log("activeTimerList: ", activeTimerList);
+                    log.debug("activeTimerList: ", activeTimerList);
                 }
             })
             .catch((err) => {
@@ -91,7 +91,7 @@
         await refreshDataFromDb();
     }
     async function handleSubmit() {
-        log("Adding:" + JSON.stringify(loginForm));
+        log.debug("Adding:" + JSON.stringify(loginForm));
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -125,17 +125,17 @@
                 };
             }
             pop();
-            //log(response);
+            //log.debug(response);
         } catch (error) {
             $statusMessage = {
                 text: "TimerConfig error: " + err,
                 type: "error",
             };
-            log(error);
+            log.debug(error);
         }
     }
     async function clickActivateHost(timer) {
-        log("clickActivateHost", timer);
+        log.debug("clickActivateHost", timer);
         loginForm.sha = timer.sha;
 
         //await handleSubmit();
@@ -145,10 +145,10 @@
     const timerShaMatchCheck = (timerToCheck) => {
         if (activeTimerSha && timerToCheck.sha) {
             if (activeTimerSha === timerToCheck.sha) {
-                log("MATCH ", timerToCheck.sha, " ", activeTimerSha);
+                log.debug("MATCH ", timerToCheck.sha, " ", activeTimerSha);
                 return true;
             } else {
-                log("NOT A MATCH ", timerToCheck.sha, " ", activeTimerSha);
+                log.debug("NOT A MATCH ", timerToCheck.sha, " ", activeTimerSha);
                 return false;
             }
         }

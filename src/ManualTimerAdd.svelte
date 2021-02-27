@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig, statusMessage, driverMap } from "./stores.js";
@@ -14,7 +14,7 @@
     var submitDisabled = false;
     var submitSpinning = false;
 
-    log("ManualTimeAdd", params);
+    log.debug("ManualTimeAdd", params);
 
     function validateTimerData(laneX) {
         if (laneX.toString().includes(".")) {
@@ -28,7 +28,7 @@
     }
 
     async function handleSubmit() {
-        log("Manual Timer:" + JSON.stringify(resultForm));
+        log.debug("Manual Timer:" + JSON.stringify(resultForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
         if (resultForm.lane1 == "0") {
@@ -43,7 +43,7 @@
         [resultForm.lane1, resultForm.lane2].forEach((laneX) => {
             validateTimerData(laneX) || errorCount++;
         });
-        log("mta errorCount:", errorCount);
+        log.debug("mta errorCount:", errorCount);
         if (errorCount > 0) {
             return;
         }
@@ -70,17 +70,17 @@
             );
             if (response.data.error) {
                 submitSpinning = false;
-                log("add failed", response);
+                log.debug("add failed", response);
                 $statusMessage = {
                     text: response.data.error,
                     type: "error",
                 };
             } else {
-                log(endPoint + " axios success");
+                log.debug(endPoint + " axios success");
                 pop();
             }
         } catch (err) {
-            log(endPoint + " failed: " + err);
+            log.debug(endPoint + " failed: " + err);
         }
         resultForm.lane1 = "0";
         resultForm.lane2 = "0";
@@ -108,7 +108,7 @@
     var carNumber2 = getUrlVars()["carNumber2"];
 
     const getDriverName = (number) => {
-        log("gdn: " + number);
+        log.debug("gdn: " + number);
         if (number && $driverMap[number]) {
             return $driverMap[number].name;
         } else {

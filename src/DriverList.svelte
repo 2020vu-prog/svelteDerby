@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import {
         userEmail,
@@ -18,7 +18,7 @@
 
     var editable = false;
     onMount(async () => {
-        log(`DriverList userEmail: ${$userEmail}`);
+        log.debug(`DriverList userEmail: ${$userEmail}`);
         editable = isDriverEditable($userEmail);
     });
     const filterMatches = (driver, lclFilter) => {
@@ -36,7 +36,7 @@
     }
     function editCarAndDriver(number) {
         if (editable) {
-            log("editCarAndDriver");
+            log.debug("editCarAndDriver");
             push(`/driverAdd/${number}`);
         }
     }

@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import {
         doRefreshBlocks,
@@ -29,7 +29,7 @@
     var histCountFromDexie = "";
 
     const refreshDataFromDb = async (trigger) => {
-        log("refreshDataFromDb data:", trigger);
+        log.warn("refreshDataFromDb data:", trigger);
 
         ecFromDexie = await db.EventConfig.toArray();
         histCountFromDexie = (await db.EventHistory.count()).toString();
@@ -49,12 +49,12 @@
     }
     function updatePrefsWhenMounted(prefs) {
         if (mounted) {
-            log("About updating developerPrefs:", mounted, prefs);
+            log.warn("About updating developerPrefs:", mounted, prefs);
             localConfigDb["LocalConfig"].put(prefs);
         }
     }
     onMount(async () => {
-        log("mounting");
+        log.warn("mounting");
 
         mounted = true;
         refreshDataFromDb();
@@ -63,7 +63,7 @@
     var devClickCount = 0;
     function devClick() {
         if (devClickCount++ > 8) {
-            log("devmodeA");
+            log.warn("devmodeA");
             $developerMode = true;
             $statusMessage = {
                 text: `Developer Mode Enabled.`,

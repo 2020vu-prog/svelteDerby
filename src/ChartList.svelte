@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import { driverMap, doRefreshBlocks } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
@@ -17,24 +17,24 @@
         refreshDataFromDb();
     });
     const refreshDataFromDb = async (trigger) => {
-        log("refreshDataFromDb data:", trigger);
+        log.debug("refreshDataFromDb data:", trigger);
 
         bmdFromDexie = await db.BracketMetaData.toArray();
     };
     const getBmdAsList = (driverMap) => {
         const rc = [];
         db.BracketMetaData.each((bmd) => {
-            log("bmd from dexie: ", bmd), rc.push(bmd);
+            log.debug("bmd from dexie: ", bmd), rc.push(bmd);
         });
 
-        log("bmd rc:", rc);
+        log.debug("bmd rc:", rc);
         return rc;
         //const bmdArray= db.BracketMetaData.toArray();
-        //log("bmdArray:",bmdArray)
+        //log.debug("bmdArray:",bmdArray)
         //return bmdArray;
     };
     const navToChartDetail = (bmd) => {
-        log("navToChartDetail:", bmd);
+        log.debug("navToChartDetail:", bmd);
         push("/ChartDetail/" + bmd.SK);
     };
     function getSortedBmd(bmdFromDexie) {

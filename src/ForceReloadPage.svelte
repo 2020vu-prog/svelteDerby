@@ -1,10 +1,10 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import { push, replace, pop } from "svelte-spa-router";
     import { onMount } from "svelte";
     onMount(async () => {
-        log("params force reload : popping ");
+        log.debug("params force reload : popping ");
         pop();
     });
 </script>

@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import { theme, driverMap } from "./stores.js";
     import { raceConfig, statusMessage, userEmail } from "./stores.js";
@@ -21,18 +21,18 @@
 
     const mediaLink = `/spMediaList/${dbName}/${dbKey}`;
     onMount(async () => {
-        log("timerLink: ", timerLink);
-        log("bracketLink: ", bracketLink);
+        log.debug("timerLink: ", timerLink);
+        log.debug("bracketLink: ", bracketLink);
     });
     /* Toggle between adding and removing the "responsive" class to the navbar when the user clicks on the icon */
     const myFunction = () => {
-        log("myFunction");
+        log.debug("myFunction");
     };
 
     async function maybeDelete() {
-        log("toolbar maybeDelete key", dbName, dbKey);
+        log.debug("toolbar maybeDelete key", dbName, dbKey);
         const tgt = await db[dbName].get(dbKey);
-        log("toolbar maybeDelete tgt", tgt);
+        log.debug("toolbar maybeDelete tgt", tgt);
         var tgtName = "";
         if (dbName === "RacePhase") {
             tgtName = "Blocks";
@@ -54,7 +54,7 @@
     }
 
     async function doDelete(dbName, dbKey, tgtName) {
-        log(`doDelete: ${dbName} ${dbKey}`);
+        log.debug(`doDelete: ${dbName} ${dbKey}`);
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -116,7 +116,7 @@
         announceText = `Car ${carsAndOrDrivers[0]}, and car ${carsAndOrDrivers[1]}, please report to your cars, it is time to race.....`;
         announceText += `Car ${carsAndOrDrivers[0]}, and car ${carsAndOrDrivers[1]}, please report to your cars, it is time to race`;
 
-        log(`doAnnounce: ${announceText} `);
+        log.debug(`doAnnounce: ${announceText} `);
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -159,15 +159,15 @@
         push(mediaLink);
     }
     const gotoTimer = () => {
-        log("routing to:", timerLink);
+        log.debug("routing to:", timerLink);
         push(timerLink);
     };
     const gotoBracket = () => {
-        log("routing to bracket:", bracketLink);
+        log.debug("routing to bracket:", bracketLink);
         push(bracketLink);
     };
     function gotoHistory() {
-        log("routing to history:");
+        log.debug("routing to history:");
         var pkSuffix = "";
         if (dbName === "RacePhase") {
             pkSuffix = "RP";

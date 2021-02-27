@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import { onDestroy } from "svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
@@ -36,7 +36,7 @@
             mainStream = undefined;
         }
         mediaRecorder.forEach((mr) => mr.stop());
-        log(`${tag} onDestroy done`);
+        log.debug(`${tag} onDestroy done`);
     });
     // stop both mic and camera
     function stopBothVideoAndAudio(stream) {
@@ -68,7 +68,7 @@
             const response = await axios.get($raceConfig.baseUrl + endPoint, {
                 params: req,
             });
-            log("requestS3PutObjectUrl response", response);
+            log.debug("requestS3PutObjectUrl response", response);
             if (response.data.signedUrl) {
                 const options = {
                     headers: {
@@ -93,7 +93,7 @@
                     videoData,
                     options
                 );
-                log("s3PutResponse", putRc);
+                log.debug("s3PutResponse", putRc);
                 $statusMessage = {
                     text: `Completed upload s3 ${videoData.size}`,
                     type: "success",
@@ -101,7 +101,7 @@
                 };
             }
             if (response.data.error) {
-                log("requestS3PutObjectUrl failed", response);
+                log.debug("requestS3PutObjectUrl failed", response);
                 $statusMessage = {
                     text: response.data.error,
                     type: "error",
@@ -118,7 +118,7 @@
         }
     }
     function parseRez() {
-        log("parseRez:", resolution);
+        log.debug("parseRez:", resolution);
         return resolution.split("x");
     }
     function getVideoHeight() {
@@ -139,7 +139,7 @@
                 facingMode: "environment",
             },
         };
-        log("Using media constraints:", constraints);
+        log.debug("Using media constraints:", constraints);
         init(constraints, snum);
     }
     async function init(constraints, snum) {
@@ -159,7 +159,7 @@
     }
     var mainStream;
     function handleGotMedia(stream, snum) {
-        log("getUserMedia() got stream:", stream);
+        log.debug("getUserMedia() got stream:", stream);
         window.stream = stream;
 
         const gumVideo = document.querySelector(`video#gum${snum}`);
@@ -191,13 +191,13 @@
     async function doCaptureAndUpload(uploadKey) {
         const tag = "doCaptureAndUpload";
         if (captureDisabled) {
-            log(`${tag}: skipping, not armed`);
+            log.debug(`${tag}: skipping, not armed`);
             return;
         }
         captureSpinning = true; // reset after upload ok
         captureDisabled = true; // reset after 2 timer cycles
         uploadPending = uploadKey;
-        log(`${tag} uploadPending: ${uploadKey}`);
+        log.debug(`${tag} uploadPending: ${uploadKey}`);
         captureOldest(); // stop oldest and upload it
         videoRefreshCount = 0;
     }
@@ -213,7 +213,7 @@
         if (nextSnum >= mediaRecorder.length) {
             nextSnum = 0;
         }
-        log(`timer ${snum} next: ${nextSnum}`);
+        log.debug(`timer ${snum} next: ${nextSnum}`);
         //downloadPending = new Date().getTime();
         mediaRecorder[snum].stop();
     }
@@ -242,11 +242,11 @@
     }
     function recordStream(stream, snum) {
         if (!stream) {
-            log("recordStream skipping. no stream");
+            log.debug("recordStream skipping. no stream");
             return;
         }
 
-        log("recordStream", stream, snum);
+        log.debug("recordStream", stream, snum);
         var options = {
             mimeType: `${mimeType}; ${videoCodecs}`,
             videoBitsPerSecond: parseInt(videoBitsPerSecond, 10),
@@ -256,14 +256,14 @@
 
         //event is a BlobEvent
         mediaRecorder[snum].ondataavailable = (event) => {
-            log("Recorder data-available", snum);
-            log("Recorder data-available", event.data);
+            log.debug("Recorder data-available", snum);
+            log.debug("Recorder data-available", event.data);
             if (event.data && event.data.size > 0) {
                 recordedBlobs[snum].push(event.data);
             }
         };
         mediaRecorder[snum].onstop = (event) => {
-            log("Recorder stopped: ", event.data);
+            log.debug("Recorder stopped: ", event.data);
             if (event.data && event.data.size > 0) {
                 recordedBlobs[snum].push(event.data);
             }
@@ -282,7 +282,7 @@
         };
         //mediaRecorder[snum].start(1000);
         mediaRecorder[snum].start();
-        log("recordStream done", snum);
+        log.debug("recordStream done", snum);
     }
 </script>
 

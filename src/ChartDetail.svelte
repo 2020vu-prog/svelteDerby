@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import ChartHotSpot from "./ChartHotSpot.svelte";
     import { onMount } from "svelte";
@@ -27,10 +27,10 @@
         await refreshDataFromDb();
     });
     const refreshDataFromDb = async (trigger) => {
-        log("refreshDataFromDb data:", trigger);
+        log.debug("refreshDataFromDb data:", trigger);
 
         bmdFromDexie = await db.BracketMetaData.get(params.chartId);
-        log("refreshDataFromDb gave:", bmdFromDexie);
+        log.debug("refreshDataFromDb gave:", bmdFromDexie);
 
         const chartCacheKey = getChartCacheKey();
         bracketImgSrc = `/data/brackets/${bmdFromDexie.imgPath}?cacheKey=${chartCacheKey}`;
@@ -38,26 +38,26 @@
         await getChartImage(bmdFromDexie.jsonPath);
     };
     const getChartImage = async (imgPath) => {
-        log("getChartImage", imgPath);
+        log.debug("getChartImage", imgPath);
 
         const chartCacheKey = getChartCacheKey();
         axios
             .get(`/data/brackets/${imgPath}?cacheKey=${chartCacheKey}`)
             .then((response) => {
-                log("ChartDetail  brackets2 axios success", response);
+                log.debug("ChartDetail  brackets2 axios success", response);
                 brackets2 = response.data;
 
                 checkAndActivateScroll();
             })
             .catch((err) => {
-                log("ChartDetail failed: " + err);
+                log.debug("ChartDetail failed: " + err);
                 if (!$chartClickLoggerId) {
                     //don't do anything when empty... enables panMove
                     return;
                 }
             });
     };
-    log("chartDetail params:", params);
+    log.debug("chartDetail params:", params);
 
     // placeholder.   brackets json is downloaded that will match chart image
     var brackets2 = {
@@ -85,7 +85,7 @@
         brackets2.imgPositions[$chartClickLoggerId] = m;
         brackets2.imgPositions = brackets2.imgPositions; // force re-render?
 
-        log(
+        log.debug(
             `loggedImagePos: ${$chartClickLoggerId}: `,
             JSON.stringify(loggedImgPositions)
         );
@@ -102,8 +102,8 @@
     }
     var thisChartImage;
     function iim(e) {
-        log(`thisChartImage: pagex: ${event.pageX} pageY: ${event.pageY}`);
-        log("thisChartImage:", thisChartImage);
+        log.debug(`thisChartImage: pagex: ${event.pageX} pageY: ${event.pageY}`);
+        log.debug("thisChartImage:", thisChartImage);
 
         const bounds = thisChartImage.getBoundingClientRect();
         var left = bounds.left;
@@ -116,7 +116,7 @@
         var ih = thisChartImage.naturalHeight;
         var px = (x / cw) * iw;
         var py = (y / ch) * ih;
-        log(
+        log.debug(
             "click on " +
                 thisChartImage.tagName +
                 " at pixel (" +
@@ -174,7 +174,7 @@
         var myImg = document.querySelector("#bracketImage");
         var currWidth = myImg.clientWidth;
         var currHeight = myImg.clientHeight;
-        log(
+        log.debug(
             "Current width=" +
                 currWidth +
                 ", " +
@@ -188,7 +188,7 @@
         myImg.style.height = brackets2.imgSize.height * scale + "px";
     }
     const imgLoadComplete = () => {
-        log(`imgLoadComplete: `);
+        log.debug(`imgLoadComplete: `);
         checkAndActivateScroll();
         imageLoaded = true;
         tryBuild();
@@ -206,15 +206,15 @@
     };
 
     function hotMoved(event, posKey) {
-        log("hotMoved:" + event + " posKey:" + posKey);
-        log("hotMoved top:" + event.detail.top);
-        log("hotMoved left:" + event.detail.left);
+        log.debug("hotMoved:" + event + " posKey:" + posKey);
+        log.debug("hotMoved top:" + event.detail.top);
+        log.debug("hotMoved left:" + event.detail.left);
         brackets2.imgPositions[posKey].top = event.detail.top;
         brackets2.imgPositions[posKey].left = event.detail.left;
     }
     const checkAndActivateScroll = () => {
         var URLscrollToVar = getUrlVars()["scrollTo"];
-        log("URLscrollToVar: ", URLscrollToVar);
+        log.debug("URLscrollToVar: ", URLscrollToVar);
         if (URLscrollToVar) {
             var x = brackets2.imgPositions[String(URLscrollToVar) + "A"].left;
             var y = brackets2.imgPositions[String(URLscrollToVar) + "A"].top;
@@ -222,7 +222,7 @@
         }
     };
     function copyJson() {
-        log("CD: copyJson");
+        log.debug("CD: copyJson");
         const jsonClone = JSON.stringify(brackets2);
         const bracketClone = JSON.parse(jsonClone);
         delete bracketClone.imgPositions.seedx;
@@ -231,17 +231,17 @@
         navigator.clipboard.writeText(JSON.stringify(bracketClone));
     }
     const jqLoaded = () => {
-        log("jqloaded");
+        log.debug("jqloaded");
         jsReady = true;
         tryBuild();
     };
     const tryBuild = () => {
         if (mounted && jsReady && imageLoaded) {
-            log("GO");
+            log.debug("GO");
             jQuery("#bracketImage").on("click", function (event) {
                 var x = event.pageX - this.offsetLeft;
                 var y = event.pageY - this.offsetTop;
-                log("jquery X Coordinate: " + x + " Y Coordinate: " + y);
+                log.debug("jquery X Coordinate: " + x + " Y Coordinate: " + y);
                 logClickXY(x, y);
             });
         }

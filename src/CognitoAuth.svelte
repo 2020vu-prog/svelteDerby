@@ -1,9 +1,9 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import Amplify, { Auth } from "aws-amplify";
     import awsconfig from "./config/aws-exports";
-    log("config:" + awsconfig);
+    log.debug("config:" + awsconfig);
     Amplify.configure(awsconfig);
 </script>
 

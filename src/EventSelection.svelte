@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import {
         nextOnBlockKey,
@@ -26,7 +26,7 @@
     var eventMap = {};
     var selectedEventMap = {};
     $: {
-        log("bound eventMap: ", eventMap);
+        log.debug("bound eventMap: ", eventMap);
     }
 
     const getOrgEventsAsList = (viewMode) => {
@@ -39,7 +39,7 @@
         return orgEvents;
     };
     const refreshOrgMap = async () => {
-        log("refreshOrgMap:");
+        log.debug("refreshOrgMap:");
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -51,13 +51,13 @@
                     `/listOrgEvents?orgIz=${params.orgIz}&cache=${cacheKey}`
             )
             .then((response) => {
-                log("refreshOrgMap length:" + response.data.length);
-                log("refreshOrgMap:", response.data);
+                log.debug("refreshOrgMap length:" + response.data.length);
+                log.debug("refreshOrgMap:", response.data);
                 eventMap = response.data;
                 currentViewMode = "Active";
             })
             .catch((err) => {
-                log(err);
+                log.debug(err);
             });
     };
 
@@ -68,14 +68,14 @@
         $doRefreshBlocks = -1;
     };
     const doSelect = async (config) => {
-        log("selected:", config);
+        log.debug("selected:", config);
         await dbReset();
-        log("db reset complete.");
+        log.debug("db reset complete.");
 
         requestClearStore();
-        log("requestClearStore  complete.");
+        log.debug("requestClearStore  complete.");
 
-        log("selecting config:", config);
+        log.debug("selecting config:", config);
         config.baseUrl = "/app";
         config.title = getRaceName(config);
 
@@ -97,7 +97,7 @@
         Object.filter = (obj, predicate) =>
             Object.fromEntries(Object.entries(obj).filter(predicate));
 
-        log("eventMap: ", eventMap);
+        log.debug("eventMap: ", eventMap);
 
         var filtered = {};
         if (viewMode === "Active") {
@@ -113,7 +113,7 @@
             );
         }
 
-        log("filteredEventMap: ", filtered);
+        log.debug("filteredEventMap: ", filtered);
         selectedEventMap = filtered;
     }
 </script>

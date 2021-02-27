@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import { carFilter } from "./stores.js";
     import Icon from "fa-svelte";
@@ -10,7 +10,7 @@
     let icon = faFilter;
     let editMode = false;
     const toggleEdit = async () => {
-        log("toggle:", editMode);
+        log.debug("toggle:", editMode);
         $carFilter = "";
         editMode = !editMode;
         if (editMode) {

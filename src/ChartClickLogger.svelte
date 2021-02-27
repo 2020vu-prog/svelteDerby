@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import { isEmailAllowedRoutePath } from "./utils.js";
     import { createEventDispatcher } from "svelte";
@@ -14,7 +14,7 @@
     var showFab = false;
     const dispatch = createEventDispatcher();
     const toggleEdit = async () => {
-        log("toggle:", editMode);
+        log.debug("toggle:", editMode);
     };
     function toggleShow() {
         $chartClickLoggerShow = !$chartClickLoggerShow;

@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import CarAndDriver from "./CarAndDriver.svelte";
     import InfoButton from "./InfoButton.svelte";
@@ -27,7 +27,7 @@
         chartPosition = await fmtChartPosition(standing);
     };
     $: {
-        log("rp changed:", at);
+        log.debug("rp changed:", at);
         updateBoundVars(standing);
     }
     onMount(async () => {
@@ -48,7 +48,7 @@
         return !raceStanding.del;
     };
     function toggleToolbar(event) {
-        log("info event: ", event.detail.text);
+        log.debug("info event: ", event.detail.text);
         showToolbar = !showToolbar;
     }
     const gotoBracket = () => {

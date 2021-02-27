@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import axios from "axios";
     import SpinnerButton from "./SpinnerButton.svelte";
@@ -43,7 +43,7 @@
     //TODO: these should happen consecutively.
     // always clearStore() before doRefresh()
     $: {
-        log("Race config changed. refreshing.");
+        log.debug("Race config changed. refreshing.");
         doRefresh($raceConfig); // call doRefresh if/when RaceConfig changes.
     }
     $: {
@@ -62,7 +62,7 @@
 
     const requstPermissionHack = async (cognitoIdentityId) => {
         if (!cognitoIdentityId) {
-            log("bypass rph. no id");
+            log.debug("bypass rph. no id");
         }
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
@@ -79,33 +79,33 @@
                     cognitoIdentityId
             )
             .then((response) => {
-                log("requstPermissionHack:" + response.data.length);
+                log.debug("requstPermissionHack:" + response.data.length);
             })
             .catch((err) => {
-                log("requstPermissionHack failed:", err);
+                log.debug("requstPermissionHack failed:", err);
             });
     };
     async function watchIot() {
         if (!$raceConfig.orgId) {
-            log("watchIot : no org:  skip");
+            log.debug("watchIot : no org:  skip");
             return; // nothing to watch
         }
         if (!$mqttEnabled) {
-            log("watchIot : not enabled:  skip", $mqttEnabled);
+            log.debug("watchIot : not enabled:  skip", $mqttEnabled);
             btnClass = "btn-info";
             return; // nothing to watch
         }
-        log("watchIot : do mqtt:  ", $mqttEnabled);
+        log.debug("watchIot : do mqtt:  ", $mqttEnabled);
 
         const ccSession = await Auth.currentSession();
-        log("auth ccSession :", ccSession);
+        log.debug("auth ccSession :", ccSession);
         const ccInfo = await Auth.currentCredentials();
         var cognitoIdentityId = "";
         if (ccInfo && ccInfo.data) {
             cognitoIdentityId = ccInfo.data.IdentityId;
-            log("auth ccInfo cognitoIdentityId:", cognitoIdentityId);
+            log.debug("auth ccInfo cognitoIdentityId:", cognitoIdentityId);
         } else {
-            log("auth ccInfo empty:", ccInfo);
+            log.debug("auth ccInfo empty:", ccInfo);
         }
 
         if (activeIotWatch && !activeIotWatch.plugged) {
@@ -122,23 +122,23 @@
         const topic = "derby/" + $raceConfig.orgId + "/dist";
 
         if (activeIotWatch.subbedTopic === topic) {
-            log("watchIot : already subscribed skip");
+            log.debug("watchIot : already subscribed skip");
             return;
         }
 
         if (activeIotWatch.subscription) {
-            log("watchIot: UnSubscribing", activeIotWatch.subscription);
+            log.debug("watchIot: UnSubscribing", activeIotWatch.subscription);
             activeIotWatch.subscription.unsubscribe();
         }
-        log("watchIot: Subscribing to:", topic);
+        log.debug("watchIot: Subscribing to:", topic);
         activeIotWatch.subbedTopic = topic;
         btnClass = "btn-success";
         activeIotWatch.subscription = PubSub.subscribe(topic).subscribe({
             next: async (data) => {
                 btnClass = "btn-success";
 
-                log("watchIot: Message received", data);
-                log("watchIot: Message value", data.value);
+                log.debug("watchIot: Message received", data);
+                log.debug("watchIot: Message value", data.value);
                 await applyFromMqMsg(data.value);
             },
             error: (error) => {
@@ -148,7 +148,7 @@
             },
             close: () => {
                 btnClass = "btn-warning";
-                log("watchIot: AWS iot Done");
+                log.debug("watchIot: AWS iot Done");
             },
         });
 
@@ -163,11 +163,11 @@
     $: syncVideoCaptureSubscription($mqttTimerSubscribe);
 
     function potentialReloadPage() {
-        log("potentialReloadPage: begin");
+        log.debug("potentialReloadPage: begin");
         const oneMinute = 60 * 1000;
         const now = new Date().getTime();
         if (now > pageLoadTimeMs + oneMinute) {
-            log("potentialReloadPage: fired");
+            log.debug("potentialReloadPage: fired");
             location.reload();
         }
     }
@@ -200,7 +200,7 @@
         }
     }
     function potentialCaptureJ(json) {
-        log("potentialCaptureJ: ", json);
+        log.debug("potentialCaptureJ: ", json);
         var timerKey;
         if (json.microb) {
             timerKey = "MQTT-" + json.microb;
@@ -210,7 +210,7 @@
         if (json.pinType) {
             const pinType = json.pinType;
             const pinState = json.pinState;
-            log(`potentialCapture: pinType: ${pinType}`);
+            log.debug(`potentialCapture: pinType: ${pinType}`);
 
             // mqtt message being processed out of sequence??
             // RacePhase only sees leading edge of car.  don't capture video on a trailing edge event!
@@ -258,16 +258,16 @@
         const tag = "tag:syncSubscription:" + subscriptionName;
         if (activeIotWatch && activeIotWatch.plugged) {
         } else {
-            log(`${tag} skipping, not ready`);
+            log.debug(`${tag} skipping, not ready`);
             return;
         }
-        log(`${tag}: ${subEnabled} `);
+        log.debug(`${tag}: ${subEnabled} `);
         if (subEnabled) {
             if (activeIotWatch[subscriptionName]) {
                 // no action needed.
-                log(`${tag}: ${topicP} subscribe stand down`);
+                log.debug(`${tag}: ${topicP} subscribe stand down`);
             } else {
-                log(`${tag}: Subscribing ${topicP}`);
+                log.debug(`${tag}: Subscribing ${topicP}`);
                 activeIotWatch[subscriptionName] = await mySubscribe(
                     topicP,
                     onMsg
@@ -275,13 +275,13 @@
             }
         } else {
             if (activeIotWatch[subscriptionName]) {
-                log(
+                log.debug(
                     `${tag}: UnSubscribing ${activeIotWatch[subscriptionName]}`
                 );
                 activeIotWatch[subscriptionName].unsubscribe();
                 delete activeIotWatch[subscriptionName];
             } else {
-                log(`${tag}: ${topicP} unsubscribe stand down`);
+                log.debug(`${tag}: ${topicP} unsubscribe stand down`);
             }
         }
     }
@@ -289,14 +289,14 @@
         const tag = "tag:mySubscribe";
         return PubSub.subscribe(topicP).subscribe({
             next: async (data) => {
-                log(`${tag}: ${topicP} paMessage received`, data);
-                log(`${tag}: ${topicP} paMessage value`, data.value);
+                log.debug(`${tag}: ${topicP} paMessage received`, data);
+                log.debug(`${tag}: ${topicP} paMessage value`, data.value);
                 onMsg(data.value);
             },
             error: (error) => {
                 console.error(`${tag}: ${topicP} AWS iot error:`, error);
             },
-            close: () => log(`${tag}: ${topicP}  AWS iot Done`),
+            close: () => log.debug(`${tag}: ${topicP}  AWS iot Done`),
         });
     }
     // called when a message arrives
@@ -318,7 +318,7 @@
     };
 
     const loadCcaHistory = async (s3Path, pendingBulk, histP) => {
-        log("LoadCca begin.");
+        log.debug("LoadCca begin.");
         refreshInProgressCca = true;
 
         try {
@@ -326,10 +326,10 @@
             const response = await axios.get(
                 $raceConfig.baseUrl + "/../" + s3Path
             );
-            log("LoadCca finished:", response);
+            log.debug("LoadCca finished:", response);
             await parseAndApply(response, false, pendingBulk, histP); // don't recurse into another CCA load
         } catch (err) {
-            log("LoadCca failed:", err);
+            log.debug("LoadCca failed:", err);
         }
         refreshInProgressCca = false;
     };
@@ -338,7 +338,7 @@
         const hist = getHistFromStore();
         const entityFactory = new EntityFactory({});
         const e = entityFactory.build(json);
-        log("Entity from mq:", e);
+        log.debug("Entity from mq:", e);
         const pendingBulk = {};
         await applyEntityToHist(e, hist, pendingBulk);
         await flushPendingBulk(pendingBulk);
@@ -355,10 +355,10 @@
         //const sortedPhases=Object.values(hist.RacePhase).sort(sortBy('lastUpdate', true, parseInt));
         //racePhaseMap.set(hist.RacePhase)
         $racePhaseMap = hist.RacePhase;
-        log("HotLoad: rpm now:", Object.keys(hist.RacePhase));
+        log.debug("HotLoad: rpm now:", Object.keys(hist.RacePhase));
 
         $doRefreshBlocks = new Date().getTime();
-        log("HotLoad: updated doRefreshBlocks");
+        log.debug("HotLoad: updated doRefreshBlocks");
     };
     const clearStore = () => {
         $nextOnBlockKey = "N/A";
@@ -367,7 +367,7 @@
         $doRefreshBlocks = 0;
         $driverMap = {};
         $standingsMap = {};
-        log("clearStore complete");
+        log.debug("clearStore complete");
     };
     const getHistFromStore = () => {
         return {
@@ -385,7 +385,7 @@
      **
      */
     async function parseAndApply(response, doLoadCca, pendingBulk, histP) {
-        log("parseAndApply:", doLoadCca, histP);
+        log.debug("parseAndApply:", doLoadCca, histP);
         const startTime = new Date().getTime();
         const entityFactory = new EntityFactory({});
 
@@ -394,7 +394,7 @@
         //TODO:   shouldn't clear hist on refresh (we just loaded it!)
 
         entityFactory.entityTypes.forEach((et) => {
-            log("et:", et);
+            log.debug("et:", et);
             if (!hist[et]) {
                 hist[et] = {};
             }
@@ -406,14 +406,14 @@
             if (e != null) {
                 await applyEntityToHist(e, hist, pendingBulk);
             } else {
-                log("wtf json: ", json);
+                log.debug("wtf json: ", json);
                 if (doLoadCca && json.PK === "CCA" && json.s3) {
                     await loadCcaHistory(json.s3, pendingBulk, hist);
                 }
             }
         }
         if (!histP) {
-            log("parseAndApply: saving hist");
+            log.debug("parseAndApply: saving hist");
             applyHistToStore(hist);
         }
 
@@ -428,22 +428,22 @@
     }
 
     async function applyEntityToHist(e, hist, pendingBulk) {
-        log(new Date().toTimeString(), " entitx", e);
+        log.debug(new Date().toTimeString(), " entitx", e);
         const sk = e.classKey;
         const pk = e.classType;
 
         const key = { PK: pk, SK: sk, at: e.at };
         //const got = await db["EventHistory"].get({ PK: pk, SK: sk, at: e.at });
-        //log(key, `Maybe EventHistory  got ${got}`);
+        //log.debug(key, `Maybe EventHistory  got ${got}`);
 
         //const idh = await db["EventHistory"].put(e);
 
-        //log(`Added EventHistory with id ${idh}`);
+        //log.debug(`Added EventHistory with id ${idh}`);
         addPendingBulk(pendingBulk, "EventHistory", e);
         const tblHist = hist[pk];
 
         if (!tblHist) {
-            log("skipping load for pk: ", pk);
+            log.debug("skipping load for pk: ", pk);
             return;
         }
         if (tblHist[sk] && tblHist[sk].lastUpdate > e.lastUpdate) {
@@ -451,17 +451,17 @@
             tblHist[sk] = e;
             addPendingBulk(pendingBulk, e.classType, e);
             //const id = await db[e.classType].put(e);
-            //log(`Added ${e.classType} with id ${id}`);
+            //log.debug(`Added ${e.classType} with id ${id}`);
         }
     }
     async function flushPendingBulk(pendingBulk) {
         for (const [tblName, pendingList] of Object.entries(pendingBulk)) {
             if (db[tblName]) {
-                log(`flushPending begin: ${tblName}`);
+                log.debug(`flushPending begin: ${tblName}`);
                 await db[tblName].bulkPut(pendingList);
-                log(`flushPending done: ${tblName}`);
+                log.debug(`flushPending done: ${tblName}`);
             } else {
-                log(`flushPending skipping: ${tblName}`);
+                log.debug(`flushPending skipping: ${tblName}`);
             }
         }
     }
@@ -474,13 +474,13 @@
     }
 
     const getNextOnBlockKeyFromRP = (rpTmp) => {
-        log("rpTmp:", rpTmp);
+        log.debug("rpTmp:", rpTmp);
         //TODO: sort after filter!
         const onBlocks = Object.values(rpTmp)
             .filter((rp) => !rp.phaseResults)
             .filter((rp) => !rp.del);
         if (onBlocks.length > 0) {
-            log("set new nob:", onBlocks[0]);
+            log.debug("set new nob:", onBlocks[0]);
             return onBlocks[0].classKey;
         } else {
             return {};
@@ -497,18 +497,18 @@
     });
 
     async function announceFromMqtt(mqMsg) {
-        log("mqMsg: ", mqMsg);
-        log(`mqMsg: ${mqMsg}`, mqMsg);
-        log(`mqMsg already parsed?: ${mqMsg.outputUri}`);
+        log.debug("mqMsg: ", mqMsg);
+        log.debug(`mqMsg: ${mqMsg}`, mqMsg);
+        log.debug(`mqMsg already parsed?: ${mqMsg.outputUri}`);
         //const parsedMsg = JSON.parse(mqMsg);
         const parsedMsg = mqMsg;
         const mediaMatch = mqMsg.outputUri.match(/\/media\/.*/);
         if (mediaMatch && mediaMatch[0]) {
             const path = mediaMatch[0];
-            log(`paMessage path: ${path}`);
+            log.debug(`paMessage path: ${path}`);
             queueAudio(path);
         } else {
-            log(`paMessage MISSING path`);
+            log.debug(`paMessage MISSING path`);
         }
     }
     function queueAudio(path) {
@@ -535,12 +535,12 @@
     const doRefresh = async () => {
         refreshInProgressButton = true;
         //await dbInit();
-        log("old nobKey:", $nextOnBlockKey);
+        log.debug("old nobKey:", $nextOnBlockKey);
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
         if ($raceConfig.orgId && $raceConfig.orgIz) {
         } else {
-            log("no selected race");
+            log.debug("no selected race");
             refreshInProgressButton = false;
             return;
         }
@@ -559,20 +559,20 @@
                 $raceConfig.orgIz;
             try {
                 const response = await axios.get(url);
-                log("history:" + response.data.length);
-                //log("history:",response.data);
+                log.debug("history:" + response.data.length);
+                //log.debug("history:",response.data);
                 const pendingBulk = {};
                 await parseAndApply(response, true, pendingBulk);
                 await flushPendingBulk(pendingBulk);
                 ecFromDexie = await db.EventConfig.toArray();
             } catch (err) {
-                log(err);
+                log.debug(err);
             }
         }
         refreshInProgressButton = false;
     };
     function isArchived(ttlSecondsUnusedSvelteTrigger) {
-        log("isArchived passed ecFromDexie: ", ecFromDexie);
+        log.debug("isArchived passed ecFromDexie: ", ecFromDexie);
         return ecFromDexie && ecFromDexie[0] && ecFromDexie[0].archived;
     }
     function checkIfRaceFrozenAndDisplayMessage() {
@@ -606,7 +606,7 @@
         }
     }
     async function loadArchivedData() {
-        log("LoadArchive begin.");
+        log.debug("LoadArchive begin.");
         refreshInProgressCca = true;
 
         var s3Path =
@@ -620,7 +620,7 @@
             const response = await axios.get(
                 $raceConfig.baseUrl + "/.." + s3Path
             );
-            log("LoadArchive finished:", response);
+            log.debug("LoadArchive finished:", response);
             const hist = getHistFromStore();
             const pendingBulk = {};
             await parseAndApply(response, false, pendingBulk, hist);
@@ -628,7 +628,7 @@
             applyHistToStore(hist);
             ecFromDexie = await db.EventConfig.toArray();
         } catch (err) {
-            log("LoadArchive failed:", err);
+            log.debug("LoadArchive failed:", err);
         }
         refreshInProgressCca = false;
     }

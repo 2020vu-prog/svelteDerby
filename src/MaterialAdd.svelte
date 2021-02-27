@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import { push, pop, replace } from "svelte-spa-router";
     import { theme, userEmail } from "./stores.js";

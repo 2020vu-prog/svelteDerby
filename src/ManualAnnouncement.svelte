@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import { raceConfig, statusMessage, driverMap } from "./stores.js";
     import { store } from "./stores/auth.js";
@@ -13,7 +13,7 @@
             return;
         }
 
-        log(`doAnnounce: ${announceText} `);
+        log.debug(`doAnnounce: ${announceText} `);
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 

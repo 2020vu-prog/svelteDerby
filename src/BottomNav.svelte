@@ -6,7 +6,7 @@
      **   the actual nav bar.    since placeholder is empty, nothing is obscured.
      **
      */
-    import log from "roarr";
+    import log from "loglevel";
 
     import { showBottomNav, theme } from "./stores.js";
     import { location } from "svelte-spa-router";
@@ -21,7 +21,7 @@
         mounted = true;
     });
     $: {
-        log("current page is ", $location);
+        log.debug("current page is ", $location);
     }
     $: {
         var bottomNavHeight = 0;
@@ -30,7 +30,7 @@
         }
         placeholderHeight = `${bottomNavHeight}px`;
 
-        log("placeholderHeight: ", placeholderHeight);
+        log.debug("placeholderHeight: ", placeholderHeight);
     }
 
     /* Toggle between adding and removing the "responsive" class to the navbar when the user clicks on the icon */
@@ -43,7 +43,7 @@
         }
     };
     const getIsSelected = (tabRoute, currentRoute) => {
-        log("ghc: current page is ", $location);
+        log.debug("ghc: current page is ", $location);
 
         if (currentRoute.includes(tabRoute)) {
             return true;

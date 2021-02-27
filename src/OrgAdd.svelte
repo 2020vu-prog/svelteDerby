@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import { raceConfig } from "./stores.js";
     import { store } from "./stores/auth.js";
@@ -17,7 +17,7 @@
     async function handleSubmit() {
         syncAddButton();
 
-        log("Adding:" + JSON.stringify(orgForm));
+        log.debug("Adding:" + JSON.stringify(orgForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -28,18 +28,18 @@
             name: orgForm.name,
         };
 
-        log("token:" + bearer);
+        log.debug("token:" + bearer);
 
         axios.defaults.headers.common["Authorization"] = bearer;
 
         axios
             .post($raceConfig.baseUrl + "/addOrg", req)
             .then((response) => {
-                log("addOrg axios success");
+                log.debug("addOrg axios success");
                 pop();
             })
             .catch((err) => {
-                log("addOrg failed: " + err);
+                log.debug("addOrg failed: " + err);
             });
         orgForm.name = "";
         orgForm.lcl1 = true;
@@ -54,7 +54,7 @@
             return;
         }
         if (orgForm.name != "" && orgForm.name != undefined) {
-            log("name: " + orgForm.name);
+            log.debug("name: " + orgForm.name);
             document.getElementById("formSubmitButton").disabled = false;
         } else {
             document.getElementById("formSubmitButton").disabled = true;

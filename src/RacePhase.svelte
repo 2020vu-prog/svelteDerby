@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
     import CarAndDriver from "./CarAndDriver.svelte";
     import ComponentToolbar from "./ComponentToolbar.svelte";
     import InfoButton from "./InfoButton.svelte";
@@ -50,15 +50,15 @@
         boundVars = true;
     };
     $: {
-        log("rp changed:", at);
+        log.debug("rp changed:", at);
         updateBoundVars(at, false);
     }
-    //log("RacePhaseKey:", phaseKey)
-    //log("RacePhase:", racePhase)
+    //log.debug("RacePhaseKey:", phaseKey)
+    //log.debug("RacePhase:", racePhase)
     const getBgColor = () => {
         if ($nextOnBlockKey === phaseKey) {
-            log("nob getBgColor key:" + JSON.stringify($nextOnBlockKey));
-            log("nob refresh:", refreshTime);
+            log.debug("nob getBgColor key:" + JSON.stringify($nextOnBlockKey));
+            log.debug("nob refresh:", refreshTime);
 
             return racePhase.rs ? "Green" : "Red";
         } else {
@@ -118,7 +118,7 @@
         );
     };
     onMount(async () => {
-        log("RacePhase unt");
+        log.debug("RacePhase unt");
         updateBoundVars(at, true);
         mounted = true;
     });
@@ -129,14 +129,14 @@
         return !racePhase.del;
     };
     function toggleToolbar(event) {
-        log("info event: ", event.detail.text);
+        log.debug("info event: ", event.detail.text);
         showToolbar = !showToolbar;
     }
 
     const gotoBracket = () => {
         if (getBracketLink(rp)) push(getBracketLink(rp));
         else {
-            log("no bracket link");
+            log.debug("no bracket link");
         }
     };
 </script>

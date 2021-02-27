@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
     import RaceStanding from "./RaceStanding.svelte";
@@ -53,12 +53,12 @@
         }
     }
     const refreshChartFromDb = async (trigger) => {
-        log("refreshChartFromDb data:", trigger);
+        log.debug("refreshChartFromDb data:", trigger);
 
         const jsonFromDexie = await db.BracketPos.get(
             `${params.chartId}:${params.chartPosition}`
         );
-        log("refreshChartFromDb gave:", jsonFromDexie);
+        log.debug("refreshChartFromDb gave:", jsonFromDexie);
         if (jsonFromDexie) {
             const entityFactory = new EntityFactory({});
             bposFromDexie = entityFactory.build(jsonFromDexie);
@@ -71,7 +71,7 @@
                 updateInputUI(ab, posForm[ab].seedType);
             });
 
-            log("refreshChartFromDb form:", posForm);
+            log.debug("refreshChartFromDb form:", posForm);
         } else {
             bposFromDexie = null;
         }
@@ -83,24 +83,24 @@
     }
     */
     const refreshStandingFromDb = async (trigger) => {
-        log("refreshStandingFromDb data:", trigger);
+        log.debug("refreshStandingFromDb data:", trigger);
 
         const jsonFromDexie = await db.RaceStanding.get(
             `${params.chartId}:${params.chartPosition}`
         );
-        log("refreshStandingFromDb gave:", jsonFromDexie);
+        log.debug("refreshStandingFromDb gave:", jsonFromDexie);
         if (jsonFromDexie) {
             const entityFactory = new EntityFactory({});
             rsFromDexie = entityFactory.build(jsonFromDexie);
 
-            log("refreshStandingFromDb form:", posForm);
+            log.debug("refreshStandingFromDb form:", posForm);
         } else {
             rsFromDexie = null;
         }
     };
 
     async function handleSubmit() {
-        log("Adding:" + JSON.stringify(posForm));
+        log.debug("Adding:" + JSON.stringify(posForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -123,20 +123,20 @@
                 ptcp: "",
             };
 
-            log("Initialized seedObject:", seedObject);
+            log.debug("Initialized seedObject:", seedObject);
             if (
                 seedObject.status === "ptcp" ||
                 seedObject.status === "forfeit"
             ) {
                 if (!posForm[ab].carNumber) {
-                    log("allow empty preSeed:", posForm[ab]);
+                    log.debug("allow empty preSeed:", posForm[ab]);
                     // let empty/null/undefined racers through bracket mgmt.  they may not be known yet.
                 } else if (participantValid(posForm[ab].carNumber)) {
-                    log("valid preSeed:", posForm[ab]);
+                    log.debug("valid preSeed:", posForm[ab]);
 
                     seedObject.ptcp = posForm[ab].carNumber.toString();
                 } else {
-                    log("invalid preSeed:", posForm[ab]);
+                    log.debug("invalid preSeed:", posForm[ab]);
                     $statusMessage = {
                         text: `Invalid Participant: [${posForm[ab].carNumber}]`,
                         type: "error",
@@ -150,10 +150,10 @@
                 seedObject.status === "bye" ||
                 seedObject.status === "ptcp" // allow empty ptcp (waiting for bracket prgress)
             ) {
-                log("Good seedObject:", seedObject);
+                log.debug("Good seedObject:", seedObject);
                 req.pos[ab] = seedObject;
             } else {
-                log("Skip seedObject:", seedObject);
+                log.debug("Skip seedObject:", seedObject);
             }
             validCount++;
         });
@@ -161,7 +161,7 @@
         if (validCount < 2) {
             return;
         }
-        log("token:" + bearer);
+        log.debug("token:" + bearer);
 
         submitSpinning = true;
 
@@ -170,7 +170,7 @@
         axios
             .post($raceConfig.baseUrl + "/addChartPosition", req)
             .then((response) => {
-                log("addChartPosition axios success ", response);
+                log.debug("addChartPosition axios success ", response);
                 if (response.data.error) {
                     $statusMessage = {
                         text: response.data.error,
@@ -182,7 +182,7 @@
             })
             .catch((err) => {
                 submitSpinning = false;
-                log("addChartPosition failed: " + err);
+                log.debug("addChartPosition failed: " + err);
             });
     }
 
@@ -194,7 +194,7 @@
     };
 
     const getDriverName = (number) => {
-        log("gdn: " + number);
+        log.debug("gdn: " + number);
         if (number && $driverMap[number]) {
             return $driverMap[number].name;
         } else {
@@ -208,7 +208,7 @@
     }
 
     const changeFocus = (carNumber, seedIdentifier) => {
-        log("changeFocus ", seedIdentifier, " ", carNumber);
+        log.debug("changeFocus ", seedIdentifier, " ", carNumber);
         if (participantFocusCompletion(carNumber)) {
             if (seedIdentifier == "A") {
                 posForm.B.input.focus();

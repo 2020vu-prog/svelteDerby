@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import Dexie from "dexie";
     import { onMount } from "svelte";
@@ -24,12 +24,12 @@
         });
         history.sort(sortByAt);
         history = history;
-        log("history:", history);
+        log.debug("history:", history);
 
         const where = { PK: params.PK, SK: params.SK };
-        log("where:", where);
+        log.debug("where:", where);
         const got = db.EventHistory.where(where);
-        log("got:", got);
+        log.debug("got:", got);
     });
     function sortByAt(a, b) {
         return b.at - a.at;

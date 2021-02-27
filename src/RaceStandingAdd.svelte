@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
     import {
@@ -14,7 +14,7 @@
     import { participantValid, participantFocusCompletion } from "./utils.js";
 
     export let params = {};
-    log("RaceStandingAdd", params);
+    log.debug("RaceStandingAdd", params);
     var mounted = false;
     var submitFocused = false;
     var submitDisabled = true;
@@ -34,17 +34,17 @@
         if (typeVars[params.type] && typeVars[params.type][feature]) {
             return typeVars[params.type][feature];
         }
-        log("unMapType:missing map for ", params.type, feature);
+        log.debug("unMapType:missing map for ", params.type, feature);
         return "unknown";
     };
     onMount(async () => {
-        log("mounted type:", params.type);
+        log.debug("mounted type:", params.type);
         title = unMapType("title");
         document.getElementById("cn1").focus();
         mounted = true;
     });
     function changeFocus(carNumber, seedIdentifier) {
-        //log("changeFocus ", seedIdentifier, " ", carNumber);
+        //log.debug("changeFocus ", seedIdentifier, " ", carNumber);
         if (participantFocusCompletion(carNumber)) {
             if (seedIdentifier == "A") {
                 document.getElementById("cn2").focus();
@@ -69,7 +69,7 @@
             return;
         }
 
-        log("Adding:" + JSON.stringify(carNumberForm));
+        log.debug("Adding:" + JSON.stringify(carNumberForm));
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -81,7 +81,7 @@
         };
 
         //no double click
-        log("axios:", $getAxios);
+        log.debug("axios:", $getAxios);
 
         if (submitSpinning) {
             return; // ignore possible double click (ui should have been disable, so this is a safety net)
@@ -93,10 +93,10 @@
                 $raceConfig.baseUrl + endPoint,
                 req
             );
-            log("add response", response);
+            log.debug("add response", response);
 
             if (response.data.error) {
-                log("add failed", response);
+                log.debug("add failed", response);
                 $statusMessage = {
                     text: response.data.error,
                     type: "error",
@@ -130,7 +130,7 @@
             participantValid(carNumberForm.car1) &&
             participantValid(carNumberForm.car2)
         ) {
-            //log("sync add button SYNC");
+            //log.debug("sync add button SYNC");
 
             submitDisabled = false;
             if (advanceFocusToSubmit == true) {
@@ -138,7 +138,7 @@
             }
         } else {
             submitDisabled = true;
-            //log("sync add button FAIL");
+            //log.debug("sync add button FAIL");
         }
     }
     const getDriverName = (number) => {

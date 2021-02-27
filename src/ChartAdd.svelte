@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig } from "./stores.js";
@@ -26,7 +26,7 @@
         syncAddButton(loginForm.chartName);
     }
     const jqLoaded = () => {
-        log("jqloaded");
+        log.debug("jqloaded");
         jsReady = true;
         const jsTreeUrl =
             "https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js";
@@ -34,7 +34,7 @@
         tryBuild();
     };
     const jsTreeLoaded = () => {
-        log("jstreeloaded");
+        log.debug("jstreeloaded");
         treeReady = true;
         tryBuild();
     };
@@ -45,7 +45,7 @@
     });
     const tryBuild = () => {
         if (treeReady && mounted && jsReady && s3ChartTypes) {
-            log("GO");
+            log.debug("GO");
             //  window.$(function () { window.$('#jstree_demo_div').jstree(); });
             /*
             const testData = {
@@ -69,7 +69,7 @@
             window
                 .$("#jstree_demo_div")
                 .on("changed.jstree", function (e, data) {
-                    log(data.selected);
+                    log.debug(data.selected);
                     if (data.node.children.length > 0) {
                         window
                             .$("#jstree_demo_div")
@@ -96,7 +96,7 @@
         }
     };
     async function handleSubmit() {
-        log("Adding:" + JSON.stringify(loginForm));
+        log.debug("Adding:" + JSON.stringify(loginForm));
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
         axios.defaults.headers.common["Authorization"] = bearer;
@@ -112,17 +112,17 @@
         };
 
         submitSpinning = true;
-        log("token:" + bearer);
+        log.debug("token:" + bearer);
 
         axios
             .post($raceConfig.baseUrl + "/addChart", req)
             .then((response) => {
-                log("addChart axios success");
+                log.debug("addChart axios success");
                 pop();
             })
             .catch((err) => {
                 submitSpinning = false;
-                log("addChart failed: " + err);
+                log.debug("addChart failed: " + err);
             });
         loginForm.chartName = "";
         loginForm.bracketSelected = "";
@@ -149,12 +149,12 @@
         axios
             .get($raceConfig.baseUrl + "/listChartTypes", { params: params })
             .then((response) => {
-                log("listChartTypes:" + response.data);
+                log.debug("listChartTypes:" + response.data);
                 s3ChartTypes = response.data;
                 tryBuild();
             })
             .catch((err) => {
-                log(err);
+                log.debug(err);
             });
     };
     const getKeys = (json) => {
@@ -162,7 +162,7 @@
         const parents = {};
         json.forEach(function (item) {
             var simpleKey = item.Key.replace("data/brackets/", "");
-            log("simpleKey:", simpleKey);
+            log.debug("simpleKey:", simpleKey);
             if (!/.png/i.test(simpleKey)) {
                 return;
             }
@@ -185,7 +185,7 @@
         rc.sort((a, b) => {
             return a.id.length - b.id.length;
         });
-        log(rc);
+        log.debug(rc);
         return rc;
     };
     const formatItem = (structureArray) => {
@@ -199,7 +199,7 @@
         } else {
             treeItem.parent = "#";
         }
-        log("format item ", structureArray, " gave: ", treeItem);
+        log.debug("format item ", structureArray, " gave: ", treeItem);
 
         return treeItem;
     };

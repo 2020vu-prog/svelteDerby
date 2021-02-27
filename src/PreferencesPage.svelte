@@ -1,5 +1,5 @@
 <script>
-    import log from "roarr";
+    import log from "loglevel";
 
     import {
         theme,
@@ -45,7 +45,7 @@
     }
     function updatePrefsWhenMounted(prefs) {
         if (mounted) {
-            log("About updating userPrefs:", mounted, prefs);
+            log.debug("About updating userPrefs:", mounted, prefs);
             localConfigDb["LocalConfig"].put(prefs);
         }
     }
@@ -55,7 +55,7 @@
         } else {
             disableCache = false;
         }
-        log("mounting :", disableCache);
+        log.debug("mounting :", disableCache);
 
         mounted = true;
         updateColorSelector();
@@ -73,7 +73,7 @@
         }
     }
     async function clickDisableCache() {
-        log("check do");
+        log.debug("check do");
         if (!disableCache) {
             // negated test, b/c clickhandler called before bind value :-(
             //$.disableCache = new Date().getTime();
@@ -82,13 +82,13 @@
             //$prefStore.disableCache = 0;
             lclCacheKey = 0;
         }
-        // log("Disable cache now:", $prefStore.disableCache)
-        log("mounted&bound Disable cache now:", lclCacheKey);
+        // log.debug("Disable cache now:", $prefStore.disableCache)
+        log.debug("mounted&bound Disable cache now:", lclCacheKey);
         setCacheKey(lclCacheKey);
     }
     const updateTheme = async () => {
         $theme = themeSelected;
-        log("Updated theme to: " + $theme);
+        log.debug("Updated theme to: " + $theme);
         let id = await localConfigDb["LocalConfig"].put({
             KEY: "theme",
             bgColor: $theme,
@@ -98,19 +98,19 @@
     const updateColorSelector = () => {
         var colorOptions = [];
         colorOptions = document.getElementsByClassName("colorOption");
-        log("ucsBegin: " + $theme);
+        log.debug("ucsBegin: " + $theme);
         Array.from(colorOptions).forEach(function (element, index, array) {
-            log("A " + String(element.value) + " B " + String($theme));
+            log.debug("A " + String(element.value) + " B " + String($theme));
             if (String(element.value) == String($theme)) {
-                log("MATCH");
+                log.debug("MATCH");
                 themeSelected = document.querySelectorAll("option")[index]
                     .value;
-                log(
+                log.debug(
                     "label of option: " +
                         document.querySelectorAll("option")[index].value
                 );
-                log("theme selector value: " + themeSelected);
-                log(
+                log.debug("theme selector value: " + themeSelected);
+                log.debug(
                     "element to select: " +
                         document.querySelectorAll("option")[index]
                 );
