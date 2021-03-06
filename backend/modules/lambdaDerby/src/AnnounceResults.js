@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const EntityFactory = require("./shared/EntityFactory.js");
+const log = require("loglevel");
 
 function isDefined(x) {
     return !(typeof x === "undefined" || x === null);
@@ -16,11 +17,11 @@ class AnnounceResults {
     }
 
     async propagateIotFromSns(json) {
-        console.log("Iot Begin broadcast:", json);
+        log.debug("Iot Begin broadcast:", json);
         var orgId = json.outputUri.replace(/.*media\//, "");
-        console.log(`orgId1: ${orgId}`);
+        log.debug(`orgId1: ${orgId}`);
         orgId = orgId.replace(/\/.*/, "");
-        console.log(`orgId2: ${orgId}`);
+        log.debug(`orgId2: ${orgId}`);
         await this.propagateIotGeneric(orgId, json.outputUri);
     }
 
@@ -39,19 +40,19 @@ class AnnounceResults {
             qos: 0,
         };
         try {
-            console.log("Iot PA broadcast request:", params);
+            log.debug("Iot PA broadcast request:", params);
             var data = await this.iotdata.publish(params).promise();
-            console.log("Iot PA broadcast Success.", params);
+            log.debug("Iot PA broadcast Success.", params);
             return { status: "ok", detail: "Published" };
         } catch (err) {
-            console.log("Iot PA Error.", err);
-            console.log(err, err.stack); // an error occurred
+            log.debug("Iot PA Error.", err);
+            log.debug(err, err.stack); // an error occurred
             return { error: err };
         }
     }
     async submitToPolly(msg, orgId, mediaPrefix) {
         if (!this.AWS) {
-            console.log("Polly unavailable. AWS is null");
+            log.debug("Polly unavailable. AWS is null");
             return;
         }
         var polly = new this.AWS.Polly({ apiVersion: "2016-06-10" });
@@ -69,7 +70,7 @@ class AnnounceResults {
         };
         try {
             const pollySpeech = await polly.synthesizeSpeech(params).promise();
-            console.log(`pollySpeech ok: ${pollySpeech.RequestCharacters}`); // successful response
+            log.debug(`pollySpeech ok: ${pollySpeech.RequestCharacters}`); // successful response
             const s3 = new this.AWS.S3({ apiVersion: "2006-03-01" });
 
             const now = new Date().getTime();
@@ -79,9 +80,9 @@ class AnnounceResults {
                 Key: `media/${orgId}/msg/${now}.mp3`,
             };
 
-            console.log(`pollySpeech s3 saving:`, s3Params); // successful response
+            log.debug(`pollySpeech s3 saving:`, s3Params); // successful response
             const data = await s3.putObject(s3Params).promise();
-            console.log(`pollySpeech s3 saved:`, data); // successful response
+            log.debug(`pollySpeech s3 saved:`, data); // successful response
 
             return s3Params.Key;
             /*
@@ -92,11 +93,11 @@ class AnnounceResults {
                }
                */
         } catch (err) {
-            console.log("pollySpeech err:", err); // successful response
+            log.debug("pollySpeech err:", err); // successful response
         }
     }
     async formatAndSubmitNextOnBlocks(tgtRs, tgtRp) {
-        console.log("formatAndSubmitNextOnBlocks rs: ", tgtRs, " rp: ", tgtRp);
+        log.debug("formatAndSubmitNextOnBlocks rs: ", tgtRs, " rp: ", tgtRp);
         const orgId = tgtRs.orgId;
         const mediaPrefix = this.getMediaPrefix(tgtRp);
         const paMessage = await this.formatNextOnBlockAnnouncement(
@@ -104,13 +105,13 @@ class AnnounceResults {
             tgtRs,
             tgtRp
         );
-        console.log(`paMessage: ${orgId} ssml:`, paMessage);
+        log.debug(`paMessage: ${orgId} ssml:`, paMessage);
         const mp3ObjectPath = await this.submitToPolly(
             paMessage,
             orgId,
             mediaPrefix
         );
-        console.log("mp3ObjectPath:", mp3ObjectPath);
+        log.debug("mp3ObjectPath:", mp3ObjectPath);
         await this.propagateIotGeneric(orgId, mp3ObjectPath);
     }
     async formatAndSubmitResults(tgtRs, tgtRp) {
@@ -118,13 +119,13 @@ class AnnounceResults {
         const mediaPrefix = this.getMediaPrefix(tgtRp);
 
         const paMessage = await this.formatResultAnnouncement(tgtRs, orgId);
-        console.log(`paMessage: ${orgId} ssml:`, paMessage);
+        log.debug(`paMessage: ${orgId} ssml:`, paMessage);
         const mp3ObjectPath = await this.submitToPolly(
             paMessage,
             orgId,
             mediaPrefix
         );
-        console.log("mp3ObjectPath:", mp3ObjectPath);
+        log.debug("mp3ObjectPath:", mp3ObjectPath);
         await this.propagateIotGeneric(orgId, mp3ObjectPath);
     }
     getMediaPrefix(tgtRp) {
@@ -149,7 +150,7 @@ class AnnounceResults {
             promises.push(this.lookupName(element.toString(), orgId));
         });
         await Promise.all(promises);
-        console.log(`lookupNames: ${orgId} cars:`, this.namesByCarNumber);
+        log.debug(`lookupNames: ${orgId} cars:`, this.namesByCarNumber);
     }
     async lookupName(carNumber, orgId) {
         if (this.ddbUtils) {
@@ -157,14 +158,14 @@ class AnnounceResults {
                 `${orgId}:PTCP`,
                 carNumber
             );
-            console.log(`lookupName: ${carNumber} org: ${orgId}`, ptcp);
+            log.debug(`lookupName: ${carNumber} org: ${orgId}`, ptcp);
             if (ptcp) {
                 const entityFactory = new EntityFactory({});
                 var ptcpEntity = entityFactory.build(ptcp);
                 this.namesByCarNumber[carNumber] = ptcpEntity.ssmlName;
             }
         } else {
-            console.log(`lookupName: missing name query ${carNumber}`);
+            log.debug(`lookupName: missing name query ${carNumber}`);
         }
     }
 
@@ -181,7 +182,7 @@ class AnnounceResults {
         const spokenPhase = this.expandPhaseForSpeech(tgtRp.pl);
         rc += `Attention race fans! Next up ${spokenPhase}. In lane 1, is ${spokenCarAndDriver1}. In lane 2, is${spokenCarAndDriver2}`;
         const ssml = `<speak>${rc}</speak>`;
-        console.log("NOB ANNOUNCEMENT RESULT ssml: ", ssml);
+        log.debug("NOB ANNOUNCEMENT RESULT ssml: ", ssml);
         return ssml;
     }
     async formatResultAnnouncement(tgtRs, orgId) {
@@ -234,7 +235,7 @@ class AnnounceResults {
         }
 
         const ssml = `<speak>${rc}</speak>`;
-        console.log("ANNOUNCEMENT RESULT ssml: ", ssml);
+        log.debug("ANNOUNCEMENT RESULT ssml: ", ssml);
         return ssml;
     }
     expandPhaseForSpeech(pl) {

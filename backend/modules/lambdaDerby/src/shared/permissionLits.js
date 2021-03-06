@@ -1,6 +1,7 @@
 "use strict";
 
 const Permission = require("./Permission.js");
+const log = require("loglevel");
 
 //module.exports.ModifyParticipant = "CanAddParticipant"
 module.exports.ModifyPending = "CanAddPending";

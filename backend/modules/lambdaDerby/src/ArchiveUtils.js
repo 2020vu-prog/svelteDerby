@@ -1,4 +1,5 @@
 const EntityFactory = require("./shared/EntityFactory.js");
+const log = require("loglevel");
 class ArchiveUtils {
     AWS = null;
     ddbUtils = null;
@@ -15,28 +16,28 @@ class ArchiveUtils {
     }
 
     async processExpiringEventConfig() {
-        console.log("Archive processExpiringEventConfig: ");
+        log.debug("Archive processExpiringEventConfig: ");
 
         // archive when TTL is within next hour.
         var eligibleArchive = new Date().getTime() / 1000 + 3600;
 
         var events = await this.ddbUtils.ddbQueryPkAll("EventConfig");
 
-        console.log(
+        log.debug(
             "Archive processExpiringEventConfig eligibleArchive: ",
             eligibleArchive
         );
 
-        console.log("allEvents:", events);
+        log.debug("allEvents:", events);
         const expiringEvents = events
             .filter((evt) => !evt.archived)
             .filter((evt) => evt.TTL < eligibleArchive);
-        console.log("expiring Events:", expiringEvents);
+        log.debug("expiring Events:", expiringEvents);
 
         for (let index = 0; index < expiringEvents.length; index++) {
             const evt = expiringEvents[index];
 
-            console.log("archiving event:", evt);
+            log.debug("archiving event:", evt);
             evt.TTL += 3600 * 24 * 365 * 5;
             evt.archived = "true";
 
@@ -46,9 +47,9 @@ class ArchiveUtils {
             this.ddbUtils.setEntityFactory(entityFactory);
             await this.ddbUtils.addSingle(eventEntity);
 
-            console.log("sleeping begin:-(");
+            log.debug("sleeping begin:-(");
             await this.sleep(3000); //   :-( Need archive flag update to propagate to DerbyDst BEFORE sending CCF
-            console.log("sleeping done :-(");
+            log.debug("sleeping done :-(");
 
             await this.ddbUtils.requestCC(evt, "CCF"); //CCFinal
         }

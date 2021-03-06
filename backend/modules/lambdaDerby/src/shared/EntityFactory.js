@@ -1,3 +1,4 @@
+const log = require("loglevel");
 const entityFactories = {};
 const RacePhaseEid = ":RP";
 const RaceStandingEid = ":RS";
@@ -12,10 +13,10 @@ const cHelper = (pthis, props, optionalMembers) => {
         ? optionalMembers
         : pthis.constructor.members;
     for (let [key, value] of Object.entries(props)) {
-        //console.log("Chelper checking:"+key);
+        //log.debug("Chelper checking:"+key);
 
         if (members.includes(key)) {
-            //console.log("Chelper applying:"+key);
+            //log.debug("Chelper applying:"+key);
             pthis[key] = value;
         }
     }
@@ -85,7 +86,7 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
         rc.freezeWarningSeconds = 3600;
         rc.secondsUntilArchive =
             this.TTL - Math.floor(new Date().getTime() / 1000);
-        console.log("Seconds until archive: ", rc.secondsUntilArchive);
+        log.debug("Seconds until archive: ", rc.secondsUntilArchive);
         if (rc.secondsUntilArchive < 0) {
             rc.status = "archived";
         }
@@ -344,7 +345,7 @@ entityFactories["RacePhase"] = class RacePhase extends EntityBase {
     getPhaseDeltaMS() {
         if (!this.phr) return undefined;
         const deltaMicros = this.phr[1] - this.phr[0];
-        console.log(`getPhaseDeltaMicros ${deltaMicros}`);
+        log.debug(`getPhaseDeltaMicros ${deltaMicros}`);
         return Math.round(deltaMicros / 1000);
     }
     get carNumbers() {
@@ -429,7 +430,7 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
         if (!x) return undefined;
         const deltaMicros = x[1] - x[0];
 
-        console.log(`phaseXDeltaMicros ${deltaMicros}`);
+        log.debug(`phaseXDeltaMicros ${deltaMicros}`);
         return Math.round(deltaMicros / 1000);
     }
     get bracketPos() {

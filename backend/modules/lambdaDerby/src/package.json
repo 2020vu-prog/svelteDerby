@@ -14,12 +14,14 @@
     "@aws-sdk/client-dynamodb-v2-node": "0.1.0-preview.2",
     "csv-parse": "^4.8.7",
     "jsonwebtoken": "^8.5.1",
-    "jwk-to-pem": "^2.0.3"
+    "jwk-to-pem": "^2.0.3",
+    "loglevel": "^1.7.1"
   },
   "bundledDependencies": [
     "@aws-sdk/client-dynamodb-v2-node",
     "csv-parse",
     "jsonwebtoken",
-    "jwk-to-pem"
+    "jwk-to-pem",
+    "loglevel"
   ]
 }

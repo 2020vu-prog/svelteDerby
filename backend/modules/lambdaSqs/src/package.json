@@ -12,7 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-dynamodb-v2-node": "0.1.0-preview.2",
-    "aws-sdk": "^2.648.0"
+    "aws-sdk": "^2.648.0",
+    "loglevel": "^1.7.1"
   },
   "bundledDependencies": [
     "@aws-sdk/client-dynamodb-v2-node",

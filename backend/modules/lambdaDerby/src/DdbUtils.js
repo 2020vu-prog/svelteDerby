@@ -1,4 +1,5 @@
 const EntityFactory = require("./shared/EntityFactory.js");
+const log = require("loglevel");
 const skipDeleteFilter = "attribute_not_exists(del) ";
 
 class DdbUtils {
@@ -26,10 +27,10 @@ class DdbUtils {
         try {
             await this.ddocClient.put(dbItem).promise();
 
-            console.log("Added dbItem: " + JSON.stringify(dbItem));
+            log.debug("Added dbItem: " + JSON.stringify(dbItem));
             rc = "OK";
         } catch (err) {
-            console.log(err, err.stack); // an error occurred
+            log.debug(err, err.stack); // an error occurred
             rc = "Error";
         }
         return rc;
@@ -46,11 +47,11 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddbQueryPkSk query: " + JSON.stringify(params));
+        log.debug("ddbQueryPkSk query: " + JSON.stringify(params));
 
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryPkSk: ", data); // successful response
+            log.debug("ddbQueryPkSk: ", data); // successful response
             const udata = this.unmarshallResultsToArray(
                 data,
                 new EntityFactory({})
@@ -62,7 +63,7 @@ class DdbUtils {
                 return null;
             }
         } catch (err) {
-            console.log("ddbQueryPkSk failed: ", err, err.stack); // an error occurred
+            log.debug("ddbQueryPkSk failed: ", err, err.stack); // an error occurred
             throw err;
         }
     }
@@ -78,7 +79,7 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddbQueryPkAll query: " + JSON.stringify(params));
+        log.debug("ddbQueryPkAll query: " + JSON.stringify(params));
 
         const factory =
             tableName === process.env.DynamoDbTable
@@ -86,12 +87,12 @@ class DdbUtils {
                 : undefined;
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryPkAll: raw:", data); // successful response
+            log.debug("ddbQueryPkAll: raw:", data); // successful response
             const udata = this.unmarshallResultsToArray(data, factory);
-            console.log("ddbQueryPkAll: unmar ", udata); // successful response
+            log.debug("ddbQueryPkAll: unmar ", udata); // successful response
             return udata;
         } catch (err) {
-            console.log("ddbQueryPkAll failed: ", err, err.stack); // an error occurred
+            log.debug("ddbQueryPkAll failed: ", err, err.stack); // an error occurred
             throw err;
         }
     }
@@ -154,18 +155,18 @@ class DdbUtils {
             ScanIndexForward: false, // sort descending
             ExpressionAttributeValues: containsValues,
         };
-        console.log("history query: " + JSON.stringify(params));
+        log.debug("history query: " + JSON.stringify(params));
         try {
             var data = await this.ddbClient.query(params);
             const cc = data.ConsumedCapacity.CapacityUnits;
-            console.log("ddbQueryTimerHistoryByUuid cc: ", cc); // successful response
-            console.log("ddbQueryTimerHistoryByUuid: ", data); // successful response
-            console.log("ddbQueryTimerHistoryByUuid: " + JSON.stringify(data)); // successful response
+            log.debug("ddbQueryTimerHistoryByUuid cc: ", cc); // successful response
+            log.debug("ddbQueryTimerHistoryByUuid: ", data); // successful response
+            log.debug("ddbQueryTimerHistoryByUuid: " + JSON.stringify(data)); // successful response
             const rc = this.unmarshallResultsToArray(data);
 
             return rc;
         } catch (err) {
-            console.log("ddbQueryTimerHistoryByUuid failed: ", err, err.stack); // an error occurred
+            log.debug("ddbQueryTimerHistoryByUuid failed: ", err, err.stack); // an error occurred
         }
         return {
             error: "ddbQueryTimerHistoryByUuid Failed",
@@ -204,25 +205,25 @@ class DdbUtils {
             ScanIndexForward: false, // sort descending
             ExpressionAttributeValues: containsValues,
         };
-        console.log("history query: " + JSON.stringify(params));
+        log.debug("history query: " + JSON.stringify(params));
         try {
             var data = await this.ddbClient.query(params);
             const cc = data.ConsumedCapacity.CapacityUnits;
-            console.log("queryRaceHistory cc: ", cc); // successful response
-            console.log("queryRaceHistory: ", data); // successful response
-            console.log("queryRaceHistory: " + JSON.stringify(data)); // successful response
+            log.debug("queryRaceHistory cc: ", cc); // successful response
+            log.debug("queryRaceHistory: ", data); // successful response
+            log.debug("queryRaceHistory: " + JSON.stringify(data)); // successful response
             const rc = this.unmarshallResultsToArray(data);
 
             if (cc > 0.5 || data.Count >= limit) {
-                console.log("queryRaceHistory: requesting CCA: ", cc);
+                log.debug("queryRaceHistory: requesting CCA: ", cc);
                 await this.requestCC(qsp, "CCA");
             } else {
-                console.log("queryRaceHistory: skipping CCA: ", cc);
+                log.debug("queryRaceHistory: skipping CCA: ", cc);
             }
 
             return [rc, cacheMaxSeconds];
         } catch (err) {
-            console.log("queryRaceHistory failed: ", err, err.stack); // an error occurred
+            log.debug("queryRaceHistory failed: ", err, err.stack); // an error occurred
         }
         return [{ error: "Query History Failed" }, cacheMaxSeconds];
     }
@@ -236,13 +237,13 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddb query: " + JSON.stringify(params));
+        log.debug("ddb query: " + JSON.stringify(params));
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryEventConfig: ", data); // successful response
+            log.debug("ddbQueryEventConfig: ", data); // successful response
             return this.unmarshallResultsToObject(data, "SK");
         } catch (err) {
-            console.log("ddbQueryEventConfig failed: ", err, err.stack); // an error occurred
+            log.debug("ddbQueryEventConfig failed: ", err, err.stack); // an error occurred
         }
         return { error: "Query Failed" };
     }
@@ -256,13 +257,13 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddb query: " + JSON.stringify(params));
+        log.debug("ddb query: " + JSON.stringify(params));
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryEventConfig: ", data); // successful response
+            log.debug("ddbQueryEventConfig: ", data); // successful response
             return this.unmarshallResultsToObject(data, "SK");
         } catch (err) {
-            console.log("ddbQueryEventConfig failed: ", err, err.stack); // an error occurred
+            log.debug("ddbQueryEventConfig failed: ", err, err.stack); // an error occurred
         }
         return { error: "Query Failed" };
     }
@@ -275,13 +276,13 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddbQueryOrgConfig query : " + JSON.stringify(params));
+        log.debug("ddbQueryOrgConfig query : " + JSON.stringify(params));
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryOrgConfig: ", data); // successful response
+            log.debug("ddbQueryOrgConfig: ", data); // successful response
             return this.unmarshallResultsToObject(data, "SK");
         } catch (err) {
-            console.log("ddbQueryOrgConfig failed: ", err, err.stack); // an error occurred
+            log.debug("ddbQueryOrgConfig failed: ", err, err.stack); // an error occurred
         }
         return { error: "Query OrgFailed" };
     }
@@ -304,11 +305,11 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddbQueryRsByKey query: " + JSON.stringify(params));
+        log.debug("ddbQueryRsByKey query: " + JSON.stringify(params));
 
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryRsByKey: ", data); // successful response
+            log.debug("ddbQueryRsByKey: ", data); // successful response
 
             const udata = this.unmarshallResultsToArray(
                 data,
@@ -317,7 +318,7 @@ class DdbUtils {
 
             return udata;
         } catch (err) {
-            console.log("ddbQueryRsByKey failed: ", err, err.stack); // an error occurred
+            log.debug("ddbQueryRsByKey failed: ", err, err.stack); // an error occurred
             throw err;
         }
     }
@@ -341,11 +342,11 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddbQueryRpByKey query: " + JSON.stringify(params));
+        log.debug("ddbQueryRpByKey query: " + JSON.stringify(params));
 
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryRpByKey: ", data); // successful response
+            log.debug("ddbQueryRpByKey: ", data); // successful response
 
             const udata = this.unmarshallResultsToArray(
                 data,
@@ -354,7 +355,7 @@ class DdbUtils {
 
             return udata.filter((rp) => !rp.phaseResults); // only return entries w/o results
         } catch (err) {
-            console.log("ddbQueryRpByKey failed: ", err, err.stack); // an error occurred
+            log.debug("ddbQueryRpByKey failed: ", err, err.stack); // an error occurred
             throw err;
         }
     }
@@ -378,11 +379,11 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddbQueryRpNextOnBlocks query: " + JSON.stringify(params));
+        log.debug("ddbQueryRpNextOnBlocks query: " + JSON.stringify(params));
 
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryRpNextOnBlocks: ", data); // successful response
+            log.debug("ddbQueryRpNextOnBlocks: ", data); // successful response
 
             const udata = this.unmarshallResultsToArray(
                 data,
@@ -391,7 +392,7 @@ class DdbUtils {
 
             return udata.filter((rp) => !rp.phaseResults).reverse(); // only return entries w/o results
         } catch (err) {
-            console.log("ddbQueryRpNextOnBlocks failed: ", err, err.stack); // an error occurred
+            log.debug("ddbQueryRpNextOnBlocks failed: ", err, err.stack); // an error occurred
             throw err;
         }
     }
@@ -421,13 +422,11 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log(
-            "ddbQueryRpDuplicateCheck query: " + JSON.stringify(params)
-        );
+        log.debug("ddbQueryRpDuplicateCheck query: " + JSON.stringify(params));
 
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryRpDuplicateCheck: ", data); // successful response
+            log.debug("ddbQueryRpDuplicateCheck: ", data); // successful response
 
             const udata = this.unmarshallResultsToArray(
                 data,
@@ -436,7 +435,7 @@ class DdbUtils {
 
             return udata.filter((rp) => !rp.phaseResults); // only return entries w/o results
         } catch (err) {
-            console.log("ddbQueryRpDuplicateCheck failed: ", err, err.stack); // an error occurred
+            log.debug("ddbQueryRpDuplicateCheck failed: ", err, err.stack); // an error occurred
             throw err;
         }
     }
@@ -457,13 +456,13 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log(
+        log.debug(
             "ddbQueryBracketMdExistsCheck query: " + JSON.stringify(params)
         );
 
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryBracketMdExistsCheck: ", data); // successful response
+            log.debug("ddbQueryBracketMdExistsCheck: ", data); // successful response
             const udata = this.unmarshallResultsToArray(
                 data,
                 new EntityFactory({})
@@ -471,11 +470,7 @@ class DdbUtils {
 
             return udata;
         } catch (err) {
-            console.log(
-                "ddbQueryBracketMdExistsCheck failed: ",
-                err,
-                err.stack
-            ); // an error occurred
+            log.debug("ddbQueryBracketMdExistsCheck failed: ", err, err.stack); // an error occurred
             throw err;
         }
     }
@@ -499,13 +494,13 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log(
+        log.debug(
             "ddbQueryRsExistsAndPendingCheck query: " + JSON.stringify(params)
         );
 
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryRsExistsAndPendingCheck: ", data); // successful response
+            log.debug("ddbQueryRsExistsAndPendingCheck: ", data); // successful response
             const udata = this.unmarshallResultsToArray(
                 data,
                 new EntityFactory({})
@@ -513,7 +508,7 @@ class DdbUtils {
 
             return udata.filter((rs) => rs.nextRace()); // only return entries that need to race
         } catch (err) {
-            console.log(
+            log.debug(
                 "ddbQueryRsExistsAndPendingCheck failed: ",
                 err,
                 err.stack
@@ -574,29 +569,29 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddb ddbQueryRsAlreadyPending: " + JSON.stringify(params));
+        log.debug("ddb ddbQueryRsAlreadyPending: " + JSON.stringify(params));
 
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbQueryRsAlreadyPending: " + data); // successful response
-            console.log("ddbQueryRsAlreadyPending: " + JSON.stringify(data)); // successful response
+            log.debug("ddbQueryRsAlreadyPending: " + data); // successful response
+            log.debug("ddbQueryRsAlreadyPending: " + JSON.stringify(data)); // successful response
             if (data.Count > 0) {
                 return this.fmtPendingError(data, json.cn);
             }
             return ""; // no errors.
         } catch (err) {
-            console.log("queryRsAlreadyPending failed: ", err, err.stack); // an error occurred
+            log.debug("queryRsAlreadyPending failed: ", err, err.stack); // an error occurred
         }
         // if there was an error, lambda will  fail.   that is ok here.  nothing returned
     }
     fmtPendingError(data, cnList) {
-        console.log("fmtPendingError looking:", cnList);
+        log.debug("fmtPendingError looking:", cnList);
         const offenders = {};
         cnList.forEach((tgtCn) => {
             data.Items.forEach((item) => {
                 item.cn.L.forEach((itemCn) => {
                     if (tgtCn === itemCn.S) {
-                        console.log("fmtPendingError found offender:", tgtCn);
+                        log.debug("fmtPendingError found offender:", tgtCn);
                         offenders[tgtCn] = "Already Pending";
                     }
                 });
@@ -628,15 +623,15 @@ class DdbUtils {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddb query: " + JSON.stringify(params));
+        log.debug("ddb query: " + JSON.stringify(params));
 
         try {
             var data = await this.ddbClient.query(params);
-            console.log("queryRsContains: " + data); // successful response
-            console.log("queryRsContains: " + JSON.stringify(data)); // successful response
+            log.debug("queryRsContains: " + data); // successful response
+            log.debug("queryRsContains: " + JSON.stringify(data)); // successful response
             return data.Count;
         } catch (err) {
-            console.log("queryRsContains failed: ", err, err.stack); // an error occurred
+            log.debug("queryRsContains failed: ", err, err.stack); // an error occurred
         }
         return 99;
     }
@@ -646,9 +641,9 @@ class DdbUtils {
 
         if (myP) {
             myP.preWrite();
-            console.log("fmtBulkPut pw:", myP);
+            log.debug("fmtBulkPut pw:", myP);
             var marshalled = this.AWS.DynamoDB.Converter.marshall(myP);
-            console.log("fmtBulkPut mar:", marshalled);
+            log.debug("fmtBulkPut mar:", marshalled);
             const putRequest = {
                 PutRequest: {
                     Item: marshalled,
@@ -657,7 +652,7 @@ class DdbUtils {
             const uk = myP.partitionKey + ":" + myP.sortKey;
             return [uk, putRequest, myP];
         } else {
-            console.log("fmtBulkPut ignored invalid:" + JSON.stringify(json1));
+            log.debug("fmtBulkPut ignored invalid:" + JSON.stringify(json1));
             return [null, null];
         }
     }
@@ -673,10 +668,10 @@ class DdbUtils {
             try {
                 var data = await this.ddbClient.batchWriteItem(params);
 
-                console.log("Added Bulk: " + JSON.stringify(data)); // successful response
+                log.debug("Added Bulk: " + JSON.stringify(data)); // successful response
                 return requests.length; // TODO get from TotalProcessed;
             } catch (err) {
-                console.log(err, err.stack); // an error occurred
+                log.debug(err, err.stack); // an error occurred
                 return 0;
             }
         }
@@ -685,7 +680,7 @@ class DdbUtils {
         var requests = {}; // keyed by unique pk/sk to elimate duplicates.
         var totalProcessed = 0;
         for (var i = 0; i < json.bulk.length; i++) {
-            console.log("addBulk: " + i);
+            log.debug("addBulk: " + i);
             const [uk, putRequest] = this.fmtBulkPut(json.bulk[i]);
             if (putRequest && uk) {
                 requests[uk] = putRequest;
@@ -719,11 +714,11 @@ class DdbUtils {
             MessageDeduplicationId: this.create_UUID(),
         };
         try {
-            console.log("SQS sending:", qsp);
+            log.debug("SQS sending:", qsp);
             const sent = await this.sqs.sendMessage(params).promise();
-            console.log("SQS send Success", sent.MessageId);
+            log.debug("SQS send Success", sent.MessageId);
         } catch (err) {
-            console.log("SQS send Error", err);
+            log.debug("SQS send Error", err);
         }
     }
 

@@ -1,4 +1,5 @@
 const fs = require("fs");
+const log = require("loglevel");
 var StringDecoder = require("string_decoder").StringDecoder;
 var path = require("path");
 
@@ -22,15 +23,15 @@ class TmpCache {
         //const pkDir = this.getCacheDir(entityKey);
         try {
             await fsPromises.mkdir(pkDir, { recursive: true });
-            console.log("created dir: ", pkDir);
+            log.debug("created dir: ", pkDir);
         } catch (err) {}
 
         const flat = JSON.stringify(entity);
-        console.log("writing to file: ", cachePath, flat);
+        log.debug("writing to file: ", cachePath, flat);
         try {
             await fsPromises.writeFile(cachePath, flat);
         } catch (err) {
-            console.log("failed to write file: ", cachePath, err);
+            log.debug("failed to write file: ", cachePath, err);
         }
     }
     async ddbOrS3(entityKey) {
@@ -42,25 +43,20 @@ class TmpCache {
     }
     async getObject(entityKey) {
         const cachePath = this.getCachePath(entityKey);
-        console.log(
-            "getObject entityKey:",
-            entityKey,
-            " cachePath:",
-            cachePath
-        );
+        log.debug("getObject entityKey:", entityKey, " cachePath:", cachePath);
         try {
             const json = await fsPromises.readFile(cachePath, "utf8");
-            console.log("getObject found in cache:", cachePath);
+            log.debug("getObject found in cache:", cachePath);
             return JSON.parse(json);
         } catch (err) {
-            console.log(
+            log.debug(
                 "failed to read file: ",
                 cachePath,
                 " entityKey:",
                 entityKey
             );
             const rc = await this.ddbOrS3(entityKey);
-            console.log("getObject cache miss: ", cachePath, " data: ", rc);
+            log.debug("getObject cache miss: ", cachePath, " data: ", rc);
             if (rc) {
                 await this.putObject(entityKey, rc); // cache for future reads.
             }
@@ -85,14 +81,14 @@ class TmpCache {
         };
         try {
             const data = await this.s3.getObject(params).promise();
-            console.log("s3 getObject ok", data);
+            log.debug("s3 getObject ok", data);
 
             const d = new StringDecoder("utf8");
             const rc = d.write(data.Body);
             return JSON.parse(rc);
         } catch (err) {
-            console.log("s3 getBucket Error", err);
-            console.log("s3 getBucket Params:", params);
+            log.debug("s3 getBucket Error", err);
+            log.debug("s3 getBucket Params:", params);
             return null;
         }
     }
@@ -108,20 +104,20 @@ class TmpCache {
             ReturnConsumedCapacity: "TOTAL",
             ExpressionAttributeValues: containsValues,
         };
-        console.log("ddbCacheQueryPkSk query: " + JSON.stringify(params));
+        log.debug("ddbCacheQueryPkSk query: " + JSON.stringify(params));
 
         try {
             var data = await this.ddbClient.query(params);
-            console.log("ddbCacheQueryPkSk: ", data); // successful response
+            log.debug("ddbCacheQueryPkSk: ", data); // successful response
             for (var i = 0; i < data.Items.length; i++) {
                 var unmarshalled = this.AWS.DynamoDB.Converter.unmarshall(
                     data.Items[i]
                 );
                 return unmarshalled;
-                console.log("ddbCacheQueryPkSk: returning", unmarshalled); // successful response
+                log.debug("ddbCacheQueryPkSk: returning", unmarshalled); // successful response
             }
         } catch (err) {
-            console.log("ddbCacheQueryPkSk failed: ", err, err.stack); // an error occurred
+            log.debug("ddbCacheQueryPkSk failed: ", err, err.stack); // an error occurred
             throw err;
         }
     }

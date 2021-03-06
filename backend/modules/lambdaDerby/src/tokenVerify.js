@@ -1,12 +1,13 @@
+const log = require("loglevel");
 const dump = (decodedToken) => {
     if (decodedToken) {
         const expDate = new Date();
         expDate.setTime(decodedToken.exp * 1000);
 
-        console.log("expires", decodedToken.exp);
-        console.log("expires", expDate);
+        log.debug("expires", decodedToken.exp);
+        log.debug("expires", expDate);
     } else {
-        console.log("no token");
+        log.debug("no token");
     }
 };
 const token =
@@ -41,7 +42,7 @@ var jwkToPem = require("jwk-to-pem");
 
 const verifyToken = (token) => {
     var pem = jwkToPem(jwk.keys[0]);
-    console.log(token);
+    log.debug(token);
     try {
         //const x= jwt.verify(token, pem, { algorithms: ['RS256'] });
         const x = jwt.verify(token, pem, {
@@ -50,10 +51,10 @@ const verifyToken = (token) => {
                 "Xhttps://cognito-idp.us-east-2.amazonaws.com/us-east-2_gHYAogcpy",
             aud: "XX755hlhpgiomc38j11um13euoae",
         });
-        console.log("verified :", x);
+        log.debug("verified :", x);
         return x;
     } catch (err) {
-        console.log("decode failed:", err);
+        log.debug("decode failed:", err);
     }
 };
 const test = () => {
@@ -67,9 +68,9 @@ const test = () => {
 	jwt.verify(token, pem, { algorithms: ['RS256'] }, function(err, decodedToken) {
 		done[i]=new Date();
 
-		console.log("elapsed:",done[i].getTime() - start[i].getTime());
-		console.log("err",err);
-		console.log("decoded",decodedToken);
+		log.debug("elapsed:",done[i].getTime() - start[i].getTime());
+		log.debug("err",err);
+		log.debug("decoded",decodedToken);
 		dump(decodedToken);
 	});
 */

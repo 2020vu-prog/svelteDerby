@@ -1,5 +1,6 @@
 "use strict";
 
+const log = require("loglevel");
 const { permissionMap, permissionMap2 } = require("./permissionLits.js");
 const powerPerms = { ...permissionMap2 };
 const starterPerms = { CanAddBlocks: true };
@@ -15,7 +16,7 @@ const orgUserPermMap = {
 };
 function hasRoutePath(routeType, orgIz, userMail, serverRoutePath) {
     const permKeys = lookupUserPermissions(orgIz, userMail);
-    console.log("permKeys:", permKeys);
+    log.debug("permKeys:", permKeys);
     var rc = false;
     permKeys.forEach((permKey) => {
         const p2 = permissionMap2[permKey];
@@ -23,11 +24,11 @@ function hasRoutePath(routeType, orgIz, userMail, serverRoutePath) {
             rc = true;
         }
     });
-    console.log(`permissions for ${userMail}  ${serverRoutePath} -- `, rc);
+    log.debug(`permissions for ${userMail}  ${serverRoutePath} -- `, rc);
     return rc;
 }
 function lookupUserPermissions(orgIz, userMail) {
-    //console.log("pmap2:", Object.keys(permissionMap2));
+    //log.debug("pmap2:", Object.keys(permissionMap2));
     var grantedPerms = {};
 
     const k1 = `${orgIz}:${userMail}`.toLowerCase();
@@ -42,7 +43,7 @@ function lookupUserPermissions(orgIz, userMail) {
 
     grantedPerms.Anonymous = "value ignored";
     const granted = Object.keys(grantedPerms);
-    console.log(`granting permissions for ${userMail} -- `, granted);
+    log.debug(`granting permissions for ${userMail} -- `, granted);
     return granted;
 }
 

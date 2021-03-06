@@ -1,8 +1,10 @@
 "use strict";
 const clientMinimumVersion = "1.1.17";
-const derbyMainVersion = "1.1.9";
+const derbyMainVersion = "1.1.10";
 const crypto = require("crypto");
 const path = require("path");
+
+const log = require("loglevel");
 
 const EntityFactory = require("./shared/EntityFactory.js");
 const { permissionMap } = require("./shared/permissionLits.js");
@@ -24,6 +26,9 @@ const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
 
 const announceResults = new AnnounceResults(AWS, ddbUtils);
 let globalErrorList = [];
+
+log.setLevel(log.levels.TRACE);
+
 const s3QueryChartTypes = async () => {
     var params = {
         Bucket: process.env.ChartS3BucketName,
@@ -33,7 +38,7 @@ const s3QueryChartTypes = async () => {
         const data = await s3.listObjectsV2(params).promise();
         return data;
     } catch (err) {
-        console.log("s3 list Error", err);
+        log.debug("s3 list Error", err);
         return { error: "s3 list buckets Failed" };
     }
 };
@@ -46,12 +51,12 @@ async function s3QueryMediaPrefix(queryStringParameters) {
         Prefix: `media/${prefix}`,
     };
     const allKeys = await getAllKeys(params);
-    console.log("s3QueryMediaPrefix: ", params, allKeys);
+    log.debug("s3QueryMediaPrefix: ", params, allKeys);
     return allKeys;
 }
 async function getAllKeys(params, allKeys = []) {
     const response = await s3.listObjectsV2(params).promise();
-    console.log("getAllKeys count:", response.Contents.length);
+    log.debug("getAllKeys count:", response.Contents.length);
     response.Contents.forEach((obj) =>
         allKeys.push({ Key: obj.Key, LastModified: obj.LastModified })
     );
@@ -70,9 +75,9 @@ const attachPrincipalPolicy = async (policyName, principal) => {
                 principal: principal,
             })
             .promise();
-        console.log("attachPrincipalPolicy Data", data);
+        log.debug("attachPrincipalPolicy Data", data);
     } catch (err) {
-        console.log("attachPrincipalPolicy Error", err);
+        log.debug("attachPrincipalPolicy Error", err);
     }
 };
 
@@ -97,7 +102,7 @@ const getTtl = async (config) => {
     //return Math.round((new Date().getTime() / 1000) + config.ttlIncrement);
 };
 function frozenOrArchived(config) {
-    console.log("function frozenOrArchived passed ", config);
+    log.debug("function frozenOrArchived passed ", config);
     if (!config) {
         return false;
     }
@@ -117,7 +122,7 @@ const addPending2 = async (event) => {
     }
 
     const json = JSON.parse(event.body);
-    console.log("BEGIN: addPending2: " + JSON.stringify(json));
+    log.debug("BEGIN: addPending2: " + JSON.stringify(json));
     json.PK = ":RS"; // force RaceStanding
 
     const alreadyExistsMessage = await ddbUtils.ddbQueryRsAlreadyPending(
@@ -134,9 +139,9 @@ const addPending2 = async (event) => {
     if (stringIsTrue(cfg.lcl1)) {
         //low car lane 1?
         json.cn.sort();
-        console.log("addPending2: sorted: ", json.cn);
+        log.debug("addPending2: sorted: ", json.cn);
     } else {
-        console.log("addPending2: unsorted: ", json.cn);
+        log.debug("addPending2: unsorted: ", json.cn);
     }
     return await ddbUtils.addSingle(json);
 };
@@ -145,7 +150,7 @@ const stringIsTrue = (stringValue) => {
 };
 
 const applyFinishTime = async (json) => {
-    console.log("applyFinishTime 413: " + JSON.stringify(json));
+    log.debug("applyFinishTime 413: " + JSON.stringify(json));
     const tgtRpList = await ddbUtils.ddbQueryRpByKey(json);
     if (tgtRpList.length == 0) {
         return {
@@ -165,13 +170,13 @@ const applyFinishTime = async (json) => {
         rpUpdatePromise,
     ]);
 
-    console.log("applyFinishTime 413 rsFoundList: ", rsFoundList);
+    log.debug("applyFinishTime 413 rsFoundList: ", rsFoundList);
 
     if (rsFoundList.length > 0) {
         const tgtRs = rsFoundList[0];
         // match means A phase.
         const phase = tgtRp.phaseLiteral;
-        console.log("applyFinishTime 413 phase: ", phase);
+        log.debug("applyFinishTime 413 phase: ", phase);
 
         if (phase === "A") {
             tgtRs.phase1Results = json.phr;
@@ -212,19 +217,19 @@ const applyFinishTime = async (json) => {
 
 // srcRs / bracketPos can be null.  Not both.
 const advanceChartPos = async (srcRs, bracketPos) => {
-    console.log("BEGIN: advanceChartPos");
+    log.debug("BEGIN: advanceChartPos");
     if (!srcRs && bracketPos) {
         //populate srcRS
         srcRs = await loadRaceStandingFromBracketPos(bracketPos);
-        console.log("advanceChartPos loaded srcRS:", srcRs);
+        log.debug("advanceChartPos loaded srcRS:", srcRs);
     } else if (srcRs && !bracketPos) {
         //populate bracketPos
         if (!srcRs.Bp) {
-            console.log("advanceChartPos: not a raceBracket RS");
+            log.debug("advanceChartPos: not a raceBracket RS");
             return;
         }
         bracketPos = await loadBracketPosFromRaceStanding(srcRs);
-        console.log("advanceChartPos loaded bracketPos:", bracketPos);
+        log.debug("advanceChartPos loaded bracketPos:", bracketPos);
     }
 
     if (srcRs) {
@@ -239,21 +244,21 @@ const advanceChartPos = async (srcRs, bracketPos) => {
         // fall thru to advance anyway to handle bye/forfeit.
     }
 
-    console.log("advanceChartPos: Bp:", bracketPos.SK);
+    log.debug("advanceChartPos: Bp:", bracketPos.SK);
     const chartId = bracketPos.SK.replace(/:.*/, "");
     const heatNumber = bracketPos.SK.replace(/.*:/, "");
     const [bmd, combined] = await getCachedBmd(bracketPos.orgId, chartId);
     if (!combined) {
-        console.log("advanceChartPos: missing combined json");
+        log.debug("advanceChartPos: missing combined json");
         return;
     }
-    console.log("advanceChartPos: combined:", combined);
+    log.debug("advanceChartPos: combined:", combined);
     if (!combined.progress) {
-        console.log("advanceChartPos: missing combined json progress");
+        log.debug("advanceChartPos: missing combined json progress");
         return;
     }
     if (!combined.progress[heatNumber]) {
-        console.log(
+        log.debug(
             "advanceChartPos: missing combined json progress for heat: ",
             heatNumber
         );
@@ -261,7 +266,7 @@ const advanceChartPos = async (srcRs, bracketPos) => {
     }
 
     const progress = combined.progress[heatNumber];
-    console.log("advanceChartPos: applying progress using: ", progress);
+    log.debug("advanceChartPos: applying progress using: ", progress);
     const winnerDest = progress.WinnerDest;
     const loserDest = progress.LoserDest;
     let winnerPtcpObj = "";
@@ -269,7 +274,7 @@ const advanceChartPos = async (srcRs, bracketPos) => {
     let winCount = 0;
     const readyToCede = bracketPos.isReadyToCedeUncontested;
     if (readyToCede) {
-        console.log("advanceChartPos: readyToCede : ", readyToCede);
+        log.debug("advanceChartPos: readyToCede : ", readyToCede);
 
         await applyPtcpToChartPos(true, readyToCede.winner, winnerDest, bmd);
         await applyPtcpToChartPos(false, readyToCede.loser, loserDest, bmd);
@@ -311,16 +316,16 @@ const loadBracketPosFromRaceStanding = async (rs) => {
 
 const addPendingFromChartPos = async (rs, bracketPos) => {
     if (rs) {
-        console.log("addPendingFromChartPos: standing down, rs exists.");
+        log.debug("addPendingFromChartPos: standing down, rs exists.");
         return;
     }
 
-    console.log(
+    log.debug(
         "BEGIN addPendingFromChartPos: isReadyToAddPending:",
         bracketPos.isReadyToAddPending
     );
     if (bracketPos.isReadyToAddPending) {
-        console.log("isReadyToAddPending Bp:", bracketPos);
+        log.debug("isReadyToAddPending Bp:", bracketPos);
         const pendingRC = await addPending2({
             body: JSON.stringify({
                 orgId: bracketPos.orgId,
@@ -357,7 +362,7 @@ const getChartDestination = (destinationChartPos, srcHeatLetter, didWin) => {
         } else {
             destinationChartPos = bWinDest;
         }
-        console.log(
+        log.debug(
             "getChartDestination resolved conditional as: ",
             destinationChartPos,
             " srcHeatLetter: ",
@@ -387,14 +392,14 @@ const applyPtcpToChartPos = async (
     );
 
     const sk = `${bmd.SK}:${destHeatNumber}`;
-    console.log(
+    log.debug(
         "BEGIN: applyPtcpToChartPos: ptcp:",
         ptcpObject,
         " destinationChartPos: ",
         destinationChartPos
     );
     //const tgtBracketPos = await ddbQueryPkSk(`${bmd.orgId}:Bp`, sk);
-    //console.log("applyPtcpToChartPos: found:", tgtBracketPos);
+    //log.debug("applyPtcpToChartPos: found:", tgtBracketPos);
     const tgtBracketPos = {
         orgId: bmd.orgId,
         orgIz: bmd.orgId.replace(/\..*/, ""), // TODO: unhack orgIz
@@ -404,7 +409,7 @@ const applyPtcpToChartPos = async (
     };
     tgtBracketPos.pos[destHeatLetter] = ptcpObject;
     // this may recurse... (consider bye/forfeit/2nd racer advances, needs pending)
-    console.log(
+    log.debug(
         "applyPtcpToChartPos: potential recursion into addOrUpdateChartPosition:",
         tgtBracketPos
     );
@@ -423,7 +428,7 @@ async function cloneRs(srcRs) {
             orgId: srcRs.orgId,
             by: srcRs.by,
         };
-        console.log("cloneRs: ", JSON.stringify(clone));
+        log.debug("cloneRs: ", JSON.stringify(clone));
         return await ddbUtils.addSingle(clone);
     } else {
         // don't generate a new key if this RS is tied to the charts!
@@ -434,9 +439,9 @@ async function cloneRs(srcRs) {
 }
 
 const deleteRacePhase = async (json) => {
-    console.log("deleteRacePhase: " + JSON.stringify(json));
+    log.debug("deleteRacePhase: " + JSON.stringify(json));
     const rpFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:RP`, json.SK);
-    console.log("rpFound", rpFound);
+    log.debug("rpFound", rpFound);
 
     //only allow delete on blocks.  no deleting historical data
     if (!rpFound) {
@@ -455,9 +460,9 @@ const deleteRacePhase = async (json) => {
     return await ddbUtils.addSingle(rpFound);
 };
 const deleteRaceStanding = async (json) => {
-    console.log("deleteRaceStanding: " + JSON.stringify(json));
+    log.debug("deleteRaceStanding: " + JSON.stringify(json));
     const rsFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:RS`, json.SK);
-    console.log("rsFound", rsFound);
+    log.debug("rsFound", rsFound);
     var msg = "";
 
     if (!rsFound) {
@@ -490,14 +495,14 @@ const deleteRaceStanding = async (json) => {
     return rc;
 };
 async function addBlocks(json) {
-    console.log("addBlocks: " + JSON.stringify(json));
+    log.debug("addBlocks: " + JSON.stringify(json));
     json.PK = ":RP"; // force RacePhase
 
     const waitRp = ddbUtils.ddbQueryRpDuplicateCheck(json);
     const waitRs = ddbUtils.ddbQueryRsExistsAndPendingCheck(json);
     const [rpFound, rsFound] = await Promise.all([waitRp, waitRs]);
-    console.log("rpFound", rpFound);
-    console.log("rsFound", rsFound);
+    log.debug("rpFound", rpFound);
+    log.debug("rsFound", rsFound);
     if (rsFound.length == 0) {
         return {
             status: "error",
@@ -530,7 +535,7 @@ async function addBlocks(json) {
     if (rsFound[0].Bp) json["Bp"] = rsFound[0].Bp;
 
     const rpResult = await ddbUtils.addSingle(json);
-    console.log("addBlocks tgtRp:", rpResult);
+    log.debug("addBlocks tgtRp:", rpResult);
 
     await announceResults.formatAndSubmitNextOnBlocks(
         rsFound[0],
@@ -540,7 +545,7 @@ async function addBlocks(json) {
 }
 
 const addChartMetaData = async (json) => {
-    console.log("addChartMetaData: " + JSON.stringify(json));
+    log.debug("addChartMetaData: " + JSON.stringify(json));
     json.PK = ":Bmd"; // force BracketMetaData
     if (!json.SK) {
         const uu6 = ddbUtils.create_UUID().substring(0, 6);
@@ -548,19 +553,19 @@ const addChartMetaData = async (json) => {
     }
 
     const bmdFound = await ddbUtils.ddbQueryBracketMdExistsCheck(json);
-    console.log("bmdFound", bmdFound);
+    log.debug("bmdFound", bmdFound);
     if (bmdFound.length == 0) {
-        console.log("addChartMetaData add needed:", bmdFound);
+        log.debug("addChartMetaData add needed:", bmdFound);
         // fall thru to  Add
     } else {
-        console.log("addChartMetaData update needed:", bmdFound);
+        log.debug("addChartMetaData update needed:", bmdFound);
         // update name.  TODO:  actual db update needed?
     }
 
     const rc = await ddbUtils.addSingle(json);
 
     rc.chartId = json.SK.replace(/:.*/, "");
-    console.log("addChartMetaData returning: ", rc);
+    log.debug("addChartMetaData returning: ", rc);
     return rc;
 };
 const getCachedBmd = async (orgId, chartId) => {
@@ -572,19 +577,19 @@ const getCachedBmd = async (orgId, chartId) => {
         PK: `${orgId}:Bmd`,
         SK: chartId,
     });
-    console.log("found cached bmd:", bmd);
+    log.debug("found cached bmd:", bmd);
     if (bmd) {
         const combinedJson = await tmpCache.getObject({
             Bucket: process.env.ChartS3BucketName,
             Key: "data/brackets" + "/" + bmd.jsonPath,
         });
-        console.log("found cached combined:", combinedJson);
+        log.debug("found cached combined:", combinedJson);
         return [bmd, combinedJson];
     }
     return [];
 };
 const addOrUpdateChartPosition = async (json) => {
-    console.log("BEGIN: addOrUpdateChartPosition: " + JSON.stringify(json));
+    log.debug("BEGIN: addOrUpdateChartPosition: " + JSON.stringify(json));
 
     json.PK = ":Bp"; // force BracketPosition
     if (!json.SK) {
@@ -592,15 +597,15 @@ const addOrUpdateChartPosition = async (json) => {
     }
 
     const posFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:Bp`, json.SK);
-    console.log("posFound", posFound);
+    log.debug("posFound", posFound);
     if (!posFound) {
-        console.log("addOrUpdateChartPosition add needed:", posFound);
+        log.debug("addOrUpdateChartPosition add needed:", posFound);
         // Add
         //return await ddbUtils.addSingle(json);
     } else {
-        console.log("addOrUpdateChartPosition update needed:", posFound);
+        log.debug("addOrUpdateChartPosition update needed:", posFound);
         const mergedPos = Object.assign(posFound.pos, json.pos);
-        console.log("addOrUpdateChartPosition mergedPos:", mergedPos);
+        log.debug("addOrUpdateChartPosition mergedPos:", mergedPos);
         json = posFound;
         json.pos = mergedPos;
     }
@@ -615,7 +620,7 @@ const addOrUpdateChartPosition = async (json) => {
 };
 
 const addOrgConfig = async (json) => {
-    console.log("addOrgConfig: " + JSON.stringify(json));
+    log.debug("addOrgConfig: " + JSON.stringify(json));
     json.PK = "OrgConfig"; // force
     json.SK = json.orgIz; // force
     const by = entityFactory.propOverrides.by;
@@ -641,7 +646,7 @@ async function queryTimerHistoryByOrgId(qsp) {
     activeTimers.forEach((timer) => {
         if (timer.sha === timerConfig.sha) selectedTimerUuid = timer.uuid;
     });
-    console.log(
+    log.debug(
         `queryTimerHistoryByOrgId selectedTimerUuid ${selectedTimerUuid} `
     );
     if (!selectedTimerUuid) {
@@ -704,38 +709,38 @@ const addTimerConfig = async (json, initialLoad) => {
         json.lanes = ["lane1", "lane2"];
     }
     if (json.sha) {
-        console.log("addTimerConfig: applying selected timer sha:", json.sha);
+        log.debug("addTimerConfig: applying selected timer sha:", json.sha);
         await registerEventWithTimer(json);
     } else {
-        console.log("addTimerConfig: no sha found.");
+        log.debug("addTimerConfig: no sha found.");
     }
     return await ddbUtils.addSingle(json);
 };
 const registerEventWithTimer = async (timerConfigJson) => {
     //
     const selectedSha = timerConfigJson.sha;
-    console.log("registerEventWithTimer: ", timerConfigJson);
+    log.debug("registerEventWithTimer: ", timerConfigJson);
     const timers = await getActiveTimers();
     const selectedTimers = timers.filter((timer) => timer.sha === selectedSha);
     if (selectedTimers.length == 0) {
-        console.log("registerEventWithTimer: sha not found: ", selectedSha);
+        log.debug("registerEventWithTimer: sha not found: ", selectedSha);
         return;
     }
     const selectedTimer = selectedTimers[0];
 
-    console.log("registerEventWithTimer: selectedTimer: ", selectedTimer);
+    log.debug("registerEventWithTimer: selectedTimer: ", selectedTimer);
     const timerTableTc = Object.assign({}, timerConfigJson);
     timerTableTc.PK = selectedTimer.uuid;
     timerTableTc.SK = `^${timerConfigJson.orgId}`;
     timerConfigJson.sha = timerTableTc.sha; // save on original --flows back to derbyMain Ddb
 
     delete timerTableTc.sha;
-    console.log("registerEventWithTimer: registration: ", timerTableTc);
+    log.debug("registerEventWithTimer: registration: ", timerTableTc);
 
     await ddbUtils.ddbPut(timerTableTc, process.env.TimerDbTable);
 };
 const addEventConfig = async (json, priorTtl) => {
-    console.log("addEventConfig: " + JSON.stringify(json));
+    log.debug("addEventConfig: " + JSON.stringify(json));
     if (!json.orgIz) {
         return { error: "Missing orgIz" };
     }
@@ -774,7 +779,7 @@ const addEventConfig = async (json, priorTtl) => {
 };
 
 async function addParticipant2(json) {
-    console.log("addParticipant2: " + JSON.stringify(json));
+    log.debug("addParticipant2: " + JSON.stringify(json));
     json.PK = ":PTCP"; // force Participant
     const paTask = await announceResults.submitToPolly(
         "added driver: " + json.name,
@@ -880,7 +885,7 @@ const routeMap = {
         allowFrozen: true,
         h: async (event) => {
             var qr = await ddbUtils.ddbQueryRsContains(JSON.parse(event.body));
-            console.log("ddbQuery: " + qr);
+            log.debug("ddbQuery: " + qr);
             return buildResponse({ Count: qr });
         },
     },
@@ -937,11 +942,8 @@ const routeMap = {
                 paMessage,
                 orgId
             );
-            console.log(
-                "announceTask: " + paMessage + " gave: ",
-                mp3ObjectPath
-            );
-            console.log("initiateAnnouncement:", mp3ObjectPath);
+            log.debug("announceTask: " + paMessage + " gave: ", mp3ObjectPath);
+            log.debug("initiateAnnouncement:", mp3ObjectPath);
             await announceResults.propagateIotGeneric(orgId, mp3ObjectPath);
             return buildResponse({ announced: mp3ObjectPath });
         },
@@ -952,7 +954,7 @@ const routeMap = {
             var ssml = json.ssml;
             var orgId = json.orgId;
             const speechMp3 = await announceResults.submitToPolly(ssml, orgId);
-            console.log("requestTts: " + ssml + " gave: ", speechMp3);
+            log.debug("requestTts: " + ssml + " gave: ", speechMp3);
             return buildResponse({ speechMp3: speechMp3 });
         },
     },
@@ -963,7 +965,7 @@ const routeMap = {
                 qsp = {};
             }
             if (!qsp.principal) {
-                console.log(
+                log.debug(
                     "/requestMqttSubPermission : Unknown or missing principal"
                 );
                 const qr = { error: "Unknown or missing principal" };
@@ -982,7 +984,7 @@ const routeMap = {
                 qsp = {};
             }
             if (!qsp.key) {
-                console.log("/requestS3PutObjectUrl : Unknown or missing key");
+                log.debug("/requestS3PutObjectUrl : Unknown or missing key");
                 const qr = { error: "Unknown or missing key" };
                 return buildResponse(qr);
             }
@@ -1005,7 +1007,7 @@ const routeMap = {
                 ContentType: mimeType,
             };
             var signedUrl = s3.getSignedUrl("putObject", params);
-            console.log("For params:", params, " The signed URL is", signedUrl);
+            log.debug("For params:", params, " The signed URL is", signedUrl);
 
             return buildResponse({ signedUrl: signedUrl });
         },
@@ -1014,7 +1016,7 @@ const routeMap = {
 
 const buildResponse = (jsonObj, cacheControl = "no-cache") => {
     if (jsonObj && jsonObj.error) {
-        console.log("buildResponse: error:  ", jsonObj);
+        log.debug("buildResponse: error:  ", jsonObj);
     }
     return {
         statusCode: 200,
@@ -1029,14 +1031,8 @@ const buildResponse = (jsonObj, cacheControl = "no-cache") => {
 };
 
 async function snsApplyTimerHandler(snsMessageJson) {
-    console.log(
-        "applyTimerHandler Message received from SNS2:",
-        snsMessageJson
-    );
-    console.log(
-        "applyTimerHandler Message received from SNS2:",
-        snsMessageJson
-    );
+    log.debug("applyTimerHandler Message received from SNS2:", snsMessageJson);
+    log.debug("applyTimerHandler Message received from SNS2:", snsMessageJson);
     const json = snsMessageJson;
     if (json && json.timerConfig && json.deltas && json.deltas.length > 0) {
         // sns gave us a timer config.  use that instead of
@@ -1057,28 +1053,28 @@ async function snsApplyTimerHandler(snsMessageJson) {
 
         if (candidateBlock && candidateBlock[0]) {
             const firstCblock = candidateBlock[0]; // first block is close enough for this edit
-            console.log(
+            log.debug(
                 "auditCblock: first candidateBlock: ",
                 firstCblock,
                 " vs: ",
                 nextOnBlocks
             );
             if (firstCblock.pubTime < nextOnBlocks.at) {
-                console.log(
+                log.debug(
                     "auditCblock: ignoring finishTime that is older than nextOnBlocks"
                 );
                 return;
             } else {
-                console.log(
+                log.debug(
                     "auditCblock: allowing finishTime that is newer than nextOnBlocks"
                 );
             }
         } else {
-            console.log("auditCblock: finishTime not Audited.  missing cblock");
+            log.debug("auditCblock: finishTime not Audited.  missing cblock");
         }
         // TODO: do not apply times from an sns event prior to
         //    the racephase add time
-        console.log("applyTimerHandler nob:", nextOnBlocks);
+        log.debug("applyTimerHandler nob:", nextOnBlocks);
         if (nextOnBlocks.length > 0) {
             const rp = nextOnBlocks[0]; // TODO: get oldest!
             const l1Micros = deltaLanes.lane1.noseMicros;
@@ -1089,19 +1085,19 @@ async function snsApplyTimerHandler(snsMessageJson) {
                 SK: rp.SK,
                 phr: [l1Micros, l2Micros],
             };
-            console.log("applyTimerHandler formatted:", req);
+            log.debug("applyTimerHandler formatted:", req);
             const applied = await applyFinishTime(req);
-            console.log("applyTimerHandler rc:", applied);
+            log.debug("applyTimerHandler rc:", applied);
         }
     } else {
-        console.log("applyTimerHandler invalid msg:", json);
+        log.debug("applyTimerHandler invalid msg:", json);
     }
 }
 
 async function apiGatewayHandler(event) {
     const dbArn = process.env.DynamoDbArn;
 
-    console.log("event.path: ", event.path);
+    log.debug("event.path: ", event.path);
 
     const routePath = event.path.replace(/^\/app/, "");
     if (routePath === "/testArchive") {
@@ -1111,12 +1107,12 @@ async function apiGatewayHandler(event) {
 
     if (routePath === "/listOrgEvents") {
         const qr = await ddbUtils.ddbListEventConfigByOrg(getOrgIz(event));
-        console.log("getEventConfig 23232:", qr);
+        log.debug("getEventConfig 23232:", qr);
         return buildResponse(qr, "max-age=307");
     }
     if (routePath === "/listOrgConfig") {
         const qr = await ddbUtils.ddbQueryOrgConfig();
-        console.log("listOrgConfig :", qr);
+        log.debug("listOrgConfig :", qr);
         return buildResponse(qr, "max-age=1807");
     }
 
@@ -1136,13 +1132,13 @@ async function apiGatewayHandler(event) {
         TTL: defaultTTL,
     });
     ddbUtils.setEntityFactory(entityFactory);
-    console.log("Begin event", event);
+    log.debug("Begin event", event);
 
     const email = decodedJwt.email;
     if (email && hasServerRoutePath(orgIz, email, routePath)) {
-        console.log(`allowing access to ${routePath} for [${email}]`);
+        log.debug(`allowing access to ${routePath} for [${email}]`);
     } else {
-        console.log(`prohibiting access to ${routePath} for [${email}]`);
+        log.debug(`prohibiting access to ${routePath} for [${email}]`);
         return buildResponse({ error: "unauthorized" });
     }
 
@@ -1166,7 +1162,7 @@ async function apiGatewayHandler(event) {
         const qr = { error: "Unable to determine default TTL" };
         return buildResponse(qr);
     } else if (routeMap[routePath] && routeMap[routePath].h) {
-        console.log(
+        log.debug(
             "ph routeMap handling: " + routePath,
             " object:",
             routeMap[routePath]
@@ -1178,20 +1174,20 @@ async function apiGatewayHandler(event) {
         }
 
         const phandler = routeMap[routePath].h;
-        console.log("routeMap handling: " + phandler);
+        log.debug("routeMap handling: " + phandler);
 
         return await phandler(event);
-        console.log("routeMap handled: " + routePath);
+        log.debug("routeMap handled: " + routePath);
     }
 
-    console.log("Unhandled Path: " + routePath + " ep: " + event.path);
+    log.debug("Unhandled Path: " + routePath + " ep: " + event.path);
     return buildResponse({
         status: "unhandled",
         error: "Unhandled",
     });
 }
 exports.handler = async function (event) {
-    console.log("Received event:", JSON.stringify(event, null, 4));
+    log.debug("Received event:", JSON.stringify(event, null, 4));
     if (event && event.path) {
         const response = await apiGatewayHandler(event);
         return response;
@@ -1200,20 +1196,20 @@ exports.handler = async function (event) {
         var snsMessage = event.Records[0].Sns.Message;
         const snsMessageJson = JSON.parse(snsMessage);
 
-        console.log("sns message: : ", snsMessageJson);
+        log.debug("sns message: : ", snsMessageJson);
         // ugly workaround for cron events not invoking lambda directly
         //   12/2020 pressing polly sns topic back into use to deliver the cron event for archival
         if (snsMessageJson && snsMessageJson.source === "aws.events") {
-            console.log("handling archive poll from cron");
+            log.debug("handling archive poll from cron");
             await archiveUtils.processExpiringEventConfig();
 
             return;
         }
 
-        console.log("sns topic: : ", snsMessageJson.snsTopicArn);
-        console.log("sns polly arn: : ", process.env.PollyCompleteSnsArn);
+        log.debug("sns topic: : ", snsMessageJson.snsTopicArn);
+        log.debug("sns polly arn: : ", process.env.PollyCompleteSnsArn);
         if (snsMessageJson.snsTopicArn === process.env.PollyCompleteSnsArn) {
-            console.log("polly finished: ", snsMessageJson);
+            log.debug("polly finished: ", snsMessageJson);
             await announceResults.propagateIotFromSns(snsMessageJson);
             return "Polly Success";
         }
@@ -1223,7 +1219,7 @@ exports.handler = async function (event) {
     }
     if (event.Records[0].s3) {
         const s3Event = event.Records[0].s3;
-        console.log("s3 trigger:", s3Event);
+        log.debug("s3 trigger:", s3Event);
 
         var basefile = path.basename(s3Event.object.key);
         const tgtFile = basefile.replace("-", "/");
@@ -1234,9 +1230,9 @@ exports.handler = async function (event) {
             Key: `media/${tgtFile}`,
             Bucket: process.env.DstBucket,
         };
-        console.log("s3 mp4 copyParams:", s3CopyParams);
+        log.debug("s3 mp4 copyParams:", s3CopyParams);
         const s3copyDone = await s3.copyObject(s3CopyParams).promise();
-        console.log("s3 mp4 copyDone:", s3copyDone);
+        log.debug("s3 mp4 copyDone:", s3copyDone);
 
         const webmSrcKey = `inputs/${basefile}`.replace(".mp4", ".webm");
         const webmTgtKey = tgtFile.replace(".mp4", ".webm");
@@ -1245,13 +1241,13 @@ exports.handler = async function (event) {
             Key: `media/${webmTgtKey}`,
             Bucket: process.env.DstBucket,
         };
-        console.log("s3 webm copyParams:", s3CopyParamsWebm);
+        log.debug("s3 webm copyParams:", s3CopyParamsWebm);
         const s3copyDoneWebm = await s3.copyObject(s3CopyParamsWebm).promise();
-        console.log("s3 webm copyDone:", s3copyDoneWebm);
+        log.debug("s3 webm copyDone:", s3copyDoneWebm);
         return "s3 success";
     }
 
-    console.log("unknown event: ", event);
+    log.debug("unknown event: ", event);
     return "Error";
 };
 

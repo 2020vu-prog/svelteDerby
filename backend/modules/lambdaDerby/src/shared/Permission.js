@@ -1,5 +1,5 @@
 "use strict";
-
+const log = require("loglevel");
 class Permission {
     //propOverrides = {}
     constructor(permissionName, serverRouteList, svelteRouteList) {

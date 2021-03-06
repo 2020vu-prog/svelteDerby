@@ -1,4 +1,5 @@
 const EntityFactory = require("./EntityFactory.js");
+const log = require("loglevel");
 const propOverrides = {
     orgId: "chi",
     by: "whoDunnIt",
@@ -47,20 +48,20 @@ const rp = ef.build({
 });
 const ecRaw = { PK: "EventConfig", lcl1: true, TTL: 5 };
 
-console.log(foo);
+log.debug(foo);
 foo.preWrite();
-console.log(foo);
+log.debug(foo);
 
-console.log("back to json:" + JSON.stringify(foo));
-console.log("partitionKey:" + foo.partitionKey);
-console.log("PK:" + foo.PK);
-console.log(foo.lastUpdate);
+log.debug("back to json:" + JSON.stringify(foo));
+log.debug("partitionKey:" + foo.partitionKey);
+log.debug("PK:" + foo.PK);
+log.debug(foo.lastUpdate);
 
-console.log(rs);
-console.log("partitionKey:" + rs.partitionKey);
-console.log("results:" + rs.overallResults);
-console.log("PK:" + rs.PK);
+log.debug(rs);
+log.debug("partitionKey:" + rs.partitionKey);
+log.debug("results:" + rs.overallResults);
+log.debug("PK:" + rs.PK);
 
-console.log(rp);
-console.log(ef.build({}));
-console.log("EventConfig: ", ef.build(ecRaw));
+log.debug(rp);
+log.debug(ef.build({}));
+log.debug("EventConfig: ", ef.build(ecRaw));
