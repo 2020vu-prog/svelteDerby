@@ -10,6 +10,7 @@ variable   CcaQueueArn  {}
 variable     ChartS3BucketName  {}
 variable ApplyTimerSnsArn{}
 variable PollyCompleteSnsArn {}
+variable RacerStatusFanoutSnsArn {}
 variable s3VideoWatch {}
 variable s3VideoDone {}
 
@@ -139,6 +140,7 @@ resource "aws_lambda_function" "lambda" {
   role    = aws_iam_role.iam_for_lambda.arn
   handler = "derbyMain.handler"
   runtime = "nodejs12.x"
+  memory_size=1024
   publish = true
   tags=local.tags
   environment {
@@ -160,6 +162,7 @@ resource "aws_lambda_function" "lambda" {
       ChartS3BucketName  =  var.ChartS3BucketName  
       AwsRegion = var.AwsRegion
       PollyCompleteSnsArn=var.PollyCompleteSnsArn
+      RacerStatusFanoutSnsArn=var.RacerStatusFanoutSnsArn
       IotEndpoint=data.aws_iot_endpoint.mqtt.endpoint_address
 
 	s3VideoWatch=local.s3VideoWatch
@@ -232,6 +235,7 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
         ]
         resources = [
 	//PollyCompleteSnsArn
+                var.RacerStatusFanoutSnsArn,
                 "*"
         ]
     }

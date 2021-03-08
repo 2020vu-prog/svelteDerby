@@ -93,42 +93,22 @@
             };
         }
     }
-    async function carAndDriverSSML(carNumber) {
-        var rc = `<say-as interpret-as="characters" >${carNumber}</say-as>`;
-        const ptcpFromDexie = await db.Participant.get(carNumber.toString());
-        if (ptcpFromDexie) {
-            const entityFactory = new EntityFactory({});
-            var ptcpEntity = entityFactory.build(ptcpFromDexie);
-            if (ptcpEntity.ssmlName) {
-                rc += ` driven by ${ptcpEntity.ssmlName}`;
-            }
-        }
-        return rc;
-    }
-    async function requestAnnouncement() {
-        var announceText = "";
-        var carsAndOrDrivers = ["", ""];
 
-        for (var i = 0; i < cn.length; i++) {
-            carsAndOrDrivers[i] = await carAndDriverSSML(cn[i]);
-        }
-
-        announceText = `Car ${carsAndOrDrivers[0]}, and car ${carsAndOrDrivers[1]}, please report to your cars, it is time to race.....`;
-        announceText += `Car ${carsAndOrDrivers[0]}, and car ${carsAndOrDrivers[1]}, please report to your cars, it is time to race`;
-
-        log.debug(`doAnnounce: ${announceText} `);
+    async function callCars() {
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
-            paMessage: `<speak>${announceText}</speak>`,
+            cn: cn,
+            SK: dbKey,
+            tags: [{ called: true }, { called: true }],
         };
 
         axios.defaults.headers.common["Authorization"] = bearer;
 
-        const endpoint = "/initiateAnnouncement";
+        const endpoint = "/RaceStanding/addTag";
 
         try {
             const response = await axios.post(
@@ -142,10 +122,9 @@
                 };
             } else {
                 $statusMessage = {
-                    text: `Announcement Requested.`,
+                    text: `Cars called.`,
                     type: "success",
                 };
-                announceText = "";
             }
         } catch (e) {
             $statusMessage = {
@@ -265,8 +244,8 @@
         <span
             class="navbarItem"
             style="background-color: {$theme}"
-            on:click|preventDefault={requestAnnouncement}>
-            Announce
+            on:click|preventDefault={callCars}>
+            Call To Race
         </span>
     {/if}
 </div>

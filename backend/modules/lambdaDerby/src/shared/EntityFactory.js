@@ -365,7 +365,7 @@ entityFactories["RacePhase"] = class RacePhase extends EntityBase {
     }
 };
 entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
-    static members = ["cn", "ph1", "ph2", "Bp"];
+    static members = ["cn", "ph1", "ph2", "Bp", "tg"];
     static eid = ":RS";
     static canBuild(json) {
         return json.PK && json.PK.endsWith(RaceStandingEid);
@@ -410,6 +410,16 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     }
     get carNumbers() {
         return this.cn;
+    }
+    get tags() {
+        if (this.tg) {
+            return this.tg;
+        } else {
+            return [{}, {}];
+        }
+    }
+    set tags(tg) {
+        return (this.tg = tg);
     }
 
     isOverallTie() {

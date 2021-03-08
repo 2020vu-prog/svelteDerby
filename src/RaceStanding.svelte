@@ -37,6 +37,18 @@
     function isHistory() {
         return source === "EventHistory";
     }
+    function showTag(lane, at) {
+        if (standing.hasResults()) {
+            return "";
+        }
+
+        const idx = lane - 1;
+        const tags = standing.tags;
+        if (tags && tags[idx] && tags[idx].called) {
+            return "Called"
+        }
+        return "";
+    }
     const isWinner = (lane, phase) => {
         return standing.isWinner(lane, phase);
     };
@@ -79,6 +91,9 @@
                         isWinner={isWinner(1, 0, at)}
                         phaseLetter=""
                         at={safeGetAt($driverMap, standing.carNumbers[0])} />
+                    {#if showTag(1, at)}
+                        <big class="bigbadge badge">{showTag(1, at)}</big>
+                    {/if}
                     {#if isWinner(1, 0, at)}
                         <big class="bigbadge badge">
                             Overall: {getWinTime(1, 0, at)}
@@ -102,6 +117,9 @@
                         isWinner={isWinner(2, 0, at)}
                         phaseLetter=""
                         at={safeGetAt($driverMap, standing.carNumbers[1])} />
+                    {#if showTag(2, at)}
+                        <big class="bigbadge badge">{showTag(1, at)}</big>
+                    {/if}
                     {#if isWinner(2, 0, at)}
                         <big class="bigbadge badge">
                             Overall: {getWinTime(2, 0, at)}

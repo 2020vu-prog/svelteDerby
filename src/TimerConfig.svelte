@@ -148,7 +148,12 @@
                 log.debug("MATCH ", timerToCheck.sha, " ", activeTimerSha);
                 return true;
             } else {
-                log.debug("NOT A MATCH ", timerToCheck.sha, " ", activeTimerSha);
+                log.debug(
+                    "NOT A MATCH ",
+                    timerToCheck.sha,
+                    " ",
+                    activeTimerSha
+                );
                 return false;
             }
         }

@@ -102,7 +102,9 @@
     }
     var thisChartImage;
     function iim(e) {
-        log.debug(`thisChartImage: pagex: ${event.pageX} pageY: ${event.pageY}`);
+        log.debug(
+            `thisChartImage: pagex: ${event.pageX} pageY: ${event.pageY}`
+        );
         log.debug("thisChartImage:", thisChartImage);
 
         const bounds = thisChartImage.getBoundingClientRect();

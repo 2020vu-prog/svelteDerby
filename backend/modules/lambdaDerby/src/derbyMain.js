@@ -19,12 +19,15 @@ const TmpCache = require("./tmpCache.js");
 const DdbUtils = require("./DdbUtils");
 const ArchiveUtils = require("./ArchiveUtils");
 const AnnounceResults = require("./AnnounceResults");
+const ApiRaceStanding = require("./ApiRaceStanding");
 const configMap = {};
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
 const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
 
 const announceResults = new AnnounceResults(AWS, ddbUtils);
+const apiRaceStanding = new ApiRaceStanding(AWS, ddbUtils, announceResults);
+
 let globalErrorList = [];
 
 log.setLevel(log.levels.TRACE);
@@ -459,41 +462,7 @@ const deleteRacePhase = async (json) => {
     rpFound.del = true;
     return await ddbUtils.addSingle(rpFound);
 };
-const deleteRaceStanding = async (json) => {
-    log.debug("deleteRaceStanding: " + JSON.stringify(json));
-    const rsFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:RS`, json.SK);
-    log.debug("rsFound", rsFound);
-    var msg = "";
 
-    if (!rsFound) {
-        return {
-            status: "error",
-            error: "Cannot delete RaceStanding. Not found.",
-        };
-    }
-    if (false) {
-    } else if (rsFound.ph2 && rsFound.ph1 && json.tgtName === "B-Phase") {
-        delete rsFound.ph2;
-        msg = "Deleted [B] phase.";
-    } else if (!rsFound.ph2 && rsFound.ph1 && json.tgtName === "A-Phase") {
-        delete rsFound.ph1;
-        msg = "Deleted [A] phase.";
-    } else if (!rsFound.ph2 && !rsFound.ph1 && json.tgtName === "Pending") {
-        rsFound.del = true;
-        msg = "Deleted pending race.";
-    } else {
-        return {
-            status: "error",
-            error: "Invalid request",
-        };
-    }
-
-    const rc = await ddbUtils.addSingle(rsFound);
-    if (rc.status === "ok") {
-        rc.text = msg;
-    }
-    return rc;
-};
 async function addBlocks(json) {
     log.debug("addBlocks: " + JSON.stringify(json));
     json.PK = ":RP"; // force RacePhase
@@ -845,7 +814,14 @@ const routeMap = {
     "/deleteRaceStanding": {
         h: async (event) => {
             return buildResponse(
-                await deleteRaceStanding(JSON.parse(event.body))
+                await apiRaceStanding.deleteRaceStanding(JSON.parse(event.body))
+            );
+        },
+    },
+    "/RaceStanding/addTag": {
+        h: async (event) => {
+            return buildResponse(
+                await apiRaceStanding.addTag(JSON.parse(event.body))
             );
         },
     },
@@ -938,6 +914,11 @@ const routeMap = {
             var json = JSON.parse(event.body);
             var paMessage = json.paMessage;
             var orgId = json.orgId;
+            /*
+            if (json.messageTag === "called") {
+                await apiRaceStanding.snsFanoutRaceStatus(json.carNumbers);
+            }
+            */
             const mp3ObjectPath = await announceResults.submitToPolly(
                 paMessage,
                 orgId

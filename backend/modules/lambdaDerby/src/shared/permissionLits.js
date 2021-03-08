@@ -48,7 +48,7 @@ addPermission(
 );
 addPermission(
     "CanInitiateAnnouncement",
-    ["/initiateAnnouncement"],
+    ["/initiateAnnouncement", "/RaceStanding/addTag"],
     ["/ManualAnnouncement"]
 );
 addPermission(

@@ -35,6 +35,9 @@ resource "aws_sqs_queue" "TimerWinDeltaQ" {
     Environment = "derby"
   }
 }
+resource "aws_sns_topic" "RacerStatusFanout" {
+  name = "RacerStatusFanout"
+}
 resource "aws_sns_topic" "TimerWinDeltaSns" {
   name = "TimerWinDeltaSns"
 }

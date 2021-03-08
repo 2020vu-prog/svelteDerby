@@ -104,7 +104,9 @@
         log.debug("chs panStart  ");
     }
     function handlePanMove(event) {
-        log.debug("chs panMove x: " + event.detail.dx + " y:" + event.detail.dy);
+        log.debug(
+            "chs panMove x: " + event.detail.dx + " y:" + event.detail.dy
+        );
         left = parseInt(event.detail.dx, 10) + parseInt(left, 10);
         top = parseInt(event.detail.dy, 10) + parseInt(top, 10);
     }

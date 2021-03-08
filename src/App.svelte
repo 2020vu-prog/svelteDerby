@@ -121,11 +121,9 @@
     }
     $: {
         if ($developerLogging) {
-            log.setLevel(log.levels.TRACE)
-        }
-        else {
-
-            log.setLevel(log.levels.ERROR)
+            log.setLevel(log.levels.TRACE);
+        } else {
+            log.setLevel(log.levels.ERROR);
         }
         //enableRoarr($developerLogging, "store");
     }
@@ -301,7 +299,9 @@
 
     async function logUserInIfNecessary() {
         if (!$userEmail) {
-            log.debug("User is not logged in, so we will sign them in anonymously.");
+            log.debug(
+                "User is not logged in, so we will sign them in anonymously."
+            );
             $beginAnonymousLogin = true;
         }
     }

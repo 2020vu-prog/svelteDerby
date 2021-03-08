@@ -96,6 +96,23 @@ class AnnounceResults {
             log.debug("pollySpeech err:", err); // successful response
         }
     }
+    async ttsAndPropagate(orgId, paMessage, mediaPrefix) {
+        log.debug(`paMessage: ${orgId} ssml:`, paMessage);
+        const mp3ObjectPath = await this.submitToPolly(
+            paMessage,
+            orgId,
+            mediaPrefix
+        );
+        log.debug("mp3ObjectPath:", mp3ObjectPath);
+        await this.propagateIotGeneric(orgId, mp3ObjectPath);
+    }
+    async formatAndSubmitCallToRace(tgtRs) {
+        log.debug("formatAndSubmitCallToRace rs: ", tgtRs);
+        const orgId = tgtRs.orgId;
+        const mediaPrefix = this.getMediaPrefix(tgtRs);
+        const paMessage = await this.formatCallToRaceAnnouncement(orgId, tgtRs);
+        await this.ttsAndPropagate(orgId, paMessage, mediaPrefix);
+    }
     async formatAndSubmitNextOnBlocks(tgtRs, tgtRp) {
         log.debug("formatAndSubmitNextOnBlocks rs: ", tgtRs, " rp: ", tgtRp);
         const orgId = tgtRs.orgId;
@@ -105,29 +122,16 @@ class AnnounceResults {
             tgtRs,
             tgtRp
         );
-        log.debug(`paMessage: ${orgId} ssml:`, paMessage);
-        const mp3ObjectPath = await this.submitToPolly(
-            paMessage,
-            orgId,
-            mediaPrefix
-        );
-        log.debug("mp3ObjectPath:", mp3ObjectPath);
-        await this.propagateIotGeneric(orgId, mp3ObjectPath);
+        await this.ttsAndPropagate(orgId, paMessage, mediaPrefix);
     }
     async formatAndSubmitResults(tgtRs, tgtRp) {
         const orgId = tgtRs.orgId;
         const mediaPrefix = this.getMediaPrefix(tgtRp);
 
         const paMessage = await this.formatResultAnnouncement(tgtRs, orgId);
-        log.debug(`paMessage: ${orgId} ssml:`, paMessage);
-        const mp3ObjectPath = await this.submitToPolly(
-            paMessage,
-            orgId,
-            mediaPrefix
-        );
-        log.debug("mp3ObjectPath:", mp3ObjectPath);
-        await this.propagateIotGeneric(orgId, mp3ObjectPath);
+        await this.ttsAndPropagate(orgId, paMessage, mediaPrefix);
     }
+    // parameter could be Rp or Rs
     getMediaPrefix(tgtRp) {
         var prefixSeed = 0;
         if (tgtRp && tgtRp.phr && tgtRp.phr.length > 0) {
@@ -169,6 +173,19 @@ class AnnounceResults {
         }
     }
 
+    async formatCallToRaceAnnouncement(orgId, tgtRs) {
+        await this.lookupNames(tgtRs.carNumbers, orgId);
+        var rc = "";
+        const [
+            spokenCarAndDriver1,
+            spokenCarAndDriver2,
+        ] = tgtRs.carNumbers.map((cn) => this.getSpokenCarAndDriver(cn));
+
+        rc += `Call to race for ${spokenCarAndDriver1}.<p/>  Call to Race for ${spokenCarAndDriver2}.`;
+        const ssml = `<speak>${rc}</speak>`;
+        log.debug("callToRace ANNOUNCEMENT ssml: ", ssml);
+        return ssml;
+    }
     async formatNextOnBlockAnnouncement(orgId, tgtRs, tgtRp) {
         await this.lookupNames(tgtRp.carNumbers, orgId);
         var rc = "";
