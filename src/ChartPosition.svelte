@@ -309,6 +309,6 @@
     {/if}
 
     {#if rsFromDexie}
-        <RaceStanding at={rsFromDexie.at} standingKey={rsFromDexie.classKey} />
+        <RaceStanding standing={rsFromDexie} refresh={doRefreshBlocks} />
     {/if}
 </form>
