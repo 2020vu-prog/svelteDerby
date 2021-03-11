@@ -309,6 +309,8 @@
     {/if}
 
     {#if rsFromDexie}
+        <br />
+        <br />
         <RaceStanding standing={rsFromDexie} refresh={doRefreshBlocks} />
     {/if}
 </form>
