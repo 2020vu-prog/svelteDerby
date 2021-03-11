@@ -45,7 +45,7 @@
         const idx = lane - 1;
         const tags = standing.tags;
         if (tags && tags[idx] && tags[idx].called) {
-            return "Called"
+            return "Called";
         }
         return "";
     }
