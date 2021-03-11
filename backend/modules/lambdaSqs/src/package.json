@@ -17,6 +17,7 @@
   },
   "bundledDependencies": [
     "@aws-sdk/client-dynamodb-v2-node",
-    "aws-sdk"
+    "aws-sdk",
+    "loglevel"
   ]
 }
