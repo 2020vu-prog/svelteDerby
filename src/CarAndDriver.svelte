@@ -54,7 +54,5 @@
         style="visibility:hidden" />
 {/if}
 
-<big>
-    <b>{number}</b>
-</big>
+<b class="bigText">{number}</b>
 {name}

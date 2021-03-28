@@ -11,6 +11,8 @@
         pendingSortAlgorithm,
         uiPageSize,
     } from "./stores.js";
+    import VirtualList from "@sveltejs/svelte-virtual-list";
+
     import RaceStanding from "./RaceStanding.svelte";
     import RacePhase from "./RacePhase.svelte";
     import CarFilter from "./CarFilter.svelte";
@@ -20,6 +22,8 @@
     import { location, replace, push } from "svelte-spa-router";
 
     var mounted = false;
+    let start;
+    let end;
     onMount(async () => {
         mounted = true;
         log.debug("RaceStanding list: ", location);
@@ -29,6 +33,14 @@
     $: {
         potentialReload($doRefreshBlocks);
     }
+    var standingList = [];
+    $: {
+        standingList = getStandings($location, $carFilter, $doRefreshBlocks);
+        log.debug(`refreshed standingList: ${standingList.length}`);
+    }
+    $: {
+        log.debug(`RaceStandingList vlist start: ${start} end: ${end}`);
+    }
     function potentialReload(unusedButImportant) {
         if (mounted) {
             log.debug("routing to force reload b/c ", $doRefreshBlocks);
@@ -37,10 +49,10 @@
         }
     }
 
-    const getTitle = () => {
+    function getTitle() {
         log.debug("mounted type:", params.type);
         return params.type === "Pending" ? "Pending Races" : "Race History";
-    };
+    }
     const typeFilter = (standing) => {
         log.debug(" type filter:", params.type);
 
@@ -120,7 +132,13 @@
         <CarFilter />
     </h4>
 
-    {#each getStandings($location, $carFilter, $doRefreshBlocks) as standing (standing.at)}
-        <RaceStanding {standing} refresh={doRefreshBlocks} />
-    {/each}
+    <VirtualList
+        height="900px"
+        items={standingList}
+        bind:start
+        bind:end
+        let:item>
+        <!-- this will be rendered for each currently visible item -->
+        <RaceStanding standing={item} refresh={doRefreshBlocks} />
+    </VirtualList>
 </main>

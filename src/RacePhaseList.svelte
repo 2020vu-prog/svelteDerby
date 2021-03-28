@@ -1,6 +1,6 @@
 <script>
     import log from "loglevel";
-
+    import VirtualList from "@sveltejs/svelte-virtual-list";
     import {
         nextOnBlockKey,
         racePhaseMap,
@@ -11,6 +11,13 @@
     import RacePhase from "./RacePhase.svelte";
     import CarFilter from "./CarFilter.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
+    var phaseList = [];
+    var start;
+    var end;
+
+    $: {
+        phaseList = getRacePhases($racePhaseMap, $carFilter, $nextOnBlockKey);
+    }
 
     $: log.debug(`DC: NOB:`, $nextOnBlockKey);
     $: log.debug(`DC: rpm:`, $racePhaseMap);
@@ -30,7 +37,7 @@
         return phase.carNumbers.filter((cn) => cn.match(re)).length > 0;
     };
     //loc &drb passed in to coerce svelte refesh screen
-    const getRacePhases = (drb, lclFilter, nobKey) => {
+    function getRacePhases(drb, lclFilter, nobKey) {
         const rc = Object.values(drb);
         rc.sort((a, b) => {
             return b.at - a.at;
@@ -38,7 +45,7 @@
         return rc
             .filter((rp) => filterMatchesX(rp, lclFilter, nobKey))
             .slice(0, $uiPageSize);
-    };
+    }
 </script>
 
 <style>
@@ -54,11 +61,11 @@
         <CarFilter />
     </h4>
 
-    {#each getRacePhases($racePhaseMap, $carFilter, $nextOnBlockKey) as racePhase (racePhase.at)}
+    <VirtualList height="900px" items={phaseList} bind:start bind:end let:item>
+        <!-- this will be rendered for each currently visible item -->
         <RacePhase
             refreshTime={$doRefreshBlocks}
-            phaseKey={racePhase.classKey}
-            at={racePhase.at} />
-    {/each}
-
+            phaseKey={item.classKey}
+            at={item.at} />
+    </VirtualList>
 </main>

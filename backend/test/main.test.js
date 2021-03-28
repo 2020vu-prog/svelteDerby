@@ -1,219 +1,289 @@
-
-
 const { CF, getData, postData, getHHMMSS } = require("./common.js");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 const testers = new RegExp(process.env.TEST_USER);
 
-
-const slowDrivers=false;
+const slowDrivers = false;
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const dmax=slowDrivers?800:520;
+const dmax = slowDrivers ? 800 : 520;
 
 const dloop = [];
 for (var x = 501; x < dmax; x++) {
     dloop.push([x]);
 }
 
-
-
 const orgU = uuidv4().substring(0, 5);
 const orgIz = "Test";
 const orgId = `${orgIz}.${orgU}`;
 
-
-
-test('listOrgConfig: ', () => {
-    return getData(`${CF}/listOrgConfig`).then(data => {
+test("listOrgConfig: ", () => {
+    return getData(`${CF}/listOrgConfig`).then((data) => {
         expect(Object.keys(data).length).toBeGreaterThan(0);
     });
 });
 
+test("postEvent: ", () => {
+    const now = new Date().toISOString();
 
-test('postEvent: ', () => {
-    const now = new Date().toISOString()
-
-    return postData(`${CF}/addEventConfig`, { "orgIz": orgIz, "orgId": orgId, "lcl1": "true", "name": `npm Test ${now} ` }).then(received => {
+    return postData(`${CF}/addEventConfig`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        lcl1: "true",
+        name: `npm Test ${now} `,
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });
 
-test('getRaceConfig: ', () => {
-    return getData(`${CF}/getRaceConfig`).then(data => {
+test("getRaceConfig: ", () => {
+    return getData(`${CF}/getRaceConfig`).then((data) => {
         expect(Object.keys(data).length).toBeGreaterThan(0);
     });
 });
 
-test('listChartTypes: ', () => {
-    return getData(`${CF}/listChartTypes?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
-        expect(Object.keys(data).length).toBeGreaterThan(0);
-        //console.log("s3listdata: ", data);
-    });
+test("listChartTypes: ", () => {
+    return getData(`${CF}/listChartTypes?orgId=${orgId}&orgIz=${orgIz}`).then(
+        (data) => {
+            expect(Object.keys(data).length).toBeGreaterThan(0);
+            //console.log("s3listdata: ", data);
+        }
+    );
 });
 
-test('postAddParticipant: ', () => {
+test("postAddParticipant: ", () => {
     const hhmmss = getHHMMSS(new Date());
-    return postData(`${CF}/addParticipant`, { "orgIz": orgIz, "orgId": orgId, "number": "333", "name": `Elmer333 ${hhmmss}` }).then(received => {
+    return postData(`${CF}/addParticipant`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        number: "333",
+        name: `Elmer333 ${hhmmss}`,
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });
 
 //test.each([[778],[ 776], [775]])('postAddParticipantLOOP: ', (carNumber) => {
-test.each(dloop)('postAddParticipantLOOP: ', async (carNumber) => {
-    if(slowDrivers){
-       await sleep(2000);
+test.each(dloop)("postAddParticipantLOOP: ", async (carNumber) => {
+    if (slowDrivers) {
+        await sleep(2000);
     }
     const hhmmss = getHHMMSS(new Date());
-    const received=await postData(`${CF}/addParticipant`, { "orgIz": orgIz, "orgId": orgId, "number": "" + carNumber, "name": `Elmer ${carNumber} ${hhmmss}` });
-        expect(received.data.status).toMatch(/ok/i);
+    const received = await postData(`${CF}/addParticipant`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        number: "" + carNumber,
+        name: `Elmer ${carNumber} ${hhmmss}`,
+    });
+    expect(received.data.status).toMatch(/ok/i);
 });
 
-test('postAddPending should work: ', () => {
-    return postData(`${CF}/addPending`, { "orgIz": orgIz, "orgId": orgId, "cn": ["333", "334"] }).then(received => {
+test("postAddPending should work: ", () => {
+    return postData(`${CF}/addPending`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        cn: ["333", "334"],
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });
-test('postAddPending should fail: ', () => {
-    return postData(`${CF}/addPending`, { "orgIz": orgIz, "orgId": orgId, "cn": ["333", "334"] }).then(received => {
+test("postAddPending should fail: ", () => {
+    return postData(`${CF}/addPending`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        cn: ["333", "334"],
+    }).then((received) => {
         expect(received.data.status).toMatch(/error/i);
-        expect(received.data.error).toMatch(/Pending2 already exists/i);
+        expect(received.data.error).toMatch(/Pending already exists/i);
     });
 });
-test('postAddBlocksBackwards: should fail b/c cars in wrong lanes. ', () => {
-    return postData(`${CF}/addBlocks`, { "orgIz": orgIz, "orgId": orgId, "cn": ["334", "333"] }).then(received => {
+test("postAddBlocksBackwards: should fail b/c cars in wrong lanes. ", () => {
+    return postData(`${CF}/addBlocks`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        cn: ["334", "333"],
+    }).then((received) => {
         expect(received.data.status).toMatch(/error/i);
         expect(received.data.error).toEqual("Cars in wrong lane(s)");
     });
 });
 
-test('postAddBlocks: ', () => {
-    return postData(`${CF}/addBlocks`, { "orgIz": orgIz, "orgId": orgId, "cn": ["333", "334"] }).then(received => {
+test("postAddBlocks: ", () => {
+    return postData(`${CF}/addBlocks`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        cn: ["333", "334"],
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });
-test('postDuplicateAddBlocks: ', () => {
-    return postData(`${CF}/addBlocks`, { "orgIz": orgIz, "orgId": orgId, "cn": ["333", "334"] }).then(received => {
+test("postDuplicateAddBlocks: ", () => {
+    return postData(`${CF}/addBlocks`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        cn: ["333", "334"],
+    }).then((received) => {
         expect(received.data.status).toMatch(/error/i);
     });
 });
 
-test('postApplyFinishTime: should fail because key is invalid!', () => {
-    return postData(`${CF}/doApplyFinishTime`, { "orgIz": orgIz, "orgId": orgId, "SK": "foobar:KeyNotPresentOnDb" }).then(received => {
+test("postApplyFinishTime: should fail because key is invalid!", () => {
+    return postData(`${CF}/doApplyFinishTime`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        SK: "foobar:KeyNotPresentOnDb",
+    }).then((received) => {
         expect(received.data.status).toMatch(/error/i);
     });
 });
 
-test('postDdbQuery: ', () => {
-    return postData(`${CF}/ddbQuery`, { "orgIz": orgIz, "orgId": orgId, "cn": ["333", "800"] }).then(received => {
+test("postDdbQuery: ", () => {
+    return postData(`${CF}/ddbQuery`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        cn: ["333", "800"],
+    }).then((received) => {
         expect(received.data.Count).toEqual(1);
     });
 });
 
-test('getHistory: the data should by created by a real tester', () => {
-    return getData(`${CF}/getRaceHistory?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
-        expect(data[0].by).toMatch(testers);
-    });
+test("getHistory: the data should by created by a real tester", () => {
+    return getData(`${CF}/getRaceHistory?orgId=${orgId}&orgIz=${orgIz}`).then(
+        (data) => {
+            expect(data[0].by).toMatch(testers);
+        }
+    );
 });
 
 var timerSkAPhase = "";
 var timerSkBPhase = "";
 
-test('getNextOnBlocks: ', () => {
-    return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
-        //console.log("nextOnBlocks:", data);
-        expect(data[0].by).toMatch(testers);
-        expect(data.length).toEqual(1);
-        timerSkAPhase = data[0].SK;
-    });
+test("getNextOnBlocks: ", () => {
+    return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(
+        (data) => {
+            //console.log("nextOnBlocks:", data);
+            expect(data[0].by).toMatch(testers);
+            expect(data.length).toEqual(1);
+            timerSkAPhase = data[0].SK;
+        }
+    );
 });
 
-test('applyFinishTime: should succeed', () => {
+test("applyFinishTime: should succeed", () => {
     //console.log("applyFinishTime:", timerSkAPhase);
-    return postData(`${CF}/doApplyFinishTime`, { "orgIz": orgIz, "orgId": orgId, SK: timerSkAPhase, phr: [0, 33] }).then(received => {
+    return postData(`${CF}/doApplyFinishTime`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        SK: timerSkAPhase,
+        phr: [0, 33000],
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });
 
-test('getNextOnBlocks: should be empty after apply finish time', () => {
-    return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
-        expect(data.length).toEqual(0);
-    });
+test("getNextOnBlocks: should be empty after apply finish time", () => {
+    return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(
+        (data) => {
+            expect(data.length).toEqual(0);
+        }
+    );
 });
 
 // Still pending until phase2 time applied.
-test('postAddPending phase2 should fail : ', () => {
-    return postData(`${CF}/addPending`, { "orgIz": orgIz, "orgId": orgId, "cn": ["333", "334"] }).then(received => {
+test("postAddPending phase2 should fail : ", () => {
+    return postData(`${CF}/addPending`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        cn: ["333", "334"],
+    }).then((received) => {
         expect(received.data.status).toMatch(/error/i);
-        expect(received.data.error).toMatch(/Pending2 already exists/i);
+        expect(received.data.error).toMatch(/Pending already exists/i);
     });
 });
-test('postAddBlocksPhase2: should work. ', () => {
-    return postData(`${CF}/addBlocks`, { "orgIz": orgIz, "orgId": orgId, "cn": ["334", "333"] }).then(received => {
+test("postAddBlocksPhase2: should work. ", () => {
+    return postData(`${CF}/addBlocks`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        cn: ["334", "333"],
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });
 
-test('getNextOnBlocks: should be B phase key', () => {
-    return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
-        expect(data.length).toEqual(1);
-        timerSkBPhase = data[0].SK;
-    });
+test("getNextOnBlocks: should be B phase key", () => {
+    return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(
+        (data) => {
+            expect(data.length).toEqual(1);
+            timerSkBPhase = data[0].SK;
+        }
+    );
 });
 
-test('applyFinishTime: (B Phase) should succeed', () => {
+test("applyFinishTime: (B Phase) should succeed", () => {
     //console.log("applyFinishTime:", timerSkBPhase);
-    return postData(`${CF}/doApplyFinishTime`, { "orgIz": orgIz, "orgId": orgId, SK: timerSkBPhase, phr: [44, 0] }).then(received => {
+    return postData(`${CF}/doApplyFinishTime`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        SK: timerSkBPhase,
+        phr: [44000, 0],
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });
 
-test('getNextOnBlocks: should be empty after apply (B phase) finish time', () => {
-    return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(data => {
-        expect(data.length).toEqual(0);
-    });
+test("getNextOnBlocks: should be empty after apply (B phase) finish time", () => {
+    return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(
+        (data) => {
+            expect(data.length).toEqual(0);
+        }
+    );
 });
 
-test('postAddPending should work again: ', () => {
-    return postData(`${CF}/addPending`, { "orgIz": orgIz, "orgId": orgId, "cn": ["333", "334"] }).then(received => {
+test("postAddPending should work again3333333: ", () => {
+    return postData(`${CF}/addPending`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        cn: ["333", "334"],
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });
-
 
 var testChartId = "";
-test('postAddChart should work ', () => {
-    return postData(`${CF}/addChart`, { "orgIz": orgIz, "orgId": orgId, "bracketName": "npmTest", "imgPath": "imgPathTODO", "jsonPath": "jsonPathTodo" }).then(received => {
+test("postAddChart should work ", () => {
+    return postData(`${CF}/addChart`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        bracketName: "npmTest",
+        imgPath: "imgPathTODO",
+        jsonPath: "jsonPathTodo",
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
         testChartId = received.data.chartId;
         expect(testChartId.length).toBeGreaterThan(0);
     });
 });
 
-test('postAddChartPosition should work ', () => {
-    return postData(`${CF}/addChartPosition`,
-        {
-            "orgIz": orgIz,
-            "orgId": orgId,
-            "chartId": testChartId,
-            "pos": { "A":{ "ptcp": "100" ,"status":"ptcp"}},
-            "heatNumber": "01"
-        }
-    ).then(received => {
+test("postAddChartPosition should work ", () => {
+    return postData(`${CF}/addChartPosition`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        chartId: testChartId,
+        pos: { A: { ptcp: "100", status: "ptcp" } },
+        heatNumber: "01",
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });
-test('postAddChartPosition should work ', () => {
-    return postData(`${CF}/addChartPosition`,
-        {
-            "orgIz": orgIz,
-            "orgId": orgId,
-            "chartId": testChartId,
-            "pos": { "B":{ "ptcp": "109" ,"status":"ptcp"}},
-            "heatNumber": "01"
-        }
-    ).then(received => {
+test("postAddChartPosition should work ", () => {
+    return postData(`${CF}/addChartPosition`, {
+        orgIz: orgIz,
+        orgId: orgId,
+        chartId: testChartId,
+        pos: { B: { ptcp: "109", status: "ptcp" } },
+        heatNumber: "01",
+    }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });

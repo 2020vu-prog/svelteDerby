@@ -10,7 +10,7 @@
     import RawTimerLane from "./RawTimerLane.svelte";
 
     const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
-    const CalcFinish = require("./CalcFinish.js");
+    import CalcFinish from "./CalcFinish.js";
 
     import axios from "axios";
     export let params = {};
@@ -43,6 +43,15 @@
 
         timerHistoryList = await getTimerHistory();
         log.debug("rawTimer: refreshDataFromDb gave:", timerHistoryList);
+        log.debug(`timerHistoryList: ${JSON.stringify(timerHistoryList)}`);
+        if (timerHistoryList.error) {
+            $statusMessage = {
+                text: timerHistoryList.error,
+                type: "error",
+            };
+
+            return;
+        }
 
         const flatHistory = flattenHistory(timerHistoryList);
 

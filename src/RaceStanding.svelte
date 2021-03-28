@@ -1,6 +1,14 @@
 <script>
     import log from "loglevel";
 
+    import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        CardFooter,
+        Badge,
+    } from "sveltestrap";
     import CarAndDriver from "./CarAndDriver.svelte";
     import InfoButton from "./InfoButton.svelte";
     import ComponentToolbar from "./ComponentToolbar.svelte";
@@ -69,9 +77,10 @@
 </script>
 
 {#if shouldRender(standing, at)}
-    <div class="well well-sm">
-        <div class="panel panel-info">
-            <div class="panel-heading">
+
+    <Card class="mt-3 border border-info cjw-border-5">
+        <CardHeader class="bg-info text-white">
+            <CardTitle>
                 <span on:click={gotoBracket}>{chartPosition}</span>
                 <span class="spanRight">
                     {hhmmss}
@@ -82,7 +91,9 @@
                             dbKey={standing.classKey} />
                     {/if}
                 </span>
-            </div>
+            </CardTitle>
+        </CardHeader>
+        <CardBody>
 
             <ul class="list-group">
                 <li class="list-group-item">
@@ -92,22 +103,22 @@
                         phaseLetter=""
                         at={safeGetAt($driverMap, standing.carNumbers[0])} />
                     {#if showTag(1, at)}
-                        <big class="bigbadge badge">{showTag(1, at)}</big>
+                        <Badge pill class="bigText">{showTag(1, at)}</Badge>
                     {/if}
                     {#if isWinner(1, 0, at)}
-                        <big class="bigbadge badge">
+                        <Badge pill class="bigText">
                             Overall: {getWinTime(1, 0, at)}
-                        </big>
+                        </Badge>
                     {/if}
                     {#if isWinner(1, 1, at)}
-                        <big class="bigbadge badge">
+                        <Badge pill class="bigText">
                             A: {getWinTime(1, 1, at)}
-                        </big>
+                        </Badge>
                     {/if}
                     {#if isWinner(1, 2, at)}
-                        <big class="bigbadge badge">
+                        <Badge pill class="bigText">
                             B: {getWinTime(1, 2, at)}
-                        </big>
+                        </Badge>
                     {/if}
 
                 </li>
@@ -118,33 +129,36 @@
                         phaseLetter=""
                         at={safeGetAt($driverMap, standing.carNumbers[1])} />
                     {#if showTag(2, at)}
-                        <big class="bigbadge badge">{showTag(1, at)}</big>
+                        <Badge pill class="bigText">{showTag(2, at)}</Badge>
                     {/if}
                     {#if isWinner(2, 0, at)}
-                        <big class="bigbadge badge">
+                        <Badge pill class="bigText">
                             Overall: {getWinTime(2, 0, at)}
-                        </big>
+                        </Badge>
                     {/if}
                     {#if isWinner(2, 1, at)}
-                        <big class="bigbadge badge">
+                        <Badge pill class="bigText">
                             A: {getWinTime(2, 1, at)}
-                        </big>
+                        </Badge>
                     {/if}
                     {#if isWinner(2, 2, at)}
-                        <big class="bigbadge badge">
+                        <Badge pill class="bigText">
                             B: {getWinTime(2, 2, at)}
-                        </big>
+                        </Badge>
                     {/if}
                 </li>
             </ul>
-        </div>
-        {#if isHistory()}User: {standing.by}{/if}
-        {#if showToolbar}
-            <ComponentToolbar
-                dbName="RaceStanding"
-                dbKey={standing.classKey}
-                bracketLink={getBracketLink(standing)}
-                cn={standing.carNumbers} />
-        {/if}
-    </div>
+            {#if isHistory()}User: {standing.by}{/if}
+            {#if showToolbar}
+                <CardFooter class="bg-info text-white">
+
+                    <ComponentToolbar
+                        dbName="RaceStanding"
+                        dbKey={standing.classKey}
+                        bracketLink={getBracketLink(standing)}
+                        cn={standing.carNumbers} />
+                </CardFooter>
+            {/if}
+        </CardBody>
+    </Card>
 {/if}

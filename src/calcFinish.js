@@ -10,7 +10,7 @@ timerConfig :{
     lanes: ["lane1","lane2"]
 }
 */
-class CalcFinish {
+export default class CalcFinish {
     //timerConfig = {};
     constructor(timerConfig) {
         this.timerConfig = timerConfig;
@@ -113,4 +113,4 @@ class CalcFinish {
         return rlf;
     }
 }
-module.exports = CalcFinish;
+//module.exports = CalcFinish;

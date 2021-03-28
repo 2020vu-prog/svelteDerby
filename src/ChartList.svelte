@@ -1,5 +1,6 @@
 <script>
     import log from "loglevel";
+    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
 
     import { driverMap, doRefreshBlocks } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
@@ -53,8 +54,12 @@
     <MaterialAdd clickHandleRoute="/chartAdd" />
 
     {#each getSortedBmd(bmdFromDexie) as bmd (bmd.at)}
-        <div class="panel panel-info" on:click={() => navToChartDetail(bmd)}>
-            {bmd.bracketName}
-        </div>
+        <Card class="mt-3 border border-info">
+            <CardBody>
+                <div on:click={() => navToChartDetail(bmd)}>
+                    {bmd.bracketName}
+                </div>
+            </CardBody>
+        </Card>
     {/each}
 </div>

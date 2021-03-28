@@ -1,6 +1,7 @@
 <script>
     import log from "loglevel";
-
+    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import VirtualList from "@sveltejs/svelte-virtual-list";
     import {
         userEmail,
         driverMap,
@@ -17,6 +18,9 @@
     import { push } from "svelte-spa-router";
 
     var editable = false;
+    var carNumberList = [];
+    var start;
+    var end;
     onMount(async () => {
         log.debug(`DriverList userEmail: ${$userEmail}`);
         editable = isDriverEditable($userEmail);
@@ -40,6 +44,16 @@
             push(`/driverAdd/${number}`);
         }
     }
+
+    $: {
+        log.debug(`driver virtualList: start: ${start} end: ${end}`);
+    }
+    $: {
+        carNumberList = getCarNumbersAsList(
+            $driverMap,
+            $carFilter
+        ).filter((cn) => filterMatches(cn, $carFilter));
+    }
 </script>
 
 <div>
@@ -51,17 +65,23 @@
     <p />
     <MaterialAdd clickHandleRoute="/driverAdd" />
 
-    {#each getCarNumbersAsList($driverMap, $carFilter) as carNumber (carNumber)}
-        {#if filterMatches(carNumber, $carFilter)}
-            <div
-                class="panel panel-info"
-                on:click={() => editCarAndDriver(carNumber)}>
-                <CarAndDriver
-                    number={carNumber}
-                    at={safeGetAt($driverMap, carNumber)}
-                    isWinner=""
-                    phaseLetter="" />
-            </div>
-        {/if}
-    {/each}
+    <VirtualList
+        height="900px"
+        items={carNumberList}
+        bind:start
+        bind:end
+        let:item>
+        <Card class="mt-3 border border-info">
+            <CardBody>
+                <div on:click={() => editCarAndDriver(item)}>
+                    <CarAndDriver
+                        number={item}
+                        at={safeGetAt($driverMap, item)}
+                        isWinner=""
+                        phaseLetter="" />
+                </div>
+            </CardBody>
+        </Card>
+    </VirtualList>
+
 </div>

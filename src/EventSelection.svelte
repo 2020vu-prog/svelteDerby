@@ -1,5 +1,6 @@
 <script>
     import log from "loglevel";
+    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
 
     import {
         nextOnBlockKey,
@@ -129,11 +130,15 @@
         <div>
 
             {#each getOrgEventsAsList(currentViewMode) as eventConfig}
-                <div
-                    class="panel panel-info"
-                    on:click={() => doSelect(eventConfig)}>
-                    <a href="javascript:void(0);">{getRaceName(eventConfig)}</a>
-                </div>
+                <Card class="mt-3 border border-info">
+                    <CardBody>
+                        <div on:click={() => doSelect(eventConfig)}>
+                            <a href="javascript:void(0);">
+                                {getRaceName(eventConfig)}
+                            </a>
+                        </div>
+                    </CardBody>
+                </Card>
             {/each}
         </div>
 

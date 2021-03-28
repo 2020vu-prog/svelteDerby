@@ -7,6 +7,8 @@ const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
 var StringDecoder = require("string_decoder").StringDecoder;
 
+log.setLevel(log.levels.DEBUG);
+
 const flushBulkRequests = async (requests) => {
     if (requests.length > 0) {
         var params = {
@@ -134,7 +136,7 @@ async function ddbQueryRaceHistory(qsp) {
     }
     return [{ error: "Query History Failed" }, cacheMaxSeconds];
 }
-function getPutObjectName(msg) {
+function getPutObjectName(msg, now) {
     if (msg.ccType === "CCF") {
         return "archive/" + msg.orgIz + "/" + msg.orgId + "/archive.json";
     } else {
@@ -143,7 +145,7 @@ function getPutObjectName(msg) {
 }
 async function putS3(msg, items) {
     const now = new Date().getTime();
-    const putObjectName = getPutObjectName(msg);
+    const putObjectName = getPutObjectName(msg, now);
     var params = {
         Body: JSON.stringify(items),
         Key: putObjectName,
@@ -225,6 +227,7 @@ const getKeyNames = (items) => {
 };
 
 exports.handler = async function (event, context) {
+    log.error("handler go:", event);
     await asyncForEach(event.Records, async (record) => {
         const { body } = record;
         log.debug("sqs b4PutAndGet:", body);
@@ -236,7 +239,7 @@ exports.handler = async function (event, context) {
             const oldItems = await getS3(keys);
             await putS3(parsedQsp, [...items, ...oldItems]);
         } catch (err) {
-            log.debug("s3 error:", err);
+            log.error("s3 error:", err);
         }
     });
 

@@ -1,6 +1,6 @@
 <script>
     import log from "loglevel";
-
+    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { doRefreshBlocks } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
     import { raceConfig } from "./stores.js";
@@ -70,11 +70,13 @@
     <p />
 
     {#each getOrgsAsList(orgMap) as orgIz}
-        <div
-            class="panel panel-info"
-            on:click={() => replace('/eventSelection/' + orgIz)}>
-            <a href="javascript:void(0);">{getOrgName(orgIz)}</a>
-        </div>
+        <Card class="mt-3 border border-info">
+            <CardBody>
+                <div on:click={() => replace('/eventSelection/' + orgIz)}>
+                    <a href="javascript:void(0);">{getOrgName(orgIz)}</a>
+                </div>
+            </CardBody>
+        </Card>
     {/each}
 
 </div>

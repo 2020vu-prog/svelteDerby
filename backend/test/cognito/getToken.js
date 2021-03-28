@@ -21,7 +21,7 @@ function Login() {
     });
 
     var userData = {
-        Username : 'clc4',
+        Username : process.env.TEST_USER,
         Pool : userPool
     };
     var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
