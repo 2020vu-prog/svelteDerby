@@ -102,25 +102,26 @@
                         isWinner={isWinner(1, 0, at)}
                         phaseLetter=""
                         at={safeGetAt($driverMap, standing.carNumbers[0])} />
-                    {#if showTag(1, at)}
-                        <Badge pill class="bigText">{showTag(1, at)}</Badge>
-                    {/if}
-                    {#if isWinner(1, 0, at)}
-                        <Badge pill class="bigText">
-                            Overall: {getWinTime(1, 0, at)}
-                        </Badge>
-                    {/if}
-                    {#if isWinner(1, 1, at)}
-                        <Badge pill class="bigText">
-                            A: {getWinTime(1, 1, at)}
-                        </Badge>
-                    {/if}
-                    {#if isWinner(1, 2, at)}
-                        <Badge pill class="bigText">
-                            B: {getWinTime(1, 2, at)}
-                        </Badge>
-                    {/if}
-
+                    <span class="spanRight">
+                        {#if showTag(1, at)}
+                            <Badge pill class="bigText">{showTag(1, at)}</Badge>
+                        {/if}
+                        {#if isWinner(1, 0, at)}
+                            <Badge pill class="bigText">
+                                Overall: {getWinTime(1, 0, at)}
+                            </Badge>
+                        {/if}
+                        {#if isWinner(1, 1, at)}
+                            <Badge pill class="bigText">
+                                A: {getWinTime(1, 1, at)}
+                            </Badge>
+                        {/if}
+                        {#if isWinner(1, 2, at)}
+                            <Badge pill class="bigText">
+                                B: {getWinTime(1, 2, at)}
+                            </Badge>
+                        {/if}
+                    </span>
                 </li>
                 <li class="list-group-item">
                     <CarAndDriver
@@ -128,24 +129,26 @@
                         isWinner={isWinner(2, 0, at)}
                         phaseLetter=""
                         at={safeGetAt($driverMap, standing.carNumbers[1])} />
-                    {#if showTag(2, at)}
-                        <Badge pill class="bigText">{showTag(2, at)}</Badge>
-                    {/if}
-                    {#if isWinner(2, 0, at)}
-                        <Badge pill class="bigText">
-                            Overall: {getWinTime(2, 0, at)}
-                        </Badge>
-                    {/if}
-                    {#if isWinner(2, 1, at)}
-                        <Badge pill class="bigText">
-                            A: {getWinTime(2, 1, at)}
-                        </Badge>
-                    {/if}
-                    {#if isWinner(2, 2, at)}
-                        <Badge pill class="bigText">
-                            B: {getWinTime(2, 2, at)}
-                        </Badge>
-                    {/if}
+                    <span class="spanRight">
+                        {#if showTag(2, at)}
+                            <Badge pill class="bigText">{showTag(2, at)}</Badge>
+                        {/if}
+                        {#if isWinner(2, 0, at)}
+                            <Badge pill class="bigText">
+                                Overall: {getWinTime(2, 0, at)}
+                            </Badge>
+                        {/if}
+                        {#if isWinner(2, 1, at)}
+                            <Badge pill class="bigText">
+                                A: {getWinTime(2, 1, at)}
+                            </Badge>
+                        {/if}
+                        {#if isWinner(2, 2, at)}
+                            <Badge pill class="bigText">
+                                B: {getWinTime(2, 2, at)}
+                            </Badge>
+                        {/if}
+                    </span>
                 </li>
             </ul>
             {#if isHistory()}User: {standing.by}{/if}

@@ -180,9 +180,11 @@
                         timerLink={getTimerLink(rp)}
                         at={safeGetAt($driverMap, rp.carNumbers[0])} />
                     {#if isWinner(1, rp)}
-                        <Badge pill class="bigText">
-                            {getPhaseLetter(rp)}:{getWinTime(1, rp)}
-                        </Badge>
+                        <span class="spanRight">
+                            <Badge pill class="bigText">
+                                {getPhaseLetter(rp)}:{getWinTime(1, rp)}
+                            </Badge>
+                        </span>
                     {/if}
                 </li>
                 <li class="list-group-item">
@@ -193,9 +195,11 @@
                         timerLink={getTimerLink(rp)}
                         at={safeGetAt($driverMap, rp.carNumbers[1])} />
                     {#if isWinner(2, rp)}
-                        <Badge pill class="bigText">
-                            {getPhaseLetter(rp)}:{getWinTime(2, rp)}
-                        </Badge>
+                        <span class="spanRight">
+                            <Badge pill class="bigText">
+                                {getPhaseLetter(rp)}:{getWinTime(2, rp)}
+                            </Badge>
+                        </span>
                     {/if}
                 </li>
 
