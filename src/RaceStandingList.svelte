@@ -20,22 +20,28 @@
     import { onMount } from "svelte";
     export let params = {};
     import { location, replace, push } from "svelte-spa-router";
+    import { getMainFull } from "./utils.js";
+    var mainFullPx = 300;
 
     var mounted = false;
     let start;
     let end;
+    const nob0 = { type: "NOB" };
     onMount(async () => {
         mounted = true;
         log.debug("RaceStanding list: ", location);
+        mainFullPx = getMainFull();
     });
 
     //workaround for svelte optimization on page reload
     $: {
         potentialReload($doRefreshBlocks);
     }
-    var standingList = [];
+    var standingList = [nob0];
     $: {
-        standingList = getStandings($location, $carFilter, $doRefreshBlocks);
+        standingList = [nob0].concat(
+            getStandings($location, $carFilter, $doRefreshBlocks)
+        );
         log.debug(`refreshed standingList: ${standingList.length}`);
     }
     $: {
@@ -111,34 +117,34 @@
 
 </style>
 
-<main>
+{#if params.type === 'Pending'}
+    <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
+{/if}
 
-    <h4>Next On Blocks</h4>
+<VirtualList
+    height="{mainFullPx}px"
+    items={standingList}
+    bind:start
+    bind:end
+    let:item>
+    {#if item.type === 'NOB'}
+        <h4>Next On Blocks</h4>
 
-    {#if params.type === 'Pending'}
-        <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
-    {/if}
-    {#if $nextOnBlockKey.length > 0}
-        <RacePhase
-            refreshTime={$doRefreshBlocks}
-            phaseKey={$nextOnBlockKey}
-            at={$racePhaseMap[$nextOnBlockKey].at} />
-    {:else}Starting Blocks are empty{/if}
+        {#if $nextOnBlockKey.length > 0}
+            <RacePhase
+                refreshTime={$doRefreshBlocks}
+                phaseKey={$nextOnBlockKey}
+                at={$racePhaseMap[$nextOnBlockKey].at} />
+        {:else}Starting Blocks are empty{/if}
 
-    <hr />
+        <hr />
 
-    <h4>
-        {getTitle($location)}
-        <CarFilter />
-    </h4>
-
-    <VirtualList
-        height="900px"
-        items={standingList}
-        bind:start
-        bind:end
-        let:item>
+        <h4>
+            {getTitle($location)}
+            <CarFilter />
+        </h4>
+    {:else}
         <!-- this will be rendered for each currently visible item -->
         <RaceStanding standing={item} refresh={doRefreshBlocks} />
-    </VirtualList>
-</main>
+    {/if}
+</VirtualList>

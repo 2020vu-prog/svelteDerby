@@ -116,3 +116,32 @@ export function participantFocusCompletion(ptcp) {
 export function participantValid(ptcp) {
     return ptcp && ptcp.toString().length >= 2;
 }
+function getHeight(box) {
+    let height = box.offsetHeight;
+    let style = getComputedStyle(box);
+
+    let marginTop = parseInt(style.marginTop);
+    let marginBottom = parseInt(style.marginBottom);
+    return height + marginBottom + marginTop;
+}
+export function getMainFull(qsList = []) {
+    qsList.push("#topnav");
+    qsList.push("div.footer");
+    let winHeight =
+        window.innerHeight ||
+        document.documentElement.clientHeight ||
+        document.body.clientHeight;
+    log.debug(`getMainFull window ${winHeight}`);
+
+    var accum = 0;
+    qsList.forEach((qs) => {
+        const el = document.querySelector(qs);
+        log.debug(`getMainFull qs: ${qs} el: ${el}`);
+        var elHeight = getHeight(el);
+        log.debug(`getMainFull qs: ${qs} elHeight: ${elHeight}`);
+        accum += elHeight;
+    });
+    const rc = winHeight - accum;
+    log.debug(`getMainFull accum: ${accum} rc: ${rc}`);
+    return rc;
+}

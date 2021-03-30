@@ -16,6 +16,8 @@
     import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
     import { push } from "svelte-spa-router";
+    import { getMainFull } from "./utils.js";
+    var mainFullPx = 300;
 
     var editable = false;
     var carNumberList = [];
@@ -24,6 +26,7 @@
     onMount(async () => {
         log.debug(`DriverList userEmail: ${$userEmail}`);
         editable = isDriverEditable($userEmail);
+        mainFullPx = getMainFull(["#dlTitle"]);
     });
     const filterMatches = (driver, lclFilter) => {
         if (!lclFilter) return true;
@@ -56,32 +59,33 @@
     }
 </script>
 
-<div>
+<div id="dlTitle">
+
     <h4>
         Driver List
         <CarFilter />
     </h4>
 
     <p />
-    <MaterialAdd clickHandleRoute="/driverAdd" />
-
-    <VirtualList
-        height="900px"
-        items={carNumberList}
-        bind:start
-        bind:end
-        let:item>
-        <Card class="mt-3 border border-info">
-            <CardBody>
-                <div on:click={() => editCarAndDriver(item)}>
-                    <CarAndDriver
-                        number={item}
-                        at={safeGetAt($driverMap, item)}
-                        isWinner=""
-                        phaseLetter="" />
-                </div>
-            </CardBody>
-        </Card>
-    </VirtualList>
-
 </div>
+
+<MaterialAdd clickHandleRoute="/driverAdd" />
+
+<VirtualList
+    height="{mainFullPx}px"
+    items={carNumberList}
+    bind:start
+    bind:end
+    let:item>
+    <Card class="mt-3 border border-info">
+        <CardBody>
+            <div on:click={() => editCarAndDriver(item)}>
+                <CarAndDriver
+                    number={item}
+                    at={safeGetAt($driverMap, item)}
+                    isWinner=""
+                    phaseLetter="" />
+            </div>
+        </CardBody>
+    </Card>
+</VirtualList>

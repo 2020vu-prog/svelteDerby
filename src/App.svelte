@@ -350,7 +350,7 @@
 <AutoAnonymousLogin display="false" />
 
 <!-- Top Navigation Menu -->
-<div class="topnav" style="z-index: 20;">
+<div id="topnav" class="topnav" style="z-index: 20; ">
     <a href="#home" style="background-color: {$theme}" class="active">
         {getTitle($raceConfig)}&nbsp;
         <HotLoad />
@@ -371,5 +371,7 @@
         <i class="fa fa-bars" />
     </a>
 </div>
-<Router {routes} />
+<main>
+    <Router {routes} />
+</main>
 <BottomNav />

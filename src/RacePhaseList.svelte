@@ -11,10 +11,12 @@
     import RacePhase from "./RacePhase.svelte";
     import CarFilter from "./CarFilter.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
+    import { onMount } from "svelte";
+    import { getMainFull } from "./utils.js";
+    var mainFullPx = 300;
     var phaseList = [];
     var start;
     var end;
-
     $: {
         phaseList = getRacePhases($racePhaseMap, $carFilter, $nextOnBlockKey);
     }
@@ -23,6 +25,10 @@
     $: log.debug(`DC: rpm:`, $racePhaseMap);
     $: log.debug("DC: doRefreshChanged :", $doRefreshBlocks);
 
+    onMount(async () => {
+        //mainFullPx = getMainFull(["#rpTitle"]) - 36
+        mainFullPx = getMainFull(["#rpTitle"]);
+    });
     const filterMatchesX = (phase, lclFilter, nobKey) => {
         const fm = filterMatches(phase, lclFilter, nobKey);
         log.debug("filterMatch:", fm);
@@ -52,20 +58,23 @@
 
 </style>
 
-<main>
-
-    <MaterialAdd clickHandleRoute="/raceStandingAdd/RacePhase" />
-
+<MaterialAdd clickHandleRoute="/raceStandingAdd/RacePhase" />
+<div id="rpTitle">
     <h4>
         Race Phases
         <CarFilter />
     </h4>
+</div>
 
-    <VirtualList height="900px" items={phaseList} bind:start bind:end let:item>
-        <!-- this will be rendered for each currently visible item -->
-        <RacePhase
-            refreshTime={$doRefreshBlocks}
-            phaseKey={item.classKey}
-            at={item.at} />
-    </VirtualList>
-</main>
+<VirtualList
+    height="{mainFullPx}px"
+    items={phaseList}
+    bind:start
+    bind:end
+    let:item>
+    <!-- this will be rendered for each currently visible item -->
+    <RacePhase
+        refreshTime={$doRefreshBlocks}
+        phaseKey={item.classKey}
+        at={item.at} />
+</VirtualList>
