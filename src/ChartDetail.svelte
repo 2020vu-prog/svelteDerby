@@ -11,7 +11,7 @@
         chartClickLoggerShow,
         getChartCacheKey,
     } from "./stores.js";
-    import { parseHeatPos } from "./utils.js";
+    import { parseHeatPos, sleep } from "./utils.js";
 
     export let params = {};
     const loggedImgPositions = {};
@@ -214,6 +214,7 @@
         brackets2.imgPositions[posKey].top = event.detail.top;
         brackets2.imgPositions[posKey].left = event.detail.left;
     }
+    /** works on laptop, but not phone
     const checkAndActivateScroll = () => {
         var URLscrollToVar = getUrlVars()["scrollTo"];
         log.debug("URLscrollToVar: ", URLscrollToVar);
@@ -223,6 +224,18 @@
             window.scrollTo(x, y);
         }
     };
+    */
+    async function checkAndActivateScroll() {
+        var URLscrollToVar = getUrlVars()["scrollTo"];
+
+        log.debug("URLscrollToVar showspot0: ", URLscrollToVar);
+        await sleep(500); // shouldn't need this, but, sigh.
+        log.debug("URLscrollToVar showspot1: ", URLscrollToVar);
+        if (URLscrollToVar) {
+            // try w/o "A", if that fails try appending an "A"
+            showSpot(URLscrollToVar) || showSpot(URLscrollToVar + "A");
+        }
+    }
     function copyJson() {
         log.debug("CD: copyJson");
         const jsonClone = JSON.stringify(brackets2);
@@ -248,6 +261,44 @@
             });
         }
     };
+    var key;
+    var keyCode;
+    var np = 0;
+    function showSpot(id) {
+        log.debug(`showSpot: ${id}`);
+        var element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView();
+            return true;
+        }
+        return false;
+    }
+    function handleKeydown(event) {
+        key = event.key;
+        keyCode = event.keyCode;
+        console.log(`key: ${key} keyCode: ${keyCode}`);
+        if (key === "j") {
+            np++;
+        }
+        if (key === "k") {
+            np--;
+            //showSpot("14A")
+        }
+        if (np < 1) np = 1;
+        if (np > 20) np = 20;
+
+        showSpot(zeroFill(np, 2) + "A");
+    }
+    function zeroFill(number, width) {
+        width -= number.toString().length;
+        if (width > 0) {
+            return (
+                new Array(width + (/\./.test(number) ? 2 : 1)).join("0") +
+                number
+            );
+        }
+        return number + ""; // always return a string
+    }
 </script>
 
 <style>
@@ -256,6 +307,8 @@
         height: 30px;
     }
 </style>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <svelte:head>
     <script
@@ -271,6 +324,7 @@
 
     {#each Object.values(brackets2.imgPositions) as bracket, pos}
         <ChartHotSpot
+            id={pos}
             pos={Object.keys(brackets2.imgPositions)[pos]}
             {scale}
             left={bracket.left}

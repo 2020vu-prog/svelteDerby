@@ -172,7 +172,7 @@
 {:else}
     <div
         class="overlay {bracketClass}"
-        id="myDIV"
+        id={pos}
         on:click={() => gotoChartPos()}
         style="position: absolute;width: {scaledWidth}px;height: {scaledHeight}px;z-index:
         2;left: {scaledLeft}px;top: {scaledTop}px;">

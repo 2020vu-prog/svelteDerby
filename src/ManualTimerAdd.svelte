@@ -147,6 +147,7 @@
             <label>
                 Lane 1 Won by
                 <input
+                    size="4"
                     type="number"
                     bind:value={resultForm.lane1}
                     placeholder="Lane1[{carNumber1}] MS" />
@@ -162,6 +163,7 @@
             <label>
                 Lane 2 Won by
                 <input
+                    size="4"
                     type="number"
                     bind:value={resultForm.lane2}
                     placeholder="Lane2[{carNumber2}] MS" />

@@ -145,3 +145,6 @@ export function getMainFull(qsList = []) {
     log.debug(`getMainFull accum: ${accum} rc: ${rc}`);
     return rc;
 }
+export function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
