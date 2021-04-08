@@ -10,6 +10,7 @@
     } from "sveltestrap";
 
     import CarAndDriver from "./CarAndDriver.svelte";
+    import CarAndDriverVertical from "./CarAndDriverVertical.svelte";
     import ComponentToolbar from "./ComponentToolbar.svelte";
     import InfoButton from "./InfoButton.svelte";
     import { onMount } from "svelte";
@@ -23,7 +24,7 @@
         hhmmssFmt,
         getHistoryEntity,
     } from "./utils.js";
-
+    export let compressedLayout;
     export let refreshTime;
     export let phaseKey;
     export let at;
@@ -150,70 +151,115 @@
     };
 </script>
 
+<style>
+    .column {
+        flex: 1 1 0px;
+    }
+</style>
+
 {#if refreshTime && shouldRender(rp, boundVars)}
-    <Card
-        class="mt-3 border border-info cjw-border-5"
-        style="background: {bgColor}">
-        <CardHeader class="bg-info text-white">
-            <CardTitle color="info">
-                <span on:click={gotoBracket}>{chartPosition}</span>
-                <span class="spanRight">
-                    {hhmmss}
-                    {#if !isHistory()}
-                        <InfoButton
-                            on:message={toggleToolbar}
+    {#if !compressedLayout}
+        <Card
+            class="mt-3 border border-info cjw-border-5"
+            style="background: {bgColor}">
+            <CardHeader class="bg-info text-white">
+                <CardTitle color="info">
+                    <span on:click={gotoBracket}>{chartPosition}</span>
+                    <span class="spanRight">
+                        {hhmmss}
+                        {#if !isHistory()}
+                            <InfoButton
+                                on:message={toggleToolbar}
+                                dbName="RacePhase"
+                                dbKey={phaseKey} />
+                        {/if}
+                    </span>
+
+                </CardTitle>
+            </CardHeader>
+            <CardBody color="info">
+
+                <ul class="list-group ">
+                    <li class="list-group-item ">
+                        <CarAndDriver
+                            number={rp.carNumbers[0]}
+                            isWinner={isWinner(1, rp)}
+                            phaseLetter={getPhaseIcon(rp)}
+                            timerLink={getTimerLink(rp)}
+                            at={safeGetAt($driverMap, rp.carNumbers[0])} />
+                        {#if isWinner(1, rp)}
+                            <span class="spanRight">
+                                <Badge pill class="bigText">
+                                    {getPhaseLetter(rp)}:{getWinTime(1, rp)}
+                                </Badge>
+                            </span>
+                        {/if}
+                    </li>
+                    <li class="list-group-item">
+                        <CarAndDriver
+                            number={rp.carNumbers[1]}
+                            isWinner={isWinner(2, rp)}
+                            phaseLetter={getPhaseIcon(rp)}
+                            timerLink={getTimerLink(rp)}
+                            at={safeGetAt($driverMap, rp.carNumbers[1])} />
+                        {#if isWinner(2, rp)}
+                            <span class="spanRight">
+                                <Badge pill class="bigText">
+                                    {getPhaseLetter(rp)}:{getWinTime(2, rp)}
+                                </Badge>
+                            </span>
+                        {/if}
+                    </li>
+
+                </ul>
+                {#if isHistory()}User: {rp.by}{/if}
+                {#if showToolbar}
+                    <CardFooter class="bg-info text-white">
+                        <ComponentToolbar
                             dbName="RacePhase"
-                            dbKey={phaseKey} />
-                    {/if}
-                </span>
+                            dbKey={phaseKey}
+                            timerLink={getTimerLink(rp)}
+                            bracketLink={getBracketLink(rp)} />
+                    </CardFooter>
+                {/if}
+            </CardBody>
+        </Card>
+    {:else}
+        <Card
+            class="mt-3 "
+            style="background: {bgColor}"
+            on:click={() => (compressedLayout = false)}>
+            <CardBody color="info" style="padding: 10px !important">
 
-            </CardTitle>
-        </CardHeader>
-        <CardBody color="info">
+                <ul class="list-group ">
+                    <li
+                        class="list-group-item"
+                        style="display: flex; flex-direction:row;">
+                        <div class="column" style="text-align: center">
+                            <CarAndDriverVertical
+                                number={rp.carNumbers[0]}
+                                at={safeGetAt($driverMap, rp.carNumbers[0])} />
+                        </div>
 
-            <ul class="list-group ">
-                <li class="list-group-item ">
-                    <CarAndDriver
-                        number={rp.carNumbers[0]}
-                        isWinner={isWinner(1, rp)}
-                        phaseLetter={getPhaseIcon(rp)}
-                        timerLink={getTimerLink(rp)}
-                        at={safeGetAt($driverMap, rp.carNumbers[0])} />
-                    {#if isWinner(1, rp)}
-                        <span class="spanRight">
-                            <Badge pill class="bigText">
-                                {getPhaseLetter(rp)}:{getWinTime(1, rp)}
-                            </Badge>
-                        </span>
-                    {/if}
-                </li>
-                <li class="list-group-item">
-                    <CarAndDriver
-                        number={rp.carNumbers[1]}
-                        isWinner={isWinner(2, rp)}
-                        phaseLetter={getPhaseIcon(rp)}
-                        timerLink={getTimerLink(rp)}
-                        at={safeGetAt($driverMap, rp.carNumbers[1])} />
-                    {#if isWinner(2, rp)}
-                        <span class="spanRight">
-                            <Badge pill class="bigText">
-                                {getPhaseLetter(rp)}:{getWinTime(2, rp)}
-                            </Badge>
-                        </span>
-                    {/if}
-                </li>
+                        <div style="text-align: center;" class="column">
+                            <button type="button" class="btn btn-warning">
+                                {getPhaseIcon(rp)}
+                            </button>
+                            <br />
+                            {chartPosition}
+                        </div>
 
-            </ul>
-            {#if isHistory()}User: {rp.by}{/if}
-            {#if showToolbar}
-                <CardFooter class="bg-info text-white">
-                    <ComponentToolbar
-                        dbName="RacePhase"
-                        dbKey={phaseKey}
-                        timerLink={getTimerLink(rp)}
-                        bracketLink={getBracketLink(rp)} />
-                </CardFooter>
-            {/if}
-        </CardBody>
-    </Card>
+                        <div class="column" style="text-align: center">
+                            <CarAndDriverVertical
+                                number={rp.carNumbers[1]}
+                                at={safeGetAt($driverMap, rp.carNumbers[1])} />
+                        </div>
+
+                    </li>
+
+                </ul>
+
+            </CardBody>
+        </Card>
+    {/if}
 {/if}

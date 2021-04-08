@@ -134,7 +134,8 @@
             <RacePhase
                 refreshTime={$doRefreshBlocks}
                 phaseKey={$nextOnBlockKey}
-                at={$racePhaseMap[$nextOnBlockKey].at} />
+                at={$racePhaseMap[$nextOnBlockKey].at}
+                compressedLayout={true} />
         {:else}Starting Blocks are empty{/if}
 
         <hr />
