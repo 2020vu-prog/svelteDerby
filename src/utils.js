@@ -74,10 +74,10 @@ export async function getUserEmail() {
         log.debug("getUserEmail error:", err);
         userEmail.set(""); // update userEmail store
         logout(); // cognito thinks we aren't logged in.  sync the store
-        statusMessage.set({
+        /*statusMessage.set({
             text: `Please login to use this system.`,
             type: "error",
-        });
+        });*/
         return "";
     }
 }
