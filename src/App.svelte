@@ -35,6 +35,7 @@
     import ForceReloadPage from "./ForceReloadPage.svelte";
     import Login from "./Login.svelte";
     import HotLoad from "./HotLoad.svelte";
+    import ElectronTimerRelay from "./ElectronTimerRelay.svelte";
     //import CognitoAuth from "./CognitoAuth.svelte";
     import {
         raceConfig,
@@ -348,6 +349,7 @@
 <svelte:window on:pageshow={onPageShow} />
 
 <AutoAnonymousLogin display="false" />
+<ElectronTimerRelay />
 
 <!-- Top Navigation Menu -->
 <div id="topnav" class="topnav" style="z-index: 20; ">

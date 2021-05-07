@@ -1,0 +1,88 @@
+<script>
+    import log from "loglevel";
+    import { onMount } from "svelte";
+    import axios from "axios";
+    import { Auth } from "aws-amplify";
+    import { statusMessage, raceConfig } from "./stores.js";
+
+    onMount(async () => {
+        installTimerHook();
+    });
+    function installTimerHook() {
+        var hookElement = document.getElementById("udpTimerSpan");
+        hookElement.addEventListener("udpTimer", handleTimerEvent, false);
+    }
+    function handleTimerEvent(event) {
+        console.log("hooked:", event);
+        console.log("hooked detail:", event.detail);
+        const timerResult = JSON.parse(event.detail);
+        if (timerResult) {
+            console.log("hooked lane:", timerResult.lane);
+            console.log("hooked ms:", timerResult.ms);
+            getNob(timerResult);
+        }
+    }
+    async function postResult(timerResult, nextOnBlocks) {
+        var phr = [];
+        const winMicros = timerResult.ms * 1000;
+
+        if (timerResult.lane === "1") {
+            phr = [0, winMicros];
+        } else if (timerResult.lane === "2") {
+            phr = [winMicros, 0];
+        } else {
+            $statusMessage = {
+                text: `Invalid Timer Lane ${timerResult.lane}`,
+                type: "error",
+            };
+            return;
+        }
+        const req = {
+            orgId: $raceConfig.orgId,
+            orgIz: $raceConfig.orgIz,
+
+            SK: nextOnBlocks.SK,
+
+            phr: phr,
+        };
+        const endPoint = "/doApplyFinishTime";
+        try {
+            const response = await axios.post(
+                $raceConfig.baseUrl + endPoint,
+                req
+            );
+            if (response.data.error) {
+                log.debug("Timer post failed", response);
+                $statusMessage = {
+                    text: response.data.error,
+                    type: "error",
+                };
+            } else {
+                log.debug(endPoint + " axios success");
+                $statusMessage = {
+                    text: "Winning Time applied!",
+                };
+            }
+        } catch (err) {
+            log.debug(endPoint + " failed: " + err);
+        }
+    }
+    async function getNob(timerResult) {
+        const currentSession = await Auth.currentSession();
+        const bearer = currentSession.idToken.jwtToken;
+        const getNextOnBlocksUrl =
+            $raceConfig.baseUrl +
+            "/getNextOnBlocks?orgId=" +
+            $raceConfig.orgId +
+            "&orgIz=" +
+            $raceConfig.orgIz;
+        const onBlocksResponse = await axios.get(getNextOnBlocksUrl);
+        const data = onBlocksResponse.data;
+        console.log("nob:", data);
+        if (data && data.length > 0) {
+            await postResult(timerResult, data[0]);
+        }
+    }
+</script>
+
+<span id="udpTimerSpan" />
