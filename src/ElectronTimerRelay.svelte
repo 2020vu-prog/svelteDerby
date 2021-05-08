@@ -13,12 +13,12 @@
         hookElement.addEventListener("udpTimer", handleTimerEvent, false);
     }
     function handleTimerEvent(event) {
-        console.log("hooked:", event);
-        console.log("hooked detail:", event.detail);
+        log.debug("hooked:", event);
+        log.debug("hooked detail:", event.detail);
         const timerResult = JSON.parse(event.detail);
         if (timerResult) {
-            console.log("hooked lane:", timerResult.lane);
-            console.log("hooked ms:", timerResult.ms);
+            log.debug("hooked lane:", timerResult.lane);
+            log.debug("hooked ms:", timerResult.ms);
             getNob(timerResult);
         }
     }
@@ -78,7 +78,7 @@
             $raceConfig.orgIz;
         const onBlocksResponse = await axios.get(getNextOnBlocksUrl);
         const data = onBlocksResponse.data;
-        console.log("nob:", data);
+        log.debug("nextOnBlock:", data);
         if (data && data.length > 0) {
             await postResult(timerResult, data[0]);
         }
