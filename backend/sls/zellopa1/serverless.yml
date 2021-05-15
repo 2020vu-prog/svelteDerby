@@ -14,13 +14,14 @@
 service: zellopa1
 provider:
   name: aws
+  region: us-east-2
   runtime: nodejs14.x
   iamRoleStatements:
     - Effect: Allow
       Action:
         - s3:PutObject
         - s3:GetObject
-      Resource: "arn:aws:s3:::${self:custom.bucket}/*"
+      Resource: "arn:aws:s3:::${env:OPUS_BUCKET}/*"
 
 
 functions:
@@ -28,10 +29,12 @@ functions:
     handler: src/handler.mkopus
     events:
       - s3:
-          bucket: ${self:custom.bucket}
+          bucket: ${env:OPUS_BUCKET}
           event: s3:ObjectCreated:*
           rules:
+            - prefix: media/chi
             - suffix: .mp3
+          existing: true # opt
     layers:
       - {Ref: FfmpegLambdaLayer}
 
@@ -39,5 +42,3 @@ layers:
   ffmpeg:
     path: layer
 
-custom:
-  bucket: ${env:BUCKET, 'ffmpeg-layer-opus-maker-rr1-b'}

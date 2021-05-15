@@ -14,6 +14,7 @@
 service: zellopa2
 provider:
   name: aws
+  region: us-east-2
   runtime: nodejs14.x
   memorySize: 128 # optional, in MB, default is 1024
   timeout: 30 # optional, in seconds, default is 6
