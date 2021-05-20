@@ -2,6 +2,7 @@ var Buffer = require("buffer/").Buffer;
 var WebSocket = require("ws");
 var ConfigParser = require("configparser");
 var OpusFileStream = require("./opus-file-stream");
+const  TokenManager = require('./tokenmanager');
 var mainPromise = null;
 
 // Global variables to handle user's SIGINT action
@@ -137,7 +138,9 @@ function zelloSendAudioPacket(
     const timeElapsedMs = getCurrentTimeMs() - startTsMs;
     const sleepDelayMs = timeStreamingMs - timeElapsedMs;
 
-    console.log(`sleep delay [${sleepDelayMs} ts: [${timeStreamingMs}]`);
+    console.log(
+        `sleep delay [${sleepDelayMs}] tsms: [${timeStreamingMs}] startMs: [${startTsMs}]`
+    );
     ws.send(packet);
     if (sleepDelayMs < 1) {
         return onCompleteCb();
@@ -308,11 +311,9 @@ function lambdaEntry(fname) {
     console.log(`begin lambdaEntry`);
     var zelloUsername = "cwitte.pa";
     var zelloPassword = "cwitte.pa.77";
-    var zelloTokenMay9 =
-        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJXa002WTNkcGRIUmxNekE2TVE9PS5oTVBqc3ZYNHpEUnp0dEZndXJYUE1QNVJzdlZHS28waWlmY0UwWllFaWJBPSIsImV4cCI6MTYyMzIzOTQ5MywiYXpwIjoiZGV2In0=.ke+fVWplRJeaKwlmLqib5NLsZ304Q/4433iVlKsgHiLLUv8VlxmeogQCMnITHXvqQT8hNlEqgXJHPUDzgs1BeDbbt7NbOQ5SDETChIuzHtJoWLlG71jPOGt9mWWoMwlPYL1Kt7NQeotqXfr7rypUAp3LQz678DpRjfO/4ne1mDb4gE9ItPh/Dc6kRg27qu15FJNfdbUghuphAiAcORMdeJP4H0bqFJtIwYB71a9B2+RLw9b41gamH3qQoi99Gr39zWfr1MsieS0yclSPVhOQvJ/0FGSDpqaLkNh+SU1XJn1rE2OQV9YJqFseAWQ6OdNDH02UBCEdEJMNtdnhW2jtBQ==";
-    var zelloTokenMay14 =
-        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJXa002WTNkcGRIUmxNekE2TWc9PS5leVo2STErYTQ2Q3d2RFhHOHlUUzI4cWVwdmxjUGRocHp0SHdQUGJhMTlVPSIsImV4cCI6MTYyMzcwNjUwNywiYXpwIjoiZGV2In0=.mYWRivQLVC5XZ40hDoLq3Wi4glQ46KzXbGYpVOukVs0XLmQj2wnJTM+lNi7D49uoQM3AW6rWi09xGMPN3ZtWMKEc0hIonPyiRBlzTdsQ4wl4HTvGsoa0opsFMDozQ+4J+y5wX6ZrJ9SJpfDLsYxk02QGdtxox0XZEmecdLP4FLrTJRMbLG/8iQpX7BfeWSx8l6UXQN4yO3kZoU+qUIVY+/RpQUoYMU3/voIcH96o3JybFtrvGOZnUhrT3LlyOKx2pzndASlmHIEGFDoXkqFF7bBAFizoEr0s8qWU1BaYPvkOVhxvSJcrhxy7tzmhDVqZJb+oT/B2qgSWqkvxBBSYbg==";
-    const zelloToken = zelloTokenMay14;
+    const pk_buff = new Buffer(process.env.ZELLO_PRIVATE_KEY, 'base64');
+    const zelloPrivateKey = pk_buff.toString('utf8');
+    const zelloToken = TokenManager.createJwt( process.env.ZELLO_ISSUER, zelloPrivateKey);
     var zelloChannel = "AASBD Chicago P.A";
     var zelloFilename = fname;
     if (

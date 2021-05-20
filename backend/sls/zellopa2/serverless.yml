@@ -18,6 +18,9 @@ provider:
   runtime: nodejs14.x
   memorySize: 128 # optional, in MB, default is 1024
   timeout: 30 # optional, in seconds, default is 6
+  environment:
+    ZELLO_ISSUER: ${env:ZELLO_ISSUER}
+    ZELLO_PRIVATE_KEY: ${env:ZELLO_PRIVATE_KEY}
   iamRoleStatements:
     - Effect: Allow
       Action:
