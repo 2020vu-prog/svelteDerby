@@ -77,9 +77,11 @@
     bind:start
     bind:end
     let:item>
-    <Card class="mt-3 border border-info">
+    <Card
+        class="mt-3 border border-info"
+        on:click={() => editCarAndDriver(item)}>
         <CardBody>
-            <div on:click={() => editCarAndDriver(item)}>
+            <div>
                 <CarAndDriver
                     number={item}
                     at={safeGetAt($driverMap, item)}
