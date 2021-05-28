@@ -310,12 +310,22 @@ function lambdaEntry(fname) {
         mainPromise = { resolve: resolve, reject: reject };
     });
     console.log(`begin lambdaEntry`);
-    var zelloUsername = "cwitte.pa";
-    var zelloPassword = "cwitte.pa.77";
+    var zelloUsername = process.env.ZelloUsername;
+    var zelloPassword = process.env.ZelloPassword;
     const pk_buff = new Buffer(process.env.ZELLO_PRIVATE_KEY, "base64");
     const zelloPrivateKey = pk_buff.toString("utf8");
-    if (!zelloToken) {
-        console.log(`INIT first time zelloToken`);
+    // token re-use caused:
+    /*
+    INFO	zelloAuth  message: [
+        {
+            "error": "not authorized",
+            "seq": 1
+        }
+        ] 
+
+    */
+    if (true) {
+        //console.log(`INIT first time zelloToken`);
         zelloToken = TokenManager.createJwt(
             process.env.ZELLO_ISSUER,
             zelloPrivateKey

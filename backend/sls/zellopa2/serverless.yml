@@ -21,6 +21,8 @@ provider:
     environment:
         ZELLO_ISSUER: ${env:ZELLO_ISSUER}
         ZELLO_PRIVATE_KEY: ${env:ZELLO_PRIVATE_KEY}
+        ZelloUsername: ${env:ZelloUsername}
+        ZelloPassword: ${env:ZelloPassword}
     iamRoleStatements:
         - Effect: Allow
           Action:
