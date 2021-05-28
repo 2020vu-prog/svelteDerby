@@ -2,12 +2,13 @@ var Buffer = require("buffer/").Buffer;
 var WebSocket = require("ws");
 var ConfigParser = require("configparser");
 var OpusFileStream = require("./opus-file-stream");
-const  TokenManager = require('./tokenmanager');
+const TokenManager = require("./tokenmanager");
 var mainPromise = null;
 
 // Global variables to handle user's SIGINT action
 var zelloSocket = null;
 var zelloStreamId = null;
+var zelloToken = null;
 
 function zelloAuthorize(
     ws,
@@ -311,9 +312,15 @@ function lambdaEntry(fname) {
     console.log(`begin lambdaEntry`);
     var zelloUsername = "cwitte.pa";
     var zelloPassword = "cwitte.pa.77";
-    const pk_buff = new Buffer(process.env.ZELLO_PRIVATE_KEY, 'base64');
-    const zelloPrivateKey = pk_buff.toString('utf8');
-    const zelloToken = TokenManager.createJwt( process.env.ZELLO_ISSUER, zelloPrivateKey);
+    const pk_buff = new Buffer(process.env.ZELLO_PRIVATE_KEY, "base64");
+    const zelloPrivateKey = pk_buff.toString("utf8");
+    if (!zelloToken) {
+        console.log(`INIT first time zelloToken`);
+        zelloToken = TokenManager.createJwt(
+            process.env.ZELLO_ISSUER,
+            zelloPrivateKey
+        );
+    }
     var zelloChannel = "AASBD Chicago P.A";
     var zelloFilename = fname;
     if (
@@ -341,8 +348,6 @@ function lambdaEntry(fname) {
             zelloChannel
         );
     });
-    console.log("sleeping"); // TODO: restructure wss loop!
-    //await sleep(32000);
     return rc;
 }
 module.exports = lambdaEntry;

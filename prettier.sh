@@ -6,6 +6,7 @@ export jslist=$(echo  \
     backend/timerIngestion/api/*.js \
     backend/modules/lambda*/src/*.js \
     backend/modules/lambda*/src/shared/*.js \
+    backend/sls/zellopa?/src/*.js \
 )
 
 prettier --write --plugin-search-dir=. $jslist

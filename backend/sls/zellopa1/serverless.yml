@@ -13,32 +13,31 @@
 
 service: zellopa1
 provider:
-  name: aws
-  region: us-east-2
-  runtime: nodejs14.x
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - s3:PutObject
-        - s3:GetObject
-      Resource: "arn:aws:s3:::${env:OPUS_BUCKET}/*"
-
+    name: aws
+    region: us-east-2
+    runtime: nodejs14.x
+    iamRoleStatements:
+        - Effect: Allow
+          Action:
+              - s3:PutObject
+              - s3:GetObject
+          Resource: "arn:aws:s3:::${env:OPUS_BUCKET}/*"
 
 functions:
-  mkopus:
-    handler: src/handler.mkopus
-    events:
-      - s3:
-          bucket: ${env:OPUS_BUCKET}
-          event: s3:ObjectCreated:*
-          rules:
-            - prefix: media/chi
-            - suffix: .mp3
-          existing: true # opt
-    layers:
-      - {Ref: FfmpegLambdaLayer}
+    mkopus:
+        handler: src/handler.mkopus
+        events:
+            - s3:
+                  bucket: ${env:OPUS_BUCKET}
+                  event: s3:ObjectCreated:*
+                  rules:
+                      #- prefix: media/chi
+                      - prefix: media/
+                      - suffix: .mp3
+                  existing: true # opt
+        layers:
+            - { Ref: FfmpegLambdaLayer }
 
 layers:
-  ffmpeg:
-    path: layer
-
+    ffmpeg:
+        path: layer
