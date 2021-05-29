@@ -9,6 +9,7 @@ var mainPromise = null;
 var zelloSocket = null;
 var zelloStreamId = null;
 var zelloToken = null;
+var zelloRefresh = null;
 
 function zelloAuthorize(
     ws,
@@ -20,16 +21,22 @@ function zelloAuthorize(
     onCompleteCb
 ) {
     console.log(`zelloAuth [${username}] [${password}] [${channel}]`);
-    ws.send(
-        JSON.stringify({
-            seq: 1,
-            command: "logon",
-            auth_token: token,
-            username: username,
-            password: password,
-            channel: channel,
-        })
-    );
+    var tokenType = "auth_token";
+    var tokenData = token;
+    if (zelloRefresh) {
+        tokenType = "refresh_token";
+        tokenData = zelloRefresh;
+    }
+    const authJsonRequest = JSON.stringify({
+        seq: 1,
+        command: "logon",
+        [tokenType]: tokenData,
+        username: username,
+        password: password,
+        channel: channel,
+    });
+    console.log(`authJsonRequest ${authJsonRequest}`);
+    ws.send(authJsonRequest);
 
     let isAuthorized = false,
         isChannelAvailable = false;
@@ -242,8 +249,12 @@ function zelloStreamReadyCb(opusStream, username, password, token, channel) {
                             username +
                             " has been authenticated on " +
                             channel +
-                            " channel"
+                            " channel. " +
+                            JSON.stringify(success)
                     );
+                    if (success.refresh_token) {
+                        zelloRefresh = success.refresh_token;
+                    }
                     zelloStartStream(ws, opusStream, function (streamId) {
                         ws.onmessage = logMessage;
                         if (!streamId) {

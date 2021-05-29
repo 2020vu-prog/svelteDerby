@@ -53,8 +53,19 @@
     }
 
     async function doTestAnnouncement() {
-        announceText = "Test Announcement";
+        announceText = `Test Announcement at ${nowHHMMMS()}`;
         await doAnnounce();
+    }
+    function checkTime(i) {
+        return i < 10 ? "0" + i : i;
+    }
+
+    function nowHHMMMS() {
+        var today = new Date(),
+            h = checkTime(today.getHours()),
+            m = checkTime(today.getMinutes()),
+            s = checkTime(today.getSeconds());
+        return h + ":" + m + ":" + s;
     }
 
     var announceText = "";
@@ -66,12 +77,7 @@
 <h4>Plain Text Announcement</h4>
 <form>
     <label for="announcement">Announcement:</label>
-    <textarea
-        rows="5"
-        type="text"
-        id="announcement"
-        name="announcement"
-        bind:value={announceText}
+    <textarea rows="5" type="text" id="announcement" name="announcement" bind:value={announceText}
         style="width: 100%;" />
     <br />
     <br />
