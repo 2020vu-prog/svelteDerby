@@ -254,6 +254,7 @@ function zelloStreamReadyCb(opusStream, username, password, token, channel) {
                     );
                     if (success.refresh_token) {
                         zelloRefresh = success.refresh_token;
+                        console.log(`Saved zelloRefresh: ${zelloRefresh}`);
                     }
                     zelloStartStream(ws, opusStream, function (streamId) {
                         ws.onmessage = logMessage;
