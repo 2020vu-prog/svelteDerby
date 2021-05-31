@@ -77,7 +77,12 @@
 <h4>Plain Text Announcement</h4>
 <form>
     <label for="announcement">Announcement:</label>
-    <textarea rows="5" type="text" id="announcement" name="announcement" bind:value={announceText}
+    <textarea
+        rows="5"
+        type="text"
+        id="announcement"
+        name="announcement"
+        bind:value={announceText}
         style="width: 100%;" />
     <br />
     <br />
