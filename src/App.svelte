@@ -11,6 +11,7 @@
     import RaceStandingList from "./RaceStandingList.svelte";
     import RacePhaseList from "./RacePhaseList.svelte";
     import ChartList from "./ChartList.svelte";
+    import ChartEdit from "./ChartEdit.svelte";
     import ChartAdd from "./ChartAdd.svelte";
     import DriverList from "./DriverList.svelte";
     import DriverAdd from "./DriverAdd.svelte";
@@ -95,6 +96,7 @@
         "/chartDetail/:chartId": ChartDetail,
         "/chartPosition/:chartId/:chartPosition": ChartPosition,
         "/chartList": ChartList,
+        "/chartEdit/:chartId": ChartEdit,
         "/chartAdd": ChartAdd,
         "/timerConfig": TimerConfig,
         "/timerAlignment": TimerAlignment,

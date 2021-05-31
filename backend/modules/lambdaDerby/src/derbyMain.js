@@ -1,6 +1,6 @@
 "use strict";
 const clientMinimumVersion = "1.1.24";
-const derbyMainVersion = "1.1.11";
+const derbyMainVersion = "1.1.12";
 const crypto = require("crypto");
 const path = require("path");
 
@@ -527,8 +527,12 @@ const addChartMetaData = async (json) => {
         log.debug("addChartMetaData add needed:", bmdFound);
         // fall thru to  Add
     } else {
-        log.debug("addChartMetaData update needed:", bmdFound);
-        // update name.  TODO:  actual db update needed?
+        // update
+        const userJson = json;
+        json = bmdFound[0];
+        json.bracketName = userJson.bracketName;
+        json.del = userJson.del;
+        log.debug("addChartMetaData updating:", json);
     }
 
     const rc = await ddbUtils.addSingle(json);
@@ -537,6 +541,7 @@ const addChartMetaData = async (json) => {
     log.debug("addChartMetaData returning: ", rc);
     return rc;
 };
+
 const getCachedBmd = async (orgId, chartId) => {
     const tmpCache = new TmpCache(AWS, ddbClient, s3);
 
