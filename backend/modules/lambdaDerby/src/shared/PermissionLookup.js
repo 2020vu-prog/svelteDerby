@@ -4,6 +4,15 @@ const log = require("loglevel");
 const { permissionMap, permissionMap2 } = require("./permissionLits.js");
 const powerPerms = { ...permissionMap2 };
 const starterPerms = { CanAddBlocks: true };
+const registrationPerms = {
+    CanAddBlocks: true,
+    CanAddChart: true,
+    ChartPosition: true,
+    CanInitiateAnnouncement: true,
+    Anonymous: true,
+    CanAddParticipant: true,
+    CanAddPending: true,
+};
 const orgUserPermMap = {
     "test:REDACTED_PERMISSION_EMAIL": powerPerms, // john harmon, Akron Local org
     "test:REDACTED_PERMISSION_EMAIL": powerPerms, // scott, Akron Local org
@@ -14,6 +23,13 @@ const orgUserPermMap = {
     ":REDACTED_PERMISSION_EMAIL": powerPerms,
     ":REDACTED_PERMISSION_EMAIL": powerPerms,
     ":REDACTED_PERMISSION_EMAIL": starterPerms,
+
+    "test:REDACTED_PERMISSION_EMAIL": registrationPerms,
+    "chi:REDACTED_PERMISSION_EMAIL": registrationPerms,
+    "test:REDACTED_PERMISSION_EMAIL": registrationPerms,
+    "chi:REDACTED_PERMISSION_EMAIL": registrationPerms,
+    "test:REDACTED_PERMISSION_EMAIL": registrationPerms,
+    "chi:REDACTED_PERMISSION_EMAIL": registrationPerms,
 };
 function hasRoutePath(routeType, orgIz, userMail, serverRoutePath) {
     const permKeys = lookupUserPermissions(orgIz, userMail);

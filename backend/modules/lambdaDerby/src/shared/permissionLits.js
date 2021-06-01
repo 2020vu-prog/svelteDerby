@@ -36,7 +36,7 @@ addPermission(
 );
 addPermission("CanAddBlocks", ["/addBlocks"], ["/raceStandingAdd/RacePhase"]);
 // TODO: qualify with metadata!
-addPermission("CanAddChart", ["/addChart"], ["/chartAdd"]);
+addPermission("CanAddChart", ["/addChart", "/listChartTypes"], ["/chartAdd"]);
 
 // svelte /addChartPosition is not a svelte route, but is used with isUserAllowedRoutePath()
 addPermission("ChartPosition", ["/addChartPosition"], ["/addChartPosition"]);
@@ -64,7 +64,6 @@ addPermission(
         "/ddbQuery",
         "/getNextOnBlocks",
         "/getRaceHistory",
-        "/listChartTypes",
         "/addEventConfig",
         "/requestMqttSubPermission",
         "/listMediaPrefix",
