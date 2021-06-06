@@ -104,6 +104,13 @@ class AnnounceResults {
             return { error: err };
         }
     }
+    randomPollyVoice() {
+        const voices = ["Joanna", "Matthew"];
+        const voice = voices[Math.floor(Math.random() * voices.length)];
+
+        //return "Joanna";
+        return voice;
+    }
     async submitToPolly(msg, orgId, mediaPrefix) {
         if (!this.AWS) {
             log.debug("Polly unavailable. AWS is null");
@@ -126,7 +133,7 @@ class AnnounceResults {
             SampleRate: "8000",
             Text: msg,
             TextType: "ssml",
-            VoiceId: "Joanna",
+            VoiceId: this.randomPollyVoice(),
         };
         try {
             const pollySpeech = await polly.synthesizeSpeech(params).promise();
