@@ -41,6 +41,9 @@ resource "aws_sns_topic" "RacerStatusFanout" {
 resource "aws_sns_topic" "TimerWinDeltaSns" {
   name = "TimerWinDeltaSns"
 }
+resource "aws_sns_topic" "ZelloPushSns" {
+  name = "ZelloPushSns"
+}
 resource "aws_sns_topic" "PollyCompleteSns" {
   name = "PollyCompleteSns"
 }
@@ -50,6 +53,13 @@ resource "aws_ssm_parameter" "sns_pass_to_serverless" {
   description = "arn to publish to TimerWinDeltaSns"
   type        = "SecureString"
   value       = aws_sns_topic.TimerWinDeltaSns.arn
+}
+resource "aws_ssm_parameter" "sns_pass_to_zello_serverless" {
+  name        = "/sns/ZelloPushSns/arn"
+
+  description = "arn to publish to ZelloPushSns"
+  type        = "String"
+  value       = aws_sns_topic.ZelloPushSns.arn
 }
 resource "aws_sns_topic_subscription" "results_updates_sqs_deltaq" {
     topic_arn = aws_sns_topic.TimerWinDeltaSns.arn

@@ -27,6 +27,60 @@ class AnnounceResults {
 
     // invoked on callback with known mp3 file.
     async propagateIotGeneric(orgId, mp3Path) {
+        await this.propagateIotMqtt(orgId, mp3Path);
+        await this.propagateIotZelloSns(orgId, mp3Path);
+    }
+    getZelloChannelFromOrg(orgId) {
+        if (orgId.startsWith("chi.")) {
+            return "AASBD Chicago P.A";
+        }
+        if (orgId.startsWith("Test.")) {
+            return "AASBD Test P.A.";
+        }
+        return null;
+    }
+    async propagateIotZelloSns(orgId, mp3Path) {
+        const zelloChannel = this.getZelloChannelFromOrg(orgId);
+        const zelloArn = process.env.ZelloPushSnsArn;
+        if (!zelloChannel) return;
+        //const cnstring = json.stringify(jsonCalledNumbers);
+        var params = {
+            //Message: JSON.stringify(jsonCarNumbers),
+            Message: mp3Path,
+            TopicArn: zelloArn,
+            Subject: `announcement for org: ${orgId}`,
+
+            MessageAttributes: {
+                orgId: {
+                    DataType: "String",
+                    StringValue: orgId,
+                },
+                zelloChannel: {
+                    DataType: "String",
+                    StringValue: zelloChannel,
+                },
+                path: {
+                    DataType: "String",
+                    StringValue: mp3Path,
+                },
+                bucket: {
+                    DataType: "String",
+                    StringValue: process.env.DstBucket,
+                },
+            },
+        };
+
+        try {
+            console.log("SNS sending zelloArn:", params);
+            const sent = await new this.AWS.SNS({ apiVersion: "2010-03-31" })
+                .publish(params)
+                .promise();
+            console.log("SNS send Success", sent);
+        } catch (err) {
+            console.log("SNS send Error", err);
+        }
+    }
+    async propagateIotMqtt(orgId, mp3Path) {
         if (!this.iotdata) {
             // first time
             this.iotdata = new this.AWS.IotData({
@@ -55,6 +109,12 @@ class AnnounceResults {
             log.debug("Polly unavailable. AWS is null");
             return;
         }
+        if (msg.includes("ResetPollyAA466430-D313-488D-A485-22CC00FE84B0")) {
+            console.log("Polly resetting zello. ");
+            return this.saveToS3(orgId, ""); // empty file!
+        }
+
+        console.log("Polly msg: ", msg);
         var polly = new this.AWS.Polly({ apiVersion: "2016-06-10" });
         //OutputS3BucketName: process.env.DstBucket /*required */,
         //OutputS3KeyPrefix: `media/${orgId}/msg`,
@@ -71,30 +131,25 @@ class AnnounceResults {
         try {
             const pollySpeech = await polly.synthesizeSpeech(params).promise();
             log.debug(`pollySpeech ok: ${pollySpeech.RequestCharacters}`); // successful response
-            const s3 = new this.AWS.S3({ apiVersion: "2006-03-01" });
 
-            const now = new Date().getTime();
-            var s3Params = {
-                Body: pollySpeech.AudioStream,
-                Bucket: process.env.DstBucket,
-                Key: `media/${orgId}/msg/${now}.mp3`,
-            };
-
-            log.debug(`pollySpeech s3 saving:`, s3Params); // successful response
-            const data = await s3.putObject(s3Params).promise();
-            log.debug(`pollySpeech s3 saved:`, data); // successful response
-
-            return s3Params.Key;
-            /*
-            data = {
-                AudioStream: <Binary String>, 
-                ContentType: "audio/mpeg", 
-                RequestCharacters: 37
-               }
-               */
+            return this.saveToS3(orgId, pollySpeech.AudioStream);
         } catch (err) {
             log.debug("pollySpeech err:", err); // successful response
         }
+    }
+    async saveToS3(orgId, bytes) {
+        const s3 = new this.AWS.S3({ apiVersion: "2006-03-01" });
+        const now = new Date().getTime();
+        var s3Params = {
+            Body: bytes,
+            Bucket: process.env.DstBucket,
+            Key: `media/${orgId}/msg/${now}.mp3`,
+        };
+
+        log.debug(`pollySpeech s3 saving:`, s3Params); // successful response
+        const s3Response = await s3.putObject(s3Params).promise();
+        log.debug(`pollySpeech s3 saved:`, s3Response); // successful response
+        return s3Params.Key;
     }
     async ttsAndPropagate(orgId, paMessage, mediaPrefix) {
         log.debug(`paMessage: ${orgId} ssml:`, paMessage);

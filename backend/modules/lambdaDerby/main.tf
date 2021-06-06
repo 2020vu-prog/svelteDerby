@@ -8,6 +8,7 @@ variable AwsRegion {}
 variable   CcaQueueId  {}
 variable   CcaQueueArn  {}
 variable     ChartS3BucketName  {}
+variable ZelloPushSnsArn{}
 variable ApplyTimerSnsArn{}
 variable PollyCompleteSnsArn {}
 variable RacerStatusFanoutSnsArn {}
@@ -162,6 +163,7 @@ resource "aws_lambda_function" "lambda" {
       ChartS3BucketName  =  var.ChartS3BucketName  
       AwsRegion = var.AwsRegion
       PollyCompleteSnsArn=var.PollyCompleteSnsArn
+      ZelloPushSnsArn=var.ZelloPushSnsArn
       RacerStatusFanoutSnsArn=var.RacerStatusFanoutSnsArn
       IotEndpoint=data.aws_iot_endpoint.mqtt.endpoint_address
 
@@ -236,6 +238,7 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
         resources = [
 	//PollyCompleteSnsArn
                 var.RacerStatusFanoutSnsArn,
+                var.ZelloPushSnsArn,
                 "*"
         ]
     }

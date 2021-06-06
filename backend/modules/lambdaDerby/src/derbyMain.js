@@ -924,6 +924,7 @@ const routeMap = {
                 await apiRaceStanding.snsFanoutRaceStatus(json.carNumbers);
             }
             */
+
             const mp3ObjectPath = await announceResults.submitToPolly(
                 paMessage,
                 orgId

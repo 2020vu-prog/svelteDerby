@@ -26,18 +26,38 @@ provider:
 functions:
     mkopus:
         handler: src/handler.mkopus
-        events:
-            - s3:
-                  bucket: ${env:OPUS_BUCKET}
-                  event: s3:ObjectCreated:*
-                  rules:
-                      #- prefix: media/chi
-                      - prefix: media/
-                      - suffix: .mp3
-                  existing: true # opt
+#        events:
+#            - s3:
+#                  bucket: ${env:OPUS_BUCKET}
+#                  event: s3:ObjectCreated:*
+#                  rules:
+#                      #- prefix: media/chi
+#                      - prefix: media/
+#                      - suffix: .mp3
+#                  existing: true # opt
         layers:
             - { Ref: FfmpegLambdaLayer }
 
 layers:
     ffmpeg:
         path: layer
+
+resources:
+  Resources:
+    OutputSsmLambdaArn:
+      Type: "AWS::SSM::Parameter"
+      Properties:
+        Name: zelloPa1LambdaArn
+        Description: zelloPa1LambdaArn
+        Type: String
+        Value: 
+          "Fn::GetAtt": [ MkopusLambdaFunction, Arn ]
+
+    OutputFfmpegLayerArn:
+      Type: "AWS::SSM::Parameter"
+      Properties:
+        Name: FfmpegLayerArn
+        Description: FfmpegLayerArn
+        Type: String
+        Value: 
+          "Ref":  FfmpegLambdaLayer 

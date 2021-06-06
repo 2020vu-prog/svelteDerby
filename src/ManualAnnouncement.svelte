@@ -56,6 +56,10 @@
         announceText = `Test Announcement at ${nowHHMMMS()}`;
         await doAnnounce();
     }
+    async function doResetPolly() {
+        announceText = "ResetPollyAA466430-D313-488D-A485-22CC00FE84B0";
+        await doAnnounce();
+    }
     function checkTime(i) {
         return i < 10 ? "0" + i : i;
     }
@@ -94,3 +98,4 @@
 <h4>Test Announcement</h4>
 <br />
 <button on:click={doTestAnnouncement}>Test Announcement</button>
+<button on:click={doResetPolly}>Reset Polly Bot</button>

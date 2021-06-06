@@ -16,27 +16,35 @@ provider:
     name: aws
     region: us-east-2
     runtime: nodejs14.x
-    memorySize: 128 # optional, in MB, default is 1024
+    memorySize: 512 # optional, in MB, default is 1024
     timeout: 30 # optional, in seconds, default is 6
     environment:
         ZELLO_ISSUER: ${env:ZELLO_ISSUER}
         ZELLO_PRIVATE_KEY: ${env:ZELLO_PRIVATE_KEY}
         ZelloUsername: ${env:ZelloUsername}
         ZelloPassword: ${env:ZelloPassword}
+        ZelloPa1LambdaArn: ${ssm:zelloPa1LambdaArn}
+
     iamRoleStatements:
         - Effect: Allow
           Action:
               - s3:GetObject
-          Resource: "arn:aws:s3:::${env:OPUS_BUCKET}/*"
+              - lambda:InvokeFunction
+          Resource: "*"
+#          Resource: "arn:aws:s3:::${env:OPUS_BUCKET}/*"
+
 
 functions:
     zelloStream:
         handler: src/handler.zelloStream
         reservedConcurrency: 1 ## no concurrent activity wanted on zello PA
+        layers:
+            - ${ssm:FfmpegLayerArn}
         events: # The Events that trigger this Function
-            - s3:
-                  bucket: ${env:OPUS_BUCKET}
-                  event: s3:ObjectCreated:*
-                  rules:
-                      - suffix: .opus
-                  existing: true # opt
+            - sns: ${ssm:/sns/ZelloPushSns/arn}
+#            - s3:
+#                  bucket: ${env:OPUS_BUCKET}
+#                  event: s3:ObjectCreated:*
+#                  rules:
+#                      - suffix: .opus
+#                  existing: true # opt
