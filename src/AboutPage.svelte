@@ -125,7 +125,7 @@
         <hr />
 
         <div class="singularSettingDiv">
-            <h4>Archive Pending</h4>
+            <h4>Archive Details</h4>
             <h6>
                 <span>
                     This event will archive at: {new Date(ecFromDexie[0].TTL * 1000).toLocaleString()}
@@ -168,8 +168,9 @@
             <h4>Developer Logs</h4>
             <input type="checkbox" bind:checked={$developerLogging} />
             <h6>
-                This toggles whether the Developer logs are emitted
-                <strong>all screens.</strong>
+                This toggles whether the developer logs are emitted on
+                <strong>all screens</strong>
+                .
             </h6>
         </div>
         <hr />

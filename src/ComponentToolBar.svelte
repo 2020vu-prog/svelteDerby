@@ -193,7 +193,7 @@
         padding: 14px 16px;
         text-decoration: none;
         font-size: 12px;
-        width: 25%;
+        width: min-content;
         border: 3px solid black;
     }
 </style>

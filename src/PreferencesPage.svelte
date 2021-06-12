@@ -180,7 +180,7 @@
     <hr />
 
     <br />
-    <h2>Aesthetics</h2>
+    <h2>Appearance</h2>
     <hr />
 
     <div class="singularSettingDiv">
@@ -188,7 +188,8 @@
         <input type="checkbox" bind:checked={$showBottomNav} />
         <h6>
             This toggles whether the bottom nav is shown or hidden on
-            <strong>all screens.</strong>
+            <strong>all screens</strong>
+            .
         </h6>
     </div>
     <hr />
@@ -211,9 +212,7 @@
             <option class="colorOption" value="saddlebrown">Brown</option>
             <option class="colorOption">Gray</option>
         </select>
-        <h6>
-            Here you can decide what color you want for your user interface.
-        </h6>
+        <h6>This controls the color of your user interface.</h6>
     </div>
     <hr />
 
@@ -224,9 +223,11 @@
             <option class="sortOption">Heat</option>
         </select>
         <h6>
-            Here you can decide how you would like your pending race screen to
-            be sorted. It defaults to Age (newest to oldest) but can also be set
-            to heat, which will group like-numbered heats of different brackets
+            This controls how your pending race screen is sorted. It defaults to
+            <strong>age</strong>
+            (newest to oldest) but it can also be set to
+            <strong>heat</strong>
+            , which will group like-numbered heats of different brackets
             together.
         </h6>
     </div>
@@ -290,7 +291,7 @@
             <h6>
                 Click here to be redirected to the about page where you can find
                 information about the race you are viewing and the version of
-                the software you are running.
+                this software that you are running.
             </h6>
         </div>
         <hr />
