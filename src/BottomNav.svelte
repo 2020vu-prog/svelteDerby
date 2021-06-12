@@ -35,7 +35,7 @@
 
     /* Toggle between adding and removing the "responsive" class to the navbar when the user clicks on the icon */
     const myFunction = () => {
-        var x = document.getElementById("myNavbar");
+        var x = document.getElementById("bottomNavBar");
         if (x.className === "navbar") {
             x.className += " responsive";
         } else {
@@ -103,7 +103,7 @@
         <div
             bind:this={thisBottomNav}
             class="navbar"
-            id="myNavbar"
+            id="bottomNavBar"
             style="z-index:20">
             <a
                 href="/#/RpList"

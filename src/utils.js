@@ -126,7 +126,7 @@ function getHeight(box) {
 }
 export function getMainFull(qsList = []) {
     qsList.push("#topnav");
-    qsList.push("div.footer");
+    qsList.push("#bottomNavBar");
     let winHeight =
         window.innerHeight ||
         document.documentElement.clientHeight ||
