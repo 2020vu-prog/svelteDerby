@@ -355,7 +355,7 @@
 
 <!-- Top Navigation Menu -->
 <div id="topnav" class="topnav" style="z-index: 20; ">
-    <a href="#home" style="background-color: {$theme}" class="active">
+    <a style="background-color: {$theme}" class="active">
         {getTitle($raceConfig)}&nbsp;
         <HotLoad />
     </a>
