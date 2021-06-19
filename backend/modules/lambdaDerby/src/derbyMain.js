@@ -467,7 +467,8 @@ async function addBlocks(json) {
     log.debug("addBlocks: " + JSON.stringify(json));
     json.PK = ":RP"; // force RacePhase
 
-    const waitRp = ddbUtils.ddbQueryRpDuplicateCheck(json);
+    const waitRp = ddbUtils.ddbQueryRpNextOnBlocks({ orgId: json.orgId });
+    //const waitRp = ddbUtils.ddbQueryRpDuplicateCheck(json);
     const waitRs = ddbUtils.ddbQueryRsExistsAndPendingCheck(json);
     const [rpFound, rsFound] = await Promise.all([waitRp, waitRs]);
     log.debug("rpFound", rpFound);
@@ -492,7 +493,7 @@ async function addBlocks(json) {
         return {
             status: "error",
             error:
-                "Car(s) already loaded on blocks:" +
+                "There is already a race on the blocks: " +
                 rpFound[0].carNumbers.toString(),
         };
     }
