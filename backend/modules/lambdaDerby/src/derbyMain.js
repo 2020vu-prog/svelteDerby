@@ -1002,11 +1002,11 @@ const routeMap = {
 };
 
 const buildResponse = (jsonObj, cacheControl = "no-cache") => {
-    if (jsonObj && jsonObj.error) {
-        log.debug("buildResponse: error:  ", jsonObj);
+    if (!jsonObj) {
+        jsonObj = {};
     }
     return {
-        statusCode: 200,
+        statusCode: jsonObj.statusCode ? jsonObj.statusCode : 200,
         headers: {
             "Content-Type": "application/json; charset=utf-8",
             "Cache-Control": cacheControl,
@@ -1126,7 +1126,7 @@ async function apiGatewayHandler(event) {
         log.debug(`allowing access to ${routePath} for [${email}]`);
     } else {
         log.debug(`prohibiting access to ${routePath} for [${email}]`);
-        return buildResponse({ error: "unauthorized" });
+        return buildResponse({ error: "unauthorized", statusCode: 401 });
     }
 
     if (false) {
