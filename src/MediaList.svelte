@@ -1,6 +1,12 @@
 <script>
     import log from "loglevel";
 
+    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+
+    import { faVideo } from "@fortawesome/free-solid-svg-icons/faVideo";
+    import { faVolumeUp } from "@fortawesome/free-solid-svg-icons/faVolumeUp";
+    import Icon from "fa-svelte";
+
     import SpinnerButton from "./SpinnerButton.svelte";
     import { doRefreshBlocks } from "./stores.js";
     import { hhmmssFmt, isEmailAllowedRoutePath } from "./utils.js";
@@ -130,9 +136,10 @@
     }
     function getDisplayName(key) {
         if (linkFrom == ALL_PREFIX) {
-            return key;
+            //This is the list all media screen. Show a slightly more detailed path.
+            return key.replace("media/" + $raceConfig.orgId + "/", "");
         } else {
-            return key.replace(/.*\//, "");
+            return key.replace(/.*-/, "");
         }
     }
     function getMediaItems(mediaList) {
@@ -149,42 +156,79 @@
     }
 </script>
 
-<div>
-    <h4>Media List</h4>
+<style>
+    .filter-black {
+        filter: saturate(100%) brightness(0%);
+    }
+    div :global(.xLargeIcon) {
+        font-size: 28px;
+    }
+</style>
+
+<div style="height: fill-parent">
+    <h3>Media List</h3>
     {#if loadingMedia}
-        <SpinnerButton spinning={loadingMedia}>Loading</SpinnerButton>
+        <div
+            style="margin: 0; position: absolute; top: 50%; left: 50%;
+            -ms-transform: translate(-50%, -50%); transform: translate(-50%,
+            -50%); text-align:center;">
+            <img
+                width="85"
+                height="85"
+                src="data/circles.svg"
+                alt="Loading..."
+                class="filter-black" />
+            <h5>Loading Media</h5>
+        </div>
     {/if}
 
     {#if mediaList}
         <p />
         {#if mediaList.length == 0}
-            <b>No Matches yet</b>
+            <h5>No media found.</h5>
         {:else}
             {#each getMediaItems(mediaList) as mediaItem (mediaItem.Key)}
-                <div
-                    class="panel panel-info"
+                <Card
+                    class="mt-3 border border-info"
                     on:click={() => playMedia(mediaItem.Key)}>
-                    {getDisplayName(mediaItem.Key)}
-                    <p />
-                    {getMediaHHMMSS(mediaItem)}
-                    {#if selectedVideo === mediaItem.Key}
-                        <video width="320" height="240" autoplay controls>
-                            <source
-                                src={getMediaHref(selectedVideo)}
-                                type="video/mp4" />
-                            Your browser does not support the video tag.
-                        </video>
-                    {/if}
-                    {#if selectedAudio === mediaItem.Key}
-                        <audio controls>
-                            <source
-                                src={getMediaHref(selectedAudio)}
-                                type="audio/mpeg" />
-                            Your browser does not support the audio element.
-                        </audio>
-                    {/if}
 
-                </div>
+                    <CardTitle
+                        color="info"
+                        class="bg-info text-white"
+                        style="text-align: center;">
+                        {getMediaHHMMSS(mediaItem)}
+                    </CardTitle>
+                    <CardBody>
+
+                        <span style="display: inline; height:fill-parent">
+                            <Icon
+                                class="xLargeIcon"
+                                icon={mediaItem.Key.endsWith('.mp3') ? faVolumeUp : faVideo} />
+                        </span>
+                        &nbsp;&nbsp;
+                        <div style="display: inline; height: fill-parent">
+                            {getDisplayName(mediaItem.Key)}
+                        </div>
+
+                        {#if selectedVideo === mediaItem.Key}
+                            <br />
+                            <video width="320" height="240" autoplay controls>
+                                <source
+                                    src={getMediaHref(selectedVideo)}
+                                    type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                        {/if}
+                        {#if selectedAudio === mediaItem.Key}
+                            <audio controls>
+                                <source
+                                    src={getMediaHref(selectedAudio)}
+                                    type="audio/mpeg" />
+                                Your browser does not support the audio element.
+                            </audio>
+                        {/if}
+                    </CardBody>
+                </Card>
             {/each}
         {/if}
     {:else}
