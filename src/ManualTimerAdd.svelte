@@ -7,6 +7,7 @@
     import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
+    import { db } from "./eventDb.js";
 
     import axios from "axios";
     export let params = {};
@@ -15,6 +16,11 @@
     var submitSpinning = false;
 
     log.debug("ManualTimeAdd", params);
+
+    onMount(async () => {
+        checkAndApplyURLParams();
+        await getCarNumbersFromRP();
+    });
 
     function validateTimerData(laneX) {
         if (laneX.toString().includes(".")) {
@@ -115,6 +121,23 @@
             return "Unknown Racer";
         }
     };
+
+    function checkAndApplyURLParams() {
+        if (params.winningLane && params.winningTime) {
+            if (params.winningLane == 1) {
+                resultForm.lane1 = Number(params.winningTime);
+            } else if (params.winningLane == 2) {
+                resultForm.lane2 = Number(params.winningTime);
+            }
+        }
+    }
+
+    async function getCarNumbersFromRP() {
+        var rpFromDexie;
+        rpFromDexie = await db.RacePhase.get(params.rpKey);
+        carNumber1 = rpFromDexie.cn[0];
+        carNumber2 = rpFromDexie.cn[1];
+    }
 </script>
 
 <style>

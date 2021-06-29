@@ -82,7 +82,7 @@
         "/RpList": RacePhaseList,
         "/drivers": DriverList,
         "/login": Login,
-        "/ManualTimerAdd/:rpKey": ManualTimerAdd,
+        "/ManualTimerAdd/:rpKey/:winningLane?/:winningTime?": ManualTimerAdd,
         "/ManualAnnouncement": ManualAnnouncement,
         "/raceStandingAdd/:type": RaceStandingAdd,
         "/driverAdd/:number?": DriverAdd,

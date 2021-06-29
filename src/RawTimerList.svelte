@@ -1,6 +1,8 @@
 <script>
     import log from "loglevel";
 
+    import SpinnerButton from "./SpinnerButton.svelte";
+
     import { raceConfig, statusMessage } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
@@ -147,6 +149,47 @@
         }
         return undefined;
     }
+
+    async function pushToManualTimer(winnerDelta) {
+        const currentSession = await Auth.currentSession();
+        const bearer = currentSession.idToken.jwtToken;
+        const getNextOnBlocksUrl =
+            $raceConfig.baseUrl +
+            "/getNextOnBlocks?orgId=" +
+            $raceConfig.orgId +
+            "&orgIz=" +
+            $raceConfig.orgIz;
+        const onBlocksResponse = await axios.get(getNextOnBlocksUrl);
+        const data = onBlocksResponse.data;
+        if (data && data.length > 0) {
+            push(
+                `/manualTimerAdd/${data[0].at}/${getWinLane(
+                    winnerDelta
+                ).replace(/[A-Za-z]*/g, "")}/${Math.abs(
+                    getWinTimeMs(winnerDelta)
+                )}`
+            );
+        } else {
+            $statusMessage = {
+                text: `There is no race on the blocks.`,
+                type: "error",
+            };
+        }
+    }
+
+    async function shouldAllowApply(winnerDelta) {
+        if (winnerDeltas.indexOf(winnerDelta) >= 3) {
+            return false;
+        }
+
+        if (!winnerDelta.valid) {
+            return false;
+        }
+
+        //TODO: don't allow the same time to be manually applied twice
+
+        return true;
+    }
 </script>
 
 <style>
@@ -183,6 +226,17 @@
                     lane="Lane2"
                     laneJson={JSON.stringify(winnerDelta.lanes.lane2)} />
                 <p />
+                {#await shouldAllowApply(winnerDelta)}
+                    <p>Loading</p>
+                {:then rc}
+                    {#if rc}
+                        <SpinnerButton
+                            on:click={() => pushToManualTimer(winnerDelta)}>
+                            Apply
+                        </SpinnerButton>
+                    {/if}
+
+                {/await}
             </div>
         </div>
     {/each}
