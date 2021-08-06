@@ -1,3 +1,7 @@
+##
+## workaround for broken npm pack when the parent directory had a package.json
+## s/b deprecated 2021-07-10
+
 rm    modules/lambdaDerby/src/package.zip ||true
 rm    modules/lambdaDerby/src/src-1.0.0.tgz ||true
 touch modules/lambdaDerby/src/src-1.0.0.tgz  ## TODO: delete! pack fails w/o this!?

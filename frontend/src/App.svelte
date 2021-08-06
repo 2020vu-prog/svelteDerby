@@ -59,9 +59,6 @@
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
     //import { ROARR } from "roarr";
 
-    //enableRoarr(true, "hardcode");
-    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
-
     /*
     function enableRoarr(doEnable, rsn) {
         if (doEnable) {
@@ -87,7 +84,7 @@
         "/raceStandingAdd/:type": RaceStandingAdd,
         "/driverAdd/:number?": DriverAdd,
         "/eventSelection/:orgIz": EventSelection,
-        "/eventAdd/:orgIz": EventAdd,
+        "/eventAdd/:orgIz/:mode": EventAdd,
         "/historyList/:PK/:SK": HistoryList,
         "/orgSelection": OrgSelection,
         "/orgAdd": OrgAdd,
@@ -188,6 +185,12 @@
                 text: "Capture Video",
                 menuRoute: "/captureVideo",
             },
+            //TODO: populate orgIz from db?
+            // (not really needed, b/c we can pull it from dexie...)
+            {
+                text: "Update Event Settings",
+                menuRoute: "/eventAdd/db/Update",
+            },
             {
                 text: loginLabel,
                 menuRoute: "/login",
@@ -234,12 +237,10 @@
         const rpList = await db.RacePhase.toArray();
         const rsList = await db.RaceStanding.toArray();
         const ptcptList = await db.Participant.toArray();
-        const entityFactory = new EntityFactory({});
         const done = new Date().getTime();
         const elapsed = done - start;
         log.debug("dexie reload took", elapsed);
         raceConfigParam.baseUrl = "/app";
-        raceConfigParam.title = raceConfigParam.name;
         $raceConfig = raceConfigParam;
     };
     onMount(async () => {
@@ -273,7 +274,7 @@
         );
     };
     const getTitle = (cfg) => {
-        if (cfg && cfg.title) return cfg.title;
+        if (cfg && cfg.name) return cfg.name;
         else return "";
     };
     /* Toggle between showing and hiding the navigation menu links when the user clicks on the hamburger menu / bar icon */

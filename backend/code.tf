@@ -29,6 +29,7 @@ module "derbyMainLambda" {
   S3DistBucketArn = aws_s3_bucket.dstBucket.arn
   s3VideoWatch = module.vodTranscode.WatchFolderBucket
   s3VideoDone = module.vodTranscode.MediaBucket
+  AwsCognitoSettingsJson = local.awsCognitoSettingsJson
   
 }
 

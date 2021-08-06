@@ -56,6 +56,7 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
         "pendingRule", // "1Race", "1Pair"
         "orgIz", // Org Id (pending refactor)
         "name",
+        "paUri", // e.g. zello:channelName
         "archived",
     ];
     static canBuild(json) {
@@ -104,6 +105,7 @@ entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
         "lcl1", // lowCarlane1
         "pendingRule", // "1Race", "1Pair"
         "defaultTTL",
+        "paUri", // e.g. zello:channelName
     ];
     static canBuild(json) {
         return json.PK && json.PK === OrgConfigLit;

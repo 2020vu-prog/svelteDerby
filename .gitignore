@@ -1,17 +1,17 @@
 terraform.tfstate
 terraform.tfstate.backup
-/generatedTargets.sh
+/frontend/generatedTargets.sh
 amplify/
 amplify-backup/
 node_modules/
-/public/bundle.*
-/public/*.*.css
-/public/vendors.*.js
-/public/vendors.css
-/public/index.html
-/src/aws-exports.js
+/frontend/public/bundle.*
+/frontend/public/*.*.css
+/frontend/public/vendors.*.js
+/frontend/public/vendors.css
+/frontend/public/index.html
+/frontend/src/aws-exports.js
 build/
 .terraform/
 
 .DS_Store
-src/config/doNotEditChartKey.json
+/frontend/src/config/doNotEditChartKey.json

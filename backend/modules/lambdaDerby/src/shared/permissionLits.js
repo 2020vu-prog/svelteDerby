@@ -58,13 +58,14 @@ addPermission(
 );
 addPermission("CanCaptureVideo", ["/requestS3PutObjectUrl"], ["/captureVideo"]);
 addPermission(
-    "TODO",
+    "TODO_permissions_power?",
     [
         "/addBulk",
         "/ddbQuery",
         "/getNextOnBlocks",
         "/getRaceHistory",
         "/addEventConfig",
+        "/updateEventConfig",
         "/requestMqttSubPermission",
         "/listMediaPrefix",
     ],
@@ -78,18 +79,3 @@ addPermission(
     ["/getRaceHistory", "/requestMqttSubPermission", "/listMediaPrefix"],
     ["/drivers", "/RpList", "/RsList/History", "/RsList/Pending", "/chartList"]
 );
-module.exports.permissionMap = {
-    "/addParticipant": "d",
-    "/addPending": "p",
-    "/addBlocks": "b",
-    "/addChart": "B",
-    "/addChartPosition": "cp",
-    "/doApplyFinishTime": "f",
-
-    "/addBulk": "bulk",
-    "/ddbQuery": "ddbq",
-    "/getNextOnBlocks": "gnob",
-    "/getRaceHistory": "h",
-    "/listChartTypes": "ct",
-    "/addEventConfig": "aec",
-};

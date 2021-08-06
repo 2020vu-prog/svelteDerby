@@ -30,17 +30,31 @@ class AnnounceResults {
         await this.propagateIotMqtt(orgId, mp3Path);
         await this.propagateIotZelloSns(orgId, mp3Path);
     }
-    getZelloChannelFromOrg(orgId) {
+    async getZelloChannelFromOrg(orgId) {
+        const eventConfig = await this.ddbUtils.getEventConfig(orgId); // should resolve from cache, no IO wait.
+        /*
         if (orgId.startsWith("chi.")) {
             return "AASBD Chicago P.A";
         }
         if (orgId.startsWith("Test.")) {
             return "AASBD Test P.A.";
         }
+        */
+        if (
+            eventConfig &&
+            eventConfig.paUri &&
+            eventConfig.paUri.startsWith("zello:")
+        ) {
+            const zelloChannel = eventConfig.paUri.replace(/^zello:/i, "");
+            log.debug("using zelloChannel:", zelloChannel);
+            return zelloChannel;
+        }
+
+        log.debug("missing zelloChannel:", eventConfig);
         return null;
     }
     async propagateIotZelloSns(orgId, mp3Path) {
-        const zelloChannel = this.getZelloChannelFromOrg(orgId);
+        const zelloChannel = await this.getZelloChannelFromOrg(orgId);
         const zelloArn = process.env.ZelloPushSnsArn;
         if (!zelloChannel) return;
         //const cnstring = json.stringify(jsonCalledNumbers);

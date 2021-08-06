@@ -314,12 +314,13 @@ resource "aws_cloudfront_distribution" "derbyApp" {
     viewer_protocol_policy = "redirect-to-https"
   }
 
-  price_class = "PriceClass_200"
+  #price_class = "All"
 
+  price_class = "PriceClass_200"
   restrictions {
     geo_restriction {
       restriction_type = "whitelist"
-      locations        = ["US", "CA" ]
+      locations        = ["US", "CA" , "BZ"]
     }
   }
 
@@ -331,7 +332,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
 viewer_certificate {
     #  cloudfront mandates that the key reside in US-EAST-1
   acm_certificate_arn            = local.use_default_cert ? null : var.AcmArn
-  minimum_protocol_version       = local.use_default_cert ? null : "TLSv1.1_2016"
+  minimum_protocol_version       = local.use_default_cert ? null : "TLSv1.2_2019"
   ssl_support_method             = local.use_default_cert ? null : "sni-only"
   cloudfront_default_certificate = local.use_default_cert
 }
@@ -372,7 +373,7 @@ resource "aws_route53_record" "www_cf" {
 }
 
 resource "local_file" "publish_bash_targets" {
-    filename = "${path.module}/../generatedTargets.sh"
+    filename = "${path.module}/../frontend/generatedTargets.sh"
     content     = <<-EOT
 export DERBY_SPA_S3_BUCKET="${aws_s3_bucket.svelteBucket.id}"
 export DERBY_CLOUDFRONT="https://${aws_cloudfront_distribution.derbyApp.domain_name}"

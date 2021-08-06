@@ -11,7 +11,7 @@
     import { participantValid, participantFocusCompletion } from "./utils.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import Icon from "fa-svelte";
-    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     import axios from "axios";
     export let params = {};

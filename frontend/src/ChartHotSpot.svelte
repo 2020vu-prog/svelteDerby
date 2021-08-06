@@ -8,7 +8,7 @@
     import { doRefreshBlocks, driverMap } from "./stores.js";
     import { pannable } from "./pannable.js";
     import { createEventDispatcher } from "svelte";
-    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let left;
     export let top;

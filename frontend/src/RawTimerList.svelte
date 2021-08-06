@@ -11,7 +11,7 @@
     import { db } from "./eventDb.js";
     import RawTimerLane from "./RawTimerLane.svelte";
 
-    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
     import CalcFinish from "./CalcFinish.js";
 
     import axios from "axios";

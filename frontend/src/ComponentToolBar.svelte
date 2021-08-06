@@ -9,7 +9,7 @@
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
     import { isEmailAllowedRoutePath } from "./utils.js";
-    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     import { db } from "./eventDb.js";
 

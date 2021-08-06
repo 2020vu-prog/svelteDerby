@@ -1,13 +1,18 @@
 <script>
     import log from "loglevel";
 
-    import { raceConfig, statusMessage, driverMap } from "./stores.js";
+    import {
+        raceConfig,
+        statusMessage,
+        driverMap,
+        getAxios,
+    } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
 
-    import axios from "axios";
+    //import axios from "axios";
     async function doAnnounce() {
         if (!announceText) {
             return;
@@ -23,6 +28,7 @@
             paMessage: `<speak>${announceText}</speak>`,
         };
 
+        const axios = await $getAxios();
         axios.defaults.headers.common["Authorization"] = bearer;
 
         const endpoint = "/initiateAnnouncement";

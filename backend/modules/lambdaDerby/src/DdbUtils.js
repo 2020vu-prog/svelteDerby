@@ -1,6 +1,7 @@
 const EntityFactory = require("./shared/EntityFactory.js");
 const log = require("loglevel");
 const skipDeleteFilter = "attribute_not_exists(del) ";
+var configMap = {};
 
 class DdbUtils {
     ddbClient = null;
@@ -17,6 +18,73 @@ class DdbUtils {
     }
     setEntityFactory(entityFactory) {
         this.entityFactory = entityFactory;
+    }
+    /*
+     ** sometimes we'll get just event id without org id.
+     **   infer org id from event key and build the full key
+     */
+    expandEventKey(eventKey) {
+        if (eventKey.includes(":")) {
+            return eventKey; // don't mess with it.
+        }
+        const org = eventKey.replace(/\..*/, "");
+
+        return `${org}:${eventKey}`;
+    }
+    flushEventCache() {
+        //configMap.clear();
+        configMap = {};
+    }
+
+    /*
+     * browser should always send it's config timestamp in a header.
+     * if lambda gets a newer timestamp than is cached, consider cache stale and delete it
+     */
+    potentialFlushStaleCache(eventKey, eventHeaders) {
+        if (!eventHeaders) eventHeaders = {};
+
+        log.debug(
+            `potentialFlushStaleCache cache keys: `,
+            JSON.stringify(Object.keys(configMap))
+        );
+        log.debug(
+            `potentialFlushStaleCache headers: `,
+            JSON.stringify(Object.keys(eventHeaders))
+        );
+        if (configMap[eventKey] && eventHeaders["x-event-ts"]) {
+            var cachedAt = parseInt(configMap[eventKey].at);
+            var browserAt = parseInt(eventHeaders["x-event-ts"]);
+            log.debug(
+                `potentialFlushStaleCache cache potential: [${cachedAt}] [${browserAt}] `
+            );
+
+            if (cachedAt && browserAt && browserAt > cachedAt) {
+                log.debug(
+                    "potentialFlushStaleCache deleting stale: " + eventKey
+                );
+                delete configMap[eventKey];
+            } else {
+                log.debug("potentialFlushStaleCache cache good: " + eventKey);
+            }
+        } else {
+            log.debug("potentialFlushStaleCache cache miss: " + eventKey);
+        }
+    }
+
+    async getEventConfig(eventKey, eventHeaders) {
+        eventKey = this.expandEventKey(eventKey);
+        this.potentialFlushStaleCache(eventKey, eventHeaders);
+        if (configMap[eventKey]) {
+            return configMap[eventKey];
+        }
+
+        var eConfig = await this.ddbQueryEventConfig(eventKey);
+        if (eConfig[eventKey]) {
+            configMap[eventKey] = eConfig[eventKey];
+            return eConfig[eventKey];
+        }
+
+        return undefined;
     }
     async ddbPut(item, tableName = process.env.DynamoDbTable) {
         var rc = "Pending";

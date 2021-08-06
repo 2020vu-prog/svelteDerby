@@ -7,7 +7,7 @@
     import RacePhase from "./RacePhase.svelte";
     import RaceStanding from "./RaceStanding.svelte";
 
-    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let params = {};
     let history = [];

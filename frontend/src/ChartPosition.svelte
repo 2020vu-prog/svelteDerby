@@ -18,7 +18,7 @@
     import axios from "axios";
     import { participantValid, participantFocusCompletion } from "./utils.js";
 
-    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
     import { isEmailAllowedRoutePath } from "./utils.js";
 
     export let params = {};

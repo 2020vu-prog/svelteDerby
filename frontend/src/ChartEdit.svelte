@@ -8,7 +8,7 @@
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
-    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     import axios from "axios";
     export let params = {};

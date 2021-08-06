@@ -90,6 +90,14 @@ export function setCacheKey(newKey) {
     prefs.disableCache = newKey;
     prefStore.set(prefs);
 }
+// Add a request interceptor
+axiosCommon.interceptors.request.use(function (config) {
+    //const token = store.getState().session.token;
+    const raceConfigVal = getStore(raceConfig);
+    config.headers["x-event-ts"] = raceConfigVal.at;
+
+    return config;
+});
 axiosCommon.interceptors.response.use(
     (response) => {
         if (response.status === 401) {

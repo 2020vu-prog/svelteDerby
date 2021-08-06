@@ -26,7 +26,7 @@
     import { onMount } from "svelte";
     import aws_exports from "./aws-exports";
     const { v4: uuidv4 } = require("uuid");
-    const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     var pageLoadTimeMs = 0;
     const nextPhaseTopic = "nextPhase";
@@ -151,8 +151,6 @@
                 log.debug("watchIot: AWS iot Done");
             },
         });
-
-        potentialReloadPage(); //test standdown
 
         syncAutoAnnounceSubscription();
         syncVideoCaptureSubscription();
@@ -459,11 +457,44 @@
             if (db[tblName]) {
                 log.debug(`flushPending begin: ${tblName}`);
                 await db[tblName].bulkPut(pendingList);
+                updateConfigStore(tblName, pendingList);
                 log.debug(`flushPending done: ${tblName}`);
             } else {
                 log.debug(`flushPending skipping: ${tblName}`);
             }
         }
+    }
+
+    function updateConfigStore(tblName, pendingList) {
+        if (tblName !== "EventConfig") return;
+
+        log.debug(
+            `updateConfigStore replacing raceConfig pre000: `,
+            $raceConfig
+        );
+
+        pendingList.forEach((eventConfig) => {
+            if (eventConfig.at > $raceConfig.at) {
+                log.debug(
+                    `updateConfigStore ${eventConfig.at} and ${$raceConfig.at}`
+                );
+
+                log.debug(
+                    `updateConfigStore replacing raceConfig ec: `,
+                    eventConfig
+                );
+                log.debug(
+                    `updateConfigStore replacing raceConfig pre: `,
+                    $raceConfig
+                );
+                const newEc = $raceConfig;
+                $raceConfig = Object.assign(newEc, eventConfig);
+                log.debug(
+                    `updateConfigStore replacing raceConfig post: `,
+                    $raceConfig
+                );
+            }
+        });
     }
 
     function addPendingBulk(pendingBulk, tblName, e) {

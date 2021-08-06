@@ -316,12 +316,18 @@ function mainResolve(msg) {
     console.error("mainResolve: ", msg);
     mainPromise.resolve(msg);
 }
-function lambdaEntry(fname) {
+function lambdaEntry(fname, zelloChannel) {
     //https://stackoverflow.com/questions/31069453/creating-a-es6-promise-without-starting-to-resolve-it
     var rc = new Promise(function (resolve, reject) {
         mainPromise = { resolve: resolve, reject: reject };
     });
-    console.log(`begin lambdaEntry`);
+
+    console.log(`begin lambdaEntry channel: [${zelloChannel}]`);
+    if (!zelloChannel) {
+        console.log(`missing channel!`);
+        return;
+    }
+
     var zelloUsername = process.env.ZelloUsername;
     var zelloPassword = process.env.ZelloPassword;
     const pk_buff = new Buffer(process.env.ZELLO_PRIVATE_KEY, "base64");
@@ -343,7 +349,6 @@ function lambdaEntry(fname) {
             zelloPrivateKey
         );
     }
-    var zelloChannel = "AASBD Chicago P.A";
     var zelloFilename = fname;
     if (
         !zelloUsername ||

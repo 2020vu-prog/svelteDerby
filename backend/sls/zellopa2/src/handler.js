@@ -87,7 +87,7 @@ async function convertAndAnnounce2(sns) {
     const mp3Key = sns.MessageAttributes.path.Value;
     const mp3Bucket = sns.MessageAttributes.bucket.Value;
     console.log(`convertAndAnnounce2 [${mp3Bucket} ${mp3Key}] `);
-    await createAndStreamOpus(mp3Bucket, mp3Key);
+    await createAndStreamOpus(sns, mp3Bucket, mp3Key);
 }
 async function announceFromS3(bucketName, bucketKey) {
     // get the file
@@ -111,7 +111,7 @@ async function announceFromS3(bucketName, bucketKey) {
     unlinkSync(tmpFile);
 }
 
-async function createAndStreamOpus(mp3Bucket, mp3Key) {
+async function createAndStreamOpus(sns, mp3Bucket, mp3Key) {
     // get the file
     const s3Object = await s3
         .getObject({
@@ -133,7 +133,9 @@ async function createAndStreamOpus(mp3Bucket, mp3Key) {
         { stdio: "inherit" }
     );
     console.log("converted to opus");
-    const mzRc = await mainZello(`${tmpFile}.opus`);
+
+    var channel = sns.MessageAttributes.zelloChannel.Value;
+    const mzRc = await mainZello(`${tmpFile}.opus`, channel);
     // read opus from disk
     //        const opusFile = readFileSync(`${tmpFile}.opus`);
     // delete the temp files

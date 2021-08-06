@@ -14,6 +14,7 @@ variable PollyCompleteSnsArn {}
 variable RacerStatusFanoutSnsArn {}
 variable s3VideoWatch {}
 variable s3VideoDone {}
+variable AwsCognitoSettingsJson {}
 
 variable S3DistBucket {}
 variable S3DistBucketArn {}
@@ -166,6 +167,7 @@ resource "aws_lambda_function" "lambda" {
       ZelloPushSnsArn=var.ZelloPushSnsArn
       RacerStatusFanoutSnsArn=var.RacerStatusFanoutSnsArn
       IotEndpoint=data.aws_iot_endpoint.mqtt.endpoint_address
+	AwsCognitoSettingsJson=var.AwsCognitoSettingsJson
 
 	s3VideoWatch=local.s3VideoWatch
 	s3VideoDone=local.s3VideoDone

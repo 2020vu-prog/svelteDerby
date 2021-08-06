@@ -37,11 +37,13 @@ test("postEvent: ", () => {
     });
 });
 
+/*
 test("getRaceConfig: ", () => {
     return getData(`${CF}/getRaceConfig`).then((data) => {
         expect(Object.keys(data).length).toBeGreaterThan(0);
     });
 });
+*/
 
 test("listChartTypes: ", () => {
     return getData(`${CF}/listChartTypes?orgId=${orgId}&orgIz=${orgIz}`).then(

@@ -2,7 +2,7 @@ import log from "loglevel";
 
 const {
     hasSvelteRoutePath,
-} = require("../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
+} = require("../../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
 import { Auth } from "aws-amplify";
 import { db } from "./eventDb.js";
 import {
@@ -13,7 +13,7 @@ import {
 import { logout } from "./stores/auth.js";
 import { get } from "svelte/store";
 
-const EntityFactory = require("../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
 export async function getHistoryEntity(PK, SK, at) {
     const key = { PK: PK, SK: SK, at: at };

@@ -14,4 +14,6 @@ function main {
 		popd
 	done
 }
-main
+## shell build deprecated for Make 2021-07-10
+###main
+make all

@@ -1,7 +1,7 @@
 "use strict";
 
 const log = require("loglevel");
-const { permissionMap, permissionMap2 } = require("./permissionLits.js");
+const { permissionMap2 } = require("./permissionLits.js");
 const powerPerms = { ...permissionMap2 };
 const starterPerms = { CanAddBlocks: true };
 const registrationPerms = {
@@ -13,23 +13,28 @@ const registrationPerms = {
     CanAddParticipant: true,
     CanAddPending: true,
 };
-const orgUserPermMap = {
-    "test:REDACTED_PERMISSION_EMAIL": powerPerms, // john harmon, Akron Local org
-    "test:REDACTED_PERMISSION_EMAIL": powerPerms, // scott, Akron Local org
+const permsByRoleMap = {
+    power: powerPerms, // john harmon, Akron Local org
+    starter: starterPerms,
+    registration: registrationPerms,
+};
+const orgUserRoleMap = {
+    "test:REDACTED_PERMISSION_EMAIL": ["power"], // john harmon, Akron Local org
+    "test:REDACTED_PERMISSION_EMAIL": ["power"], // scott, Akron Local org
 
-    "test:REDACTED_PERMISSION_EMAIL": powerPerms, // jest tests
-    "test60:REDACTED_PERMISSION_EMAIL": powerPerms, // jest tests
-    ":REDACTED_PERMISSION_EMAIL": powerPerms,
-    ":REDACTED_PERMISSION_EMAIL": powerPerms,
-    ":REDACTED_PERMISSION_EMAIL": powerPerms,
-    ":REDACTED_PERMISSION_EMAIL": starterPerms,
+    "test:REDACTED_PERMISSION_EMAIL": ["power"], // jest tests
+    "test60:REDACTED_PERMISSION_EMAIL": ["power"], // jest tests
+    ":REDACTED_PERMISSION_EMAIL": ["power"],
+    ":REDACTED_PERMISSION_EMAIL": ["power"],
+    ":REDACTED_PERMISSION_EMAIL": ["power"],
+    ":REDACTED_PERMISSION_EMAIL": ["starter"],
 
-    "test:REDACTED_PERMISSION_EMAIL": registrationPerms,
-    "chi:REDACTED_PERMISSION_EMAIL": registrationPerms,
-    "test:REDACTED_PERMISSION_EMAIL": registrationPerms,
-    "chi:REDACTED_PERMISSION_EMAIL": registrationPerms,
-    "test:REDACTED_PERMISSION_EMAIL": registrationPerms,
-    "chi:REDACTED_PERMISSION_EMAIL": registrationPerms,
+    "test:REDACTED_PERMISSION_EMAIL": ["registration"],
+    "chi:REDACTED_PERMISSION_EMAIL": ["registration"],
+    "test:REDACTED_PERMISSION_EMAIL": ["registration"],
+    "chi:REDACTED_PERMISSION_EMAIL": ["registration"],
+    "test:REDACTED_PERMISSION_EMAIL": ["registration"],
+    "chi:REDACTED_PERMISSION_EMAIL": ["registration"],
 };
 function hasRoutePath(routeType, orgIz, userMail, serverRoutePath) {
     const permKeys = lookupUserPermissions(orgIz, userMail);
@@ -47,16 +52,23 @@ function hasRoutePath(routeType, orgIz, userMail, serverRoutePath) {
 function lookupUserPermissions(orgIz, userMail) {
     //log.debug("pmap2:", Object.keys(permissionMap2));
     var grantedPerms = {};
+    var grantedRoles = [];
 
     const k1 = `${orgIz}:${userMail}`.toLowerCase();
     const k2 = `:${userMail}`.toLowerCase(); // sysadmin?
 
-    if (orgUserPermMap[k1]) {
-        grantedPerms = orgUserPermMap[k1];
-    }
-    if (orgUserPermMap[k2]) {
-        grantedPerms = orgUserPermMap[k2];
-    }
+    [k1, k2].forEach((k) => {
+        log.debug(`checking permissions for ${k} -- `, grantedRoles);
+        if (orgUserRoleMap[k]) {
+            grantedRoles = [...grantedRoles, ...orgUserRoleMap[k]];
+            log.debug(`added permissions for ${k} -- `, grantedRoles);
+        }
+    });
+
+    //expand list of roles to actual perms.
+    grantedRoles.forEach((role) => {
+        grantedPerms = { ...grantedPerms, ...permsByRoleMap[role] };
+    });
 
     grantedPerms.Anonymous = "value ignored";
     const granted = Object.keys(grantedPerms);

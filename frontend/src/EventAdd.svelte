@@ -2,12 +2,13 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { raceConfig, setCacheKey } from "./stores.js";
+    import { raceConfig, setCacheKey, statusMessage } from "./stores.js";
     import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     const { v4: uuidv4 } = require("uuid");
+    import { db } from "./eventDb.js";
     import axios from "axios";
 
     export let params = {};
@@ -17,6 +18,12 @@
     var submitDisabled = true;
     var submitSpinning = false;
 
+    function isUpdateMode() {
+        return params.mode === "Update";
+    }
+    function stringIsTrue(stringValue) {
+        return stringValue.toLowerCase() == "true" ? true : false;
+    }
     async function handleSubmit() {
         syncAddButton();
 
@@ -24,17 +31,28 @@
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
         const orgU = uuidv4().substring(0, 5);
-        const orgIz = params.orgIz;
+        const orgIz = isUpdateMode() ? $raceConfig.orgIz : params.orgIz;
         if (!orgIz) {
             log.debug("Cannot add w/o org");
             return;
         }
+        var orgId = "";
+        var postPath = "";
+        if (isUpdateMode()) {
+            orgId = $raceConfig.orgId;
+            postPath = "/updateEventConfig";
+        } else {
+            orgId = orgIz + "." + orgU;
+            postPath = "/addEventConfig";
+        }
         const req = {
-            orgId: orgIz + "." + orgU,
+            orgId: orgId,
             orgIz: orgIz,
+            mode: params.mode,
             lcl1: String(orgForm.lcl1),
             pendingRule: orgForm.pending1Race ? "1Race" : "1Pair",
             name: orgForm.name,
+            paUri: orgForm.paUri,
         };
 
         submitSpinning = true;
@@ -44,11 +62,19 @@
         axios.defaults.headers.common["Authorization"] = bearer;
 
         axios
-            .post($raceConfig.baseUrl + "/addEventConfig", req)
+            .post($raceConfig.baseUrl + postPath, req)
             .then((response) => {
                 log.debug("addEventConfig axios success");
-                setCacheKey(new Date().getTime()); // force disable cache to expose new event on local browser.
-                pop();
+                $statusMessage = {
+                    text: `Event [${params.mode}] Complete.`,
+                    type: "success",
+                };
+                if (params.mode === "Add") {
+                    setCacheKey(new Date().getTime()); // force disable cache to expose new event on local browser.
+                    pop();
+                } else {
+                    replace("/");
+                }
             })
             .catch((err) => {
                 submitSpinning = false;
@@ -66,10 +92,38 @@
     };
     orgForm = getDefaultOrgForm();
     onMount(async () => {
+        log.debug(`EventAdd mode: ${params.mode}`);
+        log.debug(`EventAdd orgIz: ${params.orgIz}`);
+        await refreshDataFromDb();
         mounted = true;
     });
+    async function refreshDataFromDb(trigger) {
+        if (params.mode !== "Update") return;
 
-    const syncAddButton = () => {
+        const eventKey = $raceConfig.orgIz + ":" + $raceConfig.orgId;
+        log.debug("eventAdd: refreshDataFromDb key:", eventKey);
+
+        const eventFromDexie = await db.EventConfig.get(eventKey);
+
+        log.debug("eventAdd: refreshDataFromDb gave:", eventFromDexie);
+
+        updateBoundVars(eventFromDexie);
+    }
+
+    const updateBoundVars = async (eventFromDexie) => {
+        Object.assign(orgForm, eventFromDexie);
+        log.debug("EventAdd: updateBoundVars gave:", orgForm);
+        orgForm.name = eventFromDexie.name;
+        orgForm.lcl1 = stringIsTrue(eventFromDexie.lcl1);
+        orgForm.pending1Race =
+            eventFromDexie.pendingRule === "1Race" ? true : false;
+        orgForm.paUri = eventFromDexie.paUri;
+    };
+    function syncAddButton() {
+        if (isUpdateMode()) {
+            submitDisabled = false;
+            return; //bypass update disabled logic.
+        }
         if (!mounted) {
             return;
         }
@@ -79,10 +133,10 @@
         } else {
             submitDisabled = true;
         }
-    };
+    }
 </script>
 
-<h3>Add Event</h3>
+<h3>{params.mode} Event</h3>
 
 <form>
 
@@ -96,6 +150,17 @@
             on:keyup={() => {
                 syncAddButton();
             }} />
+    </label>
+    <label>
+        PA Channel:
+        <input
+            type="text"
+            bind:value={orgForm.paUri}
+            placeholder="Zello Channel"
+            on:keyup={() => {
+                syncAddButton();
+            }} />
+
     </label>
     <label>
         LowCarLane1:
@@ -116,6 +181,6 @@
         disabled={submitDisabled}
         on:click={handleSubmit}
         spinning={submitSpinning}>
-        Add
+        {params.mode}
     </SpinnerButton>
 </form>

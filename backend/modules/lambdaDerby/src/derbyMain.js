@@ -7,7 +7,6 @@ const path = require("path");
 const log = require("loglevel");
 
 const EntityFactory = require("./shared/EntityFactory.js");
-const { permissionMap } = require("./shared/permissionLits.js");
 const { hasServerRoutePath } = require("./shared/PermissionLookup.js");
 const AWS = require("aws-sdk");
 const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
@@ -20,7 +19,6 @@ const DdbUtils = require("./DdbUtils");
 const ArchiveUtils = require("./ArchiveUtils");
 const AnnounceResults = require("./AnnounceResults");
 const ApiRaceStanding = require("./ApiRaceStanding");
-const configMap = {};
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
 const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
@@ -84,19 +82,6 @@ const attachPrincipalPolicy = async (policyName, principal) => {
     }
 };
 
-const getConfig = async (eventKey) => {
-    if (configMap[eventKey]) {
-        return configMap[eventKey];
-    }
-
-    var eConfig = await ddbUtils.ddbQueryEventConfig(eventKey);
-    if (eConfig[eventKey]) {
-        configMap[eventKey] = eConfig[eventKey];
-        return eConfig[eventKey];
-    }
-
-    return undefined;
-};
 const getTtl = async (config) => {
     if (config) {
         return config.TTL;
@@ -116,7 +101,7 @@ var entityFactory;
 
 const addPending2 = async (event) => {
     const eventKey = getEventKey(event);
-    const cfg = await getConfig(eventKey);
+    const cfg = await ddbUtils.getEventConfig(eventKey);
     if (!cfg) {
         return {
             status: "error",
@@ -714,28 +699,46 @@ const registerEventWithTimer = async (timerConfigJson) => {
 
     await ddbUtils.ddbPut(timerTableTc, process.env.TimerDbTable);
 };
-const addEventConfig = async (json, priorTtl) => {
+const updateEventConfig = async (json) => {
+    log.debug("updateEventConfig: stub: " + JSON.stringify(json));
+    json.PK = "EventConfig"; // force EventConfig
+    const eventConfig = await ddbUtils.getEventConfig(json.orgId); // should resolve from cache, no IO wait.
+    eventConfig.paUri = json.paUri;
+    eventConfig.pendingRule = json.pendingRule;
+    eventConfig.lcl1 = json.lcl1;
+    eventConfig.name = json.name;
+
+    ddbUtils.flushEventCache(); //TODO: flush event cache in other instances of lambda...
+    return await ddbUtils.addSingle(eventConfig);
+};
+const addEventConfig = async (event) => {
+    const json = JSON.parse(event.body);
+
     log.debug("addEventConfig: " + JSON.stringify(json));
-    if (!json.orgIz) {
-        return { error: "Missing orgIz" };
-    }
-    if (!json.orgId) {
-        return { error: "Missing orgId" };
-    }
 
     const orgConfig = await ddbUtils.ddbQueryPkSk(`OrgConfig`, json.orgIz);
 
     json.PK = "EventConfig"; // force
     json.SK = json.orgIz + ":" + json.orgId; // force
 
+    if (!json.paUri) {
+        json.paUri = orgConfig.paUri;
+    } else {
+        log.debug("addEventConfig: using api paUri: ");
+    }
+
+    log.debug(
+        "addEventConfig: paUri: " +
+            JSON.stringify(json) +
+            ` orgConfig: ${JSON.stringify(orgConfig)} `
+    );
     // use prior ttl if found (API cannot change ttl of in progress event!)
     if (!orgConfig.defaultTTL) {
         orgConfig.defaultTTL = 3600 * 24 * 1;
     }
 
-    const newTtl = priorTtl
-        ? priorTtl
-        : Math.round(new Date().getTime() / 1000) + orgConfig.defaultTTL;
+    const nowEpochSeconds = Math.round(new Date().getTime() / 1000);
+    const newTtl = nowEpochSeconds + orgConfig.defaultTTL;
 
     json.TTL = newTtl;
 
@@ -784,6 +787,20 @@ const getEventKey = (event) => {
     return getOrgIz(event) + ":" + getOrgId(event);
 };
 const routeMap = {
+    "/addEventConfig": {
+        allowFrozen: true, // not really allowing frozen, but skip edit.  race not yet existent.
+        allowMissingTtl: true,
+        h: async (event) => {
+            return buildResponse(await addEventConfig(event));
+        },
+    },
+    "/updateEventConfig": {
+        h: async (event) => {
+            return buildResponse(
+                await updateEventConfig(JSON.parse(event.body))
+            );
+        },
+    },
     "/getActiveTimers": {
         allowFrozen: true,
         h: async (event) => {
@@ -1103,12 +1120,19 @@ async function apiGatewayHandler(event) {
         log.debug("listOrgConfig :", qr);
         return buildResponse(qr, "max-age=1807");
     }
+    if (routePath === "/getAwsConfig") {
+        const aYear = 3600 * 24 * 360; // client will change cacheBuster key if environment changes
+        return buildResponse(
+            JSON.parse(process.env.AwsCognitoSettingsJson),
+            `max-age=${aYear}`
+        );
+    }
 
     const decodedJwt = jwt.decode(event.headers.Authorization);
     const eventKey = getEventKey(event);
     const orgId = getOrgId(event);
     const orgIz = getOrgIz(event);
-    const config = await getConfig(eventKey);
+    const config = await ddbUtils.getEventConfig(eventKey, event.headers);
     const defaultTTL = await getTtl(config);
 
     const by = decodedJwt["cognito:username"]
@@ -1120,7 +1144,7 @@ async function apiGatewayHandler(event) {
         TTL: defaultTTL,
     });
     ddbUtils.setEntityFactory(entityFactory);
-    log.debug("Begin event", event);
+    log.debug("Begin event", event, " with config: ", config);
 
     const email = decodedJwt.email;
     if (email && hasServerRoutePath(orgIz, email, routePath)) {
@@ -1137,16 +1161,12 @@ async function apiGatewayHandler(event) {
     } else if (!orgIz) {
         const qr = { error: "Unable to determine orgIz" };
         return buildResponse(qr);
-    } else if (routePath === "/addEventConfig") {
-        //var [qr, cacheMaxSeconds] = await ddbQueryRaceHistory(event.queryStringParameters);
-        const jsonRC = await addEventConfig(JSON.parse(event.body), defaultTTL);
-        return buildResponse(jsonRC);
     }
     //else if (routePath === "/addOrgConfig") {
     //	const jsonRC = await addOrgConfig(JSON.parse(event.body) );
     //	return buildResponse(jsonRC);
     //}
-    else if (!defaultTTL) {
+    else if (!routeMap[routePath].allowMissingTtl && !defaultTTL) {
         const qr = { error: "Unable to determine default TTL" };
         return buildResponse(qr);
     } else if (routeMap[routePath] && routeMap[routePath].h) {
@@ -1155,6 +1175,7 @@ async function apiGatewayHandler(event) {
             " object:",
             routeMap[routePath]
         );
+
         if (!routeMap[routePath].allowFrozen && frozenOrArchived(config)) {
             return buildResponse({
                 error: "Can't edit a frozen/archived race",
@@ -1165,7 +1186,6 @@ async function apiGatewayHandler(event) {
         log.debug("routeMap handling: " + phandler);
 
         return await phandler(event);
-        log.debug("routeMap handled: " + routePath);
     }
 
     log.debug("Unhandled Path: " + routePath + " ep: " + event.path);
