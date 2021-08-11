@@ -37,7 +37,6 @@
     import Login from "./Login.svelte";
     import HotLoad from "./HotLoad.svelte";
     import ElectronTimerRelay from "./ElectronTimerRelay.svelte";
-    //import CognitoAuth from "./CognitoAuth.svelte";
     import {
         raceConfig,
         theme,

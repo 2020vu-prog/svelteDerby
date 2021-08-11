@@ -85,7 +85,9 @@ class ApiRaceStanding {
         rsFound.tags = newTags;
         if (calledNumbers.length > 0) {
             await this.snsFanoutRaceStatus(calledNumbers);
-            await this.announceResults.formatAndSubmitCallToRace(rsFound);
+            // august2021 announcements too frequent/distracting (cjw)
+            // august2021 announcements need more attention getting (mm)
+            //await this.announceResults.formatAndSubmitCallToRace(rsFound);
         }
 
         const rc = await this.ddbUtils.addSingle(rsFound);

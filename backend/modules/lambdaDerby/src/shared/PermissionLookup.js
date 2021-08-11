@@ -3,7 +3,8 @@
 const log = require("loglevel");
 const { permissionMap2 } = require("./permissionLits.js");
 const powerPerms = { ...permissionMap2 };
-const starterPerms = { CanAddBlocks: true };
+const starterLimitedPerms = { CanAddBlocks: true };
+const starterPerms = { CanAddBlocks: true, CanDeleteBlocks: true };
 const registrationPerms = {
     CanAddBlocks: true,
     CanAddChart: true,
@@ -16,6 +17,7 @@ const registrationPerms = {
 const permsByRoleMap = {
     power: powerPerms, // john harmon, Akron Local org
     starter: starterPerms,
+    starterLimited: starterLimitedPerms,
     registration: registrationPerms,
 };
 const orgUserRoleMap = {
@@ -27,7 +29,16 @@ const orgUserRoleMap = {
     ":REDACTED_PERMISSION_EMAIL": ["power"],
     ":REDACTED_PERMISSION_EMAIL": ["power"],
     ":REDACTED_PERMISSION_EMAIL": ["power"],
+    ":REDACTED_PERMISSION_EMAIL": ["starterLimited"],
     ":REDACTED_PERMISSION_EMAIL": ["starter"],
+
+    "ndr:REDACTED_PERMISSION_EMAIL": ["starter"], //Savanah Fitzgerald
+    "ndr:REDACTED_PERMISSION_EMAIL": ["registration"],
+    "ndr:REDACTED_PERMISSION_EMAIL": ["registration"],
+
+    "test:REDACTED_PERMISSION_EMAIL": ["power"], // Matt M
+    "test:REDACTED_PERMISSION_EMAIL": ["starter"], // Matt M
+    "test:REDACTED_PERMISSION_EMAIL": ["registration"], // Matt M
 
     "test:REDACTED_PERMISSION_EMAIL": ["registration"],
     "chi:REDACTED_PERMISSION_EMAIL": ["registration"],

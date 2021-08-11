@@ -304,7 +304,7 @@
             disabled={submitDisabled}
             on:click={handleSubmit}
             spinning={submitSpinning}>
-            Add
+            Update
         </SpinnerButton>
     {/if}
 
