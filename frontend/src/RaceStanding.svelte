@@ -152,16 +152,19 @@
                 </li>
             </ul>
             {#if isHistory()}User: {standing.by}{/if}
-            {#if showToolbar}
-                <CardFooter class="bg-info text-white">
-
-                    <ComponentToolbar
-                        dbName="RaceStanding"
-                        dbKey={standing.classKey}
-                        bracketLink={getBracketLink(standing)}
-                        cn={standing.carNumbers} />
-                </CardFooter>
-            {/if}
         </CardBody>
+        {#if showToolbar}
+            <CardFooter
+                style="padding: 5px 1px !important"
+                class="bg-info text-white">
+
+                <ComponentToolbar
+                    dbName="RaceStanding"
+                    dbKey={standing.classKey}
+                    bracketLink={getBracketLink(standing)}
+                    cn={standing.carNumbers} />
+            </CardFooter>
+        {/if}
+
     </Card>
 {/if}

@@ -212,17 +212,22 @@
                     </li>
 
                 </ul>
-                {#if isHistory()}User: {rp.by}{/if}
-                {#if showToolbar}
-                    <CardFooter class="bg-info text-white">
-                        <ComponentToolbar
-                            dbName="RacePhase"
-                            dbKey={phaseKey}
-                            timerLink={getTimerLink(rp)}
-                            bracketLink={getBracketLink(rp)} />
-                    </CardFooter>
+                {#if isHistory()}
+                    <span style="color: white">User: {rp.by}</span>
                 {/if}
+
             </CardBody>
+            {#if showToolbar}
+                <CardFooter
+                    style="padding: 5px 1px !important"
+                    class="bg-info text-white">
+                    <ComponentToolbar
+                        dbName="RacePhase"
+                        dbKey={phaseKey}
+                        timerLink={getTimerLink(rp)}
+                        bracketLink={getBracketLink(rp)} />
+                </CardFooter>
+            {/if}
         </Card>
     {:else}
         <Card

@@ -182,6 +182,8 @@
         background-color: #333;
         overflow: hidden;
         width: 100%;
+        justify-content: space-evenly;
+        padding: 1px;
     }
 
     /* Style the links inside the navigation bar */
@@ -190,10 +192,11 @@
         display: block;
         color: #f2f2f2;
         text-align: center;
-        padding: 14px 16px;
+        padding: 3.5px 4px;
         text-decoration: none;
-        font-size: 12px;
-        width: min-content;
+        font-size: 20px;
+        font-weight: bold;
+        flex: 1;
         border: 3px solid black;
     }
 </style>
