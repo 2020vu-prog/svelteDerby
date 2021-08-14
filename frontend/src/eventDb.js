@@ -15,6 +15,18 @@ db.version(12).stores({
     TimerConfig: "SK",
     Foo: `SK`,
 });
+db.version(13).stores({
+    EventConfig: `SK`,
+    RaceStanding: `SK`,
+    RacePhase: `SK`,
+    Participant: `SK`,
+    BracketMetaData: `SK`,
+    BracketPos: `SK`,
+    EventHistory: `[PK+SK+at]`,
+    TimerConfig: "SK",
+    OrgRoles: "SK", //Not managed by HotLoad
+    Foo: `SK`,
+});
 
 //export dbTools ;
 export async function dbReset() {
@@ -26,6 +38,10 @@ const localConfigDb = new Dexie("localConfigDb");
 
 localConfigDb.version(6).stores({
     LocalConfig: `KEY`,
+});
+localConfigDb.version(7).stores({
+    LocalConfig: `KEY`,
+    OrgRoles: `OrgIz`,
 });
 
 export { db, localConfigDb };

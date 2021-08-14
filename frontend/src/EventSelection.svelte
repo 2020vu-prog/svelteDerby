@@ -18,7 +18,9 @@
     import { Auth } from "aws-amplify";
     import axios from "axios";
     import { push, pop, replace } from "svelte-spa-router";
-    import { db, dbReset } from "./eventDb.js";
+    import { dbReset } from "./eventDb.js";
+
+    import { refreshOrgRoles } from "./utils.js";
 
     export let params = {};
 
@@ -62,25 +64,9 @@
             });
     };
 
-    async function refreshOrgRoles() {
-        log.debug("refreshOrgRoles:");
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
-
-        axios.defaults.headers.common["Authorization"] = bearer;
-        axios
-            .get($raceConfig.baseUrl + `/getOrgRoles?orgIz=${params.orgIz}`)
-            .then((response) => {
-                log.debug("refreshOrgRoles:", response.data);
-            })
-            .catch((err) => {
-                log.debug(err);
-            });
-    }
-
     onMount(async () => {
         await refreshOrgMap();
-        await refreshOrgRoles();
+        await refreshOrgRoles(params.orgIz);
     });
     const requestClearStore = () => {
         $doRefreshBlocks = -1;

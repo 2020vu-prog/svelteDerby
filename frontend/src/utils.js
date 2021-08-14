@@ -9,9 +9,13 @@ import {
     userEmail,
     statusMessage,
     raceConfig as raceConfigStore,
+    roleList as roleListStore,
 } from "./stores.js";
 import { logout } from "./stores/auth.js";
-import { get } from "svelte/store";
+import { get, set } from "svelte/store";
+import { localConfigDb } from "./eventDb.js";
+
+const axios = require("axios");
 
 const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -147,4 +151,27 @@ export function getMainFull(qsList = []) {
 }
 export function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function refreshOrgRoles(orgIz) {
+    log.debug("refreshOrgRoles:");
+    const raceConfig = get(raceConfigStore);
+    const currentSession = await Auth.currentSession();
+    const bearer = currentSession.idToken.jwtToken;
+
+    axios.defaults.headers.common["Authorization"] = bearer;
+    axios
+        .get(raceConfig.baseUrl + `/getOrgRoles?orgIz=${orgIz}`)
+        .then(async (response) => {
+            log.debug("refreshOrgRoles:", response.data);
+            await localConfigDb["OrgRoles"].put({
+                OrgIz: orgIz,
+                roles: response.data,
+            });
+            //FIXME: FIX LINE 172
+            set(roleListStore, response.data);
+        })
+        .catch((err) => {
+            log.debug(err);
+        });
 }

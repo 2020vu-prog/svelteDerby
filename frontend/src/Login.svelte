@@ -9,9 +9,10 @@
         loginFormState,
         logout,
     } from "./stores/auth.js";
-    import { userEmail } from "./stores.js";
+    import { userEmail, raceConfig, roleList } from "./stores.js";
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
-    import { getUserEmail } from "./utils.js";
+    import { getUserEmail, refreshOrgRoles } from "./utils.js";
+    import { localConfigDb } from "./eventDb.js";
 
     let mode = localStorage.getItem("svelteLoginMode") || "signup";
     let isSigningIn = mode === "signin";
@@ -39,11 +40,20 @@
         log.debug("storeUserEmail begin");
         $userEmail = await getUserEmail();
         log.debug("storeUserEmail done", $userEmail);
+
+        await localConfigDb["OrgRoles"].clear();
+        if ($raceConfig.orgIz) {
+            refreshOrgRoles($raceConfig.orgIz);
+        }
     }
     function doLogOut() {
         localStorage.clear(); //clears everything in localStorage
         logout();
         $userEmail = "";
+        localConfigDb["OrgRoles"].clear();
+    }
+    $: {
+        console.log("RoleList changed: ", $roleList);
     }
 </script>
 

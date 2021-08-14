@@ -26,6 +26,7 @@ function parseBool(val) {
 }
 
 export const userEmail = writable("");
+export const roleList = writable([]);
 
 export const theme = writable("#4CAF50");
 export const statusMessage = writable({});
