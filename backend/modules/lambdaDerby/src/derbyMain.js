@@ -7,7 +7,10 @@ const path = require("path");
 const log = require("loglevel");
 
 const EntityFactory = require("./shared/EntityFactory.js");
-const { hasServerRoutePath } = require("./shared/PermissionLookup.js");
+const {
+    hasServerRoutePath,
+    getLegacyRoles,
+} = require("./shared/PermissionLookup.js");
 const AWS = require("aws-sdk");
 const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
@@ -786,7 +789,18 @@ const getOrgIz = (event) => {
 const getEventKey = (event) => {
     return getOrgIz(event) + ":" + getOrgId(event);
 };
+async function getOrgRoles(json, roleList) {
+    return roleList;
+}
 const routeMap = {
+    "/getOrgRoles": {
+        allowFrozen: true,
+        allowMissingTtl: true,
+        allowMissingOrgId: true,
+        h: async (event) => {
+            return buildResponse(await getOrgRoles(event));
+        },
+    },
     "/addEventConfig": {
         allowFrozen: true, // not really allowing frozen, but skip edit.  race not yet existent.
         allowMissingTtl: true,
@@ -1147,29 +1161,31 @@ async function apiGatewayHandler(event) {
     log.debug("Begin event", event, " with config: ", config);
 
     const email = decodedJwt.email;
-    if (email && hasServerRoutePath(orgIz, email, routePath)) {
+
+    const roleList = await getUserRoles(orgIz, email);
+    if (email && hasServerRoutePath(orgIz, roleList, routePath)) {
         log.debug(`allowing access to ${routePath} for [${email}]`);
     } else {
         log.debug(`prohibiting access to ${routePath} for [${email}]`);
         return buildResponse({ error: "unauthorized", statusCode: 401 });
     }
 
-    if (false) {
-    } else if (!orgId) {
+    if (!orgId && !routeMap[routePath].allowMissingOrgId) {
         const qr = { error: "Unable to determine orgId" };
         return buildResponse(qr);
-    } else if (!orgIz) {
+    }
+
+    if (!orgIz && !routeMap[routePath].allowMissingOrgIz) {
         const qr = { error: "Unable to determine orgIz" };
         return buildResponse(qr);
     }
-    //else if (routePath === "/addOrgConfig") {
-    //	const jsonRC = await addOrgConfig(JSON.parse(event.body) );
-    //	return buildResponse(jsonRC);
-    //}
-    else if (!routeMap[routePath].allowMissingTtl && !defaultTTL) {
+
+    if (!routeMap[routePath].allowMissingTtl && !defaultTTL) {
         const qr = { error: "Unable to determine default TTL" };
         return buildResponse(qr);
-    } else if (routeMap[routePath] && routeMap[routePath].h) {
+    }
+
+    if (routeMap[routePath] && routeMap[routePath].h) {
         log.debug(
             "ph routeMap handling: " + routePath,
             " object:",
@@ -1185,7 +1201,7 @@ async function apiGatewayHandler(event) {
         const phandler = routeMap[routePath].h;
         log.debug("routeMap handling: " + phandler);
 
-        return await phandler(event);
+        return await phandler(event, roleList);
     }
 
     log.debug("Unhandled Path: " + routePath + " ep: " + event.path);
@@ -1193,6 +1209,16 @@ async function apiGatewayHandler(event) {
         status: "unhandled",
         error: "Unhandled",
     });
+}
+async function getUserRoles(orgIz, email) {
+    const roleList = getLegacyRoles(orgIz, email);
+    const rolesByUser = await ddbUtils.ddbQueryOrgPerms({ orgIz: orgIz });
+    log.debug("rolesByUser event", rolesByUser);
+
+    if (rolesByUser && rolesByUser[email]) {
+        roleList = [...roleList, ...rolesByUser[email]];
+    }
+    return roleList;
 }
 exports.handler = async function (event) {
     log.debug("Received event:", JSON.stringify(event, null, 4));

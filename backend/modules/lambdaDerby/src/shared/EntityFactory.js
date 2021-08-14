@@ -1,5 +1,6 @@
 const log = require("loglevel");
 const entityFactories = {};
+const OrgPermEid = ":OrgPerm";
 const RacePhaseEid = ":RP";
 const RaceStandingEid = ":RS";
 const ParticipantEid = ":PTCP";
@@ -96,6 +97,32 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
         }
 
         return rc;
+    }
+};
+
+const OrgPermLit = "OrgPerm";
+entityFactories[OrgPermLit] = class OrgPerm extends EntityBase {
+    static members = [
+        "roleList", // e.g. zello:channelName
+    ];
+    static canBuild(json) {
+        return json.PK && json.PK.endsWith(OrgPermEid) && json.SK;
+    }
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK = this.orgIz + OrgPermEid;
+
+        this.SK = this.email;
+    }
+    get classType() {
+        return OrgPermLit;
+    }
+    get classKey() {
+        return this.SK;
     }
 };
 

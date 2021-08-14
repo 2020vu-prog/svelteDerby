@@ -335,6 +335,29 @@ class DdbUtils {
         }
         return { error: "Query Failed" };
     }
+    async ddbQueryOrgPerms(json) {
+        const containsValues = {};
+        const keyCondition = this.buildKeyCondition(
+            json.orgIz + ":OrgPerm",
+            containsValues
+        );
+        //containsValues[":sk"] = { S: json.SK };
+        var params = {
+            TableName: process.env.DynamoDbTable,
+            KeyConditionExpression: keyCondition,
+            ReturnConsumedCapacity: "TOTAL",
+            ExpressionAttributeValues: containsValues,
+        };
+        log.debug("ddbQueryOrgPerms query : " + JSON.stringify(params));
+        try {
+            var data = await this.ddbClient.query(params);
+            log.debug("ddbQueryOrgPerms: ", data); // successful response
+            return this.unmarshallResultsToObject(data, "SK");
+        } catch (err) {
+            log.debug("ddbQueryOrgPerms failed: ", err, err.stack); // an error occurred
+        }
+        return { error: "Query OrgPerms Failed" };
+    }
     async ddbQueryOrgConfig() {
         var containsValues = {};
         containsValues[":pk"] = { S: "OrgConfig" };

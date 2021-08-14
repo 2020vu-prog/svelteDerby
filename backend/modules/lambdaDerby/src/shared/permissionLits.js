@@ -76,6 +76,11 @@ addPermission(
 );
 addPermission(
     "Anonymous",
-    ["/getRaceHistory", "/requestMqttSubPermission", "/listMediaPrefix"],
+    [
+        "/getRaceHistory",
+        "/requestMqttSubPermission",
+        "/listMediaPrefix",
+        "/getOrgRoles",
+    ],
     ["/drivers", "/RpList", "/RsList/History", "/RsList/Pending", "/chartList"]
 );

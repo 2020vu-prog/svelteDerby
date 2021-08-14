@@ -47,49 +47,59 @@ const orgUserRoleMap = {
     "test:REDACTED_PERMISSION_EMAIL": ["registration"],
     "chi:REDACTED_PERMISSION_EMAIL": ["registration"],
 };
-function hasRoutePath(routeType, orgIz, userMail, serverRoutePath) {
-    const permKeys = lookupUserPermissions(orgIz, userMail);
-    log.debug("permKeys:", permKeys);
+function roleHasRoutePath(routeType, orgIz, roleList, routePath) {
+    log.debug("TODO: routepath:");
+    const permKeys = getRolePermissions(roleList);
+    return isRoutePathInPermissionList(routeType, permKeys, routePath);
+}
+function hasRoutePath(routeType, orgIz, userMail, routePath) {
+    const grantedRoles = getLegacyRoles(orgIz, userMail);
+    const permKeys = getRolePermissions(grantedRoles);
+    return isRoutePathInPermissionList(routeType, permKeys, routePath);
+}
+function isRoutePathInPermissionList(routeType, permList, routePath) {
+    log.debug("permList:", permList);
     var rc = false;
-    permKeys.forEach((permKey) => {
+    permList.forEach((permKey) => {
         const p2 = permissionMap2[permKey];
-        if (p2 && p2.routeMatches(routeType, serverRoutePath)) {
+        if (p2 && p2.routeMatches(routeType, routePath)) {
             rc = true;
         }
     });
-    log.debug(`permissions for ${userMail}  ${serverRoutePath} -- `, rc);
+    log.debug(`permissions for  ${routePath} -- `, rc);
     return rc;
 }
-function lookupUserPermissions(orgIz, userMail) {
+function getLegacyRoles(orgIz, userMail) {
     //log.debug("pmap2:", Object.keys(permissionMap2));
-    var grantedPerms = {};
     var grantedRoles = [];
 
     const k1 = `${orgIz}:${userMail}`.toLowerCase();
     const k2 = `:${userMail}`.toLowerCase(); // sysadmin?
-
     [k1, k2].forEach((k) => {
-        log.debug(`checking permissions for ${k} -- `, grantedRoles);
+        log.debug(`getLegacychecking permissions for ${k} -- `, grantedRoles);
         if (orgUserRoleMap[k]) {
             grantedRoles = [...grantedRoles, ...orgUserRoleMap[k]];
-            log.debug(`added permissions for ${k} -- `, grantedRoles);
         }
     });
-
+    return grantedRoles;
+}
+function getRolePermissions(roleList) {
     //expand list of roles to actual perms.
-    grantedRoles.forEach((role) => {
+    var grantedPerms = {};
+    roleList.forEach((role) => {
         grantedPerms = { ...grantedPerms, ...permsByRoleMap[role] };
     });
 
     grantedPerms.Anonymous = "value ignored";
     const granted = Object.keys(grantedPerms);
-    log.debug(`granting permissions for ${userMail} -- `, granted);
-    return granted;
+    log.debug(`permissions for ${roleList} -- `, granted);
+    return granted; // list of perms
 }
 
 module.exports.hasSvelteRoutePath = (orgIz, userMail, svelteRoutePath) => {
     return hasRoutePath("svelte", orgIz, userMail, svelteRoutePath);
 };
-module.exports.hasServerRoutePath = (orgIz, userMail, serverRoutePath) => {
-    return hasRoutePath("server", orgIz, userMail, serverRoutePath);
+module.exports.hasServerRoutePath = (orgIz, roleList, serverRoutePath) => {
+    return roleHasRoutePath("server", orgIz, roleList, serverRoutePath);
 };
+module.exports.getLegacyRoles = getLegacyRoles;
