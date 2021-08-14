@@ -62,8 +62,25 @@
             });
     };
 
+    async function refreshOrgRoles() {
+        log.debug("refreshOrgRoles:");
+        const currentSession = await Auth.currentSession();
+        const bearer = currentSession.idToken.jwtToken;
+
+        axios.defaults.headers.common["Authorization"] = bearer;
+        axios
+            .get($raceConfig.baseUrl + `/getOrgRoles?orgIz=${params.orgIz}`)
+            .then((response) => {
+                log.debug("refreshOrgRoles:", response.data);
+            })
+            .catch((err) => {
+                log.debug(err);
+            });
+    }
+
     onMount(async () => {
-        refreshOrgMap();
+        await refreshOrgMap();
+        await refreshOrgRoles();
     });
     const requestClearStore = () => {
         $doRefreshBlocks = -1;

@@ -797,8 +797,8 @@ const routeMap = {
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
-        h: async (event) => {
-            return buildResponse(await getOrgRoles(event));
+        h: async (event, roleList) => {
+            return buildResponse(await getOrgRoles(event, roleList));
         },
     },
     "/addEventConfig": {
