@@ -10,9 +10,10 @@ import {
     statusMessage,
     raceConfig as raceConfigStore,
     roleList as roleListStore,
+    roleList,
 } from "./stores.js";
 import { logout } from "./stores/auth.js";
-import { get, set } from "svelte/store";
+import { get } from "svelte/store";
 import { localConfigDb } from "./eventDb.js";
 
 const axios = require("axios");
@@ -159,6 +160,7 @@ export async function refreshOrgRoles(orgIz) {
     const currentSession = await Auth.currentSession();
     const bearer = currentSession.idToken.jwtToken;
 
+    console.log("RLIST:", roleListStore);
     axios.defaults.headers.common["Authorization"] = bearer;
     axios
         .get(raceConfig.baseUrl + `/getOrgRoles?orgIz=${orgIz}`)
@@ -168,8 +170,7 @@ export async function refreshOrgRoles(orgIz) {
                 OrgIz: orgIz,
                 roles: response.data,
             });
-            //FIXME: FIX LINE 172
-            set(roleListStore, response.data);
+            roleListStore.set(response.data);
         })
         .catch((err) => {
             log.debug(err);

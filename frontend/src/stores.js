@@ -8,25 +8,17 @@ const semver = require("semver");
 
 var bearer = "";
 
+import { persistable } from "./storedb.js";
 import { writable, readable, get as getStore } from "svelte/store";
 import { storeAuth } from "./stores/auth.js";
 import { buildVersion } from "./utils.js";
-/*
-function persistWritable(key, dflt) {
-    const initial = localStorage.getItem(key);
-    const ival = initial === null ? dflt : initial;
-    const rc = writable(ival);
-    rc.subscribe((val) => localStorage.setItem(key, val));
-    return rc;
-}
-*/
 
 function parseBool(val) {
     return val === true || val === "true";
 }
 
 export const userEmail = writable("");
-export const roleList = writable([]);
+export const roleList = persistable("roleList", []);
 
 export const theme = writable("#4CAF50");
 export const statusMessage = writable({});

@@ -45,3 +45,14 @@ localConfigDb.version(7).stores({
 });
 
 export { db, localConfigDb };
+
+export function putUserPreference(key, value) {
+    localConfigDb["LocalConfig"].put({
+        KEY: key,
+        value: value,
+    });
+}
+
+export function getUserPreference(key) {
+    return localConfigDb["LocalConfig"].get([key]);
+}
