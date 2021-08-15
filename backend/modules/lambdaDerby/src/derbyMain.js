@@ -1211,12 +1211,12 @@ async function apiGatewayHandler(event) {
     });
 }
 async function getUserRoles(orgIz, email) {
-    const roleList = getLegacyRoles(orgIz, email);
+    var roleList = getLegacyRoles(orgIz, email);
     const rolesByUser = await ddbUtils.ddbQueryOrgPerms({ orgIz: orgIz });
     log.debug("rolesByUser event", rolesByUser);
 
-    if (rolesByUser && rolesByUser[email]) {
-        roleList = [...roleList, ...rolesByUser[email]];
+    if (rolesByUser && rolesByUser[email] && rolesByUser[email].roleList) {
+        roleList = [...roleList, ...rolesByUser[email].roleList];
     }
     return roleList;
 }

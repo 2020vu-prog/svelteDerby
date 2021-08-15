@@ -10,7 +10,6 @@ import {
     statusMessage,
     raceConfig as raceConfigStore,
     roleList as roleListStore,
-    roleList,
 } from "./stores.js";
 import { logout } from "./stores/auth.js";
 import { get } from "svelte/store";
@@ -52,14 +51,20 @@ export function getBracketLink(RpRs) {
         return undefined; // No bracketLink for adhoc.
     }
 }
-
-export function isEmailAllowedRoutePath(email, routePath) {
-    const raceConfig = get(raceConfigStore);
-    return email && hasSvelteRoutePath(raceConfig.orgIz, email, routePath);
+export function isAllowedRoutePath(routePath) {
+    const roleList = get(roleListStore);
+    return roleList && hasSvelteRoutePath(null, roleList, routePath);
 }
+// deprecated
+export function isEmailAllowedRoutePath(email, routePath) {
+    //const raceConfig = get(raceConfigStore);
+    return email && isAllowedRoutePath(routePath);
+}
+// deprecated
 export async function isUserAllowedRoutePath(routePath) {
     const email = await getUserEmail();
-    return isEmailAllowedRoutePath(email, routePath);
+    return email && isAllowedRoutePath(routePath);
+    //return isEmailAllowedRoutePath(email, routePath);
 }
 export async function getUserEmail() {
     log.debug("getUserEmail");

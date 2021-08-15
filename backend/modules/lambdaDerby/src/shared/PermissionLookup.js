@@ -96,8 +96,8 @@ function getRolePermissions(roleList) {
     return granted; // list of perms
 }
 
-module.exports.hasSvelteRoutePath = (orgIz, userMail, svelteRoutePath) => {
-    return hasRoutePath("svelte", orgIz, userMail, svelteRoutePath);
+module.exports.hasSvelteRoutePath = (orgIz, roleList, svelteRoutePath) => {
+    return roleHasRoutePath("svelte", orgIz, roleList, svelteRoutePath);
 };
 module.exports.hasServerRoutePath = (orgIz, roleList, serverRoutePath) => {
     return roleHasRoutePath("server", orgIz, roleList, serverRoutePath);
