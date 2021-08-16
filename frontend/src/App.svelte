@@ -40,14 +40,9 @@
     import {
         raceConfig,
         theme,
-        autoAnnounceResults,
         userEmail,
-        developerMode,
+        roleList,
         developerLogging,
-        uiPageSize,
-        mqttEnabled,
-        pendingSortAlgorithm,
-        mediaFileType,
         statusMessage,
         beginAnonymousLogin,
     } from "./stores.js";
@@ -71,6 +66,9 @@
         }
     }
     */
+    $: {
+        console.log(`theme is ${$theme}`)
+    }
     const routes = {
         // Exact path
         "/": RaceStandingList,
@@ -115,7 +113,8 @@
     ];
     $: {
         if (isMounted) {
-            buildMenuMap($AuthStore);
+            // rebuild menuMap when roleList changes
+            buildMenuMap($AuthStore, $roleList);
         }
     }
     $: {
@@ -124,7 +123,6 @@
         } else {
             log.setLevel(log.levels.ERROR);
         }
-        //enableRoarr($developerLogging, "store");
     }
 
     async function buildMenuMap() {
@@ -197,40 +195,6 @@
             },
         ];
     }
-    async function reloadUserPrefs() {
-        const dexieTheme = await localConfigDb["LocalConfig"].get({
-            KEY: "theme",
-        });
-        if (dexieTheme && dexieTheme.bgColor) {
-            $theme = dexieTheme.bgColor;
-        }
-        const developerPrefs = await localConfigDb["LocalConfig"].get({
-            KEY: "developerPrefs",
-        });
-        log.debug(`reloaddeveloperPrefs:`, developerPrefs);
-
-        $developerMode = developerPrefs && developerPrefs.developerMode;
-
-        const userPrefs = await localConfigDb["LocalConfig"].get({
-            KEY: "userPrefs",
-        });
-        log.debug(`reloadUserPrefs:`, userPrefs);
-        $autoAnnounceResults = userPrefs && userPrefs.autoAnnounceResults;
-        if (userPrefs && userPrefs.pendingSortAlgorithm) {
-            $pendingSortAlgorithm = userPrefs && userPrefs.pendingSortAlgorithm;
-        }
-        if (userPrefs && userPrefs.mediaFileType) {
-            $mediaFileType = userPrefs.mediaFileType;
-        }
-        if (userPrefs && userPrefs.uiPageSize) {
-            $uiPageSize = userPrefs.uiPageSize;
-        }
-        if (userPrefs && userPrefs.mqttEnabled) {
-            $mqttEnabled = userPrefs.mqttEnabled;
-        }
-
-        //$userEmail = await getUserEmail();
-    }
     const reloadEvent = async (raceConfigParam) => {
         const start = new Date().getTime();
         const rpList = await db.RacePhase.toArray();
@@ -244,12 +208,10 @@
     };
     onMount(async () => {
         log.debug("mounted app");
-        await buildMenuMap();
         await logUserInIfNecessary();
         const cfg = await db.EventConfig.toArray();
         log.debug("config:", cfg);
 
-        await reloadUserPrefs();
         if (cfg.length) {
             await reloadEvent(cfg[0]);
             replace("/RpList");

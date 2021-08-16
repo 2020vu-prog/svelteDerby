@@ -16,11 +16,24 @@ import { buildVersion } from "./utils.js";
 function parseBool(val) {
     return val === true || val === "true";
 }
+/*
+const persistSetupMap = {
+    theme: "#4CAF50",
+    pendingSortAlgorithm: "Age",
+};
+const persistedStore = {};
+
+for (const key in persistSetupMap) {
+    persistedStore[key] = persistable(key, persistSetupMap[key]);
+}
+export const pendingSortAlgorithm = persistedStore["pendingSortAlgorithm"];
+export const theme = persistedStore["theme"];
+*/
 
 export const userEmail = writable("");
 export const roleList = persistable("roleList", []);
 
-export const theme = writable("#4CAF50");
+export const theme = persistable("pref:themeBg", "#4CAF50");
 export const statusMessage = writable({});
 export const clearOldStatusMessages = writable(false);
 export const prefStore = writable({ initial: 1, disableCache: 2 });
@@ -30,27 +43,28 @@ export const racePhaseMap = writable({});
 export const driverMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlockKey = writable("");
-export const showBottomNav = writable(true);
-export const developerMode = writable(false);
-//export const developerLogging = writable(false);
-//export const developerLogging = persistWritable("developerLogging", false);
-export const developerLogging = writable(
-    parseBool(localStorage.getItem("developerLogging"))
-);
-developerLogging.subscribe((val) => {
-    log.debug("tripped", val);
-    localStorage.setItem("developerLogging", val);
-});
+export const showBottomNav = persistable("pref:showBottomNav", true);
+export const developerMode = persistable("pref:developerMode", false);
+export const developerLogging = persistable("pref:developerLogging");
 
-export const pendingSortAlgorithm = writable("Age");
-export const mediaFileType = writable(getDefaultFileFormat());
-export const autoAnnounceResults = writable(false);
+export const pendingSortAlgorithm = persistable(
+    "pref:pendingSortAlgorithm",
+    "Age"
+);
+export const mediaFileType = persistable(
+    "pref:mediaFileType",
+    getDefaultFileFormat()
+);
+export const autoAnnounceResults = persistable(
+    "pref:autoAnnounceResults",
+    false
+);
 export const mqttTimerSubscribe = writable(false);
-export const mqttEnabled = writable(true);
+export const mqttEnabled = persistable("pref:mqttEnabled", true);
 export const mqttTriggerVideoCapture = writable(0);
 export const beginAnonymousLogin = writable(false);
 export const timerState = writable({});
-export const uiPageSize = writable(undefined);
+export const uiPageSize = persistable("pref:uiPageSize", undefined);
 //export const uiPageSize = writable(100);
 export const raceConfig = writable({
     orgName: "",

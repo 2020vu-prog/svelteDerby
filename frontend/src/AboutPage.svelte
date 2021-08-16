@@ -38,21 +38,6 @@
         refreshDataFromDb($doRefreshBlocks);
     }
 
-    $: {
-        const prefs = {
-            KEY: "developerPrefs",
-            developerMode: $developerMode,
-            changed: new Date().getTime(),
-            changedFmt: new Date().toLocaleTimeString(),
-        };
-        updatePrefsWhenMounted(prefs);
-    }
-    function updatePrefsWhenMounted(prefs) {
-        if (mounted) {
-            log.warn("About updating developerPrefs:", mounted, prefs);
-            localConfigDb["LocalConfig"].put(prefs);
-        }
-    }
     onMount(async () => {
         log.warn("mounting");
 

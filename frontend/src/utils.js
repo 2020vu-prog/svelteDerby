@@ -165,7 +165,6 @@ export async function refreshOrgRoles(orgIz) {
     const currentSession = await Auth.currentSession();
     const bearer = currentSession.idToken.jwtToken;
 
-    console.log("RLIST:", roleListStore);
     axios.defaults.headers.common["Authorization"] = bearer;
     axios
         .get(raceConfig.baseUrl + `/getOrgRoles?orgIz=${orgIz}`)

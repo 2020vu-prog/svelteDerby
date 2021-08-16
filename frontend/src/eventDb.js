@@ -47,6 +47,8 @@ localConfigDb.version(7).stores({
 export { db, localConfigDb };
 
 export function putUserPreference(key, value) {
+    return localStorage.setItem(key, JSON.stringify({ Value: value }));
+
     localConfigDb["LocalConfig"].put({
         KEY: key,
         value: value,
@@ -54,5 +56,12 @@ export function putUserPreference(key, value) {
 }
 
 export function getUserPreference(key) {
-    return localConfigDb["LocalConfig"].get([key]);
+    const val = localStorage.getItem(key);
+    //console.log(`type of ${key}:`, typeof val, " val: ", val);
+    if (val) {
+        const parsed = JSON.parse(val);
+        return parsed.Value;
+    }
+    return val;
+    //return localConfigDb["LocalConfig"].get([key]);
 }

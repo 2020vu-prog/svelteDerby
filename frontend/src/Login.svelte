@@ -47,13 +47,15 @@
         }
     }
     function doLogOut() {
-        localStorage.clear(); //clears everything in localStorage
+        Object.keys(localStorage).forEach((k) => {
+            if (!k.startsWith("pref:")) {
+                delete localStorage[k]
+            }
+        });
+        //localStorage.clear(); //clears everything in localStorage
         logout();
         $userEmail = "";
         localConfigDb["OrgRoles"].clear();
-    }
-    $: {
-        console.log("RoleList changed: ", $roleList);
     }
 </script>
 
@@ -129,15 +131,15 @@
         transition: 0.4s;
     }
 
-    input:checked + .slider {
+    input:checked+.slider {
         background-color: #2196f3;
     }
 
-    input:focus + .slider {
+    input:focus+.slider {
         box-shadow: 0 0 1px #2196f3;
     }
 
-    input:checked + .slider:before {
+    input:checked+.slider:before {
         -webkit-transform: translateX(26px);
         -ms-transform: translateX(26px);
         transform: translateX(26px);

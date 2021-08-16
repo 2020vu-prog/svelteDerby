@@ -4,14 +4,14 @@ export function persistable(key, defaultValue) {
     let currentValue = defaultValue;
     const { subscribe, set, update } = writable(defaultValue);
     try {
-        getUserPreference(key).then((persisted) => {
-            if (persisted && persisted.Value !== undefined) {
-                currentValue = persisted.Value;
-                set(persisted.Value);
-            }
-        });
+        const persisted = getUserPreference(key);
+
+        if (persisted !== null) {
+            currentValue = persisted;
+            set(persisted);
+        }
     } catch (error) {
-        console.warn(error);
+        console.warn("DB error:", key, " Msg: ", error);
     }
     function persistentSet(value) {
         currentValue = value;
