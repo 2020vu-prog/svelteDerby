@@ -83,12 +83,12 @@
                     .value;
                 log.debug(
                     "label of option: " +
-                    document.querySelectorAll("option")[index].value
+                        document.querySelectorAll("option")[index].value
                 );
                 log.debug("theme selector value: " + themeSelected);
                 log.debug(
                     "element to select: " +
-                    document.querySelectorAll("option")[index]
+                        document.querySelectorAll("option")[index]
                 );
                 return;
             }
@@ -172,7 +172,10 @@
 
     <div class="singularSettingDiv">
         <h4>Theme Color</h4>
-        <select id="themeSelector" bind:value={themeSelected} on:change={()=> updateTheme()}>
+        <select
+            id="themeSelector"
+            bind:value={themeSelected}
+            on:change={() => updateTheme()}>
             <option class="colorOption" value="#4CAF50">Default (Green)</option>
             <option class="colorOption">Pink</option>
             <option class="colorOption">Fuchsia</option>
@@ -244,13 +247,16 @@
 
     <div class="singularSettingDiv">
         <h4>Disable Cache</h4>
-        <input type="checkbox" bind:checked={disableCache} on:click={()=> clickDisableCache()} />
+        <input
+            type="checkbox"
+            bind:checked={disableCache}
+            on:click={() => clickDisableCache()} />
         <h6>
             This is used when selecting a race created within the last 5
             minutes.
         </h6>
     </div>
-    <div on:click={()=> push('/about')}>
+    <div on:click={() => push('/about')}>
         <hr />
 
         <div class="singularSettingDiv">

@@ -247,9 +247,7 @@
     async function logUserInIfNecessary() {
         $userEmail = await getUserEmail();
         if (!$userEmail) {
-            log.debug(
-                "User is not logged in, requesting autoAnonymousLogin."
-            );
+            log.debug("User is not logged in, requesting autoAnonymousLogin.");
             $beginAnonymousLogin = true;
         }
     }

@@ -2,11 +2,12 @@
     import log from "loglevel";
 
     import { push, pop, replace } from "svelte-spa-router";
-    import { theme, userEmail } from "./stores.js";
-    import { isEmailAllowedRoutePath } from "./utils.js";
+    import { theme } from "./stores.js";
+    import { isAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
 
     export let clickHandleRoute;
+    export let overrideOrgIz; //allow null.  this is an override
 
     var userHasPermission = false;
 
@@ -14,9 +15,9 @@
         push(clickHandleRoute);
     };
     onMount(async () => {
-        userHasPermission = await isEmailAllowedRoutePath(
-            $userEmail,
-            clickHandleRoute
+        userHasPermission = await isAllowedRoutePath(
+            clickHandleRoute,
+            overrideOrgIz
         );
     });
 </script>

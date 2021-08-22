@@ -8,11 +8,7 @@
     import { Auth } from "aws-amplify";
     import axios from "axios";
     import { push, pop, replace } from "svelte-spa-router";
-    import {
-        getCacheKey,
-        developerMode,
-        userEmail,
-    } from "./stores.js";
+    import { getCacheKey, developerMode, userEmail } from "./stores.js";
 
     //Populate org list if user is logged in automatically as anonymous
     $: refreshOrgMap($userEmail);

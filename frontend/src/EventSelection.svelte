@@ -123,7 +123,9 @@
 </script>
 
 <div>
-    <MaterialAdd clickHandleRoute="/eventAdd/{params.orgIz}/Add" />
+    <MaterialAdd
+        overrideOrgIz={params.orgIz}
+        clickHandleRoute="/eventAdd/{params.orgIz}/Add" />
 
     <h4>EventSelection for {decodeURIComponent(params.orgIz)}</h4>
 

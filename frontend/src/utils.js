@@ -51,11 +51,17 @@ export function getBracketLink(RpRs) {
         return undefined; // No bracketLink for adhoc.
     }
 }
-export function isAllowedRoutePath(routePath) {
+export function isAllowedRoutePath(routePath, orgIz = null) {
     const roleMap = get(roleMapStore);
     const userEmail = get(userEmailStore);
-    const raceConfig = get(raceConfigStore);
-    const orgIz = raceConfig.orgIz;
+    // orgIz usually can default to active RaceConfig.
+    //   eventSelection may try to add an event for a different org.
+    //   (it will pass in an override for orgIz)
+    if (!orgIz) {
+        const raceConfig = get(raceConfigStore);
+        orgIz = raceConfig.orgIz;
+    }
+    log.debug("isAllowedRoutePath effective org:", orgIz);
     if (userEmail && orgIz && roleMap[userEmail] && roleMap[userEmail][orgIz]) {
         const roleList = roleMap[userEmail][orgIz];
         return roleMap && hasSvelteRoutePath(null, roleList, routePath);
