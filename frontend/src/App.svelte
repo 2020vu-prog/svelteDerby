@@ -41,7 +41,7 @@
         raceConfig,
         theme,
         userEmail,
-        roleList,
+        roleMap,
         developerLogging,
         statusMessage,
         beginAnonymousLogin,
@@ -51,24 +51,6 @@
     import { isEmailAllowedRoutePath, getUserEmail } from "./utils.js";
 
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
-    //import { ROARR } from "roarr";
-
-    /*
-    function enableRoarr(doEnable, rsn) {
-        if (doEnable) {
-            console.log.debug(`roarr log On ${doEnable} ${rsn}`);
-            ROARR.write = (message) => {
-                console.log.debug("r-log:", JSON.parse(message).message);
-            };
-        } else {
-            console.log.debug(`roarr log Off ${doEnable} ${rsn}`);
-            ROARR.write = (message) => {};
-        }
-    }
-    */
-    $: {
-        console.log(`theme is ${$theme}`)
-    }
     const routes = {
         // Exact path
         "/": RaceStandingList,
@@ -113,8 +95,8 @@
     ];
     $: {
         if (isMounted) {
-            // rebuild menuMap when roleList changes
-            buildMenuMap($AuthStore, $roleList);
+            // rebuild menuMap when roleMap changes
+            buildMenuMap($AuthStore, $roleMap);
         }
     }
     $: {
@@ -263,9 +245,10 @@
     }
 
     async function logUserInIfNecessary() {
+        $userEmail = await getUserEmail();
         if (!$userEmail) {
             log.debug(
-                "User is not logged in, so we will sign them in anonymously."
+                "User is not logged in, requesting autoAnonymousLogin."
             );
             $beginAnonymousLogin = true;
         }

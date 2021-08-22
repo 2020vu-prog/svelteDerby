@@ -10,7 +10,6 @@
     import { push, pop, replace } from "svelte-spa-router";
     import {
         getCacheKey,
-        beginAnonymousLogin,
         developerMode,
         userEmail,
     } from "./stores.js";

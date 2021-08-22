@@ -6,10 +6,10 @@ const {
 import { Auth } from "aws-amplify";
 import { db } from "./eventDb.js";
 import {
-    userEmail,
+    userEmail as userEmailStore,
     statusMessage,
     raceConfig as raceConfigStore,
-    roleList as roleListStore,
+    roleMap as roleMapStore,
 } from "./stores.js";
 import { logout } from "./stores/auth.js";
 import { get } from "svelte/store";
@@ -52,8 +52,16 @@ export function getBracketLink(RpRs) {
     }
 }
 export function isAllowedRoutePath(routePath) {
-    const roleList = get(roleListStore);
-    return roleList && hasSvelteRoutePath(null, roleList, routePath);
+    const roleMap = get(roleMapStore);
+    const userEmail = get(userEmailStore);
+    const raceConfig = get(raceConfigStore);
+    const orgIz = raceConfig.orgIz;
+    if (userEmail && orgIz && roleMap[userEmail] && roleMap[userEmail][orgIz]) {
+        const roleList = roleMap[userEmail][orgIz];
+        return roleMap && hasSvelteRoutePath(null, roleList, routePath);
+    } else {
+        return false;
+    }
 }
 // deprecated
 export function isEmailAllowedRoutePath(email, routePath) {
@@ -82,7 +90,7 @@ export async function getUserEmail() {
         return email;
     } catch (err) {
         log.debug("getUserEmail error:", err);
-        userEmail.set(""); // update userEmail store
+        userEmailStore.set(""); // update userEmail store
         logout(); // cognito thinks we aren't logged in.  sync the store
         /*statusMessage.set({
             text: `Please login to use this system.`,
@@ -164,17 +172,25 @@ export async function refreshOrgRoles(orgIz) {
     const raceConfig = get(raceConfigStore);
     const currentSession = await Auth.currentSession();
     const bearer = currentSession.idToken.jwtToken;
+    const userEmail = get(userEmailStore);
 
     axios.defaults.headers.common["Authorization"] = bearer;
     axios
-        .get(raceConfig.baseUrl + `/getOrgRoles?orgIz=${orgIz}`)
+        .get(
+            raceConfig.baseUrl +
+                `/getOrgRoles?orgIz=${orgIz}&userEmail=${userEmail}`
+        )
         .then(async (response) => {
-            log.debug("refreshOrgRoles:", response.data);
-            await localConfigDb["OrgRoles"].put({
-                OrgIz: orgIz,
-                roles: response.data,
-            });
-            roleListStore.set(response.data);
+            log.debug("refreshOrgRoles: raw:", response.data);
+            const roleMap = get(roleMapStore);
+            log.debug("refreshOrgRoles: old:", roleMap);
+            if (!roleMap[userEmail]) {
+                roleMap[userEmail] = {};
+            }
+            log.debug("refreshOrgRoles: p1:", roleMap);
+            roleMap[userEmail][orgIz] = response.data;
+            log.debug("refreshOrgRoles: now:", roleMap);
+            roleMapStore.set(roleMap);
         })
         .catch((err) => {
             log.debug(err);

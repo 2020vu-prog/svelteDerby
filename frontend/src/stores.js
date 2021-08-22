@@ -31,7 +31,7 @@ export const theme = persistedStore["theme"];
 */
 
 export const userEmail = writable("");
-export const roleList = persistable("roleList", []);
+export const roleMap = persistable("roleMap", {});
 
 export const theme = persistable("pref:themeBg", "#4CAF50");
 export const statusMessage = writable({});
