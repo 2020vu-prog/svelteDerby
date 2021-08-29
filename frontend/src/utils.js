@@ -7,15 +7,15 @@ import { Auth } from "aws-amplify";
 import { db } from "./eventDb.js";
 import {
     userEmail as userEmailStore,
+    userJwtStore,
     statusMessage,
+    getAxios as getAxiosStore,
     raceConfig as raceConfigStore,
     roleMap as roleMapStore,
 } from "./stores.js";
-import { logout } from "./stores/auth.js";
+import { logout as cognitoLogout } from "./stores/auth.js";
 import { get } from "svelte/store";
 import { localConfigDb } from "./eventDb.js";
-
-const axios = require("axios");
 
 const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -72,16 +72,15 @@ export function isAllowedRoutePath(routePath, orgIz = null) {
 // deprecated
 export function isEmailAllowedRoutePath(email, routePath) {
     //const raceConfig = get(raceConfigStore);
-    return email && isAllowedRoutePath(routePath);
+    return isAllowedRoutePath(routePath);
 }
 // deprecated
 export async function isUserAllowedRoutePath(routePath) {
-    const email = await getUserEmail();
-    return email && isAllowedRoutePath(routePath);
+    return isAllowedRoutePath(routePath);
     //return isEmailAllowedRoutePath(email, routePath);
 }
 export async function getUserEmail() {
-    log.debug("getUserEmail");
+    log.debug("getUserEmail TODO: prefer bearer token!");
     try {
         const user = await Auth.currentAuthenticatedUser();
         log.debug("getUserEmail cognito user:", user);
@@ -93,10 +92,10 @@ export async function getUserEmail() {
             })[0]
             .getValue();
         log.debug("getUserEmail email:", email);
-        return email;
+        return email.toLowerCase();
     } catch (err) {
         log.debug("getUserEmail error:", err);
-        userEmailStore.set(""); // update userEmail store
+        //userEmailStore.set(""); // update userEmail store
         logout(); // cognito thinks we aren't logged in.  sync the store
         /*statusMessage.set({
             text: `Please login to use this system.`,
@@ -104,6 +103,10 @@ export async function getUserEmail() {
         });*/
         return "";
     }
+}
+export function logout() {
+    cognitoLogout();
+    userJwtStore.set("");
 }
 export function safeGetAt(map, key) {
     if (map && key && map[key]) {
@@ -176,11 +179,11 @@ export function sleep(ms) {
 export async function refreshOrgRoles(orgIz) {
     log.debug("refreshOrgRoles:");
     const raceConfig = get(raceConfigStore);
-    const currentSession = await Auth.currentSession();
-    const bearer = currentSession.idToken.jwtToken;
-    const userEmail = get(userEmailStore);
+    const userEmail = get(userEmailStore); // s/b lowercase!
 
-    axios.defaults.headers.common["Authorization"] = bearer;
+    const getAxios = get(getAxiosStore);
+    const axios = await getAxios();
+
     axios
         .get(
             raceConfig.baseUrl +
@@ -194,9 +197,11 @@ export async function refreshOrgRoles(orgIz) {
                 roleMap[userEmail] = {};
             }
             log.debug("refreshOrgRoles: p1:", roleMap);
-            roleMap[userEmail][orgIz] = response.data;
-            log.debug("refreshOrgRoles: now:", roleMap);
-            roleMapStore.set(roleMap);
+            if (response.data && response.data.roleList) {
+                roleMap[userEmail][orgIz] = response.data.roleList;
+                log.debug("refreshOrgRoles: now:", roleMap);
+                roleMapStore.set(roleMap);
+            }
         })
         .catch((err) => {
             log.debug(err);

@@ -26,7 +26,7 @@
     var mounted = false;
     let start;
     let end;
-    const nob0 = { type: "NOB" };
+    const nob0 = { type: "NOB", at: 1 };
     onMount(async () => {
         mounted = true;
         log.debug("RaceStanding list: ", location);
@@ -121,12 +121,7 @@
     <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
 {/if}
 
-<VirtualList
-    height="{mainFullPx}px"
-    items={standingList}
-    bind:start
-    bind:end
-    let:item>
+{#each standingList as item (item.at)}
     {#if item.type === 'NOB'}
         <h4>Next On Blocks</h4>
 
@@ -148,4 +143,4 @@
         <!-- this will be rendered for each currently visible item -->
         <RaceStanding standing={item} refresh={doRefreshBlocks} />
     {/if}
-</VirtualList>
+{/each}

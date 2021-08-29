@@ -18,7 +18,6 @@
         timerState,
         raceConfig,
     } from "./stores.js";
-    import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import Amplify, { PubSub } from "aws-amplify";
     import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
@@ -404,7 +403,6 @@
             if (e != null) {
                 await applyEntityToHist(e, hist, pendingBulk);
             } else {
-                log.debug("wtf json: ", json);
                 if (doLoadCca && json.PK === "CCA" && json.s3) {
                     await loadCcaHistory(json.s3, pendingBulk, hist);
                 }

@@ -66,15 +66,9 @@
     </h4>
 </div>
 
-<VirtualList
-    height="{mainFullPx}px"
-    items={phaseList}
-    bind:start
-    bind:end
-    let:item>
-    <!-- this will be rendered for each currently visible item -->
+{#each phaseList as item (item.at)}
     <RacePhase
         refreshTime={$doRefreshBlocks}
         phaseKey={item.classKey}
         at={item.at} />
-</VirtualList>
+{/each}

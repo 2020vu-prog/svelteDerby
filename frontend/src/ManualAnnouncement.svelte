@@ -6,8 +6,8 @@
         statusMessage,
         driverMap,
         getAxios,
+        axios,
     } from "./stores.js";
-    import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
@@ -28,13 +28,13 @@
             paMessage: `<speak>${announceText}</speak>`,
         };
 
-        const axios = await $getAxios();
-        axios.defaults.headers.common["Authorization"] = bearer;
+        //const axios = await $getAxios();
+        //axios.defaults.headers.common["Authorization"] = bearer;
 
         const endpoint = "/initiateAnnouncement";
 
         try {
-            const response = await axios.post(
+            const response = await $axios.post(
                 $raceConfig.baseUrl + endpoint,
                 req
             );

@@ -14,6 +14,7 @@ const registrationPerms = {
     CanAddParticipant: true,
     CanAddPending: true,
 };
+
 const permsByRoleMap = {
     power: powerPerms, // john harmon, Akron Local org
     starter: starterPerms,
@@ -69,6 +70,9 @@ function isRoutePathInPermissionList(routeType, permList, routePath) {
     log.debug(`permissions for  ${routePath} -- `, rc);
     return rc;
 }
+function getNamedRoles() {
+    return Object.keys(permsByRoleMap);
+}
 function getLegacyRoles(orgIz, userMail) {
     //log.debug("pmap2:", Object.keys(permissionMap2));
     var grantedRoles = [];
@@ -86,6 +90,11 @@ function getLegacyRoles(orgIz, userMail) {
 function getRolePermissions(roleList) {
     //expand list of roles to actual perms.
     var grantedPerms = {};
+    if (!roleList) {
+        roleList = [];
+    }
+
+    //log.debug(`getRolePermissions roleList: ${roleList} `);
     roleList.forEach((role) => {
         grantedPerms = { ...grantedPerms, ...permsByRoleMap[role] };
     });
@@ -103,3 +112,4 @@ module.exports.hasServerRoutePath = (orgIz, roleList, serverRoutePath) => {
     return roleHasRoutePath("server", orgIz, roleList, serverRoutePath);
 };
 module.exports.getLegacyRoles = getLegacyRoles;
+module.exports.getNamedRoles = getNamedRoles;

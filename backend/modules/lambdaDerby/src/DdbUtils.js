@@ -352,7 +352,15 @@ class DdbUtils {
         try {
             var data = await this.ddbClient.query(params);
             log.debug("ddbQueryOrgPerms: ", data); // successful response
-            return this.unmarshallResultsToObject(data, "SK");
+            var candidates = this.unmarshallResultsToObject(data, "SK");
+            candidates = Object.values(candidates);
+            const nowEpochSeconds = Math.round(new Date().getTime() / 1000);
+
+            // remove expired candidates
+            candidates = candidates.filter(
+                (ouser) => !(ouser.TTL && ouser.TTL < nowEpochSeconds)
+            );
+            return candidates;
         } catch (err) {
             log.debug("ddbQueryOrgPerms failed: ", err, err.stack); // an error occurred
         }

@@ -89,7 +89,7 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
         rc.secondsUntilArchive =
             this.TTL - Math.floor(new Date().getTime() / 1000);
         log.debug("Seconds until archive: ", rc.secondsUntilArchive);
-        if (rc.secondsUntilArchive < 0) {
+        if (rc.secondsUntilArchive < 0 || this.archived === "true") {
             rc.status = "archived";
         }
         if (rc.secondsUntilArchive < rc.freezeWarningSeconds) {
@@ -114,9 +114,13 @@ entityFactories[OrgPermLit] = class OrgPerm extends EntityBase {
     }
     preWrite() {
         super.preWrite();
-        this.PK = this.orgIz + OrgPermEid;
+        //this.PK = this.orgIz + OrgPermEid;
 
-        this.SK = this.email;
+        // email used as SK directly
+        //this.SK = this.email;
+    }
+    get email() {
+        return this.SK;
     }
     get classType() {
         return OrgPermLit;

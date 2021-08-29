@@ -7,11 +7,23 @@
         signIn,
         confirmSignUp,
         loginFormState,
-        logout,
     } from "./stores/auth.js";
-    import { userEmail, raceConfig, roleList } from "./stores.js";
+    import {
+        userEmail,
+        userId,
+        userExp,
+        userExpCountDownSecs,
+        raceConfig,
+        roleList,
+        userJwtStore,
+    } from "./stores.js";
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
-    import { getUserEmail, refreshOrgRoles } from "./utils.js";
+    import {
+        getUserEmail,
+        refreshOrgRoles,
+        logout,
+        hhmmssFmt,
+    } from "./utils.js";
     import { localConfigDb } from "./eventDb.js";
 
     let mode = localStorage.getItem("svelteLoginMode") || "signup";
@@ -38,10 +50,8 @@
     }
     async function storeUserEmail() {
         log.debug("storeUserEmail begin");
-        $userEmail = await getUserEmail();
-        log.debug("storeUserEmail done", $userEmail);
-
-        await localConfigDb["OrgRoles"].clear();
+        //refreshOrgRoles will install new bearerToken as side effect
+        $userJwtStore = ""; // force reload  (TODO: what if there is no org.)
         if ($raceConfig.orgIz) {
             refreshOrgRoles($raceConfig.orgIz);
         }
@@ -54,8 +64,27 @@
         });
         //localStorage.clear(); //clears everything in localStorage
         logout();
-        $userEmail = "";
-        localConfigDb["OrgRoles"].clear();
+        $userJwtStore = ""; // force reload  (TODO: what if there is no org.)
+        //$userEmail = "";
+    }
+    function m60(x) {
+        const modx = x % 60;
+        const remx = Math.floor(x / 60);
+        return [remx, modx];
+    }
+
+    function hhmmss(secs) {
+        const [fatMM, ss] = m60(secs);
+        const [hh, mm] = m60(fatMM);
+        //return `[${secs}] ` + hh + ":" + mm + ":" + ss + "__" +
+        return (
+            "" +
+            ("0" + hh).slice(-2) +
+            ":" +
+            ("0" + mm).slice(-2) +
+            ":" +
+            ("0" + ss).slice(-2)
+        );
     }
 </script>
 
@@ -156,8 +185,8 @@
 </style>
 
 <!-- https://www.swyx.io/writing/svelte-auth/#draw-the-rest-of-the-owl -->
-{#if $store && $store.username}
-    <p>Logged in as {$store.username}</p>
+{#if $userId || $userEmail}
+    <p>Logged in as {$userId} [{hhmmss($userExpCountDownSecs)}]</p>
     <button on:click={doLogOut}>Log Out</button>
 {:else}
     <div>

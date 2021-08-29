@@ -10,7 +10,6 @@
         statusMessage,
         userEmail,
     } from "./stores.js";
-    import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";

@@ -789,16 +789,37 @@ const getOrgIz = (event) => {
 const getEventKey = (event) => {
     return getOrgIz(event) + ":" + getOrgId(event);
 };
-async function getOrgRoles(json, roleList) {
-    return roleList;
+async function getOrgRoles(event, apiProps) {
+    const json = JSON.parse(event.body);
+
+    log.debug("getOrgRoles: apiEmail:", apiProps);
+    log.debug("getOrgRoles: qsEmail:", event.queryStringParameters);
+    if (
+        event &&
+        event.queryStringParameters &&
+        event.queryStringParameters.userEmail &&
+        apiProps &&
+        apiProps.email
+    ) {
+        if (
+            apiProps.email.toLowerCase() ===
+            event.queryStringParameters.userEmail.toLowerCase()
+        ) {
+            return {
+                roleList: apiProps.roleList,
+                email: apiProps.email.toLowerCase(),
+            };
+        }
+    }
+    return { statusCode: 403, error: "email not aligned" };
 }
 const routeMap = {
     "/getOrgRoles": {
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
-        h: async (event, roleList) => {
-            return buildResponse(await getOrgRoles(event, roleList));
+        h: async (event, apiProps) => {
+            return buildResponse(await getOrgRoles(event, apiProps));
         },
     },
     "/addEventConfig": {
@@ -826,6 +847,24 @@ const routeMap = {
             return buildResponse(
                 await addTimerConfig(JSON.parse(event.body), false)
             );
+        },
+    },
+    "/listOrgUser": {
+        allowFrozen: true,
+        allowMissingTtl: true,
+        allowMissingOrgId: true,
+        h: async (event, apiProps) => {
+            return buildResponse(
+                await listOrgUser(JSON.parse(event.body), apiProps)
+            );
+        },
+    },
+    "/addOrgUser": {
+        allowFrozen: true,
+        allowMissingTtl: true,
+        allowMissingOrgId: true,
+        h: async (event) => {
+            return buildResponse(await addOrgUser(JSON.parse(event.body)));
         },
     },
     "/addParticipant": {
@@ -1033,7 +1072,7 @@ const routeMap = {
     },
 };
 
-const buildResponse = (jsonObj, cacheControl = "no-cache") => {
+function buildResponse(jsonObj, cacheControl = "no-cache") {
     if (!jsonObj) {
         jsonObj = {};
     }
@@ -1047,7 +1086,7 @@ const buildResponse = (jsonObj, cacheControl = "no-cache") => {
         },
         body: JSON.stringify(jsonObj),
     };
-};
+}
 
 async function snsApplyTimerHandler(snsMessageJson) {
     log.debug("applyTimerHandler Message received from SNS2:", snsMessageJson);
@@ -1201,7 +1240,12 @@ async function apiGatewayHandler(event) {
         const phandler = routeMap[routePath].h;
         log.debug("routeMap handling: " + phandler);
 
-        return await phandler(event, roleList);
+        return await phandler(event, {
+            orgIz: orgIz,
+            orgId: orgId,
+            email: email,
+            roleList: roleList,
+        });
     }
 
     log.debug("Unhandled Path: " + routePath + " ep: " + event.path);
@@ -1210,13 +1254,49 @@ async function apiGatewayHandler(event) {
         error: "Unhandled",
     });
 }
+async function listOrgUser(json, apiProps) {
+    const rolesByOrg = await ddbUtils.ddbQueryOrgPerms({
+        orgIz: apiProps.orgIz,
+    });
+    return rolesByOrg;
+}
+async function addOrgUser(json) {
+    log.debug("addOrgUser: " + JSON.stringify(json));
+
+    if (json.email && json.orgIz && json.roleList) {
+        json.PK = json.orgIz + ":OrgPerm"; // force OrgPerm
+        json.SK = json.email;
+        const by = entityFactory.propOverrides.by;
+        const nowEpochSeconds = Math.round(new Date().getTime() / 1000);
+
+        const tmpEntityFactory = new EntityFactory({
+            orgIz: json.orgIz,
+            by: by,
+        });
+
+        ddbUtils.setEntityFactory(tmpEntityFactory);
+        return await ddbUtils.addSingle(json);
+    } else {
+        return { error: "missing field(s)" };
+    }
+}
 async function getUserRoles(orgIz, email) {
     var roleList = getLegacyRoles(orgIz, email);
-    const rolesByUser = await ddbUtils.ddbQueryOrgPerms({ orgIz: orgIz });
+    var rolesByUser = await ddbUtils.ddbQueryOrgPerms({ orgIz: orgIz });
     log.debug("rolesByUser event", rolesByUser);
 
+    /*
     if (rolesByUser && rolesByUser[email] && rolesByUser[email].roleList) {
         roleList = [...roleList, ...rolesByUser[email].roleList];
+    }
+    */
+    if (rolesByUser && rolesByUser.length > 0) {
+        rolesByUser = rolesByUser.filter(
+            (ouser) => ouser.SK.toLowerCase() === email.toLowerCase()
+        );
+        if (rolesByUser && rolesByUser.length > 0 && rolesByUser[0].roleList) {
+            roleList = [...roleList, ...rolesByUser[0].roleList];
+        }
     }
     return roleList;
 }

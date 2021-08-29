@@ -20,6 +20,11 @@ function addPermission(pname, serverRouteList, svelteRouteList) {
     );
 }
 addPermission(
+    "CanAddOrgUser",
+    ["/addOrgUser", "/listOrgUser"],
+    ["/orgUserAdd", "/orgUserList"]
+);
+addPermission(
     "CanAddParticipant",
     ["/addParticipant", "/requestTts"],
     ["/driverAdd"]

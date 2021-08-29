@@ -6,11 +6,8 @@ import { Auth } from "aws-amplify";
 const jwt = require("jsonwebtoken");
 const semver = require("semver");
 
-var bearer = "";
-
 import { persistable } from "./storedb.js";
-import { writable, readable, get as getStore } from "svelte/store";
-import { storeAuth } from "./stores/auth.js";
+import { derived, writable, readable, get as getStore } from "svelte/store";
 import { buildVersion } from "./utils.js";
 
 function parseBool(val) {
@@ -30,7 +27,27 @@ export const pendingSortAlgorithm = persistedStore["pendingSortAlgorithm"];
 export const theme = persistedStore["theme"];
 */
 
-export const userEmail = writable("");
+function dtoken(bearerToken, prop) {
+    const decoded = jwt.decode(bearerToken);
+    if (decoded) {
+        //log.debug("derive dtoken decoded jwt:", decoded);
+        //log.debug("derive dtoken decoded prop:", decoded[prop]);
+        return decoded[prop];
+    } else {
+        return "";
+    }
+}
+export const userJwtStore = persistable("userJwt", "");
+//export const userEmail = persistable("userEmail", "");
+export const userId = derived(userJwtStore, ($bearer) => {
+    return dtoken($bearer, "cognito:username");
+});
+export const userEmail = derived(userJwtStore, ($bearer) => {
+    return dtoken($bearer, "email");
+});
+export const userExp = derived(userJwtStore, ($bearer) => {
+    return dtoken($bearer, "exp");
+});
 export const roleMap = persistable("roleMap", {});
 
 export const theme = persistable("pref:themeBg", "#4CAF50");
@@ -77,6 +94,20 @@ function axSet(setF) {
     return () => {};
 }
 export const getAxios = readable(getAxiosCommon, axSet);
+//
+// helper function to call getAxios transparently (and async)
+//
+export const axios = derived(
+    getAxios,
+    ($getAxios, set) => {
+        $getAxios().then((got) => {
+            log.debug("derived axios:", got);
+            set(got);
+        });
+    },
+    axiosCommon // placeHolder while waiting for promise fulfillment
+);
+
 export function getChartCacheKey() {
     return require("./config/doNotEditChartKey.json").chartKey;
 }
@@ -131,6 +162,7 @@ axiosCommon.interceptors.response.use(
 );
 async function getAxiosCommon() {
     //TODO: flush bearer token when email changes
+    var bearer = getStore(userJwtStore);
     if (bearer) {
         var decoded = jwt.decode(bearer);
         log.debug("decoded jwt:", decoded);
@@ -140,11 +172,13 @@ async function getAxiosCommon() {
         } else {
             log.debug("getAxiosCommon expiring token");
             bearer = "";
+            userJwtStore.set(bearer);
         }
     }
     if (!bearer) {
         const currentSession = await Auth.currentSession();
         bearer = currentSession.idToken.jwtToken;
+        userJwtStore.set(bearer);
         axiosCommon.defaults.headers.common["Authorization"] = bearer;
     }
     log.debug("bearer:", bearer);
@@ -173,4 +207,30 @@ function getDefaultFileFormat() {
     }
     return "Webm";
 }
+// nowDate copied from https://svelte.dev/tutorial/derived-stores
+export const nowDate = readable(new Date(), function start(set) {
+    const interval = setInterval(() => {
+        set(new Date());
+    }, 1000);
+
+    return function stop() {
+        clearInterval(interval);
+    };
+});
+export const userExpCountDownSecs = derived(
+    [nowDate, userExp],
+    ([$nowDate, $userExp]) => {
+        if ($userExp) {
+            const nowMs = $nowDate.getTime();
+            const secs = $userExp - nowMs / 1000;
+            if (secs < 0) {
+                return 0;
+            }
+            return Math.floor(secs);
+        } else {
+            return 0;
+        }
+    }
+);
+
 //doRefresh();

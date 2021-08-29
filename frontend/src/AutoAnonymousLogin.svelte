@@ -1,9 +1,10 @@
 <script>
     import log from "loglevel";
 
-    import { signIn, loginFormState, logout } from "./stores/auth.js";
+    import { signIn, loginFormState } from "./stores/auth.js";
     import { createEventDispatcher } from "svelte";
     import { beginAnonymousLogin } from "./stores.js";
+    import { logout } from "./utils.js";
 
     export let display;
 

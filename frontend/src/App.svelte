@@ -19,6 +19,8 @@
     import EventAdd from "./EventAdd.svelte";
     import HistoryList from "./HistoryList.svelte";
 
+    import OrgUserAdd from "./OrgUserAdd.svelte";
+    import OrgUserList from "./OrgUserList.svelte";
     import OrgSelection from "./OrgSelection.svelte";
     import OrgAdd from "./OrgAdd.svelte";
     import ManualTimerAdd from "./ManualTimerAdd.svelte";
@@ -45,6 +47,7 @@
         developerLogging,
         statusMessage,
         beginAnonymousLogin,
+        userId,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -65,6 +68,8 @@
         "/eventSelection/:orgIz": EventSelection,
         "/eventAdd/:orgIz/:mode": EventAdd,
         "/historyList/:PK/:SK": HistoryList,
+        "/orgUserList": OrgUserList,
+        "/orgUserAdd/:b64User?": OrgUserAdd,
         "/orgSelection": OrgSelection,
         "/orgAdd": OrgAdd,
         "/about": AboutPage,
@@ -96,7 +101,8 @@
     $: {
         if (isMounted) {
             // rebuild menuMap when roleMap changes
-            buildMenuMap($AuthStore, $roleMap);
+            log.debug("bmm:", $userId, $userEmail, $roleMap);
+            buildMenuMap($userId, $userEmail, $roleMap);
         }
     }
     $: {
@@ -108,12 +114,14 @@
     }
 
     async function buildMenuMap() {
-        $userEmail = await getUserEmail();
+        //$userEmail = await getUserEmail();
+        await getUserEmail();
 
-        const loginLabel =
-            $AuthStore && $AuthStore.username
-                ? `Logout [${$AuthStore.username}]`
-                : "Login";
+        if ($userId) {
+            log.debug("bmm: uid:", $userId);
+        }
+
+        const loginLabel = $userId ? `Logout [${$userId}]` : "Login";
 
         menuMap = [
             {
@@ -153,6 +161,10 @@
             {
                 text: "Raw Timer List",
                 menuRoute: "/rawTimerList",
+            },
+            {
+                text: "Org Users",
+                menuRoute: "/orgUserList",
             },
             {
                 text: "Preferences",
@@ -245,7 +257,7 @@
     }
 
     async function logUserInIfNecessary() {
-        $userEmail = await getUserEmail();
+        await getUserEmail();
         if (!$userEmail) {
             log.debug("User is not logged in, requesting autoAnonymousLogin.");
             $beginAnonymousLogin = true;

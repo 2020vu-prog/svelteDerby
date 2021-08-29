@@ -3,7 +3,6 @@
 
     import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig, statusMessage, driverMap } from "./stores.js";
-    import { store } from "./stores/auth.js";
     import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
