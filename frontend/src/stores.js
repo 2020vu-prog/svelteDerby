@@ -169,6 +169,7 @@ async function getAxiosCommon() {
         const now = new Date().getTime() / 1000;
         if (decoded && decoded.exp && decoded.exp > now + 30) {
             log.debug("getAxiosCommon re-using token");
+            axiosCommon.defaults.headers.common["Authorization"] = bearer;
         } else {
             log.debug("getAxiosCommon expiring token");
             bearer = "";

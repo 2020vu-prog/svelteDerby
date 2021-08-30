@@ -7,7 +7,7 @@
         driverMap,
         statusMessage,
         nextOnBlockKey,
-        getAxios,
+        axios,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
@@ -81,15 +81,12 @@
         };
 
         //no double click
-        log.debug("axios:", $getAxios);
-
         if (submitSpinning) {
             return; // ignore possible double click (ui should have been disable, so this is a safety net)
         }
         submitSpinning = true;
         try {
-            const axios = await $getAxios();
-            const response = await axios.post(
+            const response = await $axios.post(
                 $raceConfig.baseUrl + endPoint,
                 req
             );
