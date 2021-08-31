@@ -60,11 +60,7 @@
             };
             pop();
         } catch (error) {
-            submitSpinning = false;
-            $statusMessage = {
-                text: "failed: " + error,
-                type: "error",
-            };
+            log.debug("axios err:", e);
         }
     }
 </script>

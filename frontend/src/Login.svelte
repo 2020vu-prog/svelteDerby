@@ -50,8 +50,7 @@
     }
     async function storeUserEmail() {
         log.debug("storeUserEmail begin");
-        //refreshOrgRoles will install new bearerToken as side effect
-        $userJwtStore = ""; // force reload  (TODO: what if there is no org.)
+        //Signin should have installed new bearer token
         if ($raceConfig.orgIz) {
             refreshOrgRoles($raceConfig.orgIz);
         }

@@ -1,5 +1,5 @@
 import log from "loglevel";
-
+import { store as AuthStore } from "./stores/auth.js";
 const {
     hasSvelteRoutePath,
 } = require("../../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
@@ -103,6 +103,22 @@ export async function getUserEmail() {
         });*/
         return "";
     }
+}
+export function setJwt() {
+    const session = get(AuthStore); // s/b lowercase!
+    console.log("seeking jwt as :", session);
+    if (
+        session &&
+        session.signInUserSession &&
+        session.signInUserSession.idToken &&
+        session.signInUserSession.idToken.jwtToken
+    ) {
+        const token = session.signInUserSession.idToken.jwtToken;
+        console.log("Setting jwt as :", token);
+        userJwtStore.set(token);
+    }
+    return;
+    //if(session.signInUserSession.idToken.jwtToken)
 }
 export function logout() {
     cognitoLogout();

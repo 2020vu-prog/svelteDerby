@@ -149,14 +149,37 @@ axiosCommon.interceptors.response.use(
                 location.reload();
             }
         }
+        if (response.data.error) {
+            log.debug("AINT 200 with error:", response);
+            statusMessage.set({
+                text: response.data.error,
+                type: "error",
+            });
+            return Promise.reject(response.data.error);
+        }
+
         log.debug("AINT: ", response);
         return response;
     },
     (error) => {
         log.debug("AINT error: ", error);
-        if (error.response && error.response.data) {
+
+        if (
+            error.response &&
+            error.response.data &&
+            error.response.data.message
+        ) {
+            log.debug("AINT2 error: ", JSON.stringify(error.response.data));
+            statusMessage.set({
+                text: "ERR A12: " + error.response.data.message,
+                type: "error",
+            });
             return Promise.reject(error.response.data);
         }
+        statusMessage.set({
+            text: "failed3: " + error.message,
+            type: "error",
+        });
         return Promise.reject(error.message);
     }
 );
@@ -183,6 +206,7 @@ async function getAxiosCommon() {
         axiosCommon.defaults.headers.common["Authorization"] = bearer;
     }
     log.debug("bearer:", bearer);
+    //axiosCommon.defaults.headers.common["Authorization"] = "401me";
     return axiosCommon;
 }
 

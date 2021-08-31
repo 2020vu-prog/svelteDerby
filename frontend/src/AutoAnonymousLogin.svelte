@@ -10,16 +10,22 @@
 
     const dispatch = createEventDispatcher();
 
-    const performAnonymousLogin = () => {
+    async function performAnonymousLogin() {
+        console.log("AAlogin Begin");
         logout();
         $loginFormState.username = "Anonymous";
         $loginFormState.password = "DERBYderby12345!";
         $beginAnonymousLogin = false;
-        let promise = signIn().then(() => {
-            log.debug("login complete");
+        try {
+            await signIn();
+            log.debug("AAlogin complete");
+            console.log("AAlogin complete");
             dispatch("loginComplete");
-        });
-    };
+        } catch (e) {
+            console.log("AAlogin failed:", e);
+        }
+    }
+
     $: {
         if ($beginAnonymousLogin) {
             performAnonymousLogin();

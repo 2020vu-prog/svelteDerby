@@ -38,23 +38,14 @@
                 $raceConfig.baseUrl + endpoint,
                 req
             );
-            if (response.data.status === "error") {
-                $statusMessage = {
-                    text: response.data.error,
-                    type: response.data.status,
-                };
-            } else {
-                $statusMessage = {
-                    text: `Announcement Requested.`,
-                    type: "success",
-                };
-                announceText = "";
-            }
-        } catch (e) {
             $statusMessage = {
-                text: e,
-                type: "error",
+                text: `Announcement Requested.`,
+                type: "success",
             };
+            announceText = "";
+        } catch (e) {
+            //interceptor handles messaging
+            log.debug("axios err:", e);
         }
     }
 

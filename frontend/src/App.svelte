@@ -203,6 +203,24 @@
     onMount(async () => {
         log.debug("mounted app");
         await logUserInIfNecessary();
+
+        isMounted = new Date().getTime();
+    });
+    $: {
+        // $userEmail required so bearer token is ready when calling apis
+        replaceRouteOnInitialLoad(isMounted, $userEmail);
+    }
+    async function replaceRouteOnInitialLoad() {
+        const now = new Date().getTime();
+        if (!isMounted || !$userEmail) {
+            console.log("ignoring not mounted", isMounted);
+            console.log("ignoring not email", $userEmail);
+            return;
+        }
+        if (isMounted + 10000 < now) {
+            console.log("ignoring stale state change from onload handler");
+            return;
+        }
         const cfg = await db.EventConfig.toArray();
         log.debug("config:", cfg);
 
@@ -212,8 +230,7 @@
         } else {
             replace("/orgSelection");
         }
-        isMounted = true;
-    });
+    }
     const shouldDisplay = (email, menuOption, raceConfigParam) => {
         if (menuOption.alwaysShow) return true;
 
@@ -312,9 +329,10 @@
 <div id="topnav" class="topnav" style="z-index: 20; ">
     <a style="background-color: {$theme}" class="active">
         {getTitle($raceConfig)}&nbsp;
-        <HotLoad />
+        {#if $userEmail && $raceConfig}
+            <HotLoad />
+        {/if}
     </a>
-    <!-- Navigation links (hidden by default) -->
     <div id="myLinks">
 
         {#each menuMap as menuOption}

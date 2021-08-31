@@ -92,21 +92,10 @@
             );
             log.debug("add response", response);
 
-            if (response.data.error) {
-                log.debug("add failed", response);
-                $statusMessage = {
-                    text: response.data.error,
-                    type: "error",
-                };
-            } else {
-                await sleep(1000); // verify spinner
-                pop();
-            }
+            await sleep(1000); // verify spinner
+            pop();
         } catch (err) {
-            $statusMessage = {
-                text: err,
-                type: "error",
-            };
+            log.debug("RSA axios err:", err);
         } finally {
             //re-enable
             submitSpinning = false;

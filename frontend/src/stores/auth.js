@@ -1,5 +1,6 @@
 import { writable, get } from "svelte/store";
 import Auth from "@aws-amplify/auth";
+import { setJwt } from "../utils.js";
 
 let _user = localStorage.getItem("amplifyUser");
 export const store = writable(_user ? JSON.parse(_user) : null);
@@ -19,7 +20,10 @@ export async function signIn() {
     return Auth.signIn(
         get(loginFormState).username,
         get(loginFormState).password
-    ).then((data) => void store.set(data));
+    ).then((data) => {
+        void store.set(data);
+        setJwt();
+    });
 }
 export async function signUp() {
     return Auth.signUp({
