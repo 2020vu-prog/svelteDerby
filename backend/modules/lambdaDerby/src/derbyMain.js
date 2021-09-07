@@ -13,6 +13,7 @@ const {
 } = require("./shared/PermissionLookup.js");
 const AWS = require("aws-sdk");
 const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
+
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
 const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
 const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
@@ -1088,9 +1089,14 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
     };
 }
 
-async function snsApplyTimerHandler(snsMessageJson) {
-    log.debug("applyTimerHandler Message received from SNS2:", snsMessageJson);
-    log.debug("applyTimerHandler Message received from SNS2:", snsMessageJson);
+async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
+    log.debug(
+        "applyTimerHandler Message received from SNS2:",
+        snsPublishedTimestamp,
+        snsMessageJson
+    );
+    const snsPubDate = Date.parse(snsPublishedTimestamp);
+
     const json = snsMessageJson;
     if (json && json.timerConfig && json.deltas && json.deltas.length > 0) {
         // sns gave us a timer config.  use that instead of
@@ -1109,15 +1115,41 @@ async function snsApplyTimerHandler(snsMessageJson) {
         );
         const candidateBlock = json.deltas[0].cBlock;
 
+        if (!nextOnBlocks.length > 0) {
+            log.debug("applyTimerHandler Message : blocks are empty 0.");
+            return;
+        }
+        const rp = nextOnBlocks[0]; // TODO: get oldest!
+        if (!rp) {
+            log.debug("applyTimerHandler Message : blocks are empty 1.");
+            return;
+        }
+        log.debug(
+            "applyTimerHandler Message : snsPubDate:",
+            snsPubDate,
+            " rpDate:",
+            rp.at
+        );
+
+        // wall time may slip on pi.   if sns time (from AWS datacenter) is older than NOB time. don't apply time.
+        if (snsPublishedTimestamp < rp.at) {
+            log.debug(
+                "applyTimerHandler Message : skipping stale SNS finish time : ",
+                snsPubDate,
+                " rpDate:",
+                rp.at
+            );
+            return;
+        }
         if (candidateBlock && candidateBlock[0]) {
             const firstCblock = candidateBlock[0]; // first block is close enough for this edit
             log.debug(
                 "auditCblock: first candidateBlock: ",
                 firstCblock,
                 " vs: ",
-                nextOnBlocks
+                rp
             );
-            if (firstCblock.pubTime < nextOnBlocks.at) {
+            if (firstCblock.pubTime < rp.at) {
                 log.debug(
                     "auditCblock: ignoring finishTime that is older than nextOnBlocks"
                 );
@@ -1130,11 +1162,9 @@ async function snsApplyTimerHandler(snsMessageJson) {
         } else {
             log.debug("auditCblock: finishTime not Audited.  missing cblock");
         }
-        // TODO: do not apply times from an sns event prior to
-        //    the racephase add time
-        log.debug("applyTimerHandler nob:", nextOnBlocks);
-        if (nextOnBlocks.length > 0) {
-            const rp = nextOnBlocks[0]; // TODO: get oldest!
+
+        log.debug("applyTimerHandler nob:", rp);
+        if (rp) {
             const l1Micros = deltaLanes.lane1.noseMicros;
             const l2Micros = deltaLanes.lane2.noseMicros;
             const req = {
@@ -1328,7 +1358,8 @@ exports.handler = async function (event) {
             return "Polly Success";
         }
 
-        await snsApplyTimerHandler(snsMessageJson);
+        var snsTimestamp = event.Records[0].Sns.Timestamp;
+        await snsApplyTimerHandler(snsMessageJson, snsTimestamp);
         return "Success";
     }
     if (event.Records[0].s3) {
