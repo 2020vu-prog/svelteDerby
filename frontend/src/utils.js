@@ -200,11 +200,14 @@ export async function refreshOrgRoles(orgIz) {
     const getAxios = get(getAxiosStore);
     const axios = await getAxios();
 
+    const req = {
+        orgIz: orgIz,
+        userEmail: userEmail,
+    };
     axios
-        .get(
-            raceConfig.baseUrl +
-                `/getOrgRoles?orgIz=${orgIz}&userEmail=${userEmail}`
-        )
+        .get(`${raceConfig.baseUrl}/getOrgRoles`, {
+            params: req,
+        })
         .then(async (response) => {
             log.debug("refreshOrgRoles: raw:", response.data);
             const roleMap = get(roleMapStore);
