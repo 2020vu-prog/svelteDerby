@@ -129,11 +129,26 @@
     function getMediaHref(key) {
         return `/${key}`;
     }
-    function getMediaHHMMSS(mediaItem) {
+    function getMediaMMDDYYHHMMSS(mediaItem) {
         log.debug("LMOD:", mediaItem.LastModified);
         log.debug("LMOD parsed:", Date.parse(mediaItem.LastModified));
-        return hhmmssFmt(Date.parse(mediaItem.LastModified));
+        return (
+            mmddyyFmt(Date.parse(mediaItem.LastModified)) +
+            " " +
+            hhmmssFmt(Date.parse(mediaItem.LastModified))
+        );
     }
+    function mmddyyFmt(at) {
+        var time = new Date(at);
+        return (
+            ("0" + time.getMonth()).slice(-2) +
+            "/" +
+            ("0" + time.getDate()).slice(-2) +
+            "/" +
+            ("0" + time.getFullYear()).slice(-2)
+        );
+    }
+
     function getDisplayName(key) {
         if (linkFrom == ALL_PREFIX) {
             //This is the list all media screen. Show a slightly more detailed path.
@@ -196,7 +211,7 @@
                         color="info"
                         class="bg-info text-white"
                         style="text-align: center;">
-                        {getMediaHHMMSS(mediaItem)}
+                        {getMediaMMDDYYHHMMSS(mediaItem)}
                     </CardTitle>
                     <CardBody>
 
