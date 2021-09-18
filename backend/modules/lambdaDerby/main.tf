@@ -130,7 +130,7 @@ resource "aws_iam_role" "iam_for_lambda" {
 
 resource "aws_cloudwatch_log_group" "derbyMainLogRetention" {
   name              = "/aws/lambda/${local.mainLambdaName}"
-  retention_in_days = 5
+  retention_in_days = 90
 }
 resource "aws_lambda_function" "lambda" {
   function_name = local.mainLambdaName

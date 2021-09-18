@@ -66,7 +66,7 @@ resource "aws_iam_role" "iam_for_lambda_dynamo" {
 
 resource "aws_cloudwatch_log_group" "dynamoMainLogRetention" {
   name              = "/aws/lambda/dynamoMain"
-  retention_in_days = 5
+  retention_in_days = 90
 }
 resource "aws_lambda_function" "lambda" {
   function_name = "dynamoMain"

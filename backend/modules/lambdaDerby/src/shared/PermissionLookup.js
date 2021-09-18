@@ -14,12 +14,16 @@ const registrationPerms = {
     CanAddParticipant: true,
     CanAddPending: true,
 };
+const videoPerms = {
+    CanCaptureVideo: true,
+};
 
 const permsByRoleMap = {
     power: powerPerms, // john harmon, Akron Local org
     starter: starterPerms,
     starterLimited: starterLimitedPerms,
     registration: registrationPerms,
+    video: videoPerms,
 };
 const orgUserRoleMap = {
     "test:REDACTED_PERMISSION_EMAIL": ["power"], // john harmon, Akron Local org
@@ -71,7 +75,7 @@ function isRoutePathInPermissionList(routeType, permList, routePath) {
     return rc;
 }
 function getNamedRoles() {
-    return Object.keys(permsByRoleMap);
+    return Object.keys(permsByRoleMap).sort();
 }
 function getLegacyRoles(orgIz, userMail) {
     //log.debug("pmap2:", Object.keys(permissionMap2));
