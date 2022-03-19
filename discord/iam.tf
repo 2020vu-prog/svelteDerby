@@ -83,6 +83,8 @@ resource "aws_iam_policy" "discord_bot_iam_policy" {
 			"s3:ListBucket"
               ],
 		"Resource": [ 
+		    "arn:aws:s3:::derby-dst-bucket20200627220032157000000004",
+		    "arn:aws:s3:::derby-dst-bucket20200627220032157000000004/*",
 		    "arn:aws:s3:::${module.boot_bucket.s3_bucket_id}",
 		    "arn:aws:s3:::${module.boot_bucket.s3_bucket_id}/*"
 		] 

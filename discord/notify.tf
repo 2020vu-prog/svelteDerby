@@ -12,7 +12,7 @@ module "sns_topic1" {
         "Action": "SNS:Publish",
         "Resource": "arn:aws:sns:*:*:*",
         "Condition":{
-            "ArnLike":{"aws:SourceArn":"${module.boot_bucket.s3_bucket_arn}"}
+            "ArnLike":{"aws:SourceArn": "arn:aws:s3:::derby-dst-bucket20200627220032157000000004" }
         }
     }]
 }
@@ -21,7 +21,7 @@ POLICY
 
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket = module.boot_bucket.s3_bucket_id
+  bucket = "derby-dst-bucket20200627220032157000000004"
 
   topic {
     topic_arn     = module.sns_topic1.sns_topic_arn
