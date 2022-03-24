@@ -2,15 +2,20 @@ package main
 
 import "github.com/deadmanssnitch/snshttp"
 import "net/http"
+import "os/exec"
 import "fmt"
 import "time"
 import "io/ioutil"
+import "io"
 import "context"
 import "encoding/json"
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/jonas747/dca"
 
 	"flag"
 	"os"
@@ -80,6 +85,21 @@ func (h *EventHandler) Notification(ctx context.Context, event *snshttp.Notifica
 		fmt.Printf("\nbucket=%q \n", s3Notify.Records[0].S3.Bucket.Name)
 		fmt.Printf("\nobject=%q \n", s3Notify.Records[0].S3.Object.Key)
 
+		mp3 := s3Download(s3Notify.Records[0].S3.Bucket.Name,
+			s3Notify.Records[0].S3.Object.Key,
+		)
+		if mp3 != "" {
+			//transcode(mp3)
+			cmd := exec.Command("/s3/sns/bin/dca.sh", mp3)
+			err := cmd.Run()
+			if err != nil {
+				fmt.Printf("err=%q \n", err)
+				return nil
+			}
+			fmt.Printf("shell transcoded\n")
+
+		}
+
 	} else {
 		fmt.Printf("err=%q \n", err)
 	}
@@ -113,6 +133,28 @@ func getPublicIp() (string, error) {
 	}
 	return "boo", nil
 }
+func snsDeleteOldSubs(svc *sns.SNS, topicArn *string) {
+
+	result, err := svc.ListSubscriptionsByTopic(&sns.ListSubscriptionsByTopicInput{
+		TopicArn: topicArn,
+	})
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	for _, s := range result.Subscriptions {
+		fmt.Println(*s.SubscriptionArn)
+		fmt.Println("  " + *s.TopicArn)
+		fmt.Println("")
+		_, errDel := svc.Unsubscribe(&sns.UnsubscribeInput{
+			SubscriptionArn: s.SubscriptionArn,
+		})
+		if errDel != nil {
+			fmt.Println(errDel.Error())
+		}
+
+	}
+}
 func snsSubscribe() {
 	topicArn := flag.String("sns", "", "The ARN of the topic to which the user subscribes")
 
@@ -131,6 +173,7 @@ func snsSubscribe() {
 	}))
 
 	svc := sns.New(sess)
+	snsDeleteOldSubs(svc, topicArn)
 
 	ip, _ := getPublicIp()
 	fmt.Println("IP:", ip)
@@ -148,6 +191,56 @@ func snsSubscribe() {
 	}
 
 	fmt.Println(*result.SubscriptionArn)
+}
+func transcode(mp3in string) string {
+	dcaOutput := "/tmp/output.dca"
+	// Encoding a file and saving it to disk
+	encodeSession, _ := dca.EncodeFile(mp3in, dca.StdEncodeOptions)
+	// Make sure everything is cleaned up, that for example the encoding process if any issues happened isnt lingering around
+	defer encodeSession.Cleanup()
+
+	output, err := os.Create(dcaOutput)
+	if err != nil {
+		fmt.Printf("Unable to create file %q, %v\n", dcaOutput, err)
+		return ""
+	}
+
+	bytes, errT := io.Copy(output, encodeSession)
+	if errT != nil {
+		fmt.Printf("Unable to transcode file %q, %v\n", mp3in, err)
+		return ""
+	}
+	fmt.Printf("transcoded %q, %s, [%d]\n", mp3in, dcaOutput, bytes)
+
+	return dcaOutput
+}
+func s3Download(bucket, item string) string {
+	//file, err := os.Create(item)
+	file, err := ioutil.TempFile("/tmp", "snsTriggered_*.mp3")
+	if err != nil {
+		fmt.Printf("Unable to open file %q, %v\n", item, err)
+		return ""
+	}
+
+	defer file.Close()
+
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+	downloader := s3manager.NewDownloader(sess)
+
+	numBytes, err := downloader.Download(file,
+		&s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(item),
+		})
+	if err != nil {
+		fmt.Printf("Unable to download item %q, %v\n", item, err)
+		return ""
+	}
+	fmt.Printf("Downloaded %d as  %s\n", numBytes, file.Name())
+	return file.Name()
+
 }
 
 func main() {
