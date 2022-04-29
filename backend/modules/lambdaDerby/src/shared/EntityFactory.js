@@ -486,7 +486,18 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
         return this.getPhaseXDeltaMS(this.phase1Results);
     }
     get phase2DeltaMS() {
-        return this.getPhaseXDeltaMS(this.phase2Results);
+        if (!this.phase2Results) {
+            return undefined;
+        }
+
+        // phase 2 runs with RacePhase car numbers in opposite lanes as RaceStanding.
+        // this reverse hook is intended to provide consistent timer
+        //   calculations b/t RP and RS, accomodating that flip.
+        // the only affected value is when there is a time with .500 ms,
+        // and we need to round up/down consistently.
+        const p2Copy = [...this.phase2Results];
+        p2Copy.reverse();
+        return this.getPhaseXDeltaMS(p2Copy) * -1;
     }
 
     isWinner(lane, phase) {

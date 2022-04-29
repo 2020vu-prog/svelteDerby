@@ -7,6 +7,7 @@
         showBottomNav,
         developerMode,
         developerLogging,
+        enableFractionalMs,
         statusMessage,
     } from "./stores.js";
     $: {
@@ -159,6 +160,13 @@
             </h6>
         </div>
         <hr />
+        <div class="singularSettingDiv">
+            <h4>Allow Fractional MS timing</h4>
+            <input type="checkbox" bind:checked={$enableFractionalMs} />
+            <h6>
+                This enables partial MS entry on manual timer. NOT recommended.
+            </h6>
+        </div>
     {/if}
 
     <BottomNav />

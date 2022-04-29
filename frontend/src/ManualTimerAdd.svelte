@@ -2,7 +2,12 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { raceConfig, statusMessage, driverMap } from "./stores.js";
+    import {
+        raceConfig,
+        statusMessage,
+        driverMap,
+        enableFractionalMs,
+    } from "./stores.js";
     import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
@@ -22,6 +27,9 @@
     });
 
     function validateTimerData(laneX) {
+        if ($enableFractionalMs) {
+            return true; // skip edit if prefs allow
+        }
         if (laneX.toString().includes(".")) {
             $statusMessage = {
                 text: `Invalid Input: [${laneX}] (do not include decimal for time).`,

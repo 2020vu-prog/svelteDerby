@@ -63,6 +63,7 @@ export const nextOnBlockKey = writable("");
 export const showBottomNav = persistable("pref:showBottomNav", true);
 export const developerMode = persistable("pref:developerMode", false);
 export const developerLogging = persistable("pref:developerLogging");
+export const enableFractionalMs = persistable("pref:enableFractionalMs", false);
 
 export const pendingSortAlgorithm = persistable(
     "pref:pendingSortAlgorithm",
