@@ -6,9 +6,21 @@
     import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { getCacheKey, getChartCacheKey } from "./stores.js";
+    import { getCacheKey, getChartCacheKey, theme } from "./stores.js";
 
     import axios from "axios";
+
+    $: {
+        document.documentElement.style.setProperty(
+            `--themeFromJS`,
+            `${$theme}`
+        );
+    }
+    $: {
+        if (mounted && day && time && division) {
+            loginForm.chartName = `${day} ${time} ${division}`;
+        }
+    }
 
     var jsReady = false;
     var treeReady = false;
@@ -20,6 +32,9 @@
     var submitSpinning = false;
 
     var chartSelected = "Chart Selected: ";
+    var day;
+    var time;
+    var division;
 
     $: {
         syncAddButton(loginForm.chartName);
@@ -41,6 +56,7 @@
         mounted = true;
         getChartDataFromServer();
         tryBuild();
+        presetBracketNameSelections();
     });
     const tryBuild = () => {
         if (treeReady && mounted && jsReady && s3ChartTypes) {
@@ -202,7 +218,45 @@
 
         return treeItem;
     };
+
+    function presetBracketNameSelections() {
+        var d = new Date();
+        if (d.getDay() == 6) {
+            day = "Sat";
+        } else if (d.getDay() == 0) {
+            day = "Sun";
+        }
+
+        if (d.getHours() > 12) {
+            time = "PM";
+        } else {
+            time = "AM";
+        }
+    }
 </script>
+
+<style>
+    :root {
+        --themeFromJS: "black";
+    }
+    .switch-toggle {
+        float: left;
+        background: #242729;
+    }
+    .switch-toggle input {
+        position: absolute;
+        opacity: 0;
+    }
+    .switch-toggle input + label {
+        padding: 7px;
+        float: left;
+        color: #fff;
+        cursor: pointer;
+    }
+    .switch-toggle input:checked + label {
+        background: var(--themeFromJS);
+    }
+</style>
 
 <svelte:head>
     <script
@@ -224,13 +278,90 @@
         <div id="jstree_demo_div" />
     </label>
     <p>{chartSelected}</p>
+
+    <p style="float:left">Day:</p>
+    <div class="switch-toggle" style="max-height: 38px;">
+
+        <input id="sat" name="day" type="radio" bind:group={day} value="Sat" />
+        <label for="sat" onclick="">Sat</label>
+
+        <input id="sun" name="day" type="radio" bind:group={day} value="Sun" />
+        <label for="sun" onclick="">Sun</label>
+
+    </div>
+    <br />
+    <br />
+
+    <p style="float:left">Time:</p>
+    <div class="switch-toggle" style="max-height: 38px;">
+
+        <input id="am" name="time" type="radio" bind:group={time} value="AM" />
+        <label for="am" onclick="">AM</label>
+
+        <input id="pm" name="time" type="radio" bind:group={time} value="PM" />
+        <label for="pm" onclick="">PM</label>
+
+    </div>
+    <br />
+    <br />
+    <p style="float:left">Division:</p>
+    <div class="switch-toggle" style="max-height: 38px;">
+
+        <input
+            id="stock"
+            name="class"
+            type="radio"
+            bind:group={division}
+            value="Stock" />
+        <label for="stock" onclick="">Stock</label>
+
+        <input
+            id="ss"
+            name="class"
+            type="radio"
+            bind:group={division}
+            value="SS" />
+        <label for="ss" onclick="">SS</label>
+
+        <input
+            id="masters"
+            name="class"
+            type="radio"
+            bind:group={division}
+            value="Masters" />
+        <label for="masters" onclick="">Masters</label>
+
+        <input
+            id="legacy"
+            name="class"
+            type="radio"
+            bind:group={division}
+            value="Legacy" />
+        <label for="legacy" onclick="">Legacy</label>
+
+        <input
+            id="wrap"
+            name="class"
+            type="radio"
+            bind:group={division}
+            value="Wrap" />
+        <label for="wrap" onclick="">Wrap</label>
+
+    </div>
+    <br />
+    <br />
+    <br />
+    <br />
     <label>
-        ChartName:
+        Chart Name:
         <input
             type="text"
             bind:value={loginForm.chartName}
             placeholder="Chart Name" />
     </label>
+
+    <br />
+    <br />
     <SpinnerButton
         disabled={submitDisabled}
         on:click={handleSubmit}
