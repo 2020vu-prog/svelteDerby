@@ -45,6 +45,8 @@
         if (editable) {
             log.debug("editCarAndDriver");
             push(`/driverAdd/${number}`);
+        } else {
+            push(`/driverInfo/${number}`);
         }
     }
 
