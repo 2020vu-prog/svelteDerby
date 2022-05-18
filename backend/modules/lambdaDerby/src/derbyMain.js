@@ -1293,6 +1293,9 @@ async function listOrgUser(json, apiProps) {
 async function addOrgUser(json) {
     log.debug("addOrgUser: " + JSON.stringify(json));
 
+    if (json.email) {
+        json.email = json.email.trim();
+    }
     if (json.email && json.orgIz && json.roleList) {
         json.PK = json.orgIz + ":OrgPerm"; // force OrgPerm
         json.SK = json.email;
