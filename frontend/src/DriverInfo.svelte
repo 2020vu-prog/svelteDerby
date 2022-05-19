@@ -103,7 +103,7 @@
     var phaseWinPercentage;
     $: phaseWinPercentage = (numPhasesWon / numPhasesRaced) * 100;
     //const store = tweened(0, {duration: 1000});
-    const phaseStore = spring(0, { stiffness: 0.3, damping: 0.3 });
+    const phaseStore = spring(0, { stiffness: 0.08, damping: 1 });
     $: phaseStore.set(phaseWinPercentage);
 
     var heatWinPercentage = 0;
@@ -112,7 +112,7 @@
             heatWinPercentage = (numHeatsWon / numHeatsRaced) * 100;
         }
     }
-    const heatStore = spring(0, { stiffness: 0.3, damping: 0.3 });
+    const heatStore = spring(0, { stiffness: 0.08, damping: 1 });
     $: heatStore.set(heatWinPercentage);
 </script>
 
@@ -150,7 +150,7 @@
         {numPhasesWon}/{racePhaseList.length}
         <br />
         <strong>Avg. Win Time:</strong>
-        {Math.round(phaseWinSum / numPhasesWon)} ms
+        {phaseWinSum > 0 ? Math.round(phaseWinSum / numPhasesWon) : '--'} ms
     </div>
     <div class="column">
         <h2>Heats:</h2>
@@ -160,7 +160,7 @@
         {numHeatsWon}/{numHeatsRaced}
         <br />
         <strong>Avg. Win Time:</strong>
-        {Math.round(heatWinSum / numHeatsWon)} ms
+        {heatWinSum > 0 ? Math.round(heatWinSum / numHeatsWon) : '--'} ms
         <br />
     </div>
 </div>
