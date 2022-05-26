@@ -53,6 +53,10 @@
             $carFilter
         ).filter((cn) => filterMatches(cn, $carFilter));
     }
+
+    function carAndDriverOnClick(number) {
+        push(`/driverInfo/${number}`);
+    }
 </script>
 
 <style>
@@ -73,22 +77,11 @@
 
 <MaterialAdd clickHandleRoute="/driverAdd" />
 
-<VirtualList
-    height="{mainFullPx}px"
-    items={carNumberList}
-    bind:start
-    bind:end
-    let:item>
-    <Card
-        class="mt-3 border border-info"
-        on:click={() => push(`/driverInfo/${item}`)}>
+<VirtualList height="{mainFullPx}px" items={carNumberList} bind:start bind:end let:item>
+    <Card class="mt-3 border border-info" on:click={()=> carAndDriverOnClick(item)}>
         <CardBody>
             <div style="display: inline">
-                <CarAndDriver
-                    number={item}
-                    at={safeGetAt($driverMap, item)}
-                    isWinner=""
-                    phaseLetter="" />
+                <CarAndDriver number={item} at={safeGetAt($driverMap, item)} isWinner="" phaseLetter="" />
 
                 {#if editable}
                     <span

@@ -9,30 +9,26 @@
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
+    import { spring } from "svelte/motion";
+    import Pie from "./Pie.svelte";
+
     var racePhaseList = Object.values($racePhaseMap);
     racePhaseList = racePhaseList.filter((a) => {
         return a.cn.indexOf(params.number) > -1;
     });
 
-    function determineIfCarWonPhase(racePhase) {
-        if (!racePhase.phr || racePhase.del) {
-            numPhasesRaced--;
-            return false;
-        }
-        if (racePhase.cn.indexOf(String(params.number)) == 0) {
-            return racePhase.phr[0] < racePhase.phr[1];
-        } else {
-            return racePhase.phr[1] < racePhase.phr[0];
-        }
-    }
-
     var numPhasesRaced = racePhaseList.length;
     var numPhasesWon = 0;
     var phaseWinSum = 0;
     racePhaseList.forEach(function (item) {
-        if (determineIfCarWonPhase(item) == true) {
+        const entityFactory = new EntityFactory({});
+        var entityRP = entityFactory.build(item);
+        if (
+            entityRP.isWinner(item.cn.indexOf(String(params.number)), false) ==
+            true
+        ) {
             numPhasesWon++;
-            phaseWinSum += Math.abs((item.phr[0] - item.phr[1]) / 1000);
+            phaseWinSum += Math.abs(entityRP.getPhaseDeltaMS());
         }
     });
 
@@ -98,11 +94,9 @@
         })[0].bracketName;
     }
 
-    import { spring, tweened } from "svelte/motion";
-    import Pie from "./Pie.svelte";
     var phaseWinPercentage;
     $: phaseWinPercentage = (numPhasesWon / numPhasesRaced) * 100;
-    //const store = tweened(0, {duration: 1000});
+
     const phaseStore = spring(0, { stiffness: 0.08, damping: 1 });
     $: phaseStore.set(phaseWinPercentage);
 
@@ -132,11 +126,7 @@
 </style>
 
 <div style="font-size: xx-large; width: 100%; text-align: center">
-    <CarAndDriver
-        number={params.number}
-        at={safeGetAt($driverMap, params.number)}
-        isWinner=""
-        phaseLetter="" />
+    <CarAndDriver number={params.number} at={safeGetAt($driverMap, params.number)} isWinner="" phaseLetter="" />
 </div>
 <hr />
 <br />
@@ -174,4 +164,11 @@
             <br />
         {/each}
     {:else}This racer has not yet participated in any complete brackets.{/if}
+
+    <hr />
+    <h6>
+        This feature is currently in BETA and accuracy of the data on this
+        screen should be expected but is not guaranteed. Please report any
+        issues to your local race city official.
+    </h6>
 </div>
