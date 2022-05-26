@@ -76,22 +76,6 @@
         }
     };
 
-    const isWinner = (lane) => {
-        if (!racePhase.phaseResults) {
-            return undefined;
-        }
-        var phaseWinTime = racePhase.getPhaseDeltaMS();
-
-        if (phaseWinTime == 0) {
-            return true;
-        }
-
-        if (lane === 1) {
-            return phaseWinTime > 0;
-        } else {
-            return phaseWinTime < 0;
-        }
-    };
     const getWinTime = (lane) => {
         var phaseWinTime = racePhase.getPhaseDeltaMS();
         if (lane === 2) {
@@ -183,11 +167,11 @@
                     <li class="list-group-item ">
                         <CarAndDriver
                             number={rp.carNumbers[0]}
-                            isWinner={isWinner(1, rp)}
+                            isWinner={racePhase.isWinner(1, true)}
                             phaseLetter={getPhaseIcon(rp)}
                             timerLink={getTimerLink(rp)}
                             at={safeGetAt($driverMap, rp.carNumbers[0])} />
-                        {#if isWinner(1, rp)}
+                        {#if racePhase.isWinner(1, true)}
                             <span class="spanRight">
                                 <Badge pill class="bigText">
                                     {getPhaseLetter(rp)}:{getWinTime(1, rp)}
@@ -198,11 +182,11 @@
                     <li class="list-group-item">
                         <CarAndDriver
                             number={rp.carNumbers[1]}
-                            isWinner={isWinner(2, rp)}
+                            isWinner={racePhase.isWinner(2, true)}
                             phaseLetter={getPhaseIcon(rp)}
                             timerLink={getTimerLink(rp)}
                             at={safeGetAt($driverMap, rp.carNumbers[1])} />
-                        {#if isWinner(2, rp)}
+                        {#if racePhase.isWinner(2, true)}
                             <span class="spanRight">
                                 <Badge pill class="bigText">
                                     {getPhaseLetter(rp)}:{getWinTime(2, rp)}

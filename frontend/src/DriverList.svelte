@@ -17,6 +17,8 @@
     import { onMount } from "svelte";
     import { push } from "svelte-spa-router";
     import { getMainFull } from "./utils.js";
+    import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
+    import Icon from "fa-svelte";
     var mainFullPx = 300;
 
     var editable = false;
@@ -41,12 +43,6 @@
     function isDriverEditable(paramEmail) {
         return isEmailAllowedRoutePath(paramEmail, "/driverAdd");
     }
-    function editCarAndDriver(number) {
-        if (editable) {
-            log.debug("editCarAndDriver");
-            push(`/driverAdd/${number}`);
-        }
-    }
 
     $: {
         log.debug(`driver virtualList: start: ${start} end: ${end}`);
@@ -57,7 +53,17 @@
             $carFilter
         ).filter((cn) => filterMatches(cn, $carFilter));
     }
+
+    function carAndDriverOnClick(number) {
+        push(`/driverInfo/${number}`);
+    }
 </script>
+
+<style>
+    div :global(.xLargeEdit) {
+        font-size: 28px;
+    }
+</style>
 
 <div id="dlTitle">
 
@@ -79,14 +85,25 @@
     let:item>
     <Card
         class="mt-3 border border-info"
-        on:click={() => editCarAndDriver(item)}>
+        on:click={() => carAndDriverOnClick(item)}>
         <CardBody>
-            <div>
+            <div style="display: inline">
                 <CarAndDriver
                     number={item}
                     at={safeGetAt($driverMap, item)}
                     isWinner=""
                     phaseLetter="" />
+
+                {#if editable}
+                    <span
+                        on:click={(event) => {
+                            push(`/driverAdd/${item}`);
+                            event.stopPropagation();
+                        }}
+                        style="display: inline; float: right">
+                        <Icon class="xLargeEdit" icon={faEdit} />
+                    </span>
+                {/if}
             </div>
         </CardBody>
     </Card>

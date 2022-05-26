@@ -15,6 +15,7 @@
     import ChartAdd from "./ChartAdd.svelte";
     import DriverList from "./DriverList.svelte";
     import DriverAdd from "./DriverAdd.svelte";
+    import DriverInfo from "./DriverInfo.svelte";
     import EventSelection from "./EventSelection.svelte";
     import EventAdd from "./EventAdd.svelte";
     import HistoryList from "./HistoryList.svelte";
@@ -65,6 +66,7 @@
         "/ManualAnnouncement": ManualAnnouncement,
         "/raceStandingAdd/:type": RaceStandingAdd,
         "/driverAdd/:number?": DriverAdd,
+        "/driverInfo/:number?": DriverInfo,
         "/eventSelection/:orgIz": EventSelection,
         "/eventAdd/:orgIz/:mode": EventAdd,
         "/historyList/:PK/:SK": HistoryList,

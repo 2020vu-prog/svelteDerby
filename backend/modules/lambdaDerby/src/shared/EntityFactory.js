@@ -390,6 +390,22 @@ entityFactories["RacePhase"] = class RacePhase extends EntityBase {
     set phaseLiteral(pl) {
         return (this.pl = pl);
     }
+    isWinner(lane, shouldWinOnTie) {
+        if (!this.phr) {
+            return undefined;
+        }
+        var phaseWinTime = this.getPhaseDeltaMS();
+
+        if (phaseWinTime == 0) {
+            return shouldWinOnTie;
+        }
+
+        if (lane === 1) {
+            return phaseWinTime > 0;
+        } else {
+            return phaseWinTime < 0;
+        }
+    }
     get classType() {
         return "RacePhase";
     }
