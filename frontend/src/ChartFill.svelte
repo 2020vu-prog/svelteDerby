@@ -44,9 +44,8 @@
         });
         return rc;
     }
-    function fillRandom() {
+    async function fillRandom() {
         const fillMap = {}
-        const fillHeats = {}
         if ($selectedDriverList.length == 0) {
             log.debug("ChartFill skipped: ", params);
             return
@@ -56,15 +55,28 @@
         const loadMe = getShaCars(new Date().getTime(), $selectedDriverList)
         log.debug("ChartFill fill order: ", loadMe);
         seeds.forEach((seed) => {
-            fillMap[seed] = loadMe.shift()
             const heat = seed.slice(0, -1) //'abcde'
+            if (!fillMap[heat]) {
+                fillMap[heat] = {}
+            }
 
-            fillHeats[heat] = true
+            const nextCar = loadMe.shift();
+            if (nextCar) {
+                fillMap[heat][seed] = {
+                    "status": "ptcp",
+                    "ptcp": nextCar
+                }
+            }
+            else {
+                fillMap[heat][seed] = {
+                    "status": "bye",
+                }
+            }
         });
         log.debug("ChartFill fillMap: ", fillMap);
-        log.debug("ChartFill heats: ", fillHeats);
-        //Object.keys(fillHeats).forEach((heat) => {
-        //}
+        Object.keys(fillMap).reverse().forEach(async function (heat) {
+            await handleSubmit(heat, fillMap[heat]);
+        });
     }
     async function refreshDataFromDb(trigger) {
         if (!params.chartId) return;
@@ -89,88 +101,41 @@
         chartForm.id = bmdFromDexie.SK;
     };
 
-    async function handleSubmit() {
-        log.debug("Filling:" + JSON.stringify(posForm));
+    async function handleSubmit(heat, posMap) {
+        log.debug("Filling:" + JSON.stringify(posMap));
 
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
             chartId: params.chartId,
             pos: {},
-            heatNumber: params.chartPosition,
+            heatNumber: heat,
         };
 
         var validCount = 0;
         ["A", "B"].forEach((ab) => {
-            // this should probably happen on load
-            if (!posForm[ab].seedType) {
-                posForm[ab].seedType = "ptcp";
+            if (posMap[heat + ab]) {
+                req.pos[ab] = posMap[heat + ab]
             }
-            var seedObject = {
-                status: posForm[ab].seedType,
-                ptcp: "",
-            };
-
-            log.debug("Initialized seedObject:", seedObject);
-            if (
-                seedObject.status === "ptcp" ||
-                seedObject.status === "forfeit"
-            ) {
-                if (!posForm[ab].carNumber) {
-                    log.debug("allow empty preSeed:", posForm[ab]);
-                    // let empty/null/undefined racers through bracket mgmt.  they may not be known yet.
-                } else if (participantValid(posForm[ab].carNumber)) {
-                    log.debug("valid preSeed:", posForm[ab]);
-
-                    seedObject.ptcp = posForm[ab].carNumber.toString();
-                } else {
-                    log.debug("invalid preSeed:", posForm[ab]);
-                    $statusMessage = {
-                        text: `Invalid Participant: [${posForm[ab].carNumber}]`,
-                        type: "error",
-                    };
-                    return; // return from closure [AB]
-                }
-            }
-
-            if (
-                (seedObject.ptcp && seedObject.status === "forfeit") ||
-                seedObject.status === "bye" ||
-                seedObject.status === "ptcp" // allow empty ptcp (waiting for bracket prgress)
-            ) {
-                log.debug("Good seedObject:", seedObject);
-                req.pos[ab] = seedObject;
-            } else {
-                log.debug("Skip seedObject:", seedObject);
-            }
-            validCount++;
         });
-
-        if (validCount < 2) {
-            return;
-        }
-        log.debug("token:" + bearer);
 
         submitSpinning = true;
 
 
-        $axios
-            .post($raceConfig.baseUrl + "/addChartPosition", req)
-            .then((response) => {
-                log.debug("addChartPosition axios success ", response);
-                if (response.data.error) {
-                    $statusMessage = {
-                        text: response.data.error,
-                        type: "error",
-                    };
-                } else {
-                    pop();
-                }
-            })
-            .catch((err) => {
-                submitSpinning = false;
-                log.debug("addChartPosition failed: " + err);
-            });
+        try {
+            const response = await $axios.post($raceConfig.baseUrl + "/addChartPosition", req)
+            log.debug("addChartPosition axios success ", response);
+            if (response.data.error) {
+                $statusMessage = {
+                    text: response.data.error,
+                    type: "error",
+                };
+            }
+        }
+        catch (err) {
+            submitSpinning = false;
+            log.debug("addChartPosition failed: " + err);
+        };
     }
 
     const chartForm = { name: undefined };
