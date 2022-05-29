@@ -34,6 +34,30 @@ let globalErrorList = [];
 
 log.setLevel(log.levels.TRACE);
 
+const testCars = [
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+];
+//const testSeed = new Date().getTime();
+const testSeed = new Date().toISOString();
+
+getShaCars(testSeed, testCars);
+getShaCars(testSeed, testCars);
+
 const s3QueryChartTypes = async () => {
     var params = {
         Bucket: process.env.ChartS3BucketName,
@@ -627,6 +651,28 @@ async function getActiveTimers() {
 
     return timers;
 }
+
+function getShaCars(seed, carList) {
+    var rc = [];
+    var shaMap = {};
+    log.debug("getShaCars: Begin:", seed);
+
+    carList.forEach((carNumber) => {
+        const seededCar = "" + carNumber + ":" + seed;
+        const sha = crypto.createHash("sha256").update(seededCar).digest("hex");
+        shaMap[sha] = carNumber;
+    });
+    var shaKeys = Object.keys(shaMap);
+    shaKeys.sort();
+
+    shaKeys.forEach((shaKey) => {
+        const nextCar = shaMap[shaKey];
+        log.debug("getShaCars: ", nextCar, " shaKey:", shaKey);
+        rc.push(nextCar);
+    });
+    return rc;
+}
+
 const registeredTimerSha = (timer) => {
     const sha = crypto.createHash("sha256").update(timer.uuid).digest("hex");
     //timer.sha = sha.substring(0, 6);

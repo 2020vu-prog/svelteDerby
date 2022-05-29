@@ -12,6 +12,7 @@
     import RacePhaseList from "./RacePhaseList.svelte";
     import ChartList from "./ChartList.svelte";
     import ChartEdit from "./ChartEdit.svelte";
+    import ChartFill from "./ChartFill.svelte";
     import ChartAdd from "./ChartAdd.svelte";
     import DriverList from "./DriverList.svelte";
     import DriverAdd from "./DriverAdd.svelte";
@@ -60,7 +61,7 @@
         "/": RaceStandingList,
         "/RsList/:type": RaceStandingList,
         "/RpList": RacePhaseList,
-        "/drivers": DriverList,
+        "/drivers/:selectable?": DriverList,
         "/login": Login,
         "/ManualTimerAdd/:rpKey/:winningLane?/:winningTime?": ManualTimerAdd,
         "/ManualAnnouncement": ManualAnnouncement,
@@ -80,6 +81,7 @@
         "/chartPosition/:chartId/:chartPosition": ChartPosition,
         "/chartList": ChartList,
         "/chartEdit/:chartId": ChartEdit,
+        "/chartFill/:chartId": ChartFill,
         "/chartAdd": ChartAdd,
         "/timerConfig": TimerConfig,
         "/timerAlignment": TimerAlignment,

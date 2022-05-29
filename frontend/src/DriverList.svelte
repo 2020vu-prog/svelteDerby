@@ -1,4 +1,5 @@
 <script>
+    import SpinnerButton from "./SpinnerButton.svelte";
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import VirtualList from "@sveltejs/svelte-virtual-list";
@@ -8,6 +9,8 @@
         carFilter,
         doRefreshBlocks,
         uiPageSize,
+        selectedDriverMap,
+        selectedDriverList,
     } from "./stores.js";
     import CarAndDriver from "./CarAndDriver.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
@@ -15,20 +18,28 @@
     import { safeGetAt } from "./utils.js";
     import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
-    import { push } from "svelte-spa-router";
+    import { push, pop } from "svelte-spa-router";
     import { getMainFull } from "./utils.js";
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
+    export let params = {};
     var mainFullPx = 300;
 
     var editable = false;
+    var selectable = false;
     var carNumberList = [];
     var start;
     var end;
     onMount(async () => {
         log.debug(`DriverList userEmail: ${$userEmail}`);
+        log.debug("DriverList mounted : ", params);
+
         editable = isDriverEditable($userEmail);
+        selectable = params.selectable;
         mainFullPx = getMainFull(["#dlTitle"]);
+
+        wip = $selectedDriverMap;
+        updateSelectTotal();
     });
     const filterMatches = (driver, lclFilter) => {
         if (!lclFilter) return true;
@@ -55,7 +66,27 @@
     }
 
     function carAndDriverOnClick(number) {
-        push(`/driverInfo/${number}`);
+        if (selectable) {
+        } else {
+            push(`/driverInfo/${number}`);
+        }
+    }
+    var wip = {};
+    function clearSelect() {
+        wip = {};
+        $selectedDriverMap = wip;
+        updateSelectTotalWhenSettled();
+    }
+    function finishSelect() {
+        $selectedDriverMap = wip;
+        pop();
+    }
+    function updateSelectTotal() {
+        setTimeout(updateSelectTotalWhenSettled, 300);
+    }
+    function updateSelectTotalWhenSettled() {
+        $selectedDriverMap = wip;
+        //wipTotal = $selectedDriverList.length
     }
 </script>
 
@@ -63,27 +94,64 @@
     div :global(.xLargeEdit) {
         font-size: 28px;
     }
+
+    input[type="checkbox"] {
+        transform: scale(2);
+    }
 </style>
 
 <div id="dlTitle">
 
     <h4>
-        Driver List
+        Driver
+        {#if selectable}Selection{:else}List{/if}
         <CarFilter />
     </h4>
+    {#if selectable}
+        <SpinnerButton on:click={finishSelect}>
+            Select [{$selectedDriverList.length}] Drivers
+        </SpinnerButton>
+        <SpinnerButton on:click={clearSelect}>
+            Clear Selected Drivers
+        </SpinnerButton>
+    {/if}
 
     <p />
 </div>
 
-<MaterialAdd clickHandleRoute="/driverAdd" />
+{#if !selectable}
+    <MaterialAdd clickHandleRoute="/driverAdd" />
+{/if}
 
-<VirtualList height="{mainFullPx}px" items={carNumberList} bind:start bind:end let:item>
-    <Card class="mt-3 border border-info" on:click={()=> carAndDriverOnClick(item)}>
+<VirtualList
+    height="{mainFullPx}px"
+    items={carNumberList}
+    bind:start
+    bind:end
+    let:item>
+    <Card
+        class="mt-3 border border-info"
+        on:click={() => carAndDriverOnClick(item)}>
+
         <CardBody>
             <div style="display: inline">
-                <CarAndDriver number={item} at={safeGetAt($driverMap, item)} isWinner="" phaseLetter="" />
+                <CarAndDriver
+                    number={item}
+                    at={safeGetAt($driverMap, item)}
+                    isWinner=""
+                    phaseLetter="" />
 
-                {#if editable}
+                {#if selectable}
+                    <span style="display: inline; float: right">
+                        <input
+                            type="checkbox"
+                            bind:checked={wip[item]}
+                            on:click={(event) => {
+                                updateSelectTotal();
+                                event.stopPropagation();
+                            }} />
+                    </span>
+                {:else if editable}
                     <span
                         on:click={(event) => {
                             push(`/driverAdd/${item}`);
@@ -97,3 +165,8 @@
         </CardBody>
     </Card>
 </VirtualList>
+{#if selectable}
+    <SpinnerButton on:click={finishSelect}>
+        Select [{$selectedDriverList.length}] Drivers
+    </SpinnerButton>
+{/if}

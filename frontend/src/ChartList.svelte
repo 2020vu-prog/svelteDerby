@@ -3,6 +3,7 @@
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
 
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
+    import { faDice } from "@fortawesome/free-solid-svg-icons/faDice";
     import Icon from "fa-svelte";
 
     import { driverMap, doRefreshBlocks } from "./stores.js";
@@ -94,13 +95,23 @@
                     <div style="display: inline">{bmd.bracketName}</div>
 
                     {#if userHasPermission}
-                        <span
-                            on:click={(event) => {
-                                push(`/ChartEdit/${bmd.SK}`);
-                                event.stopPropagation();
-                            }}
-                            style="display: inline; float: right">
-                            <Icon class="xLargeEdit" icon={faEdit} />
+                        <span style="display: inline; float: right">
+                            <span
+                                on:click={(event) => {
+                                    push(`/ChartFill/${bmd.SK}`);
+                                    event.stopPropagation();
+                                }}>
+                                <Icon class="xLargeEdit" icon={faDice} />
+                            </span>
+                            &nbsp; &nbsp;
+                            <span
+                                on:click={(event) => {
+                                    push(`/ChartEdit/${bmd.SK}`);
+                                    event.stopPropagation();
+                                }}>
+
+                                <Icon class="xLargeEdit" icon={faEdit} />
+                            </span>
                         </span>
                     {/if}
                 </CardBody>

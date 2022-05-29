@@ -11,7 +11,7 @@
         chartClickLoggerShow,
         getChartCacheKey,
     } from "./stores.js";
-    import { parseHeatPos, sleep } from "./utils.js";
+    import { parseHeatPos, sleep, getChartJson } from "./utils.js";
 
     export let params = {};
     const loggedImgPositions = {};
@@ -35,28 +35,19 @@
         const chartCacheKey = getChartCacheKey();
         bracketImgSrc = `/data/brackets/${bmdFromDexie.imgPath}?cacheKey=${chartCacheKey}`;
         //await getChartImage(bmdFromDexie.imgPath);
-        await getChartImage(bmdFromDexie.jsonPath);
+        const chartjson = await getChartJson(bmdFromDexie.jsonPath);
+        log.debug("refreshDataFromDb chartjson:", chartjson);
+        if (chartjson) {
+            brackets2 = chartjson;
+            checkAndActivateScroll();
+        } else {
+            if (!$chartClickLoggerId) {
+                //don't do anything when empty... enables panMove
+                return;
+            }
+        }
     };
-    const getChartImage = async (imgPath) => {
-        log.debug("getChartImage", imgPath);
 
-        const chartCacheKey = getChartCacheKey();
-        axios
-            .get(`/data/brackets/${imgPath}?cacheKey=${chartCacheKey}`)
-            .then((response) => {
-                log.debug("ChartDetail  brackets2 axios success", response);
-                brackets2 = response.data;
-
-                checkAndActivateScroll();
-            })
-            .catch((err) => {
-                log.debug("ChartDetail failed: " + err);
-                if (!$chartClickLoggerId) {
-                    //don't do anything when empty... enables panMove
-                    return;
-                }
-            });
-    };
     log.debug("chartDetail params:", params);
 
     // placeholder.   brackets json is downloaded that will match chart image

@@ -258,5 +258,15 @@ export const userExpCountDownSecs = derived(
         }
     }
 );
+export const selectedDriverMap = writable({});
+export const selectedDriverList = derived(selectedDriverMap, ($dm) => {
+    const dlist = [];
+    for (const [key, value] of Object.entries($dm)) {
+        if (value) {
+            dlist.push(key);
+        }
+    }
+    return dlist;
+});
 
 //doRefresh();

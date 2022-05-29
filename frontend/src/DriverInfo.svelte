@@ -126,7 +126,11 @@
 </style>
 
 <div style="font-size: xx-large; width: 100%; text-align: center">
-    <CarAndDriver number={params.number} at={safeGetAt($driverMap, params.number)} isWinner="" phaseLetter="" />
+    <CarAndDriver
+        number={params.number}
+        at={safeGetAt($driverMap, params.number)}
+        isWinner=""
+        phaseLetter="" />
 </div>
 <hr />
 <br />

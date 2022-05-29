@@ -1,5 +1,6 @@
 import log from "loglevel";
 import { store as AuthStore } from "./stores/auth.js";
+import axios from "axios";
 const {
     hasSvelteRoutePath,
 } = require("../../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
@@ -12,6 +13,7 @@ import {
     getAxios as getAxiosStore,
     raceConfig as raceConfigStore,
     roleMap as roleMapStore,
+    getChartCacheKey,
 } from "./stores.js";
 import { logout as cognitoLogout } from "./stores/auth.js";
 import { get } from "svelte/store";
@@ -225,4 +227,18 @@ export async function refreshOrgRoles(orgIz) {
         .catch((err) => {
             log.debug(err);
         });
+}
+
+export async function getChartJson(jsonPath) {
+    log.debug("utils getChartJson", jsonPath);
+
+    const chartCacheKey = getChartCacheKey();
+    try {
+        const response = await axios.get(
+            `/data/brackets/${jsonPath}?cacheKey=${chartCacheKey}`
+        );
+        return response.data;
+    } catch (err) {
+        log.debug("utils getChartJson failed: " + err);
+    }
 }
