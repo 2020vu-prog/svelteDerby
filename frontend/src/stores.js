@@ -266,6 +266,7 @@ export const selectedDriverList = derived(selectedDriverMap, ($dm) => {
             dlist.push(key);
         }
     }
+    dlist.sort();
     return dlist;
 });
 
