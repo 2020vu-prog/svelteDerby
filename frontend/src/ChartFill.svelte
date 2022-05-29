@@ -74,9 +74,10 @@
             }
         });
         log.debug("ChartFill fillMap: ", fillMap);
-        Object.keys(fillMap).reverse().forEach(async function (heat) {
+
+        for (const heat of Object.keys(fillMap).reverse()) {
             await handleSubmit(heat, fillMap[heat]);
-        });
+        };
     }
     async function refreshDataFromDb(trigger) {
         if (!params.chartId) return;
