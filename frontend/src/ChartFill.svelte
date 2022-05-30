@@ -24,13 +24,15 @@
     var pieShowing = false;
     var piePercent = 0;
     var seeds = [];
+    var bracketD;
+    var chartIsEmpty = false;
     onMount(async () => {
         log.debug("ChartFill mounted focus: ", params);
 
         chartId = params.chartId;
         mounted = true;
         await refreshDataFromDb();
-        fillRandom();
+        await getChartIsEmpty();
     });
     function getShaCars(seed, carList) {
         var rc = [];
@@ -121,6 +123,19 @@
         chartForm.id = bmdFromDexie.SK;
     };
 
+    async function getChartIsEmpty() {
+        const bracketPosKey = `${params.chartId}:`;
+        log.debug("chartIsEmpty bracketPosKey: ", bracketPosKey);
+        const bp = await db.BracketPos.where(":id").startsWith(bracketPosKey);
+        log.debug("chartIsEmpty got: ", bp);
+        bp.count(function (count) {
+            log.debug("chartIsEmpty Found: " + count);
+            if (count == 0) {
+                chartIsEmpty = true;
+            }
+            log.debug("chartIsEmpty: " + chartIsEmpty);
+        });
+    }
     async function handleSubmit(heat, posMap) {
         log.debug("Filling:" + JSON.stringify(posMap));
 
@@ -169,14 +184,29 @@
         <input bind:value={chartForm.name} disabled="true" />
     </label>
 
-    <SpinnerButton
-        on:click={(event) => {
-            push(`/drivers/selectable=true`);
-            event.stopPropagation();
-        }}>
-        Select Drivers
-    </SpinnerButton>
-    {#if $selectedDriverList.length}Selected: {$selectedDriverList}{/if}
+    {#if chartIsEmpty}
+        <SpinnerButton
+            on:click={(event) => {
+                push(`/drivers/selectable=true`);
+                event.stopPropagation();
+            }}>
+            Select Drivers
+        </SpinnerButton>
+        {#if $selectedDriverList.length}
+            <SpinnerButton
+                on:click={(event) => {
+                    setTimeout(fillRandom, 300);
+                    event.stopPropagation();
+                }}>
+                Fill Chart With [{$selectedDriverList.length}] Drivers
+            </SpinnerButton>
+            <p />
+            Selected: {$selectedDriverList}
+        {/if}
+    {:else}
+        <p />
+        Chart already loaded.
+    {/if}
     {#each seeds as seed}
         <Card class="mt-3 border border-info">
             <CardBody>{seed}</CardBody>
