@@ -186,6 +186,7 @@
         margin: 15% auto; /* 15% from the top and centered */
         padding: 20px;
         border: 1px solid #888;
+        width: min-content;
     }
 </style>
 
@@ -212,11 +213,12 @@
         </Card>
     {/each}
 
-    {#if pieShowing}
+    {#if true}
         <div id="myModal" class="modal">
 
             <!-- Modal content -->
             <div class="modal-content">
+                <p>AutoFill Progress:</p>
                 <Pie size={150} percent={$ps} />
             </div>
 
