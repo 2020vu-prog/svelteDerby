@@ -64,6 +64,16 @@
             return;
         }
 
+        if ($selectedDriverList.length > seeds.length) {
+            $statusMessage = {
+                text: `Selected [${$selectedDriverList.length}] drivers for a chart with only [${seeds.length}] seeds`,
+                type: "error",
+            };
+            return
+        }
+
+
+
         log.debug("ChartFill filling: ", params);
         const loadMe = getShaCars(new Date().getTime(), $selectedDriverList);
         log.debug("ChartFill fill order: ", loadMe);
@@ -195,7 +205,7 @@
         {#if $selectedDriverList.length}
             <SpinnerButton
                 on:click={(event) => {
-                    setTimeout(fillRandom, 300);
+                    fillRandom()
                     event.stopPropagation();
                 }}>
                 Fill Chart With [{$selectedDriverList.length}] Drivers
