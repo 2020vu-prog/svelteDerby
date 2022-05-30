@@ -69,10 +69,8 @@
                 text: `Selected [${$selectedDriverList.length}] drivers for a chart with only [${seeds.length}] seeds`,
                 type: "error",
             };
-            return
+            return;
         }
-
-
 
         log.debug("ChartFill filling: ", params);
         const loadMe = getShaCars(new Date().getTime(), $selectedDriverList);
@@ -205,7 +203,7 @@
         {#if $selectedDriverList.length}
             <SpinnerButton
                 on:click={(event) => {
-                    fillRandom()
+                    fillRandom();
                     event.stopPropagation();
                 }}>
                 Fill Chart With [{$selectedDriverList.length}] Drivers
