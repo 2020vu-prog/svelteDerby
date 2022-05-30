@@ -13,16 +13,16 @@
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
-    import { getChartJson } from "./utils.js";
+    import { getChartJson, sleep } from "./utils.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
-    import { spring } from "svelte/motion";
-    import Pie from "./Pie.svelte";
+    import PieProgress from "./PieProgress.svelte";
     const crypto = require("crypto");
     export let params = {};
     var chartId = undefined;
     var mounted = false;
     var pieShowing = false;
+    var piePercent = 0;
     var seeds = [];
     onMount(async () => {
         log.debug("ChartFill mounted focus: ", params);
@@ -55,11 +55,6 @@
         });
         return rc;
     }
-    var numPieParts = 0;
-    var currentPiePart = 0;
-
-    const ps = spring(0, { stiffness: 0.08, damping: 1 });
-
     async function fillRandom() {
         const fillMap = {};
         if ($selectedDriverList.length == 0) {
@@ -89,19 +84,19 @@
             }
         });
         log.debug("ChartFill fillMap: ", fillMap);
-
-        numPieParts = Object.keys(fillMap).length;
+        var currentPiePart = 0;
+        var numPieParts = Object.keys(fillMap).length;
 
         pieShowing = true;
 
         for (const heat of Object.keys(fillMap).reverse()) {
             await handleSubmit(heat, fillMap[heat]);
-            currentPiePart++;
-            ps.set((currentPiePart / numPieParts) * 100);
+            piePercent = (++currentPiePart / numPieParts) * 100;
         }
+        await sleep(1500);
         pieShowing = false;
         $selectedDriverMap = {};
-        push(`/ChartDetail/${params.chartId}`);
+        replace(`/ChartDetail/${params.chartId}`);
     }
     async function refreshDataFromDb(trigger) {
         if (!params.chartId) return;
@@ -165,31 +160,6 @@
     const chartForm = { name: undefined };
 </script>
 
-<style>
-    /* The Modal (background) */
-    .modal {
-        display: block;
-        position: fixed; /* Stay in place */
-        z-index: 1; /* Sit on top */
-        left: 0;
-        top: 0;
-        height: 100%; /* Full height */
-        overflow: auto; /* Enable scroll if needed */
-        background-color: rgb(0, 0, 0); /* Fallback color */
-        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
-        text-align: center;
-    }
-
-    /* Modal Content/Box */
-    .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto; /* 15% from the top and centered */
-        padding: 20px;
-        border: 1px solid #888;
-        width: min-content;
-    }
-</style>
-
 <h3>Fill Chart [Initial Seeds]</h3>
 
 <form>
@@ -214,14 +184,6 @@
     {/each}
 
     {#if pieShowing}
-        <div id="myModal" class="modal">
-
-            <!-- Modal content -->
-            <div class="modal-content">
-                <p>AutoFill Progress:</p>
-                <Pie size={150} percent={$ps} />
-            </div>
-
-        </div>
+        <PieProgress pieTitle="AutoFill Progress" {piePercent} />
     {/if}
 </form>
