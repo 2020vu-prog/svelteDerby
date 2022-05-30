@@ -94,11 +94,11 @@
         })[0].bracketName;
     }
 
-    var phaseWinPercentage;
+    var phaseWinPercentage = 0;
     $: phaseWinPercentage = (numPhasesWon / numPhasesRaced) * 100;
 
     const phaseStore = spring(0, { stiffness: 0.08, damping: 1 });
-    $: phaseStore.set(phaseWinPercentage);
+    $: phaseStore.set(phaseWinPercentage ? phaseWinPercentage : 0);
 
     var heatWinPercentage = 0;
     $: {
@@ -107,7 +107,7 @@
         }
     }
     const heatStore = spring(0, { stiffness: 0.08, damping: 1 });
-    $: heatStore.set(heatWinPercentage);
+    $: heatStore.set(heatWinPercentage ? heatWinPercentage : 0);
 </script>
 
 <style>
@@ -163,9 +163,11 @@
     <h2>Placements:</h2>
     {#if bpListFromDexie && bpListFromDexie.length > 0}
         {#each bpListFromDexie as bp}
-            <strong>{getNameFromBracketSK(bp.SK.split(':')[0])}:</strong>
-            {placeMap[bp.SK.split(':')[1]]}
-            <br />
+            {#if placeMap[bp.SK.split(':')[1]]}
+                <strong>{getNameFromBracketSK(bp.SK.split(':')[0])}:</strong>
+                {placeMap[bp.SK.split(':')[1]]}
+                <br />
+            {/if}
         {/each}
     {:else}This racer has not yet participated in any complete brackets.{/if}
 
