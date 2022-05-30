@@ -101,7 +101,7 @@
         }
         pieShowing = false;
         $selectedDriverMap = {};
-        push("/ChartList");
+        push(`/ChartDetail/${params.chartId}`);
     }
     async function refreshDataFromDb(trigger) {
         if (!params.chartId) return;
@@ -213,7 +213,7 @@
         </Card>
     {/each}
 
-    {#if true}
+    {#if pieShowing}
         <div id="myModal" class="modal">
 
             <!-- Modal content -->
