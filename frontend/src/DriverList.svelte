@@ -18,7 +18,7 @@
     import { safeGetAt } from "./utils.js";
     import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
-    import { push, pop } from "svelte-spa-router";
+    import { push, pop, location } from "svelte-spa-router";
     import { getMainFull } from "./utils.js";
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
@@ -32,15 +32,19 @@
     var end;
     onMount(async () => {
         log.debug(`DriverList userEmail: ${$userEmail}`);
-        log.debug("DriverList mounted : ", params);
+        log.debug("DriverList mounted : ", $location, params);
 
         editable = isDriverEditable($userEmail);
-        selectable = params.selectable;
         mainFullPx = getMainFull(["#dlTitle"]);
 
         wip = $selectedDriverMap;
         updateSelectTotal();
     });
+    $: {
+        log.debug("DriverList location: ", $location); // trigger param reload on location change
+        selectable = params.selectable;
+
+    }
     const filterMatches = (driver, lclFilter) => {
         if (!lclFilter) return true;
         let re = new RegExp("^" + lclFilter);
