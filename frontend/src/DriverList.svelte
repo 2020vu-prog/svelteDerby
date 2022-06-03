@@ -43,7 +43,6 @@
     $: {
         log.debug("DriverList location: ", $location); // trigger param reload on location change
         selectable = params.selectable;
-
     }
     const filterMatches = (driver, lclFilter) => {
         if (!lclFilter) return true;

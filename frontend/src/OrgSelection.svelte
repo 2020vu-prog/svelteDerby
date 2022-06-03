@@ -20,11 +20,11 @@
 
     const getOrgsAsList = (orgList) => {
         if ($developerMode) {
-            return Object.keys(orgList);
+            return Object.keys(orgList).sort(sortByOrgName);
         } else {
-            return Object.keys(orgList).filter(
-                (orgName) => !orgName.startsWith("Test")
-            );
+            return Object.keys(orgList)
+                .filter((orgName) => !orgName.startsWith("Test"))
+                .sort(sortByOrgName);
         }
     };
     const refreshOrgMap = async () => {
@@ -51,6 +51,19 @@
         refreshOrgMap();
     });
 
+    function sortByOrgName(a, b) {
+        const nameA = getOrgName(a).toUpperCase(); // ignore upper and lowercase
+        const nameB = getOrgName(b).toUpperCase(); // ignore upper and lowercase
+        if (nameA < nameB) {
+            return -1;
+        }
+        if (nameA > nameB) {
+            return 1;
+        }
+
+        // names must be equal
+        return 0;
+    }
     function getOrgName(orgIz) {
         if (orgMap[orgIz].orgName) {
             return orgMap[orgIz].orgName;
