@@ -164,8 +164,8 @@
         <input type="checkbox" bind:checked={$showBottomNav} />
         <h6>
             This toggles whether the bottom nav is shown or hidden on
-            <strong>all screens</strong>
-            .
+            <strong>all screens.</strong>
+
         </h6>
     </div>
     <hr />
@@ -202,9 +202,8 @@
             This controls how your pending race screen is sorted. It defaults to
             <strong>age</strong>
             (newest to oldest) but it can also be set to
-            <strong>heat</strong>
-            , which will group like-numbered heats of different brackets
-            together.
+            <strong>heat,</strong>
+            which will group like-numbered heats of different brackets together.
         </h6>
     </div>
     <hr />
@@ -224,8 +223,9 @@
             <option>5</option>
         </select>
         <h6>
-            This limits the number of elements(phases, heats, or drivers) and
-            should only be necessary when dealing with an extremely large race.
+            This limits the number of elements(phases, heats, or drivers) that
+            are displayed on your screen and should only be necessary when
+            dealing with an extremely large race.
         </h6>
     </div>
     <hr />

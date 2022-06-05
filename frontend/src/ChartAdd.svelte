@@ -301,6 +301,22 @@
         <input id="pm" name="time" type="radio" bind:group={time} value="PM" />
         <label for="pm" onclick="">PM</label>
 
+        <input
+            id="double"
+            name="time"
+            type="radio"
+            bind:group={time}
+            value="Double" />
+        <label for="double" onclick="">Double</label>
+
+        <input
+            id="single"
+            name="time"
+            type="radio"
+            bind:group={time}
+            value="Single" />
+        <label for="single" onclick="">Single</label>
+
     </div>
     <br />
     <br />
