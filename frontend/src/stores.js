@@ -58,6 +58,7 @@ export const doRefreshBlocks = writable(0);
 export const standingsMap = writable({});
 export const racePhaseMap = writable({});
 export const driverMap = writable({});
+export const orgMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlockKey = writable("");
 export const showBottomNav = persistable("pref:showBottomNav", true);
@@ -270,4 +271,34 @@ export const selectedDriverList = derived(selectedDriverMap, ($dm) => {
     return dlist;
 });
 
+export function getOrgName(orgIz) {
+    var om = getStore(orgMap);
+    if (om && om[orgIz] && om[orgIz].orgName) {
+        return om[orgIz].orgName;
+    } else return orgIz;
+}
+
+export async function refreshOrgMap() {
+    log.debug("refreshOrgMap:");
+    const currentSession = await Auth.currentSession();
+    const bearer = currentSession.idToken.jwtToken;
+
+    axiosCommon.defaults.headers.common["Authorization"] = bearer;
+    const cacheKey = getCacheKey();
+
+    axiosCommon
+        .get(
+            getStore(raceConfig).baseUrl + `/listOrgConfig?cacheKey=${cacheKey}`
+        )
+        .then((response) => {
+            log.debug("refreshOrgMap length:" + response.data.length);
+            log.debug("refreshOrgMap:", response.data);
+            if (response.data) {
+                orgMap.set(response.data);
+            }
+        })
+        .catch((err) => {
+            log.debug(err);
+        });
+}
 //doRefresh();

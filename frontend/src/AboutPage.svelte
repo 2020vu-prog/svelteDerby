@@ -9,6 +9,7 @@
         developerLogging,
         enableFractionalMs,
         statusMessage,
+        getOrgName,
     } from "./stores.js";
     $: {
         document.documentElement.style.setProperty(
@@ -20,7 +21,12 @@
     import { buildVersion, buildDate } from "./utils.js";
 
     import { onMount } from "svelte";
-    import { getCacheKey, setCacheKey } from "./stores.js";
+    import {
+        getCacheKey,
+        setCacheKey,
+        refreshOrgMap,
+        orgMap,
+    } from "./stores.js";
     import { db, localConfigDb } from "./eventDb.js";
     import BottomNav from "./BottomNav.svelte";
 
@@ -44,6 +50,7 @@
 
         mounted = true;
         refreshDataFromDb();
+        refreshOrgMap();
     });
 
     var devClickCount = 0;
@@ -106,6 +113,14 @@
             <h4>Event Name</h4>
             <h6>
                 <span>{ecFromDexie[0].name}</span>
+            </h6>
+        </div>
+        <hr />
+
+        <div class="singularSettingDiv">
+            <h4>Org Name</h4>
+            <h6>
+                <span>{getOrgName(ecFromDexie[0].orgIz, $orgMap)}</span>
             </h6>
         </div>
         <hr />

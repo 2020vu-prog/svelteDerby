@@ -9,6 +9,7 @@
         raceConfig,
         getCacheKey,
         clearOldStatusMessages,
+        getOrgName,
     } from "./stores.js";
 
     import SpinnerButton from "./SpinnerButton.svelte";
@@ -127,7 +128,7 @@
         overrideOrgIz={params.orgIz}
         clickHandleRoute="/eventAdd/{params.orgIz}/Add" />
 
-    <h4>EventSelection for {decodeURIComponent(params.orgIz)}</h4>
+    <h4>EventSelection for {getOrgName(decodeURIComponent(params.orgIz))}</h4>
 
     <p />
 
