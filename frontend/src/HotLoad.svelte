@@ -418,7 +418,7 @@
         $statusMessage = {
             text: `Refresh took ${elapsedTime}`,
             type: "success",
-            key: "refreshTime"
+            key: "refreshTime",
         };
 
         return hist;
