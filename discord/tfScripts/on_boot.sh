@@ -35,7 +35,8 @@ function selfDestructWhenIdle () {
 			exit 0
 		fi
 
-		if test $(find "/var/log/wtmp" -mmin +1200)
+		#if test $(find "/var/log/wtmp" -mmin +1200)
+		if test  $(find "/tmp/sns.out" -mmin +240)
 		then
 			echo tired.  eligible to quit
 			terminateAsg 
