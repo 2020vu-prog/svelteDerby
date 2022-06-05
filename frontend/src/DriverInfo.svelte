@@ -24,8 +24,7 @@
         const entityFactory = new EntityFactory({});
         var entityRP = entityFactory.build(item);
         if (
-            entityRP.isWinner(item.cn.indexOf(String(params.number)), false) ==
-            true
+            entityRP.isWinner(item.cn.indexOf(String(params.number)) + 1, false)
         ) {
             numPhasesWon++;
             phaseWinSum += Math.abs(entityRP.getPhaseDeltaMS());
