@@ -53,7 +53,7 @@
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
-    import { isEmailAllowedRoutePath, getUserEmail } from "./utils.js";
+    import { isEmailAllowedRoutePath, getUserEmail, sleep } from "./utils.js";
 
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
     const routes = {
@@ -278,6 +278,7 @@
     }
 
     async function logUserInIfNecessary() {
+        await sleep(2500); // let things settle before possibly logging user out erroneously.
         await getUserEmail();
         if (!$userEmail) {
             log.debug("User is not logged in, requesting autoAnonymousLogin.");

@@ -9,7 +9,6 @@
         developerLogging,
         enableFractionalMs,
         statusMessage,
-        getOrgName,
     } from "./stores.js";
     $: {
         document.documentElement.style.setProperty(
@@ -21,14 +20,10 @@
     import { buildVersion, buildDate } from "./utils.js";
 
     import { onMount } from "svelte";
-    import {
-        getCacheKey,
-        setCacheKey,
-        refreshOrgMap,
-        orgMap,
-    } from "./stores.js";
+    import { getCacheKey, setCacheKey } from "./stores.js";
     import { db, localConfigDb } from "./eventDb.js";
     import BottomNav from "./BottomNav.svelte";
+    import OrgName from "./OrgName.svelte";
 
     let mounted = false;
 
@@ -50,7 +45,6 @@
 
         mounted = true;
         refreshDataFromDb();
-        refreshOrgMap();
     });
 
     var devClickCount = 0;
@@ -110,17 +104,12 @@
         <hr />
 
         <div class="singularSettingDiv">
-            <h4>Event Name</h4>
+            <h4>Event Name / Org Name</h4>
             <h6>
                 <span>{ecFromDexie[0].name}</span>
-            </h6>
-        </div>
-        <hr />
-
-        <div class="singularSettingDiv">
-            <h4>Org Name</h4>
-            <h6>
-                <span>{getOrgName(ecFromDexie[0].orgIz, $orgMap)}</span>
+                /
+                <OrgName orgIz={ecFromDexie[0].orgIz} />
+                [{ecFromDexie[0].orgIz}]
             </h6>
         </div>
         <hr />
@@ -170,8 +159,7 @@
             <input type="checkbox" bind:checked={$developerLogging} />
             <h6>
                 This toggles whether the developer logs are emitted on
-                <strong>all screens</strong>
-                .
+                <strong>all screens.</strong>
             </h6>
         </div>
         <hr />

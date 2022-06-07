@@ -9,12 +9,12 @@
         raceConfig,
         getCacheKey,
         clearOldStatusMessages,
-        getOrgName,
     } from "./stores.js";
 
     import SpinnerButton from "./SpinnerButton.svelte";
 
     import MaterialAdd from "./MaterialAdd.svelte";
+    import OrgName from "./OrgName.svelte";
     import { onMount } from "svelte";
     import { Auth } from "aws-amplify";
     import axios from "axios";
@@ -42,8 +42,8 @@
         });
         return orgEvents;
     };
-    const refreshOrgMap = async () => {
-        log.debug("refreshOrgMap:");
+    const refreshOrgEvents = async () => {
+        log.debug("refreshOrgEvents:");
         const currentSession = await Auth.currentSession();
         const bearer = currentSession.idToken.jwtToken;
 
@@ -55,8 +55,8 @@
                     `/listOrgEvents?orgIz=${params.orgIz}&cache=${cacheKey}`
             )
             .then((response) => {
-                log.debug("refreshOrgMap length:" + response.data.length);
-                log.debug("refreshOrgMap:", response.data);
+                log.debug("refreshOrgEvents length:" + response.data.length);
+                log.debug("refreshOrgEvents:", response.data);
                 eventMap = response.data;
                 currentViewMode = "Active";
             })
@@ -66,7 +66,7 @@
     };
 
     onMount(async () => {
-        await refreshOrgMap();
+        await refreshOrgEvents();
         await refreshOrgRoles(params.orgIz);
     });
     const requestClearStore = () => {
@@ -128,7 +128,10 @@
         overrideOrgIz={params.orgIz}
         clickHandleRoute="/eventAdd/{params.orgIz}/Add" />
 
-    <h4>EventSelection for {getOrgName(decodeURIComponent(params.orgIz))}</h4>
+    <h4>
+        EventSelection for
+        <OrgName orgIz={decodeURIComponent(params.orgIz)} />
+    </h4>
 
     <p />
 

@@ -3,6 +3,7 @@
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { doRefreshBlocks } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
+    import OrgName from "./OrgName.svelte";
     import { raceConfig } from "./stores.js";
     import { onMount } from "svelte";
     import { Auth } from "aws-amplify";
@@ -64,7 +65,7 @@
             <CardBody>
                 <div on:click={() => replace('/eventSelection/' + orgIz)}>
                     <a href="javascript:void(0);">
-                        {getOrgName(orgIz, $orgMap)}
+                        <OrgName {orgIz} />
                     </a>
                 </div>
             </CardBody>

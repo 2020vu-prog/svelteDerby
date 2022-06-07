@@ -279,26 +279,27 @@ export function getOrgName(orgIz) {
 }
 
 export async function refreshOrgMap() {
-    log.debug("refreshOrgMap:");
-    const currentSession = await Auth.currentSession();
-    const bearer = currentSession.idToken.jwtToken;
-
-    axiosCommon.defaults.headers.common["Authorization"] = bearer;
+    log.debug("refreshOrgMap: begin");
+    log.debug("refreshOrgMap ga:", getAxios);
     const cacheKey = getCacheKey();
+    const axios2 = getStore(getAxios);
+    log.debug("refreshOrgMap a2:", axios2);
+    const axios3 = await axios2();
+    log.debug("refreshOrgMap a3:", axios3);
 
-    axiosCommon
-        .get(
+    try {
+        const response = await axios3.get(
             getStore(raceConfig).baseUrl + `/listOrgConfig?cacheKey=${cacheKey}`
-        )
-        .then((response) => {
-            log.debug("refreshOrgMap length:" + response.data.length);
-            log.debug("refreshOrgMap:", response.data);
-            if (response.data) {
-                orgMap.set(response.data);
-            }
-        })
-        .catch((err) => {
-            log.debug(err);
-        });
+        );
+        log.debug("refreshOrgMap length:" + response.data.length);
+        log.debug("refreshOrgMap:", response.data);
+        if (response.data) {
+            orgMap.set(response.data);
+        }
+        return response.data;
+    } catch (err) {
+        log.debug(err);
+        return {};
+    }
 }
 //doRefresh();
