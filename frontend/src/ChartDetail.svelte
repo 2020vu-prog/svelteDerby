@@ -31,6 +31,7 @@
 
         bmdFromDexie = await db.BracketMetaData.get(params.chartId);
         log.debug("refreshDataFromDb gave:", bmdFromDexie);
+        setWidthOverride(bmdFromDexie.imgPath);
 
         const chartCacheKey = getChartCacheKey();
         bracketImgSrc = `/data/brackets/${bmdFromDexie.imgPath}?cacheKey=${chartCacheKey}`;
@@ -47,6 +48,24 @@
             }
         }
     };
+    var widthOverride = "";
+    var imgStyle = "";
+    const imgStyleBase = "position: relative; z-index: 1;";
+
+    function setWidthOverride(imgPath) {
+        log.debug("setWidthOverride :", imgPath);
+        if (imgPath === "AASBD/Single/06single.png") {
+        }
+        if (imgPath === "AASBD/Single/32single.png") {
+            widthOverride = "width: 3000px;";
+        }
+        //AASBD/Double/24double.png?cacheKey=1654559811FromDevEnvsh
+
+        if (imgPath === "AASBD/Double/24double.png") {
+            widthOverride = "width: 3000px;";
+        }
+        imgStyle = imgStyleBase + widthOverride;
+    }
 
     log.debug("chartDetail params:", params);
 
@@ -234,6 +253,7 @@
         delete bracketClone.imgPositions.seedx;
         delete bracketClone.seeds;
         delete bracketClone.progress;
+        log.debug("CD: copyJson: ", JSON.stringify(bracketClone));
         navigator.clipboard.writeText(JSON.stringify(bracketClone));
     }
     const jqLoaded = () => {
@@ -327,7 +347,7 @@
     {/each}
     <img
         on:load={imgLoadComplete}
-        style="position: relative; z-index: 1; "
+        style={imgStyle}
         id="bracketImage"
         src={bracketImgSrc}
         alt="bracketImage"
