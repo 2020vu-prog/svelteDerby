@@ -239,7 +239,7 @@
             class="navbarItem"
             style="background-color: {$theme}"
             on:click|preventDefault={gotoListMedia}>
-            Media
+            Video
         </span>
     {/if}
 
