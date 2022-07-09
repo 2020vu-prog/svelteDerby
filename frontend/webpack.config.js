@@ -1,6 +1,7 @@
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WebpackAutoInject = require("webpack-auto-inject-version");
+const WorkboxWebpackPlugin = require("workbox-webpack-plugin");
 
 const path = require("path");
 
@@ -113,6 +114,32 @@ module.exports = {
             hash: false,
             template: "./src/index.ejs",
             filename: "./index.html",
+        }),
+        new WorkboxWebpackPlugin.GenerateSW({
+            swDest: "./sw.js",
+            maximumFileSizeToCacheInBytes: 10000000,
+            //include: ["./global922a.css", "*.js"],
+            //globPartial: [],
+            runtimeCaching: [
+                {
+                    urlPattern: "*.css",
+                    handler: {
+                        strategyName: "StaleWhileRevalidate",
+                    },
+                },
+                {
+                    urlPattern: "*.js",
+                    handler: {
+                        strategyName: "StaleWhileRevalidate",
+                    },
+                },
+                {
+                    urlPattern: "*.html",
+                    handler: {
+                        strategyName: "StaleWhileRevalidate",
+                    },
+                },
+            ],
         }),
     ],
     devtool: prod ? false : "source-map",

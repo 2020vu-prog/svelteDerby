@@ -10,6 +10,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="manifest" href="/manifest.json">
 
     <!-- Latest compiled and minified JavaScript -->
 
@@ -20,5 +21,18 @@
 
 <body>
 </body>
+<script>
+
+    console.log("loading sw00")
+    if ('serviceWorker' in navigator) {
+        console.log("loading sw01")
+        //navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+        navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    }
+    else {
+        console.log("loading swfailed00")
+
+    }
+</script>
 
 </html>
