@@ -14,7 +14,7 @@
 
     var racePhaseList = Object.values($racePhaseMap);
     racePhaseList = racePhaseList.filter((a) => {
-        return a.cn.indexOf(params.number) > -1;
+        return a.cn.indexOf(params.number) > -1 && !a.del;
     });
 
     var numPhasesRaced = racePhaseList.length;
@@ -33,7 +33,7 @@
 
     var standingsList = Object.values($standingsMap);
     standingsList = standingsList.filter((a) => {
-        return a.cn.indexOf(params.number) > -1;
+        return a.cn.indexOf(params.number) > -1 && !a.del;
     });
 
     var numHeatsRaced = standingsList.length;
