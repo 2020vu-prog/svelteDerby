@@ -32,7 +32,7 @@
     }
 
     onMount(async () => {
-        log.debug("StatuaMessage.svelte mounting");
+        log.debug("StatusMessage.svelte mounting");
         log.debug("StatusMessage RC: ", $raceConfig);
     });
 
