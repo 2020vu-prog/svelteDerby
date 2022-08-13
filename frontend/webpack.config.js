@@ -115,6 +115,12 @@ module.exports = {
             template: "./src/index.ejs",
             filename: "./index.html",
         }),
+        new WorkboxWebpackPlugin.InjectManifest({
+            swSrc: "./src/src-sw.js",
+            swDest: "sw.js",
+            maximumFileSizeToCacheInBytes: 10000000,
+        }),
+        /*
         new WorkboxWebpackPlugin.GenerateSW({
             swDest: "./sw.js",
             maximumFileSizeToCacheInBytes: 10000000,
@@ -141,6 +147,7 @@ module.exports = {
                 },
             ],
         }),
+        */
     ],
     devtool: prod ? false : "source-map",
 };
