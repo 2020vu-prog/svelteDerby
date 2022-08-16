@@ -117,7 +117,7 @@ module.exports = {
         }),
         new WorkboxWebpackPlugin.InjectManifest({
             swSrc: "./src/src-sw.js",
-            swDest: "sw.js",
+            swDest: "sw-generated.js",
             maximumFileSizeToCacheInBytes: 10000000,
         }),
         /*
