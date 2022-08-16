@@ -3,6 +3,7 @@
 
     import {
         theme,
+        showChart2,
         showBottomNav,
         autoAnnounceResults,
         pendingSortAlgorithm,
@@ -166,6 +167,15 @@
             This toggles whether the bottom nav is shown or hidden on
             <strong>all screens.</strong>
 
+        </h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4>Progress on Chart List</h4>
+        <input type="checkbox" bind:checked={$showChart2} />
+        <h6>
+            This toggles whether the chart list is displayed with progress bars
         </h6>
     </div>
     <hr />
