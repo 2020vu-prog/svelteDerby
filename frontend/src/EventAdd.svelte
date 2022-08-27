@@ -2,13 +2,11 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { raceConfig, setCacheKey, statusMessage } from "./stores.js";
-    import { Auth } from "aws-amplify";
+    import { axios, raceConfig, setCacheKey, statusMessage } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     const { v4: uuidv4 } = require("uuid");
     import { db } from "./eventDb.js";
-    import axios from "axios";
 
     export let params = {};
 
@@ -27,8 +25,6 @@
         syncAddButton();
 
         log.debug("Adding:" + JSON.stringify(orgForm), " to: ", $raceConfig);
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
         const orgU = uuidv4().substring(0, 5);
         const orgIz = isUpdateMode() ? $raceConfig.orgIz : params.orgIz;
         if (!orgIz) {
@@ -56,11 +52,7 @@
 
         submitSpinning = true;
 
-        log.debug("token:" + bearer);
-
-        axios.defaults.headers.common["Authorization"] = bearer;
-
-        axios
+        $axios
             .post($raceConfig.baseUrl + postPath, req)
             .then((response) => {
                 log.debug("addEventConfig axios success");

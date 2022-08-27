@@ -1,12 +1,9 @@
 <script>
     import log from "loglevel";
 
-    import { raceConfig } from "./stores.js";
-    import { Auth } from "aws-amplify";
+    import { axios, raceConfig } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-
-    import axios from "axios";
 
     var mounted = false;
     onMount(async () => {
@@ -17,8 +14,6 @@
         syncAddButton();
 
         log.debug("Adding:" + JSON.stringify(orgForm));
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -27,11 +22,7 @@
             name: orgForm.name,
         };
 
-        log.debug("token:" + bearer);
-
-        axios.defaults.headers.common["Authorization"] = bearer;
-
-        axios
+        $axios
             .post($raceConfig.baseUrl + "/addOrg", req)
             .then((response) => {
                 log.debug("addOrg axios success");

@@ -9,12 +9,11 @@
         doRefreshBlocks,
         statusMessage,
         userEmail,
+        axios,
     } from "./stores.js";
-    import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
-    import axios from "axios";
     import { participantValid, participantFocusCompletion } from "./utils.js";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -100,8 +99,6 @@
 
     async function handleSubmit() {
         log.debug("Adding:" + JSON.stringify(posForm));
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -160,13 +157,10 @@
         if (validCount < 2) {
             return;
         }
-        log.debug("token:" + bearer);
 
         submitSpinning = true;
 
-        axios.defaults.headers.common["Authorization"] = bearer;
-
-        axios
+        $axios
             .post($raceConfig.baseUrl + "/addChartPosition", req)
             .then((response) => {
                 log.debug("addChartPosition axios success ", response);

@@ -11,9 +11,12 @@
     import { doRefreshBlocks } from "./stores.js";
     import { hhmmssFmt, isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
-    import { raceConfig, statusMessage, mediaFileType } from "./stores.js";
-    import { Auth } from "aws-amplify";
-    import axios from "axios";
+    import {
+        axios,
+        raceConfig,
+        statusMessage,
+        mediaFileType,
+    } from "./stores.js";
     import { tick } from "svelte";
     import { db } from "./eventDb.js";
 
@@ -87,8 +90,6 @@
         }
         //log.debug(`listMedia: ${dbName} ${dbKey}`);
         log.debug(`listMedia: `);
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -97,12 +98,10 @@
             iSrc: i,
         };
 
-        axios.defaults.headers.common["Authorization"] = bearer;
-
         try {
             log.debug("listmedia about to", req);
             const endpoint = "/listMediaPrefix";
-            const response = await axios.get($raceConfig.baseUrl + endpoint, {
+            const response = await $axios.get($raceConfig.baseUrl + endpoint, {
                 params: req,
             });
             log.debug("media:", response);
@@ -175,6 +174,7 @@
     .filter-black {
         filter: saturate(100%) brightness(0%);
     }
+
     div :global(.xLargeIcon) {
         font-size: 28px;
     }

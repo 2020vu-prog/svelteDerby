@@ -210,7 +210,7 @@
     };
     onMount(async () => {
         log.debug("mounted app");
-        await logUserInIfNecessary();
+        logUserInIfNecessary();
 
         isMounted = new Date().getTime();
     });

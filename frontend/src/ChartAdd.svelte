@@ -2,13 +2,10 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { raceConfig } from "./stores.js";
-    import { Auth } from "aws-amplify";
+    import { raceConfig, axios } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { getCacheKey, getChartCacheKey, theme } from "./stores.js";
-
-    import axios from "axios";
 
     $: {
         document.documentElement.style.setProperty(
@@ -112,9 +109,6 @@
     };
     async function handleSubmit() {
         log.debug("Adding:" + JSON.stringify(loginForm));
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
-        axios.defaults.headers.common["Authorization"] = bearer;
 
         const combinedJson =
             loginForm.bracketSelected.replace(/\.png$/i, "") + ".combined.json";
@@ -127,9 +121,8 @@
         };
 
         submitSpinning = true;
-        log.debug("token:" + bearer);
 
-        axios
+        $axios
             .post($raceConfig.baseUrl + "/addChart", req)
             .then((response) => {
                 log.debug("addChart axios success");
@@ -158,10 +151,7 @@
             cacheKey: cacheKey,
         };
 
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
-        axios.defaults.headers.common["Authorization"] = bearer;
-        axios
+        $axios
             .get($raceConfig.baseUrl + "/listChartTypes", { params: params })
             .then((response) => {
                 log.debug("listChartTypes:" + response.data);
@@ -239,20 +229,24 @@
     :root {
         --themeFromJS: "black";
     }
+
     .switch-toggle {
         float: left;
         background: #242729;
     }
+
     .switch-toggle input {
         position: absolute;
         opacity: 0;
     }
+
     .switch-toggle input + label {
         padding: 7px;
         float: left;
         color: #fff;
         cursor: pointer;
     }
+
     .switch-toggle input:checked + label {
         background: var(--themeFromJS);
     }

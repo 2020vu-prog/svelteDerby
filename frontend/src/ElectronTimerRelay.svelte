@@ -1,9 +1,7 @@
 <script>
     import log from "loglevel";
     import { onMount } from "svelte";
-    import axios from "axios";
-    import { Auth } from "aws-amplify";
-    import { statusMessage, raceConfig } from "./stores.js";
+    import { axios, statusMessage, raceConfig } from "./stores.js";
 
     onMount(async () => {
         installTimerHook();
@@ -47,7 +45,7 @@
         };
         const endPoint = "/doApplyFinishTime";
         try {
-            const response = await axios.post(
+            const response = await $axios.post(
                 $raceConfig.baseUrl + endPoint,
                 req
             );
@@ -68,15 +66,13 @@
         }
     }
     async function getNob(timerResult) {
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
         const getNextOnBlocksUrl =
             $raceConfig.baseUrl +
             "/getNextOnBlocks?orgId=" +
             $raceConfig.orgId +
             "&orgIz=" +
             $raceConfig.orgIz;
-        const onBlocksResponse = await axios.get(getNextOnBlocksUrl);
+        const onBlocksResponse = await $axios.get(getNextOnBlocksUrl);
         const data = onBlocksResponse.data;
         log.debug("nextOnBlock:", data);
         if (data && data.length > 0) {

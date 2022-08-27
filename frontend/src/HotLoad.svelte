@@ -1,7 +1,6 @@
 <script>
     import log from "loglevel";
 
-    import axios from "axios";
     import SpinnerButton from "./SpinnerButton.svelte";
     import {
         driverMap,
@@ -17,6 +16,7 @@
         mqttEnabled,
         timerState,
         raceConfig,
+        axios,
     } from "./stores.js";
     import { Auth } from "aws-amplify";
     import Amplify, { PubSub } from "aws-amplify";
@@ -63,11 +63,7 @@
         if (!cognitoIdentityId) {
             log.debug("bypass rph. no id");
         }
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
-
-        axios.defaults.headers.common["Authorization"] = bearer;
-        axios
+        $axios
             .get(
                 $raceConfig.baseUrl +
                     "/requestMqttSubPermission?orgId=" +
@@ -320,7 +316,7 @@
 
         try {
             // baseUrl is /app.   archives are at root.
-            const response = await axios.get(
+            const response = await $axios.get(
                 $raceConfig.baseUrl + "/../" + s3Path
             );
             log.debug("LoadCca finished:", response);
@@ -566,8 +562,6 @@
         refreshInProgressButton = true;
         //await dbInit();
         log.debug("old nobKey:", $nextOnBlockKey);
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
         if ($raceConfig.orgId && $raceConfig.orgIz) {
         } else {
             log.debug("no selected race");
@@ -580,7 +574,6 @@
         } else {
             watchIot();
 
-            axios.defaults.headers.common["Authorization"] = bearer;
             const url =
                 $raceConfig.baseUrl +
                 "/getRaceHistory?orgId=" +
@@ -588,7 +581,7 @@
                 "&orgIz=" +
                 $raceConfig.orgIz;
             try {
-                const response = await axios.get(url);
+                const response = await $axios.get(url);
                 log.debug("history:" + response.data.length);
                 //log.debug("history:",response.data);
                 const pendingBulk = {};
@@ -647,7 +640,7 @@
             "/archive.json";
 
         try {
-            const response = await axios.get(
+            const response = await $axios.get(
                 $raceConfig.baseUrl + "/.." + s3Path
             );
             log.debug("LoadArchive finished:", response);

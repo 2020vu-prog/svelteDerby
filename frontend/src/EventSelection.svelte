@@ -9,6 +9,7 @@
         raceConfig,
         getCacheKey,
         clearOldStatusMessages,
+        axios,
     } from "./stores.js";
 
     import SpinnerButton from "./SpinnerButton.svelte";
@@ -16,8 +17,6 @@
     import MaterialAdd from "./MaterialAdd.svelte";
     import OrgName from "./OrgName.svelte";
     import { onMount } from "svelte";
-    import { Auth } from "aws-amplify";
-    import axios from "axios";
     import { push, pop, replace } from "svelte-spa-router";
     import { dbReset } from "./eventDb.js";
 
@@ -44,12 +43,9 @@
     };
     const refreshOrgEvents = async () => {
         log.debug("refreshOrgEvents:");
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
-        axios.defaults.headers.common["Authorization"] = bearer;
         const cacheKey = getCacheKey();
-        axios
+        $axios
             .get(
                 $raceConfig.baseUrl +
                     `/listOrgEvents?orgIz=${params.orgIz}&cache=${cacheKey}`

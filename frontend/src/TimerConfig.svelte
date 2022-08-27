@@ -1,12 +1,15 @@
 <script>
     import log from "loglevel";
 
-    import { raceConfig, statusMessage, doRefreshBlocks } from "./stores.js";
-    import { Auth } from "aws-amplify";
+    import {
+        axios,
+        raceConfig,
+        statusMessage,
+        doRefreshBlocks,
+    } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
-    import axios from "axios";
     import SpinnerButton from "./SpinnerButton.svelte";
 
     var activeTimerList = [];
@@ -45,21 +48,16 @@
     }
     async function getActiveTimers() {
         log.debug("getActiveTimers:");
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
         };
 
-        log.debug("token:" + bearer);
-
-        axios.defaults.headers.common["Authorization"] = bearer;
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
 
-        axios
+        $axios
             .get(
                 $raceConfig.baseUrl +
                     `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`
@@ -103,14 +101,10 @@
             sha: loginForm.sha,
         };
 
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
-        axios.defaults.headers.common["Authorization"] = bearer;
-
         try {
             submitSpinning = true;
             const url = $raceConfig.baseUrl + "/timerConfig";
-            const response = await axios.post(url, req);
+            const response = await $axios.post(url, req);
             if (response.error) {
                 //TODO: not working!?
                 $statusMessage = {

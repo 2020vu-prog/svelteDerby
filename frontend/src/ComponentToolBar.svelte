@@ -2,10 +2,8 @@
     import log from "loglevel";
 
     import { theme, driverMap } from "./stores.js";
-    import { raceConfig, statusMessage, userEmail } from "./stores.js";
+    import { axios, raceConfig, statusMessage, userEmail } from "./stores.js";
 
-    import axios from "axios";
-    import { Auth } from "aws-amplify";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
     import { isEmailAllowedRoutePath } from "./utils.js";
@@ -55,8 +53,6 @@
 
     async function doDelete(dbName, dbKey, tgtName) {
         log.debug(`doDelete: ${dbName} ${dbKey}`);
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -65,13 +61,11 @@
             tgtName: tgtName,
         };
 
-        axios.defaults.headers.common["Authorization"] = bearer;
-
         const endpoint =
             dbName === "RacePhase" ? "/deleteRacePhase" : "/deleteRaceStanding";
 
         try {
-            const response = await axios.post(
+            const response = await $axios.post(
                 $raceConfig.baseUrl + endpoint,
                 req
             );
@@ -95,9 +89,6 @@
     }
 
     async function callCars() {
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
-
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
@@ -106,12 +97,10 @@
             tags: [{ called: true }, { called: true }],
         };
 
-        axios.defaults.headers.common["Authorization"] = bearer;
-
         const endpoint = "/RaceStanding/addTag";
 
         try {
-            const response = await axios.post(
+            const response = await $axios.post(
                 $raceConfig.baseUrl + endpoint,
                 req
             );

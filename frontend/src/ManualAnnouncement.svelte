@@ -1,14 +1,7 @@
 <script>
     import log from "loglevel";
 
-    import {
-        raceConfig,
-        statusMessage,
-        driverMap,
-        getAxios,
-        axios,
-    } from "./stores.js";
-    import { Auth } from "aws-amplify";
+    import { raceConfig, statusMessage, driverMap, axios } from "./stores.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
 
@@ -19,17 +12,12 @@
         }
 
         log.debug(`doAnnounce: ${announceText} `);
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
             paMessage: `<speak>${announceText}</speak>`,
         };
-
-        //const axios = await $getAxios();
-        //axios.defaults.headers.common["Authorization"] = bearer;
 
         const endpoint = "/initiateAnnouncement";
 

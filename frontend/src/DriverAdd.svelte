@@ -2,8 +2,7 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { raceConfig, statusMessage } from "./stores.js";
-    import { Auth } from "aws-amplify";
+    import { axios, raceConfig, statusMessage } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -12,7 +11,6 @@
     import Icon from "fa-svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
-    import axios from "axios";
     export let params = {};
     var showPhoneticInfo = false;
     var mounted = false;
@@ -55,8 +53,6 @@
     };
     async function handleSubmit() {
         log.debug(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -67,15 +63,11 @@
             pType: driverForm.pType ? driverForm.pType : undefined,
         };
 
-        log.debug("token:" + bearer);
-
-        axios.defaults.headers.common["Authorization"] = bearer;
-
         const newPtcp = driverForm.carNumber;
         const url = $raceConfig.baseUrl + "/addParticipant";
         submitSpinning = true;
         try {
-            const response = await axios.post(url, req);
+            const response = await $axios.post(url, req);
             $statusMessage = {
                 text: `Driver [${newPtcp}] Added.`,
                 type: "success",
@@ -140,8 +132,6 @@
         const ssml = `<speak>Driver name is ${getLocalSSML()}</speak>`;
         log.debug("requesting speech");
         log.debug(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -149,14 +139,10 @@
             ssml: ssml,
         };
 
-        log.debug("token:" + bearer);
-
-        axios.defaults.headers.common["Authorization"] = bearer;
-
         const newPtcp = driverForm.carNumber;
         const url = $raceConfig.baseUrl + "/requestTts";
         try {
-            const response = await axios.post(url, req);
+            const response = await $axios.post(url, req);
             log.debug("speech: ", response);
             $statusMessage = {
                 text: `Speech Processed.`,
