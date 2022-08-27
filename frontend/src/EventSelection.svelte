@@ -49,7 +49,7 @@
         $axios
             .get(
                 $raceConfig.baseUrl +
-                `/listOrgEvents?orgIz=${params.orgIz}&cache=${cacheKey}`
+                    `/listOrgEvents?orgIz=${params.orgIz}&cache=${cacheKey}`
             )
             .then((response) => {
                 log.debug("refreshOrgEvents length:" + response.data.length);
@@ -122,7 +122,9 @@
 </script>
 
 <div>
-    <MaterialAdd overrideOrgIz={params.orgIz} clickHandleRoute="/eventAdd/{params.orgIz}/Add" />
+    <MaterialAdd
+        overrideOrgIz={params.orgIz}
+        clickHandleRoute="/eventAdd/{params.orgIz}/Add" />
 
     <h4>
         EventSelection for
