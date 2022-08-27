@@ -9,7 +9,6 @@
         selectedDriverList,
         selectedDriverMap,
     } from "./stores.js";
-    import { Auth } from "aws-amplify";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";

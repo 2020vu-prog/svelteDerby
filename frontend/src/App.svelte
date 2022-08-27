@@ -4,7 +4,6 @@
     import Router from "svelte-spa-router";
     import { link, location } from "svelte-spa-router";
     import { push, pop, replace } from "svelte-spa-router";
-    import { store as AuthStore } from "./stores/auth.js";
 
     import BottomNav from "./BottomNav.svelte";
     import CaptureVideo from "./CaptureVideo.svelte";

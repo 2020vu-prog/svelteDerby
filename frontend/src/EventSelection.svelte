@@ -21,6 +21,7 @@
     import { dbReset } from "./eventDb.js";
 
     import { refreshOrgRoles } from "./utils.js";
+    import { setJwt } from "./utils.js";
 
     export let params = {};
 
@@ -48,7 +49,7 @@
         $axios
             .get(
                 $raceConfig.baseUrl +
-                    `/listOrgEvents?orgIz=${params.orgIz}&cache=${cacheKey}`
+                `/listOrgEvents?orgIz=${params.orgIz}&cache=${cacheKey}`
             )
             .then((response) => {
                 log.debug("refreshOrgEvents length:" + response.data.length);
@@ -83,6 +84,7 @@
         $raceConfig = config;
         $clearOldStatusMessages = true;
 
+        await setJwt(); // need mqtt perms if initial login didn't have selected org.
         replace("/RpList");
     };
     const getRaceName = (config) => {
@@ -120,9 +122,7 @@
 </script>
 
 <div>
-    <MaterialAdd
-        overrideOrgIz={params.orgIz}
-        clickHandleRoute="/eventAdd/{params.orgIz}/Add" />
+    <MaterialAdd overrideOrgIz={params.orgIz} clickHandleRoute="/eventAdd/{params.orgIz}/Add" />
 
     <h4>
         EventSelection for

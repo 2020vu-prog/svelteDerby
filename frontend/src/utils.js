@@ -106,7 +106,7 @@ export async function getUserEmail() {
         return "";
     }
 }
-export function setJwt() {
+export async function setJwt() {
     const session = get(AuthStore); // s/b lowercase!
     console.log("seeking jwt as :", session);
     if (
@@ -118,10 +118,51 @@ export function setJwt() {
         const token = session.signInUserSession.idToken.jwtToken;
         console.log("Setting jwt as :", token);
         userJwtStore.set(token);
+        await movedFromIot();
     }
     return;
     //if(session.signInUserSession.idToken.jwtToken)
 }
+async function requstPermissionHack(cognitoIdentityId) {
+    if (!cognitoIdentityId) {
+        log.debug("mfi.bypass rph. no id");
+        return;
+    }
+    log.debug("mfi. doing rph: ", cognitoIdentityId);
+    const raceConfig = get(raceConfigStore);
+    const getAxios = get(getAxiosStore);
+    const axios = await getAxios();
+    axios
+        .get(
+            raceConfig.baseUrl +
+                "/requestMqttSubPermission?orgId=" +
+                raceConfig.orgId +
+                "&orgIz=" +
+                raceConfig.orgIz +
+                "&principal=" +
+                cognitoIdentityId
+        )
+        .then((response) => {
+            log.debug("mfi. requstPermissionHack ok:" + response.data.length);
+        })
+        .catch((err) => {
+            log.debug("mfi. requstPermissionHack failed:", err);
+        });
+}
+async function movedFromIot() {
+    const ccSession = await Auth.currentSession();
+    log.debug("mfi.auth ccSession :", ccSession);
+    const ccInfo = await Auth.currentCredentials();
+    var cognitoIdentityId = "";
+    if (ccInfo && ccInfo.data) {
+        cognitoIdentityId = ccInfo.data.IdentityId;
+        log.debug("mfi.auth ccInfo cognitoIdentityId:", cognitoIdentityId);
+        await requstPermissionHack(cognitoIdentityId);
+    } else {
+        log.debug("mfi.auth ccInfo empty:", ccInfo);
+    }
+}
+
 export function logout() {
     cognitoLogout();
     userJwtStore.set("");

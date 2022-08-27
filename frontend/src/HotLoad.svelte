@@ -59,27 +59,6 @@
         checkIfRaceFrozenAndDisplayMessage($raceConfig);
     }
 
-    const requstPermissionHack = async (cognitoIdentityId) => {
-        if (!cognitoIdentityId) {
-            log.debug("bypass rph. no id");
-        }
-        $axios
-            .get(
-                $raceConfig.baseUrl +
-                    "/requestMqttSubPermission?orgId=" +
-                    $raceConfig.orgId +
-                    "&orgIz=" +
-                    $raceConfig.orgIz +
-                    "&principal=" +
-                    cognitoIdentityId
-            )
-            .then((response) => {
-                log.debug("requstPermissionHack:" + response.data.length);
-            })
-            .catch((err) => {
-                log.debug("requstPermissionHack failed:", err);
-            });
-    };
     async function watchIot() {
         if (!$raceConfig.orgId) {
             log.debug("watchIot : no org:  skip");
@@ -92,6 +71,7 @@
         }
         log.debug("watchIot : do mqtt:  ", $mqttEnabled);
 
+        /*
         const ccSession = await Auth.currentSession();
         log.debug("auth ccSession :", ccSession);
         const ccInfo = await Auth.currentCredentials();
@@ -102,9 +82,10 @@
         } else {
             log.debug("auth ccInfo empty:", ccInfo);
         }
+        */
 
         if (activeIotWatch && !activeIotWatch.plugged) {
-            await requstPermissionHack(cognitoIdentityId);
+            //await requstPermissionHack(cognitoIdentityId);
             Amplify.addPluggable(
                 new AWSIoTProvider({
                     aws_pubsub_region: aws_exports.aws_pubsub_region,
