@@ -120,34 +120,6 @@ module.exports = {
             swDest: "sw-generated.js",
             maximumFileSizeToCacheInBytes: 10000000,
         }),
-        /*
-        new WorkboxWebpackPlugin.GenerateSW({
-            swDest: "./sw.js",
-            maximumFileSizeToCacheInBytes: 10000000,
-            //include: ["./global922a.css", "*.js"],
-            //globPartial: [],
-            runtimeCaching: [
-                {
-                    urlPattern: "*.css",
-                    handler: {
-                        strategyName: "StaleWhileRevalidate",
-                    },
-                },
-                {
-                    urlPattern: "*.js",
-                    handler: {
-                        strategyName: "StaleWhileRevalidate",
-                    },
-                },
-                {
-                    urlPattern: "*.html",
-                    handler: {
-                        strategyName: "StaleWhileRevalidate",
-                    },
-                },
-            ],
-        }),
-        */
     ],
     devtool: prod ? false : "source-map",
 };
