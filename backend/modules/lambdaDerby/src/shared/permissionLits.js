@@ -77,6 +77,7 @@ addPermission(
     [
         "/orgAdd", // be careful with this one!
         "/eventAdd",
+        "/svelteDriverJson", // not a svelte route, but is used with isUserAllowedRoutePath()
     ]
 );
 addPermission(

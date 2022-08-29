@@ -77,9 +77,9 @@
         requestClearStore();
         log.debug("requestClearStore  complete.");
 
-        log.debug("selecting config:", config);
         config.baseUrl = "/app";
         config.title = getRaceName(config);
+        log.debug("selecting config:", config);
 
         $raceConfig = config;
         $clearOldStatusMessages = true;

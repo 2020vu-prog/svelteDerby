@@ -54,7 +54,7 @@
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
-    import { isEmailAllowedRoutePath, getUserEmail, sleep } from "./utils.js";
+    import { isEmailAllowedRoutePath, sleep } from "./utils.js";
 
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
     const routes = {
@@ -121,8 +121,7 @@
     }
 
     async function buildMenuMap() {
-        //$userEmail = await getUserEmail();
-        await getUserEmail();
+        log.debug("bmm: userEmailStored:", $userEmail);
 
         if ($userId) {
             log.debug("bmm: uid:", $userId);
@@ -282,7 +281,6 @@
 
     async function logUserInIfNecessary() {
         await sleep(2500); // let things settle before possibly logging user out erroneously.
-        await getUserEmail();
         if (!$userEmail) {
             log.debug("User is not logged in, requesting autoAnonymousLogin.");
             $beginAnonymousLogin = true;

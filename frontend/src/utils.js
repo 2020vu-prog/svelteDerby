@@ -63,7 +63,7 @@ export function isAllowedRoutePath(routePath, orgIz = null) {
         const raceConfig = get(raceConfigStore);
         orgIz = raceConfig.orgIz;
     }
-    log.debug("isAllowedRoutePath effective org:", orgIz);
+    log.debug("isAllowedRoutePath effective org:", userEmail, orgIz);
     if (userEmail && orgIz && roleMap[userEmail] && roleMap[userEmail][orgIz]) {
         const roleList = roleMap[userEmail][orgIz];
         return roleMap && hasSvelteRoutePath(null, roleList, routePath);
@@ -80,31 +80,6 @@ export function isEmailAllowedRoutePath(email, routePath) {
 export async function isUserAllowedRoutePath(routePath) {
     return isAllowedRoutePath(routePath);
     //return isEmailAllowedRoutePath(email, routePath);
-}
-export async function getUserEmail() {
-    log.debug("getUserEmail TODO: prefer bearer token!");
-    try {
-        const user = await Auth.currentAuthenticatedUser();
-        log.debug("getUserEmail cognito user:", user);
-        const attributes = await Auth.userAttributes(user);
-        log.debug("getUserEmail cognito attrs:", attributes);
-        const email = attributes
-            .filter((a) => {
-                return a.Name === "email";
-            })[0]
-            .getValue();
-        log.debug("getUserEmail email:", email);
-        return email.toLowerCase();
-    } catch (err) {
-        log.debug("getUserEmail error:", err);
-        //userEmailStore.set(""); // update userEmail store
-        logout(); // cognito thinks we aren't logged in.  sync the store
-        /*statusMessage.set({
-            text: `Please login to use this system.`,
-            type: "error",
-        });*/
-        return "";
-    }
 }
 export async function setJwt() {
     const session = get(AuthStore); // s/b lowercase!
