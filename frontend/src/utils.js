@@ -175,7 +175,7 @@ export function participantFocusCompletion(ptcp) {
     return ptcp && ptcp.toString().length == 3;
 }
 export function participantValid(ptcp) {
-    return ptcp && ptcp.toString().length >= 2;
+    return ptcp && ptcp.toString().length >= 1;
 }
 function getHeight(box) {
     let height = box.offsetHeight;
