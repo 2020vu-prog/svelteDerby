@@ -10,7 +10,7 @@
         Badge,
     } from "sveltestrap";
     import CarAndDriver from "./CarAndDriver.svelte";
-    import InfoButton from "./InfoButton.svelte";
+    import EllipsisButton from "./EllipsisButton.svelte";
     import ComponentToolbar from "./ComponentToolbar.svelte";
     import { standingsMap, driverMap } from "./stores.js";
     import {
@@ -85,7 +85,7 @@
                 <span class="spanRight">
                     {hhmmss}
                     {#if !isHistory()}
-                        <InfoButton
+                        <EllipsisButton
                             on:message={toggleToolbar}
                             dbName="RaceStanding"
                             dbKey={standing.classKey} />

@@ -1,5 +1,6 @@
 import log from "loglevel";
 import { store as AuthStore } from "./stores/auth.js";
+import axios from "axios";
 const {
     hasSvelteRoutePath,
 } = require("../../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
@@ -12,6 +13,7 @@ import {
     getAxios as getAxiosStore,
     raceConfig as raceConfigStore,
     roleMap as roleMapStore,
+    getChartCacheKey,
 } from "./stores.js";
 import { logout as cognitoLogout } from "./stores/auth.js";
 import { get } from "svelte/store";
@@ -61,7 +63,7 @@ export function isAllowedRoutePath(routePath, orgIz = null) {
         const raceConfig = get(raceConfigStore);
         orgIz = raceConfig.orgIz;
     }
-    log.debug("isAllowedRoutePath effective org:", orgIz);
+    log.debug("isAllowedRoutePath effective org:", userEmail, orgIz);
     if (userEmail && orgIz && roleMap[userEmail] && roleMap[userEmail][orgIz]) {
         const roleList = roleMap[userEmail][orgIz];
         return roleMap && hasSvelteRoutePath(null, roleList, routePath);
@@ -79,32 +81,7 @@ export async function isUserAllowedRoutePath(routePath) {
     return isAllowedRoutePath(routePath);
     //return isEmailAllowedRoutePath(email, routePath);
 }
-export async function getUserEmail() {
-    log.debug("getUserEmail TODO: prefer bearer token!");
-    try {
-        const user = await Auth.currentAuthenticatedUser();
-        log.debug("getUserEmail cognito user:", user);
-        const attributes = await Auth.userAttributes(user);
-        log.debug("getUserEmail cognito attrs:", attributes);
-        const email = attributes
-            .filter((a) => {
-                return a.Name === "email";
-            })[0]
-            .getValue();
-        log.debug("getUserEmail email:", email);
-        return email.toLowerCase();
-    } catch (err) {
-        log.debug("getUserEmail error:", err);
-        //userEmailStore.set(""); // update userEmail store
-        logout(); // cognito thinks we aren't logged in.  sync the store
-        /*statusMessage.set({
-            text: `Please login to use this system.`,
-            type: "error",
-        });*/
-        return "";
-    }
-}
-export function setJwt() {
+export async function setJwt() {
     const session = get(AuthStore); // s/b lowercase!
     console.log("seeking jwt as :", session);
     if (
@@ -116,10 +93,51 @@ export function setJwt() {
         const token = session.signInUserSession.idToken.jwtToken;
         console.log("Setting jwt as :", token);
         userJwtStore.set(token);
+        await movedFromIot();
     }
     return;
     //if(session.signInUserSession.idToken.jwtToken)
 }
+async function requstPermissionHack(cognitoIdentityId) {
+    if (!cognitoIdentityId) {
+        log.debug("mfi.bypass rph. no id");
+        return;
+    }
+    log.debug("mfi. doing rph: ", cognitoIdentityId);
+    const raceConfig = get(raceConfigStore);
+    const getAxios = get(getAxiosStore);
+    const axios = await getAxios();
+    axios
+        .get(
+            raceConfig.baseUrl +
+                "/requestMqttSubPermission?orgId=" +
+                raceConfig.orgId +
+                "&orgIz=" +
+                raceConfig.orgIz +
+                "&principal=" +
+                cognitoIdentityId
+        )
+        .then((response) => {
+            log.debug("mfi. requstPermissionHack ok:" + response.data.length);
+        })
+        .catch((err) => {
+            log.debug("mfi. requstPermissionHack failed:", err);
+        });
+}
+async function movedFromIot() {
+    const ccSession = await Auth.currentSession();
+    log.debug("mfi.auth ccSession :", ccSession);
+    const ccInfo = await Auth.currentCredentials();
+    var cognitoIdentityId = "";
+    if (ccInfo && ccInfo.data) {
+        cognitoIdentityId = ccInfo.data.IdentityId;
+        log.debug("mfi.auth ccInfo cognitoIdentityId:", cognitoIdentityId);
+        await requstPermissionHack(cognitoIdentityId);
+    } else {
+        log.debug("mfi.auth ccInfo empty:", ccInfo);
+    }
+}
+
 export function logout() {
     cognitoLogout();
     userJwtStore.set("");
@@ -157,7 +175,7 @@ export function participantFocusCompletion(ptcp) {
     return ptcp && ptcp.toString().length == 3;
 }
 export function participantValid(ptcp) {
-    return ptcp && ptcp.toString().length >= 2;
+    return ptcp && ptcp.toString().length >= 1;
 }
 function getHeight(box) {
     let height = box.offsetHeight;
@@ -225,4 +243,18 @@ export async function refreshOrgRoles(orgIz) {
         .catch((err) => {
             log.debug(err);
         });
+}
+
+export async function getChartJson(jsonPath) {
+    log.debug("utils getChartJson", jsonPath);
+
+    const chartCacheKey = getChartCacheKey();
+    try {
+        const response = await axios.get(
+            `/data/brackets/${jsonPath}?cacheKey=${chartCacheKey}`
+        );
+        return response.data;
+    } catch (err) {
+        log.debug("utils getChartJson failed: " + err);
+    }
 }

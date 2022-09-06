@@ -1,3 +1,7 @@
+##NOTE:
+* node 6 required for build as of May 2022
+* tested: 6.14.15
+
 # Stand up AWS infrastructure
 * copy awsVarTemplate.sh to a private file (probably outside of the git tree)
 * update the varTemplate with credentials for the AWS account and environment you will use

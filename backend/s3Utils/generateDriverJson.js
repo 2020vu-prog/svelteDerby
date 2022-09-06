@@ -36,9 +36,9 @@ const doOne = async (tgt) => {
     const orgIz = "Test";
     const orgId = "Test.4b117";
     const outJson = {
-        orgId: orgId,
-        orgIz: orgIz,
-        bulk: [],
+        //orgId: orgId,
+        //orgIz: orgIz,
+        //bulk: [],
     };
     const rs = fs.createReadStream(`${baseDirAndFile}.csv`);
 
@@ -60,7 +60,14 @@ const doOne = async (tgt) => {
                     name: r.ShortName,
                     number: r.CarNumber,
                 };
-                outJson.bulk.push(driver);
+                //outJson.bulk.push(driver);
+                outJson[r.CarNumber]={
+                    orgId: orgId,
+                    orgIz: orgIz,
+                    PK: `${orgId}:PTCP`,
+                    name: r.ShortName,
+                    number: r.CarNumber,
+		};
             }
         }
 

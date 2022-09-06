@@ -7,6 +7,7 @@
         showBottomNav,
         developerMode,
         developerLogging,
+        enableFractionalMs,
         statusMessage,
     } from "./stores.js";
     $: {
@@ -22,6 +23,7 @@
     import { getCacheKey, setCacheKey } from "./stores.js";
     import { db, localConfigDb } from "./eventDb.js";
     import BottomNav from "./BottomNav.svelte";
+    import OrgName from "./OrgName.svelte";
 
     let mounted = false;
 
@@ -102,9 +104,12 @@
         <hr />
 
         <div class="singularSettingDiv">
-            <h4>Event Name</h4>
+            <h4>Event Name / Org Name</h4>
             <h6>
                 <span>{ecFromDexie[0].name}</span>
+                /
+                <OrgName orgIz={ecFromDexie[0].orgIz} />
+                [{ecFromDexie[0].orgIz}]
             </h6>
         </div>
         <hr />
@@ -154,11 +159,17 @@
             <input type="checkbox" bind:checked={$developerLogging} />
             <h6>
                 This toggles whether the developer logs are emitted on
-                <strong>all screens</strong>
-                .
+                <strong>all screens.</strong>
             </h6>
         </div>
         <hr />
+        <div class="singularSettingDiv">
+            <h4>Allow Fractional MS timing</h4>
+            <input type="checkbox" bind:checked={$enableFractionalMs} />
+            <h6>
+                This enables partial MS entry on manual timer. NOT recommended.
+            </h6>
+        </div>
     {/if}
 
     <BottomNav />

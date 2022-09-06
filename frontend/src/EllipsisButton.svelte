@@ -1,5 +1,5 @@
 <script>
-    import { faInfo } from "@fortawesome/free-solid-svg-icons/faInfo";
+    import { faEllipsisV } from "@fortawesome/free-solid-svg-icons/faEllipsisV";
     import Icon from "fa-svelte";
 
     import { createEventDispatcher } from "svelte";
@@ -15,5 +15,5 @@
 
 <span on:click={didClick}>
     <!-- TODO: don't show info button if no delete permission -->
-    <Icon icon={faInfo} />
+    <Icon icon={faEllipsisV} />
 </span>

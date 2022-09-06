@@ -1,0 +1,340 @@
+{
+	"imgSize": {
+		"height": 1700,
+		"width": 2200
+	},
+	"imgPositions": {
+		"01A": {
+			"left": 102,
+			"top": 340
+		},
+		"01B": {
+			"left": 117,
+			"top": 412
+		},
+		"02A": {
+			"left": 111,
+			"top": 469
+		},
+		"02B": {
+			"left": 115,
+			"top": 540
+		},
+		"03A": {
+			"left": 105,
+			"top": 600
+		},
+		"03B": {
+			"left": 98,
+			"top": 683
+		},
+		"04A": {
+			"left": 117,
+			"top": 746
+		},
+		"04B": {
+			"left": 106,
+			"top": 822
+		},
+		"05A": {
+			"left": 136,
+			"top": 874
+		},
+		"05B": {
+			"left": 119,
+			"top": 964
+		},
+		"06A": {
+			"left": 110,
+			"top": 1036
+		},
+		"06B": {
+			"left": 101,
+			"top": 1119
+		},
+		"07A": {
+			"left": 102,
+			"top": 1178
+		},
+		"07B": {
+			"left": 100,
+			"top": 1258
+		},
+		"08A": {
+			"left": 101,
+			"top": 1317
+		},
+		"08B": {
+			"left": 99,
+			"top": 1401
+		},
+		"09A": {
+			"left": 375,
+			"top": 358
+		},
+		"09B": {
+			"left": 366,
+			"top": 506
+		},
+		"10A": {
+			"left": 372,
+			"top": 624
+		},
+		"10B": {
+			"left": 365,
+			"top": 777
+		},
+		"11A": {
+			"left": 352,
+			"top": 911
+		},
+		"11B": {
+			"left": 354,
+			"top": 1065
+		},
+		"12A": {
+			"left": 366,
+			"top": 1195
+		},
+		"12B": {
+			"left": 364,
+			"top": 1350
+		},
+		"13A": {
+			"left": 585,
+			"top": 408
+		},
+		"13B": {
+			"left": 591,
+			"top": 692
+		},
+		"14A": {
+			"left": 581,
+			"top": 980
+		},
+		"14B": {
+			"left": 586,
+			"top": 1256
+		},
+		"15A": {
+			"left": 1629,
+			"top": 149
+		},
+		"15B": {
+			"left": 1629,
+			"top": 241
+		},
+		"16A": {
+			"left": 1631,
+			"top": 338
+		},
+		"16B": {
+			"left": 1631,
+			"top": 420
+		},
+		"17A": {
+			"left": 1860,
+			"top": 181
+		},
+		"17B": {
+			"left": 1859,
+			"top": 366
+		},
+		"18A": {
+			"left": 794,
+			"top": 544
+		},
+		"18B": {
+			"left": 797,
+			"top": 1107
+		},
+		"19A": {
+			"left": 1617,
+			"top": 696
+		},
+		"19B": {
+			"left": 1618,
+			"top": 784
+		},
+		"20A": {
+			"left": 1616,
+			"top": 530
+		},
+		"20B": {
+			"left": 1622,
+			"top": 623
+		},
+		"Place1": {
+			"left": 1735,
+			"top": 928
+		},
+		"Place2": {
+			"left": 1735,
+			"top": 983
+		},
+		"Place3": {
+			"left": 1734,
+			"top": 1039
+		},
+		"Place4": {
+			"left": 1736,
+			"top": 1085
+		},
+		"Place5": {
+			"left": 1738,
+			"top": 1139
+		},
+		"Place6": {
+			"left": 1737,
+			"top": 1188
+		},
+		"Place7": {
+			"left": 1734,
+			"top": 1247
+		},
+		"Place8": {
+			"left": 1739,
+			"top": 1297
+		}
+	},
+	"seeds": [
+		"01A",
+		"02A",
+		"03A",
+		"04A",
+		"05A",
+		"06A",
+		"07A",
+		"08A",
+		"08B",
+		"06B",
+		"04B",
+		"02B",
+		"07B",
+		"03B",
+		"05B",
+		"01B"
+	],
+	"progress": {
+		"10": {
+			"#Round": "Left2",
+			"HeatNumber": "10",
+			"WinnerDest": "13B",
+			"LoserDest": "15B"
+		},
+		"11": {
+			"#Round": "Left2",
+			"HeatNumber": "11",
+			"WinnerDest": "14A",
+			"LoserDest": "16A"
+		},
+		"12": {
+			"#Round": "Left2",
+			"HeatNumber": "12",
+			"WinnerDest": "14B",
+			"LoserDest": "16B"
+		},
+		"13": {
+			"#Round": "Left3",
+			"HeatNumber": "13",
+			"WinnerDest": "18A",
+			"LoserDest": "19A"
+		},
+		"14": {
+			"#Round": "Left3",
+			"HeatNumber": "14",
+			"WinnerDest": "18B",
+			"LoserDest": "19B"
+		},
+		"15": {
+			"#Round": "Runoff",
+			"HeatNumber": "15",
+			"WinnerDest": "17A",
+			"LoserDest": "20A"
+		},
+		"16": {
+			"#Round": "Runoff",
+			"HeatNumber": "16",
+			"WinnerDest": "17B",
+			"LoserDest": "20B"
+		},
+		"17": {
+			"#Round": "Runoff",
+			"HeatNumber": "17",
+			"WinnerDest": "Place5",
+			"LoserDest": "Place6"
+		},
+		"18": {
+			"#Round": "Left4",
+			"HeatNumber": "18",
+			"WinnerDest": "Place1",
+			"LoserDest": "Place2"
+		},
+		"19": {
+			"#Round": "Runoff",
+			"HeatNumber": "19",
+			"WinnerDest": "Place3",
+			"LoserDest": "Place4"
+		},
+		"20": {
+			"#Round": "Runoff",
+			"HeatNumber": "20",
+			"WinnerDest": "Place7",
+			"LoserDest": "Place8"
+		},
+		"01": {
+			"#Round": "Left1",
+			"HeatNumber": "01",
+			"WinnerDest": "09A",
+			"LoserDest": "OUT"
+		},
+		"02": {
+			"#Round": "Left1",
+			"HeatNumber": "02",
+			"WinnerDest": "09B",
+			"LoserDest": "OUT"
+		},
+		"03": {
+			"#Round": "Left1",
+			"HeatNumber": "03",
+			"WinnerDest": "10A",
+			"LoserDest": "OUT"
+		},
+		"04": {
+			"#Round": "Left1",
+			"HeatNumber": "04",
+			"WinnerDest": "10B",
+			"LoserDest": "OUT"
+		},
+		"05": {
+			"#Round": "Left1",
+			"HeatNumber": "05",
+			"WinnerDest": "11A",
+			"LoserDest": "OUT"
+		},
+		"06": {
+			"#Round": "Left1",
+			"HeatNumber": "06",
+			"WinnerDest": "11B",
+			"LoserDest": "OUT"
+		},
+		"07": {
+			"#Round": "Left1",
+			"HeatNumber": "07",
+			"WinnerDest": "12A",
+			"LoserDest": "OUT"
+		},
+		"08": {
+			"#Round": "Left1",
+			"HeatNumber": "08",
+			"WinnerDest": "12B",
+			"LoserDest": "OUT"
+		},
+		"09": {
+			"#Round": "Left2",
+			"HeatNumber": "09",
+			"WinnerDest": "13A",
+			"LoserDest": "15A"
+		}
+	}
+}

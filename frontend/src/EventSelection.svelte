@@ -9,18 +9,19 @@
         raceConfig,
         getCacheKey,
         clearOldStatusMessages,
+        axios,
     } from "./stores.js";
 
     import SpinnerButton from "./SpinnerButton.svelte";
 
     import MaterialAdd from "./MaterialAdd.svelte";
+    import OrgName from "./OrgName.svelte";
     import { onMount } from "svelte";
-    import { Auth } from "aws-amplify";
-    import axios from "axios";
     import { push, pop, replace } from "svelte-spa-router";
     import { dbReset } from "./eventDb.js";
 
     import { refreshOrgRoles } from "./utils.js";
+    import { setJwt } from "./utils.js";
 
     export let params = {};
 
@@ -41,21 +42,18 @@
         });
         return orgEvents;
     };
-    const refreshOrgMap = async () => {
-        log.debug("refreshOrgMap:");
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
+    const refreshOrgEvents = async () => {
+        log.debug("refreshOrgEvents:");
 
-        axios.defaults.headers.common["Authorization"] = bearer;
         const cacheKey = getCacheKey();
-        axios
+        $axios
             .get(
                 $raceConfig.baseUrl +
                     `/listOrgEvents?orgIz=${params.orgIz}&cache=${cacheKey}`
             )
             .then((response) => {
-                log.debug("refreshOrgMap length:" + response.data.length);
-                log.debug("refreshOrgMap:", response.data);
+                log.debug("refreshOrgEvents length:" + response.data.length);
+                log.debug("refreshOrgEvents:", response.data);
                 eventMap = response.data;
                 currentViewMode = "Active";
             })
@@ -65,7 +63,7 @@
     };
 
     onMount(async () => {
-        await refreshOrgMap();
+        await refreshOrgEvents();
         await refreshOrgRoles(params.orgIz);
     });
     const requestClearStore = () => {
@@ -79,13 +77,14 @@
         requestClearStore();
         log.debug("requestClearStore  complete.");
 
-        log.debug("selecting config:", config);
         config.baseUrl = "/app";
         config.title = getRaceName(config);
+        log.debug("selecting config:", config);
 
         $raceConfig = config;
         $clearOldStatusMessages = true;
 
+        await setJwt(); // need mqtt perms if initial login didn't have selected org.
         replace("/RpList");
     };
     const getRaceName = (config) => {
@@ -127,7 +126,10 @@
         overrideOrgIz={params.orgIz}
         clickHandleRoute="/eventAdd/{params.orgIz}/Add" />
 
-    <h4>EventSelection for {decodeURIComponent(params.orgIz)}</h4>
+    <h4>
+        EventSelection for
+        <OrgName orgIz={decodeURIComponent(params.orgIz)} />
+    </h4>
 
     <p />
 

@@ -3,58 +3,54 @@
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { doRefreshBlocks } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
+    import OrgName from "./OrgName.svelte";
     import { raceConfig } from "./stores.js";
     import { onMount } from "svelte";
     import { Auth } from "aws-amplify";
     import axios from "axios";
     import { push, pop, replace } from "svelte-spa-router";
-    import { getCacheKey, developerMode, userEmail } from "./stores.js";
+    import {
+        getCacheKey,
+        developerMode,
+        userEmail,
+        getOrgName,
+        orgMap,
+        refreshOrgMap,
+    } from "./stores.js";
 
     //Populate org list if user is logged in automatically as anonymous
     $: refreshOrgMap($userEmail);
 
-    var orgMap = {};
     $: {
         log.debug("bound orgMap: ", orgMap);
     }
 
     const getOrgsAsList = (orgList) => {
         if ($developerMode) {
-            return Object.keys(orgList);
+            return Object.keys(orgList).sort(sortByOrgName);
         } else {
-            return Object.keys(orgList).filter(
-                (orgName) => !orgName.startsWith("Test")
-            );
+            return Object.keys(orgList)
+                .filter((orgName) => !orgName.startsWith("Test"))
+                .sort(sortByOrgName);
         }
-    };
-    const refreshOrgMap = async () => {
-        log.debug("refreshOrgMap:");
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
-
-        axios.defaults.headers.common["Authorization"] = bearer;
-        const cacheKey = getCacheKey();
-
-        axios
-            .get($raceConfig.baseUrl + `/listOrgConfig?cacheKey=${cacheKey}`)
-            .then((response) => {
-                log.debug("refreshOrgMap length:" + response.data.length);
-                log.debug("refreshOrgMap:", response.data);
-                orgMap = response.data;
-            })
-            .catch((err) => {
-                log.debug(err);
-            });
     };
 
     onMount(async () => {
         refreshOrgMap();
     });
 
-    function getOrgName(orgIz) {
-        if (orgMap[orgIz].orgName) {
-            return orgMap[orgIz].orgName;
-        } else return orgIz;
+    function sortByOrgName(a, b) {
+        const nameA = getOrgName(a).toUpperCase(); // ignore upper and lowercase
+        const nameB = getOrgName(b).toUpperCase(); // ignore upper and lowercase
+        if (nameA < nameB) {
+            return -1;
+        }
+        if (nameA > nameB) {
+            return 1;
+        }
+
+        // names must be equal
+        return 0;
     }
 </script>
 
@@ -64,11 +60,13 @@
     <h4>Organization List</h4>
     <p />
 
-    {#each getOrgsAsList(orgMap) as orgIz}
+    {#each getOrgsAsList($orgMap) as orgIz}
         <Card class="mt-3 border border-info">
             <CardBody>
                 <div on:click={() => replace('/eventSelection/' + orgIz)}>
-                    <a href="javascript:void(0);">{getOrgName(orgIz)}</a>
+                    <a href="javascript:void(0);">
+                        <OrgName {orgIz} />
+                    </a>
                 </div>
             </CardBody>
         </Card>

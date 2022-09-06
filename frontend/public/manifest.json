@@ -1,0 +1,35 @@
+{
+    "name": "RaceResults",
+    "short_name": "RR1",
+    "start_url": "index.html",
+    "id": "index.html",
+    "display": "standalone",
+    "theme_color": "#9c27b0",
+    "background_color": "#fff",
+    "icons": [
+        {
+            "src": "/RR1cm144.png",
+            "sizes": "144x144",
+            "purpose": "any",
+            "type": "image/png"
+        },
+        {
+            "src": "/data/checkered-flag-svgrepo-com.svg",
+            "sizes": "192x192",
+            "purpose": "maskable",
+            "type": "image/svg"
+        },
+        {
+            "src": "/data/checkered-flag-svgrepo-com.svg",
+            "sizes": "512x512",
+            "purpose": "maskable",
+            "type": "image/svg"
+        },
+        {
+            "src": "/data/checkered-flag-svgrepo-com.svg",
+            "sizes": "478x478",
+            "purpose": "maskable",
+            "type": "image/svg"
+        }
+    ]
+}

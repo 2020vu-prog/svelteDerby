@@ -6,4 +6,4 @@ terraform apply /tmp/chart.out
 ##### terraform apply -auto-approve
 
 now=$(date '+%s')
-sed "s/foo/$now/"<<< '{ "chartKey":"foo" }' > ../src/config/doNotEditChartKey.json
+sed "s/foo/$now/"<<< '{ "chartKey":"foo" }' > ../frontend/src/config/doNotEditChartKey.json

@@ -4,17 +4,20 @@
     import Router from "svelte-spa-router";
     import { link, location } from "svelte-spa-router";
     import { push, pop, replace } from "svelte-spa-router";
-    import { store as AuthStore } from "./stores/auth.js";
 
     import BottomNav from "./BottomNav.svelte";
     import CaptureVideo from "./CaptureVideo.svelte";
     import RaceStandingList from "./RaceStandingList.svelte";
     import RacePhaseList from "./RacePhaseList.svelte";
-    import ChartList from "./ChartList.svelte";
+    import ChartList from "./ChartListRouter.svelte";
+    import ChartList1 from "./ChartList.svelte";
+    import ChartList2 from "./ChartList2.svelte";
     import ChartEdit from "./ChartEdit.svelte";
+    import ChartFill from "./ChartFill.svelte";
     import ChartAdd from "./ChartAdd.svelte";
     import DriverList from "./DriverList.svelte";
     import DriverAdd from "./DriverAdd.svelte";
+    import DriverInfo from "./DriverInfo.svelte";
     import EventSelection from "./EventSelection.svelte";
     import EventAdd from "./EventAdd.svelte";
     import HistoryList from "./HistoryList.svelte";
@@ -51,7 +54,7 @@
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
-    import { isEmailAllowedRoutePath, getUserEmail } from "./utils.js";
+    import { isEmailAllowedRoutePath, sleep } from "./utils.js";
 
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
     const routes = {
@@ -59,12 +62,13 @@
         "/": RaceStandingList,
         "/RsList/:type": RaceStandingList,
         "/RpList": RacePhaseList,
-        "/drivers": DriverList,
+        "/drivers/:selectable?": DriverList,
         "/login": Login,
         "/ManualTimerAdd/:rpKey/:winningLane?/:winningTime?": ManualTimerAdd,
         "/ManualAnnouncement": ManualAnnouncement,
         "/raceStandingAdd/:type": RaceStandingAdd,
         "/driverAdd/:number?": DriverAdd,
+        "/driverInfo/:number?": DriverInfo,
         "/eventSelection/:orgIz": EventSelection,
         "/eventAdd/:orgIz/:mode": EventAdd,
         "/historyList/:PK/:SK": HistoryList,
@@ -77,7 +81,10 @@
         "/chartDetail/:chartId": ChartDetail,
         "/chartPosition/:chartId/:chartPosition": ChartPosition,
         "/chartList": ChartList,
+        "/chartList1": ChartList1,
+        "/chartList2": ChartList2,
         "/chartEdit/:chartId": ChartEdit,
+        "/chartFill/:chartId": ChartFill,
         "/chartAdd": ChartAdd,
         "/timerConfig": TimerConfig,
         "/timerAlignment": TimerAlignment,
@@ -114,8 +121,7 @@
     }
 
     async function buildMenuMap() {
-        //$userEmail = await getUserEmail();
-        await getUserEmail();
+        log.debug("bmm: userEmailStored:", $userEmail);
 
         if ($userId) {
             log.debug("bmm: uid:", $userId);
@@ -202,7 +208,7 @@
     };
     onMount(async () => {
         log.debug("mounted app");
-        await logUserInIfNecessary();
+        logUserInIfNecessary();
 
         isMounted = new Date().getTime();
     });
@@ -274,7 +280,7 @@
     }
 
     async function logUserInIfNecessary() {
-        await getUserEmail();
+        await sleep(2500); // let things settle before possibly logging user out erroneously.
         if (!$userEmail) {
             log.debug("User is not logged in, requesting autoAnonymousLogin.");
             $beginAnonymousLogin = true;

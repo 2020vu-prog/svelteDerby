@@ -1,7 +1,6 @@
 <script>
     import log from "loglevel";
 
-    import axios from "axios";
     import SpinnerButton from "./SpinnerButton.svelte";
     import {
         driverMap,
@@ -17,6 +16,7 @@
         mqttEnabled,
         timerState,
         raceConfig,
+        axios,
     } from "./stores.js";
     import { Auth } from "aws-amplify";
     import Amplify, { PubSub } from "aws-amplify";
@@ -59,31 +59,6 @@
         checkIfRaceFrozenAndDisplayMessage($raceConfig);
     }
 
-    const requstPermissionHack = async (cognitoIdentityId) => {
-        if (!cognitoIdentityId) {
-            log.debug("bypass rph. no id");
-        }
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
-
-        axios.defaults.headers.common["Authorization"] = bearer;
-        axios
-            .get(
-                $raceConfig.baseUrl +
-                    "/requestMqttSubPermission?orgId=" +
-                    $raceConfig.orgId +
-                    "&orgIz=" +
-                    $raceConfig.orgIz +
-                    "&principal=" +
-                    cognitoIdentityId
-            )
-            .then((response) => {
-                log.debug("requstPermissionHack:" + response.data.length);
-            })
-            .catch((err) => {
-                log.debug("requstPermissionHack failed:", err);
-            });
-    };
     async function watchIot() {
         if (!$raceConfig.orgId) {
             log.debug("watchIot : no org:  skip");
@@ -96,6 +71,7 @@
         }
         log.debug("watchIot : do mqtt:  ", $mqttEnabled);
 
+        /*
         const ccSession = await Auth.currentSession();
         log.debug("auth ccSession :", ccSession);
         const ccInfo = await Auth.currentCredentials();
@@ -106,9 +82,10 @@
         } else {
             log.debug("auth ccInfo empty:", ccInfo);
         }
+        */
 
         if (activeIotWatch && !activeIotWatch.plugged) {
-            await requstPermissionHack(cognitoIdentityId);
+            //await requstPermissionHack(cognitoIdentityId);
             Amplify.addPluggable(
                 new AWSIoTProvider({
                     aws_pubsub_region: aws_exports.aws_pubsub_region,
@@ -320,7 +297,7 @@
 
         try {
             // baseUrl is /app.   archives are at root.
-            const response = await axios.get(
+            const response = await $axios.get(
                 $raceConfig.baseUrl + "/../" + s3Path
             );
             log.debug("LoadCca finished:", response);
@@ -418,6 +395,7 @@
         $statusMessage = {
             text: `Refresh took ${elapsedTime}`,
             type: "success",
+            key: "refreshTime",
         };
 
         return hist;
@@ -565,8 +543,6 @@
         refreshInProgressButton = true;
         //await dbInit();
         log.debug("old nobKey:", $nextOnBlockKey);
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
         if ($raceConfig.orgId && $raceConfig.orgIz) {
         } else {
             log.debug("no selected race");
@@ -579,7 +555,6 @@
         } else {
             watchIot();
 
-            axios.defaults.headers.common["Authorization"] = bearer;
             const url =
                 $raceConfig.baseUrl +
                 "/getRaceHistory?orgId=" +
@@ -587,7 +562,7 @@
                 "&orgIz=" +
                 $raceConfig.orgIz;
             try {
-                const response = await axios.get(url);
+                const response = await $axios.get(url);
                 log.debug("history:" + response.data.length);
                 //log.debug("history:",response.data);
                 const pendingBulk = {};
@@ -646,7 +621,7 @@
             "/archive.json";
 
         try {
-            const response = await axios.get(
+            const response = await $axios.get(
                 $raceConfig.baseUrl + "/.." + s3Path
             );
             log.debug("LoadArchive finished:", response);

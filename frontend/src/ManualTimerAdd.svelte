@@ -2,13 +2,17 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { raceConfig, statusMessage, driverMap } from "./stores.js";
-    import { Auth } from "aws-amplify";
+    import {
+        axios,
+        raceConfig,
+        statusMessage,
+        driverMap,
+        enableFractionalMs,
+    } from "./stores.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
     import { db } from "./eventDb.js";
 
-    import axios from "axios";
     export let params = {};
 
     var submitDisabled = false;
@@ -22,6 +26,9 @@
     });
 
     function validateTimerData(laneX) {
+        if ($enableFractionalMs) {
+            return true; // skip edit if prefs allow
+        }
         if (laneX.toString().includes(".")) {
             $statusMessage = {
                 text: `Invalid Input: [${laneX}] (do not include decimal for time).`,
@@ -34,8 +41,6 @@
 
     async function handleSubmit() {
         log.debug("Manual Timer:" + JSON.stringify(resultForm));
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
         if (resultForm.lane1 == "0") {
             resultForm.lane1 = 0;
         }
@@ -64,12 +69,10 @@
             ].reverse(),
         };
 
-        axios.defaults.headers.common["Authorization"] = bearer;
-
         const endPoint = "/doApplyFinishTime";
         try {
             submitSpinning = true;
-            const response = await axios.post(
+            const response = await $axios.post(
                 $raceConfig.baseUrl + endPoint,
                 req
             );

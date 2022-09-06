@@ -2,14 +2,12 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { raceConfig, statusMessage } from "./stores.js";
-    import { Auth } from "aws-amplify";
+    import { axios, raceConfig, statusMessage } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
-    import axios from "axios";
     export let params = {};
     var chartId = undefined;
     var mounted = false;
@@ -41,8 +39,6 @@
     };
     async function handleSubmit() {
         log.debug(`handleSubmit: ` + JSON.stringify(chartForm));
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
@@ -52,14 +48,10 @@
             del: chartForm.hidden,
         };
 
-        log.debug("token:" + bearer);
-
-        axios.defaults.headers.common["Authorization"] = bearer;
-
         const url = $raceConfig.baseUrl + "/addChart";
         submitSpinning = true;
         try {
-            const response = await axios.post(url, req);
+            const response = await $axios.post(url, req);
             $statusMessage = {
                 text: `Chart [${chartForm.name}] Updated.`,
                 type: "success",

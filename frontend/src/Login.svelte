@@ -18,12 +18,7 @@
         userJwtStore,
     } from "./stores.js";
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
-    import {
-        getUserEmail,
-        refreshOrgRoles,
-        logout,
-        hhmmssFmt,
-    } from "./utils.js";
+    import { refreshOrgRoles, logout, hhmmssFmt } from "./utils.js";
     import { localConfigDb } from "./eventDb.js";
 
     let mode = localStorage.getItem("svelteLoginMode") || "signup";

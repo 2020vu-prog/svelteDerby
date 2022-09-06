@@ -1,6 +1,6 @@
 "use strict";
 const clientMinimumVersion = "1.1.24";
-const derbyMainVersion = "1.1.14";
+const derbyMainVersion = "1.1.15";
 const crypto = require("crypto");
 const path = require("path");
 
@@ -33,6 +33,30 @@ const apiRaceStanding = new ApiRaceStanding(AWS, ddbUtils, announceResults);
 let globalErrorList = [];
 
 log.setLevel(log.levels.TRACE);
+
+const testCars = [
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+];
+//const testSeed = new Date().getTime();
+const testSeed = new Date().toISOString();
+
+getShaCars(testSeed, testCars);
+getShaCars(testSeed, testCars);
 
 const s3QueryChartTypes = async () => {
     var params = {
@@ -627,6 +651,28 @@ async function getActiveTimers() {
 
     return timers;
 }
+
+function getShaCars(seed, carList) {
+    var rc = [];
+    var shaMap = {};
+    log.debug("getShaCars: Begin:", seed);
+
+    carList.forEach((carNumber) => {
+        const seededCar = "" + carNumber + ":" + seed;
+        const sha = crypto.createHash("sha256").update(seededCar).digest("hex");
+        shaMap[sha] = carNumber;
+    });
+    var shaKeys = Object.keys(shaMap);
+    shaKeys.sort();
+
+    shaKeys.forEach((shaKey) => {
+        const nextCar = shaMap[shaKey];
+        log.debug("getShaCars: ", nextCar, " shaKey:", shaKey);
+        rc.push(nextCar);
+    });
+    return rc;
+}
+
 const registeredTimerSha = (timer) => {
     const sha = crypto.createHash("sha256").update(timer.uuid).digest("hex");
     //timer.sha = sha.substring(0, 6);
@@ -1293,6 +1339,9 @@ async function listOrgUser(json, apiProps) {
 async function addOrgUser(json) {
     log.debug("addOrgUser: " + JSON.stringify(json));
 
+    if (json.email) {
+        json.email = json.email.trim();
+    }
     if (json.email && json.orgIz && json.roleList) {
         json.PK = json.orgIz + ":OrgPerm"; // force OrgPerm
         json.SK = json.email;

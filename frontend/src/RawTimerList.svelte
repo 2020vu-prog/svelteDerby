@@ -3,8 +3,7 @@
 
     import SpinnerButton from "./SpinnerButton.svelte";
 
-    import { raceConfig, statusMessage } from "./stores.js";
-    import { Auth } from "aws-amplify";
+    import { axios, raceConfig, statusMessage } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -13,7 +12,6 @@
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
     import CalcFinish from "./CalcFinish.js";
 
-    import axios from "axios";
     export let params = {};
     const entityFactory = new EntityFactory({});
     var mounted = false;
@@ -88,20 +86,14 @@
     };
     async function getTimerHistory() {
         log.debug(`getTimerHistory: `);
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
 
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
         };
 
-        log.debug("token:" + bearer);
-
-        axios.defaults.headers.common["Authorization"] = bearer;
-
         try {
-            const response = await axios.get(
+            const response = await $axios.get(
                 $raceConfig.baseUrl + "/getTimerHistory",
                 { params: req }
             );
@@ -150,15 +142,13 @@
     }
 
     async function pushToManualTimer(winnerDelta) {
-        const currentSession = await Auth.currentSession();
-        const bearer = currentSession.idToken.jwtToken;
         const getNextOnBlocksUrl =
             $raceConfig.baseUrl +
             "/getNextOnBlocks?orgId=" +
             $raceConfig.orgId +
             "&orgIz=" +
             $raceConfig.orgIz;
-        const onBlocksResponse = await axios.get(getNextOnBlocksUrl);
+        const onBlocksResponse = await $axios.get(getNextOnBlocksUrl);
         const data = onBlocksResponse.data;
         if (data && data.length > 0) {
             push(

@@ -58,11 +58,14 @@ export const doRefreshBlocks = writable(0);
 export const standingsMap = writable({});
 export const racePhaseMap = writable({});
 export const driverMap = writable({});
+export const orgMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlockKey = writable("");
+export const showChart2 = persistable("pref:showChart2", false);
 export const showBottomNav = persistable("pref:showBottomNav", true);
 export const developerMode = persistable("pref:developerMode", false);
 export const developerLogging = persistable("pref:developerLogging");
+export const enableFractionalMs = persistable("pref:enableFractionalMs", false);
 
 export const pendingSortAlgorithm = persistable(
     "pref:pendingSortAlgorithm",
@@ -257,5 +260,47 @@ export const userExpCountDownSecs = derived(
         }
     }
 );
+export const selectedDriverMap = writable({});
+export const selectedDriverList = derived(selectedDriverMap, ($dm) => {
+    const dlist = [];
+    for (const [key, value] of Object.entries($dm)) {
+        if (value) {
+            dlist.push(key);
+        }
+    }
+    dlist.sort();
+    return dlist;
+});
 
+export function getOrgName(orgIz) {
+    var om = getStore(orgMap);
+    if (om && om[orgIz] && om[orgIz].orgName) {
+        return om[orgIz].orgName;
+    } else return orgIz;
+}
+
+export async function refreshOrgMap() {
+    log.debug("refreshOrgMap: begin");
+    log.debug("refreshOrgMap ga:", getAxios);
+    const cacheKey = getCacheKey();
+    const axios2 = getStore(getAxios);
+    log.debug("refreshOrgMap a2:", axios2);
+    const axios3 = await axios2();
+    log.debug("refreshOrgMap a3:", axios3);
+
+    try {
+        const response = await axios3.get(
+            getStore(raceConfig).baseUrl + `/listOrgConfig?cacheKey=${cacheKey}`
+        );
+        log.debug("refreshOrgMap length:" + response.data.length);
+        log.debug("refreshOrgMap:", response.data);
+        if (response.data) {
+            orgMap.set(response.data);
+        }
+        return response.data;
+    } catch (err) {
+        log.debug(err);
+        return {};
+    }
+}
 //doRefresh();
