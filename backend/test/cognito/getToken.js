@@ -6,7 +6,7 @@ const jwkToPem = require('jwk-to-pem');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const devConfig = require('../aws-exports.json');
-global.fetch = require('node-fetch');
+//global.fetch = require('node-fetch');
 
 const poolData = {    
 	UserPoolId : devConfig.aws_user_pools_id,
