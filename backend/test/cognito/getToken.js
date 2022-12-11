@@ -5,11 +5,12 @@ const request = require('request');
 const jwkToPem = require('jwk-to-pem');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const devConfig = require('../aws-exports.json');
 global.fetch = require('node-fetch');
 
 const poolData = {    
-UserPoolId : "us-east-2_iksOg1OJe",
-ClientId : "5u75gsnn9883r7pnpnm894c2tg" // Your client id here
+	UserPoolId : devConfig.aws_user_pools_id,
+	ClientId : devConfig.aws_user_pools_web_client_id
 }; 
 const pool_region = 'us-east-2';
 

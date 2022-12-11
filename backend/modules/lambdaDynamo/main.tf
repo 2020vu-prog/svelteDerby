@@ -7,7 +7,6 @@ variable S3DistBucket {}
 variable S3DistBucketArn {}
 variable AwsRegion {}
 
-provider "archive" {}
 locals{
   tags = {
     Environment = var.DeployEnvironment
@@ -76,7 +75,7 @@ resource "aws_lambda_function" "lambda" {
 
   role    = aws_iam_role.iam_for_lambda_dynamo.arn
   handler = "dynamoMain.handler"
-  runtime = "nodejs10.x"
+  runtime = "nodejs16.x"
   publish = true
   tags=local.tags
   environment {

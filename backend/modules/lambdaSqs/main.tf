@@ -7,7 +7,6 @@ variable S3DistBucketArn {}
 variable AwsRegion {}
 variable CcaQueueArn {}
 
-provider "archive" {}
 locals {
   tags = {
     Environment = var.DeployEnvironment
@@ -73,7 +72,7 @@ resource "aws_lambda_function" "lambda" {
 
   role    = aws_iam_role.iam_for_lambda_cca.arn
   handler = "ccaMain.handler"
-  runtime = "nodejs10.x"
+  runtime = "nodejs16.x"
   publish = true
   tags    = local.tags
   environment {

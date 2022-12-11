@@ -20,23 +20,39 @@ locals {
 }
 resource "aws_s3_bucket" "svelteBucket" {
   bucket_prefix="svelte-static-"
-  acl    = "private"
   force_destroy=true
 
+}
+resource "aws_s3_bucket_acl" "svelteBucket" {
+  bucket = aws_s3_bucket.svelteBucket.id
+  acl    = "private"
 }
 resource "aws_s3_bucket" "cdnLogBucket" {
   bucket_prefix="svelte-cdn-logs"
   force_destroy=true
-  acl    = "private"
-  lifecycle_rule {
-    enabled = true
+}
+resource "aws_s3_bucket_lifecycle_configuration" "cdnLogBucket" {
+  bucket = aws_s3_bucket.cdnLogBucket.id
+  rule {
+    id = "log"
+    status = "Enabled"
 
-    abort_incomplete_multipart_upload_days=2
+
+   
+    abort_incomplete_multipart_upload {
+	days_after_initiation=2
+	}
     expiration {
       days = 90
     }
   }
+
 }
+resource "aws_s3_bucket_acl" "cdnLogBucket_acl" {
+  bucket = aws_s3_bucket.cdnLogBucket.id
+  acl    = "private"
+}
+
 data "aws_iam_policy_document" "s3_svelte_policy" {
   statement {
     actions   = ["s3:GetObject"]
@@ -170,6 +186,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
   is_ipv6_enabled     = true
   comment             = "Terraform cdn"
   default_root_object = "index.html"
+  http_version        = "http2and3"
 
 
   aliases = local.use_default_cert ? null : [local.DnsCfAliasFq]

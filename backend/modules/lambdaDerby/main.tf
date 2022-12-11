@@ -1,5 +1,4 @@
 
-provider "archive" {}
 variable DeployEnvironment {}
 variable DynamoDbArn {}
 variable DistDbArn {}

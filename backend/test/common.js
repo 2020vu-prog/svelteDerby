@@ -5,6 +5,9 @@ module.exports.CF = "https://cf.derby.rr1.us/app"
 
 const fs = require('fs');
 const axios = require("axios")
+//const devEnv= require("../../frontend/generatedTargets.json")
+const devEnv= require("./aws-exports.json")
+module.exports.CF = `${devEnv.DERBY_CLOUDFRONT}/app`
 
 function checkTime(i) {
     return (i < 10) ? "0" + i : i;

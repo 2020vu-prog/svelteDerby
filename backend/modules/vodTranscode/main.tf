@@ -13,10 +13,13 @@ locals{
 
 resource "aws_s3_bucket" "lambdaSrcBucket" {
   bucket_prefix = "vod-lambda-src-"
+}
+resource "aws_s3_bucket_acl" "lambdaSrcBucket" {
+  bucket = aws_s3_bucket.lambdaSrcBucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "vod_src_file_upload" {
+resource "aws_s3_object" "vod_src_file_upload" {
   bucket = aws_s3_bucket.lambdaSrcBucket.id
   key    = "vodTranscode/lambda.zip"
   source = "${path.module}/src/lambda.zip"
@@ -32,7 +35,7 @@ resource "aws_cloudformation_stack" "vodTranscodeStack" {
     NotifcationEmail="2020vu+videoJobDone@gmail.com"
     LambdaSrcBucket=aws_s3_bucket.lambdaSrcBucket.id
   }
-  depends_on = [ aws_s3_bucket_object.vod_src_file_upload ]
+  depends_on = [ aws_s3_object.vod_src_file_upload ]
 }
 
 output MediaBucket {

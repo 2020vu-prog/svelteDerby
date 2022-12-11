@@ -1,8 +1,16 @@
 SUBDIRS := $(wildcard modules/*/src/.)
 
-all: $(SUBDIRS)
+all: lambdaPkgs tfplan
+
+lambdaPkgs: $(SUBDIRS) 
+
 $(SUBDIRS):
 	$(MAKE) -C $@
 	echo $@
 
-.PHONY: all $(SUBDIRS)
+.PHONY: all $(SUBDIRS) tfplan lambdaPkgs
+
+tfplan: $(SUBDIRS)
+	terraform plan
+valid:
+	terraform validate -json

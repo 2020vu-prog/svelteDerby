@@ -1,3 +1,5 @@
+/backend/*.env
+/backend/test/aws-exports.json
 terraform.tfstate
 terraform.tfstate.backup
 /frontend/generatedTargets.sh

@@ -93,7 +93,14 @@ resource "aws_dynamodb_table" "derby-distribution" {
 }
 resource "aws_s3_bucket" "dstBucket" {
   bucket_prefix = local.S3DistBucketPrefix
+}
+resource "aws_s3_bucket_acl" "dstBucket" {
+  bucket = aws_s3_bucket.dstBucket.id
   acl    = "private"
+}
+resource "aws_s3_bucket_cors_configuration" "dstBucket" {
+  bucket = aws_s3_bucket.dstBucket.id
+
   cors_rule {
           allowed_headers = [
               "*",

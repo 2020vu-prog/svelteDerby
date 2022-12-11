@@ -97,4 +97,5 @@ output derbyUserPool {
 }
 output sveltePoolClient {
         value=aws_cognito_user_pool_client.sveltePoolClient
+	sensitive = true
 }
