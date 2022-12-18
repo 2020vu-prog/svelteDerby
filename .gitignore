@@ -1,7 +1,10 @@
 /backend/*.env
 /backend/test/aws-exports.json
-terraform.tfstate
-terraform.tfstate.backup
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info*.terraform.lock.hcl
+
+
 /frontend/generatedTargets.sh
 amplify/
 amplify-backup/
