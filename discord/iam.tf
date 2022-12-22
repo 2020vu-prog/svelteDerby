@@ -33,7 +33,7 @@ resource "aws_iam_instance_profile" "discord_bot_ec2_profile" {
   role = aws_iam_role.discord_bot_iam_role.name
 }
 resource "aws_iam_policy" "discord_bot_iam_policy" {
-  name = "${var.DeployEnvironment}_discord_bot_ec2_policy"
+  name        = "${var.DeployEnvironment}_discord_bot_ec2_policy"
   path        = "/"
   description = "${var.DeployEnvironment}_discord_bot_ec2_policy"
 
@@ -126,7 +126,7 @@ module "boot_bucket" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
   bucket_prefix = "rr1-discord-bot-init-bucket"
-  acl    = "private"
+  acl           = "private"
 
   versioning = {
     enabled = true
@@ -135,5 +135,5 @@ module "boot_bucket" {
 }
 
 output "discord_bot_instance_profile_arn" {
-    value= aws_iam_instance_profile.discord_bot_ec2_profile.arn
+  value = aws_iam_instance_profile.discord_bot_ec2_profile.arn
 }

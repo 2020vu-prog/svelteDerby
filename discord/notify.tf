@@ -3,7 +3,7 @@ module "sns_topic1" {
   version = "~> 3.0"
 
   name_prefix = "discordMp3"
-  policy = <<POLICY
+  policy      = <<POLICY
 {
     "Version":"2012-10-17",
     "Statement":[{

@@ -1,19 +1,19 @@
 provider "aws" {
-  region     = "us-east-2"
-  
+  region = "us-east-2"
+
 }
-variable DeployEnvironment {
-	default="dev"
+variable "DeployEnvironment" {
+  default = "dev"
 }
-variable DerbyDistBucket {
+variable "DerbyDistBucket" {
 }
-variable DiscordBotToken {
+variable "DiscordBotToken" {
 }
 
-locals{
+locals {
   tags = {
     Environment = var.DeployEnvironment
-    CreatedBy = "terraform ${basename(path.cwd)}"
+    CreatedBy   = "terraform ${basename(path.cwd)}"
   }
   launch-template-name = "discord-bot-asg"
 }
@@ -56,11 +56,11 @@ resource "aws_security_group" "allow_ssh" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks     = ["0.0.0.0/0"] 
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(local.tags,{
-    Name=  "allow ssh discordbot"
+  tags = merge(local.tags, {
+    Name = "allow ssh discordbot"
   })
 
 }
@@ -73,11 +73,11 @@ resource "aws_security_group" "allow_sns" {
     from_port   = 8090
     to_port     = 8090
     protocol    = "tcp"
-    cidr_blocks     = ["0.0.0.0/0"] 
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(local.tags,{
-    Name=  "allow sns discordbot"
+  tags = merge(local.tags, {
+    Name = "allow sns discordbot"
   })
 
 }
@@ -89,7 +89,7 @@ resource "aws_security_group" "allow_discord_udp" {
     from_port   = 50000
     to_port     = 65535
     protocol    = "udp"
-    cidr_blocks     = ["0.0.0.0/0"] 
+    cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
     from_port   = 50000
@@ -98,8 +98,8 @@ resource "aws_security_group" "allow_discord_udp" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(local.tags,{
-    Name=  "allow udp discordbot"
+  tags = merge(local.tags, {
+    Name = "allow udp discordbot"
   })
 
 }
@@ -158,17 +158,17 @@ module "asg" {
   }
 
   # Launch template
-  launch_template_name= local.launch-template-name
-  launch_template_description= "Discord bot LT"
-  update_default_version = true
+  launch_template_name        = local.launch-template-name
+  launch_template_description = "Discord bot LT"
+  update_default_version      = true
 
 
-  image_id          = data.aws_ami.latest_ami2.id
-  instance_type     = "t3.nano"
-  ebs_optimized     = true
+  image_id      = data.aws_ami.latest_ami2.id
+  instance_type = "t3.nano"
+  ebs_optimized = true
 
   placement = {
-  availability_zone       = "us-east-2b"
+    availability_zone = "us-east-2b"
   }
 
   tag_specifications = [
@@ -178,20 +178,20 @@ module "asg" {
     },
     {
       resource_type = "volume"
-      tags          = { WhatAmI = "Volume" , Name="discordBot"}
+      tags          = { WhatAmI = "Volume", Name = "discordBot" }
     }
   ]
 
   tags = {
     Environment = "dev"
-    Usage= "discordBot2"
+    Usage       = "discordBot2"
   }
 
-  security_groups=[
-        aws_security_group.allow_sns.id,
-        aws_security_group.allow_ssh.id,
-	aws_security_group.allow_egress_from_discordBot.id,
-        aws_security_group.allow_discord_udp.id,
+  security_groups = [
+    aws_security_group.allow_sns.id,
+    aws_security_group.allow_ssh.id,
+    aws_security_group.allow_egress_from_discordBot.id,
+    aws_security_group.allow_discord_udp.id,
   ]
   block_device_mappings = [
     {
@@ -205,15 +205,15 @@ module "asg" {
         volume_type           = "gp3"
       }
     }
-]
+  ]
 
   //user_data = file("tfScripts/on_boot.sh")
-  user_data= base64encode(file("tfScripts/on_boot.sh"))
-  key_name="discordKey"
-  instance_initiated_shutdown_behavior="terminate"
-  iam_instance_profile_arn=aws_iam_instance_profile.discord_bot_ec2_profile.arn
-  default_cooldown=0
+  user_data                            = base64encode(file("tfScripts/on_boot.sh"))
+  key_name                             = "discordKey"
+  instance_initiated_shutdown_behavior = "terminate"
+  iam_instance_profile_arn             = aws_iam_instance_profile.discord_bot_ec2_profile.arn
+  default_cooldown                     = 0
 }
-output "launch-template"{
-	value=local.launch-template-name
+output "launch-template" {
+  value = local.launch-template-name
 }
