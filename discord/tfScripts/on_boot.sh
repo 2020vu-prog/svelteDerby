@@ -53,6 +53,11 @@ function selfDestructWhenIdle () {
 
 
 
+function fastSsh(){
+	echo "UseDNS no" >> /etc/ssh/sshd_config
+	service sshd restart
+}
+
 function runBot(){
 	chmod +x $s3dir/airhorn/airhorn
 	token=$(aws ssm get-parameters --region us-east-2  --names discord-bot-token|jq -r '.Parameters[0].Value')
@@ -64,6 +69,7 @@ function runBot(){
 		sleep 18
 	done
 }
+
 function runSns(){
 	chmod +x $s3dir/sns/cjwsns $s3dir/sns/*.sh
 
@@ -87,5 +93,6 @@ function initBot () {
 	runSns &
 }
 
+fastSsh &
 initBot &
 selfDestructWhenIdle &

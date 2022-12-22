@@ -19,8 +19,14 @@ import (
 
 	"flag"
 	"os"
+	"regexp"
 )
 
+type TriggerDiscord struct {
+	ChannelName string
+	DcaFilePath string
+	OrigKey     string
+}
 type S3Notify struct {
 	Records []struct {
 		EventVersion string    `json:"eventVersion"`
@@ -97,6 +103,7 @@ func (h *EventHandler) Notification(ctx context.Context, event *snshttp.Notifica
 				return nil
 			}
 			fmt.Printf("shell transcoded\n")
+			doTriggerDiscord(mp3, s3Notify.Records[0].S3.Object.Key)
 
 		}
 
@@ -105,6 +112,27 @@ func (h *EventHandler) Notification(ctx context.Context, event *snshttp.Notifica
 	}
 
 	return nil
+}
+func grokChannel(objectKey string) string {
+	re := regexp.MustCompile(`media/(?P<Channel>[^\.]*)`)
+	matches := re.FindStringSubmatch(objectKey)
+	cIndex := re.SubexpIndex("Channel")
+	return matches[cIndex]
+
+	//return "hello"
+}
+func doTriggerDiscord(mp3Path string, objectKey string) {
+	dcaPath := fmt.Sprintf("%s.dca", mp3Path)
+	triggerDiscord := TriggerDiscord{DcaFilePath: dcaPath, ChannelName: grokChannel(objectKey), OrigKey: objectKey}
+	jbytes, _ := json.Marshal(triggerDiscord)
+	jsonFile := fmt.Sprintf("snsTrigger-%d.json", time.Now().UnixNano())
+	jsonPath := fmt.Sprintf("/tmp/%s", jsonFile)
+	ioutil.WriteFile(jsonPath, jbytes, 0644)
+	err := os.Rename(jsonPath, fmt.Sprintf("/s3/airhorn/%s", jsonFile))
+	if err != nil {
+		fmt.Println(err)
+	}
+
 }
 
 func getPublicIp() (string, error) {
@@ -143,9 +171,7 @@ func snsDeleteOldSubs(svc *sns.SNS, topicArn *string) {
 	}
 
 	for _, s := range result.Subscriptions {
-		fmt.Println(*s.SubscriptionArn)
-		fmt.Println("  " + *s.TopicArn)
-		fmt.Println("")
+		fmt.Printf("About to delete [%s] from [%s]\n", *s.SubscriptionArn, *s.TopicArn)
 		_, errDel := svc.Unsubscribe(&sns.UnsubscribeInput{
 			SubscriptionArn: s.SubscriptionArn,
 		})
@@ -190,7 +216,7 @@ func snsSubscribe() {
 		os.Exit(1)
 	}
 
-	fmt.Println(*result.SubscriptionArn)
+	fmt.Printf("subscribed as: %s\n", *result.SubscriptionArn)
 }
 func transcode(mp3in string) string {
 	dcaOutput := "/tmp/output.dca"

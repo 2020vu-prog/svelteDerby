@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"strings"
@@ -19,9 +21,16 @@ import (
 )
 
 var token string
-var paChannel chan string
+var paChannel chan *TriggerDiscord
 
 const AirHornFile = "airhorn.dca"
+
+type TriggerDiscord struct {
+	ChannelName string
+	DcaFilePath string
+	OrigKey     string
+	jsonPath    string
+}
 
 func init() {
 	// Log as JSON instead of the default ASCII formatter.
@@ -37,7 +46,7 @@ func init() {
 	flag.StringVar(&token, "t", "", "Bot Token")
 	flag.Parse()
 
-	paChannel = make(chan string, 9)
+	paChannel = make(chan *TriggerDiscord, 9)
 
 }
 
@@ -158,10 +167,31 @@ func paLoop() {
 
 	}
 }
+func parseTrigger(jsonPath string) *TriggerDiscord {
+	jsonBytes, err := ioutil.ReadFile(jsonPath)
+	if err != nil {
+		return nil
+	}
+	triggerDiscord := TriggerDiscord{}
+	err = json.Unmarshal(jsonBytes, &triggerDiscord)
+	if err != nil {
+		log.Errorf("ParseTrigger error: [%v]", err)
+		return nil
+	}
+	triggerDiscord.jsonPath = jsonPath
+	return &triggerDiscord
+
+}
 func requestPaSend(dcaPath string) {
-	if strings.HasSuffix(dcaPath, ".dca") {
+	if strings.HasSuffix(dcaPath, ".json") {
+
 		log.Debugf("requestPaSend go file [%s]", dcaPath)
-		paChannel <- dcaPath
+		triggerDiscord := parseTrigger(dcaPath)
+		if triggerDiscord != nil {
+			paChannel <- triggerDiscord
+		} else {
+			log.Debugf("requestPaSend ignore file parse Failed: [%s]", dcaPath)
+		}
 	} else {
 		log.Debugf("requestPaSend ignore file [%s]", dcaPath)
 	}
@@ -170,67 +200,89 @@ func requestPaSend(dcaPath string) {
 // recvPaSend should run as gofunc
 func recvPaSend() {
 	for {
-		dcaPath := <-paChannel
-		doPaSend(dcaPath)
+		trigger := <-paChannel
+		doPaSend(trigger)
 	}
 }
-func showChannels(s *discordgo.Session) {
+func scanChannels(s *discordgo.Session, tgt string) (*discordgo.Guild, *discordgo.Channel) {
 	for _, g := range s.State.Guilds {
 		for _, c := range g.Channels {
-			log.Debugf("showChannels g[%s] c[%s] type:[%d]", g.Name, c.Name, c.Type)
+			log.Debugf("scanChannels g[%s] c[%s] type:[%d] seeking: [%s]", g.Name, c.Name, c.Type, tgt)
+			if c.Type == 2 && c.Name == tgt {
+				log.Debugf("scanChannels matched g[%s] c[%s] type:[%d]", g.ID, c.Name, c.Type)
+				return g, c
+			}
 		}
 	}
+	return nil, nil
 }
-func findChannel(dcaPath string) (*discordgo.Session, *discordgo.Guild, string) {
-	c30Guild := "947934742072942654"
-	generalChannel := "947934742618193993"
+func findChannel(channelName string) (*discordgo.Session, *discordgo.Guild, string) {
+	//c30Guild := "947934742072942654"
+	//generalChannel := "947934742618193993"
 	s := readySession
 	if s == nil {
 		fmt.Println("findChannel not ready:")
 		return nil, nil, ""
 	}
 
-	showChannels(s)
-
-	// Find the guild for PA
-	g, err := s.State.Guild(c30Guild)
-	if err != nil {
-		// Could not find guild.
-		fmt.Println("findChannel could not find guild:", c30Guild)
+	g, channel := scanChannels(s, channelName)
+	if g == nil || channel == nil {
 		return nil, nil, ""
 	}
 
+	// Find the guild for PA
+	//g, err := s.State.Guild(c30Guild)
+	/*
+		g, err := s.State.Guild(g.ID)
+		if err != nil {
+			// Could not find guild.
+			fmt.Println("findChannel could not find guild:", g.ID)
+			return nil, nil, ""
+		}
+	*/
+
 	// Look for the message sender in that guild's current voice states.
 	for _, vs := range g.VoiceStates {
-		if vs.ChannelID == generalChannel {
+		//if vs.ChannelID == generalChannel {}
+		if vs.ChannelID == channel.ID {
 			return s, g, vs.ChannelID
 		}
 	}
+	fmt.Printf("findChannel worked, but no voiceState: [%s]\n", channel.ID)
 	return nil, nil, ""
 
 }
-func doPaSend(dcaPath string) {
+func doPaSend(triggerDiscord *TriggerDiscord) {
 
-	log.Debugf("doPaSend start: [%s]", dcaPath)
+	log.Debugf("doPaSend start: [%s]", triggerDiscord.DcaFilePath)
 
-	s, g, c := findChannel(dcaPath)
+	s, g, c := findChannel(triggerDiscord.ChannelName)
 	if c != "" {
-		err := playSoundFile(s, g.ID, c, dcaPath)
+		err := playSoundFile(s, g.ID, c, triggerDiscord.DcaFilePath)
 		if err != nil {
 			log.Debug("doPaSend Error playing:", err)
+			os.Exit(1)
 		} else {
-			log.Debugf("doPaSend Success playing [%s]", dcaPath)
+			log.Debugf("doPaSend Success playing [%s]", triggerDiscord.DcaFilePath)
 		}
 
 	} else {
 		log.Info("No channels to play")
 	}
-	os.Remove(dcaPath)
+	os.Remove(triggerDiscord.DcaFilePath)
+	os.Remove(triggerDiscord.jsonPath)
+}
+
+func logString(path, data string) {
+	os.WriteFile(path, []byte(data), 0644)
 }
 
 // This function will be called (due to AddHandler above) every time a new
 // guild is joined.
 func guildCreate(s *discordgo.Session, event *discordgo.GuildCreate) {
+
+	log.Info("GuildCreate: %v", event)
+	logString("/tmp/nowSession", spew.Sdump(event))
 
 	if event.Guild.Unavailable {
 		return
@@ -290,6 +342,8 @@ func loadSound(soundFile string) ([][]byte, error) {
 	}
 }
 
+var vcMap map[string]*discordgo.VoiceConnection = make(map[string]*discordgo.VoiceConnection)
+
 // playSound plays the current buffer to the provided channel.
 func playSoundFile(s *discordgo.Session, guildID, channelID string, dcaPath string) (err error) {
 	buffer, loadErr := loadSound(dcaPath)
@@ -297,14 +351,23 @@ func playSoundFile(s *discordgo.Session, guildID, channelID string, dcaPath stri
 		return loadErr
 	}
 
-	// Join the provided voice channel.
-	vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
-	if err != nil {
-		return err
-	}
+	key := fmt.Sprintf("%s:%s", guildID, channelID)
+	if _, ok := vcMap[key]; !ok {
+		log.Debug("playSoundFile: opening voice channel: ", key)
 
-	// Sleep for a specified amount of time before playing the sound
-	time.Sleep(250 * time.Millisecond)
+		// Join the provided voice channel.
+		vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
+		if err != nil {
+			log.Warn("playSoundFile: failed: ", err)
+			return err
+		}
+
+		// Sleep for a specified amount of time before playing the sound
+		time.Sleep(250 * time.Millisecond)
+		vcMap[key] = vc
+
+	}
+	vc := vcMap[key]
 
 	// Start speaking.
 	vc.Speaking(true)
@@ -317,11 +380,14 @@ func playSoundFile(s *discordgo.Session, guildID, channelID string, dcaPath stri
 	// Stop speaking
 	vc.Speaking(false)
 
-	// Sleep for a specificed amount of time before ending.
-	time.Sleep(250 * time.Millisecond)
+	if !vc.Ready {
+		// Sleep for a specificed amount of time before ending.
+		time.Sleep(250 * time.Millisecond)
 
-	// Disconnect from the provided voice channel.
-	vc.Disconnect()
+		// Disconnect from the provided voice channel.
+		vc.Disconnect()
+		delete(vcMap, key)
+	}
 
 	return nil
 }

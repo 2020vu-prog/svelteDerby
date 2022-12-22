@@ -1,0 +1,8 @@
+#!/bin/bash
+export DeployEnvironment=$TF_VAR_DeployEnvironment
+export AWS_DEFAULT_REGION=us-east-2
+export PATH=$PATH:/s3/sns/bin
+chmod +x /s3/sns/bin/*
+topicArn=$(aws ssm get-parameters --names   "/${DeployEnvironment}/discord-bot/sns-topic" |jq -r '.Parameters[0].Value')
+echo "Launching with topicArn: $topicArn"
+./cjwsns --sns "$topicArn"
