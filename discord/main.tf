@@ -167,9 +167,9 @@ module "asg" {
   instance_type = "t3.nano"
   ebs_optimized = true
 
-  placement = {
-    availability_zone = "us-east-2b"
-  }
+  availability_zones = [
+    "us-east-2b", "us-east-2a", "us-east-2c"
+  ]
 
   tag_specifications = [
     {
@@ -213,7 +213,19 @@ module "asg" {
   instance_initiated_shutdown_behavior = "terminate"
   iam_instance_profile_arn             = aws_iam_instance_profile.discord_bot_ec2_profile.arn
   default_cooldown                     = 0
+  metadata_options = {
+    http_endpoint               = "enabled"
+    http_tokens                 = "optional"
+    http_put_response_hop_limit = 32
+    instance_metadata_tags      = "enabled"
+  }
 }
 output "launch-template" {
   value = local.launch-template-name
+}
+output "launch-template-latest" {
+  value = module.asg.launch_template_latest_version
+}
+output "launch-template-default" {
+  value = module.asg.launch_template_default_version
 }
