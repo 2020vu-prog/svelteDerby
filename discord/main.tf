@@ -158,9 +158,10 @@ module "asg" {
   }
 
   # Launch template
-  launch_template_name        = local.launch-template-name
-  launch_template_description = "Discord bot LT"
-  update_default_version      = true
+  launch_template_use_name_prefix = false
+  launch_template_name            = local.launch-template-name
+  launch_template_description     = "Discord bot LT"
+  update_default_version          = true
 
 
   image_id      = data.aws_ami.latest_ami2.id

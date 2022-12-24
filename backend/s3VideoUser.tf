@@ -3,13 +3,13 @@ resource "aws_iam_user" "android" {
   path = "/system/"
 
   tags = {
-    terraform= "s3VideoUser.tf"
+    terraform = "s3VideoUser.tf"
   }
 }
 
 locals {
-	dstBucketArn=aws_s3_bucket.dstBucket.arn
-	dstBucketArnMedia="${aws_s3_bucket.dstBucket.arn}/media/*"
+  dstBucketArn      = aws_s3_bucket.dstBucket.arn
+  dstBucketArnMedia = "${aws_s3_bucket.dstBucket.arn}/media/*"
 }
 
 resource "aws_iam_access_key" "android" {
@@ -18,11 +18,11 @@ resource "aws_iam_access_key" "android" {
 
 data "aws_iam_policy_document" "android_put_document" {
   statement {
-    actions   = [
-	"s3:PutObject"
-	]
+    actions = [
+      "s3:PutObject"
+    ]
     resources = [
-	"${aws_s3_bucket.dstBucket.arn}/media/*"
+      "${aws_s3_bucket.dstBucket.arn}/media/*"
     ]
 
   }
@@ -89,7 +89,7 @@ resource "aws_iot_policy_attachment" "grafika_att" {
   policy = aws_iot_policy.grafikaSubToAnyTopic.name
   target = aws_iot_certificate.grafika_cert.arn
 }
- 
+
 
 resource "aws_iot_certificate" "rpi_cert" {
   active = true

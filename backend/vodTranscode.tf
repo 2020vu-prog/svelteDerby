@@ -3,9 +3,9 @@
 module "vodTranscode" {
   source = "./modules/vodTranscode"
 
-  DeployEnvironment=var.DeployEnvironment
-  AwsRegion=var.AwsRegion
-  
+  DeployEnvironment = var.DeployEnvironment
+  AwsRegion         = var.AwsRegion
+
 }
 
 output "WatchFolderBucket" {

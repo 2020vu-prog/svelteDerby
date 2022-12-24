@@ -56,6 +56,7 @@ addPermission(
     ["/initiateAnnouncement", "/RaceStanding/addTag"],
     ["/ManualAnnouncement"]
 );
+addPermission("CanManageDiscord", ["/manageDiscord"], ["/manageDiscord"]);
 addPermission(
     "CanDeleteStanding",
     ["/deleteRaceStanding"],

@@ -252,6 +252,15 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 "*"
         ]
     }
+    statement {
+        actions = [
+            "ec2:RunInstances",
+        ]
+        resources = [
+                "*"
+        ]
+    }
+
 }
 resource "aws_iam_policy" "cloudwatch_allow" {
     name_prefix = "cloudwatch_allow_"

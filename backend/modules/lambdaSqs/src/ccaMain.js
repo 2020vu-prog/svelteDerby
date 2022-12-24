@@ -227,7 +227,7 @@ const getKeyNames = (items) => {
 };
 
 exports.handler = async function (event, context) {
-    log.error("handler go:", event);
+    log.info("ccaMain handler go:", event);
     await asyncForEach(event.Records, async (record) => {
         const { body } = record;
         log.debug("sqs b4PutAndGet:", body);

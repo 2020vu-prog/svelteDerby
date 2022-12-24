@@ -89,8 +89,14 @@ function initBot () {
 	echo bucket: $bucket
 	aws s3 sync s3://$bucket "$s3dir"
 	chown -R ec2-user $s3dir
-	runBot &
-	runSns &
+
+	botFunc=$(declare -f runBot)
+	su - ec2-user  bash -c "$botFunc; export s3dir=$s3dir && runBot" &
+	# runBot &
+
+	snsFunc=$(declare -f runSns)
+	su - ec2-user  bash -c "$snsFunc; export s3dir=$s3dir && runSns" &
+	#runSns &
 }
 
 fastSsh &

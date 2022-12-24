@@ -1,7 +1,7 @@
 resource "local_file" "testCognitoSettings" {
-    filename = "${path.module}/test/aws-exports.json"
+  filename = "${path.module}/test/aws-exports.json"
 
-    content     = <<-EOT
+  content = <<-EOT
 {
     "aws_project_region": "${data.aws_region.current.name}",
     "aws_cognito_identity_pool_id": "${aws_cognito_identity_pool.derbyMainIdp.id}",

@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "serverless": "^3.26.0",
+    "serverless-plugin-log-retention": "^2.0.0",
+    "serverless-plugin-resource-tagging": "^1.2.0"
+  }
+}

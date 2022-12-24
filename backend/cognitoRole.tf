@@ -1,8 +1,8 @@
 
 data "aws_caller_identity" "current" {}
 locals {
-  accountId   = data.aws_caller_identity.current.account_id
-  IotArn      = "arn:aws:iot:${var.AwsRegion}:${local.accountId}"
+  accountId = data.aws_caller_identity.current.account_id
+  IotArn    = "arn:aws:iot:${var.AwsRegion}:${local.accountId}"
 }
 
 resource "aws_iam_role" "authenticated" {
@@ -88,16 +88,16 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
 
 
   roles = {
-    "authenticated" = aws_iam_role.authenticated.arn
+    "authenticated"   = aws_iam_role.authenticated.arn
     "unauthenticated" = aws_iam_role.authenticated.arn
   }
 }
 data "aws_iot_endpoint" "mqtt" {
-  endpoint_type="iot:Data-ATS"
+  endpoint_type = "iot:Data-ATS"
 }
-output "mqttEndpoint"{
-	value=data.aws_iot_endpoint.mqtt
+output "mqttEndpoint" {
+  value = data.aws_iot_endpoint.mqtt
 }
-output "mqttPolicy"{
-	value=aws_iam_role_policy.authenticated.policy
+output "mqttPolicy" {
+  value = aws_iam_role_policy.authenticated.policy
 }

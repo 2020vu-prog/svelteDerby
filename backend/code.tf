@@ -2,8 +2,8 @@
 ** derived From: https://learn.hashicorp.com/terraform/aws/lambda-api-gateway
 **
 */
-variable AwsRegion {}
-variable DeployEnvironment {}
+variable "AwsRegion" {}
+variable "DeployEnvironment" {}
 terraform {
   required_providers {
     aws = {
@@ -12,104 +12,104 @@ terraform {
     }
   }
 }
- provider "aws" {
+provider "aws" {
 
 
-   region = var.AwsRegion
- }
+  region = var.AwsRegion
+}
 
 module "derbyMainLambda" {
   source = "./modules/lambdaDerby"
 
-    ChartS3BucketName  =  aws_s3_bucket.svelteBucket.id
-    CcaQueueId  = aws_sqs_queue.cacheAlignmentQueue.id
-    CcaQueueArn  = aws_sqs_queue.cacheAlignmentQueue.arn
-  DynamoDbArn=aws_dynamodb_table.derby-dynamodb-table.arn
-  DistDbArn=aws_dynamodb_table.derby-distribution.arn
-  TimerDbArn=aws_dynamodb_table.timer-dynamodb-table.arn
-  DeployEnvironment=var.DeployEnvironment
-  AwsRegion=var.AwsRegion
-  ApplyTimerSnsArn =aws_sns_topic.TimerWinDeltaSns.arn
-  PollyCompleteSnsArn =aws_sns_topic.PollyCompleteSns.arn
-  ZelloPushSnsArn =aws_sns_topic.ZelloPushSns.arn
-    RacerStatusFanoutSnsArn=aws_sns_topic.RacerStatusFanout.arn
-  S3DistBucket = aws_s3_bucket.dstBucket.id
-  S3DistBucketArn = aws_s3_bucket.dstBucket.arn
-  s3VideoWatch = module.vodTranscode.WatchFolderBucket
-  s3VideoDone = module.vodTranscode.MediaBucket
-  AwsCognitoSettingsJson = local.awsCognitoSettingsJson
-  
+  ChartS3BucketName       = aws_s3_bucket.svelteBucket.id
+  CcaQueueId              = aws_sqs_queue.cacheAlignmentQueue.id
+  CcaQueueArn             = aws_sqs_queue.cacheAlignmentQueue.arn
+  DynamoDbArn             = aws_dynamodb_table.derby-dynamodb-table.arn
+  DistDbArn               = aws_dynamodb_table.derby-distribution.arn
+  TimerDbArn              = aws_dynamodb_table.timer-dynamodb-table.arn
+  DeployEnvironment       = var.DeployEnvironment
+  AwsRegion               = var.AwsRegion
+  ApplyTimerSnsArn        = aws_sns_topic.TimerWinDeltaSns.arn
+  PollyCompleteSnsArn     = aws_sns_topic.PollyCompleteSns.arn
+  ZelloPushSnsArn         = aws_sns_topic.ZelloPushSns.arn
+  RacerStatusFanoutSnsArn = aws_sns_topic.RacerStatusFanout.arn
+  S3DistBucket            = aws_s3_bucket.dstBucket.id
+  S3DistBucketArn         = aws_s3_bucket.dstBucket.arn
+  s3VideoWatch            = module.vodTranscode.WatchFolderBucket
+  s3VideoDone             = module.vodTranscode.MediaBucket
+  AwsCognitoSettingsJson  = local.awsCognitoSettingsJson
+
 }
 
- resource "aws_api_gateway_resource" "proxy" {
-   rest_api_id = aws_api_gateway_rest_api.derbyApp.id
-   parent_id   = aws_api_gateway_rest_api.derbyApp.root_resource_id
-   path_part   = "{proxy+}"
+resource "aws_api_gateway_resource" "proxy" {
+  rest_api_id = aws_api_gateway_rest_api.derbyApp.id
+  parent_id   = aws_api_gateway_rest_api.derbyApp.root_resource_id
+  path_part   = "{proxy+}"
 }
 
 resource "aws_api_gateway_method" "proxy" {
-   rest_api_id   = aws_api_gateway_rest_api.derbyApp.id
-   resource_id   = aws_api_gateway_resource.proxy.id
-   http_method   = "ANY"
-   //authorization = "NONE"
+  rest_api_id = aws_api_gateway_rest_api.derbyApp.id
+  resource_id = aws_api_gateway_resource.proxy.id
+  http_method = "ANY"
+  //authorization = "NONE"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.require_pool.id
- }
+}
 
 resource "aws_api_gateway_integration" "lambda" {
-   rest_api_id = aws_api_gateway_rest_api.derbyApp.id
-   resource_id = aws_api_gateway_method.proxy.resource_id
-   http_method = aws_api_gateway_method.proxy.http_method
+  rest_api_id = aws_api_gateway_rest_api.derbyApp.id
+  resource_id = aws_api_gateway_method.proxy.resource_id
+  http_method = aws_api_gateway_method.proxy.http_method
 
-   integration_http_method = "POST"
-   type                    = "AWS_PROXY"
-   uri                     = module.derbyMainLambda.invoke_arn
- }
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = module.derbyMainLambda.invoke_arn
+}
 resource "aws_api_gateway_method" "proxy_root" {
-   rest_api_id   = aws_api_gateway_rest_api.derbyApp.id
-   resource_id   = aws_api_gateway_rest_api.derbyApp.root_resource_id
-   http_method   = "ANY"
-   //authorization = "NONE"
+  rest_api_id = aws_api_gateway_rest_api.derbyApp.id
+  resource_id = aws_api_gateway_rest_api.derbyApp.root_resource_id
+  http_method = "ANY"
+  //authorization = "NONE"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.require_pool.id
- }
+}
 
- resource "aws_api_gateway_integration" "lambda_root" {
-   rest_api_id = aws_api_gateway_rest_api.derbyApp.id
-   resource_id = aws_api_gateway_method.proxy_root.resource_id
-   http_method = aws_api_gateway_method.proxy_root.http_method
+resource "aws_api_gateway_integration" "lambda_root" {
+  rest_api_id = aws_api_gateway_rest_api.derbyApp.id
+  resource_id = aws_api_gateway_method.proxy_root.resource_id
+  http_method = aws_api_gateway_method.proxy_root.http_method
 
-   integration_http_method = "POST"
-   type                    = "AWS_PROXY"
-   uri                     = module.derbyMainLambda.invoke_arn
- }
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = module.derbyMainLambda.invoke_arn
+}
 
 resource "aws_api_gateway_deployment" "derbyMain" {
-   depends_on = [
-     aws_api_gateway_integration.lambda,
-     aws_api_gateway_integration.lambda_root,
-   ]
+  depends_on = [
+    aws_api_gateway_integration.lambda,
+    aws_api_gateway_integration.lambda_root,
+  ]
 
-   rest_api_id = aws_api_gateway_rest_api.derbyApp.id
-   stage_name  = "test"
- }
+  rest_api_id = aws_api_gateway_rest_api.derbyApp.id
+  stage_name  = "test"
+}
 
- resource "aws_lambda_permission" "apigw" {
-   statement_id  = "AllowAPIGatewayInvoke"
-   action        = "lambda:InvokeFunction"
-   function_name = module.derbyMainLambda.function_name
-   principal     = "apigateway.amazonaws.com"
+resource "aws_lambda_permission" "apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = module.derbyMainLambda.function_name
+  principal     = "apigateway.amazonaws.com"
 
-   # The "/*/*" portion grants access from any method on any resource
-   # within the API Gateway REST API.
-   source_arn = "${aws_api_gateway_rest_api.derbyApp.execution_arn}/*/*"
- }
+  # The "/*/*" portion grants access from any method on any resource
+  # within the API Gateway REST API.
+  source_arn = "${aws_api_gateway_rest_api.derbyApp.execution_arn}/*/*"
+}
 
 resource "aws_api_gateway_authorizer" "require_pool" {
-  name                   = "Require_id_pool"
-  rest_api_id            = aws_api_gateway_rest_api.derbyApp.id
-  type                   = "COGNITO_USER_POOLS"
-  provider_arns          = [ aws_cognito_user_pool.derbyUserPool.arn]
+  name          = "Require_id_pool"
+  rest_api_id   = aws_api_gateway_rest_api.derbyApp.id
+  type          = "COGNITO_USER_POOLS"
+  provider_arns = [aws_cognito_user_pool.derbyUserPool.arn]
 }
 
 output "base_url" {

@@ -1,26 +1,30 @@
-variable AcmArn {}
-variable DnsDomain {
-	default="derby.rr1.us"
+variable "AcmArn" {}
+variable "TimerApiGatewayDomain" {
+  // legacy default that was previously hard-coded
+  default = "cfxgbxl7d9.execute-api.us-east-2.amazonaws.com"
+}
+variable "DnsDomain" {
+  default = "derby.rr1.us"
 }
 
-variable DnsCloudfrontHostAlias {
-	default="cf"
+variable "DnsCloudfrontHostAlias" {
+  default = "cf"
 }
 locals {
-  s3_svelte_origin_id = "s3SvelteOrigin"
+  s3_svelte_origin_id  = "s3SvelteOrigin"
   s3_archive_origin_id = "s3ArchiveOrigin"
-  app_timer_origin_id = "lambdaTimerApiGateway"
-    app_origin_id= "lambdaApiGateway"
-  useRoute53DnsCount= local.use_default_cert ? 0 : 1
-  use_default_cert = var.AcmArn == ""
-    invoke_host_temp=replace(aws_api_gateway_deployment.derbyMain.invoke_url,"https://","")
-    invoke_host=replace(local.invoke_host_temp,"/\\/.*/","")
-  DnsCfAliasFq = "${var.DnsCloudfrontHostAlias}.${var.DnsDomain}"
+  app_timer_origin_id  = "lambdaTimerApiGateway"
+  app_origin_id        = "lambdaApiGateway"
+  useRoute53DnsCount   = local.use_default_cert ? 0 : 1
+  use_default_cert     = var.AcmArn == ""
+  invoke_host_temp     = replace(aws_api_gateway_deployment.derbyMain.invoke_url, "https://", "")
+  invoke_host          = replace(local.invoke_host_temp, "/\\/.*/", "")
+  DnsCfAliasFq         = "${var.DnsCloudfrontHostAlias}.${var.DnsDomain}"
 
 }
 resource "aws_s3_bucket" "svelteBucket" {
-  bucket_prefix="svelte-static-"
-  force_destroy=true
+  bucket_prefix = "svelte-static-"
+  force_destroy = true
 
 }
 resource "aws_s3_bucket_acl" "svelteBucket" {
@@ -28,20 +32,20 @@ resource "aws_s3_bucket_acl" "svelteBucket" {
   acl    = "private"
 }
 resource "aws_s3_bucket" "cdnLogBucket" {
-  bucket_prefix="svelte-cdn-logs"
-  force_destroy=true
+  bucket_prefix = "svelte-cdn-logs"
+  force_destroy = true
 }
 resource "aws_s3_bucket_lifecycle_configuration" "cdnLogBucket" {
   bucket = aws_s3_bucket.cdnLogBucket.id
   rule {
-    id = "log"
+    id     = "log"
     status = "Enabled"
 
 
-   
+
     abort_incomplete_multipart_upload {
-	days_after_initiation=2
-	}
+      days_after_initiation = 2
+    }
     expiration {
       days = 90
     }
@@ -55,9 +59,9 @@ resource "aws_s3_bucket_acl" "cdnLogBucket_acl" {
 
 data "aws_iam_policy_document" "s3_svelte_policy" {
   statement {
-    actions   = ["s3:GetObject"]
+    actions = ["s3:GetObject"]
     resources = [
-	"${aws_s3_bucket.svelteBucket.arn}/*"
+      "${aws_s3_bucket.svelteBucket.arn}/*"
     ]
 
     principals {
@@ -67,9 +71,9 @@ data "aws_iam_policy_document" "s3_svelte_policy" {
   }
 
   statement {
-    actions   = ["s3:ListBucket"]
+    actions = ["s3:ListBucket"]
     resources = [
-	aws_s3_bucket.svelteBucket.arn
+      aws_s3_bucket.svelteBucket.arn
     ]
 
     principals {
@@ -80,9 +84,9 @@ data "aws_iam_policy_document" "s3_svelte_policy" {
 }
 data "aws_iam_policy_document" "s3_dst_policy" {
   statement {
-    actions   = ["s3:GetObject"]
+    actions = ["s3:GetObject"]
     resources = [
-	"${aws_s3_bucket.dstBucket.arn}/*"
+      "${aws_s3_bucket.dstBucket.arn}/*"
     ]
 
     principals {
@@ -92,9 +96,9 @@ data "aws_iam_policy_document" "s3_dst_policy" {
   }
 
   statement {
-    actions   = ["s3:ListBucket"]
+    actions = ["s3:ListBucket"]
     resources = [
-	aws_s3_bucket.dstBucket.arn
+      aws_s3_bucket.dstBucket.arn
     ]
 
     principals {
@@ -121,14 +125,14 @@ resource "aws_cloudfront_origin_access_identity" "svelte_oaid" {
 resource "null_resource" "sync_s3_chart_data" {
 
   provisioner "local-exec" {
-    command = "scripts/syncS3ChartData.sh"
+    command     = "scripts/syncS3ChartData.sh"
     working_dir = path.module
     environment = {
-    	BucketName= aws_s3_bucket.svelteBucket.id
+      BucketName = aws_s3_bucket.svelteBucket.id
     }
   }
 
-  depends_on = [ aws_s3_bucket.svelteBucket ]
+  depends_on = [aws_s3_bucket.svelteBucket]
 }
 
 resource "aws_cloudfront_distribution" "derbyApp" {
@@ -154,29 +158,28 @@ resource "aws_cloudfront_distribution" "derbyApp" {
     //domain_name = "05wv6js1p4.execute-api.us-east-2.amazonaws.com"
     domain_name = local.invoke_host
     origin_path = "/test"
-	
-    origin_id   = local.app_origin_id
+
+    origin_id = local.app_origin_id
 
     custom_origin_config {
-         origin_protocol_policy = "https-only"
-         origin_ssl_protocols = ["TLSv1.2"]
-         http_port=80
-         https_port=443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+      http_port              = 80
+      https_port             = 443
 
     }
   }
   origin {
-    //domain_name = "290ayeoot6.execute-api.us-east-2.amazonaws.com"
-    domain_name = "cfxgbxl7d9.execute-api.us-east-2.amazonaws.com"
+    domain_name = var.TimerApiGatewayDomain // from serverless
     origin_path = "/dev"
-	
-    origin_id   = local.app_timer_origin_id
+
+    origin_id = local.app_timer_origin_id
 
     custom_origin_config {
-         origin_protocol_policy = "https-only"
-         origin_ssl_protocols = ["TLSv1.2"]
-         http_port=80
-         https_port=443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+      http_port              = 80
+      https_port             = 443
 
     }
   }
@@ -192,15 +195,15 @@ resource "aws_cloudfront_distribution" "derbyApp" {
   aliases = local.use_default_cert ? null : [local.DnsCfAliasFq]
 
   default_cache_behavior {
-    allowed_methods  = [ "GET", "HEAD", "OPTIONS" ]
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = local.s3_svelte_origin_id
 
     forwarded_values {
       query_string = true
       query_string_cache_keys = [
-                  "cacheKey"
-                ]
+        "cacheKey"
+      ]
 
       cookies {
         forward = "none"
@@ -246,7 +249,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
 
     forwarded_values {
       headers = [
-         "Authorization",
+        "Authorization",
       ]
       query_string = true
 
@@ -306,7 +309,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
     viewer_protocol_policy = "redirect-to-https"
   }
 
-  
+
   # Cache behavior with precedence 3
   #    currently same as archive s3 bucket with a different path (/media)
   ordered_cache_behavior {
@@ -337,7 +340,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
   restrictions {
     geo_restriction {
       restriction_type = "whitelist"
-      locations        = ["US", "CA" , "BZ"]
+      locations        = ["US", "CA", "BZ"]
     }
   }
 
@@ -345,14 +348,14 @@ resource "aws_cloudfront_distribution" "derbyApp" {
     Environment = "test"
   }
 
-### https://discuss.hashicorp.com/t/how-do-write-an-if-else-block/2563/2
-viewer_certificate {
+  ### https://discuss.hashicorp.com/t/how-do-write-an-if-else-block/2563/2
+  viewer_certificate {
     #  cloudfront mandates that the key reside in US-EAST-1
-  acm_certificate_arn            = local.use_default_cert ? null : var.AcmArn
-  minimum_protocol_version       = local.use_default_cert ? null : "TLSv1.2_2019"
-  ssl_support_method             = local.use_default_cert ? null : "sni-only"
-  cloudfront_default_certificate = local.use_default_cert
-}
+    acm_certificate_arn            = local.use_default_cert ? null : var.AcmArn
+    minimum_protocol_version       = local.use_default_cert ? null : "TLSv1.2_2019"
+    ssl_support_method             = local.use_default_cert ? null : "sni-only"
+    cloudfront_default_certificate = local.use_default_cert
+  }
   #viewer_certificate {
   #  cloudfront_default_certificate = true
   #}
@@ -369,12 +372,12 @@ viewer_certificate {
 }
 
 data "aws_route53_zone" "derby_zone" {
-  count=local.useRoute53DnsCount
-  name = var.DnsDomain
-}      
+  count = local.useRoute53DnsCount
+  name  = var.DnsDomain
+}
 
 resource "aws_route53_record" "www_cf" {
-  count=local.useRoute53DnsCount
+  count   = local.useRoute53DnsCount
   zone_id = data.aws_route53_zone.derby_zone[0].zone_id
   name    = local.DnsCfAliasFq
   type    = "A"
@@ -382,16 +385,16 @@ resource "aws_route53_record" "www_cf" {
 
 
   alias {
-    name = aws_cloudfront_distribution.derbyApp.domain_name
-    zone_id = aws_cloudfront_distribution.derbyApp.hosted_zone_id
+    name                   = aws_cloudfront_distribution.derbyApp.domain_name
+    zone_id                = aws_cloudfront_distribution.derbyApp.hosted_zone_id
     evaluate_target_health = false
 
   }
 }
 
 resource "local_file" "publish_bash_targets" {
-    filename = "${path.module}/../frontend/generatedTargets.sh"
-    content     = <<-EOT
+  filename = "${path.module}/../frontend/generatedTargets.sh"
+  content  = <<-EOT
 export DERBY_SPA_S3_BUCKET="${aws_s3_bucket.svelteBucket.id}"
 export DERBY_CLOUDFRONT="https://${aws_cloudfront_distribution.derbyApp.domain_name}"
   EOT

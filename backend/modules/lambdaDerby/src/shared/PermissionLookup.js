@@ -13,6 +13,7 @@ const registrationPerms = {
     Anonymous: true,
     CanAddParticipant: true,
     CanAddPending: true,
+    CanManageDiscord: true,
 };
 const videoPerms = {
     CanCaptureVideo: true,

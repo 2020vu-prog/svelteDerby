@@ -289,3 +289,11 @@ test("postAddChartPosition should work ", () => {
         expect(received.data.status).toMatch(/ok/i);
     });
 });
+
+test("startDiscordBot: ", async () => {
+    const data=await getData(`${CF}/manageDiscord?orgId=${orgId}&orgIz=${orgIz}`)
+
+    console.log("manageDiscord: ", data);
+	// TODO: currently fails with permission issue.
+    //expect(Object.keys(data).length).toBeGreaterThan(0);
+});

@@ -20,21 +20,23 @@ service: timerIngestion
 # Check out our docs for more details
 # frameworkVersion: "=X.X.X"
 
+plugins:
+  - serverless-plugin-log-retention
+  - serverless-plugin-resource-tagging
 provider:
     name: aws
     runtime: nodejs12.x
     region: ${env:TF_VAR_AwsRegion}
-    provider:
-      logRetentionInDays: 5
-    httpApi:
-        id: 05wv6js1p4
+    stackTags:
+        tfProbe: "DerbyTimerIngestionForCloudFront"
+
 
     # you can overwrite defaults here
     #  stage: dev
     environment:
         DERBY_TIMER_TABLE: DerbyTimer
-        TimerWinDeltaSns:  ${ssm:/sns/TimerWinDeltaSns/arn~true}
-    iamRoleStatements:
+        TimerWinDeltaSns:  ${ssm:/sns/TimerWinDeltaSns/arn}
+    provider.iam.role.statements:
         - Effect: Allow
           Action:
               - dynamodb:Query
@@ -78,15 +80,17 @@ provider:
 
 functions:
     getUuid:
+        logRetentionInDays: 90 # set the retention for specific log group
         handler: api/ingestTimes.getUuid
-        memorySize: 128
+        memorySize: 1024
         events:
             - http:
                   path: /timer/getUuid
                   method: get
     ingestTimes:
+        logRetentionInDays: 90 # set the retention for specific log group
         handler: api/ingestTimes.submit
-        memorySize: 128
+        memorySize: 1024
         events:
             - http:
                   path: timer/ingestTimes

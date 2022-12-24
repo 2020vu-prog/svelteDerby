@@ -21,11 +21,13 @@ var jwt = require("jsonwebtoken");
 const TmpCache = require("./tmpCache.js");
 const DdbUtils = require("./DdbUtils");
 const ArchiveUtils = require("./ArchiveUtils");
+const DiscordUtils = require("./DiscordUtils");
 const AnnounceResults = require("./AnnounceResults");
 const ApiRaceStanding = require("./ApiRaceStanding");
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
 const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
+const discordUtils = new DiscordUtils(AWS, ddbUtils);
 
 const announceResults = new AnnounceResults(AWS, ddbUtils);
 const apiRaceStanding = new ApiRaceStanding(AWS, ddbUtils, announceResults);
@@ -34,29 +36,34 @@ let globalErrorList = [];
 
 log.setLevel(log.levels.TRACE);
 
-const testCars = [
-    101,
-    102,
-    103,
-    104,
-    105,
-    106,
-    107,
-    108,
-    109,
-    110,
-    111,
-    112,
-    113,
-    114,
-    115,
-    116,
-];
-//const testSeed = new Date().getTime();
-const testSeed = new Date().toISOString();
+//log.info("ENV:",process.env);
+function testSeededCars(){
 
-getShaCars(testSeed, testCars);
-getShaCars(testSeed, testCars);
+    const testCars = [
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+    ];
+    //const testSeed = new Date().getTime();
+    const testSeed = new Date().toISOString();
+
+    getShaCars(testSeed, testCars);
+    getShaCars(testSeed, testCars);
+}
+
 
 const s3QueryChartTypes = async () => {
     var params = {
@@ -1115,6 +1122,16 @@ const routeMap = {
             log.debug("For params:", params, " The signed URL is", signedUrl);
 
             return buildResponse({ signedUrl: signedUrl });
+        },
+    },
+    "/manageDiscord": {
+        h: async (event) => {
+            const qsp = event.queryStringParameters;
+            if (!qsp) {
+                qsp = {};
+            }
+            const orgId = getOrgId(event);
+            await discordUtils.launchEc2Bot(orgId);
         },
     },
 };

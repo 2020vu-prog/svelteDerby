@@ -11,6 +11,6 @@ $(SUBDIRS):
 .PHONY: all $(SUBDIRS) tfplan lambdaPkgs
 
 tfplan: $(SUBDIRS)
-	terraform plan
+	terraform apply
 valid:
 	terraform validate -json

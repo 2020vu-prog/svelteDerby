@@ -2,7 +2,8 @@
 /backend/test/aws-exports.json
 *.tfstate
 *.tfstate.backup
-*.tfstate.lock.info*.terraform.lock.hcl
+*.tfstate.lock.info
+*.terraform.lock.hcl
 
 
 /frontend/generatedTargets.sh
