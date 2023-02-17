@@ -187,7 +187,10 @@
                 <h6>{item.systemName}</h6>
                 {#if isCarousel()}
                     Delay:
-                    <input type="number" bind:value={item.delay} />
+                    <input
+                        type="number"
+                        bind:value={item.delay}
+                        placeholder="Seconds" />
                 {/if}
                 {#if isNavMode()}
                     Display:
