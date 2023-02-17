@@ -170,6 +170,18 @@
         </h6>
     </div>
     <hr />
+    <div
+        class="singularSettingDiv"
+        on:click={() => push('/routeSelection/nav')}>
+        <h4>Custom NavBar</h4>
+    </div>
+    <hr />
+    <div
+        class="singularSettingDiv"
+        on:click={() => push('/routeSelection/carousel')}>
+        <h4>Carousel</h4>
+    </div>
+    <hr />
 
     <div class="singularSettingDiv">
         <h4>Progress on Chart List</h4>

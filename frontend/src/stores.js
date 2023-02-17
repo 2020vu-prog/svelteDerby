@@ -260,6 +260,21 @@ export const userExpCountDownSecs = derived(
         }
     }
 );
+export const carouselList = persistable("carouselList", []);
+export const carouselRun = writable(false);
+export const customToolbarList = persistable("toolbarList", []);
+export const selectedToolbarList = derived(customToolbarList, ($dm) => {
+    const dlist = [];
+    $dm.forEach(function (item) {
+        if (item.selected) {
+            dlist.push(item);
+        }
+    });
+    if (!dlist.length) {
+        return getDefaultToolbarList();
+    }
+    return dlist;
+});
 export const selectedDriverMap = writable({});
 export const selectedDriverList = derived(selectedDriverMap, ($dm) => {
     const dlist = [];
@@ -302,5 +317,33 @@ export async function refreshOrgMap() {
         log.debug(err);
         return {};
     }
+}
+export function getDefaultToolbarList() {
+    return [
+        {
+            selected: true,
+            text: "Phases",
+            systemName: "Phases",
+            path: "RpList",
+        },
+        {
+            selected: true,
+            text: "Races",
+            systemName: "Races",
+            path: "RsList/History",
+        },
+        {
+            selected: true,
+            text: "Pending",
+            systemName: "Pending",
+            path: "RsList/Pending",
+        },
+        {
+            selected: true,
+            text: "Charts",
+            systemName: "Charts",
+            path: "chartList",
+        },
+    ];
 }
 //doRefresh();

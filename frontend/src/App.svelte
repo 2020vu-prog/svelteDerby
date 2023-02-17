@@ -1,5 +1,6 @@
 <script>
     import log from "loglevel";
+    const { v4: uuidv4 } = require("uuid");
 
     import Router from "svelte-spa-router";
     import { link, location } from "svelte-spa-router";
@@ -36,6 +37,7 @@
     import ChartPosition from "./ChartPosition.svelte";
     import TimerConfig from "./TimerConfig.svelte";
     import TimerAlignment from "./TimerAlignment.svelte";
+    import RouteSelection from "./RouteSelection.svelte";
     import MediaList from "./MediaList.svelte";
 
     import ForceReloadPage from "./ForceReloadPage.svelte";
@@ -51,6 +53,8 @@
         statusMessage,
         beginAnonymousLogin,
         userId,
+        carouselRun,
+        carouselList,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -86,6 +90,7 @@
         "/chartEdit/:chartId": ChartEdit,
         "/chartFill/:chartId": ChartFill,
         "/chartAdd": ChartAdd,
+        "/routeSelection/:mode": RouteSelection,
         "/timerConfig": TimerConfig,
         "/timerAlignment": TimerAlignment,
         "/rawTimerList": RawTimerList,
@@ -120,6 +125,44 @@
         }
     }
 
+    let carouselRunUuid = "";
+    $: {
+        carouselRunUuid = uuidv4();
+        if ($carouselRun) {
+            doCarouselLoop(carouselRunUuid);
+        }
+    }
+
+    async function doCarouselLoop(paramCarouselRunUuid) {
+        let currentRoute = -1;
+        // uuid is safeguard against multiple concurrent loops.
+        while (paramCarouselRunUuid === carouselRunUuid) {
+            await sleep(100); // no cpu loop!
+            currentRoute = getNextCarouselRoute(currentRoute);
+            if (currentRoute < 0) {
+                log.debug("doCarouseLoop: quitting. config error.");
+                return; // shouldn't happen.  delay logic foobar
+            }
+            log.debug("doCarouseLoop:", $carouselList[currentRoute].path);
+            replace("/" + $carouselList[currentRoute].path);
+            await sleep($carouselList[currentRoute].delay * 1000);
+        }
+    }
+    function getNextCarouselRoute(index) {
+        let wrap = 0;
+        while (wrap < 10) {
+            index++;
+            if (index < 0) index = 0;
+            if (index >= $carouselList.length) {
+                index = 0;
+                wrap++;
+            }
+            if ($carouselList[index].delay) {
+                return index;
+            }
+        }
+        return -1; // shouldn't happen
+    }
     async function buildMenuMap() {
         log.debug("bmm: userEmailStored:", $userEmail);
 
