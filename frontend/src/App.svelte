@@ -38,6 +38,7 @@
     import TimerConfig from "./TimerConfig.svelte";
     import TimerAlignment from "./TimerAlignment.svelte";
     import RouteSelection from "./RouteSelection.svelte";
+    import ForceLoad from "./ForceLoad.svelte";
     import MediaList from "./MediaList.svelte";
 
     import ForceReloadPage from "./ForceReloadPage.svelte";
@@ -90,6 +91,7 @@
         "/chartEdit/:chartId": ChartEdit,
         "/chartFill/:chartId": ChartFill,
         "/chartAdd": ChartAdd,
+        "/forceLoad/:b64route": ForceLoad,
         "/routeSelection/:mode": RouteSelection,
         "/timerConfig": TimerConfig,
         "/timerAlignment": TimerAlignment,
@@ -144,7 +146,8 @@
                 return; // shouldn't happen.  delay logic foobar
             }
             log.debug("doCarouseLoop:", $carouselList[currentRoute].path);
-            replace("/" + $carouselList[currentRoute].path);
+            const b64route = btoa("/" + $carouselList[currentRoute].path);
+            replace(`/forceLoad/${b64route}`); //ChartDetail repaint won't detect
             await sleep($carouselList[currentRoute].delay * 1000);
         }
     }
