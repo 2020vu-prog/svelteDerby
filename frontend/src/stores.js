@@ -80,6 +80,7 @@ export const autoAnnounceResults = persistable(
     false
 );
 export const mqttTimerSubscribe = writable(false);
+export const mqttTimerTopic = persistable("pref:mqttTimerTopic", "");
 export const mqttEnabled = persistable("pref:mqttEnabled", true);
 export const mqttTriggerVideoCapture = writable(0);
 export const beginAnonymousLogin = writable(false);

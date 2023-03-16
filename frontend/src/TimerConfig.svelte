@@ -6,8 +6,9 @@
         raceConfig,
         statusMessage,
         doRefreshBlocks,
+        mqttTimerTopic,
     } from "./stores.js";
-    import { push, pop, replace } from "svelte-spa-router";
+    import { push, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import SpinnerButton from "./SpinnerButton.svelte";
@@ -22,6 +23,7 @@
 
     onMount(async () => {
         log.debug("mounted focus");
+        log.debug("TimerConfig: initial timerTopic:", $mqttTimerTopic);
         mounted = true;
         getActiveTimers();
     });
@@ -43,6 +45,23 @@
         loginForm.maxPerfCount = loginForm.maxPerfCount;
         if (tcFromDexie.sha) {
             activeTimerSha = tcFromDexie.sha;
+            if (activeTimerList) {
+                log.debug("TimerConfig: atl length:", activeTimerList.length);
+                for (let ctimer of activeTimerList) {
+                    log.debug("TimerConfig: consider:", ctimer);
+                    if (tcFromDexie.sha === ctimer.sha) {
+                        $mqttTimerTopic = ctimer.hostname;
+                        log.debug(
+                            "TimerConfig: set timerTopic:",
+                            $mqttTimerTopic
+                        );
+                    } else {
+                        log.debug("TimerConfig: mismatch:", ctimer);
+                    }
+                }
+            } else {
+                log.debug("TimerConfig: no atl.");
+            }
         }
         log.debug("loginForm copied:", JSON.stringify(loginForm));
     }
@@ -77,6 +96,7 @@
                     };
                     activeTimerList = response.data;
                     log.debug("activeTimerList: ", activeTimerList);
+                    refreshDataFromDb();
                 }
             })
             .catch((err) => {
@@ -85,7 +105,6 @@
                     type: "error",
                 };
             });
-        await refreshDataFromDb();
     }
     async function handleSubmit() {
         log.debug("Adding:" + JSON.stringify(loginForm));
@@ -117,7 +136,7 @@
                     type: "success",
                 };
             }
-            pop();
+            //pop();  ## 3/2023 pop() doesn't always have a dest,and can hang
             //log.debug(response);
         } catch (error) {
             $statusMessage = {
@@ -130,6 +149,7 @@
     async function clickActivateHost(timer) {
         log.debug("clickActivateHost", timer);
         loginForm.sha = timer.sha;
+        $mqttTimerTopic = timer.hostname;
 
         //await handleSubmit();
     }

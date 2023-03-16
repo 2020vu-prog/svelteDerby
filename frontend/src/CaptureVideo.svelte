@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
 
-    import { onDestroy } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
     import {
         statusMessage,
@@ -9,6 +9,7 @@
         raceConfig,
         mqttTriggerVideoCapture,
         mqttTimerSubscribe,
+        mqttTimerTopic,
     } from "./stores.js";
     var mediaRecorder = [];
     var recordedBlobs = [];
@@ -24,7 +25,14 @@
     var videoBitsPerSecond = "1000000";
     const tag = "CaptureVideo";
     var perspective = "Finish";
-
+    onMount(async () => {
+        if (!$mqttTimerTopic) {
+            $statusMessage = {
+                text: `Missing selected Timer. Go to Timer Config and verify that a timer has been chosen.`,
+                type: "error",
+            };
+        }
+    });
     onDestroy(() => {
         $mqttTimerSubscribe = false;
         if (timerHandle) {
@@ -306,10 +314,13 @@
 <select bind:value={videoBitsPerSecond}>
     <option>500000</option>
     <option>1000000</option>
+    <option>2000000</option>
     <option>8000000</option>
 </select>
 <label>Perspective</label>
 <input bind:value={perspective} />
+<label>Linked Timer</label>
+<input bind:value={$mqttTimerTopic} disabled />
 <p />
 <SpinnerButton on:click={doStart} spinning={recordSpinning}>
     Record

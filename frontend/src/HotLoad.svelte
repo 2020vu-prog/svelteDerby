@@ -12,6 +12,7 @@
         statusMessage,
         autoAnnounceResults,
         mqttTimerSubscribe,
+        mqttTimerTopic,
         mqttTriggerVideoCapture,
         mqttEnabled,
         timerState,
@@ -149,7 +150,9 @@
         const tag = "tag:syncVideoCaptureSubscription";
 
         // TODO: use race timer id instead of wildcard in topic.   don't fire capture for other timers!!!
-        const timerTopic = "derby/+/rpi/+";
+        log.info(`mqttTimerTopic stored:` + $mqttTimerTopic);
+        const timerTopic = `derby/${$mqttTimerTopic}/rpi/+`;
+        log.info(`mqttTimerTopic subscribing: ${timerTopic}`);
         syncSubscription(
             "timerSubscription",
             $mqttTimerSubscribe,
