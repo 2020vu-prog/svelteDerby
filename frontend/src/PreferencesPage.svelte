@@ -3,7 +3,7 @@
 
     import {
         theme,
-        showChart2,
+        showChart1,
         showBottomNav,
         autoAnnounceResults,
         pendingSortAlgorithm,
@@ -84,12 +84,12 @@
                     .value;
                 log.debug(
                     "label of option: " +
-                        document.querySelectorAll("option")[index].value
+                    document.querySelectorAll("option")[index].value
                 );
                 log.debug("theme selector value: " + themeSelected);
                 log.debug(
                     "element to select: " +
-                        document.querySelectorAll("option")[index]
+                    document.querySelectorAll("option")[index]
                 );
                 return;
             }
@@ -123,6 +123,7 @@
     input[type="checkbox"] {
         transform: scale(2);
     }
+
 </style>
 
 <div class="settings">
@@ -170,22 +171,18 @@
         </h6>
     </div>
     <hr />
-    <div
-        class="singularSettingDiv"
-        on:click={() => push('/routeSelection/nav')}>
+    <div class="singularSettingDiv" on:click={()=> push('/routeSelection/nav')}>
         <h4>Custom NavBar</h4>
     </div>
     <hr />
-    <div
-        class="singularSettingDiv"
-        on:click={() => push('/routeSelection/carousel')}>
+    <div class="singularSettingDiv" on:click={()=> push('/routeSelection/carousel')}>
         <h4>Carousel</h4>
     </div>
     <hr />
 
     <div class="singularSettingDiv">
-        <h4>Progress on Chart List</h4>
-        <input type="checkbox" bind:checked={$showChart2} />
+        <h4>Simple Chart List</h4>
+        <input type="checkbox" bind:checked={$showChart1} />
         <h6>
             This toggles whether the chart list is displayed with progress bars
         </h6>
@@ -194,10 +191,7 @@
 
     <div class="singularSettingDiv">
         <h4>Theme Color</h4>
-        <select
-            id="themeSelector"
-            bind:value={themeSelected}
-            on:change={() => updateTheme()}>
+        <select id="themeSelector" bind:value={themeSelected} on:change={()=> updateTheme()}>
             <option class="colorOption" value="#4CAF50">Default (Green)</option>
             <option class="colorOption">Pink</option>
             <option class="colorOption">Fuchsia</option>
@@ -269,16 +263,13 @@
 
     <div class="singularSettingDiv">
         <h4>Disable Cache</h4>
-        <input
-            type="checkbox"
-            bind:checked={disableCache}
-            on:click={() => clickDisableCache()} />
+        <input type="checkbox" bind:checked={disableCache} on:click={()=> clickDisableCache()} />
         <h6>
             This is used when selecting a race created within the last 5
             minutes.
         </h6>
     </div>
-    <div on:click={() => push('/about')}>
+    <div on:click={()=> push('/about')}>
         <hr />
 
         <div class="singularSettingDiv">
