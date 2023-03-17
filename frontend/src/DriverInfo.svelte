@@ -20,6 +20,22 @@
     var numPhasesRaced = racePhaseList.length;
     var numPhasesWon = 0;
     var phaseWinSum = 0;
+
+    var standingsList = Object.values($standingsMap);
+    standingsList = standingsList.filter((a) => {
+        return a.cn.indexOf(params.number) > -1 && !a.del;
+    });
+
+    racePhaseList = racePhaseList.filter((a) => {
+        //find rs for this rp
+        var rs = standingsList.filter((b) => {
+            return b.Bp === a.Bp;
+        })[0];
+        return (
+            (rs.ph1 && arraysEqual(rs.ph1, a.phr)) ||
+            (rs.ph2 && arraysEqual(rs.ph2, a.phr.slice().reverse()))
+        );
+    });
     racePhaseList.forEach(function (item) {
         const entityFactory = new EntityFactory({});
         var entityRP = entityFactory.build(item);
@@ -29,11 +45,6 @@
             numPhasesWon++;
             phaseWinSum += Math.abs(entityRP.getPhaseDeltaMS());
         }
-    });
-
-    var standingsList = Object.values($standingsMap);
-    standingsList = standingsList.filter((a) => {
-        return a.cn.indexOf(params.number) > -1 && !a.del;
     });
 
     var numHeatsRaced = standingsList.length;
@@ -70,12 +81,28 @@
         });
         bpListFromDexie = bpListFromDexie.filter((a) => {
             return (
-                Object.keys(a.pos).indexOf("A") == -1 &&
-                Object.values(a.pos)[0].ptcp == String(params.number)
+                (Object.values(a.pos)[0] &&
+                    Object.values(a.pos)[0].ptcp &&
+                    Object.values(a.pos)[0].ptcp == String(params.number)) ||
+                (Object.values(a.pos)[1] &&
+                    Object.values(a.pos)[1].ptcp &&
+                    Object.values(a.pos)[1].ptcp == String(params.number))
             );
         });
+        bpListFromDexie.forEach(function (bp) {
+            if (!placesMap[getNameFromBracketSK(bp.SK.split(":")[0])]) {
+                placesMap[getNameFromBracketSK(bp.SK.split(":")[0])] = "Raced";
+            }
+            if (
+                Object.keys(placeDisplayNameMap).indexOf(bp.SK.split(":")[1]) !=
+                -1
+            ) {
+                placesMap[getNameFromBracketSK(bp.SK.split(":")[0])] =
+                    placeDisplayNameMap[bp.SK.split(":")[1]];
+            }
+        });
     });
-    const placeMap = {
+    const placeDisplayNameMap = {
         "": "Raced",
         Place1: "1st Place",
         Place2: "2nd Place",
@@ -86,6 +113,7 @@
         Place7: "7th Place",
         Place8: "8th Place",
     };
+    var placesMap = {};
 
     function getNameFromBracketSK(bracketSK) {
         return bmdFromDexie.filter((a) => {
@@ -107,6 +135,23 @@
     }
     const heatStore = spring(0, { stiffness: 0.08, damping: 1 });
     $: heatStore.set(heatWinPercentage ? heatWinPercentage : 0);
+
+    //https://stackoverflow.com/questions/3115982/how-to-check-if-two-arrays-are-equal-with-javascript
+    function arraysEqual(a, b) {
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length !== b.length) return false;
+
+        // If you don't care about the order of the elements inside
+        // the array, you should sort both arrays here.
+        // Please note that calling sort on an array will modify that array.
+        // you might want to clone your array first.
+
+        for (var i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
+    }
 </script>
 
 <style>
@@ -161,12 +206,10 @@
 <div style="width: 100%; text-align: center">
     <h2>Placements:</h2>
     {#if bpListFromDexie && bpListFromDexie.length > 0}
-        {#each bpListFromDexie as bp}
-            {#if placeMap[bp.SK.split(':')[1]]}
-                <strong>{getNameFromBracketSK(bp.SK.split(':')[0])}:</strong>
-                {placeMap[bp.SK.split(':')[1]]}
-                <br />
-            {/if}
+        {#each Object.keys(placesMap) as bracketName}
+            <strong>{bracketName}:</strong>
+            {placesMap[bracketName]}
+            <br />
         {/each}
     {:else}This racer has not yet participated in any complete brackets.{/if}
 
