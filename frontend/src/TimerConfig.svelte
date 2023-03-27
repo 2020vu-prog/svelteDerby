@@ -96,8 +96,6 @@
                 };
             }
             submitSpinning = false;
-            //pop();  ## 3/2023 pop() doesn't always have a dest,and can hang
-            //log.debug(response);
         } catch (error) {
             $statusMessage = {
                 text: "TimerConfig error: " + err,

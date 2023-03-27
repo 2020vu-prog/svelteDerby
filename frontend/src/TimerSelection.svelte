@@ -30,42 +30,40 @@
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
         //const response = await axios.get($raceConfig.baseUrl + endPoint, {
-        $axios
-            .get(
+        try {
+            const response = await $axios.get(
                 $raceConfig.baseUrl +
                     `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`
-            )
-            .then((response) => {
-                if (response.error) {
-                    log.debug("getActiveTimers:", response);
-                    //TODO: not working!?
-                    $statusMessage = {
-                        text: `getActiveTimers Failed: ${response.error}.`,
-                        type: "error",
-                    };
-                } else {
-                    $statusMessage = {
-                        text: `getActiveTimers Complete.`,
-                        type: "success",
-                    };
-                    activeTimerList = response.data;
-                    if (testNone && activeTimerList.length == 0) {
-                        activeTimerList.push({
-                            sha: "123",
-                            hostname: "none",
-                        });
-                    }
-                    log.debug("activeTimerList: ", activeTimerList);
-                    //TODO: refreshDataFromDb();
-                }
-                loading = false;
-            })
-            .catch((err) => {
+            );
+            if (response.error) {
+                log.debug("getActiveTimers:", response);
+                //TODO: not working!?
                 $statusMessage = {
-                    text: "getActiveTimers error: " + err,
+                    text: `getActiveTimers Failed: ${response.error}.`,
                     type: "error",
                 };
-            });
+            } else {
+                $statusMessage = {
+                    text: `getActiveTimers Complete.`,
+                    type: "success",
+                };
+                activeTimerList = response.data;
+                if (testNone && activeTimerList.length == 0) {
+                    activeTimerList.push({
+                        sha: "1234",
+                        hostname: "none",
+                    });
+                }
+                log.debug("activeTimerList: ", activeTimerList);
+                //TODO: refreshDataFromDb();
+            }
+            loading = false;
+        } catch (err) {
+            $statusMessage = {
+                text: "getActiveTimers error: " + err,
+                type: "error",
+            };
+        }
     }
     async function clickActivateHost(timer) {
         log.debug("clickActivateHost dispatching.");
