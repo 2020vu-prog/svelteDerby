@@ -12,6 +12,7 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import SpinnerButton from "./SpinnerButton.svelte";
+    import TimerSelection from "./TimerSelection.svelte";
 
     var activeTimerList = [];
     var tcFromDexie = {};
@@ -25,7 +26,6 @@
         log.debug("mounted focus");
         log.debug("TimerConfig: initial timerTopic:", $mqttTimerTopic);
         mounted = true;
-        getActiveTimers();
     });
 
     $: refreshDataFromDb($doRefreshBlocks);
@@ -64,47 +64,6 @@
             }
         }
         log.debug("loginForm copied:", JSON.stringify(loginForm));
-    }
-    async function getActiveTimers() {
-        log.debug("getActiveTimers:");
-
-        const req = {
-            orgId: $raceConfig.orgId,
-            orgIz: $raceConfig.orgIz,
-        };
-
-        const orgIz = $raceConfig.orgIz;
-        const orgId = $raceConfig.orgId;
-
-        $axios
-            .get(
-                $raceConfig.baseUrl +
-                    `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`
-            )
-            .then((response) => {
-                if (response.error) {
-                    log.debug("getActiveTimers:", response);
-                    //TODO: not working!?
-                    $statusMessage = {
-                        text: `getActiveTimers Failed: ${response.error}.`,
-                        type: "error",
-                    };
-                } else {
-                    $statusMessage = {
-                        text: `getActiveTimers Complete.`,
-                        type: "success",
-                    };
-                    activeTimerList = response.data;
-                    log.debug("activeTimerList: ", activeTimerList);
-                    refreshDataFromDb();
-                }
-            })
-            .catch((err) => {
-                $statusMessage = {
-                    text: "getActiveTimers error: " + err,
-                    type: "error",
-                };
-            });
     }
     async function handleSubmit() {
         log.debug("Adding:" + JSON.stringify(loginForm));
@@ -147,31 +106,16 @@
             log.debug(error);
         }
     }
-    async function clickActivateHost(timer) {
-        log.debug("clickActivateHost", timer);
+    async function handleTimerSelection(timerEvent) {
+        log.debug("handleTimerSelection e:", timerEvent);
+        var timer = timerEvent.detail;
+        log.debug("handleTimerSelection timer:", timer);
         loginForm.sha = timer.sha;
         $mqttTimerTopic = timer.hostname;
 
         //await handleSubmit();
     }
     const loginForm = {};
-
-    const timerShaMatchCheck = (timerToCheck) => {
-        if (activeTimerSha && timerToCheck.sha) {
-            if (activeTimerSha === timerToCheck.sha) {
-                log.debug("MATCH ", timerToCheck.sha, " ", activeTimerSha);
-                return true;
-            } else {
-                log.debug(
-                    "NOT A MATCH ",
-                    timerToCheck.sha,
-                    " ",
-                    activeTimerSha
-                );
-                return false;
-            }
-        }
-    };
 </script>
 
 <h3>Timer Config</h3>
@@ -215,20 +159,7 @@
             placeholder="1" />
     </label>
     <br />
-    <h4>Timer Selection</h4>
-    {#each activeTimerList as activeTimer}
-        <input
-            checked={timerShaMatchCheck(activeTimer)}
-            type="radio"
-            id={activeTimer.sha}
-            name="activeTimerOption"
-            on:click={() => clickActivateHost(activeTimer)} />
-        <label style="display: inline" for={activeTimer.sha}>
-            {activeTimer.hostname}
-        </label>
-        <br />
-        <br />
-    {/each}
+    <TimerSelection on:timerSelected={handleTimerSelection} {activeTimerSha} />
 
     <SpinnerButton
         disabled={submitDisabled}
@@ -237,3 +168,5 @@
         Update
     </SpinnerButton>
 </form>
+<br />
+<br />

@@ -87,7 +87,7 @@ export const beginAnonymousLogin = writable(false);
 export const timerState = writable({});
 export const uiPageSize = persistable("pref:uiPageSize", undefined);
 //export const uiPageSize = writable(100);
-export const raceConfig = writable({
+export const raceConfig = persistable("pref:uiRaceConfig", {
     orgName: "",
     orgId: "",
     baseUrl: "/app",
