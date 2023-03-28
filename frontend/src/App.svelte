@@ -36,6 +36,8 @@
     import ChartDetail from "./ChartDetail.svelte";
     import ChartPosition from "./ChartPosition.svelte";
     import TimerConfig from "./TimerConfig.svelte";
+    import TimerConfigList from "./TimerConfigList.svelte";
+    import TimerConfigElapsed from "./TimerConfigElapsed.svelte";
     import TimerAlignment from "./TimerAlignment.svelte";
     import RouteSelection from "./RouteSelection.svelte";
     import ForceLoad from "./ForceLoad.svelte";
@@ -94,6 +96,8 @@
         "/forceLoad/:b64route": ForceLoad,
         "/routeSelection/:mode": RouteSelection,
         "/timerConfig": TimerConfig,
+        "/timerConfigList": TimerConfigList,
+        "/timerConfigElapsed": TimerConfigElapsed,
         "/timerAlignment": TimerAlignment,
         "/rawTimerList": RawTimerList,
         "/spMediaList/:dbName/:dbKey": MediaList,
@@ -207,8 +211,12 @@
                 alwaysShow: true,
             },
             {
-                text: "Timer Config",
+                text: "Timer Config (Original)",
                 menuRoute: "/timerConfig",
+            },
+            {
+                text: "Timer Config (Elapsed)",
+                menuRoute: "/timerConfigList",
             },
             {
                 text: "Raw Timer List",
@@ -370,6 +378,7 @@
         background-color: #4caf50;
         color: white;
     }
+
 </style>
 
 <svelte:window on:pageshow={onPageShow} />
@@ -382,17 +391,17 @@
     <a style="background-color: {$theme}" class="active">
         {getTitle($raceConfig)}&nbsp;
         {#if $userEmail && $raceConfig}
-            <HotLoad />
+        <HotLoad />
         {/if}
     </a>
     <div id="myLinks">
 
         {#each menuMap as menuOption}
-            {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
-                <a on:click={() => navTo(menuOption.menuRoute)}>
-                    {menuOption.text}
-                </a>
-            {/if}
+        {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
+        <a on:click={()=> navTo(menuOption.menuRoute)}>
+            {menuOption.text}
+        </a>
+        {/if}
         {/each}
     </div>
     <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->

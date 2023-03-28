@@ -32,7 +32,7 @@ addPermission(
 addPermission(
     "CanTimerConfig",
     ["/timerConfig", "/getActiveTimers", "/getTimerHistory"],
-    ["/timerConfig", "/rawTimerList"]
+    ["/timerConfig", "/rawTimerList", "/timerConfigList"]
 );
 addPermission(
     "CanAddPending",
