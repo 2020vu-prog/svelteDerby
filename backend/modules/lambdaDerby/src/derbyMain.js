@@ -37,8 +37,7 @@ let globalErrorList = [];
 log.setLevel(log.levels.TRACE);
 
 //log.info("ENV:",process.env);
-function testSeededCars(){
-
+function testSeededCars() {
     const testCars = [
         101,
         102,
@@ -63,7 +62,6 @@ function testSeededCars(){
     getShaCars(testSeed, testCars);
     getShaCars(testSeed, testCars);
 }
-
 
 const s3QueryChartTypes = async () => {
     var params = {

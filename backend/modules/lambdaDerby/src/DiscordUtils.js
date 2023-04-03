@@ -5,7 +5,7 @@ const EntityFactory = require("./shared/EntityFactory.js");
 const log = require("loglevel");
 class DiscordUtils {
     AWS = null;
-    ddbUtils = null
+    ddbUtils = null;
     constructor(AWS, ddbUtils) {
         this.AWS = AWS;
         this.ddbUtils = ddbUtils;
@@ -27,20 +27,21 @@ class DiscordUtils {
             MaxCount: 1,
             MinCount: 1,
             LaunchTemplate: {
-                LaunchTemplateName: "discord-bot-asg"
+                LaunchTemplateName: "discord-bot-asg",
             },
-            TagSpecifications: [{
-                ResourceType: "instance",
-                Tags: [
-                    { Key: "Name", Value: `Discord bot ${orgId}` },
-                    { Key: "OrgId", Value: `${orgId}` },
-                ]
-            }],
+            TagSpecifications: [
+                {
+                    ResourceType: "instance",
+                    Tags: [
+                        { Key: "Name", Value: `Discord bot ${orgId}` },
+                        { Key: "OrgId", Value: `${orgId}` },
+                    ],
+                },
+            ],
         };
         let data = await new this.AWS.EC2().runInstances(params).promise();
-        log.debug("launchEc2Bot gave:",data)
-        return data
-
+        log.debug("launchEc2Bot gave:", data);
+        return data;
     }
 }
 module.exports = DiscordUtils;

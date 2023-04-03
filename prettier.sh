@@ -7,6 +7,7 @@ export jslist=$(echo  \
     backend/modules/lambda*/src/*.js \
     backend/modules/lambda*/src/shared/*.js \
     backend/sls/zellopa?/src/*.js \
+    backend/scratch509/iotLambda1/src/*.ts \
 )
 
 prettier --write --plugin-search-dir=./frontend $jslist
