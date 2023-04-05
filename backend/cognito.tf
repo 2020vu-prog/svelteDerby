@@ -1,6 +1,7 @@
 data "aws_region" "current" {}
 resource "aws_cognito_user_pool" "derbyUserPool" {
   name                       = "derbyUserPool"
+  //domain                     = "cf-test-rr1-us"
   email_verification_subject = "User Verification for ${var.DeployEnvironment}"
   auto_verified_attributes   = ["email"]
   schema {
@@ -21,6 +22,51 @@ resource "aws_cognito_user_pool_client" "sveltePoolClient" {
   name = "sveltePoolClient"
 
   user_pool_id = aws_cognito_user_pool.derbyUserPool.id
+}
+resource "aws_cognito_user_pool_client" "svelteHostedPoolClient" {
+  name = "svelteHostedPoolClient"
+
+  user_pool_id = aws_cognito_user_pool.derbyUserPool.id
+      allowed_oauth_flows                           = [
+          // "code",
+          "implicit",
+        ]
+      allowed_oauth_flows_user_pool_client          = true
+      allowed_oauth_scopes                          = [
+          "email",
+          "openid",
+        ]
+      explicit_auth_flows                           = [
+          "ALLOW_CUSTOM_AUTH",
+          "ALLOW_REFRESH_TOKEN_AUTH",
+          "ALLOW_USER_SRP_AUTH",
+        ]
+       supported_identity_providers                  = [
+           "COGNITO",
+           "Google",
+        ]
+}
+resource "aws_cognito_identity_provider" "google" {
+  user_pool_id  = aws_cognito_user_pool.derbyUserPool.id
+  provider_name = "Google"
+  provider_type = "Google"
+
+  provider_details = {
+    authorize_scopes = "email"
+    client_id        = "REDACTED_GOOGLE_OAUTH_CLIENT_ID"
+    client_secret    = "REDACTED_GOOGLE_OAUTH_CLIENT_SECRET"
+          "attributes_url"                = "https://people.googleapis.com/v1/people/me?personFields=" 
+          "attributes_url_add_attributes" = "true" 
+          "authorize_url"                 = "https://accounts.google.com/o/oauth2/v2/auth" 
+          "oidc_issuer"                   = "https://accounts.google.com" 
+          "token_request_method"          = "POST" 
+          "token_url"                     = "https://www.googleapis.com/oauth2/v4/token" 
+  }
+
+  attribute_mapping = {
+    email    = "email"
+    username = "sub"
+  }
 }
 resource "aws_cognito_user_pool_client" "idpLink" {
   name = "ipdLink"

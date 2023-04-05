@@ -3,6 +3,9 @@ const clientMinimumVersion = "1.1.24";
 const derbyMainVersion = "1.1.15";
 const crypto = require("crypto");
 const path = require("path");
+//const timer_protobuf_1 = require("timer_protobuf");
+//    const timerConfig = new timer_protobuf_1.tutorial.TimerConfig();
+//    console.log("tbp:",timer_protobuf_1.tutorial.TimerConfig.decode);
 
 const log = require("loglevel");
 
@@ -686,6 +689,26 @@ const registeredTimerSha = (timer) => {
 const doNotPublishUuid = (timer) => {
     delete timer.uuid;
 };
+const addTimerPbConfig = async (json) => {
+    if (!json.orgIz) {
+        return { error: "Missing orgIz" };
+    }
+    if (!json.orgId) {
+        return { error: "Missing orgId" };
+    }
+    if (!json.pb) {
+        return { error: "Missing protobuf" };
+    }
+
+    
+    //let decoded = timer_protobuf_1.tutorial.TimerConfig.decode(bdata)
+    //let decoded = timer_protobuf.Timer.TimerConfig.decode(bdata);
+     //   log.debug("addTimerPbConfig: decoded:", decoded);
+    json.PK = ":TimerConfig"; // force
+	log.debug("addTimerPbConfig:",json)
+
+    //return await ddbUtils.addSingle(json);
+};
 const addTimerConfig = async (json, initialLoad) => {
     if (!json.orgIz) {
         return { error: "Missing orgIz" };
@@ -898,6 +921,13 @@ const routeMap = {
         h: async (event) => {
             return buildResponse(
                 await addTimerConfig(JSON.parse(event.body), false)
+            );
+        },
+    },
+    "/timerPbConfig": {
+        h: async (event) => {
+            return buildResponse(
+                await addTimerPbConfig(JSON.parse(event.body), false)
             );
         },
     },
