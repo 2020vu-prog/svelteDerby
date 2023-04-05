@@ -1,5 +1,6 @@
 <script>
     import log from "loglevel";
+    const { v4: uuidv4 } = require("uuid");
 
     import Router from "svelte-spa-router";
     import { link, location } from "svelte-spa-router";
@@ -35,7 +36,11 @@
     import ChartDetail from "./ChartDetail.svelte";
     import ChartPosition from "./ChartPosition.svelte";
     import TimerConfig from "./TimerConfig.svelte";
+    import TimerConfigList from "./TimerConfigList.svelte";
+    import TimerConfigElapsed from "./TimerConfigElapsed.svelte";
     import TimerAlignment from "./TimerAlignment.svelte";
+    import RouteSelection from "./RouteSelection.svelte";
+    import ForceLoad from "./ForceLoad.svelte";
     import MediaList from "./MediaList.svelte";
 
     import ForceReloadPage from "./ForceReloadPage.svelte";
@@ -51,6 +56,9 @@
         statusMessage,
         beginAnonymousLogin,
         userId,
+        carouselRun,
+        carouselList,
+        initialReloadRoute,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -86,7 +94,11 @@
         "/chartEdit/:chartId": ChartEdit,
         "/chartFill/:chartId": ChartFill,
         "/chartAdd": ChartAdd,
+        "/forceLoad/:b64route": ForceLoad,
+        "/routeSelection/:mode": RouteSelection,
         "/timerConfig": TimerConfig,
+        "/timerConfigList": TimerConfigList,
+        "/timerConfigElapsed": TimerConfigElapsed,
         "/timerAlignment": TimerAlignment,
         "/rawTimerList": RawTimerList,
         "/spMediaList/:dbName/:dbKey": MediaList,
@@ -120,6 +132,45 @@
         }
     }
 
+    let carouselRunUuid = "";
+    $: {
+        carouselRunUuid = uuidv4();
+        if ($carouselRun) {
+            doCarouselLoop(carouselRunUuid);
+        }
+    }
+
+    async function doCarouselLoop(paramCarouselRunUuid) {
+        let currentRoute = -1;
+        // uuid is safeguard against multiple concurrent loops.
+        while (paramCarouselRunUuid === carouselRunUuid) {
+            await sleep(100); // no cpu loop!
+            currentRoute = getNextCarouselRoute(currentRoute);
+            if (currentRoute < 0) {
+                log.debug("doCarouseLoop: quitting. config error.");
+                return; // shouldn't happen.  delay logic foobar
+            }
+            log.debug("doCarouseLoop:", $carouselList[currentRoute].path);
+            const b64route = btoa("/" + $carouselList[currentRoute].path);
+            replace(`/forceLoad/${b64route}`); //ChartDetail repaint won't detect
+            await sleep($carouselList[currentRoute].delay * 1000);
+        }
+    }
+    function getNextCarouselRoute(index) {
+        let wrap = 0;
+        while (wrap < 10) {
+            index++;
+            if (index < 0) index = 0;
+            if (index >= $carouselList.length) {
+                index = 0;
+                wrap++;
+            }
+            if ($carouselList[index].delay) {
+                return index;
+            }
+        }
+        return -1; // shouldn't happen
+    }
     async function buildMenuMap() {
         log.debug("bmm: userEmailStored:", $userEmail);
 
@@ -161,8 +212,12 @@
                 alwaysShow: true,
             },
             {
-                text: "Timer Config",
+                text: "Timer Config (Original)",
                 menuRoute: "/timerConfig",
+            },
+            {
+                text: "Timer Config (Elapsed)",
+                menuRoute: "/timerConfigList",
             },
             {
                 text: "Raw Timer List",
@@ -232,7 +287,12 @@
 
         if (cfg.length) {
             await reloadEvent(cfg[0]);
-            replace("/RpList");
+            if ($initialReloadRoute) {
+                replace($initialReloadRoute)
+            }
+            else {
+                replace("/RpList");
+            }
         } else {
             replace("/orgSelection");
         }
@@ -324,6 +384,7 @@
         background-color: #4caf50;
         color: white;
     }
+
 </style>
 
 <svelte:window on:pageshow={onPageShow} />
@@ -336,17 +397,17 @@
     <a style="background-color: {$theme}" class="active">
         {getTitle($raceConfig)}&nbsp;
         {#if $userEmail && $raceConfig}
-            <HotLoad />
+        <HotLoad />
         {/if}
     </a>
     <div id="myLinks">
 
         {#each menuMap as menuOption}
-            {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
-                <a on:click={() => navTo(menuOption.menuRoute)}>
-                    {menuOption.text}
-                </a>
-            {/if}
+        {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
+        <a on:click={()=> navTo(menuOption.menuRoute)}>
+            {menuOption.text}
+        </a>
+        {/if}
         {/each}
     </div>
     <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->

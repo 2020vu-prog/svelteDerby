@@ -61,7 +61,7 @@ export const driverMap = writable({});
 export const orgMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlockKey = writable("");
-export const showChart2 = persistable("pref:showChart2", false);
+export const showChart1 = persistable("pref:showChart1", false);
 export const showBottomNav = persistable("pref:showBottomNav", true);
 export const developerMode = persistable("pref:developerMode", false);
 export const developerLogging = persistable("pref:developerLogging");
@@ -80,13 +80,14 @@ export const autoAnnounceResults = persistable(
     false
 );
 export const mqttTimerSubscribe = writable(false);
+export const mqttTimerTopic = persistable("pref:mqttTimerTopic", "");
 export const mqttEnabled = persistable("pref:mqttEnabled", true);
 export const mqttTriggerVideoCapture = writable(0);
 export const beginAnonymousLogin = writable(false);
 export const timerState = writable({});
 export const uiPageSize = persistable("pref:uiPageSize", undefined);
 //export const uiPageSize = writable(100);
-export const raceConfig = writable({
+export const raceConfig = persistable("pref:uiRaceConfig", {
     orgName: "",
     orgId: "",
     baseUrl: "/app",
@@ -260,6 +261,22 @@ export const userExpCountDownSecs = derived(
         }
     }
 );
+export const initialReloadRoute = persistable("initialReloadRoute", "");
+export const carouselList = persistable("carouselList", []);
+export const carouselRun = writable(false);
+export const customToolbarList = persistable("toolbarList", []);
+export const selectedToolbarList = derived(customToolbarList, ($dm) => {
+    const dlist = [];
+    $dm.forEach(function (item) {
+        if (item.selected) {
+            dlist.push(item);
+        }
+    });
+    if (!dlist.length) {
+        return getDefaultToolbarList();
+    }
+    return dlist;
+});
 export const selectedDriverMap = writable({});
 export const selectedDriverList = derived(selectedDriverMap, ($dm) => {
     const dlist = [];
@@ -302,5 +319,33 @@ export async function refreshOrgMap() {
         log.debug(err);
         return {};
     }
+}
+export function getDefaultToolbarList() {
+    return [
+        {
+            selected: true,
+            text: "Phases",
+            systemName: "Phases",
+            path: "RpList",
+        },
+        {
+            selected: true,
+            text: "Races",
+            systemName: "Races",
+            path: "RsList/History",
+        },
+        {
+            selected: true,
+            text: "Pending",
+            systemName: "Pending",
+            path: "RsList/Pending",
+        },
+        {
+            selected: true,
+            text: "Charts",
+            systemName: "Charts",
+            path: "chartList",
+        },
+    ];
 }
 //doRefresh();

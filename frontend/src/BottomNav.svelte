@@ -8,7 +8,7 @@
      */
     import log from "loglevel";
 
-    import { showBottomNav, theme } from "./stores.js";
+    import { showBottomNav, selectedToolbarList, theme } from "./stores.js";
     import { location } from "svelte-spa-router";
     import StatusMessage from "./StatusMessage.svelte";
 
@@ -105,26 +105,13 @@
             class="navbar"
             id="bottomNavBar"
             style="z-index:20">
-            <a
-                href="/#/RpList"
-                style="background-color: {getIsSelected('RpList', $location) ? $theme : '#333'}">
-                Phases
-            </a>
-            <a
-                href="/#/RsList/History"
-                style="background-color: {getIsSelected('RsList/History', $location) ? $theme : '#333'}">
-                Races
-            </a>
-            <a
-                href="/#/RsList/Pending"
-                style="background-color: {getIsSelected('RsList/Pending', $location) ? $theme : '#333'}">
-                Pending
-            </a>
-            <a
-                href="/#/chartList"
-                style="background-color: {getIsSelected('chartList', $location) ? $theme : '#333'}">
-                Charts
-            </a>
+            {#each $selectedToolbarList as item, index (item.path)}
+                <a
+                    href="/#/{item.path}"
+                    style="background-color: {getIsSelected(item.path, $location) ? $theme : '#333'}">
+                    {item.text}
+                </a>
+            {/each}
             <a
                 href="javascript:void(0);"
                 class="icon"
