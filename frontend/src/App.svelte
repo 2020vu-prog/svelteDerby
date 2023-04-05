@@ -58,6 +58,7 @@
         userId,
         carouselRun,
         carouselList,
+        initialReloadRoute,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -286,7 +287,12 @@
 
         if (cfg.length) {
             await reloadEvent(cfg[0]);
-            replace("/RpList");
+            if ($initialReloadRoute) {
+                replace($initialReloadRoute)
+            }
+            else {
+                replace("/RpList");
+            }
         } else {
             replace("/orgSelection");
         }

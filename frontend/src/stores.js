@@ -261,6 +261,7 @@ export const userExpCountDownSecs = derived(
         }
     }
 );
+export const initialReloadRoute = persistable("initialReloadRoute", "");
 export const carouselList = persistable("carouselList", []);
 export const carouselRun = writable(false);
 export const customToolbarList = persistable("toolbarList", []);

@@ -2371,7 +2371,7 @@ $root.tutorial = (function() {
          * @memberof tutorial
          * @interface ITimerConfig
          * @property {string|null} [timerName] TimerConfig timerName
-         * @property {number|null} [clearMS] TimerConfig clearMS
+         * @property {string|null} [timerMqttClientId] TimerConfig timerMqttClientId
          * @property {boolean|null} [useGpsTime] TimerConfig useGpsTime
          * @property {string|null} [orgId] TimerConfig orgId
          * @property {string|null} [orgIz] TimerConfig orgIz
@@ -2404,12 +2404,12 @@ $root.tutorial = (function() {
         TimerConfig.prototype.timerName = "";
 
         /**
-         * TimerConfig clearMS.
-         * @member {number} clearMS
+         * TimerConfig timerMqttClientId.
+         * @member {string} timerMqttClientId
          * @memberof tutorial.TimerConfig
          * @instance
          */
-        TimerConfig.prototype.clearMS = 0;
+        TimerConfig.prototype.timerMqttClientId = "";
 
         /**
          * TimerConfig useGpsTime.
@@ -2485,8 +2485,8 @@ $root.tutorial = (function() {
                 writer = $Writer.create();
             if (message.timerName != null && Object.hasOwnProperty.call(message, "timerName"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.timerName);
-            if (message.clearMS != null && Object.hasOwnProperty.call(message, "clearMS"))
-                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.clearMS);
+            if (message.timerMqttClientId != null && Object.hasOwnProperty.call(message, "timerMqttClientId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.timerMqttClientId);
             if (message.useGpsTime != null && Object.hasOwnProperty.call(message, "useGpsTime"))
                 writer.uint32(/* id 3, wireType 0 =*/24).bool(message.useGpsTime);
             if (message.orgId != null && Object.hasOwnProperty.call(message, "orgId"))
@@ -2538,7 +2538,7 @@ $root.tutorial = (function() {
                         break;
                     }
                 case 2: {
-                        message.clearMS = reader.uint32();
+                        message.timerMqttClientId = reader.string();
                         break;
                     }
                 case 3: {
@@ -2603,9 +2603,9 @@ $root.tutorial = (function() {
             if (message.timerName != null && message.hasOwnProperty("timerName"))
                 if (!$util.isString(message.timerName))
                     return "timerName: string expected";
-            if (message.clearMS != null && message.hasOwnProperty("clearMS"))
-                if (!$util.isInteger(message.clearMS))
-                    return "clearMS: integer expected";
+            if (message.timerMqttClientId != null && message.hasOwnProperty("timerMqttClientId"))
+                if (!$util.isString(message.timerMqttClientId))
+                    return "timerMqttClientId: string expected";
             if (message.useGpsTime != null && message.hasOwnProperty("useGpsTime"))
                 if (typeof message.useGpsTime !== "boolean")
                     return "useGpsTime: boolean expected";
@@ -2650,8 +2650,8 @@ $root.tutorial = (function() {
             var message = new $root.tutorial.TimerConfig();
             if (object.timerName != null)
                 message.timerName = String(object.timerName);
-            if (object.clearMS != null)
-                message.clearMS = object.clearMS >>> 0;
+            if (object.timerMqttClientId != null)
+                message.timerMqttClientId = String(object.timerMqttClientId);
             if (object.useGpsTime != null)
                 message.useGpsTime = Boolean(object.useGpsTime);
             if (object.orgId != null)
@@ -2702,7 +2702,7 @@ $root.tutorial = (function() {
             var object = {};
             if (options.defaults) {
                 object.timerName = "";
-                object.clearMS = 0;
+                object.timerMqttClientId = "";
                 object.useGpsTime = false;
                 object.orgId = "";
                 object.orgIz = "";
@@ -2712,8 +2712,8 @@ $root.tutorial = (function() {
             }
             if (message.timerName != null && message.hasOwnProperty("timerName"))
                 object.timerName = message.timerName;
-            if (message.clearMS != null && message.hasOwnProperty("clearMS"))
-                object.clearMS = message.clearMS;
+            if (message.timerMqttClientId != null && message.hasOwnProperty("timerMqttClientId"))
+                object.timerMqttClientId = message.timerMqttClientId;
             if (message.useGpsTime != null && message.hasOwnProperty("useGpsTime"))
                 object.useGpsTime = message.useGpsTime;
             if (message.orgId != null && message.hasOwnProperty("orgId"))
@@ -2767,6 +2767,7 @@ $root.tutorial = (function() {
          * @property {number|null} [maxCarLenMS] TimerConfigLanePhotoEye maxCarLenMS
          * @property {number|null} [minCarLenMS] TimerConfigLanePhotoEye minCarLenMS
          * @property {number|null} [maxPerfCount] TimerConfigLanePhotoEye maxPerfCount
+         * @property {number|null} [clearMS] TimerConfigLanePhotoEye clearMS
          */
 
         /**
@@ -2809,6 +2810,14 @@ $root.tutorial = (function() {
         TimerConfigLanePhotoEye.prototype.maxPerfCount = 0;
 
         /**
+         * TimerConfigLanePhotoEye clearMS.
+         * @member {number} clearMS
+         * @memberof tutorial.TimerConfigLanePhotoEye
+         * @instance
+         */
+        TimerConfigLanePhotoEye.prototype.clearMS = 0;
+
+        /**
          * Creates a new TimerConfigLanePhotoEye instance using the specified properties.
          * @function create
          * @memberof tutorial.TimerConfigLanePhotoEye
@@ -2838,6 +2847,8 @@ $root.tutorial = (function() {
                 writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.minCarLenMS);
             if (message.maxPerfCount != null && Object.hasOwnProperty.call(message, "maxPerfCount"))
                 writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.maxPerfCount);
+            if (message.clearMS != null && Object.hasOwnProperty.call(message, "clearMS"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.clearMS);
             return writer;
         };
 
@@ -2884,6 +2895,10 @@ $root.tutorial = (function() {
                         message.maxPerfCount = reader.uint32();
                         break;
                     }
+                case 4: {
+                        message.clearMS = reader.uint32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2928,6 +2943,9 @@ $root.tutorial = (function() {
             if (message.maxPerfCount != null && message.hasOwnProperty("maxPerfCount"))
                 if (!$util.isInteger(message.maxPerfCount))
                     return "maxPerfCount: integer expected";
+            if (message.clearMS != null && message.hasOwnProperty("clearMS"))
+                if (!$util.isInteger(message.clearMS))
+                    return "clearMS: integer expected";
             return null;
         };
 
@@ -2949,6 +2967,8 @@ $root.tutorial = (function() {
                 message.minCarLenMS = object.minCarLenMS >>> 0;
             if (object.maxPerfCount != null)
                 message.maxPerfCount = object.maxPerfCount >>> 0;
+            if (object.clearMS != null)
+                message.clearMS = object.clearMS >>> 0;
             return message;
         };
 
@@ -2969,6 +2989,7 @@ $root.tutorial = (function() {
                 object.maxCarLenMS = 0;
                 object.minCarLenMS = 0;
                 object.maxPerfCount = 0;
+                object.clearMS = 0;
             }
             if (message.maxCarLenMS != null && message.hasOwnProperty("maxCarLenMS"))
                 object.maxCarLenMS = message.maxCarLenMS;
@@ -2976,6 +2997,8 @@ $root.tutorial = (function() {
                 object.minCarLenMS = message.minCarLenMS;
             if (message.maxPerfCount != null && message.hasOwnProperty("maxPerfCount"))
                 object.maxPerfCount = message.maxPerfCount;
+            if (message.clearMS != null && message.hasOwnProperty("clearMS"))
+                object.clearMS = message.clearMS;
             return object;
         };
 
