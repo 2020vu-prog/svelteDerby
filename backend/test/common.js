@@ -1,13 +1,11 @@
 module.exports.FOO = "bar";
-//module.exports.CF = "https://d15zun4udup4ky.cloudfront.net/app"
-module.exports.CF = "https://cf.derby.rr1.us/app"
-//const CF="https://05wv6js1p4.execute-api.us-east-2.amazonaws.com/test"
 
 const fs = require('fs');
 const axios = require("axios")
 //const devEnv= require("../../frontend/generatedTargets.json")
 const devEnv= require("./aws-exports.json")
 module.exports.CF = `${devEnv.DERBY_CLOUDFRONT}/app`
+module.exports.CfBase = `${devEnv.DERBY_CLOUDFRONT}`
 
 function checkTime(i) {
     return (i < 10) ? "0" + i : i;
