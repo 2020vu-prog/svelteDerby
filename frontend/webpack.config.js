@@ -81,19 +81,19 @@ module.exports = {
         proxy: {
             "/app": {
                 target:
-                    "https://z24xykma0c.execute-api.us-east-2.amazonaws.com/test/",
+                    "https://se6e6ch1m4.execute-api.us-east-2.amazonaws.com/test/",
                 changeOrigin: true,
             },
             "/archive": {
-                target: "https://d27962ihtc8hvf.cloudfront.net",
+                target: "https://dd5oqqc7cmn2u.cloudfront.net",
                 changeOrigin: true,
             },
             "/media": {
-                target: "https://d27962ihtc8hvf.cloudfront.net",
+                target: "https://dd5oqqc7cmn2u.cloudfront.net",
                 changeOrigin: true,
             },
             "/data": {
-                target: "https://d27962ihtc8hvf.cloudfront.net",
+                target: "https://dd5oqqc7cmn2u.cloudfront.net",
                 changeOrigin: true,
             },
         },

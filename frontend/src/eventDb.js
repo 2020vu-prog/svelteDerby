@@ -27,6 +27,9 @@ db.version(13).stores({
     OrgRoles: "SK", //Not managed by HotLoad
     Foo: `SK`,
 });
+db.version(14).stores({
+    TimerPbConfig: "SK",
+});
 
 //export dbTools ;
 export async function dbReset() {

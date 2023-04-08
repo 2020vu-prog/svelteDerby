@@ -288,9 +288,8 @@
         if (cfg.length) {
             await reloadEvent(cfg[0]);
             if ($initialReloadRoute) {
-                replace($initialReloadRoute)
-            }
-            else {
+                replace($initialReloadRoute);
+            } else {
                 replace("/RpList");
             }
         } else {
@@ -384,7 +383,6 @@
         background-color: #4caf50;
         color: white;
     }
-
 </style>
 
 <svelte:window on:pageshow={onPageShow} />
@@ -397,17 +395,17 @@
     <a style="background-color: {$theme}" class="active">
         {getTitle($raceConfig)}&nbsp;
         {#if $userEmail && $raceConfig}
-        <HotLoad />
+            <HotLoad />
         {/if}
     </a>
     <div id="myLinks">
 
         {#each menuMap as menuOption}
-        {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
-        <a on:click={()=> navTo(menuOption.menuRoute)}>
-            {menuOption.text}
-        </a>
-        {/if}
+            {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
+                <a on:click={() => navTo(menuOption.menuRoute)}>
+                    {menuOption.text}
+                </a>
+            {/if}
         {/each}
     </div>
     <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->

@@ -7,6 +7,7 @@ const ParticipantEid = ":PTCP";
 const BracketMetaDataEid = ":Bmd";
 const BracketPosEid = ":Bp";
 const TimerConfigEid = ":TimerConfig";
+const TimerPbConfigEid = ":TimerPbConfig";
 const cHelper = (pthis, props, optionalMembers) => {
     //console.log (pthis.constructor.members) ;
 
@@ -635,6 +636,32 @@ entityFactories["TimerConfig"] = class TimerConfig extends EntityBase {
     }
     get classType() {
         return "TimerConfig";
+    }
+    get classKey() {
+        return this.SK;
+    }
+};
+entityFactories["TimerPbConfig"] = class TimerPbConfig extends EntityBase {
+    static members = [
+        "timerName", //TODO: extract from pb??
+        "pb", //TODO: base64 <->
+    ];
+    static eid = TimerPbConfigEid;
+    static canBuild(json) {
+        return json.PK && json.PK.endsWith(TimerPbConfigEid);
+    }
+
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK = this.orgId + TimerPbConfigEid;
+        this.SK = this.timerName;
+    }
+    get classType() {
+        return "TimerPbConfig";
     }
     get classKey() {
         return this.SK;

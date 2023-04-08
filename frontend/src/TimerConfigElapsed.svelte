@@ -1,5 +1,6 @@
 <script>
     import log from "loglevel";
+    import { flatten, unflatten } from "flat";
 
     import {
         axios,
@@ -9,79 +10,153 @@
         mqttTimerTopic,
         initialReloadRoute,
     } from "./stores.js";
-    import { tutorial as Timer } from "./timer_pb.js"
-    import { push, replace } from "svelte-spa-router";
+    import { tutorial as Timer } from "./timer_pb.js";
+    import { push, replace, querystring } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import SpinnerButton from "./SpinnerButton.svelte";
     import TimerSelection from "./TimerSelection.svelte";
-    import { Form, FormGroup, FormText, Input, Label } from 'sveltestrap';
+    import { Form, FormGroup, FormText, Input, Label } from "sveltestrap";
+    import { Base64 } from "js-base64";
 
     //    import PrefFormInput from "./PrefFormInput.svelte";
 
-    var paddlesUpLane1 = Timer.PinState.OFF
-    var paddlesUpLane2 = Timer.PinState.ON
-    var bar2 = true
+    var bar2 = true;
     var activeTimerList = [];
     var tcFromDexie = {};
     var activeTimerSha;
     var mounted = false;
+    const params = {};
 
     var submitDisabled = false;
     var submitSpinning = false;
-    var timerConfig = new Timer.TimerConfig()
-    timerConfig.timerConfigLanePhotoEye = new Timer.TimerConfigLanePhotoEye
-    timerConfig.timerConfigOpposedStarter = new Timer.TimerConfigOpposedStarter
-    timerConfig.timerConfigOpposedStarter.paddlesUp = []
-    timerConfig.timerConfigOpposedStarter.paddlesUp.push(new Timer.TimerConfigOpposedPosition)
-    timerConfig.timerConfigOpposedStarter.paddlesUp.push(new Timer.TimerConfigOpposedPosition)
+    var timerConfig = {};
+    var pbForm = {};
+    loadDefaults();
 
     onMount(async () => {
-        log.debug("mounted focus");
-        log.debug("TimerConfig: initial timerTopic:", $mqttTimerTopic);
+        log.debug("tce mounted focus:", $querystring);
+        log.debug("tce TimerPbConfig: initial timerTopic:", $mqttTimerTopic);
+        params.timerName = $querystring;
+
+        loadInitialData();
+        //$initialReloadRoute = $location
         mounted = true;
-        loadDefaults()
-        $initialReloadRoute = "/timerConfigElapsed"
     });
 
-    $: syncStarterLane2(paddlesUpLane1)
+    $: if (mounted) {
+        syncStarterLane2(pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState);
+    }
     $: refreshDataFromDb($doRefreshBlocks);
 
-    function loadDefaults() {
-        timerConfig.timerName = "Finish"
-        timerConfig.timerMqttClientId = "TODO"
-        timerConfig.sensorLogic = Timer.SensorLogic.LanePhotoEyes
-        timerConfig.useGpsTime = true
-        timerConfig.orgId = $raceConfig.orgId
-        timerConfig.orgIz = $raceConfig.orgIz
-        timerConfig.timerConfigLanePhotoEye = new Timer.TimerConfigLanePhotoEye
-        timerConfig.timerConfigLanePhotoEye.clearMS = 7000
-        timerConfig.timerConfigLanePhotoEye.minCarLenMS = 8
-        timerConfig.timerConfigLanePhotoEye.maxCarLenMS = 800
-        timerConfig.timerConfigLanePhotoEye.maxPerfCount = 2
-
-        syncStarterLane2(paddlesUpLane1)
-        timerConfig.timerConfigOpposedStarter.maxTransitionMS = 49
-        console.log(timerConfig)
-        const b = Timer.TimerConfig.encode(timerConfig).finish()
-        console.log(b)
-        console.log(timerConfig.toJSON())
-    }
-    function syncStarterLane2(paddlesUpLane1) {
-        log.debug("syncStarterLane2: param:", paddlesUpLane1);
-        if (paddlesUpLane1 == Timer.PinState.ON) {
-            paddlesUpLane2 = Timer.PinState.OFF
-        } else {
-            paddlesUpLane2 = Timer.PinState.ON
+    async function loadInitialData() {
+        log.debug("tcinit: param:", params);
+        loadDefaults();
+        if (!params.timerName) {
+            return;
         }
-        timerConfig.timerConfigOpposedStarter.paddlesUp[0].pinState = paddlesUpLane1
-        timerConfig.timerConfigOpposedStarter.paddlesUp[0].pinName = Timer.PinName.lane1
-        timerConfig.timerConfigOpposedStarter.paddlesUp[1].pinState = paddlesUpLane2
-        timerConfig.timerConfigOpposedStarter.paddlesUp[1].pinName = Timer.PinName.lane2
+
+        const tcFromDexie = await db.TimerPbConfig.get(params.timerName);
+        if (tcFromDexie && tcFromDexie.pb) {
+            log.debug("tcinit: 0:", tcFromDexie.pb);
+            log.debug("tcinit: 0len:", tcFromDexie.pb.length);
+            //const tcInit=atob(tcFromDexie.pb)
+            const tcInit = Base64.toUint8Array(tcFromDexie.pb);
+            log.debug("tcinit: 1:", tcInit);
+
+            const c = Timer.TimerConfig.decode(tcInit);
+            log.debug("tcinit: 2:", c);
+            const flatDb = flatten(c, { delimiter: "_" });
+            log.debug("tcinit flatDb: 2:", flatDb);
+            Object.assign(pbForm, flatDb);
+            log.debug("tcinit merged: 2:", pbForm);
+        }
+        syncStarterLane2(pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState);
+    }
+    function loadDefaults() {
+        //timerConfig = new Timer.TimerConfig()
+        //timerConfig.timerName = "Finish"
+        pbForm.timerName = "Finish";
+        pbForm.timerMqttClientId = "TODO";
+        pbForm.sensorLogic = Timer.SensorLogic.LanePhotoEyes;
+        pbForm.useGpsTime = true;
+        pbForm.orgId = $raceConfig.orgId;
+        pbForm.orgIz = $raceConfig.orgIz;
+        //pbForm.timerConfigLanePhotoEye = new Timer.TimerConfigLanePhotoEye
+        pbForm.timerConfigLanePhotoEye_clearMS = 7000;
+        pbForm.timerConfigLanePhotoEye_minCarLenMS = 8;
+        pbForm.timerConfigLanePhotoEye_maxCarLenMS = 800;
+        pbForm.timerConfigLanePhotoEye_maxPerfCount = 2;
+        //pbForm.timerConfigLanePhotoEye = new Timer.TimerConfigLanePhotoEye
+        //pbForm.timerConfigOpposedStarter = new Timer.TimerConfigOpposedStarter
+
+        //pbForm.timerConfigOpposedStarter_paddlesUp = []
+        //pbForm.timerConfigOpposedStarter_paddlesUp.push(new Timer.TimerConfigOpposedPosition)
+        //pbForm.timerConfigOpposedStarter_paddlesUp.push(new Timer.TimerConfigOpposedPosition)
+        //pbForm.timerConfigOpposedStarter_paddlesUp.push(new Timer.TimerConfigOpposedPosition)
+        pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState =
+            Timer.PinState.OFF;
+        pbForm.timerConfigOpposedStarter_paddlesUp_0_pinName =
+            Timer.PinName.lane1;
+        pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState =
+            Timer.PinState.ON;
+        pbForm.timerConfigOpposedStarter_paddlesUp_1_pinName =
+            Timer.PinName.lane2;
+        /*
+            const q={}
+            q.y=0
+            q.x={}
+            q.x.l=[]
+            q.x.l[0]='pp'
+            q.x.l[1]='clc'
+            q.x.l[2]={}
+            q.x.l[2].foo='bar'
+
+        const x=flatten(q,{delimiter:"_"})
+        log.debug("tcinit flat: ",x);
+        log.debug("unflat",unflatten(x,{delimiter:"_"}))
+        */
+
+        //syncStarterLane2(paddlesUpLane1)
+        pbForm.timerConfigOpposedStarter_maxTransitionMS = 49;
+        log.debug("dflts:", pbForm);
+        log.debug("unflat", unflatten(pbForm, { delimiter: "_" }));
+        //const b = Timer.TimerConfig.encode(timerConfig).finish()
+        //console.log(b)
+        //console.log(timerConfig.toJSON())
+    }
+
+    function syncStarterLane2() {
+        log.debug(
+            "syncStarterLane2: param:",
+            pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState
+        );
+        if (
+            pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState ==
+            Timer.PinState.ON
+        ) {
+            pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState =
+                Timer.PinState.OFF;
+        } else {
+            pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState =
+                Timer.PinState.ON;
+        }
+        log.debug("unflat", unflatten(pbForm, { delimiter: "_" }));
+        return;
+        if (paddlesUpLane1 == Timer.PinState.ON) {
+            paddlesUpLane2 = Timer.PinState.OFF;
+        } else {
+            paddlesUpLane2 = Timer.PinState.ON;
+        }
+        pbForm.timerConfigOpposedStarter.paddlesUp[0].pinState = paddlesUpLane1;
+        pbForm.timerConfigOpposedStarter.paddlesUp[0].pinName =
+            Timer.PinName.lane1;
+        pbForm.timerConfigOpposedStarter.paddlesUp[1].pinState = paddlesUpLane2;
+        pbForm.timerConfigOpposedStarter.paddlesUp[1].pinName =
+            Timer.PinName.lane2;
     }
     async function refreshDataFromDb(trigger) {
         log.debug("TimerConfig: TODO: skipping refresh", trigger);
-        return;
         log.debug("TimerConfig: refreshDataFromDb data:", trigger);
 
         tcFromDexie = await db.TimerConfig.get("TimerConfig");
@@ -90,7 +165,8 @@
 
         Object.assign(timerConfig, tcFromDexie);
 
-        timerConfig.timerConfigLanePhotoEye.clearMS = timerConfig.timerConfigLanePhotoEye.clearMS
+        timerConfig.timerConfigLanePhotoEye.clearMS =
+            timerConfig.timerConfigLanePhotoEye.clearMS;
         timerConfig.maxCarLenMS = timerConfig.maxCarLenMS;
         timerConfig.minCarLenMS = timerConfig.minCarLenMS;
         timerConfig.maxPerfCount = timerConfig.maxPerfCount;
@@ -117,31 +193,39 @@
         log.debug("timerConfig copied:", JSON.stringify(timerConfig));
     }
     async function handleSubmit() {
-        log.debug("Adding json:" + JSON.stringify(timerConfig));
-        log.debug("Adding pb: ", timerConfig.toJSON());
-        log.debug("Adding pbs: ", timerConfig.timerConfigOpposedStarter.paddlesUp[0].toJSON())
-        const b = Timer.TimerConfig.encode(timerConfig).finish()
-        log.debug("Adding bin: ", b)
+        pbForm.Foo = "bar";
+        log.debug("Adding bound:", pbForm);
+        log.debug("Adding bound str:", JSON.stringify(pbForm));
+        const tcObject = unflatten(pbForm, { delimiter: "_" });
+        log.debug("Adding tcObject:", tcObject);
+        var wtf = Timer.TimerConfig.create(tcObject);
+        log.debug("wtf:", wtf);
 
-        var payload = Timer.TimerConfig.create(timerConfig);
-        log.debug("Adding copy: ", payload.toJSON())
+        var payload = Timer.TimerConfig.create(tcObject);
+        log.debug("Adding copy: ", payload.toJSON());
 
-        if (timerConfig.sensorLogic == Timer.SensorLogic.LanePhotoEyes) {
-            payload.timerConfigOpposedStarter = null
+        if (payload.sensorLogic == Timer.SensorLogic.LanePhotoEyes) {
+            payload.timerConfigOpposedStarter = null;
         }
-        if (timerConfig.sensorLogic == Timer.SensorLogic.OpposedStarterReeds) {
-            payload.timerConfigLanePhotoEye = null
+        if (payload.sensorLogic == Timer.SensorLogic.OpposedStarterReeds) {
+            payload.timerConfigLanePhotoEye = null;
         }
-        const c = Timer.TimerConfig.encode(payload).finish()
-        log.debug("Adding bin: ", c)
+        const c = Timer.TimerConfig.encode(payload).finish();
+        log.debug("Adding bin: ", c);
         log.debug("Adding json slim: ", payload.toJSON());
-        payload.orgId = $raceConfig.orgId
-        payload.orgIz = $raceConfig.orgIz
+        payload.orgId = $raceConfig.orgId;
+        payload.orgIz = $raceConfig.orgIz;
+        //const payloadWithPB=JSON.parse(payload.toJSON())
+        const payloadWithPB = payload.toJSON();
+        payloadWithPB.pb = Base64.fromUint8Array(c);
+        log.debug("Adding json slim2: ", payloadWithPB);
+        const z = Timer.TimerConfig.decode(c);
+        console.log("roundtrip:", z);
 
         try {
             submitSpinning = true;
-            const url = $raceConfig.baseUrl + "/timerConfig2";
-            const response = await $axios.post(url, payload);
+            const url = $raceConfig.baseUrl + "/timerPbConfig";
+            const response = await $axios.post(url, payloadWithPB);
             if (response.error) {
                 //TODO: not working!?
                 $statusMessage = {
@@ -167,18 +251,17 @@
         log.debug("handleTimerSelection e:", timerEvent);
         var timer = timerEvent.detail;
         log.debug("handleTimerSelection timer:", timer);
-        timerConfig.sha = timer.sha;
+        pbForm.sha = timer.sha;
+        pbForm.timerMqttClientId = timer.hostname;
         $mqttTimerTopic = timer.hostname;
-        timerConfig.timerMqttClientId = timer.hostname
 
         //await handleSubmit();
     }
-    timerConfig.timerName = "Finish"
 </script>
 
 <h3>Timer Config Elapsed</h3>
 <br />
-<SpinnerButton on:click={()=> push('/timerAlignment')}>
+<SpinnerButton on:click={() => push('/timerAlignment')}>
     Timer Alignment
 </SpinnerButton>
 
@@ -186,35 +269,41 @@
     <FormGroup>
         <Label>
             Timer Name:
-            <Input type="text" bind:value={timerConfig.timerName} />
+            <Input type="text" bind:value={pbForm.timerName} />
         </Label>
     </FormGroup>
 
     <FormGroup>
         <Label>
             Timer Type
-            <Input type="select" bind:value={timerConfig.sensorLogic}>
-            <option value={Timer.SensorLogic.LanePhotoEyes}>PhotoEye</option>
-            <option value={Timer.SensorLogic.OpposedStarterReeds}>Starter</option>
+            <Input type="select" bind:value={pbForm.sensorLogic}>
+                <option value={Timer.SensorLogic.LanePhotoEyes}>
+                    PhotoEye
+                </option>
+                <option value={Timer.SensorLogic.OpposedStarterReeds}>
+                    Starter
+                </option>
             </Input>
         </Label>
     </FormGroup>
     <FormGroup check>
         <Label check>
             Use GPS time
-            <br /><!-- workaround for bootstrap broken layout -->
-            <Input type="checkbox" bind:checked={timerConfig.useGpsTime} />
+            <br />
+            <!-- workaround for bootstrap broken layout -->
+            <Input type="checkbox" bind:checked={pbForm.useGpsTime} />
             <br />
             <FormText color="muted">
-                Gps time is required for elapsed times to work. It can be disabled when using a
-                timer without a Gps module, or when the Gps signal won't lock in.
-                When it is disabled, only differential finish times are available.
+                Gps time is required for elapsed times to work. It can be
+                disabled when using a timer without a Gps module, or when the
+                Gps signal won't lock in. When it is disabled, only differential
+                finish times are available.
             </FormText>
         </Label>
     </FormGroup>
-    {#if timerConfig.sensorLogic == Timer.SensorLogic.LanePhotoEyes }
-    {#if timerConfig.timerName == "Finish" }
-    <!--
+    {#if pbForm.sensorLogic == Timer.SensorLogic.LanePhotoEyes}
+        {#if pbForm.timerName == 'Finish'}
+            <!--
 
     <PrefFormInput title="Foo" helpText="bar">
         <input type="number" bind:value={loginForm.maxTrackSeconds} placeholder="45" />
@@ -223,75 +312,102 @@
         <input type="checkbox" bind:checked={bar2} />
     </PrefFormInput>
     -->
-    <FormGroup>
-        <Label>
-            MaxTrackSeconds:
-            <Input type="number" bind:value={timerConfig.maxTrackSeconds} placeholder="45" />
-            <FormText color="muted">
-                This field is used to control elapsed time. It can be ignored when elapsed
-                times are not needed. It is the amount of time the slowest car is expected
-                to take to run the track (in seconds).
-            </FormText>
-        </Label>
+            <FormGroup>
+                <Label>
+                    MaxTrackSeconds:
+                    <Input
+                        type="number"
+                        bind:value={pbForm.maxTrackSeconds}
+                        placeholder="45" />
+                    <FormText color="muted">
+                        This field is used to control elapsed time. It can be
+                        ignored when elapsed times are not needed. It is the
+                        amount of time the slowest car is expected to take to
+                        run the track (in seconds).
+                    </FormText>
+                </Label>
 
-    </FormGroup>
-    {/if}
-    <FormGroup>
-        <Label>
-            ClearMS:
-            <Input type="number" bind:value={timerConfig.timerConfigLanePhotoEye.clearMS} placeholder="3000" />
-        </Label>
-    </FormGroup>
-    <FormGroup>
-        <Label>
-            MaxCarLenMS:
-            <Input type="number" bind:value={timerConfig.timerConfigLanePhotoEye.maxCarLenMS} placeholder="700" />
-        </Label>
-    </FormGroup>
-    <FormGroup>
-        <Label>
-            MinCarLenMS:
-            <Input type="number" bind:value={timerConfig.timerConfigLanePhotoEye.minCarLenMS} placeholder="300" />
-        </Label>
-    </FormGroup>
-    <FormGroup>
-        <Label>
-            Max Perf:
-            <Input type="number" bind:value={timerConfig.timerConfigLanePhotoEye.maxPerfCount} placeholder="1" />
-        </Label>
-    </FormGroup>
+            </FormGroup>
+        {/if}
+        <FormGroup>
+            <Label>
+                ClearMS:
+                <Input
+                    type="number"
+                    bind:value={pbForm.timerConfigLanePhotoEye_clearMS}
+                    placeholder="3000" />
 
-    <br />
-    {:else if timerConfig.sensorLogic == Timer.SensorLogic.OpposedStarterReeds}
-    <FormGroup>
-        <Label>
-            Paddles Up Lane1:
-            <Input type="select" bind:value={paddlesUpLane1}>
-            <option value={Timer.PinState.OFF}>Off</option>
-            <option value={Timer.PinState.ON}>On</option>
-            </Input>
-        </Label>
-    </FormGroup>
-    <FormGroup>
-        <Label>
-            Paddles Up Lane2:
-            <Input type="select" disabled bind:value={paddlesUpLane2}>
-            <option value={Timer.PinState.OFF}>Off</option>
-            <option value={Timer.PinState.ON}>On</option>
-            </Input>
-        </Label>
-    </FormGroup>
-    <FormGroup>
-        <Label>
-            MaxTransitionMS:
-            <Input type="number" bind:value={timerConfig.timerConfigOpposedStarter.maxTransitionMS} placeholder="50" />
-        </Label>
-    </FormGroup>
+            </Label>
+        </FormGroup>
+        <FormGroup>
+            <Label>
+                MaxCarLenMS:
+                <Input
+                    type="number"
+                    bind:value={pbForm.timerConfigLanePhotoEye_maxCarLenMS}
+                    placeholder="700" />
+            </Label>
+        </FormGroup>
+        <FormGroup>
+            <Label>
+                MinCarLenMS:
+                <Input
+                    type="number"
+                    bind:value={pbForm.timerConfigLanePhotoEye_minCarLenMS}
+                    placeholder="300" />
+            </Label>
+        </FormGroup>
+        <FormGroup>
+            <Label>
+                Max Perf:
+                <Input
+                    type="number"
+                    bind:value={pbForm.timerConfigLanePhotoEye_maxPerfCount}
+                    placeholder="1" />
+            </Label>
+        </FormGroup>
 
+        <br />
+    {:else if pbForm.sensorLogic == Timer.SensorLogic.OpposedStarterReeds}
+        <FormGroup>
+            <Label>
+                Paddles Up Lane1:
+                <Input
+                    type="select"
+                    bind:value={pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState}>
+                    <option value={Timer.PinState.OFF}>Off</option>
+                    <option value={Timer.PinState.ON}>On</option>
+                </Input>
+            </Label>
+        </FormGroup>
+        <FormGroup>
+            <Label>
+                Paddles Up Lane2:
+                <Input
+                    type="select"
+                    disabled
+                    bind:value={pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState}>
+                    <option value={Timer.PinState.OFF}>Off</option>
+                    <option value={Timer.PinState.ON}>On</option>
+                </Input>
+            </Label>
+        </FormGroup>
+        <FormGroup>
+            <Label>
+                MaxTransitionMS:
+                <Input
+                    type="number"
+                    bind:value={pbForm.timerConfigOpposedStarter_maxTransitionMS}
+                    placeholder="50" />
+            </Label>
+        </FormGroup>
     {/if}
     <TimerSelection on:timerSelected={handleTimerSelection} {activeTimerSha} />
 
-    <SpinnerButton disabled={submitDisabled} on:click={handleSubmit} spinning={submitSpinning}>
+    <SpinnerButton
+        disabled={submitDisabled}
+        on:click={handleSubmit}
+        spinning={submitSpinning}>
         Update
     </SpinnerButton>
 </Form>

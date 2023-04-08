@@ -700,14 +700,13 @@ const addTimerPbConfig = async (json) => {
         return { error: "Missing protobuf" };
     }
 
-    
     //let decoded = timer_protobuf_1.tutorial.TimerConfig.decode(bdata)
     //let decoded = timer_protobuf.Timer.TimerConfig.decode(bdata);
-     //   log.debug("addTimerPbConfig: decoded:", decoded);
-    json.PK = ":TimerConfig"; // force
-	log.debug("addTimerPbConfig:",json)
+    //   log.debug("addTimerPbConfig: decoded:", decoded);
+    json.PK = ":TimerPbConfig"; // force
+    log.debug("addTimerPbConfig:", json);
 
-    //return await ddbUtils.addSingle(json);
+    return await ddbUtils.addSingle(json);
 };
 const addTimerConfig = async (json, initialLoad) => {
     if (!json.orgIz) {

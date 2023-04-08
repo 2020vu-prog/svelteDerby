@@ -355,6 +355,7 @@
             BracketPos: {},
             EventConfig: {},
             TimerConfig: {},
+            TimerPbConfig: {},
         };
     };
 
@@ -416,6 +417,7 @@
         //const idh = await db["EventHistory"].put(e);
 
         //log.debug(`Added EventHistory with id ${idh}`);
+        log.debug(`Added EventHistory with id ${key}`);
         addPendingBulk(pendingBulk, "EventHistory", e);
         const tblHist = hist[pk];
 
