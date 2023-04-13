@@ -31,7 +31,7 @@ addPermission(
 );
 addPermission(
     "CanTimerConfig",
-    ["/timerConfig", "/getActiveTimers", "/getTimerHistory", "/timerPbConfig"],
+    ["/timerConfig", "/getActiveTimers", "/getTimerHistory","/getActivePbTimers", "/timerPbConfig"],
     ["/timerConfig", "/rawTimerList", "/timerConfigList"]
 );
 addPermission(

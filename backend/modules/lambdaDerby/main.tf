@@ -3,6 +3,7 @@ variable DeployEnvironment {}
 variable DynamoDbArn {}
 variable DistDbArn {}
 variable TimerDbArn {}
+variable TimerProtobufDbArn {}
 variable AwsRegion {}
 variable   CcaQueueId  {}
 variable   CcaQueueArn  {}
@@ -32,6 +33,10 @@ locals{
       
       timerDbList= split("/",var.TimerDbArn)
       TimerDbTable= element(local.timerDbList,length(local.timerDbList)-1)
+      
+      timerProtobufDbList= split("/",var.TimerProtobufDbArn)
+      TimerProtobufDbTable= element(local.timerProtobufDbList,length(local.timerProtobufDbList)-1)
+
       zipFile         = "${path.module}/src/package.zip"
  
 	s3VideoWatch=var.s3VideoWatch
@@ -159,6 +164,9 @@ resource "aws_lambda_function" "lambda" {
       TimerDbTable= local.TimerDbTable
       TimerDbArn= var.TimerDbArn
 
+      TimerProtobufDbTable= local.TimerProtobufDbTable
+      TimerProtobufDbArn= var.TimerProtobufDbArn
+
       CcaQueueId =var.CcaQueueId 
       ChartS3BucketName  =  var.ChartS3BucketName  
       AwsRegion = var.AwsRegion
@@ -219,7 +227,8 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 var.CcaQueueArn,
                 var.DynamoDbArn,
                 var.DistDbArn,
-                var.TimerDbArn
+                var.TimerDbArn,
+                var.TimerProtobufDbArn
         ]   
     }   
     statement {

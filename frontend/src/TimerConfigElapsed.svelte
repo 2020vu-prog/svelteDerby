@@ -32,7 +32,7 @@
     var submitSpinning = false;
     var timerConfig = {};
     var pbForm = {};
-    loadDefaults();
+    //loadDefaults();
 
     onMount(async () => {
         log.debug("tce mounted focus:", $querystring);
@@ -51,7 +51,7 @@
 
     async function loadInitialData() {
         log.debug("tcinit: param:", params);
-        loadDefaults();
+        await loadDefaults();
         if (!params.timerName) {
             return;
         }
@@ -70,18 +70,33 @@
             log.debug("tcinit flatDb: 2:", flatDb);
             Object.assign(pbForm, flatDb);
             log.debug("tcinit merged: 2:", pbForm);
+            pbForm.timerNameDisabled=true
         }
         syncStarterLane2(pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState);
     }
-    function loadDefaults() {
+        async function finishTimerAlreadyExists(){
+
+            const finish= await db.TimerPbConfig.get("Finish");
+            log.debug("already:",finish)
+            return finish
+
+        }
+    async function loadDefaults() {
         //timerConfig = new Timer.TimerConfig()
         //timerConfig.timerName = "Finish"
-        pbForm.timerName = "Finish";
-        pbForm.timerMqttClientId = "TODO";
+        if(! await finishTimerAlreadyExists()){
+            pbForm.timerName = "Finish";
+            pbForm.timerNameDisabled=true
+        }else{
+            pbForm.timerNameDisabled=false
+        }
+        pbForm.timerMqttClientId = "";
         pbForm.sensorLogic = Timer.SensorLogic.LanePhotoEyes;
         pbForm.useGpsTime = true;
         pbForm.orgId = $raceConfig.orgId;
         pbForm.orgIz = $raceConfig.orgIz;
+        pbForm.deleted = false
+        pbForm.maxTrackSeconds = 120
         //pbForm.timerConfigLanePhotoEye = new Timer.TimerConfigLanePhotoEye
         pbForm.timerConfigLanePhotoEye_clearMS = 7000;
         pbForm.timerConfigLanePhotoEye_minCarLenMS = 8;
@@ -165,11 +180,11 @@
 
         Object.assign(timerConfig, tcFromDexie);
 
-        timerConfig.timerConfigLanePhotoEye.clearMS =
-            timerConfig.timerConfigLanePhotoEye.clearMS;
-        timerConfig.maxCarLenMS = timerConfig.maxCarLenMS;
-        timerConfig.minCarLenMS = timerConfig.minCarLenMS;
-        timerConfig.maxPerfCount = timerConfig.maxPerfCount;
+        //timerConfig.timerConfigLanePhotoEye.clearMS =
+         //   timerConfig.timerConfigLanePhotoEye.clearMS;
+        //timerConfig.maxCarLenMS = timerConfig.maxCarLenMS;
+        //timerConfig.minCarLenMS = timerConfig.minCarLenMS;
+        //timerConfig.maxPerfCount = timerConfig.maxPerfCount;
         if (tcFromDexie.sha) {
             activeTimerSha = tcFromDexie.sha;
             if (activeTimerList) {
@@ -192,17 +207,40 @@
         }
         log.debug("timerConfig copied:", JSON.stringify(timerConfig));
     }
+    function isFormValid() {
+        if(!pbForm.timerName){
+            $statusMessage = {
+                text: "TimerName required" ,
+                type: "error",
+            };
+            return false
+
+        }
+        if(!pbForm.timerMqttClientId ){
+            $statusMessage = {
+                text: "Timer Selection required" ,
+                type: "error",
+            };
+            return false
+
+        }
+            return true
+    }
     async function handleSubmit() {
+        log.debug("handleSubmit bound:", pbForm);
+        if(!isFormValid()){
+            return
+        }
         pbForm.Foo = "bar";
-        log.debug("Adding bound:", pbForm);
-        log.debug("Adding bound str:", JSON.stringify(pbForm));
+        log.debug("handleSubmit bound:", pbForm);
+        log.debug("handleSubmit bound str:", JSON.stringify(pbForm));
         const tcObject = unflatten(pbForm, { delimiter: "_" });
-        log.debug("Adding tcObject:", tcObject);
+        log.debug("handleSubmit tcObject:", tcObject);
         var wtf = Timer.TimerConfig.create(tcObject);
         log.debug("wtf:", wtf);
 
         var payload = Timer.TimerConfig.create(tcObject);
-        log.debug("Adding copy: ", payload.toJSON());
+        log.debug("handleSubmit copy: ", payload.toJSON());
 
         if (payload.sensorLogic == Timer.SensorLogic.LanePhotoEyes) {
             payload.timerConfigOpposedStarter = null;
@@ -211,16 +249,16 @@
             payload.timerConfigLanePhotoEye = null;
         }
         const c = Timer.TimerConfig.encode(payload).finish();
-        log.debug("Adding bin: ", c);
-        log.debug("Adding json slim: ", payload.toJSON());
+        log.debug("handleSubmit bin: ", c);
+        log.debug("handleSubmit json slim: ", payload.toJSON());
         payload.orgId = $raceConfig.orgId;
         payload.orgIz = $raceConfig.orgIz;
         //const payloadWithPB=JSON.parse(payload.toJSON())
         const payloadWithPB = payload.toJSON();
         payloadWithPB.pb = Base64.fromUint8Array(c);
-        log.debug("Adding json slim2: ", payloadWithPB);
+        log.debug("handleSubmit json slim2: ", payloadWithPB);
         const z = Timer.TimerConfig.decode(c);
-        console.log("roundtrip:", z);
+        console.log("handleSubmit roundtrip:", z);
 
         try {
             submitSpinning = true;
@@ -251,9 +289,8 @@
         log.debug("handleTimerSelection e:", timerEvent);
         var timer = timerEvent.detail;
         log.debug("handleTimerSelection timer:", timer);
-        pbForm.sha = timer.sha;
-        pbForm.timerMqttClientId = timer.hostname;
-        $mqttTimerTopic = timer.hostname;
+        pbForm.timerMqttClientId = timer.clientId
+        $mqttTimerTopic = timer.clientId
 
         //await handleSubmit();
     }
@@ -269,7 +306,7 @@
     <FormGroup>
         <Label>
             Timer Name:
-            <Input type="text" bind:value={pbForm.timerName} />
+            <Input disabled={pbForm.timerNameDisabled} type="text" bind:value={pbForm.timerName} />
         </Label>
     </FormGroup>
 
@@ -299,6 +336,15 @@
                 Gps signal won't lock in. When it is disabled, only differential
                 finish times are available.
             </FormText>
+        </Label>
+    </FormGroup>
+    <FormGroup check>
+        <Label check>
+            Delete
+            <br />
+            <!-- workaround for bootstrap broken layout -->
+            <Input type="checkbox" bind:checked={pbForm.deleted} />
+            <br />
         </Label>
     </FormGroup>
     {#if pbForm.sensorLogic == Timer.SensorLogic.LanePhotoEyes}
@@ -402,7 +448,7 @@
             </Label>
         </FormGroup>
     {/if}
-    <TimerSelection on:timerSelected={handleTimerSelection} {activeTimerSha} />
+    <TimerSelection isProtobuf=true on:timerSelected={handleTimerSelection} activeTimerKey={pbForm.timerMqttClientId} />
 
     <SpinnerButton
         disabled={submitDisabled}

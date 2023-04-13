@@ -9,13 +9,15 @@
     //    import { Jumper } from 'svelte-loading-spinners';
 
     const dispatch = createEventDispatcher();
-    export let activeTimerSha;
+    export let activeTimerKey;
+    export let isProtobuf;
+
     var activeTimerList = [];
     var loading = true;
     const testNone = true;
 
     onMount(async () => {
-        log.debug("TimerSelection: ", activeTimerSha);
+        log.debug("TimerSelection: ", activeTimerKey);
         getActiveTimers();
     });
     async function getActiveTimers() {
@@ -29,11 +31,13 @@
 
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
+        const activeTimerUrl= isProtobuf?
+        `/getActivePbTimers?orgIz=${orgIz}&orgId=${orgId}`:
+        `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`
         //const response = await axios.get($raceConfig.baseUrl + endPoint, {
         try {
             const response = await $axios.get(
-                $raceConfig.baseUrl +
-                    `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`
+                $raceConfig.baseUrl + activeTimerUrl
             );
             if (response.error) {
                 log.debug("getActiveTimers:", response);
@@ -70,22 +74,45 @@
         dispatch("timerSelected", timer);
     }
 
+    const timerMatchCheck = (timerToCheck) => {
+        if(isProtobuf){
+            return(activeTimerKey && activeTimerKey===timerToCheck.clientId)
+        }
+        else{
+            return timerShaMatchCheck(timerToCheck)
+        }
+    };
     const timerShaMatchCheck = (timerToCheck) => {
-        if (activeTimerSha && timerToCheck.sha) {
-            if (activeTimerSha === timerToCheck.sha) {
-                log.debug("MATCH ", timerToCheck.sha, " ", activeTimerSha);
+        if (activeTimerKey && timerToCheck.sha) {
+            if (activeTimerKey === timerToCheck.sha) {
+                log.debug("MATCH ", timerToCheck.sha, " ", activeTimerKey);
                 return true;
             } else {
                 log.debug(
                     "NOT A MATCH ",
                     timerToCheck.sha,
                     " ",
-                    activeTimerSha
+                    activeTimerKey
                 );
                 return false;
             }
         }
     };
+    function getTimerId(activeTimer){
+        if(isProtobuf){
+            return activeTimer.clientId
+        }else{
+        return activeTimer.sha
+        }
+    }
+    function getTimerName(activeTimer){
+        if(isProtobuf){
+            return activeTimer.clientId
+        }else{
+
+        return activeTimer.hostname
+        }
+    }
 </script>
 
 <h4>Timer Selection</h4>
@@ -97,13 +124,13 @@
 {:else}
     {#each activeTimerList as activeTimer}
         <input
-            checked={timerShaMatchCheck(activeTimer)}
+            checked={timerMatchCheck(activeTimer)}
             type="radio"
-            id={activeTimer.sha}
+            id={getTimerId(activeTimer)}
             name="activeTimerOption"
             on:click={() => clickActivateHost(activeTimer)} />
         <label style="display: inline" for={activeTimer.sha}>
-            {activeTimer.hostname}
+            {getTimerName(activeTimer)}
         </label>
         <br />
         <br />

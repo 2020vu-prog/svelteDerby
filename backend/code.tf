@@ -18,6 +18,10 @@ provider "aws" {
   region = var.AwsRegion
 }
 
+//TODO: likely issue stanging up new env with resource pre-req :-(
+data "aws_dynamodb_table" "timer-protobuf" {
+  name = "timer-protobuf"
+}
 module "derbyMainLambda" {
   source = "./modules/lambdaDerby"
 
@@ -27,6 +31,7 @@ module "derbyMainLambda" {
   DynamoDbArn             = aws_dynamodb_table.derby-dynamodb-table.arn
   DistDbArn               = aws_dynamodb_table.derby-distribution.arn
   TimerDbArn              = aws_dynamodb_table.timer-dynamodb-table.arn
+  TimerProtobufDbArn              = data.aws_dynamodb_table.timer-protobuf.arn
   DeployEnvironment       = var.DeployEnvironment
   AwsRegion               = var.AwsRegion
   ApplyTimerSnsArn        = aws_sns_topic.TimerWinDeltaSns.arn

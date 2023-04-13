@@ -659,6 +659,14 @@ async function getActiveTimers() {
 
     return timers;
 }
+async function getActivePbTimers() {
+    const timers = await ddbUtils.ddbQueryPkAll(
+        "TimerList:",
+        process.env.TimerProtobufDbTable
+    );
+
+    return timers;
+}
 
 function getShaCars(seed, carList) {
     var rc = [];
@@ -914,6 +922,12 @@ const routeMap = {
         allowFrozen: true,
         h: async (event) => {
             return buildResponse(await getSanitizedTimers());
+        },
+    },
+    "/getActivePbTimers": {
+        allowFrozen: true,
+        h: async (event) => {
+            return buildResponse(await getActivePbTimers());
         },
     },
     "/timerConfig": {
