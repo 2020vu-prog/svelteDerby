@@ -56,6 +56,7 @@
                     activeTimerList.push({
                         sha: "1234",
                         hostname: "none",
+                        emoji: "❌"
                     });
                 }
                 log.debug("activeTimerList: ", activeTimerList);
@@ -105,9 +106,21 @@
         return activeTimer.sha
         }
     }
+    function getTimerEmoji(activeTimer){
+        if(activeTimer.emoji){
+            return activeTimer.emoji
+        }
+        if(activeTimer.disconnectAt){
+            return "❌"
+        }
+        if(activeTimer.connectAt){
+            return "✅"
+        }
+        return ""
+    }
     function getTimerName(activeTimer){
         if(isProtobuf){
-            return activeTimer.clientId
+            return `${getTimerEmoji(activeTimer)} ${activeTimer.clientId}`
         }else{
 
         return activeTimer.hostname
@@ -129,7 +142,7 @@
             id={getTimerId(activeTimer)}
             name="activeTimerOption"
             on:click={() => clickActivateHost(activeTimer)} />
-        <label style="display: inline" for={activeTimer.sha}>
+        <label style="display: inline" for={getTimerId(activeTimer)}>
             {getTimerName(activeTimer)}
         </label>
         <br />

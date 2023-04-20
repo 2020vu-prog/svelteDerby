@@ -71,6 +71,7 @@
             Object.assign(pbForm, flatDb);
             log.debug("tcinit merged: 2:", pbForm);
             pbForm.timerNameDisabled=true
+            pbForm.at=tcFromDexie.at // server audits version on update!
         }
         syncStarterLane2(pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState);
     }
@@ -256,6 +257,7 @@
         //const payloadWithPB=JSON.parse(payload.toJSON())
         const payloadWithPB = payload.toJSON();
         payloadWithPB.pb = Base64.fromUint8Array(c);
+        payloadWithPB.at    = pbForm.at; // appease server version audit.
         log.debug("handleSubmit json slim2: ", payloadWithPB);
         const z = Timer.TimerConfig.decode(c);
         console.log("handleSubmit roundtrip:", z);

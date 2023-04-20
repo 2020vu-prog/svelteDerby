@@ -7,6 +7,8 @@ const path = require("path");
 //    const timerConfig = new timer_protobuf_1.tutorial.TimerConfig();
 //    console.log("tbp:",timer_protobuf_1.tutorial.TimerConfig.decode);
 
+const {Base64} = require('js-base64');
+
 const log = require("loglevel");
 
 const EntityFactory = require("./shared/EntityFactory.js");
@@ -707,14 +709,61 @@ const addTimerPbConfig = async (json) => {
     if (!json.pb) {
         return { error: "Missing protobuf" };
     }
+    const eventKey = getEventKey(json);
 
+    const [cfg,oldTimerPbMain] = await Promise.all([
+        ddbUtils.getEventConfig(eventKey),
+        ddbUtils.ddbQueryPkSk(
+            `${json.orgId}:TimerPbConfig`,
+            `${json.timerName}` ,
+        ),
+    ]);
+    if (!cfg) {
+        return {
+            status: "error",
+            error: "No Event config found.",
+        };
+    }
+
+    log.debug("addTimerPbConfig oldTimerPbMain:", oldTimerPbMain);
+    if(oldTimerPbMain && oldTimerPbMain.at!=json.at){
+        return {
+            status: "error",
+            error: "Update request ignored due to stale data.  Refresh your Browser.",
+        };
+    }
     //let decoded = timer_protobuf_1.tutorial.TimerConfig.decode(bdata)
     //let decoded = timer_protobuf.Timer.TimerConfig.decode(bdata);
     //   log.debug("addTimerPbConfig: decoded:", decoded);
     json.PK = ":TimerPbConfig"; // force
     log.debug("addTimerPbConfig:", json);
 
-    return await ddbUtils.addSingle(json);
+    const pbJson={
+        PK: `T:${json.timerMqttClientId}` ,
+        SK: `9999:${eventKey}`, // short iso year, sort to last!
+        data:             Base64.toUint8Array(json.pb),
+        TTL: cfg.TTL,
+    }
+    const plist=[]
+    plist.push(ddbUtils.addSingle(json));
+    plist.push(ddbUtils.ddbPut(pbJson, process.env.TimerProtobufDbTable))
+    if(oldTimerPbMain && oldTimerPbMain.SK!==json.timerName){
+    //if timerMqttClientID changes, the OLD timer needs deleted (logical)
+    //  from p2.  this is b/c of key change.   p1 key is unchanged...
+        const pbDelete={
+            PK: `T:${json.timerName}` ,// should be mqtt client id
+            SK: `9999:${eventKey}`, // short iso year, sort to last!
+            pb: "",
+            TTL: 1,
+        }
+        log.debug("addTimerPbConfig deleting:", pbDelete);
+        log.debug("addTimerPbConfig TODO: need to get old mqttClient from OldTimerPbMain")
+        //plist.push(ddbUtils.ddbPut(pbJson, process.env.TimerProtobufDbTable))
+    }
+    const rc = await Promise.all( plist );
+    log.debug("addTimerPbConfig gave:", rc);
+
+    return rc[0]
 };
 const addTimerConfig = async (json, initialLoad) => {
     if (!json.orgIz) {
@@ -857,6 +906,9 @@ const getOrgId = (event) => {
     if (event.queryStringParameters) {
         return event.queryStringParameters.orgId;
     }
+    if (event.orgId) {
+        return event.orgId;
+    }
     return null;
 };
 const getOrgIz = (event) => {
@@ -865,6 +917,9 @@ const getOrgIz = (event) => {
     }
     if (event.queryStringParameters) {
         return event.queryStringParameters.orgIz;
+    }
+    if (event.orgIz) {
+        return event.orgIz;
     }
     return null;
 };
