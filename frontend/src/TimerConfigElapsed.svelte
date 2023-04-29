@@ -10,7 +10,7 @@
         mqttTimerTopic,
         initialReloadRoute,
     } from "./stores.js";
-    import { getTimerPbConfig } from "./utils.js"
+    import { getTimerPbConfig } from "./utils.js";
     import { tutorial as Timer } from "./timer_pb.js";
     import { push, replace, querystring } from "svelte-spa-router";
     import { onMount } from "svelte";
@@ -28,7 +28,7 @@
     var activeTimerSha;
     var mounted = false;
     const params = {};
-    var alignmentDisabled=true;
+    var alignmentDisabled = true;
 
     var submitDisabled = false;
     var submitSpinning = false;
@@ -57,7 +57,9 @@
         if (!params.timerName) {
             return;
         }
-       const [timerPbConfig,tcFromDexie]=await getTimerPbConfig(params.timerName)
+        const [timerPbConfig, tcFromDexie] = await getTimerPbConfig(
+            params.timerName
+        );
 
         if (tcFromDexie && timerPbConfig) {
             log.debug("tcinit timerPbConfig: 2:", timerPbConfig);
@@ -65,37 +67,35 @@
             log.debug("tcinit flatDb: 2:", flatDb);
             Object.assign(pbForm, flatDb);
             log.debug("tcinit merged: 2:", pbForm);
-            pbForm.timerNameDisabled=true
-            pbForm.at=tcFromDexie.at // server audits version on update!
-            if(pbForm.timerMqttClientId){
-                alignmentDisabled=false
+            pbForm.timerNameDisabled = true;
+            pbForm.at = tcFromDexie.at; // server audits version on update!
+            if (pbForm.timerMqttClientId) {
+                alignmentDisabled = false;
             }
         }
         syncStarterLane2(pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState);
     }
-        async function finishTimerAlreadyExists(){
-
-            const finish= await db.TimerPbConfig.get("Finish");
-            log.debug("already:",finish)
-            return finish
-
-        }
+    async function finishTimerAlreadyExists() {
+        const finish = await db.TimerPbConfig.get("Finish");
+        log.debug("already:", finish);
+        return finish;
+    }
     async function loadDefaults() {
         //timerConfig = new Timer.TimerConfig()
         //timerConfig.timerName = "Finish"
-        if(! await finishTimerAlreadyExists()){
+        if (!(await finishTimerAlreadyExists())) {
             pbForm.timerName = "Finish";
-            pbForm.timerNameDisabled=true
-        }else{
-            pbForm.timerNameDisabled=false
+            pbForm.timerNameDisabled = true;
+        } else {
+            pbForm.timerNameDisabled = false;
         }
         pbForm.timerMqttClientId = "";
         pbForm.sensorLogic = Timer.SensorLogic.LanePhotoEyes;
         pbForm.useGpsTime = true;
         pbForm.orgId = $raceConfig.orgId;
         pbForm.orgIz = $raceConfig.orgIz;
-        pbForm.deleted = false
-        pbForm.maxTrackSeconds = 120
+        pbForm.deleted = false;
+        pbForm.maxTrackSeconds = 120;
         //pbForm.timerConfigLanePhotoEye = new Timer.TimerConfigLanePhotoEye
         pbForm.timerConfigLanePhotoEye_clearMS = 7000;
         pbForm.timerConfigLanePhotoEye_minCarLenMS = 8;
@@ -180,7 +180,7 @@
         Object.assign(timerConfig, tcFromDexie);
 
         //timerConfig.timerConfigLanePhotoEye.clearMS =
-         //   timerConfig.timerConfigLanePhotoEye.clearMS;
+        //   timerConfig.timerConfigLanePhotoEye.clearMS;
         //timerConfig.maxCarLenMS = timerConfig.maxCarLenMS;
         //timerConfig.minCarLenMS = timerConfig.minCarLenMS;
         //timerConfig.maxPerfCount = timerConfig.maxPerfCount;
@@ -207,28 +207,26 @@
         log.debug("timerConfig copied:", JSON.stringify(timerConfig));
     }
     function isFormValid() {
-        if(!pbForm.timerName){
+        if (!pbForm.timerName) {
             $statusMessage = {
-                text: "TimerName required" ,
+                text: "TimerName required",
                 type: "error",
             };
-            return false
-
+            return false;
         }
-        if(!pbForm.timerMqttClientId ){
+        if (!pbForm.timerMqttClientId) {
             $statusMessage = {
-                text: "Timer Selection required" ,
+                text: "Timer Selection required",
                 type: "error",
             };
-            return false
-
+            return false;
         }
-            return true
+        return true;
     }
     async function handleSubmit() {
         log.debug("handleSubmit bound:", pbForm);
-        if(!isFormValid()){
-            return
+        if (!isFormValid()) {
+            return;
         }
         pbForm.Foo = "bar";
         log.debug("handleSubmit bound:", pbForm);
@@ -255,7 +253,7 @@
         //const payloadWithPB=JSON.parse(payload.toJSON())
         const payloadWithPB = payload.toJSON();
         payloadWithPB.pb = Base64.fromUint8Array(c);
-        payloadWithPB.at    = pbForm.at; // appease server version audit.
+        payloadWithPB.at = pbForm.at; // appease server version audit.
         log.debug("handleSubmit json slim2: ", payloadWithPB);
         const z = Timer.TimerConfig.decode(c);
         console.log("handleSubmit roundtrip:", z);
@@ -289,8 +287,8 @@
         log.debug("handleTimerSelection e:", timerEvent);
         var timer = timerEvent.detail;
         log.debug("handleTimerSelection timer:", timer);
-        pbForm.timerMqttClientId = timer.clientId
-        $mqttTimerTopic = timer.clientId
+        pbForm.timerMqttClientId = timer.clientId;
+        $mqttTimerTopic = timer.clientId;
 
         //await handleSubmit();
     }
@@ -298,7 +296,9 @@
 
 <h3>Timer Config Elapsed</h3>
 <br />
-<SpinnerButton             disabled={alignmentDisabled} on:click={() => push(`/timerPbAlignment/${params.timerName}`)}>
+<SpinnerButton
+    disabled={alignmentDisabled}
+    on:click={() => push(`/timerPbAlignment/${params.timerName}`)}>
     Timer Alignment
 </SpinnerButton>
 
@@ -306,7 +306,10 @@
     <FormGroup>
         <Label>
             Timer Name:
-            <Input disabled={pbForm.timerNameDisabled} type="text" bind:value={pbForm.timerName} />
+            <Input
+                disabled={pbForm.timerNameDisabled}
+                type="text"
+                bind:value={pbForm.timerName} />
         </Label>
     </FormGroup>
 
@@ -448,7 +451,10 @@
             </Label>
         </FormGroup>
     {/if}
-    <TimerSelection isProtobuf=true on:timerSelected={handleTimerSelection} activeTimerKey={pbForm.timerMqttClientId} />
+    <TimerSelection
+        isProtobuf="true"
+        on:timerSelected={handleTimerSelection}
+        activeTimerKey={pbForm.timerMqttClientId} />
 
     <SpinnerButton
         disabled={submitDisabled}

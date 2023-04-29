@@ -13,11 +13,11 @@
     } from "./stores.js";
     import SpinnerButton from "./SpinnerButton.svelte";
     import { onMount, onDestroy } from "svelte";
-    import { getTimerPbConfig } from "./utils.js"
-    export let params={};
-    var timerPbConfig={}
-    var historyList=[]
-    var loading=true
+    import { getTimerPbConfig } from "./utils.js";
+    export let params = {};
+    var timerPbConfig = {};
+    var historyList = [];
+    var loading = true;
     const laneStatusList = {
         lane1: {
             blocked: true,
@@ -38,12 +38,12 @@
     });
 
     onMount(async () => {
-            log.debug("TimerName:", params.timerName);
+        log.debug("TimerName:", params.timerName);
         $mqttTimerSubscribe = true;
-        [timerPbConfig]=await getTimerPbConfig(params.timerName)
-        
+        [timerPbConfig] = await getTimerPbConfig(params.timerName);
+
         log.debug("TimerPbAlignment dexie:", timerPbConfig);
-        await getTimerHistory()
+        await getTimerHistory();
     });
 
     function syncState() {
@@ -79,18 +79,15 @@
             //laneStatusList[lane].audio
         }
     }
-    async function getTimerHistory(){
-
+    async function getTimerHistory() {
         log.debug("getTimerHistory:");
         //await sleep(3000)
 
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
-        const url= `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}`
+        const url = `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}`;
         try {
-            const response = await $axios.get(
-                $raceConfig.baseUrl + url
-            );
+            const response = await $axios.get($raceConfig.baseUrl + url);
             if (response.error) {
                 log.debug("getTimerHistory:", response);
                 //TODO: not working!?
@@ -103,32 +100,32 @@
                     text: `getTimerHistory Complete.`,
                     type: "success",
                 };
-                historyList= response.data;
+                historyList = response.data;
                 log.debug("getTimerHistory: ", historyList);
-                if(historyList&& historyList.length>0){
+                if (historyList && historyList.length > 0) {
                     for (let h of historyList) {
-                        if(h&&h.data){}
-                        else{continue}
-                const buf=h.data
-                //log.debug("getTimerHistory h: ", h.SK," buf:",buf);
-                const buf8=buf.data
+                        if (h && h.data) {
+                        } else {
+                            continue;
+                        }
+                        const buf = h.data;
+                        //log.debug("getTimerHistory h: ", h.SK," buf:",buf);
+                        const buf8 = buf.data;
 
-                //log.debug("getTimerHistory h: ", h.SK," buf8:",buf8);
-                        if (h.SK.startsWith("9999:")){
+                        //log.debug("getTimerHistory h: ", h.SK," buf8:",buf8);
+                        if (h.SK.startsWith("9999:")) {
                             const c = Timer.TimerConfig.decode(buf8);
                             log.debug("getTimerPbConfig: 2:", c);
-            
-                        }else{
+                        } else {
                             const c = Timer.TimerDataList.decode(buf8);
                             log.debug("getTimerDataList: 2:", c);
-
                         }
                     }
                 }
             }
             loading = false;
         } catch (err) {
-            log.error( "getTimerHistory error: " , err)
+            log.error("getTimerHistory error: ", err);
             $statusMessage = {
                 text: "getTimerHistory error: " + err,
                 type: "error",

@@ -157,7 +157,10 @@
             placeholder="1" />
     </label>
     <br />
-    <TimerSelection isProtobuf=""  on:timerSelected={handleTimerSelection} activeTimerKey={activeTimerSha} />
+    <TimerSelection
+        isProtobuf=""
+        on:timerSelected={handleTimerSelection}
+        activeTimerKey={activeTimerSha} />
 
     <SpinnerButton
         disabled={submitDisabled}

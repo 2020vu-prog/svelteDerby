@@ -7,7 +7,7 @@ const path = require("path");
 //    const timerConfig = new timer_protobuf_1.tutorial.TimerConfig();
 //    console.log("tbp:",timer_protobuf_1.tutorial.TimerConfig.decode);
 
-const {Base64} = require('js-base64');
+const { Base64 } = require("js-base64");
 
 const log = require("loglevel");
 
@@ -632,6 +632,13 @@ const getSanitizedTimers = async () => {
     return timers;
 };
 
+async function queryTimerPbHistory(qsp) {
+    log.debug(`queryTimerPbHistory qsp ${qsp} `);
+    if (!qsp.timerName) {
+        return { error: "Missing timerName" };
+    }
+    return await ddbUtils.ddbQueryTimerPbHistory(qsp.timerName);
+}
 async function queryTimerHistoryByOrgId(qsp) {
     const [activeTimers, timerConfig] = await Promise.all([
         getActiveTimers(),
@@ -711,11 +718,11 @@ const addTimerPbConfig = async (json) => {
     }
     const eventKey = getEventKey(json);
 
-    const [cfg,oldTimerPbMain] = await Promise.all([
+    const [cfg, oldTimerPbMain] = await Promise.all([
         ddbUtils.getEventConfig(eventKey),
         ddbUtils.ddbQueryPkSk(
             `${json.orgId}:TimerPbConfig`,
-            `${json.timerName}` ,
+            `${json.timerName}`
         ),
     ]);
     if (!cfg) {
@@ -726,10 +733,11 @@ const addTimerPbConfig = async (json) => {
     }
 
     log.debug("addTimerPbConfig oldTimerPbMain:", oldTimerPbMain);
-    if(oldTimerPbMain && oldTimerPbMain.at!=json.at){
+    if (oldTimerPbMain && oldTimerPbMain.at != json.at) {
         return {
             status: "error",
-            error: "Update request ignored due to stale data.  Refresh your Browser.",
+            error:
+                "Update request ignored due to stale data.  Refresh your Browser.",
         };
     }
     //let decoded = timer_protobuf_1.tutorial.TimerConfig.decode(bdata)
@@ -738,32 +746,34 @@ const addTimerPbConfig = async (json) => {
     json.PK = ":TimerPbConfig"; // force
     log.debug("addTimerPbConfig:", json);
 
-    const pbJson={
-        PK: `T:${json.timerMqttClientId}` ,
+    const pbJson = {
+        PK: `T:${json.timerMqttClientId}`,
         SK: `9999:${eventKey}`, // short iso year, sort to last!
-        data:             Base64.toUint8Array(json.pb),
+        data: Base64.toUint8Array(json.pb),
         TTL: cfg.TTL,
-    }
-    const plist=[]
+    };
+    const plist = [];
     plist.push(ddbUtils.addSingle(json));
-    plist.push(ddbUtils.ddbPut(pbJson, process.env.TimerProtobufDbTable))
-    if(oldTimerPbMain && oldTimerPbMain.SK!==json.timerName){
-    //if timerMqttClientID changes, the OLD timer needs deleted (logical)
-    //  from p2.  this is b/c of key change.   p1 key is unchanged...
-        const pbDelete={
-            PK: `T:${json.timerName}` ,// should be mqtt client id
+    plist.push(ddbUtils.ddbPut(pbJson, process.env.TimerProtobufDbTable));
+    if (oldTimerPbMain && oldTimerPbMain.SK !== json.timerName) {
+        //if timerMqttClientID changes, the OLD timer needs deleted (logical)
+        //  from p2.  this is b/c of key change.   p1 key is unchanged...
+        const pbDelete = {
+            PK: `T:${json.timerName}`, // should be mqtt client id
             SK: `9999:${eventKey}`, // short iso year, sort to last!
             pb: "",
             TTL: 1,
-        }
+        };
         log.debug("addTimerPbConfig deleting:", pbDelete);
-        log.debug("addTimerPbConfig TODO: need to get old mqttClient from OldTimerPbMain")
+        log.debug(
+            "addTimerPbConfig TODO: need to get old mqttClient from OldTimerPbMain"
+        );
         //plist.push(ddbUtils.ddbPut(pbJson, process.env.TimerProtobufDbTable))
     }
-    const rc = await Promise.all( plist );
+    const rc = await Promise.all(plist);
     log.debug("addTimerPbConfig gave:", rc);
 
-    return rc[0]
+    return rc[0];
 };
 const addTimerConfig = async (json, initialLoad) => {
     if (!json.orgIz) {
@@ -1116,6 +1126,13 @@ const routeMap = {
             var qr = await queryTimerHistoryByOrgId(
                 event.queryStringParameters
             );
+            return buildResponse(qr);
+        },
+    },
+    "/getTimerPbHistory": {
+        allowFrozen: true,
+        h: async (event) => {
+            var qr = await queryTimerPbHistory(event.queryStringParameters);
             return buildResponse(qr);
         },
     },

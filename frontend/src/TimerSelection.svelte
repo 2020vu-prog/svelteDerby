@@ -31,9 +31,9 @@
 
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
-        const activeTimerUrl= isProtobuf?
-        `/getActivePbTimers?orgIz=${orgIz}&orgId=${orgId}`:
-        `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`
+        const activeTimerUrl = isProtobuf
+            ? `/getActivePbTimers?orgIz=${orgIz}&orgId=${orgId}`
+            : `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`;
         //const response = await axios.get($raceConfig.baseUrl + endPoint, {
         try {
             const response = await $axios.get(
@@ -56,7 +56,7 @@
                     activeTimerList.push({
                         sha: "1234",
                         hostname: "none",
-                        emoji: "❌"
+                        emoji: "❌",
                     });
                 }
                 log.debug("activeTimerList: ", activeTimerList);
@@ -76,11 +76,10 @@
     }
 
     const timerMatchCheck = (timerToCheck) => {
-        if(isProtobuf){
-            return(activeTimerKey && activeTimerKey===timerToCheck.clientId)
-        }
-        else{
-            return timerShaMatchCheck(timerToCheck)
+        if (isProtobuf) {
+            return activeTimerKey && activeTimerKey === timerToCheck.clientId;
+        } else {
+            return timerShaMatchCheck(timerToCheck);
         }
     };
     const timerShaMatchCheck = (timerToCheck) => {
@@ -99,41 +98,39 @@
             }
         }
     };
-    function getTimerId(activeTimer){
-        if(isProtobuf){
-            return activeTimer.clientId
-        }else{
-        return activeTimer.sha
+    function getTimerId(activeTimer) {
+        if (isProtobuf) {
+            return activeTimer.clientId;
+        } else {
+            return activeTimer.sha;
         }
     }
-    function getBgColor(activeTimer){
-        if(activeTimer.disconnectAt){
-            return "#ed5e62"
+    function getBgColor(activeTimer) {
+        if (activeTimer.disconnectAt) {
+            return "#ed5e62";
         }
-        if(activeTimer.connectAt){
-            return 'lightgreen'
+        if (activeTimer.connectAt) {
+            return "lightgreen";
         }
-        return 'lightgrey'
-
+        return "lightgrey";
     }
-    function getTimerEmoji(activeTimer){
-        if(activeTimer.emoji){
-            return activeTimer.emoji
+    function getTimerEmoji(activeTimer) {
+        if (activeTimer.emoji) {
+            return activeTimer.emoji;
         }
-        if(activeTimer.disconnectAt){
-            return "⬇️"
+        if (activeTimer.disconnectAt) {
+            return "⬇️";
         }
-        if(activeTimer.connectAt){
-            return "⬆️"
+        if (activeTimer.connectAt) {
+            return "⬆️";
         }
-        return ""
+        return "";
     }
-    function getTimerName(activeTimer){
-        if(isProtobuf){
-            return `${getTimerEmoji(activeTimer)} ${activeTimer.clientId}`
-        }else{
-
-        return activeTimer.hostname
+    function getTimerName(activeTimer) {
+        if (isProtobuf) {
+            return `${getTimerEmoji(activeTimer)} ${activeTimer.clientId}`;
+        } else {
+            return activeTimer.hostname;
         }
     }
 </script>
@@ -146,21 +143,21 @@
     <br />
 {:else}
     {#each activeTimerList as activeTimer}
-    <Card class="mt-3 border border-info" >
-        <CardBody style="background-color:{getBgColor(activeTimer)}">
-        <input
-            checked={timerMatchCheck(activeTimer)}
-            type="radio"
-            id={getTimerId(activeTimer)}
-            name="activeTimerOption"
-            on:click={() => clickActivateHost(activeTimer)} />
-        <label style="display: inline" for={getTimerId(activeTimer)}>
-            {getTimerName(activeTimer)} {activeTimer.ipAddress}
-        </label>
-        <br />
-        <br />
-        </CardBody>
-    </Card>
+        <Card class="mt-3 border border-info">
+            <CardBody style="background-color:{getBgColor(activeTimer)}">
+                <input
+                    checked={timerMatchCheck(activeTimer)}
+                    type="radio"
+                    id={getTimerId(activeTimer)}
+                    name="activeTimerOption"
+                    on:click={() => clickActivateHost(activeTimer)} />
+                <label style="display: inline" for={getTimerId(activeTimer)}>
+                    {getTimerName(activeTimer)} {activeTimer.ipAddress}
+                </label>
+                <br />
+                <br />
+            </CardBody>
+        </Card>
     {/each}
     {#if activeTimerList.length == 0}
         <br />

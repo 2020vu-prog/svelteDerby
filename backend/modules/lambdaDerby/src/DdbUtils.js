@@ -209,6 +209,36 @@ class DdbUtils {
         );
         return timerConfig;
     }
+    async ddbQueryTimerPbHistory(timerName) {
+        var containsValues = {};
+        containsValues[":pk"] = { S: `T:${timerName}` };
+        const lowMS = 1000 * 3600 * 0.1;
+        const loIso = new Date(new Date().getTime() - lowMS).toISOString();
+        containsValues[":loIso"] = { S: loIso };
+        var params = {
+            TableName: process.env.TimerProtobufDbTable,
+            KeyConditionExpression: "PK = :pk and SK > :loIso  ",
+            ReturnConsumedCapacity: "TOTAL",
+            ScanIndexForward: false, // sort descending
+            ExpressionAttributeValues: containsValues,
+        };
+        log.debug("history query: " + JSON.stringify(params));
+        try {
+            var data = await this.ddbClient.query(params);
+            const cc = data.ConsumedCapacity.CapacityUnits;
+            log.debug("ddbQueryTimerPbHistory cc: ", cc); // successful response
+            log.debug("ddbQueryTimerPbHistory: ", data); // successful response
+            log.debug("ddbQueryTimerPbHistory: " + JSON.stringify(data)); // successful response
+            const rc = this.unmarshallResultsToArray(data);
+
+            return rc;
+        } catch (err) {
+            log.debug("ddbQueryTimerPbHistory failed: ", err, err.stack); // an error occurred
+        }
+        return {
+            error: "ddbQueryTimerPbHistory Failed",
+        };
+    }
     async ddbQueryTimerHistoryByUuid(uuid) {
         var containsValues = {};
         containsValues[":pk"] = { S: uuid };

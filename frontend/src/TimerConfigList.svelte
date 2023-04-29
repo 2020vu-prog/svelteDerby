@@ -36,7 +36,6 @@
     }
 </script>
 
-
 <h4>Race Timers</h4>
 First Timer added will be finish line timer. Subsequent additions may be used to
 report elapsed time split(s).
@@ -46,14 +45,14 @@ report elapsed time split(s).
 {#each getSortedTc(tcFromDexie) as tc (tc.at)}
     <Card class="mtj-3 border border-info" on:click={() => navToTcDetail(tc)}>
         <CardHeader class="bg-info text-white">
-        <CardTitle>
-            <span class="spanRight">
+            <CardTitle>
+                <span class="spanRight">
                     <EllipsisButton
                         on:message={toggleToolbar}
                         dbName="Foo"
                         dbKey={tc.at} />
-            </span>
-        </CardTitle>
+                </span>
+            </CardTitle>
         </CardHeader>
         <CardBody>
             <div style="display: inline">{tc.timerName}</div>

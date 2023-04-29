@@ -271,7 +271,7 @@ export async function getTimerPbConfig(timerName) {
 
         const c = Timer.TimerConfig.decode(tcInit);
         log.debug("getTimerPbConfig: 2:", c);
-        return [c,tcFromDexie]
+        return [c, tcFromDexie];
     }
-    return []
+    return [];
 }
