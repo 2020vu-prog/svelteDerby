@@ -1,6 +1,6 @@
 <script>
     import log from "loglevel";
-
+    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { sleep } from "./utils.js";
     import SpinnerButton from "./SpinnerButton.svelte";
     import { axios, raceConfig, statusMessage } from "./stores.js";
@@ -106,15 +106,25 @@
         return activeTimer.sha
         }
     }
+    function getBgColor(activeTimer){
+        if(activeTimer.disconnectAt){
+            return "#ed5e62"
+        }
+        if(activeTimer.connectAt){
+            return 'lightgreen'
+        }
+        return 'lightgrey'
+
+    }
     function getTimerEmoji(activeTimer){
         if(activeTimer.emoji){
             return activeTimer.emoji
         }
         if(activeTimer.disconnectAt){
-            return "❌"
+            return "⬇️"
         }
         if(activeTimer.connectAt){
-            return "✅"
+            return "⬆️"
         }
         return ""
     }
@@ -136,6 +146,8 @@
     <br />
 {:else}
     {#each activeTimerList as activeTimer}
+    <Card class="mt-3 border border-info" >
+        <CardBody style="background-color:{getBgColor(activeTimer)}">
         <input
             checked={timerMatchCheck(activeTimer)}
             type="radio"
@@ -143,10 +155,12 @@
             name="activeTimerOption"
             on:click={() => clickActivateHost(activeTimer)} />
         <label style="display: inline" for={getTimerId(activeTimer)}>
-            {getTimerName(activeTimer)}
+            {getTimerName(activeTimer)} {activeTimer.ipAddress}
         </label>
         <br />
         <br />
+        </CardBody>
+    </Card>
     {/each}
     {#if activeTimerList.length == 0}
         <br />

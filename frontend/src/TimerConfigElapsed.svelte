@@ -10,6 +10,7 @@
         mqttTimerTopic,
         initialReloadRoute,
     } from "./stores.js";
+    import { getTimerPbConfig } from "./utils.js"
     import { tutorial as Timer } from "./timer_pb.js";
     import { push, replace, querystring } from "svelte-spa-router";
     import { onMount } from "svelte";
@@ -27,6 +28,7 @@
     var activeTimerSha;
     var mounted = false;
     const params = {};
+    var alignmentDisabled=true;
 
     var submitDisabled = false;
     var submitSpinning = false;
@@ -55,23 +57,19 @@
         if (!params.timerName) {
             return;
         }
+       const [timerPbConfig,tcFromDexie]=await getTimerPbConfig(params.timerName)
 
-        const tcFromDexie = await db.TimerPbConfig.get(params.timerName);
-        if (tcFromDexie && tcFromDexie.pb) {
-            log.debug("tcinit: 0:", tcFromDexie.pb);
-            log.debug("tcinit: 0len:", tcFromDexie.pb.length);
-            //const tcInit=atob(tcFromDexie.pb)
-            const tcInit = Base64.toUint8Array(tcFromDexie.pb);
-            log.debug("tcinit: 1:", tcInit);
-
-            const c = Timer.TimerConfig.decode(tcInit);
-            log.debug("tcinit: 2:", c);
-            const flatDb = flatten(c, { delimiter: "_" });
+        if (tcFromDexie && timerPbConfig) {
+            log.debug("tcinit timerPbConfig: 2:", timerPbConfig);
+            const flatDb = flatten(timerPbConfig, { delimiter: "_" });
             log.debug("tcinit flatDb: 2:", flatDb);
             Object.assign(pbForm, flatDb);
             log.debug("tcinit merged: 2:", pbForm);
             pbForm.timerNameDisabled=true
             pbForm.at=tcFromDexie.at // server audits version on update!
+            if(pbForm.timerMqttClientId){
+                alignmentDisabled=false
+            }
         }
         syncStarterLane2(pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState);
     }
@@ -300,7 +298,7 @@
 
 <h3>Timer Config Elapsed</h3>
 <br />
-<SpinnerButton on:click={() => push('/timerAlignment')}>
+<SpinnerButton             disabled={alignmentDisabled} on:click={() => push(`/timerPbAlignment/${params.timerName}`)}>
     Timer Alignment
 </SpinnerButton>
 

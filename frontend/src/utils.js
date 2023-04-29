@@ -1,6 +1,8 @@
 import log from "loglevel";
 import { store as AuthStore } from "./stores/auth.js";
 import axios from "axios";
+import { Base64 } from "js-base64";
+import { tutorial as Timer } from "./timer_pb.js";
 const {
     hasSvelteRoutePath,
 } = require("../../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
@@ -257,4 +259,19 @@ export async function getChartJson(jsonPath) {
     } catch (err) {
         log.debug("utils getChartJson failed: " + err);
     }
+}
+export async function getTimerPbConfig(timerName) {
+    const tcFromDexie = await db.TimerPbConfig.get(timerName);
+    if (tcFromDexie && tcFromDexie.pb) {
+        log.debug("getTimerPbConfig: 0:", tcFromDexie.pb);
+        log.debug("getTimerPbConfig: 0len:", tcFromDexie.pb.length);
+        //const tcInit=atob(tcFromDexie.pb)
+        const tcInit = Base64.toUint8Array(tcFromDexie.pb);
+        log.debug("getTimerPbConfig: 1:", tcInit);
+
+        const c = Timer.TimerConfig.decode(tcInit);
+        log.debug("getTimerPbConfig: 2:", c);
+        return [c,tcFromDexie]
+    }
+    return []
 }
