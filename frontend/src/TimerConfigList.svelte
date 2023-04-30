@@ -1,5 +1,7 @@
 <script>
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import { tutorial as Timer } from "./generated/timer_pb.js";
+    import { Base64 } from "js-base64";
     import EllipsisButton from "./EllipsisButton.svelte";
     import log from "loglevel";
     import MaterialAdd from "./MaterialAdd.svelte";
@@ -34,6 +36,19 @@
         log.debug("toggleToolbar info event: ", event.detail.text);
         //showToolbar = !showToolbar;
     }
+    function annotat(tc){
+        if (tc &&tc.pb){
+
+        const tcBin= Base64.toUint8Array(tc.pb);
+        const tcObject = Timer.TimerConfig.decode(tcBin);
+
+        log.debug("annotat: ", tcObject);
+        if(tcObject.deleted){
+            return "[Inactive]"
+        }
+        }
+        return ""
+    }
 </script>
 
 <h4>Race Timers</h4>
@@ -55,7 +70,7 @@ report elapsed time split(s).
             </CardTitle>
         </CardHeader>
         <CardBody>
-            <div style="display: inline">{tc.timerName}</div>
+            <div style="display: inline">{tc.timerName}<nbsp/> {annotat(tc)}</div>
         </CardBody>
     </Card>
 {/each}

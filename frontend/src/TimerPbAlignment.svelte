@@ -1,6 +1,6 @@
 <script>
     import log from "loglevel";
-    import { tutorial as Timer } from "./timer_pb.js";
+    import { tutorial as Timer } from "./generated/timer_pb.js";
     import { Card, CardBody, CardHeader } from "sveltestrap";
     import { Base64 } from "js-base64";
     import {

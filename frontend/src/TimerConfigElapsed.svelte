@@ -11,7 +11,7 @@
         initialReloadRoute,
     } from "./stores.js";
     import { getTimerPbConfig } from "./utils.js";
-    import { tutorial as Timer } from "./timer_pb.js";
+    import { tutorial as Timer } from "./generated/timer_pb.js";
     import { push, replace, querystring } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -343,7 +343,7 @@
     </FormGroup>
     <FormGroup check>
         <Label check>
-            Delete
+            Inactive
             <br />
             <!-- workaround for bootstrap broken layout -->
             <Input type="checkbox" bind:checked={pbForm.deleted} />

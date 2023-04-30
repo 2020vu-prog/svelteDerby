@@ -2,7 +2,7 @@ import log from "loglevel";
 import { store as AuthStore } from "./stores/auth.js";
 import axios from "axios";
 import { Base64 } from "js-base64";
-import { tutorial as Timer } from "./timer_pb.js";
+import { tutorial as Timer } from "./generated/timer_pb.js";
 const {
     hasSvelteRoutePath,
 } = require("../../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
