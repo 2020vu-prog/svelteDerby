@@ -12,7 +12,7 @@
     } from "./stores.js";
     import { getTimerPbConfig } from "./utils.js";
     import { tutorial as Timer } from "./generated/timer_pb.js";
-    import { push, replace, querystring } from "svelte-spa-router";
+    import { push, replace, querystring, pop } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import SpinnerButton from "./SpinnerButton.svelte";
@@ -273,6 +273,7 @@
                     text: `TimerConfigElapsed Processed.`,
                     type: "success",
                 };
+                pop();
             }
         } catch (error) {
             $statusMessage = {

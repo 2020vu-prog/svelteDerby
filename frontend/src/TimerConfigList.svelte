@@ -36,18 +36,17 @@
         log.debug("toggleToolbar info event: ", event.detail.text);
         //showToolbar = !showToolbar;
     }
-    function annotat(tc){
-        if (tc &&tc.pb){
+    function annotat(tc) {
+        if (tc && tc.pb) {
+            const tcBin = Base64.toUint8Array(tc.pb);
+            const tcObject = Timer.TimerConfig.decode(tcBin);
 
-        const tcBin= Base64.toUint8Array(tc.pb);
-        const tcObject = Timer.TimerConfig.decode(tcBin);
-
-        log.debug("annotat: ", tcObject);
-        if(tcObject.deleted){
-            return "[Inactive]"
+            log.debug("annotat: ", tcObject);
+            if (tcObject.deleted) {
+                return "[Inactive]";
+            }
         }
-        }
-        return ""
+        return "";
     }
 </script>
 
@@ -70,7 +69,11 @@ report elapsed time split(s).
             </CardTitle>
         </CardHeader>
         <CardBody>
-            <div style="display: inline">{tc.timerName}<nbsp/> {annotat(tc)}</div>
+            <div style="display: inline">
+                {tc.timerName}
+                <nbsp />
+                {annotat(tc)}
+            </div>
         </CardBody>
     </Card>
 {/each}

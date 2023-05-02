@@ -146,8 +146,8 @@
         <Card class="mt-3 border border-info">
             <CardBody style="background-color:{getBgColor(activeTimer)}">
                 <input
-                    checked={timerMatchCheck(activeTimer)}
                     type="radio"
+                    checked={timerMatchCheck(activeTimer)}
                     id={getTimerId(activeTimer)}
                     name="activeTimerOption"
                     on:click={() => clickActivateHost(activeTimer)} />
