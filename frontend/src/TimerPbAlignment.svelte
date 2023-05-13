@@ -14,6 +14,17 @@
     import SpinnerButton from "./SpinnerButton.svelte";
     import { onMount, onDestroy } from "svelte";
     import { getTimerPbConfig } from "./utils.js";
+    import {
+    Button,
+    Collapse,
+    Modal,
+    ModalBody,
+    ModalFooter,
+    ModalHeader
+  } from 'sveltestrap';
+  let open = false;
+  const toggle = () => (open = !open);
+
     export let params = {};
     var timerPbConfig = {};
     var historyList = [];
@@ -79,13 +90,51 @@
             //laneStatusList[lane].audio
         }
     }
+    let healthMs=0
+    let healthColor="info"
+    let recentHealth={}
+    const satelliteEmoji="🛰️"
+    let healthText="Health"
+    function showHealth(tdl){
+                //console.log(`tdl: ${tdl}`)
+                //return
+
+        for (let td of tdl.timerData) {
+            if(td.timerHealth){
+
+                console.log(`thealth:`, td.timerHealth)
+                if(tdl.xmitMs && tdl.xmitMs>healthMs){
+                    healthMs=tdl.xmitMs
+                    recentHealth=td.timerHealth
+                    recentHealth.ageSeconds=Math.floor((new Date().getTime()-healthMs)/1000)
+                    recentHealth.tempFmt=`${R100(recentHealth.cpuTempC)} C`
+                        healthText="Health"
+                    if(recentHealth.ageSeconds >72){
+                        healthColor="danger"
+                    }else{
+                        healthColor="success"
+                        if (recentHealth.gpsEmittingPps){
+                            healthText+=satelliteEmoji
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+    function R100(x){
+        return Math.round(x*100)/100
+    }
     async function getTimerHistory() {
         log.debug("getTimerHistory:");
         //await sleep(3000)
 
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
-        const url = `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}`;
+        //const lowMS = 1000 * 3600 * 720;
+        const lowMS = 1000 * 3600 * .3;
+        const loIso = new Date(new Date().getTime() - lowMS).toISOString();
+        const url = `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}&loIso=${loIso}`;
         try {
             const response = await $axios.get($raceConfig.baseUrl + url);
             if (response.error) {
@@ -118,7 +167,8 @@
                             log.debug("getTimerPbConfig: 2:", c);
                         } else {
                             const c = Timer.TimerDataList.decode(buf8);
-                            log.debug("getTimerDataList: 2:", c);
+                            //log.debug("getTimerDataList: 2:", c);
+                            showHealth(c)
                         }
                     }
                 }
@@ -142,6 +192,22 @@
 
 <h3>Timer Alignment [{params.timerName}]</h3>
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
+<div>
+    <Button color={healthColor} on:click={toggle}>{healthText}</Button>
+    <Collapse isOpen={open} {toggle}>
+
+        <ul>
+            <li>Age : {recentHealth.ageSeconds} seconds</li>
+            <li>Temp: {recentHealth.tempFmt}</li>
+            <li>Uptime: {R100(recentHealth.cpuUptime/60)} minutes</li>
+            <li>Gps PPS: {recentHealth.gpsEmittingPps}</li>
+            <li>Chrony PPS: {recentHealth.chronyUsingPps}</li>
+            <li>Free Mem: {recentHealth.ramFreeKB} KB</li>
+            <li>SSID: {recentHealth.ssid}</li>
+        </ul>
+
+        </Collapse>
+  </div>
 {#each Object.entries(laneStatusList) as [lane, ls]}
     <Card class="mt-3 border border-info">
         <CardHeader class="bg-info">

@@ -151,7 +151,8 @@
 
         // TODO: use race timer id instead of wildcard in topic.   don't fire capture for other timers!!!
         log.info(`mqttTimerTopic stored:` + $mqttTimerTopic);
-        const timerTopic = `derby/${$mqttTimerTopic}/rpi/+`;
+        const timerTopic = $mqttTimerTopic.includes('/')?
+            $mqttTimerTopic:`derby/${$mqttTimerTopic}/rpi/+`;
         log.info(`mqttTimerTopic subscribing: ${timerTopic}`);
         syncSubscription(
             "timerSubscription",
@@ -161,11 +162,13 @@
         );
     }
     function onTimerMqttData(json) {
+        log.debug("onTimerMqttData")
         potentialCaptureJ(json);
         publishTimerState(json);
     }
     function publishTimerState(json) {
         //{"microb": 26520205700, "pinNumber": "24", "pinName": "oneHz", "pubTime": 1598832946117, "seq": 13413, "pinState": 1, "micros": 26520205700, "pinType": "clock", "microP
+        //legacy timer
         if (json.pinType) {
             const pinType = json.pinType;
             const pinName = json.pinName;
@@ -174,6 +177,10 @@
                 $timerState[pinName] = pinState;
                 $timerState = $timerState;
             }
+        }
+        else{
+            // probably protobuf binary, not json!
+            log.debug("publishTimerState:",json)
         }
     }
     function potentialCaptureJ(json) {

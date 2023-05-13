@@ -184,6 +184,7 @@
         //timerConfig.maxCarLenMS = timerConfig.maxCarLenMS;
         //timerConfig.minCarLenMS = timerConfig.minCarLenMS;
         //timerConfig.maxPerfCount = timerConfig.maxPerfCount;
+        /*
         if (tcFromDexie.sha) {
             activeTimerSha = tcFromDexie.sha;
             if (activeTimerList) {
@@ -204,6 +205,7 @@
                 log.debug("TimerConfig: no atl.");
             }
         }
+        */
         log.debug("timerConfig copied:", JSON.stringify(timerConfig));
     }
     function isFormValid() {
@@ -289,9 +291,10 @@
         var timer = timerEvent.detail;
         log.debug("handleTimerSelection timer:", timer);
         pbForm.timerMqttClientId = timer.clientId;
-        $mqttTimerTopic = timer.clientId;
+        //TODO: amplify issues with binary data :-(
+            // "AMQJS0005E Internal error. Error Message: AMQJS0009E Malformed UTF data:
+        // $mqttTimerTopic = `rr1Timer/${timer.clientId}`;
 
-        //await handleSubmit();
     }
 </script>
 

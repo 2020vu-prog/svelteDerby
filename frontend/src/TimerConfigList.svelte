@@ -9,11 +9,15 @@
     import { onMount } from "svelte";
     import { push, pop, replace, location } from "svelte-spa-router";
     import { initialReloadRoute } from "./stores.js";
+    import { doRefreshBlocks } from "./stores.js";
     var tcFromDexie = [{ timerName: "Initializing..." }];
     onMount(async () => {
         refreshDataFromDb();
         $initialReloadRoute = $location;
     });
+    $: {
+        refreshDataFromDb($doRefreshBlocks);
+    }
     const refreshDataFromDb = async (trigger) => {
         log.debug("tcl: refreshDataFromDb data:", trigger);
 

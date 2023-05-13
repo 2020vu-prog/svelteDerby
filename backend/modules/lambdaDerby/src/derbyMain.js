@@ -637,7 +637,16 @@ async function queryTimerPbHistory(qsp) {
     if (!qsp.timerName) {
         return { error: "Missing timerName" };
     }
-    return await ddbUtils.ddbQueryTimerPbHistory(qsp.timerName);
+    if (!qsp.loIso) {
+        const lowMS = 1000 * 3600 * 0.1;
+        const loIso = new Date(new Date().getTime() - lowMS).toISOString();
+        qsp.loIso=loIso
+    }
+    if (!qsp.hiIso) {
+        const hiIso = new Date().toISOString();
+        qsp.hiIso=hiIso
+    }
+    return await ddbUtils.ddbQueryTimerPbHistory(qsp.timerName,qsp.loIso,qsp.hiIso);
 }
 async function queryTimerHistoryByOrgId(qsp) {
     const [activeTimers, timerConfig] = await Promise.all([
