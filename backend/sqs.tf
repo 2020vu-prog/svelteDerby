@@ -51,7 +51,7 @@ resource "aws_ssm_parameter" "sns_pass_to_serverless" {
   name = "/sns/TimerWinDeltaSns/arn"
 
   description = "arn to publish to TimerWinDeltaSns"
-  type        = "SecureString"
+  type        = "String"
   value       = aws_sns_topic.TimerWinDeltaSns.arn
 }
 resource "aws_ssm_parameter" "sns_pass_to_zello_serverless" {

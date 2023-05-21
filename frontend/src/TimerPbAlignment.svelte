@@ -3,6 +3,7 @@
     import { tutorial as Timer } from "./generated/timer_pb.js";
     import { Card, CardBody, CardHeader } from "sveltestrap";
     import { Base64 } from "js-base64";
+    import TimerPbHealth from "./TimerPbHealth.svelte";
     import {
         axios,
         mqttTimerSubscribe,
@@ -22,13 +23,12 @@
     ModalFooter,
     ModalHeader
   } from 'sveltestrap';
-  let open = false;
-  const toggle = () => (open = !open);
+
 
     export let params = {};
+    var timerName=""
     var timerPbConfig = {};
     var historyList = [];
-    var loading = true;
     const laneStatusList = {
         lane1: {
             blocked: true,
@@ -49,12 +49,16 @@
     });
 
     onMount(async () => {
-        log.debug("TimerName:", params.timerName);
+        //params.timerName=uriDecode(params.timerName);
+        timerName=decodeURI(params.timerName)
+        log.debug("TimerPbAlignment TimerName:", timerName);
         $mqttTimerSubscribe = true;
-        [timerPbConfig] = await getTimerPbConfig(params.timerName);
+        [timerPbConfig] = await getTimerPbConfig(timerName);
 
         log.debug("TimerPbAlignment dexie:", timerPbConfig);
-        await getTimerHistory();
+        if(timerPbConfig && timerPbConfig.at){
+            //await getTimerHistory();
+        }
     });
 
     function syncState() {
@@ -90,41 +94,8 @@
             //laneStatusList[lane].audio
         }
     }
-    let healthMs=0
-    let healthColor="info"
-    let recentHealth={}
-    const satelliteEmoji="🛰️"
-    let healthText="Health"
-    function showHealth(tdl){
-                //console.log(`tdl: ${tdl}`)
-                //return
 
-        for (let td of tdl.timerData) {
-            if(td.timerHealth){
 
-                console.log(`thealth:`, td.timerHealth)
-                if(tdl.xmitMs && tdl.xmitMs>healthMs){
-                    healthMs=tdl.xmitMs
-                    recentHealth=td.timerHealth
-                    recentHealth.ageSeconds=Math.floor((new Date().getTime()-healthMs)/1000)
-                    recentHealth.tempFmt=`${R100(recentHealth.cpuTempC)} C`
-                        healthText="Health"
-                    if(recentHealth.ageSeconds >72){
-                        healthColor="danger"
-                    }else{
-                        healthColor="success"
-                        if (recentHealth.gpsEmittingPps){
-                            healthText+=satelliteEmoji
-                        }
-                    }
-                }
-            }
-
-        }
-    }
-    function R100(x){
-        return Math.round(x*100)/100
-    }
     async function getTimerHistory() {
         log.debug("getTimerHistory:");
         //await sleep(3000)
@@ -168,12 +139,10 @@
                         } else {
                             const c = Timer.TimerDataList.decode(buf8);
                             //log.debug("getTimerDataList: 2:", c);
-                            showHealth(c)
                         }
                     }
                 }
             }
-            loading = false;
         } catch (err) {
             log.error("getTimerHistory error: ", err);
             $statusMessage = {
@@ -190,24 +159,12 @@
     }
 </style>
 
-<h3>Timer Alignment [{params.timerName}]</h3>
+<h3>Timer Alignment [{timerName}]</h3>
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
-<div>
-    <Button color={healthColor} on:click={toggle}>{healthText}</Button>
-    <Collapse isOpen={open} {toggle}>
+{#if timerName}
+    <TimerPbHealth timerName={timerName} />
+{/if}
 
-        <ul>
-            <li>Age : {recentHealth.ageSeconds} seconds</li>
-            <li>Temp: {recentHealth.tempFmt}</li>
-            <li>Uptime: {R100(recentHealth.cpuUptime/60)} minutes</li>
-            <li>Gps PPS: {recentHealth.gpsEmittingPps}</li>
-            <li>Chrony PPS: {recentHealth.chronyUsingPps}</li>
-            <li>Free Mem: {recentHealth.ramFreeKB} KB</li>
-            <li>SSID: {recentHealth.ssid}</li>
-        </ul>
-
-        </Collapse>
-  </div>
 {#each Object.entries(laneStatusList) as [lane, ls]}
     <Card class="mt-3 border border-info">
         <CardHeader class="bg-info">

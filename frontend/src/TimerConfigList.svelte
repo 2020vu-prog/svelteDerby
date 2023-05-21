@@ -10,6 +10,7 @@
     import { push, pop, replace, location } from "svelte-spa-router";
     import { initialReloadRoute } from "./stores.js";
     import { doRefreshBlocks } from "./stores.js";
+    import TimerPbHealth from "./TimerPbHealth.svelte";
     var tcFromDexie = [{ timerName: "Initializing..." }];
     onMount(async () => {
         refreshDataFromDb();
@@ -22,6 +23,15 @@
         log.debug("tcl: refreshDataFromDb data:", trigger);
 
         tcFromDexie = await db.TimerPbConfig.toArray();
+        //tcFromDexie=[]
+        for (let tcd of tcFromDexie) { 
+            const tcInit = Base64.toUint8Array(tcd.pb);
+            log.debug("refreshDataFromDb: 1:", tcInit);
+            const c = Timer.TimerConfig.decode(tcInit);
+            Object.assign(tcd, c);
+            log.debug("refreshDataFromDb: 2:", tcd);
+            tcd.sortKey=`${tcd.seq}-${tcd.timerName}`
+        }
     };
     const navToTcDetail = (tc) => {
         log.debug("navToTcDetail:", tc);
@@ -29,9 +39,8 @@
     };
     function getSortedTc(tcFromDexie) {
         tcFromDexie.sort((a, b) => {
-            return a.timerName
-                .toLowerCase()
-                .localeCompare(b.timerName.toLowerCase());
+            return a.sortKey
+                .localeCompare(b.sortKey);
         });
 
         return tcFromDexie;
@@ -61,7 +70,7 @@ report elapsed time split(s).
 <MaterialAdd clickHandleRoute="/timerConfigElapsed" />
 
 {#each getSortedTc(tcFromDexie) as tc (tc.at)}
-    <Card class="mtj-3 border border-info" on:click={() => navToTcDetail(tc)}>
+    <Card class="mtj-3 border border-info" >
         <CardHeader class="bg-info text-white">
             <CardTitle>
                 <span class="spanRight">
@@ -74,10 +83,14 @@ report elapsed time split(s).
         </CardHeader>
         <CardBody>
             <div style="display: inline">
-                {tc.timerName}
+                <span on:click={() => navToTcDetail(tc)}>
+                {tc.sortKey}
                 <nbsp />
                 {annotat(tc)}
+                </span>
+                <TimerPbHealth timerName="{tc.timerName}" />
             </div>
+
         </CardBody>
     </Card>
 {/each}

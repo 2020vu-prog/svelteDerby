@@ -15,6 +15,7 @@
     import { push, replace, querystring, pop } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
+    import TimerPbHealth from "./TimerPbHealth.svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
     import TimerSelection from "./TimerSelection.svelte";
     import { Form, FormGroup, FormText, Input, Label } from "sveltestrap";
@@ -39,7 +40,7 @@
     onMount(async () => {
         log.debug("tce mounted focus:", $querystring);
         log.debug("tce TimerPbConfig: initial timerTopic:", $mqttTimerTopic);
-        params.timerName = $querystring;
+        params.timerName = decodeURI($querystring);
 
         loadInitialData();
         //$initialReloadRoute = $location
@@ -223,6 +224,20 @@
             };
             return false;
         }
+        if (!pbForm.seq) {
+            $statusMessage = {
+                text: "Timer Sequence required",
+                type: "error",
+            };
+            return false;
+        }
+        if (parseInt(pbForm.seq)<100 ||parseInt(pbForm.seq)>999 ){
+            $statusMessage = {
+                text: "Timer Sequence must be n range of 100 - 999",
+                type: "error",
+            };
+            return false;
+        }
         return true;
     }
     async function handleSubmit() {
@@ -305,7 +320,9 @@
     on:click={() => push(`/timerPbAlignment/${params.timerName}`)}>
     Timer Alignment
 </SpinnerButton>
-
+{#if params.timerName}
+    <TimerPbHealth timerName="{params.timerName}" />
+{/if}
 <Form>
     <FormGroup>
         <Label>
@@ -314,6 +331,20 @@
                 disabled={pbForm.timerNameDisabled}
                 type="text"
                 bind:value={pbForm.timerName} />
+        </Label>
+    </FormGroup>
+    <FormGroup>
+        <Label>
+            Timer Sequence:
+            <Input
+                disabled={pbForm.seqDisabled}
+                type="number"
+                bind:value={pbForm.seq} />
+            <FormText color="muted">
+                Sequence is used to indicate position of timer on the track when there 
+                are multiple timers.  Lower numbers are closer to the starting ramps. Higher numbers
+                are closer to the finish line. Range 100-999.
+            </FormText>
         </Label>
     </FormGroup>
 

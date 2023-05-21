@@ -4,14 +4,13 @@
 var $protobuf = require("protobufjs/minimal");
 
 // Common aliases
-var $Reader = $protobuf.Reader,
-    $Writer = $protobuf.Writer,
-    $util = $protobuf.util;
+var $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.util;
 
 // Exported root namespace
 var $root = $protobuf.roots["default"] || ($protobuf.roots["default"] = {});
 
-$root.tutorial = (function () {
+$root.tutorial = (function() {
+
     /**
      * Namespace tutorial.
      * @exports tutorial
@@ -19,7 +18,8 @@ $root.tutorial = (function () {
      */
     var tutorial = {};
 
-    tutorial.TimerHealth = (function () {
+    tutorial.TimerHealth = (function() {
+
         /**
          * Properties of a TimerHealth.
          * @memberof tutorial
@@ -49,11 +49,7 @@ $root.tutorial = (function () {
          */
         function TimerHealth(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -184,97 +180,34 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerHealth.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.stamp != null &&
-                Object.hasOwnProperty.call(message, "stamp")
-            )
-                $root.tutorial.TimerTimeStamp.encode(
-                    message.stamp,
-                    writer.uint32(/* id 1, wireType 2 =*/ 10).fork()
-                ).ldelim();
-            if (
-                message.chronyUsingPps != null &&
-                Object.hasOwnProperty.call(message, "chronyUsingPps")
-            )
-                writer
-                    .uint32(/* id 2, wireType 0 =*/ 16)
-                    .bool(message.chronyUsingPps);
-            if (
-                message.gpsEmittingPps != null &&
-                Object.hasOwnProperty.call(message, "gpsEmittingPps")
-            )
-                writer
-                    .uint32(/* id 3, wireType 0 =*/ 24)
-                    .bool(message.gpsEmittingPps);
-            if (
-                message.ramFreeKB != null &&
-                Object.hasOwnProperty.call(message, "ramFreeKB")
-            )
-                writer
-                    .uint32(/* id 4, wireType 0 =*/ 32)
-                    .uint32(message.ramFreeKB);
-            if (
-                message.cpuTempC != null &&
-                Object.hasOwnProperty.call(message, "cpuTempC")
-            )
-                writer
-                    .uint32(/* id 5, wireType 5 =*/ 45)
-                    .float(message.cpuTempC);
-            if (
-                message.cpuUptime != null &&
-                Object.hasOwnProperty.call(message, "cpuUptime")
-            )
-                writer
-                    .uint32(/* id 6, wireType 0 =*/ 48)
-                    .uint32(message.cpuUptime);
-            if (
-                message.batteryMilliVolts != null &&
-                Object.hasOwnProperty.call(message, "batteryMilliVolts")
-            )
-                writer
-                    .uint32(/* id 7, wireType 0 =*/ 56)
-                    .uint32(message.batteryMilliVolts);
-            if (
-                message.ssid != null &&
-                Object.hasOwnProperty.call(message, "ssid")
-            )
-                writer.uint32(/* id 8, wireType 2 =*/ 66).string(message.ssid);
-            if (
-                message.linkQuality != null &&
-                Object.hasOwnProperty.call(message, "linkQuality")
-            )
-                writer
-                    .uint32(/* id 9, wireType 2 =*/ 74)
-                    .string(message.linkQuality);
-            if (
-                message.signalLevel != null &&
-                Object.hasOwnProperty.call(message, "signalLevel")
-            )
-                writer
-                    .uint32(/* id 10, wireType 2 =*/ 82)
-                    .string(message.signalLevel);
-            if (
-                message.wirelessMac != null &&
-                Object.hasOwnProperty.call(message, "wirelessMac")
-            )
-                writer
-                    .uint32(/* id 11, wireType 2 =*/ 90)
-                    .string(message.wirelessMac);
-            if (
-                message.wifiRss != null &&
-                Object.hasOwnProperty.call(message, "wifiRss")
-            )
-                writer
-                    .uint32(/* id 12, wireType 5 =*/ 101)
-                    .float(message.wifiRss);
-            if (
-                message.maxPublishAckMs != null &&
-                Object.hasOwnProperty.call(message, "maxPublishAckMs")
-            )
-                writer
-                    .uint32(/* id 13, wireType 0 =*/ 104)
-                    .uint32(message.maxPublishAckMs);
+            if (!writer)
+                writer = $Writer.create();
+            if (message.stamp != null && Object.hasOwnProperty.call(message, "stamp"))
+                $root.tutorial.TimerTimeStamp.encode(message.stamp, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.chronyUsingPps != null && Object.hasOwnProperty.call(message, "chronyUsingPps"))
+                writer.uint32(/* id 2, wireType 0 =*/16).bool(message.chronyUsingPps);
+            if (message.gpsEmittingPps != null && Object.hasOwnProperty.call(message, "gpsEmittingPps"))
+                writer.uint32(/* id 3, wireType 0 =*/24).bool(message.gpsEmittingPps);
+            if (message.ramFreeKB != null && Object.hasOwnProperty.call(message, "ramFreeKB"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.ramFreeKB);
+            if (message.cpuTempC != null && Object.hasOwnProperty.call(message, "cpuTempC"))
+                writer.uint32(/* id 5, wireType 5 =*/45).float(message.cpuTempC);
+            if (message.cpuUptime != null && Object.hasOwnProperty.call(message, "cpuUptime"))
+                writer.uint32(/* id 6, wireType 0 =*/48).uint32(message.cpuUptime);
+            if (message.batteryMilliVolts != null && Object.hasOwnProperty.call(message, "batteryMilliVolts"))
+                writer.uint32(/* id 7, wireType 0 =*/56).uint32(message.batteryMilliVolts);
+            if (message.ssid != null && Object.hasOwnProperty.call(message, "ssid"))
+                writer.uint32(/* id 8, wireType 2 =*/66).string(message.ssid);
+            if (message.linkQuality != null && Object.hasOwnProperty.call(message, "linkQuality"))
+                writer.uint32(/* id 9, wireType 2 =*/74).string(message.linkQuality);
+            if (message.signalLevel != null && Object.hasOwnProperty.call(message, "signalLevel"))
+                writer.uint32(/* id 10, wireType 2 =*/82).string(message.signalLevel);
+            if (message.wirelessMac != null && Object.hasOwnProperty.call(message, "wirelessMac"))
+                writer.uint32(/* id 11, wireType 2 =*/90).string(message.wirelessMac);
+            if (message.wifiRss != null && Object.hasOwnProperty.call(message, "wifiRss"))
+                writer.uint32(/* id 12, wireType 5 =*/101).float(message.wifiRss);
+            if (message.maxPublishAckMs != null && Object.hasOwnProperty.call(message, "maxPublishAckMs"))
+                writer.uint32(/* id 13, wireType 0 =*/104).uint32(message.maxPublishAckMs);
             return writer;
         };
 
@@ -287,10 +220,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        TimerHealth.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        TimerHealth.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -306,70 +236,67 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerHealth.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerHealth();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerHealth();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
-                        message.stamp = $root.tutorial.TimerTimeStamp.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 1: {
+                        message.stamp = $root.tutorial.TimerTimeStamp.decode(reader, reader.uint32());
                         break;
                     }
-                    case 2: {
+                case 2: {
                         message.chronyUsingPps = reader.bool();
                         break;
                     }
-                    case 3: {
+                case 3: {
                         message.gpsEmittingPps = reader.bool();
                         break;
                     }
-                    case 4: {
+                case 4: {
                         message.ramFreeKB = reader.uint32();
                         break;
                     }
-                    case 5: {
+                case 5: {
                         message.cpuTempC = reader.float();
                         break;
                     }
-                    case 6: {
+                case 6: {
                         message.cpuUptime = reader.uint32();
                         break;
                     }
-                    case 7: {
+                case 7: {
                         message.batteryMilliVolts = reader.uint32();
                         break;
                     }
-                    case 8: {
+                case 8: {
                         message.ssid = reader.string();
                         break;
                     }
-                    case 9: {
+                case 9: {
                         message.linkQuality = reader.string();
                         break;
                     }
-                    case 10: {
+                case 10: {
                         message.signalLevel = reader.string();
                         break;
                     }
-                    case 11: {
+                case 11: {
                         message.wirelessMac = reader.string();
                         break;
                     }
-                    case 12: {
+                case 12: {
                         message.wifiRss = reader.float();
                         break;
                     }
-                    case 13: {
+                case 13: {
                         message.maxPublishAckMs = reader.uint32();
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -386,7 +313,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerHealth.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -403,69 +331,43 @@ $root.tutorial = (function () {
                 return "object expected";
             if (message.stamp != null && message.hasOwnProperty("stamp")) {
                 var error = $root.tutorial.TimerTimeStamp.verify(message.stamp);
-                if (error) return "stamp." + error;
+                if (error)
+                    return "stamp." + error;
             }
-            if (
-                message.chronyUsingPps != null &&
-                message.hasOwnProperty("chronyUsingPps")
-            )
+            if (message.chronyUsingPps != null && message.hasOwnProperty("chronyUsingPps"))
                 if (typeof message.chronyUsingPps !== "boolean")
                     return "chronyUsingPps: boolean expected";
-            if (
-                message.gpsEmittingPps != null &&
-                message.hasOwnProperty("gpsEmittingPps")
-            )
+            if (message.gpsEmittingPps != null && message.hasOwnProperty("gpsEmittingPps"))
                 if (typeof message.gpsEmittingPps !== "boolean")
                     return "gpsEmittingPps: boolean expected";
-            if (
-                message.ramFreeKB != null &&
-                message.hasOwnProperty("ramFreeKB")
-            )
+            if (message.ramFreeKB != null && message.hasOwnProperty("ramFreeKB"))
                 if (!$util.isInteger(message.ramFreeKB))
                     return "ramFreeKB: integer expected";
             if (message.cpuTempC != null && message.hasOwnProperty("cpuTempC"))
                 if (typeof message.cpuTempC !== "number")
                     return "cpuTempC: number expected";
-            if (
-                message.cpuUptime != null &&
-                message.hasOwnProperty("cpuUptime")
-            )
+            if (message.cpuUptime != null && message.hasOwnProperty("cpuUptime"))
                 if (!$util.isInteger(message.cpuUptime))
                     return "cpuUptime: integer expected";
-            if (
-                message.batteryMilliVolts != null &&
-                message.hasOwnProperty("batteryMilliVolts")
-            )
+            if (message.batteryMilliVolts != null && message.hasOwnProperty("batteryMilliVolts"))
                 if (!$util.isInteger(message.batteryMilliVolts))
                     return "batteryMilliVolts: integer expected";
             if (message.ssid != null && message.hasOwnProperty("ssid"))
                 if (!$util.isString(message.ssid))
                     return "ssid: string expected";
-            if (
-                message.linkQuality != null &&
-                message.hasOwnProperty("linkQuality")
-            )
+            if (message.linkQuality != null && message.hasOwnProperty("linkQuality"))
                 if (!$util.isString(message.linkQuality))
                     return "linkQuality: string expected";
-            if (
-                message.signalLevel != null &&
-                message.hasOwnProperty("signalLevel")
-            )
+            if (message.signalLevel != null && message.hasOwnProperty("signalLevel"))
                 if (!$util.isString(message.signalLevel))
                     return "signalLevel: string expected";
-            if (
-                message.wirelessMac != null &&
-                message.hasOwnProperty("wirelessMac")
-            )
+            if (message.wirelessMac != null && message.hasOwnProperty("wirelessMac"))
                 if (!$util.isString(message.wirelessMac))
                     return "wirelessMac: string expected";
             if (message.wifiRss != null && message.hasOwnProperty("wifiRss"))
                 if (typeof message.wifiRss !== "number")
                     return "wifiRss: number expected";
-            if (
-                message.maxPublishAckMs != null &&
-                message.hasOwnProperty("maxPublishAckMs")
-            )
+            if (message.maxPublishAckMs != null && message.hasOwnProperty("maxPublishAckMs"))
                 if (!$util.isInteger(message.maxPublishAckMs))
                     return "maxPublishAckMs: integer expected";
             return null;
@@ -480,16 +382,13 @@ $root.tutorial = (function () {
          * @returns {tutorial.TimerHealth} TimerHealth
          */
         TimerHealth.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.TimerHealth) return object;
+            if (object instanceof $root.tutorial.TimerHealth)
+                return object;
             var message = new $root.tutorial.TimerHealth();
             if (object.stamp != null) {
                 if (typeof object.stamp !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerHealth.stamp: object expected"
-                    );
-                message.stamp = $root.tutorial.TimerTimeStamp.fromObject(
-                    object.stamp
-                );
+                    throw TypeError(".tutorial.TimerHealth.stamp: object expected");
+                message.stamp = $root.tutorial.TimerTimeStamp.fromObject(object.stamp);
             }
             if (object.chronyUsingPps != null)
                 message.chronyUsingPps = Boolean(object.chronyUsingPps);
@@ -503,7 +402,8 @@ $root.tutorial = (function () {
                 message.cpuUptime = object.cpuUptime >>> 0;
             if (object.batteryMilliVolts != null)
                 message.batteryMilliVolts = object.batteryMilliVolts >>> 0;
-            if (object.ssid != null) message.ssid = String(object.ssid);
+            if (object.ssid != null)
+                message.ssid = String(object.ssid);
             if (object.linkQuality != null)
                 message.linkQuality = String(object.linkQuality);
             if (object.signalLevel != null)
@@ -527,7 +427,8 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         TimerHealth.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
             if (options.defaults) {
                 object.stamp = null;
@@ -545,66 +446,30 @@ $root.tutorial = (function () {
                 object.maxPublishAckMs = 0;
             }
             if (message.stamp != null && message.hasOwnProperty("stamp"))
-                object.stamp = $root.tutorial.TimerTimeStamp.toObject(
-                    message.stamp,
-                    options
-                );
-            if (
-                message.chronyUsingPps != null &&
-                message.hasOwnProperty("chronyUsingPps")
-            )
+                object.stamp = $root.tutorial.TimerTimeStamp.toObject(message.stamp, options);
+            if (message.chronyUsingPps != null && message.hasOwnProperty("chronyUsingPps"))
                 object.chronyUsingPps = message.chronyUsingPps;
-            if (
-                message.gpsEmittingPps != null &&
-                message.hasOwnProperty("gpsEmittingPps")
-            )
+            if (message.gpsEmittingPps != null && message.hasOwnProperty("gpsEmittingPps"))
                 object.gpsEmittingPps = message.gpsEmittingPps;
-            if (
-                message.ramFreeKB != null &&
-                message.hasOwnProperty("ramFreeKB")
-            )
+            if (message.ramFreeKB != null && message.hasOwnProperty("ramFreeKB"))
                 object.ramFreeKB = message.ramFreeKB;
             if (message.cpuTempC != null && message.hasOwnProperty("cpuTempC"))
-                object.cpuTempC =
-                    options.json && !isFinite(message.cpuTempC)
-                        ? String(message.cpuTempC)
-                        : message.cpuTempC;
-            if (
-                message.cpuUptime != null &&
-                message.hasOwnProperty("cpuUptime")
-            )
+                object.cpuTempC = options.json && !isFinite(message.cpuTempC) ? String(message.cpuTempC) : message.cpuTempC;
+            if (message.cpuUptime != null && message.hasOwnProperty("cpuUptime"))
                 object.cpuUptime = message.cpuUptime;
-            if (
-                message.batteryMilliVolts != null &&
-                message.hasOwnProperty("batteryMilliVolts")
-            )
+            if (message.batteryMilliVolts != null && message.hasOwnProperty("batteryMilliVolts"))
                 object.batteryMilliVolts = message.batteryMilliVolts;
             if (message.ssid != null && message.hasOwnProperty("ssid"))
                 object.ssid = message.ssid;
-            if (
-                message.linkQuality != null &&
-                message.hasOwnProperty("linkQuality")
-            )
+            if (message.linkQuality != null && message.hasOwnProperty("linkQuality"))
                 object.linkQuality = message.linkQuality;
-            if (
-                message.signalLevel != null &&
-                message.hasOwnProperty("signalLevel")
-            )
+            if (message.signalLevel != null && message.hasOwnProperty("signalLevel"))
                 object.signalLevel = message.signalLevel;
-            if (
-                message.wirelessMac != null &&
-                message.hasOwnProperty("wirelessMac")
-            )
+            if (message.wirelessMac != null && message.hasOwnProperty("wirelessMac"))
                 object.wirelessMac = message.wirelessMac;
             if (message.wifiRss != null && message.hasOwnProperty("wifiRss"))
-                object.wifiRss =
-                    options.json && !isFinite(message.wifiRss)
-                        ? String(message.wifiRss)
-                        : message.wifiRss;
-            if (
-                message.maxPublishAckMs != null &&
-                message.hasOwnProperty("maxPublishAckMs")
-            )
+                object.wifiRss = options.json && !isFinite(message.wifiRss) ? String(message.wifiRss) : message.wifiRss;
+            if (message.maxPublishAckMs != null && message.hasOwnProperty("maxPublishAckMs"))
                 object.maxPublishAckMs = message.maxPublishAckMs;
             return object;
         };
@@ -617,10 +482,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerHealth.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -641,7 +503,8 @@ $root.tutorial = (function () {
         return TimerHealth;
     })();
 
-    tutorial.TimerPulse = (function () {
+    tutorial.TimerPulse = (function() {
+
         /**
          * Properties of a TimerPulse.
          * @memberof tutorial
@@ -663,11 +526,7 @@ $root.tutorial = (function () {
          */
         function TimerPulse(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -734,39 +593,18 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerPulse.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.pinNumber != null &&
-                Object.hasOwnProperty.call(message, "pinNumber")
-            )
-                writer
-                    .uint32(/* id 1, wireType 0 =*/ 8)
-                    .uint32(message.pinNumber);
-            if (
-                message.stamp != null &&
-                Object.hasOwnProperty.call(message, "stamp")
-            )
-                $root.tutorial.TimerTimeStamp.encode(
-                    message.stamp,
-                    writer.uint32(/* id 2, wireType 2 =*/ 18).fork()
-                ).ldelim();
-            if (
-                message.lane1 != null &&
-                Object.hasOwnProperty.call(message, "lane1")
-            )
-                writer.uint32(/* id 3, wireType 0 =*/ 24).int32(message.lane1);
-            if (
-                message.lane2 != null &&
-                Object.hasOwnProperty.call(message, "lane2")
-            )
-                writer.uint32(/* id 4, wireType 0 =*/ 32).int32(message.lane2);
-            if (
-                message.pinName != null &&
-                Object.hasOwnProperty.call(message, "pinName")
-            )
-                writer
-                    .uint32(/* id 5, wireType 0 =*/ 40)
-                    .int32(message.pinName);
+            if (!writer)
+                writer = $Writer.create();
+            if (message.pinNumber != null && Object.hasOwnProperty.call(message, "pinNumber"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.pinNumber);
+            if (message.stamp != null && Object.hasOwnProperty.call(message, "stamp"))
+                $root.tutorial.TimerTimeStamp.encode(message.stamp, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            if (message.lane1 != null && Object.hasOwnProperty.call(message, "lane1"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.lane1);
+            if (message.lane2 != null && Object.hasOwnProperty.call(message, "lane2"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.lane2);
+            if (message.pinName != null && Object.hasOwnProperty.call(message, "pinName"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int32(message.pinName);
             return writer;
         };
 
@@ -795,38 +633,35 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerPulse.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerPulse();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerPulse();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
+                case 1: {
                         message.pinNumber = reader.uint32();
                         break;
                     }
-                    case 2: {
-                        message.stamp = $root.tutorial.TimerTimeStamp.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 2: {
+                        message.stamp = $root.tutorial.TimerTimeStamp.decode(reader, reader.uint32());
                         break;
                     }
-                    case 3: {
+                case 3: {
                         message.lane1 = reader.int32();
                         break;
                     }
-                    case 4: {
+                case 4: {
                         message.lane2 = reader.int32();
                         break;
                     }
-                    case 5: {
+                case 5: {
                         message.pinName = reader.int32();
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -843,7 +678,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerPulse.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -858,44 +694,42 @@ $root.tutorial = (function () {
         TimerPulse.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (
-                message.pinNumber != null &&
-                message.hasOwnProperty("pinNumber")
-            )
+            if (message.pinNumber != null && message.hasOwnProperty("pinNumber"))
                 if (!$util.isInteger(message.pinNumber))
                     return "pinNumber: integer expected";
             if (message.stamp != null && message.hasOwnProperty("stamp")) {
                 var error = $root.tutorial.TimerTimeStamp.verify(message.stamp);
-                if (error) return "stamp." + error;
+                if (error)
+                    return "stamp." + error;
             }
             if (message.lane1 != null && message.hasOwnProperty("lane1"))
                 switch (message.lane1) {
-                    default:
-                        return "lane1: enum value expected";
-                    case 0:
-                    case 1:
-                    case 2:
-                        break;
+                default:
+                    return "lane1: enum value expected";
+                case 0:
+                case 1:
+                case 2:
+                    break;
                 }
             if (message.lane2 != null && message.hasOwnProperty("lane2"))
                 switch (message.lane2) {
-                    default:
-                        return "lane2: enum value expected";
-                    case 0:
-                    case 1:
-                    case 2:
-                        break;
+                default:
+                    return "lane2: enum value expected";
+                case 0:
+                case 1:
+                case 2:
+                    break;
                 }
             if (message.pinName != null && message.hasOwnProperty("pinName"))
                 switch (message.pinName) {
-                    default:
-                        return "pinName: enum value expected";
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 9:
-                        break;
+                default:
+                    return "pinName: enum value expected";
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 9:
+                    break;
                 }
             return null;
         };
@@ -909,86 +743,83 @@ $root.tutorial = (function () {
          * @returns {tutorial.TimerPulse} TimerPulse
          */
         TimerPulse.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.TimerPulse) return object;
+            if (object instanceof $root.tutorial.TimerPulse)
+                return object;
             var message = new $root.tutorial.TimerPulse();
             if (object.pinNumber != null)
                 message.pinNumber = object.pinNumber >>> 0;
             if (object.stamp != null) {
                 if (typeof object.stamp !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerPulse.stamp: object expected"
-                    );
-                message.stamp = $root.tutorial.TimerTimeStamp.fromObject(
-                    object.stamp
-                );
+                    throw TypeError(".tutorial.TimerPulse.stamp: object expected");
+                message.stamp = $root.tutorial.TimerTimeStamp.fromObject(object.stamp);
             }
             switch (object.lane1) {
-                default:
-                    if (typeof object.lane1 === "number") {
-                        message.lane1 = object.lane1;
-                        break;
-                    }
+            default:
+                if (typeof object.lane1 === "number") {
+                    message.lane1 = object.lane1;
                     break;
-                case "OFF":
-                case 0:
-                    message.lane1 = 0;
-                    break;
-                case "ON":
-                case 1:
-                    message.lane1 = 1;
-                    break;
-                case "UNKNOWN_STATE":
-                case 2:
-                    message.lane1 = 2;
-                    break;
+                }
+                break;
+            case "CLEAR":
+            case 0:
+                message.lane1 = 0;
+                break;
+            case "BLOCKED":
+            case 1:
+                message.lane1 = 1;
+                break;
+            case "UNKNOWN_STATE":
+            case 2:
+                message.lane1 = 2;
+                break;
             }
             switch (object.lane2) {
-                default:
-                    if (typeof object.lane2 === "number") {
-                        message.lane2 = object.lane2;
-                        break;
-                    }
+            default:
+                if (typeof object.lane2 === "number") {
+                    message.lane2 = object.lane2;
                     break;
-                case "OFF":
-                case 0:
-                    message.lane2 = 0;
-                    break;
-                case "ON":
-                case 1:
-                    message.lane2 = 1;
-                    break;
-                case "UNKNOWN_STATE":
-                case 2:
-                    message.lane2 = 2;
-                    break;
+                }
+                break;
+            case "CLEAR":
+            case 0:
+                message.lane2 = 0;
+                break;
+            case "BLOCKED":
+            case 1:
+                message.lane2 = 1;
+                break;
+            case "UNKNOWN_STATE":
+            case 2:
+                message.lane2 = 2;
+                break;
             }
             switch (object.pinName) {
-                default:
-                    if (typeof object.pinName === "number") {
-                        message.pinName = object.pinName;
-                        break;
-                    }
+            default:
+                if (typeof object.pinName === "number") {
+                    message.pinName = object.pinName;
                     break;
-                case "lane1":
-                case 1:
-                    message.pinName = 1;
-                    break;
-                case "lane2":
-                case 2:
-                    message.pinName = 2;
-                    break;
-                case "gpsHz":
-                case 3:
-                    message.pinName = 3;
-                    break;
-                case "oneHz":
-                case 4:
-                    message.pinName = 4;
-                    break;
-                case "UNKNOWN_PIN":
-                case 9:
-                    message.pinName = 9;
-                    break;
+                }
+                break;
+            case "lane1":
+            case 1:
+                message.pinName = 1;
+                break;
+            case "lane2":
+            case 2:
+                message.pinName = 2;
+                break;
+            case "gpsHz":
+            case 3:
+                message.pinName = 3;
+                break;
+            case "oneHz":
+            case 4:
+                message.pinName = 4;
+                break;
+            case "UNKNOWN_PIN":
+            case 9:
+                message.pinName = 9;
+                break;
             }
             return message;
         };
@@ -1003,46 +834,26 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         TimerPulse.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
             if (options.defaults) {
                 object.pinNumber = 0;
                 object.stamp = null;
-                object.lane1 = options.enums === String ? "OFF" : 0;
-                object.lane2 = options.enums === String ? "OFF" : 0;
+                object.lane1 = options.enums === String ? "CLEAR" : 0;
+                object.lane2 = options.enums === String ? "CLEAR" : 0;
                 object.pinName = options.enums === String ? "lane1" : 1;
             }
-            if (
-                message.pinNumber != null &&
-                message.hasOwnProperty("pinNumber")
-            )
+            if (message.pinNumber != null && message.hasOwnProperty("pinNumber"))
                 object.pinNumber = message.pinNumber;
             if (message.stamp != null && message.hasOwnProperty("stamp"))
-                object.stamp = $root.tutorial.TimerTimeStamp.toObject(
-                    message.stamp,
-                    options
-                );
+                object.stamp = $root.tutorial.TimerTimeStamp.toObject(message.stamp, options);
             if (message.lane1 != null && message.hasOwnProperty("lane1"))
-                object.lane1 =
-                    options.enums === String
-                        ? $root.tutorial.PinState[message.lane1] === undefined
-                            ? message.lane1
-                            : $root.tutorial.PinState[message.lane1]
-                        : message.lane1;
+                object.lane1 = options.enums === String ? $root.tutorial.PinState[message.lane1] === undefined ? message.lane1 : $root.tutorial.PinState[message.lane1] : message.lane1;
             if (message.lane2 != null && message.hasOwnProperty("lane2"))
-                object.lane2 =
-                    options.enums === String
-                        ? $root.tutorial.PinState[message.lane2] === undefined
-                            ? message.lane2
-                            : $root.tutorial.PinState[message.lane2]
-                        : message.lane2;
+                object.lane2 = options.enums === String ? $root.tutorial.PinState[message.lane2] === undefined ? message.lane2 : $root.tutorial.PinState[message.lane2] : message.lane2;
             if (message.pinName != null && message.hasOwnProperty("pinName"))
-                object.pinName =
-                    options.enums === String
-                        ? $root.tutorial.PinName[message.pinName] === undefined
-                            ? message.pinName
-                            : $root.tutorial.PinName[message.pinName]
-                        : message.pinName;
+                object.pinName = options.enums === String ? $root.tutorial.PinName[message.pinName] === undefined ? message.pinName : $root.tutorial.PinName[message.pinName] : message.pinName;
             return object;
         };
 
@@ -1054,10 +865,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerPulse.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -1082,16 +890,15 @@ $root.tutorial = (function () {
      * PinState enum.
      * @name tutorial.PinState
      * @enum {number}
-     * @property {number} OFF=0 OFF value
-     * @property {number} ON=1 ON value
+     * @property {number} CLEAR=0 CLEAR value
+     * @property {number} BLOCKED=1 BLOCKED value
      * @property {number} UNKNOWN_STATE=2 UNKNOWN_STATE value
      */
-    tutorial.PinState = (function () {
-        var valuesById = {},
-            values = Object.create(valuesById);
-        values[(valuesById[0] = "OFF")] = 0;
-        values[(valuesById[1] = "ON")] = 1;
-        values[(valuesById[2] = "UNKNOWN_STATE")] = 2;
+    tutorial.PinState = (function() {
+        var valuesById = {}, values = Object.create(valuesById);
+        values[valuesById[0] = "CLEAR"] = 0;
+        values[valuesById[1] = "BLOCKED"] = 1;
+        values[valuesById[2] = "UNKNOWN_STATE"] = 2;
         return values;
     })();
 
@@ -1105,18 +912,18 @@ $root.tutorial = (function () {
      * @property {number} oneHz=4 oneHz value
      * @property {number} UNKNOWN_PIN=9 UNKNOWN_PIN value
      */
-    tutorial.PinName = (function () {
-        var valuesById = {},
-            values = Object.create(valuesById);
-        values[(valuesById[1] = "lane1")] = 1;
-        values[(valuesById[2] = "lane2")] = 2;
-        values[(valuesById[3] = "gpsHz")] = 3;
-        values[(valuesById[4] = "oneHz")] = 4;
-        values[(valuesById[9] = "UNKNOWN_PIN")] = 9;
+    tutorial.PinName = (function() {
+        var valuesById = {}, values = Object.create(valuesById);
+        values[valuesById[1] = "lane1"] = 1;
+        values[valuesById[2] = "lane2"] = 2;
+        values[valuesById[3] = "gpsHz"] = 3;
+        values[valuesById[4] = "oneHz"] = 4;
+        values[valuesById[9] = "UNKNOWN_PIN"] = 9;
         return values;
     })();
 
-    tutorial.TimerPin = (function () {
+    tutorial.TimerPin = (function() {
+
         /**
          * Properties of a TimerPin.
          * @memberof tutorial
@@ -1137,11 +944,7 @@ $root.tutorial = (function () {
          */
         function TimerPin(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -1200,36 +1003,16 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerPin.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.pinNumber != null &&
-                Object.hasOwnProperty.call(message, "pinNumber")
-            )
-                writer
-                    .uint32(/* id 1, wireType 0 =*/ 8)
-                    .int32(message.pinNumber);
-            if (
-                message.stamp != null &&
-                Object.hasOwnProperty.call(message, "stamp")
-            )
-                $root.tutorial.TimerTimeStamp.encode(
-                    message.stamp,
-                    writer.uint32(/* id 2, wireType 2 =*/ 18).fork()
-                ).ldelim();
-            if (
-                message.pinState != null &&
-                Object.hasOwnProperty.call(message, "pinState")
-            )
-                writer
-                    .uint32(/* id 3, wireType 0 =*/ 24)
-                    .int32(message.pinState);
-            if (
-                message.pinName != null &&
-                Object.hasOwnProperty.call(message, "pinName")
-            )
-                writer
-                    .uint32(/* id 4, wireType 0 =*/ 32)
-                    .int32(message.pinName);
+            if (!writer)
+                writer = $Writer.create();
+            if (message.pinNumber != null && Object.hasOwnProperty.call(message, "pinNumber"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.pinNumber);
+            if (message.stamp != null && Object.hasOwnProperty.call(message, "stamp"))
+                $root.tutorial.TimerTimeStamp.encode(message.stamp, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            if (message.pinState != null && Object.hasOwnProperty.call(message, "pinState"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.pinState);
+            if (message.pinName != null && Object.hasOwnProperty.call(message, "pinName"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.pinName);
             return writer;
         };
 
@@ -1258,34 +1041,31 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerPin.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerPin();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerPin();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
+                case 1: {
                         message.pinNumber = reader.int32();
                         break;
                     }
-                    case 2: {
-                        message.stamp = $root.tutorial.TimerTimeStamp.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 2: {
+                        message.stamp = $root.tutorial.TimerTimeStamp.decode(reader, reader.uint32());
                         break;
                     }
-                    case 3: {
+                case 3: {
                         message.pinState = reader.int32();
                         break;
                     }
-                    case 4: {
+                case 4: {
                         message.pinName = reader.int32();
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -1302,7 +1082,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerPin.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -1317,35 +1098,33 @@ $root.tutorial = (function () {
         TimerPin.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (
-                message.pinNumber != null &&
-                message.hasOwnProperty("pinNumber")
-            )
+            if (message.pinNumber != null && message.hasOwnProperty("pinNumber"))
                 if (!$util.isInteger(message.pinNumber))
                     return "pinNumber: integer expected";
             if (message.stamp != null && message.hasOwnProperty("stamp")) {
                 var error = $root.tutorial.TimerTimeStamp.verify(message.stamp);
-                if (error) return "stamp." + error;
+                if (error)
+                    return "stamp." + error;
             }
             if (message.pinState != null && message.hasOwnProperty("pinState"))
                 switch (message.pinState) {
-                    default:
-                        return "pinState: enum value expected";
-                    case 0:
-                    case 1:
-                    case 2:
-                        break;
+                default:
+                    return "pinState: enum value expected";
+                case 0:
+                case 1:
+                case 2:
+                    break;
                 }
             if (message.pinName != null && message.hasOwnProperty("pinName"))
                 switch (message.pinName) {
-                    default:
-                        return "pinName: enum value expected";
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 9:
-                        break;
+                default:
+                    return "pinName: enum value expected";
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 9:
+                    break;
                 }
             return null;
         };
@@ -1359,66 +1138,63 @@ $root.tutorial = (function () {
          * @returns {tutorial.TimerPin} TimerPin
          */
         TimerPin.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.TimerPin) return object;
+            if (object instanceof $root.tutorial.TimerPin)
+                return object;
             var message = new $root.tutorial.TimerPin();
             if (object.pinNumber != null)
                 message.pinNumber = object.pinNumber | 0;
             if (object.stamp != null) {
                 if (typeof object.stamp !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerPin.stamp: object expected"
-                    );
-                message.stamp = $root.tutorial.TimerTimeStamp.fromObject(
-                    object.stamp
-                );
+                    throw TypeError(".tutorial.TimerPin.stamp: object expected");
+                message.stamp = $root.tutorial.TimerTimeStamp.fromObject(object.stamp);
             }
             switch (object.pinState) {
-                default:
-                    if (typeof object.pinState === "number") {
-                        message.pinState = object.pinState;
-                        break;
-                    }
+            default:
+                if (typeof object.pinState === "number") {
+                    message.pinState = object.pinState;
                     break;
-                case "OFF":
-                case 0:
-                    message.pinState = 0;
-                    break;
-                case "ON":
-                case 1:
-                    message.pinState = 1;
-                    break;
-                case "UNKNOWN_STATE":
-                case 2:
-                    message.pinState = 2;
-                    break;
+                }
+                break;
+            case "CLEAR":
+            case 0:
+                message.pinState = 0;
+                break;
+            case "BLOCKED":
+            case 1:
+                message.pinState = 1;
+                break;
+            case "UNKNOWN_STATE":
+            case 2:
+                message.pinState = 2;
+                break;
             }
             switch (object.pinName) {
-                default:
-                    if (typeof object.pinName === "number") {
-                        message.pinName = object.pinName;
-                        break;
-                    }
+            default:
+                if (typeof object.pinName === "number") {
+                    message.pinName = object.pinName;
                     break;
-                case "lane1":
-                case 1:
-                    message.pinName = 1;
-                    break;
-                case "lane2":
-                case 2:
-                    message.pinName = 2;
-                    break;
-                case "gpsHz":
-                case 3:
-                    message.pinName = 3;
-                    break;
-                case "oneHz":
-                case 4:
-                    message.pinName = 4;
-                    break;
-                case "UNKNOWN_PIN":
-                case 9:
-                    message.pinName = 9;
-                    break;
+                }
+                break;
+            case "lane1":
+            case 1:
+                message.pinName = 1;
+                break;
+            case "lane2":
+            case 2:
+                message.pinName = 2;
+                break;
+            case "gpsHz":
+            case 3:
+                message.pinName = 3;
+                break;
+            case "oneHz":
+            case 4:
+                message.pinName = 4;
+                break;
+            case "UNKNOWN_PIN":
+            case 9:
+                message.pinName = 9;
+                break;
             }
             return message;
         };
@@ -1433,39 +1209,23 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         TimerPin.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
             if (options.defaults) {
                 object.pinNumber = 0;
                 object.stamp = null;
-                object.pinState = options.enums === String ? "OFF" : 0;
+                object.pinState = options.enums === String ? "CLEAR" : 0;
                 object.pinName = options.enums === String ? "lane1" : 1;
             }
-            if (
-                message.pinNumber != null &&
-                message.hasOwnProperty("pinNumber")
-            )
+            if (message.pinNumber != null && message.hasOwnProperty("pinNumber"))
                 object.pinNumber = message.pinNumber;
             if (message.stamp != null && message.hasOwnProperty("stamp"))
-                object.stamp = $root.tutorial.TimerTimeStamp.toObject(
-                    message.stamp,
-                    options
-                );
+                object.stamp = $root.tutorial.TimerTimeStamp.toObject(message.stamp, options);
             if (message.pinState != null && message.hasOwnProperty("pinState"))
-                object.pinState =
-                    options.enums === String
-                        ? $root.tutorial.PinState[message.pinState] ===
-                          undefined
-                            ? message.pinState
-                            : $root.tutorial.PinState[message.pinState]
-                        : message.pinState;
+                object.pinState = options.enums === String ? $root.tutorial.PinState[message.pinState] === undefined ? message.pinState : $root.tutorial.PinState[message.pinState] : message.pinState;
             if (message.pinName != null && message.hasOwnProperty("pinName"))
-                object.pinName =
-                    options.enums === String
-                        ? $root.tutorial.PinName[message.pinName] === undefined
-                            ? message.pinName
-                            : $root.tutorial.PinName[message.pinName]
-                        : message.pinName;
+                object.pinName = options.enums === String ? $root.tutorial.PinName[message.pinName] === undefined ? message.pinName : $root.tutorial.PinName[message.pinName] : message.pinName;
             return object;
         };
 
@@ -1477,10 +1237,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerPin.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -1501,7 +1258,8 @@ $root.tutorial = (function () {
         return TimerPin;
     })();
 
-    tutorial.TimerTimeStamp = (function () {
+    tutorial.TimerTimeStamp = (function() {
+
         /**
          * Properties of a TimerTimeStamp.
          * @memberof tutorial
@@ -1520,11 +1278,7 @@ $root.tutorial = (function () {
          */
         function TimerTimeStamp(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -1567,20 +1321,12 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerTimeStamp.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.tick != null &&
-                Object.hasOwnProperty.call(message, "tick")
-            )
-                writer.uint32(/* id 1, wireType 0 =*/ 8).uint32(message.tick);
-            if (
-                message.gpsTime != null &&
-                Object.hasOwnProperty.call(message, "gpsTime")
-            )
-                $root.google.protobuf.Timestamp.encode(
-                    message.gpsTime,
-                    writer.uint32(/* id 3, wireType 2 =*/ 26).fork()
-                ).ldelim();
+            if (!writer)
+                writer = $Writer.create();
+            if (message.tick != null && Object.hasOwnProperty.call(message, "tick"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.tick);
+            if (message.gpsTime != null && Object.hasOwnProperty.call(message, "gpsTime"))
+                $root.google.protobuf.Timestamp.encode(message.gpsTime, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             return writer;
         };
 
@@ -1593,10 +1339,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        TimerTimeStamp.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        TimerTimeStamp.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -1612,26 +1355,23 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerTimeStamp.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerTimeStamp();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerTimeStamp();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
+                case 1: {
                         message.tick = reader.uint32();
                         break;
                     }
-                    case 3: {
-                        message.gpsTime = $root.google.protobuf.Timestamp.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 3: {
+                        message.gpsTime = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -1648,7 +1388,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerTimeStamp.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -1667,10 +1408,9 @@ $root.tutorial = (function () {
                 if (!$util.isInteger(message.tick))
                     return "tick: integer expected";
             if (message.gpsTime != null && message.hasOwnProperty("gpsTime")) {
-                var error = $root.google.protobuf.Timestamp.verify(
-                    message.gpsTime
-                );
-                if (error) return "gpsTime." + error;
+                var error = $root.google.protobuf.Timestamp.verify(message.gpsTime);
+                if (error)
+                    return "gpsTime." + error;
             }
             return null;
         };
@@ -1684,17 +1424,15 @@ $root.tutorial = (function () {
          * @returns {tutorial.TimerTimeStamp} TimerTimeStamp
          */
         TimerTimeStamp.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.TimerTimeStamp) return object;
+            if (object instanceof $root.tutorial.TimerTimeStamp)
+                return object;
             var message = new $root.tutorial.TimerTimeStamp();
-            if (object.tick != null) message.tick = object.tick >>> 0;
+            if (object.tick != null)
+                message.tick = object.tick >>> 0;
             if (object.gpsTime != null) {
                 if (typeof object.gpsTime !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerTimeStamp.gpsTime: object expected"
-                    );
-                message.gpsTime = $root.google.protobuf.Timestamp.fromObject(
-                    object.gpsTime
-                );
+                    throw TypeError(".tutorial.TimerTimeStamp.gpsTime: object expected");
+                message.gpsTime = $root.google.protobuf.Timestamp.fromObject(object.gpsTime);
             }
             return message;
         };
@@ -1709,7 +1447,8 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         TimerTimeStamp.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
             if (options.defaults) {
                 object.tick = 0;
@@ -1718,10 +1457,7 @@ $root.tutorial = (function () {
             if (message.tick != null && message.hasOwnProperty("tick"))
                 object.tick = message.tick;
             if (message.gpsTime != null && message.hasOwnProperty("gpsTime"))
-                object.gpsTime = $root.google.protobuf.Timestamp.toObject(
-                    message.gpsTime,
-                    options
-                );
+                object.gpsTime = $root.google.protobuf.Timestamp.toObject(message.gpsTime, options);
             return object;
         };
 
@@ -1733,10 +1469,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerTimeStamp.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -1757,7 +1490,8 @@ $root.tutorial = (function () {
         return TimerTimeStamp;
     })();
 
-    tutorial.TimerData = (function () {
+    tutorial.TimerData = (function() {
+
         /**
          * Properties of a TimerData.
          * @memberof tutorial
@@ -1777,11 +1511,7 @@ $root.tutorial = (function () {
          */
         function TimerData(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -1832,31 +1562,14 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerData.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.timerPin != null &&
-                Object.hasOwnProperty.call(message, "timerPin")
-            )
-                $root.tutorial.TimerPin.encode(
-                    message.timerPin,
-                    writer.uint32(/* id 1, wireType 2 =*/ 10).fork()
-                ).ldelim();
-            if (
-                message.timerPulse != null &&
-                Object.hasOwnProperty.call(message, "timerPulse")
-            )
-                $root.tutorial.TimerPulse.encode(
-                    message.timerPulse,
-                    writer.uint32(/* id 2, wireType 2 =*/ 18).fork()
-                ).ldelim();
-            if (
-                message.timerHealth != null &&
-                Object.hasOwnProperty.call(message, "timerHealth")
-            )
-                $root.tutorial.TimerHealth.encode(
-                    message.timerHealth,
-                    writer.uint32(/* id 3, wireType 2 =*/ 26).fork()
-                ).ldelim();
+            if (!writer)
+                writer = $Writer.create();
+            if (message.timerPin != null && Object.hasOwnProperty.call(message, "timerPin"))
+                $root.tutorial.TimerPin.encode(message.timerPin, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.timerPulse != null && Object.hasOwnProperty.call(message, "timerPulse"))
+                $root.tutorial.TimerPulse.encode(message.timerPulse, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            if (message.timerHealth != null && Object.hasOwnProperty.call(message, "timerHealth"))
+                $root.tutorial.TimerHealth.encode(message.timerHealth, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             return writer;
         };
 
@@ -1885,36 +1598,27 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerData.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerData();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerData();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
-                        message.timerPin = $root.tutorial.TimerPin.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 1: {
+                        message.timerPin = $root.tutorial.TimerPin.decode(reader, reader.uint32());
                         break;
                     }
-                    case 2: {
-                        message.timerPulse = $root.tutorial.TimerPulse.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 2: {
+                        message.timerPulse = $root.tutorial.TimerPulse.decode(reader, reader.uint32());
                         break;
                     }
-                    case 3: {
-                        message.timerHealth = $root.tutorial.TimerHealth.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 3: {
+                        message.timerHealth = $root.tutorial.TimerHealth.decode(reader, reader.uint32());
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -1931,7 +1635,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerData.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -1946,30 +1651,20 @@ $root.tutorial = (function () {
         TimerData.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (
-                message.timerPin != null &&
-                message.hasOwnProperty("timerPin")
-            ) {
+            if (message.timerPin != null && message.hasOwnProperty("timerPin")) {
                 var error = $root.tutorial.TimerPin.verify(message.timerPin);
-                if (error) return "timerPin." + error;
+                if (error)
+                    return "timerPin." + error;
             }
-            if (
-                message.timerPulse != null &&
-                message.hasOwnProperty("timerPulse")
-            ) {
-                var error = $root.tutorial.TimerPulse.verify(
-                    message.timerPulse
-                );
-                if (error) return "timerPulse." + error;
+            if (message.timerPulse != null && message.hasOwnProperty("timerPulse")) {
+                var error = $root.tutorial.TimerPulse.verify(message.timerPulse);
+                if (error)
+                    return "timerPulse." + error;
             }
-            if (
-                message.timerHealth != null &&
-                message.hasOwnProperty("timerHealth")
-            ) {
-                var error = $root.tutorial.TimerHealth.verify(
-                    message.timerHealth
-                );
-                if (error) return "timerHealth." + error;
+            if (message.timerHealth != null && message.hasOwnProperty("timerHealth")) {
+                var error = $root.tutorial.TimerHealth.verify(message.timerHealth);
+                if (error)
+                    return "timerHealth." + error;
             }
             return null;
         };
@@ -1983,34 +1678,23 @@ $root.tutorial = (function () {
          * @returns {tutorial.TimerData} TimerData
          */
         TimerData.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.TimerData) return object;
+            if (object instanceof $root.tutorial.TimerData)
+                return object;
             var message = new $root.tutorial.TimerData();
             if (object.timerPin != null) {
                 if (typeof object.timerPin !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerData.timerPin: object expected"
-                    );
-                message.timerPin = $root.tutorial.TimerPin.fromObject(
-                    object.timerPin
-                );
+                    throw TypeError(".tutorial.TimerData.timerPin: object expected");
+                message.timerPin = $root.tutorial.TimerPin.fromObject(object.timerPin);
             }
             if (object.timerPulse != null) {
                 if (typeof object.timerPulse !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerData.timerPulse: object expected"
-                    );
-                message.timerPulse = $root.tutorial.TimerPulse.fromObject(
-                    object.timerPulse
-                );
+                    throw TypeError(".tutorial.TimerData.timerPulse: object expected");
+                message.timerPulse = $root.tutorial.TimerPulse.fromObject(object.timerPulse);
             }
             if (object.timerHealth != null) {
                 if (typeof object.timerHealth !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerData.timerHealth: object expected"
-                    );
-                message.timerHealth = $root.tutorial.TimerHealth.fromObject(
-                    object.timerHealth
-                );
+                    throw TypeError(".tutorial.TimerData.timerHealth: object expected");
+                message.timerHealth = $root.tutorial.TimerHealth.fromObject(object.timerHealth);
             }
             return message;
         };
@@ -2025,7 +1709,8 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         TimerData.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
             if (options.defaults) {
                 object.timerPin = null;
@@ -2033,26 +1718,11 @@ $root.tutorial = (function () {
                 object.timerHealth = null;
             }
             if (message.timerPin != null && message.hasOwnProperty("timerPin"))
-                object.timerPin = $root.tutorial.TimerPin.toObject(
-                    message.timerPin,
-                    options
-                );
-            if (
-                message.timerPulse != null &&
-                message.hasOwnProperty("timerPulse")
-            )
-                object.timerPulse = $root.tutorial.TimerPulse.toObject(
-                    message.timerPulse,
-                    options
-                );
-            if (
-                message.timerHealth != null &&
-                message.hasOwnProperty("timerHealth")
-            )
-                object.timerHealth = $root.tutorial.TimerHealth.toObject(
-                    message.timerHealth,
-                    options
-                );
+                object.timerPin = $root.tutorial.TimerPin.toObject(message.timerPin, options);
+            if (message.timerPulse != null && message.hasOwnProperty("timerPulse"))
+                object.timerPulse = $root.tutorial.TimerPulse.toObject(message.timerPulse, options);
+            if (message.timerHealth != null && message.hasOwnProperty("timerHealth"))
+                object.timerHealth = $root.tutorial.TimerHealth.toObject(message.timerHealth, options);
             return object;
         };
 
@@ -2064,10 +1734,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerData.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -2088,7 +1755,8 @@ $root.tutorial = (function () {
         return TimerData;
     })();
 
-    tutorial.TimerDataList = (function () {
+    tutorial.TimerDataList = (function() {
+
         /**
          * Properties of a TimerDataList.
          * @memberof tutorial
@@ -2110,11 +1778,7 @@ $root.tutorial = (function () {
         function TimerDataList(properties) {
             this.timerData = [];
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -2141,9 +1805,7 @@ $root.tutorial = (function () {
          * @memberof tutorial.TimerDataList
          * @instance
          */
-        TimerDataList.prototype.xmitMs = $util.Long
-            ? $util.Long.fromBits(0, 0, true)
-            : 0;
+        TimerDataList.prototype.xmitMs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
          * TimerDataList prevPubAckMs.
@@ -2151,9 +1813,7 @@ $root.tutorial = (function () {
          * @memberof tutorial.TimerDataList
          * @instance
          */
-        TimerDataList.prototype.prevPubAckMs = $util.Long
-            ? $util.Long.fromBits(0, 0, true)
-            : 0;
+        TimerDataList.prototype.prevPubAckMs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
          * Creates a new TimerDataList instance using the specified properties.
@@ -2177,35 +1837,17 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerDataList.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.xmitTime != null &&
-                Object.hasOwnProperty.call(message, "xmitTime")
-            )
-                $root.google.protobuf.Timestamp.encode(
-                    message.xmitTime,
-                    writer.uint32(/* id 1, wireType 2 =*/ 10).fork()
-                ).ldelim();
-            if (
-                message.xmitMs != null &&
-                Object.hasOwnProperty.call(message, "xmitMs")
-            )
-                writer
-                    .uint32(/* id 2, wireType 0 =*/ 16)
-                    .uint64(message.xmitMs);
+            if (!writer)
+                writer = $Writer.create();
+            if (message.xmitTime != null && Object.hasOwnProperty.call(message, "xmitTime"))
+                $root.google.protobuf.Timestamp.encode(message.xmitTime, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.xmitMs != null && Object.hasOwnProperty.call(message, "xmitMs"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.xmitMs);
             if (message.timerData != null && message.timerData.length)
                 for (var i = 0; i < message.timerData.length; ++i)
-                    $root.tutorial.TimerData.encode(
-                        message.timerData[i],
-                        writer.uint32(/* id 3, wireType 2 =*/ 26).fork()
-                    ).ldelim();
-            if (
-                message.prevPubAckMs != null &&
-                Object.hasOwnProperty.call(message, "prevPubAckMs")
-            )
-                writer
-                    .uint32(/* id 4, wireType 0 =*/ 32)
-                    .uint64(message.prevPubAckMs);
+                    $root.tutorial.TimerData.encode(message.timerData[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.prevPubAckMs != null && Object.hasOwnProperty.call(message, "prevPubAckMs"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint64(message.prevPubAckMs);
             return writer;
         };
 
@@ -2218,10 +1860,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        TimerDataList.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        TimerDataList.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -2237,41 +1876,33 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerDataList.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerDataList();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerDataList();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 3: {
+                case 3: {
                         if (!(message.timerData && message.timerData.length))
                             message.timerData = [];
-                        message.timerData.push(
-                            $root.tutorial.TimerData.decode(
-                                reader,
-                                reader.uint32()
-                            )
-                        );
+                        message.timerData.push($root.tutorial.TimerData.decode(reader, reader.uint32()));
                         break;
                     }
-                    case 1: {
-                        message.xmitTime = $root.google.protobuf.Timestamp.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 1: {
+                        message.xmitTime = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
                         break;
                     }
-                    case 2: {
+                case 2: {
                         message.xmitMs = reader.uint64();
                         break;
                     }
-                    case 4: {
+                case 4: {
                         message.prevPubAckMs = reader.uint64();
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -2288,7 +1919,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerDataList.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -2303,50 +1935,25 @@ $root.tutorial = (function () {
         TimerDataList.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (
-                message.timerData != null &&
-                message.hasOwnProperty("timerData")
-            ) {
+            if (message.timerData != null && message.hasOwnProperty("timerData")) {
                 if (!Array.isArray(message.timerData))
                     return "timerData: array expected";
                 for (var i = 0; i < message.timerData.length; ++i) {
-                    var error = $root.tutorial.TimerData.verify(
-                        message.timerData[i]
-                    );
-                    if (error) return "timerData." + error;
+                    var error = $root.tutorial.TimerData.verify(message.timerData[i]);
+                    if (error)
+                        return "timerData." + error;
                 }
             }
-            if (
-                message.xmitTime != null &&
-                message.hasOwnProperty("xmitTime")
-            ) {
-                var error = $root.google.protobuf.Timestamp.verify(
-                    message.xmitTime
-                );
-                if (error) return "xmitTime." + error;
+            if (message.xmitTime != null && message.hasOwnProperty("xmitTime")) {
+                var error = $root.google.protobuf.Timestamp.verify(message.xmitTime);
+                if (error)
+                    return "xmitTime." + error;
             }
             if (message.xmitMs != null && message.hasOwnProperty("xmitMs"))
-                if (
-                    !$util.isInteger(message.xmitMs) &&
-                    !(
-                        message.xmitMs &&
-                        $util.isInteger(message.xmitMs.low) &&
-                        $util.isInteger(message.xmitMs.high)
-                    )
-                )
+                if (!$util.isInteger(message.xmitMs) && !(message.xmitMs && $util.isInteger(message.xmitMs.low) && $util.isInteger(message.xmitMs.high)))
                     return "xmitMs: integer|Long expected";
-            if (
-                message.prevPubAckMs != null &&
-                message.hasOwnProperty("prevPubAckMs")
-            )
-                if (
-                    !$util.isInteger(message.prevPubAckMs) &&
-                    !(
-                        message.prevPubAckMs &&
-                        $util.isInteger(message.prevPubAckMs.low) &&
-                        $util.isInteger(message.prevPubAckMs.high)
-                    )
-                )
+            if (message.prevPubAckMs != null && message.hasOwnProperty("prevPubAckMs"))
+                if (!$util.isInteger(message.prevPubAckMs) && !(message.prevPubAckMs && $util.isInteger(message.prevPubAckMs.low) && $util.isInteger(message.prevPubAckMs.high)))
                     return "prevPubAckMs: integer|Long expected";
             return null;
         };
@@ -2360,61 +1967,42 @@ $root.tutorial = (function () {
          * @returns {tutorial.TimerDataList} TimerDataList
          */
         TimerDataList.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.TimerDataList) return object;
+            if (object instanceof $root.tutorial.TimerDataList)
+                return object;
             var message = new $root.tutorial.TimerDataList();
             if (object.timerData) {
                 if (!Array.isArray(object.timerData))
-                    throw TypeError(
-                        ".tutorial.TimerDataList.timerData: array expected"
-                    );
+                    throw TypeError(".tutorial.TimerDataList.timerData: array expected");
                 message.timerData = [];
                 for (var i = 0; i < object.timerData.length; ++i) {
                     if (typeof object.timerData[i] !== "object")
-                        throw TypeError(
-                            ".tutorial.TimerDataList.timerData: object expected"
-                        );
-                    message.timerData[i] = $root.tutorial.TimerData.fromObject(
-                        object.timerData[i]
-                    );
+                        throw TypeError(".tutorial.TimerDataList.timerData: object expected");
+                    message.timerData[i] = $root.tutorial.TimerData.fromObject(object.timerData[i]);
                 }
             }
             if (object.xmitTime != null) {
                 if (typeof object.xmitTime !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerDataList.xmitTime: object expected"
-                    );
-                message.xmitTime = $root.google.protobuf.Timestamp.fromObject(
-                    object.xmitTime
-                );
+                    throw TypeError(".tutorial.TimerDataList.xmitTime: object expected");
+                message.xmitTime = $root.google.protobuf.Timestamp.fromObject(object.xmitTime);
             }
             if (object.xmitMs != null)
                 if ($util.Long)
-                    (message.xmitMs = $util.Long.fromValue(
-                        object.xmitMs
-                    )).unsigned = true;
+                    (message.xmitMs = $util.Long.fromValue(object.xmitMs)).unsigned = true;
                 else if (typeof object.xmitMs === "string")
                     message.xmitMs = parseInt(object.xmitMs, 10);
                 else if (typeof object.xmitMs === "number")
                     message.xmitMs = object.xmitMs;
                 else if (typeof object.xmitMs === "object")
-                    message.xmitMs = new $util.LongBits(
-                        object.xmitMs.low >>> 0,
-                        object.xmitMs.high >>> 0
-                    ).toNumber(true);
+                    message.xmitMs = new $util.LongBits(object.xmitMs.low >>> 0, object.xmitMs.high >>> 0).toNumber(true);
             if (object.prevPubAckMs != null)
                 if ($util.Long)
-                    (message.prevPubAckMs = $util.Long.fromValue(
-                        object.prevPubAckMs
-                    )).unsigned = true;
+                    (message.prevPubAckMs = $util.Long.fromValue(object.prevPubAckMs)).unsigned = true;
                 else if (typeof object.prevPubAckMs === "string")
                     message.prevPubAckMs = parseInt(object.prevPubAckMs, 10);
                 else if (typeof object.prevPubAckMs === "number")
                     message.prevPubAckMs = object.prevPubAckMs;
                 else if (typeof object.prevPubAckMs === "object")
-                    message.prevPubAckMs = new $util.LongBits(
-                        object.prevPubAckMs.low >>> 0,
-                        object.prevPubAckMs.high >>> 0
-                    ).toNumber(true);
+                    message.prevPubAckMs = new $util.LongBits(object.prevPubAckMs.low >>> 0, object.prevPubAckMs.high >>> 0).toNumber(true);
             return message;
         };
 
@@ -2428,80 +2016,41 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         TimerDataList.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
-            if (options.arrays || options.defaults) object.timerData = [];
+            if (options.arrays || options.defaults)
+                object.timerData = [];
             if (options.defaults) {
                 object.xmitTime = null;
                 if ($util.Long) {
                     var long = new $util.Long(0, 0, true);
-                    object.xmitMs =
-                        options.longs === String
-                            ? long.toString()
-                            : options.longs === Number
-                            ? long.toNumber()
-                            : long;
-                } else object.xmitMs = options.longs === String ? "0" : 0;
+                    object.xmitMs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.xmitMs = options.longs === String ? "0" : 0;
                 if ($util.Long) {
                     var long = new $util.Long(0, 0, true);
-                    object.prevPubAckMs =
-                        options.longs === String
-                            ? long.toString()
-                            : options.longs === Number
-                            ? long.toNumber()
-                            : long;
-                } else object.prevPubAckMs = options.longs === String ? "0" : 0;
+                    object.prevPubAckMs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.prevPubAckMs = options.longs === String ? "0" : 0;
             }
             if (message.xmitTime != null && message.hasOwnProperty("xmitTime"))
-                object.xmitTime = $root.google.protobuf.Timestamp.toObject(
-                    message.xmitTime,
-                    options
-                );
+                object.xmitTime = $root.google.protobuf.Timestamp.toObject(message.xmitTime, options);
             if (message.xmitMs != null && message.hasOwnProperty("xmitMs"))
                 if (typeof message.xmitMs === "number")
-                    object.xmitMs =
-                        options.longs === String
-                            ? String(message.xmitMs)
-                            : message.xmitMs;
+                    object.xmitMs = options.longs === String ? String(message.xmitMs) : message.xmitMs;
                 else
-                    object.xmitMs =
-                        options.longs === String
-                            ? $util.Long.prototype.toString.call(message.xmitMs)
-                            : options.longs === Number
-                            ? new $util.LongBits(
-                                  message.xmitMs.low >>> 0,
-                                  message.xmitMs.high >>> 0
-                              ).toNumber(true)
-                            : message.xmitMs;
+                    object.xmitMs = options.longs === String ? $util.Long.prototype.toString.call(message.xmitMs) : options.longs === Number ? new $util.LongBits(message.xmitMs.low >>> 0, message.xmitMs.high >>> 0).toNumber(true) : message.xmitMs;
             if (message.timerData && message.timerData.length) {
                 object.timerData = [];
                 for (var j = 0; j < message.timerData.length; ++j)
-                    object.timerData[j] = $root.tutorial.TimerData.toObject(
-                        message.timerData[j],
-                        options
-                    );
+                    object.timerData[j] = $root.tutorial.TimerData.toObject(message.timerData[j], options);
             }
-            if (
-                message.prevPubAckMs != null &&
-                message.hasOwnProperty("prevPubAckMs")
-            )
+            if (message.prevPubAckMs != null && message.hasOwnProperty("prevPubAckMs"))
                 if (typeof message.prevPubAckMs === "number")
-                    object.prevPubAckMs =
-                        options.longs === String
-                            ? String(message.prevPubAckMs)
-                            : message.prevPubAckMs;
+                    object.prevPubAckMs = options.longs === String ? String(message.prevPubAckMs) : message.prevPubAckMs;
                 else
-                    object.prevPubAckMs =
-                        options.longs === String
-                            ? $util.Long.prototype.toString.call(
-                                  message.prevPubAckMs
-                              )
-                            : options.longs === Number
-                            ? new $util.LongBits(
-                                  message.prevPubAckMs.low >>> 0,
-                                  message.prevPubAckMs.high >>> 0
-                              ).toNumber(true)
-                            : message.prevPubAckMs;
+                    object.prevPubAckMs = options.longs === String ? $util.Long.prototype.toString.call(message.prevPubAckMs) : options.longs === Number ? new $util.LongBits(message.prevPubAckMs.low >>> 0, message.prevPubAckMs.high >>> 0).toNumber(true) : message.prevPubAckMs;
             return object;
         };
 
@@ -2513,10 +2062,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerDataList.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -2544,15 +2090,15 @@ $root.tutorial = (function () {
      * @property {number} LanePhotoEyes=1 LanePhotoEyes value
      * @property {number} OpposedStarterReeds=2 OpposedStarterReeds value
      */
-    tutorial.SensorLogic = (function () {
-        var valuesById = {},
-            values = Object.create(valuesById);
-        values[(valuesById[1] = "LanePhotoEyes")] = 1;
-        values[(valuesById[2] = "OpposedStarterReeds")] = 2;
+    tutorial.SensorLogic = (function() {
+        var valuesById = {}, values = Object.create(valuesById);
+        values[valuesById[1] = "LanePhotoEyes"] = 1;
+        values[valuesById[2] = "OpposedStarterReeds"] = 2;
         return values;
     })();
 
-    tutorial.ElapsedConfig = (function () {
+    tutorial.ElapsedConfig = (function() {
+
         /**
          * Properties of an ElapsedConfig.
          * @memberof tutorial
@@ -2573,11 +2119,7 @@ $root.tutorial = (function () {
         function ElapsedConfig(properties) {
             this.timerName = [];
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -2628,26 +2170,15 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         ElapsedConfig.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
+            if (!writer)
+                writer = $Writer.create();
             if (message.timerName != null && message.timerName.length)
                 for (var i = 0; i < message.timerName.length; ++i)
-                    writer
-                        .uint32(/* id 1, wireType 2 =*/ 10)
-                        .string(message.timerName[i]);
-            if (
-                message.maxTravelMS != null &&
-                Object.hasOwnProperty.call(message, "maxTravelMS")
-            )
-                writer
-                    .uint32(/* id 3, wireType 0 =*/ 24)
-                    .uint32(message.maxTravelMS);
-            if (
-                message.minTravelMS != null &&
-                Object.hasOwnProperty.call(message, "minTravelMS")
-            )
-                writer
-                    .uint32(/* id 4, wireType 0 =*/ 32)
-                    .uint32(message.minTravelMS);
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.timerName[i]);
+            if (message.maxTravelMS != null && Object.hasOwnProperty.call(message, "maxTravelMS"))
+                writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.maxTravelMS);
+            if (message.minTravelMS != null && Object.hasOwnProperty.call(message, "minTravelMS"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.minTravelMS);
             return writer;
         };
 
@@ -2660,10 +2191,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        ElapsedConfig.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        ElapsedConfig.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -2679,29 +2207,29 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         ElapsedConfig.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.ElapsedConfig();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.ElapsedConfig();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
+                case 1: {
                         if (!(message.timerName && message.timerName.length))
                             message.timerName = [];
                         message.timerName.push(reader.string());
                         break;
                     }
-                    case 3: {
+                case 3: {
                         message.maxTravelMS = reader.uint32();
                         break;
                     }
-                    case 4: {
+                case 4: {
                         message.minTravelMS = reader.uint32();
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -2718,7 +2246,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         ElapsedConfig.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -2733,26 +2262,17 @@ $root.tutorial = (function () {
         ElapsedConfig.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (
-                message.timerName != null &&
-                message.hasOwnProperty("timerName")
-            ) {
+            if (message.timerName != null && message.hasOwnProperty("timerName")) {
                 if (!Array.isArray(message.timerName))
                     return "timerName: array expected";
                 for (var i = 0; i < message.timerName.length; ++i)
                     if (!$util.isString(message.timerName[i]))
                         return "timerName: string[] expected";
             }
-            if (
-                message.maxTravelMS != null &&
-                message.hasOwnProperty("maxTravelMS")
-            )
+            if (message.maxTravelMS != null && message.hasOwnProperty("maxTravelMS"))
                 if (!$util.isInteger(message.maxTravelMS))
                     return "maxTravelMS: integer expected";
-            if (
-                message.minTravelMS != null &&
-                message.hasOwnProperty("minTravelMS")
-            )
+            if (message.minTravelMS != null && message.hasOwnProperty("minTravelMS"))
                 if (!$util.isInteger(message.minTravelMS))
                     return "minTravelMS: integer expected";
             return null;
@@ -2767,13 +2287,12 @@ $root.tutorial = (function () {
          * @returns {tutorial.ElapsedConfig} ElapsedConfig
          */
         ElapsedConfig.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.ElapsedConfig) return object;
+            if (object instanceof $root.tutorial.ElapsedConfig)
+                return object;
             var message = new $root.tutorial.ElapsedConfig();
             if (object.timerName) {
                 if (!Array.isArray(object.timerName))
-                    throw TypeError(
-                        ".tutorial.ElapsedConfig.timerName: array expected"
-                    );
+                    throw TypeError(".tutorial.ElapsedConfig.timerName: array expected");
                 message.timerName = [];
                 for (var i = 0; i < object.timerName.length; ++i)
                     message.timerName[i] = String(object.timerName[i]);
@@ -2795,9 +2314,11 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         ElapsedConfig.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
-            if (options.arrays || options.defaults) object.timerName = [];
+            if (options.arrays || options.defaults)
+                object.timerName = [];
             if (options.defaults) {
                 object.maxTravelMS = 0;
                 object.minTravelMS = 0;
@@ -2807,15 +2328,9 @@ $root.tutorial = (function () {
                 for (var j = 0; j < message.timerName.length; ++j)
                     object.timerName[j] = message.timerName[j];
             }
-            if (
-                message.maxTravelMS != null &&
-                message.hasOwnProperty("maxTravelMS")
-            )
+            if (message.maxTravelMS != null && message.hasOwnProperty("maxTravelMS"))
                 object.maxTravelMS = message.maxTravelMS;
-            if (
-                message.minTravelMS != null &&
-                message.hasOwnProperty("minTravelMS")
-            )
+            if (message.minTravelMS != null && message.hasOwnProperty("minTravelMS"))
                 object.minTravelMS = message.minTravelMS;
             return object;
         };
@@ -2828,10 +2343,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         ElapsedConfig.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -2852,7 +2364,8 @@ $root.tutorial = (function () {
         return ElapsedConfig;
     })();
 
-    tutorial.TimerConfig = (function () {
+    tutorial.TimerConfig = (function() {
+
         /**
          * Properties of a TimerConfig.
          * @memberof tutorial
@@ -2867,6 +2380,7 @@ $root.tutorial = (function () {
          * @property {tutorial.ITimerConfigOpposedStarter|null} [timerConfigOpposedStarter] TimerConfig timerConfigOpposedStarter
          * @property {number|null} [maxTrackSeconds] TimerConfig maxTrackSeconds
          * @property {boolean|null} [deleted] TimerConfig deleted
+         * @property {number|null} [seq] TimerConfig seq
          */
 
         /**
@@ -2879,11 +2393,7 @@ $root.tutorial = (function () {
          */
         function TimerConfig(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -2969,6 +2479,14 @@ $root.tutorial = (function () {
         TimerConfig.prototype.deleted = false;
 
         /**
+         * TimerConfig seq.
+         * @member {number} seq
+         * @memberof tutorial.TimerConfig
+         * @instance
+         */
+        TimerConfig.prototype.seq = 0;
+
+        /**
          * Creates a new TimerConfig instance using the specified properties.
          * @function create
          * @memberof tutorial.TimerConfig
@@ -2990,75 +2508,30 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerConfig.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.timerName != null &&
-                Object.hasOwnProperty.call(message, "timerName")
-            )
-                writer
-                    .uint32(/* id 1, wireType 2 =*/ 10)
-                    .string(message.timerName);
-            if (
-                message.timerMqttClientId != null &&
-                Object.hasOwnProperty.call(message, "timerMqttClientId")
-            )
-                writer
-                    .uint32(/* id 2, wireType 2 =*/ 18)
-                    .string(message.timerMqttClientId);
-            if (
-                message.useGpsTime != null &&
-                Object.hasOwnProperty.call(message, "useGpsTime")
-            )
-                writer
-                    .uint32(/* id 3, wireType 0 =*/ 24)
-                    .bool(message.useGpsTime);
-            if (
-                message.orgId != null &&
-                Object.hasOwnProperty.call(message, "orgId")
-            )
-                writer.uint32(/* id 4, wireType 2 =*/ 34).string(message.orgId);
-            if (
-                message.orgIz != null &&
-                Object.hasOwnProperty.call(message, "orgIz")
-            )
-                writer.uint32(/* id 5, wireType 2 =*/ 42).string(message.orgIz);
-            if (
-                message.sensorLogic != null &&
-                Object.hasOwnProperty.call(message, "sensorLogic")
-            )
-                writer
-                    .uint32(/* id 6, wireType 0 =*/ 48)
-                    .int32(message.sensorLogic);
-            if (
-                message.timerConfigLanePhotoEye != null &&
-                Object.hasOwnProperty.call(message, "timerConfigLanePhotoEye")
-            )
-                $root.tutorial.TimerConfigLanePhotoEye.encode(
-                    message.timerConfigLanePhotoEye,
-                    writer.uint32(/* id 7, wireType 2 =*/ 58).fork()
-                ).ldelim();
-            if (
-                message.timerConfigOpposedStarter != null &&
-                Object.hasOwnProperty.call(message, "timerConfigOpposedStarter")
-            )
-                $root.tutorial.TimerConfigOpposedStarter.encode(
-                    message.timerConfigOpposedStarter,
-                    writer.uint32(/* id 8, wireType 2 =*/ 66).fork()
-                ).ldelim();
-            if (
-                message.maxTrackSeconds != null &&
-                Object.hasOwnProperty.call(message, "maxTrackSeconds")
-            )
-                writer
-                    .uint32(/* id 9, wireType 0 =*/ 72)
-                    .uint32(message.maxTrackSeconds);
-            if (
-                message.deleted != null &&
-                Object.hasOwnProperty.call(message, "deleted")
-            )
-                writer
-                    .uint32(/* id 10, wireType 0 =*/ 80)
-                    .bool(message.deleted);
+            if (!writer)
+                writer = $Writer.create();
+            if (message.timerName != null && Object.hasOwnProperty.call(message, "timerName"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.timerName);
+            if (message.timerMqttClientId != null && Object.hasOwnProperty.call(message, "timerMqttClientId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.timerMqttClientId);
+            if (message.useGpsTime != null && Object.hasOwnProperty.call(message, "useGpsTime"))
+                writer.uint32(/* id 3, wireType 0 =*/24).bool(message.useGpsTime);
+            if (message.orgId != null && Object.hasOwnProperty.call(message, "orgId"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.orgId);
+            if (message.orgIz != null && Object.hasOwnProperty.call(message, "orgIz"))
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.orgIz);
+            if (message.sensorLogic != null && Object.hasOwnProperty.call(message, "sensorLogic"))
+                writer.uint32(/* id 6, wireType 0 =*/48).int32(message.sensorLogic);
+            if (message.timerConfigLanePhotoEye != null && Object.hasOwnProperty.call(message, "timerConfigLanePhotoEye"))
+                $root.tutorial.TimerConfigLanePhotoEye.encode(message.timerConfigLanePhotoEye, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
+            if (message.timerConfigOpposedStarter != null && Object.hasOwnProperty.call(message, "timerConfigOpposedStarter"))
+                $root.tutorial.TimerConfigOpposedStarter.encode(message.timerConfigOpposedStarter, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
+            if (message.maxTrackSeconds != null && Object.hasOwnProperty.call(message, "maxTrackSeconds"))
+                writer.uint32(/* id 9, wireType 0 =*/72).uint32(message.maxTrackSeconds);
+            if (message.deleted != null && Object.hasOwnProperty.call(message, "deleted"))
+                writer.uint32(/* id 10, wireType 0 =*/80).bool(message.deleted);
+            if (message.seq != null && Object.hasOwnProperty.call(message, "seq"))
+                writer.uint32(/* id 11, wireType 0 =*/88).uint32(message.seq);
             return writer;
         };
 
@@ -3071,10 +2544,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        TimerConfig.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        TimerConfig.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -3090,61 +2560,59 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerConfig.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerConfig();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerConfig();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
+                case 1: {
                         message.timerName = reader.string();
                         break;
                     }
-                    case 2: {
+                case 2: {
                         message.timerMqttClientId = reader.string();
                         break;
                     }
-                    case 3: {
+                case 3: {
                         message.useGpsTime = reader.bool();
                         break;
                     }
-                    case 4: {
+                case 4: {
                         message.orgId = reader.string();
                         break;
                     }
-                    case 5: {
+                case 5: {
                         message.orgIz = reader.string();
                         break;
                     }
-                    case 6: {
+                case 6: {
                         message.sensorLogic = reader.int32();
                         break;
                     }
-                    case 7: {
-                        message.timerConfigLanePhotoEye = $root.tutorial.TimerConfigLanePhotoEye.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 7: {
+                        message.timerConfigLanePhotoEye = $root.tutorial.TimerConfigLanePhotoEye.decode(reader, reader.uint32());
                         break;
                     }
-                    case 8: {
-                        message.timerConfigOpposedStarter = $root.tutorial.TimerConfigOpposedStarter.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 8: {
+                        message.timerConfigOpposedStarter = $root.tutorial.TimerConfigOpposedStarter.decode(reader, reader.uint32());
                         break;
                     }
-                    case 9: {
+                case 9: {
                         message.maxTrackSeconds = reader.uint32();
                         break;
                     }
-                    case 10: {
+                case 10: {
                         message.deleted = reader.bool();
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
+                case 11: {
+                        message.seq = reader.uint32();
                         break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -3161,7 +2629,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerConfig.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -3176,22 +2645,13 @@ $root.tutorial = (function () {
         TimerConfig.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (
-                message.timerName != null &&
-                message.hasOwnProperty("timerName")
-            )
+            if (message.timerName != null && message.hasOwnProperty("timerName"))
                 if (!$util.isString(message.timerName))
                     return "timerName: string expected";
-            if (
-                message.timerMqttClientId != null &&
-                message.hasOwnProperty("timerMqttClientId")
-            )
+            if (message.timerMqttClientId != null && message.hasOwnProperty("timerMqttClientId"))
                 if (!$util.isString(message.timerMqttClientId))
                     return "timerMqttClientId: string expected";
-            if (
-                message.useGpsTime != null &&
-                message.hasOwnProperty("useGpsTime")
-            )
+            if (message.useGpsTime != null && message.hasOwnProperty("useGpsTime"))
                 if (typeof message.useGpsTime !== "boolean")
                     return "useGpsTime: boolean expected";
             if (message.orgId != null && message.hasOwnProperty("orgId"))
@@ -3200,44 +2660,33 @@ $root.tutorial = (function () {
             if (message.orgIz != null && message.hasOwnProperty("orgIz"))
                 if (!$util.isString(message.orgIz))
                     return "orgIz: string expected";
-            if (
-                message.sensorLogic != null &&
-                message.hasOwnProperty("sensorLogic")
-            )
+            if (message.sensorLogic != null && message.hasOwnProperty("sensorLogic"))
                 switch (message.sensorLogic) {
-                    default:
-                        return "sensorLogic: enum value expected";
-                    case 1:
-                    case 2:
-                        break;
+                default:
+                    return "sensorLogic: enum value expected";
+                case 1:
+                case 2:
+                    break;
                 }
-            if (
-                message.timerConfigLanePhotoEye != null &&
-                message.hasOwnProperty("timerConfigLanePhotoEye")
-            ) {
-                var error = $root.tutorial.TimerConfigLanePhotoEye.verify(
-                    message.timerConfigLanePhotoEye
-                );
-                if (error) return "timerConfigLanePhotoEye." + error;
+            if (message.timerConfigLanePhotoEye != null && message.hasOwnProperty("timerConfigLanePhotoEye")) {
+                var error = $root.tutorial.TimerConfigLanePhotoEye.verify(message.timerConfigLanePhotoEye);
+                if (error)
+                    return "timerConfigLanePhotoEye." + error;
             }
-            if (
-                message.timerConfigOpposedStarter != null &&
-                message.hasOwnProperty("timerConfigOpposedStarter")
-            ) {
-                var error = $root.tutorial.TimerConfigOpposedStarter.verify(
-                    message.timerConfigOpposedStarter
-                );
-                if (error) return "timerConfigOpposedStarter." + error;
+            if (message.timerConfigOpposedStarter != null && message.hasOwnProperty("timerConfigOpposedStarter")) {
+                var error = $root.tutorial.TimerConfigOpposedStarter.verify(message.timerConfigOpposedStarter);
+                if (error)
+                    return "timerConfigOpposedStarter." + error;
             }
-            if (
-                message.maxTrackSeconds != null &&
-                message.hasOwnProperty("maxTrackSeconds")
-            )
+            if (message.maxTrackSeconds != null && message.hasOwnProperty("maxTrackSeconds"))
                 if (!$util.isInteger(message.maxTrackSeconds))
                     return "maxTrackSeconds: integer expected";
             if (message.deleted != null && message.hasOwnProperty("deleted"))
                 if (typeof message.deleted !== "boolean")
                     return "deleted: boolean expected";
+            if (message.seq != null && message.hasOwnProperty("seq"))
+                if (!$util.isInteger(message.seq))
+                    return "seq: integer expected";
             return null;
         };
 
@@ -3250,7 +2699,8 @@ $root.tutorial = (function () {
          * @returns {tutorial.TimerConfig} TimerConfig
          */
         TimerConfig.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.TimerConfig) return object;
+            if (object instanceof $root.tutorial.TimerConfig)
+                return object;
             var message = new $root.tutorial.TimerConfig();
             if (object.timerName != null)
                 message.timerName = String(object.timerName);
@@ -3258,46 +2708,42 @@ $root.tutorial = (function () {
                 message.timerMqttClientId = String(object.timerMqttClientId);
             if (object.useGpsTime != null)
                 message.useGpsTime = Boolean(object.useGpsTime);
-            if (object.orgId != null) message.orgId = String(object.orgId);
-            if (object.orgIz != null) message.orgIz = String(object.orgIz);
+            if (object.orgId != null)
+                message.orgId = String(object.orgId);
+            if (object.orgIz != null)
+                message.orgIz = String(object.orgIz);
             switch (object.sensorLogic) {
-                default:
-                    if (typeof object.sensorLogic === "number") {
-                        message.sensorLogic = object.sensorLogic;
-                        break;
-                    }
+            default:
+                if (typeof object.sensorLogic === "number") {
+                    message.sensorLogic = object.sensorLogic;
                     break;
-                case "LanePhotoEyes":
-                case 1:
-                    message.sensorLogic = 1;
-                    break;
-                case "OpposedStarterReeds":
-                case 2:
-                    message.sensorLogic = 2;
-                    break;
+                }
+                break;
+            case "LanePhotoEyes":
+            case 1:
+                message.sensorLogic = 1;
+                break;
+            case "OpposedStarterReeds":
+            case 2:
+                message.sensorLogic = 2;
+                break;
             }
             if (object.timerConfigLanePhotoEye != null) {
                 if (typeof object.timerConfigLanePhotoEye !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerConfig.timerConfigLanePhotoEye: object expected"
-                    );
-                message.timerConfigLanePhotoEye = $root.tutorial.TimerConfigLanePhotoEye.fromObject(
-                    object.timerConfigLanePhotoEye
-                );
+                    throw TypeError(".tutorial.TimerConfig.timerConfigLanePhotoEye: object expected");
+                message.timerConfigLanePhotoEye = $root.tutorial.TimerConfigLanePhotoEye.fromObject(object.timerConfigLanePhotoEye);
             }
             if (object.timerConfigOpposedStarter != null) {
                 if (typeof object.timerConfigOpposedStarter !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerConfig.timerConfigOpposedStarter: object expected"
-                    );
-                message.timerConfigOpposedStarter = $root.tutorial.TimerConfigOpposedStarter.fromObject(
-                    object.timerConfigOpposedStarter
-                );
+                    throw TypeError(".tutorial.TimerConfig.timerConfigOpposedStarter: object expected");
+                message.timerConfigOpposedStarter = $root.tutorial.TimerConfigOpposedStarter.fromObject(object.timerConfigOpposedStarter);
             }
             if (object.maxTrackSeconds != null)
                 message.maxTrackSeconds = object.maxTrackSeconds >>> 0;
             if (object.deleted != null)
                 message.deleted = Boolean(object.deleted);
+            if (object.seq != null)
+                message.seq = object.seq >>> 0;
             return message;
         };
 
@@ -3311,7 +2757,8 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         TimerConfig.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
             if (options.defaults) {
                 object.timerName = "";
@@ -3319,66 +2766,35 @@ $root.tutorial = (function () {
                 object.useGpsTime = false;
                 object.orgId = "";
                 object.orgIz = "";
-                object.sensorLogic =
-                    options.enums === String ? "LanePhotoEyes" : 1;
+                object.sensorLogic = options.enums === String ? "LanePhotoEyes" : 1;
                 object.timerConfigLanePhotoEye = null;
                 object.timerConfigOpposedStarter = null;
                 object.maxTrackSeconds = 0;
                 object.deleted = false;
+                object.seq = 0;
             }
-            if (
-                message.timerName != null &&
-                message.hasOwnProperty("timerName")
-            )
+            if (message.timerName != null && message.hasOwnProperty("timerName"))
                 object.timerName = message.timerName;
-            if (
-                message.timerMqttClientId != null &&
-                message.hasOwnProperty("timerMqttClientId")
-            )
+            if (message.timerMqttClientId != null && message.hasOwnProperty("timerMqttClientId"))
                 object.timerMqttClientId = message.timerMqttClientId;
-            if (
-                message.useGpsTime != null &&
-                message.hasOwnProperty("useGpsTime")
-            )
+            if (message.useGpsTime != null && message.hasOwnProperty("useGpsTime"))
                 object.useGpsTime = message.useGpsTime;
             if (message.orgId != null && message.hasOwnProperty("orgId"))
                 object.orgId = message.orgId;
             if (message.orgIz != null && message.hasOwnProperty("orgIz"))
                 object.orgIz = message.orgIz;
-            if (
-                message.sensorLogic != null &&
-                message.hasOwnProperty("sensorLogic")
-            )
-                object.sensorLogic =
-                    options.enums === String
-                        ? $root.tutorial.SensorLogic[message.sensorLogic] ===
-                          undefined
-                            ? message.sensorLogic
-                            : $root.tutorial.SensorLogic[message.sensorLogic]
-                        : message.sensorLogic;
-            if (
-                message.timerConfigLanePhotoEye != null &&
-                message.hasOwnProperty("timerConfigLanePhotoEye")
-            )
-                object.timerConfigLanePhotoEye = $root.tutorial.TimerConfigLanePhotoEye.toObject(
-                    message.timerConfigLanePhotoEye,
-                    options
-                );
-            if (
-                message.timerConfigOpposedStarter != null &&
-                message.hasOwnProperty("timerConfigOpposedStarter")
-            )
-                object.timerConfigOpposedStarter = $root.tutorial.TimerConfigOpposedStarter.toObject(
-                    message.timerConfigOpposedStarter,
-                    options
-                );
-            if (
-                message.maxTrackSeconds != null &&
-                message.hasOwnProperty("maxTrackSeconds")
-            )
+            if (message.sensorLogic != null && message.hasOwnProperty("sensorLogic"))
+                object.sensorLogic = options.enums === String ? $root.tutorial.SensorLogic[message.sensorLogic] === undefined ? message.sensorLogic : $root.tutorial.SensorLogic[message.sensorLogic] : message.sensorLogic;
+            if (message.timerConfigLanePhotoEye != null && message.hasOwnProperty("timerConfigLanePhotoEye"))
+                object.timerConfigLanePhotoEye = $root.tutorial.TimerConfigLanePhotoEye.toObject(message.timerConfigLanePhotoEye, options);
+            if (message.timerConfigOpposedStarter != null && message.hasOwnProperty("timerConfigOpposedStarter"))
+                object.timerConfigOpposedStarter = $root.tutorial.TimerConfigOpposedStarter.toObject(message.timerConfigOpposedStarter, options);
+            if (message.maxTrackSeconds != null && message.hasOwnProperty("maxTrackSeconds"))
                 object.maxTrackSeconds = message.maxTrackSeconds;
             if (message.deleted != null && message.hasOwnProperty("deleted"))
                 object.deleted = message.deleted;
+            if (message.seq != null && message.hasOwnProperty("seq"))
+                object.seq = message.seq;
             return object;
         };
 
@@ -3390,10 +2806,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerConfig.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -3414,7 +2827,8 @@ $root.tutorial = (function () {
         return TimerConfig;
     })();
 
-    tutorial.TimerConfigLanePhotoEye = (function () {
+    tutorial.TimerConfigLanePhotoEye = (function() {
+
         /**
          * Properties of a TimerConfigLanePhotoEye.
          * @memberof tutorial
@@ -3435,11 +2849,7 @@ $root.tutorial = (function () {
          */
         function TimerConfigLanePhotoEye(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -3498,35 +2908,16 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerConfigLanePhotoEye.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.maxCarLenMS != null &&
-                Object.hasOwnProperty.call(message, "maxCarLenMS")
-            )
-                writer
-                    .uint32(/* id 1, wireType 0 =*/ 8)
-                    .uint32(message.maxCarLenMS);
-            if (
-                message.minCarLenMS != null &&
-                Object.hasOwnProperty.call(message, "minCarLenMS")
-            )
-                writer
-                    .uint32(/* id 2, wireType 0 =*/ 16)
-                    .uint32(message.minCarLenMS);
-            if (
-                message.maxPerfCount != null &&
-                Object.hasOwnProperty.call(message, "maxPerfCount")
-            )
-                writer
-                    .uint32(/* id 3, wireType 0 =*/ 24)
-                    .uint32(message.maxPerfCount);
-            if (
-                message.clearMS != null &&
-                Object.hasOwnProperty.call(message, "clearMS")
-            )
-                writer
-                    .uint32(/* id 4, wireType 0 =*/ 32)
-                    .uint32(message.clearMS);
+            if (!writer)
+                writer = $Writer.create();
+            if (message.maxCarLenMS != null && Object.hasOwnProperty.call(message, "maxCarLenMS"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.maxCarLenMS);
+            if (message.minCarLenMS != null && Object.hasOwnProperty.call(message, "minCarLenMS"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.minCarLenMS);
+            if (message.maxPerfCount != null && Object.hasOwnProperty.call(message, "maxPerfCount"))
+                writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.maxPerfCount);
+            if (message.clearMS != null && Object.hasOwnProperty.call(message, "clearMS"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.clearMS);
             return writer;
         };
 
@@ -3539,10 +2930,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        TimerConfigLanePhotoEye.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        TimerConfigLanePhotoEye.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -3558,31 +2946,31 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerConfigLanePhotoEye.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerConfigLanePhotoEye();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerConfigLanePhotoEye();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
+                case 1: {
                         message.maxCarLenMS = reader.uint32();
                         break;
                     }
-                    case 2: {
+                case 2: {
                         message.minCarLenMS = reader.uint32();
                         break;
                     }
-                    case 3: {
+                case 3: {
                         message.maxPerfCount = reader.uint32();
                         break;
                     }
-                    case 4: {
+                case 4: {
                         message.clearMS = reader.uint32();
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -3598,10 +2986,9 @@ $root.tutorial = (function () {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        TimerConfigLanePhotoEye.decodeDelimited = function decodeDelimited(
-            reader
-        ) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+        TimerConfigLanePhotoEye.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -3616,22 +3003,13 @@ $root.tutorial = (function () {
         TimerConfigLanePhotoEye.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (
-                message.maxCarLenMS != null &&
-                message.hasOwnProperty("maxCarLenMS")
-            )
+            if (message.maxCarLenMS != null && message.hasOwnProperty("maxCarLenMS"))
                 if (!$util.isInteger(message.maxCarLenMS))
                     return "maxCarLenMS: integer expected";
-            if (
-                message.minCarLenMS != null &&
-                message.hasOwnProperty("minCarLenMS")
-            )
+            if (message.minCarLenMS != null && message.hasOwnProperty("minCarLenMS"))
                 if (!$util.isInteger(message.minCarLenMS))
                     return "minCarLenMS: integer expected";
-            if (
-                message.maxPerfCount != null &&
-                message.hasOwnProperty("maxPerfCount")
-            )
+            if (message.maxPerfCount != null && message.hasOwnProperty("maxPerfCount"))
                 if (!$util.isInteger(message.maxPerfCount))
                     return "maxPerfCount: integer expected";
             if (message.clearMS != null && message.hasOwnProperty("clearMS"))
@@ -3658,7 +3036,8 @@ $root.tutorial = (function () {
                 message.minCarLenMS = object.minCarLenMS >>> 0;
             if (object.maxPerfCount != null)
                 message.maxPerfCount = object.maxPerfCount >>> 0;
-            if (object.clearMS != null) message.clearMS = object.clearMS >>> 0;
+            if (object.clearMS != null)
+                message.clearMS = object.clearMS >>> 0;
             return message;
         };
 
@@ -3672,7 +3051,8 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         TimerConfigLanePhotoEye.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
             if (options.defaults) {
                 object.maxCarLenMS = 0;
@@ -3680,20 +3060,11 @@ $root.tutorial = (function () {
                 object.maxPerfCount = 0;
                 object.clearMS = 0;
             }
-            if (
-                message.maxCarLenMS != null &&
-                message.hasOwnProperty("maxCarLenMS")
-            )
+            if (message.maxCarLenMS != null && message.hasOwnProperty("maxCarLenMS"))
                 object.maxCarLenMS = message.maxCarLenMS;
-            if (
-                message.minCarLenMS != null &&
-                message.hasOwnProperty("minCarLenMS")
-            )
+            if (message.minCarLenMS != null && message.hasOwnProperty("minCarLenMS"))
                 object.minCarLenMS = message.minCarLenMS;
-            if (
-                message.maxPerfCount != null &&
-                message.hasOwnProperty("maxPerfCount")
-            )
+            if (message.maxPerfCount != null && message.hasOwnProperty("maxPerfCount"))
                 object.maxPerfCount = message.maxPerfCount;
             if (message.clearMS != null && message.hasOwnProperty("clearMS"))
                 object.clearMS = message.clearMS;
@@ -3708,10 +3079,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerConfigLanePhotoEye.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -3722,9 +3090,7 @@ $root.tutorial = (function () {
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
          */
-        TimerConfigLanePhotoEye.getTypeUrl = function getTypeUrl(
-            typeUrlPrefix
-        ) {
+        TimerConfigLanePhotoEye.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
@@ -3734,7 +3100,8 @@ $root.tutorial = (function () {
         return TimerConfigLanePhotoEye;
     })();
 
-    tutorial.TimerConfigOpposedStarter = (function () {
+    tutorial.TimerConfigOpposedStarter = (function() {
+
         /**
          * Properties of a TimerConfigOpposedStarter.
          * @memberof tutorial
@@ -3755,11 +3122,7 @@ $root.tutorial = (function () {
         function TimerConfigOpposedStarter(properties) {
             this.paddlesUp = [];
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -3810,27 +3173,15 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerConfigOpposedStarter.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
+            if (!writer)
+                writer = $Writer.create();
             if (message.paddlesUp != null && message.paddlesUp.length)
                 for (var i = 0; i < message.paddlesUp.length; ++i)
-                    $root.tutorial.TimerConfigOpposedPosition.encode(
-                        message.paddlesUp[i],
-                        writer.uint32(/* id 1, wireType 2 =*/ 10).fork()
-                    ).ldelim();
-            if (
-                message.maxTransitionMS != null &&
-                Object.hasOwnProperty.call(message, "maxTransitionMS")
-            )
-                writer
-                    .uint32(/* id 2, wireType 0 =*/ 16)
-                    .uint32(message.maxTransitionMS);
-            if (
-                message.minTransitionMS != null &&
-                Object.hasOwnProperty.call(message, "minTransitionMS")
-            )
-                writer
-                    .uint32(/* id 3, wireType 0 =*/ 24)
-                    .uint32(message.minTransitionMS);
+                    $root.tutorial.TimerConfigOpposedPosition.encode(message.paddlesUp[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.maxTransitionMS != null && Object.hasOwnProperty.call(message, "maxTransitionMS"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.maxTransitionMS);
+            if (message.minTransitionMS != null && Object.hasOwnProperty.call(message, "minTransitionMS"))
+                writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.minTransitionMS);
             return writer;
         };
 
@@ -3843,10 +3194,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        TimerConfigOpposedStarter.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        TimerConfigOpposedStarter.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -3862,34 +3210,29 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerConfigOpposedStarter.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerConfigOpposedStarter();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerConfigOpposedStarter();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
+                case 1: {
                         if (!(message.paddlesUp && message.paddlesUp.length))
                             message.paddlesUp = [];
-                        message.paddlesUp.push(
-                            $root.tutorial.TimerConfigOpposedPosition.decode(
-                                reader,
-                                reader.uint32()
-                            )
-                        );
+                        message.paddlesUp.push($root.tutorial.TimerConfigOpposedPosition.decode(reader, reader.uint32()));
                         break;
                     }
-                    case 2: {
+                case 2: {
                         message.maxTransitionMS = reader.uint32();
                         break;
                     }
-                    case 3: {
+                case 3: {
                         message.minTransitionMS = reader.uint32();
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -3905,10 +3248,9 @@ $root.tutorial = (function () {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        TimerConfigOpposedStarter.decodeDelimited = function decodeDelimited(
-            reader
-        ) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+        TimerConfigOpposedStarter.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -3923,29 +3265,19 @@ $root.tutorial = (function () {
         TimerConfigOpposedStarter.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (
-                message.paddlesUp != null &&
-                message.hasOwnProperty("paddlesUp")
-            ) {
+            if (message.paddlesUp != null && message.hasOwnProperty("paddlesUp")) {
                 if (!Array.isArray(message.paddlesUp))
                     return "paddlesUp: array expected";
                 for (var i = 0; i < message.paddlesUp.length; ++i) {
-                    var error = $root.tutorial.TimerConfigOpposedPosition.verify(
-                        message.paddlesUp[i]
-                    );
-                    if (error) return "paddlesUp." + error;
+                    var error = $root.tutorial.TimerConfigOpposedPosition.verify(message.paddlesUp[i]);
+                    if (error)
+                        return "paddlesUp." + error;
                 }
             }
-            if (
-                message.maxTransitionMS != null &&
-                message.hasOwnProperty("maxTransitionMS")
-            )
+            if (message.maxTransitionMS != null && message.hasOwnProperty("maxTransitionMS"))
                 if (!$util.isInteger(message.maxTransitionMS))
                     return "maxTransitionMS: integer expected";
-            if (
-                message.minTransitionMS != null &&
-                message.hasOwnProperty("minTransitionMS")
-            )
+            if (message.minTransitionMS != null && message.hasOwnProperty("minTransitionMS"))
                 if (!$util.isInteger(message.minTransitionMS))
                     return "minTransitionMS: integer expected";
             return null;
@@ -3965,20 +3297,12 @@ $root.tutorial = (function () {
             var message = new $root.tutorial.TimerConfigOpposedStarter();
             if (object.paddlesUp) {
                 if (!Array.isArray(object.paddlesUp))
-                    throw TypeError(
-                        ".tutorial.TimerConfigOpposedStarter.paddlesUp: array expected"
-                    );
+                    throw TypeError(".tutorial.TimerConfigOpposedStarter.paddlesUp: array expected");
                 message.paddlesUp = [];
                 for (var i = 0; i < object.paddlesUp.length; ++i) {
                     if (typeof object.paddlesUp[i] !== "object")
-                        throw TypeError(
-                            ".tutorial.TimerConfigOpposedStarter.paddlesUp: object expected"
-                        );
-                    message.paddlesUp[
-                        i
-                    ] = $root.tutorial.TimerConfigOpposedPosition.fromObject(
-                        object.paddlesUp[i]
-                    );
+                        throw TypeError(".tutorial.TimerConfigOpposedStarter.paddlesUp: object expected");
+                    message.paddlesUp[i] = $root.tutorial.TimerConfigOpposedPosition.fromObject(object.paddlesUp[i]);
                 }
             }
             if (object.maxTransitionMS != null)
@@ -3997,13 +3321,12 @@ $root.tutorial = (function () {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        TimerConfigOpposedStarter.toObject = function toObject(
-            message,
-            options
-        ) {
-            if (!options) options = {};
+        TimerConfigOpposedStarter.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
             var object = {};
-            if (options.arrays || options.defaults) object.paddlesUp = [];
+            if (options.arrays || options.defaults)
+                object.paddlesUp = [];
             if (options.defaults) {
                 object.maxTransitionMS = 0;
                 object.minTransitionMS = 0;
@@ -4011,22 +3334,11 @@ $root.tutorial = (function () {
             if (message.paddlesUp && message.paddlesUp.length) {
                 object.paddlesUp = [];
                 for (var j = 0; j < message.paddlesUp.length; ++j)
-                    object.paddlesUp[
-                        j
-                    ] = $root.tutorial.TimerConfigOpposedPosition.toObject(
-                        message.paddlesUp[j],
-                        options
-                    );
+                    object.paddlesUp[j] = $root.tutorial.TimerConfigOpposedPosition.toObject(message.paddlesUp[j], options);
             }
-            if (
-                message.maxTransitionMS != null &&
-                message.hasOwnProperty("maxTransitionMS")
-            )
+            if (message.maxTransitionMS != null && message.hasOwnProperty("maxTransitionMS"))
                 object.maxTransitionMS = message.maxTransitionMS;
-            if (
-                message.minTransitionMS != null &&
-                message.hasOwnProperty("minTransitionMS")
-            )
+            if (message.minTransitionMS != null && message.hasOwnProperty("minTransitionMS"))
                 object.minTransitionMS = message.minTransitionMS;
             return object;
         };
@@ -4039,10 +3351,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerConfigOpposedStarter.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -4053,9 +3362,7 @@ $root.tutorial = (function () {
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
          */
-        TimerConfigOpposedStarter.getTypeUrl = function getTypeUrl(
-            typeUrlPrefix
-        ) {
+        TimerConfigOpposedStarter.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
@@ -4065,7 +3372,8 @@ $root.tutorial = (function () {
         return TimerConfigOpposedStarter;
     })();
 
-    tutorial.TimerConfigOpposedPosition = (function () {
+    tutorial.TimerConfigOpposedPosition = (function() {
+
         /**
          * Properties of a TimerConfigOpposedPosition.
          * @memberof tutorial
@@ -4084,11 +3392,7 @@ $root.tutorial = (function () {
          */
         function TimerConfigOpposedPosition(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -4131,21 +3435,12 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerConfigOpposedPosition.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.pinState != null &&
-                Object.hasOwnProperty.call(message, "pinState")
-            )
-                writer
-                    .uint32(/* id 1, wireType 0 =*/ 8)
-                    .int32(message.pinState);
-            if (
-                message.pinName != null &&
-                Object.hasOwnProperty.call(message, "pinName")
-            )
-                writer
-                    .uint32(/* id 2, wireType 0 =*/ 16)
-                    .int32(message.pinName);
+            if (!writer)
+                writer = $Writer.create();
+            if (message.pinState != null && Object.hasOwnProperty.call(message, "pinState"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.pinState);
+            if (message.pinName != null && Object.hasOwnProperty.call(message, "pinName"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.pinName);
             return writer;
         };
 
@@ -4158,10 +3453,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        TimerConfigOpposedPosition.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        TimerConfigOpposedPosition.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -4177,23 +3469,23 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerConfigOpposedPosition.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerConfigOpposedPosition();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerConfigOpposedPosition();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
+                case 1: {
                         message.pinState = reader.int32();
                         break;
                     }
-                    case 2: {
+                case 2: {
                         message.pinName = reader.int32();
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -4209,10 +3501,9 @@ $root.tutorial = (function () {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        TimerConfigOpposedPosition.decodeDelimited = function decodeDelimited(
-            reader
-        ) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+        TimerConfigOpposedPosition.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -4229,23 +3520,23 @@ $root.tutorial = (function () {
                 return "object expected";
             if (message.pinState != null && message.hasOwnProperty("pinState"))
                 switch (message.pinState) {
-                    default:
-                        return "pinState: enum value expected";
-                    case 0:
-                    case 1:
-                    case 2:
-                        break;
+                default:
+                    return "pinState: enum value expected";
+                case 0:
+                case 1:
+                case 2:
+                    break;
                 }
             if (message.pinName != null && message.hasOwnProperty("pinName"))
                 switch (message.pinName) {
-                    default:
-                        return "pinName: enum value expected";
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 9:
-                        break;
+                default:
+                    return "pinName: enum value expected";
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 9:
+                    break;
                 }
             return null;
         };
@@ -4263,52 +3554,52 @@ $root.tutorial = (function () {
                 return object;
             var message = new $root.tutorial.TimerConfigOpposedPosition();
             switch (object.pinState) {
-                default:
-                    if (typeof object.pinState === "number") {
-                        message.pinState = object.pinState;
-                        break;
-                    }
+            default:
+                if (typeof object.pinState === "number") {
+                    message.pinState = object.pinState;
                     break;
-                case "OFF":
-                case 0:
-                    message.pinState = 0;
-                    break;
-                case "ON":
-                case 1:
-                    message.pinState = 1;
-                    break;
-                case "UNKNOWN_STATE":
-                case 2:
-                    message.pinState = 2;
-                    break;
+                }
+                break;
+            case "CLEAR":
+            case 0:
+                message.pinState = 0;
+                break;
+            case "BLOCKED":
+            case 1:
+                message.pinState = 1;
+                break;
+            case "UNKNOWN_STATE":
+            case 2:
+                message.pinState = 2;
+                break;
             }
             switch (object.pinName) {
-                default:
-                    if (typeof object.pinName === "number") {
-                        message.pinName = object.pinName;
-                        break;
-                    }
+            default:
+                if (typeof object.pinName === "number") {
+                    message.pinName = object.pinName;
                     break;
-                case "lane1":
-                case 1:
-                    message.pinName = 1;
-                    break;
-                case "lane2":
-                case 2:
-                    message.pinName = 2;
-                    break;
-                case "gpsHz":
-                case 3:
-                    message.pinName = 3;
-                    break;
-                case "oneHz":
-                case 4:
-                    message.pinName = 4;
-                    break;
-                case "UNKNOWN_PIN":
-                case 9:
-                    message.pinName = 9;
-                    break;
+                }
+                break;
+            case "lane1":
+            case 1:
+                message.pinName = 1;
+                break;
+            case "lane2":
+            case 2:
+                message.pinName = 2;
+                break;
+            case "gpsHz":
+            case 3:
+                message.pinName = 3;
+                break;
+            case "oneHz":
+            case 4:
+                message.pinName = 4;
+                break;
+            case "UNKNOWN_PIN":
+            case 9:
+                message.pinName = 9;
+                break;
             }
             return message;
         };
@@ -4322,31 +3613,18 @@ $root.tutorial = (function () {
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
-        TimerConfigOpposedPosition.toObject = function toObject(
-            message,
-            options
-        ) {
-            if (!options) options = {};
+        TimerConfigOpposedPosition.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
             var object = {};
             if (options.defaults) {
-                object.pinState = options.enums === String ? "OFF" : 0;
+                object.pinState = options.enums === String ? "CLEAR" : 0;
                 object.pinName = options.enums === String ? "lane1" : 1;
             }
             if (message.pinState != null && message.hasOwnProperty("pinState"))
-                object.pinState =
-                    options.enums === String
-                        ? $root.tutorial.PinState[message.pinState] ===
-                          undefined
-                            ? message.pinState
-                            : $root.tutorial.PinState[message.pinState]
-                        : message.pinState;
+                object.pinState = options.enums === String ? $root.tutorial.PinState[message.pinState] === undefined ? message.pinState : $root.tutorial.PinState[message.pinState] : message.pinState;
             if (message.pinName != null && message.hasOwnProperty("pinName"))
-                object.pinName =
-                    options.enums === String
-                        ? $root.tutorial.PinName[message.pinName] === undefined
-                            ? message.pinName
-                            : $root.tutorial.PinName[message.pinName]
-                        : message.pinName;
+                object.pinName = options.enums === String ? $root.tutorial.PinName[message.pinName] === undefined ? message.pinName : $root.tutorial.PinName[message.pinName] : message.pinName;
             return object;
         };
 
@@ -4358,10 +3636,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerConfigOpposedPosition.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -4372,9 +3647,7 @@ $root.tutorial = (function () {
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
          */
-        TimerConfigOpposedPosition.getTypeUrl = function getTypeUrl(
-            typeUrlPrefix
-        ) {
+        TimerConfigOpposedPosition.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
@@ -4384,7 +3657,8 @@ $root.tutorial = (function () {
         return TimerConfigOpposedPosition;
     })();
 
-    tutorial.TimerEventList = (function () {
+    tutorial.TimerEventList = (function() {
+
         /**
          * Properties of a TimerEventList.
          * @memberof tutorial
@@ -4403,11 +3677,7 @@ $root.tutorial = (function () {
         function TimerEventList(properties) {
             this.timerEvent = [];
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -4442,13 +3712,11 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerEventList.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
+            if (!writer)
+                writer = $Writer.create();
             if (message.timerEvent != null && message.timerEvent.length)
                 for (var i = 0; i < message.timerEvent.length; ++i)
-                    $root.tutorial.TimerEvent.encode(
-                        message.timerEvent[i],
-                        writer.uint32(/* id 1, wireType 2 =*/ 10).fork()
-                    ).ldelim();
+                    $root.tutorial.TimerEvent.encode(message.timerEvent[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             return writer;
         };
 
@@ -4461,10 +3729,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        TimerEventList.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        TimerEventList.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -4480,26 +3745,21 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerEventList.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerEventList();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerEventList();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
+                case 1: {
                         if (!(message.timerEvent && message.timerEvent.length))
                             message.timerEvent = [];
-                        message.timerEvent.push(
-                            $root.tutorial.TimerEvent.decode(
-                                reader,
-                                reader.uint32()
-                            )
-                        );
+                        message.timerEvent.push($root.tutorial.TimerEvent.decode(reader, reader.uint32()));
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -4516,7 +3776,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerEventList.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -4531,17 +3792,13 @@ $root.tutorial = (function () {
         TimerEventList.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (
-                message.timerEvent != null &&
-                message.hasOwnProperty("timerEvent")
-            ) {
+            if (message.timerEvent != null && message.hasOwnProperty("timerEvent")) {
                 if (!Array.isArray(message.timerEvent))
                     return "timerEvent: array expected";
                 for (var i = 0; i < message.timerEvent.length; ++i) {
-                    var error = $root.tutorial.TimerEvent.verify(
-                        message.timerEvent[i]
-                    );
-                    if (error) return "timerEvent." + error;
+                    var error = $root.tutorial.TimerEvent.verify(message.timerEvent[i]);
+                    if (error)
+                        return "timerEvent." + error;
                 }
             }
             return null;
@@ -4556,24 +3813,17 @@ $root.tutorial = (function () {
          * @returns {tutorial.TimerEventList} TimerEventList
          */
         TimerEventList.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.TimerEventList) return object;
+            if (object instanceof $root.tutorial.TimerEventList)
+                return object;
             var message = new $root.tutorial.TimerEventList();
             if (object.timerEvent) {
                 if (!Array.isArray(object.timerEvent))
-                    throw TypeError(
-                        ".tutorial.TimerEventList.timerEvent: array expected"
-                    );
+                    throw TypeError(".tutorial.TimerEventList.timerEvent: array expected");
                 message.timerEvent = [];
                 for (var i = 0; i < object.timerEvent.length; ++i) {
                     if (typeof object.timerEvent[i] !== "object")
-                        throw TypeError(
-                            ".tutorial.TimerEventList.timerEvent: object expected"
-                        );
-                    message.timerEvent[
-                        i
-                    ] = $root.tutorial.TimerEvent.fromObject(
-                        object.timerEvent[i]
-                    );
+                        throw TypeError(".tutorial.TimerEventList.timerEvent: object expected");
+                    message.timerEvent[i] = $root.tutorial.TimerEvent.fromObject(object.timerEvent[i]);
                 }
             }
             return message;
@@ -4589,16 +3839,15 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         TimerEventList.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
-            if (options.arrays || options.defaults) object.timerEvent = [];
+            if (options.arrays || options.defaults)
+                object.timerEvent = [];
             if (message.timerEvent && message.timerEvent.length) {
                 object.timerEvent = [];
                 for (var j = 0; j < message.timerEvent.length; ++j)
-                    object.timerEvent[j] = $root.tutorial.TimerEvent.toObject(
-                        message.timerEvent[j],
-                        options
-                    );
+                    object.timerEvent[j] = $root.tutorial.TimerEvent.toObject(message.timerEvent[j], options);
             }
             return object;
         };
@@ -4611,10 +3860,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerEventList.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -4635,7 +3881,8 @@ $root.tutorial = (function () {
         return TimerEventList;
     })();
 
-    tutorial.TimerEvent = (function () {
+    tutorial.TimerEvent = (function() {
+
         /**
          * Properties of a TimerEvent.
          * @memberof tutorial
@@ -4656,11 +3903,7 @@ $root.tutorial = (function () {
          */
         function TimerEvent(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -4719,39 +3962,16 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         TimerEvent.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.eventLaneTime != null &&
-                Object.hasOwnProperty.call(message, "eventLaneTime")
-            )
-                $root.tutorial.EventLaneTime.encode(
-                    message.eventLaneTime,
-                    writer.uint32(/* id 1, wireType 2 =*/ 10).fork()
-                ).ldelim();
-            if (
-                message.eventRacePaddleDrop != null &&
-                Object.hasOwnProperty.call(message, "eventRacePaddleDrop")
-            )
-                $root.tutorial.EventRacePaddleDrop.encode(
-                    message.eventRacePaddleDrop,
-                    writer.uint32(/* id 2, wireType 2 =*/ 18).fork()
-                ).ldelim();
-            if (
-                message.eventTimerAvailability != null &&
-                Object.hasOwnProperty.call(message, "eventTimerAvailability")
-            )
-                $root.tutorial.EventTimerAvailability.encode(
-                    message.eventTimerAvailability,
-                    writer.uint32(/* id 3, wireType 2 =*/ 26).fork()
-                ).ldelim();
-            if (
-                message.eventTimerHealthAlert != null &&
-                Object.hasOwnProperty.call(message, "eventTimerHealthAlert")
-            )
-                $root.tutorial.EventTimerHealthAlert.encode(
-                    message.eventTimerHealthAlert,
-                    writer.uint32(/* id 4, wireType 2 =*/ 34).fork()
-                ).ldelim();
+            if (!writer)
+                writer = $Writer.create();
+            if (message.eventLaneTime != null && Object.hasOwnProperty.call(message, "eventLaneTime"))
+                $root.tutorial.EventLaneTime.encode(message.eventLaneTime, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.eventRacePaddleDrop != null && Object.hasOwnProperty.call(message, "eventRacePaddleDrop"))
+                $root.tutorial.EventRacePaddleDrop.encode(message.eventRacePaddleDrop, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            if (message.eventTimerAvailability != null && Object.hasOwnProperty.call(message, "eventTimerAvailability"))
+                $root.tutorial.EventTimerAvailability.encode(message.eventTimerAvailability, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.eventTimerHealthAlert != null && Object.hasOwnProperty.call(message, "eventTimerHealthAlert"))
+                $root.tutorial.EventTimerHealthAlert.encode(message.eventTimerHealthAlert, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             return writer;
         };
 
@@ -4780,43 +4000,31 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerEvent.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.TimerEvent();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.TimerEvent();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
-                        message.eventLaneTime = $root.tutorial.EventLaneTime.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 1: {
+                        message.eventLaneTime = $root.tutorial.EventLaneTime.decode(reader, reader.uint32());
                         break;
                     }
-                    case 2: {
-                        message.eventRacePaddleDrop = $root.tutorial.EventRacePaddleDrop.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 2: {
+                        message.eventRacePaddleDrop = $root.tutorial.EventRacePaddleDrop.decode(reader, reader.uint32());
                         break;
                     }
-                    case 3: {
-                        message.eventTimerAvailability = $root.tutorial.EventTimerAvailability.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 3: {
+                        message.eventTimerAvailability = $root.tutorial.EventTimerAvailability.decode(reader, reader.uint32());
                         break;
                     }
-                    case 4: {
-                        message.eventTimerHealthAlert = $root.tutorial.EventTimerHealthAlert.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 4: {
+                        message.eventTimerHealthAlert = $root.tutorial.EventTimerHealthAlert.decode(reader, reader.uint32());
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -4833,7 +4041,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         TimerEvent.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -4848,41 +4057,25 @@ $root.tutorial = (function () {
         TimerEvent.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (
-                message.eventLaneTime != null &&
-                message.hasOwnProperty("eventLaneTime")
-            ) {
-                var error = $root.tutorial.EventLaneTime.verify(
-                    message.eventLaneTime
-                );
-                if (error) return "eventLaneTime." + error;
+            if (message.eventLaneTime != null && message.hasOwnProperty("eventLaneTime")) {
+                var error = $root.tutorial.EventLaneTime.verify(message.eventLaneTime);
+                if (error)
+                    return "eventLaneTime." + error;
             }
-            if (
-                message.eventRacePaddleDrop != null &&
-                message.hasOwnProperty("eventRacePaddleDrop")
-            ) {
-                var error = $root.tutorial.EventRacePaddleDrop.verify(
-                    message.eventRacePaddleDrop
-                );
-                if (error) return "eventRacePaddleDrop." + error;
+            if (message.eventRacePaddleDrop != null && message.hasOwnProperty("eventRacePaddleDrop")) {
+                var error = $root.tutorial.EventRacePaddleDrop.verify(message.eventRacePaddleDrop);
+                if (error)
+                    return "eventRacePaddleDrop." + error;
             }
-            if (
-                message.eventTimerAvailability != null &&
-                message.hasOwnProperty("eventTimerAvailability")
-            ) {
-                var error = $root.tutorial.EventTimerAvailability.verify(
-                    message.eventTimerAvailability
-                );
-                if (error) return "eventTimerAvailability." + error;
+            if (message.eventTimerAvailability != null && message.hasOwnProperty("eventTimerAvailability")) {
+                var error = $root.tutorial.EventTimerAvailability.verify(message.eventTimerAvailability);
+                if (error)
+                    return "eventTimerAvailability." + error;
             }
-            if (
-                message.eventTimerHealthAlert != null &&
-                message.hasOwnProperty("eventTimerHealthAlert")
-            ) {
-                var error = $root.tutorial.EventTimerHealthAlert.verify(
-                    message.eventTimerHealthAlert
-                );
-                if (error) return "eventTimerHealthAlert." + error;
+            if (message.eventTimerHealthAlert != null && message.hasOwnProperty("eventTimerHealthAlert")) {
+                var error = $root.tutorial.EventTimerHealthAlert.verify(message.eventTimerHealthAlert);
+                if (error)
+                    return "eventTimerHealthAlert." + error;
             }
             return null;
         };
@@ -4896,43 +4089,28 @@ $root.tutorial = (function () {
          * @returns {tutorial.TimerEvent} TimerEvent
          */
         TimerEvent.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.TimerEvent) return object;
+            if (object instanceof $root.tutorial.TimerEvent)
+                return object;
             var message = new $root.tutorial.TimerEvent();
             if (object.eventLaneTime != null) {
                 if (typeof object.eventLaneTime !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerEvent.eventLaneTime: object expected"
-                    );
-                message.eventLaneTime = $root.tutorial.EventLaneTime.fromObject(
-                    object.eventLaneTime
-                );
+                    throw TypeError(".tutorial.TimerEvent.eventLaneTime: object expected");
+                message.eventLaneTime = $root.tutorial.EventLaneTime.fromObject(object.eventLaneTime);
             }
             if (object.eventRacePaddleDrop != null) {
                 if (typeof object.eventRacePaddleDrop !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerEvent.eventRacePaddleDrop: object expected"
-                    );
-                message.eventRacePaddleDrop = $root.tutorial.EventRacePaddleDrop.fromObject(
-                    object.eventRacePaddleDrop
-                );
+                    throw TypeError(".tutorial.TimerEvent.eventRacePaddleDrop: object expected");
+                message.eventRacePaddleDrop = $root.tutorial.EventRacePaddleDrop.fromObject(object.eventRacePaddleDrop);
             }
             if (object.eventTimerAvailability != null) {
                 if (typeof object.eventTimerAvailability !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerEvent.eventTimerAvailability: object expected"
-                    );
-                message.eventTimerAvailability = $root.tutorial.EventTimerAvailability.fromObject(
-                    object.eventTimerAvailability
-                );
+                    throw TypeError(".tutorial.TimerEvent.eventTimerAvailability: object expected");
+                message.eventTimerAvailability = $root.tutorial.EventTimerAvailability.fromObject(object.eventTimerAvailability);
             }
             if (object.eventTimerHealthAlert != null) {
                 if (typeof object.eventTimerHealthAlert !== "object")
-                    throw TypeError(
-                        ".tutorial.TimerEvent.eventTimerHealthAlert: object expected"
-                    );
-                message.eventTimerHealthAlert = $root.tutorial.EventTimerHealthAlert.fromObject(
-                    object.eventTimerHealthAlert
-                );
+                    throw TypeError(".tutorial.TimerEvent.eventTimerHealthAlert: object expected");
+                message.eventTimerHealthAlert = $root.tutorial.EventTimerHealthAlert.fromObject(object.eventTimerHealthAlert);
             }
             return message;
         };
@@ -4947,7 +4125,8 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         TimerEvent.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
             if (options.defaults) {
                 object.eventLaneTime = null;
@@ -4955,38 +4134,14 @@ $root.tutorial = (function () {
                 object.eventTimerAvailability = null;
                 object.eventTimerHealthAlert = null;
             }
-            if (
-                message.eventLaneTime != null &&
-                message.hasOwnProperty("eventLaneTime")
-            )
-                object.eventLaneTime = $root.tutorial.EventLaneTime.toObject(
-                    message.eventLaneTime,
-                    options
-                );
-            if (
-                message.eventRacePaddleDrop != null &&
-                message.hasOwnProperty("eventRacePaddleDrop")
-            )
-                object.eventRacePaddleDrop = $root.tutorial.EventRacePaddleDrop.toObject(
-                    message.eventRacePaddleDrop,
-                    options
-                );
-            if (
-                message.eventTimerAvailability != null &&
-                message.hasOwnProperty("eventTimerAvailability")
-            )
-                object.eventTimerAvailability = $root.tutorial.EventTimerAvailability.toObject(
-                    message.eventTimerAvailability,
-                    options
-                );
-            if (
-                message.eventTimerHealthAlert != null &&
-                message.hasOwnProperty("eventTimerHealthAlert")
-            )
-                object.eventTimerHealthAlert = $root.tutorial.EventTimerHealthAlert.toObject(
-                    message.eventTimerHealthAlert,
-                    options
-                );
+            if (message.eventLaneTime != null && message.hasOwnProperty("eventLaneTime"))
+                object.eventLaneTime = $root.tutorial.EventLaneTime.toObject(message.eventLaneTime, options);
+            if (message.eventRacePaddleDrop != null && message.hasOwnProperty("eventRacePaddleDrop"))
+                object.eventRacePaddleDrop = $root.tutorial.EventRacePaddleDrop.toObject(message.eventRacePaddleDrop, options);
+            if (message.eventTimerAvailability != null && message.hasOwnProperty("eventTimerAvailability"))
+                object.eventTimerAvailability = $root.tutorial.EventTimerAvailability.toObject(message.eventTimerAvailability, options);
+            if (message.eventTimerHealthAlert != null && message.hasOwnProperty("eventTimerHealthAlert"))
+                object.eventTimerHealthAlert = $root.tutorial.EventTimerHealthAlert.toObject(message.eventTimerHealthAlert, options);
             return object;
         };
 
@@ -4998,10 +4153,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         TimerEvent.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -5022,7 +4174,8 @@ $root.tutorial = (function () {
         return TimerEvent;
     })();
 
-    tutorial.EventRacePaddleDrop = (function () {
+    tutorial.EventRacePaddleDrop = (function() {
+
         /**
          * Properties of an EventRacePaddleDrop.
          * @memberof tutorial
@@ -5039,11 +4192,7 @@ $root.tutorial = (function () {
          */
         function EventRacePaddleDrop(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -5070,7 +4219,8 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         EventRacePaddleDrop.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
+            if (!writer)
+                writer = $Writer.create();
             return writer;
         };
 
@@ -5083,10 +4233,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        EventRacePaddleDrop.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        EventRacePaddleDrop.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -5102,15 +4249,15 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         EventRacePaddleDrop.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.EventRacePaddleDrop();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.EventRacePaddleDrop();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -5127,7 +4274,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         EventRacePaddleDrop.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -5180,10 +4328,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         EventRacePaddleDrop.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -5204,7 +4349,8 @@ $root.tutorial = (function () {
         return EventRacePaddleDrop;
     })();
 
-    tutorial.EventTimerAvailability = (function () {
+    tutorial.EventTimerAvailability = (function() {
+
         /**
          * Properties of an EventTimerAvailability.
          * @memberof tutorial
@@ -5221,11 +4367,7 @@ $root.tutorial = (function () {
          */
         function EventTimerAvailability(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -5252,7 +4394,8 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         EventTimerAvailability.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
+            if (!writer)
+                writer = $Writer.create();
             return writer;
         };
 
@@ -5265,10 +4408,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        EventTimerAvailability.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        EventTimerAvailability.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -5284,15 +4424,15 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         EventTimerAvailability.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.EventTimerAvailability();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.EventTimerAvailability();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -5308,10 +4448,9 @@ $root.tutorial = (function () {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        EventTimerAvailability.decodeDelimited = function decodeDelimited(
-            reader
-        ) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+        EventTimerAvailability.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -5364,10 +4503,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         EventTimerAvailability.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -5388,7 +4524,8 @@ $root.tutorial = (function () {
         return EventTimerAvailability;
     })();
 
-    tutorial.EventTimerHealthAlert = (function () {
+    tutorial.EventTimerHealthAlert = (function() {
+
         /**
          * Properties of an EventTimerHealthAlert.
          * @memberof tutorial
@@ -5405,11 +4542,7 @@ $root.tutorial = (function () {
          */
         function EventTimerHealthAlert(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -5436,7 +4569,8 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         EventTimerHealthAlert.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
+            if (!writer)
+                writer = $Writer.create();
             return writer;
         };
 
@@ -5449,10 +4583,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        EventTimerHealthAlert.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        EventTimerHealthAlert.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -5468,15 +4599,15 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         EventTimerHealthAlert.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.EventTimerHealthAlert();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.EventTimerHealthAlert();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -5492,10 +4623,9 @@ $root.tutorial = (function () {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        EventTimerHealthAlert.decodeDelimited = function decodeDelimited(
-            reader
-        ) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+        EventTimerHealthAlert.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -5548,10 +4678,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         EventTimerHealthAlert.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -5572,7 +4699,8 @@ $root.tutorial = (function () {
         return EventTimerHealthAlert;
     })();
 
-    tutorial.EventLaneTime = (function () {
+    tutorial.EventLaneTime = (function() {
+
         /**
          * Properties of an EventLaneTime.
          * @memberof tutorial
@@ -5593,11 +4721,7 @@ $root.tutorial = (function () {
          */
         function EventLaneTime(properties) {
             if (properties)
-                for (
-                    var keys = Object.keys(properties), i = 0;
-                    i < keys.length;
-                    ++i
-                )
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
@@ -5656,35 +4780,16 @@ $root.tutorial = (function () {
          * @returns {$protobuf.Writer} Writer
          */
         EventLaneTime.encode = function encode(message, writer) {
-            if (!writer) writer = $Writer.create();
-            if (
-                message.lane != null &&
-                Object.hasOwnProperty.call(message, "lane")
-            )
-                writer.uint32(/* id 1, wireType 0 =*/ 8).int32(message.lane);
-            if (
-                message.noseTime != null &&
-                Object.hasOwnProperty.call(message, "noseTime")
-            )
-                $root.tutorial.TimerPin.encode(
-                    message.noseTime,
-                    writer.uint32(/* id 2, wireType 2 =*/ 18).fork()
-                ).ldelim();
-            if (
-                message.tailTime != null &&
-                Object.hasOwnProperty.call(message, "tailTime")
-            )
-                $root.tutorial.TimerPin.encode(
-                    message.tailTime,
-                    writer.uint32(/* id 3, wireType 2 =*/ 26).fork()
-                ).ldelim();
-            if (
-                message.lanePairFound != null &&
-                Object.hasOwnProperty.call(message, "lanePairFound")
-            )
-                writer
-                    .uint32(/* id 4, wireType 0 =*/ 32)
-                    .bool(message.lanePairFound);
+            if (!writer)
+                writer = $Writer.create();
+            if (message.lane != null && Object.hasOwnProperty.call(message, "lane"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.lane);
+            if (message.noseTime != null && Object.hasOwnProperty.call(message, "noseTime"))
+                $root.tutorial.TimerPin.encode(message.noseTime, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            if (message.tailTime != null && Object.hasOwnProperty.call(message, "tailTime"))
+                $root.tutorial.TimerPin.encode(message.tailTime, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.lanePairFound != null && Object.hasOwnProperty.call(message, "lanePairFound"))
+                writer.uint32(/* id 4, wireType 0 =*/32).bool(message.lanePairFound);
             return writer;
         };
 
@@ -5697,10 +4802,7 @@ $root.tutorial = (function () {
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
-        EventLaneTime.encodeDelimited = function encodeDelimited(
-            message,
-            writer
-        ) {
+        EventLaneTime.encodeDelimited = function encodeDelimited(message, writer) {
             return this.encode(message, writer).ldelim();
         };
 
@@ -5716,37 +4818,31 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         EventLaneTime.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader)) reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length,
-                message = new $root.tutorial.EventLaneTime();
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tutorial.EventLaneTime();
             while (reader.pos < end) {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
-                    case 1: {
+                case 1: {
                         message.lane = reader.int32();
                         break;
                     }
-                    case 2: {
-                        message.noseTime = $root.tutorial.TimerPin.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 2: {
+                        message.noseTime = $root.tutorial.TimerPin.decode(reader, reader.uint32());
                         break;
                     }
-                    case 3: {
-                        message.tailTime = $root.tutorial.TimerPin.decode(
-                            reader,
-                            reader.uint32()
-                        );
+                case 3: {
+                        message.tailTime = $root.tutorial.TimerPin.decode(reader, reader.uint32());
                         break;
                     }
-                    case 4: {
+                case 4: {
                         message.lanePairFound = reader.bool();
                         break;
                     }
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
                 }
             }
             return message;
@@ -5763,7 +4859,8 @@ $root.tutorial = (function () {
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         EventLaneTime.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
@@ -5780,33 +4877,26 @@ $root.tutorial = (function () {
                 return "object expected";
             if (message.lane != null && message.hasOwnProperty("lane"))
                 switch (message.lane) {
-                    default:
-                        return "lane: enum value expected";
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 9:
-                        break;
+                default:
+                    return "lane: enum value expected";
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 9:
+                    break;
                 }
-            if (
-                message.noseTime != null &&
-                message.hasOwnProperty("noseTime")
-            ) {
+            if (message.noseTime != null && message.hasOwnProperty("noseTime")) {
                 var error = $root.tutorial.TimerPin.verify(message.noseTime);
-                if (error) return "noseTime." + error;
+                if (error)
+                    return "noseTime." + error;
             }
-            if (
-                message.tailTime != null &&
-                message.hasOwnProperty("tailTime")
-            ) {
+            if (message.tailTime != null && message.hasOwnProperty("tailTime")) {
                 var error = $root.tutorial.TimerPin.verify(message.tailTime);
-                if (error) return "tailTime." + error;
+                if (error)
+                    return "tailTime." + error;
             }
-            if (
-                message.lanePairFound != null &&
-                message.hasOwnProperty("lanePairFound")
-            )
+            if (message.lanePairFound != null && message.hasOwnProperty("lanePairFound"))
                 if (typeof message.lanePairFound !== "boolean")
                     return "lanePairFound: boolean expected";
             return null;
@@ -5821,53 +4911,46 @@ $root.tutorial = (function () {
          * @returns {tutorial.EventLaneTime} EventLaneTime
          */
         EventLaneTime.fromObject = function fromObject(object) {
-            if (object instanceof $root.tutorial.EventLaneTime) return object;
+            if (object instanceof $root.tutorial.EventLaneTime)
+                return object;
             var message = new $root.tutorial.EventLaneTime();
             switch (object.lane) {
-                default:
-                    if (typeof object.lane === "number") {
-                        message.lane = object.lane;
-                        break;
-                    }
+            default:
+                if (typeof object.lane === "number") {
+                    message.lane = object.lane;
                     break;
-                case "lane1":
-                case 1:
-                    message.lane = 1;
-                    break;
-                case "lane2":
-                case 2:
-                    message.lane = 2;
-                    break;
-                case "gpsHz":
-                case 3:
-                    message.lane = 3;
-                    break;
-                case "oneHz":
-                case 4:
-                    message.lane = 4;
-                    break;
-                case "UNKNOWN_PIN":
-                case 9:
-                    message.lane = 9;
-                    break;
+                }
+                break;
+            case "lane1":
+            case 1:
+                message.lane = 1;
+                break;
+            case "lane2":
+            case 2:
+                message.lane = 2;
+                break;
+            case "gpsHz":
+            case 3:
+                message.lane = 3;
+                break;
+            case "oneHz":
+            case 4:
+                message.lane = 4;
+                break;
+            case "UNKNOWN_PIN":
+            case 9:
+                message.lane = 9;
+                break;
             }
             if (object.noseTime != null) {
                 if (typeof object.noseTime !== "object")
-                    throw TypeError(
-                        ".tutorial.EventLaneTime.noseTime: object expected"
-                    );
-                message.noseTime = $root.tutorial.TimerPin.fromObject(
-                    object.noseTime
-                );
+                    throw TypeError(".tutorial.EventLaneTime.noseTime: object expected");
+                message.noseTime = $root.tutorial.TimerPin.fromObject(object.noseTime);
             }
             if (object.tailTime != null) {
                 if (typeof object.tailTime !== "object")
-                    throw TypeError(
-                        ".tutorial.EventLaneTime.tailTime: object expected"
-                    );
-                message.tailTime = $root.tutorial.TimerPin.fromObject(
-                    object.tailTime
-                );
+                    throw TypeError(".tutorial.EventLaneTime.tailTime: object expected");
+                message.tailTime = $root.tutorial.TimerPin.fromObject(object.tailTime);
             }
             if (object.lanePairFound != null)
                 message.lanePairFound = Boolean(object.lanePairFound);
@@ -5884,7 +4967,8 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} Plain object
          */
         EventLaneTime.toObject = function toObject(message, options) {
-            if (!options) options = {};
+            if (!options)
+                options = {};
             var object = {};
             if (options.defaults) {
                 object.lane = options.enums === String ? "lane1" : 1;
@@ -5893,26 +4977,12 @@ $root.tutorial = (function () {
                 object.lanePairFound = false;
             }
             if (message.lane != null && message.hasOwnProperty("lane"))
-                object.lane =
-                    options.enums === String
-                        ? $root.tutorial.PinName[message.lane] === undefined
-                            ? message.lane
-                            : $root.tutorial.PinName[message.lane]
-                        : message.lane;
+                object.lane = options.enums === String ? $root.tutorial.PinName[message.lane] === undefined ? message.lane : $root.tutorial.PinName[message.lane] : message.lane;
             if (message.noseTime != null && message.hasOwnProperty("noseTime"))
-                object.noseTime = $root.tutorial.TimerPin.toObject(
-                    message.noseTime,
-                    options
-                );
+                object.noseTime = $root.tutorial.TimerPin.toObject(message.noseTime, options);
             if (message.tailTime != null && message.hasOwnProperty("tailTime"))
-                object.tailTime = $root.tutorial.TimerPin.toObject(
-                    message.tailTime,
-                    options
-                );
-            if (
-                message.lanePairFound != null &&
-                message.hasOwnProperty("lanePairFound")
-            )
+                object.tailTime = $root.tutorial.TimerPin.toObject(message.tailTime, options);
+            if (message.lanePairFound != null && message.hasOwnProperty("lanePairFound"))
                 object.lanePairFound = message.lanePairFound;
             return object;
         };
@@ -5925,10 +4995,7 @@ $root.tutorial = (function () {
          * @returns {Object.<string,*>} JSON object
          */
         EventLaneTime.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(
-                this,
-                $protobuf.util.toJSONOptions
-            );
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
         /**
@@ -5952,7 +5019,8 @@ $root.tutorial = (function () {
     return tutorial;
 })();
 
-$root.google = (function () {
+$root.google = (function() {
+
     /**
      * Namespace google.
      * @exports google
@@ -5960,7 +5028,8 @@ $root.google = (function () {
      */
     var google = {};
 
-    google.protobuf = (function () {
+    google.protobuf = (function() {
+
         /**
          * Namespace protobuf.
          * @memberof google
@@ -5968,7 +5037,8 @@ $root.google = (function () {
          */
         var protobuf = {};
 
-        protobuf.Timestamp = (function () {
+        protobuf.Timestamp = (function() {
+
             /**
              * Properties of a Timestamp.
              * @memberof google.protobuf
@@ -5987,11 +5057,7 @@ $root.google = (function () {
              */
             function Timestamp(properties) {
                 if (properties)
-                    for (
-                        var keys = Object.keys(properties), i = 0;
-                        i < keys.length;
-                        ++i
-                    )
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null)
                             this[keys[i]] = properties[keys[i]];
             }
@@ -6002,9 +5068,7 @@ $root.google = (function () {
              * @memberof google.protobuf.Timestamp
              * @instance
              */
-            Timestamp.prototype.seconds = $util.Long
-                ? $util.Long.fromBits(0, 0, false)
-                : 0;
+            Timestamp.prototype.seconds = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
             /**
              * Timestamp nanos.
@@ -6036,21 +5100,12 @@ $root.google = (function () {
              * @returns {$protobuf.Writer} Writer
              */
             Timestamp.encode = function encode(message, writer) {
-                if (!writer) writer = $Writer.create();
-                if (
-                    message.seconds != null &&
-                    Object.hasOwnProperty.call(message, "seconds")
-                )
-                    writer
-                        .uint32(/* id 1, wireType 0 =*/ 8)
-                        .int64(message.seconds);
-                if (
-                    message.nanos != null &&
-                    Object.hasOwnProperty.call(message, "nanos")
-                )
-                    writer
-                        .uint32(/* id 2, wireType 0 =*/ 16)
-                        .int32(message.nanos);
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.seconds != null && Object.hasOwnProperty.call(message, "seconds"))
+                    writer.uint32(/* id 1, wireType 0 =*/8).int64(message.seconds);
+                if (message.nanos != null && Object.hasOwnProperty.call(message, "nanos"))
+                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.nanos);
                 return writer;
             };
 
@@ -6063,10 +5118,7 @@ $root.google = (function () {
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Timestamp.encodeDelimited = function encodeDelimited(
-                message,
-                writer
-            ) {
+            Timestamp.encodeDelimited = function encodeDelimited(message, writer) {
                 return this.encode(message, writer).ldelim();
             };
 
@@ -6084,23 +5136,21 @@ $root.google = (function () {
             Timestamp.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end =
-                        length === undefined ? reader.len : reader.pos + length,
-                    message = new $root.google.protobuf.Timestamp();
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.google.protobuf.Timestamp();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
-                        case 1: {
+                    case 1: {
                             message.seconds = reader.int64();
                             break;
                         }
-                        case 2: {
+                    case 2: {
                             message.nanos = reader.int32();
                             break;
                         }
-                        default:
-                            reader.skipType(tag & 7);
-                            break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
                     }
                 }
                 return message;
@@ -6117,7 +5167,8 @@ $root.google = (function () {
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
             Timestamp.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader)) reader = new $Reader(reader);
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
 
@@ -6132,18 +5183,8 @@ $root.google = (function () {
             Timestamp.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (
-                    message.seconds != null &&
-                    message.hasOwnProperty("seconds")
-                )
-                    if (
-                        !$util.isInteger(message.seconds) &&
-                        !(
-                            message.seconds &&
-                            $util.isInteger(message.seconds.low) &&
-                            $util.isInteger(message.seconds.high)
-                        )
-                    )
+                if (message.seconds != null && message.hasOwnProperty("seconds"))
+                    if (!$util.isInteger(message.seconds) && !(message.seconds && $util.isInteger(message.seconds.low) && $util.isInteger(message.seconds.high)))
                         return "seconds: integer|Long expected";
                 if (message.nanos != null && message.hasOwnProperty("nanos"))
                     if (!$util.isInteger(message.nanos))
@@ -6165,19 +5206,15 @@ $root.google = (function () {
                 var message = new $root.google.protobuf.Timestamp();
                 if (object.seconds != null)
                     if ($util.Long)
-                        (message.seconds = $util.Long.fromValue(
-                            object.seconds
-                        )).unsigned = false;
+                        (message.seconds = $util.Long.fromValue(object.seconds)).unsigned = false;
                     else if (typeof object.seconds === "string")
                         message.seconds = parseInt(object.seconds, 10);
                     else if (typeof object.seconds === "number")
                         message.seconds = object.seconds;
                     else if (typeof object.seconds === "object")
-                        message.seconds = new $util.LongBits(
-                            object.seconds.low >>> 0,
-                            object.seconds.high >>> 0
-                        ).toNumber();
-                if (object.nanos != null) message.nanos = object.nanos | 0;
+                        message.seconds = new $util.LongBits(object.seconds.low >>> 0, object.seconds.high >>> 0).toNumber();
+                if (object.nanos != null)
+                    message.nanos = object.nanos | 0;
                 return message;
             };
 
@@ -6191,41 +5228,22 @@ $root.google = (function () {
              * @returns {Object.<string,*>} Plain object
              */
             Timestamp.toObject = function toObject(message, options) {
-                if (!options) options = {};
+                if (!options)
+                    options = {};
                 var object = {};
                 if (options.defaults) {
                     if ($util.Long) {
                         var long = new $util.Long(0, 0, false);
-                        object.seconds =
-                            options.longs === String
-                                ? long.toString()
-                                : options.longs === Number
-                                ? long.toNumber()
-                                : long;
-                    } else object.seconds = options.longs === String ? "0" : 0;
+                        object.seconds = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    } else
+                        object.seconds = options.longs === String ? "0" : 0;
                     object.nanos = 0;
                 }
-                if (
-                    message.seconds != null &&
-                    message.hasOwnProperty("seconds")
-                )
+                if (message.seconds != null && message.hasOwnProperty("seconds"))
                     if (typeof message.seconds === "number")
-                        object.seconds =
-                            options.longs === String
-                                ? String(message.seconds)
-                                : message.seconds;
+                        object.seconds = options.longs === String ? String(message.seconds) : message.seconds;
                     else
-                        object.seconds =
-                            options.longs === String
-                                ? $util.Long.prototype.toString.call(
-                                      message.seconds
-                                  )
-                                : options.longs === Number
-                                ? new $util.LongBits(
-                                      message.seconds.low >>> 0,
-                                      message.seconds.high >>> 0
-                                  ).toNumber()
-                                : message.seconds;
+                        object.seconds = options.longs === String ? $util.Long.prototype.toString.call(message.seconds) : options.longs === Number ? new $util.LongBits(message.seconds.low >>> 0, message.seconds.high >>> 0).toNumber() : message.seconds;
                 if (message.nanos != null && message.hasOwnProperty("nanos"))
                     object.nanos = message.nanos;
                 return object;
@@ -6239,10 +5257,7 @@ $root.google = (function () {
              * @returns {Object.<string,*>} JSON object
              */
             Timestamp.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(
-                    this,
-                    $protobuf.util.toJSONOptions
-                );
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
