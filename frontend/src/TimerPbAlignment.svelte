@@ -16,17 +16,16 @@
     import { onMount, onDestroy } from "svelte";
     import { getTimerPbConfig } from "./utils.js";
     import {
-    Button,
-    Collapse,
-    Modal,
-    ModalBody,
-    ModalFooter,
-    ModalHeader
-  } from 'sveltestrap';
-
+        Button,
+        Collapse,
+        Modal,
+        ModalBody,
+        ModalFooter,
+        ModalHeader,
+    } from "sveltestrap";
 
     export let params = {};
-    var timerName=""
+    var timerName = "";
     var timerPbConfig = {};
     var historyList = [];
     const laneStatusList = {
@@ -50,13 +49,13 @@
 
     onMount(async () => {
         //params.timerName=uriDecode(params.timerName);
-        timerName=decodeURI(params.timerName)
+        timerName = decodeURI(params.timerName);
         log.debug("TimerPbAlignment TimerName:", timerName);
         $mqttTimerSubscribe = true;
         [timerPbConfig] = await getTimerPbConfig(timerName);
 
         log.debug("TimerPbAlignment dexie:", timerPbConfig);
-        if(timerPbConfig && timerPbConfig.at){
+        if (timerPbConfig && timerPbConfig.at) {
             //await getTimerHistory();
         }
     });
@@ -95,7 +94,6 @@
         }
     }
 
-
     async function getTimerHistory() {
         log.debug("getTimerHistory:");
         //await sleep(3000)
@@ -103,7 +101,7 @@
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
         //const lowMS = 1000 * 3600 * 720;
-        const lowMS = 1000 * 3600 * .3;
+        const lowMS = 1000 * 3600 * 0.3;
         const loIso = new Date(new Date().getTime() - lowMS).toISOString();
         const url = `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}&loIso=${loIso}`;
         try {
@@ -162,7 +160,7 @@
 <h3>Timer Alignment [{timerName}]</h3>
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
 {#if timerName}
-    <TimerPbHealth timerName={timerName} />
+    <TimerPbHealth {timerName} />
 {/if}
 
 {#each Object.entries(laneStatusList) as [lane, ls]}

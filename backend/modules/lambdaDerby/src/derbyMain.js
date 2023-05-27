@@ -640,13 +640,17 @@ async function queryTimerPbHistory(qsp) {
     if (!qsp.loIso) {
         const lowMS = 1000 * 3600 * 0.1;
         const loIso = new Date(new Date().getTime() - lowMS).toISOString();
-        qsp.loIso=loIso
+        qsp.loIso = loIso;
     }
     if (!qsp.hiIso) {
         const hiIso = new Date().toISOString();
-        qsp.hiIso=hiIso
+        qsp.hiIso = hiIso;
     }
-    return await ddbUtils.ddbQueryTimerPbHistory(qsp.timerName,qsp.loIso,qsp.hiIso);
+    return await ddbUtils.ddbQueryTimerPbHistory(
+        qsp.timerName,
+        qsp.loIso,
+        qsp.hiIso
+    );
 }
 async function queryTimerHistoryByOrgId(qsp) {
     const [activeTimers, timerConfig] = await Promise.all([
@@ -1524,6 +1528,13 @@ exports.handler = async function (event) {
         const response = await apiGatewayHandler(event);
         return response;
     }
+
+    if (event.source == "aws.events") {
+        log.debug("handling archive rulefrom cron0");
+        await archiveUtils.processExpiringEventConfig();
+        return;
+    }
+
     if (event.Records[0].Sns) {
         var snsMessage = event.Records[0].Sns.Message;
         const snsMessageJson = JSON.parse(snsMessage);
@@ -1532,7 +1543,7 @@ exports.handler = async function (event) {
         // ugly workaround for cron events not invoking lambda directly
         //   12/2020 pressing polly sns topic back into use to deliver the cron event for archival
         if (snsMessageJson && snsMessageJson.source === "aws.events") {
-            log.debug("handling archive poll from cron");
+            log.debug("handling archive poll from cron1");
             await archiveUtils.processExpiringEventConfig();
 
             return;

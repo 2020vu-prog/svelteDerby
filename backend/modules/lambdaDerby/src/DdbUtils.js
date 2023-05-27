@@ -209,14 +209,15 @@ class DdbUtils {
         );
         return timerConfig;
     }
-    async ddbQueryTimerPbHistory(timerName,loIso,hiIso) {
+    async ddbQueryTimerPbHistory(timerName, loIso, hiIso) {
         var containsValues = {};
         containsValues[":pk"] = { S: `T:${timerName}` };
         containsValues[":loIso"] = { S: loIso };
         containsValues[":hiIso"] = { S: hiIso };
         var params = {
             TableName: process.env.TimerProtobufDbTable,
-            KeyConditionExpression: "PK = :pk and SK BETWEEN :loIso  and :hiIso",
+            KeyConditionExpression:
+                "PK = :pk and SK BETWEEN :loIso  and :hiIso",
             ReturnConsumedCapacity: "TOTAL",
             ScanIndexForward: false, // sort descending
             ExpressionAttributeValues: containsValues,

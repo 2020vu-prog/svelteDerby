@@ -231,7 +231,7 @@
             };
             return false;
         }
-        if (parseInt(pbForm.seq)<100 ||parseInt(pbForm.seq)>999 ){
+        if (parseInt(pbForm.seq) < 100 || parseInt(pbForm.seq) > 999) {
             $statusMessage = {
                 text: "Timer Sequence must be n range of 100 - 999",
                 type: "error",
@@ -307,9 +307,8 @@
         log.debug("handleTimerSelection timer:", timer);
         pbForm.timerMqttClientId = timer.clientId;
         //TODO: amplify issues with binary data :-(
-            // "AMQJS0005E Internal error. Error Message: AMQJS0009E Malformed UTF data:
+        // "AMQJS0005E Internal error. Error Message: AMQJS0009E Malformed UTF data:
         // $mqttTimerTopic = `rr1Timer/${timer.clientId}`;
-
     }
 </script>
 
@@ -321,7 +320,7 @@
     Timer Alignment
 </SpinnerButton>
 {#if params.timerName}
-    <TimerPbHealth timerName="{params.timerName}" />
+    <TimerPbHealth timerName={params.timerName} />
 {/if}
 <Form>
     <FormGroup>
@@ -341,9 +340,10 @@
                 type="number"
                 bind:value={pbForm.seq} />
             <FormText color="muted">
-                Sequence is used to indicate position of timer on the track when there 
-                are multiple timers.  Lower numbers are closer to the starting ramps. Higher numbers
-                are closer to the finish line. Range 100-999.
+                Sequence is used to indicate position of timer on the track when
+                there are multiple timers. Lower numbers are closer to the
+                starting ramps. Higher numbers are closer to the finish line.
+                Range 100-999.
             </FormText>
         </Label>
     </FormGroup>

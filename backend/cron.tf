@@ -6,5 +6,5 @@ module "lambda-cloudwatch-trigger" {
 
   lambda_arn                 = module.derbyMainLambda.qualified_arn
   lambda_function_name       = module.derbyMainLambda.function_name
-  lambda_schedule_expression = "cron(44 * * * ? *)"
+  lambda_schedule_expression = "cron(55 * * * ? *)"
 }

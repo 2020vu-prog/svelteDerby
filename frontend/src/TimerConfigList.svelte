@@ -24,13 +24,13 @@
 
         tcFromDexie = await db.TimerPbConfig.toArray();
         //tcFromDexie=[]
-        for (let tcd of tcFromDexie) { 
+        for (let tcd of tcFromDexie) {
             const tcInit = Base64.toUint8Array(tcd.pb);
             log.debug("refreshDataFromDb: 1:", tcInit);
             const c = Timer.TimerConfig.decode(tcInit);
             Object.assign(tcd, c);
             log.debug("refreshDataFromDb: 2:", tcd);
-            tcd.sortKey=`${tcd.seq}-${tcd.timerName}`
+            tcd.sortKey = `${tcd.seq}-${tcd.timerName}`;
         }
     };
     const navToTcDetail = (tc) => {
@@ -39,8 +39,7 @@
     };
     function getSortedTc(tcFromDexie) {
         tcFromDexie.sort((a, b) => {
-            return a.sortKey
-                .localeCompare(b.sortKey);
+            return a.sortKey.localeCompare(b.sortKey);
         });
 
         return tcFromDexie;
@@ -70,9 +69,14 @@ report elapsed time split(s).
 <MaterialAdd clickHandleRoute="/timerConfigElapsed" />
 
 {#each getSortedTc(tcFromDexie) as tc (tc.at)}
-    <Card class="mtj-3 border border-info" >
+    <Card class="mtj-3 border border-info">
         <CardHeader class="bg-info text-white">
             <CardTitle>
+                <span on:click={() => navToTcDetail(tc)}>
+                    {tc.sortKey}
+                    <nbsp />
+                    {annotat(tc)}
+                </span>
                 <span class="spanRight">
                     <EllipsisButton
                         on:message={toggleToolbar}
@@ -83,12 +87,7 @@ report elapsed time split(s).
         </CardHeader>
         <CardBody>
             <div style="display: inline">
-                <span on:click={() => navToTcDetail(tc)}>
-                {tc.sortKey}
-                <nbsp />
-                {annotat(tc)}
-                </span>
-                <TimerPbHealth timerName="{tc.timerName}" />
+                <TimerPbHealth timerName={tc.timerName} />
             </div>
 
         </CardBody>

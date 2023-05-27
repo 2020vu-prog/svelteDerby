@@ -151,8 +151,9 @@
 
         // TODO: use race timer id instead of wildcard in topic.   don't fire capture for other timers!!!
         log.info(`mqttTimerTopic stored:` + $mqttTimerTopic);
-        const timerTopic = $mqttTimerTopic.includes('/')?
-            $mqttTimerTopic:`derby/${$mqttTimerTopic}/rpi/+`;
+        const timerTopic = $mqttTimerTopic.includes("/")
+            ? $mqttTimerTopic
+            : `derby/${$mqttTimerTopic}/rpi/+`;
         log.info(`mqttTimerTopic subscribing: ${timerTopic}`);
         syncSubscription(
             "timerSubscription",
@@ -162,7 +163,7 @@
         );
     }
     function onTimerMqttData(json) {
-        log.debug("onTimerMqttData")
+        log.debug("onTimerMqttData");
         potentialCaptureJ(json);
         publishTimerState(json);
     }
@@ -177,10 +178,9 @@
                 $timerState[pinName] = pinState;
                 $timerState = $timerState;
             }
-        }
-        else{
+        } else {
             // probably protobuf binary, not json!
-            log.debug("publishTimerState:",json)
+            log.debug("publishTimerState:", json);
         }
     }
     function potentialCaptureJ(json) {
