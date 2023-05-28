@@ -144,13 +144,17 @@
     <Collapse isOpen={open} {toggle}>
 
         <ul>
+            <li>Timer Id: {timerPbConfig.timerMqttClientId}</li>
             <li>Last Status: {recentHealth.ageSeconds} seconds ago</li>
             <li>CPU Temp: {recentHealth.tempFmt}</li>
-            <li>Uptime: {R100(recentHealth.cpuUptime / 60)} minutes</li>
+            <li>CPU Uptime: {R100(recentHealth.cpuUptime / 60)} minutes</li>
+            <li>Gps Uptime: {R100(recentHealth.gpsUptime / 60)} minutes</li>
+            <li>Gps Flutter: {recentHealth.gpsFlutter}</li>
             <li>Gps PPS: {recentHealth.gpsEmittingPps}</li>
             <li>Chrony PPS: {recentHealth.chronyUsingPps}</li>
             <li>Free Mem: {recentHealth.ramFreeKB} KB</li>
             <li>SSID: {recentHealth.ssid}</li>
+            <li>IP: {recentHealth.wifiIP}</li>
         </ul>
 
     </Collapse>

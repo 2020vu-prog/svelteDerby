@@ -18,6 +18,7 @@
     export let cn;
 
     const mediaLink = `/spMediaList/${dbName}/${dbKey}`;
+    const elapsedLink = `/RpElapsed/${dbKey}`;
     onMount(async () => {
         log.debug("timerLink: ", timerLink);
         log.debug("bracketLink: ", bracketLink);
@@ -126,6 +127,9 @@
     async function gotoListMedia() {
         push(mediaLink);
     }
+    async function gotoElapsed() {
+        push(elapsedLink);
+    }
     const gotoTimer = () => {
         log.debug("routing to:", timerLink);
         push(timerLink);
@@ -231,7 +235,14 @@
             Video
         </span>
     {/if}
-
+    {#if dbName === 'RacePhase'}
+        <span
+            class="navbarItem"
+            style="background-color: {$theme}"
+            on:click|preventDefault={gotoElapsed}>
+            Elapsed
+        </span>
+    {/if}
     {#if window.location.href.includes('RsList/Pending') && isAnnounceAllowed()}
         <span
             class="navbarItem"

@@ -37,6 +37,9 @@ $root.tutorial = (function() {
          * @property {string|null} [wirelessMac] TimerHealth wirelessMac
          * @property {number|null} [wifiRss] TimerHealth wifiRss
          * @property {number|null} [maxPublishAckMs] TimerHealth maxPublishAckMs
+         * @property {number|null} [gpsUptime] TimerHealth gpsUptime
+         * @property {number|null} [gpsFlutter] TimerHealth gpsFlutter
+         * @property {string|null} [wifiIP] TimerHealth wifiIP
          */
 
         /**
@@ -159,6 +162,30 @@ $root.tutorial = (function() {
         TimerHealth.prototype.maxPublishAckMs = 0;
 
         /**
+         * TimerHealth gpsUptime.
+         * @member {number} gpsUptime
+         * @memberof tutorial.TimerHealth
+         * @instance
+         */
+        TimerHealth.prototype.gpsUptime = 0;
+
+        /**
+         * TimerHealth gpsFlutter.
+         * @member {number} gpsFlutter
+         * @memberof tutorial.TimerHealth
+         * @instance
+         */
+        TimerHealth.prototype.gpsFlutter = 0;
+
+        /**
+         * TimerHealth wifiIP.
+         * @member {string} wifiIP
+         * @memberof tutorial.TimerHealth
+         * @instance
+         */
+        TimerHealth.prototype.wifiIP = "";
+
+        /**
          * Creates a new TimerHealth instance using the specified properties.
          * @function create
          * @memberof tutorial.TimerHealth
@@ -208,6 +235,12 @@ $root.tutorial = (function() {
                 writer.uint32(/* id 12, wireType 5 =*/101).float(message.wifiRss);
             if (message.maxPublishAckMs != null && Object.hasOwnProperty.call(message, "maxPublishAckMs"))
                 writer.uint32(/* id 13, wireType 0 =*/104).uint32(message.maxPublishAckMs);
+            if (message.gpsUptime != null && Object.hasOwnProperty.call(message, "gpsUptime"))
+                writer.uint32(/* id 14, wireType 0 =*/112).uint32(message.gpsUptime);
+            if (message.gpsFlutter != null && Object.hasOwnProperty.call(message, "gpsFlutter"))
+                writer.uint32(/* id 15, wireType 0 =*/120).uint32(message.gpsFlutter);
+            if (message.wifiIP != null && Object.hasOwnProperty.call(message, "wifiIP"))
+                writer.uint32(/* id 16, wireType 2 =*/130).string(message.wifiIP);
             return writer;
         };
 
@@ -294,6 +327,18 @@ $root.tutorial = (function() {
                         message.maxPublishAckMs = reader.uint32();
                         break;
                     }
+                case 14: {
+                        message.gpsUptime = reader.uint32();
+                        break;
+                    }
+                case 15: {
+                        message.gpsFlutter = reader.uint32();
+                        break;
+                    }
+                case 16: {
+                        message.wifiIP = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -370,6 +415,15 @@ $root.tutorial = (function() {
             if (message.maxPublishAckMs != null && message.hasOwnProperty("maxPublishAckMs"))
                 if (!$util.isInteger(message.maxPublishAckMs))
                     return "maxPublishAckMs: integer expected";
+            if (message.gpsUptime != null && message.hasOwnProperty("gpsUptime"))
+                if (!$util.isInteger(message.gpsUptime))
+                    return "gpsUptime: integer expected";
+            if (message.gpsFlutter != null && message.hasOwnProperty("gpsFlutter"))
+                if (!$util.isInteger(message.gpsFlutter))
+                    return "gpsFlutter: integer expected";
+            if (message.wifiIP != null && message.hasOwnProperty("wifiIP"))
+                if (!$util.isString(message.wifiIP))
+                    return "wifiIP: string expected";
             return null;
         };
 
@@ -414,6 +468,12 @@ $root.tutorial = (function() {
                 message.wifiRss = Number(object.wifiRss);
             if (object.maxPublishAckMs != null)
                 message.maxPublishAckMs = object.maxPublishAckMs >>> 0;
+            if (object.gpsUptime != null)
+                message.gpsUptime = object.gpsUptime >>> 0;
+            if (object.gpsFlutter != null)
+                message.gpsFlutter = object.gpsFlutter >>> 0;
+            if (object.wifiIP != null)
+                message.wifiIP = String(object.wifiIP);
             return message;
         };
 
@@ -444,6 +504,9 @@ $root.tutorial = (function() {
                 object.wirelessMac = "";
                 object.wifiRss = 0;
                 object.maxPublishAckMs = 0;
+                object.gpsUptime = 0;
+                object.gpsFlutter = 0;
+                object.wifiIP = "";
             }
             if (message.stamp != null && message.hasOwnProperty("stamp"))
                 object.stamp = $root.tutorial.TimerTimeStamp.toObject(message.stamp, options);
@@ -471,6 +534,12 @@ $root.tutorial = (function() {
                 object.wifiRss = options.json && !isFinite(message.wifiRss) ? String(message.wifiRss) : message.wifiRss;
             if (message.maxPublishAckMs != null && message.hasOwnProperty("maxPublishAckMs"))
                 object.maxPublishAckMs = message.maxPublishAckMs;
+            if (message.gpsUptime != null && message.hasOwnProperty("gpsUptime"))
+                object.gpsUptime = message.gpsUptime;
+            if (message.gpsFlutter != null && message.hasOwnProperty("gpsFlutter"))
+                object.gpsFlutter = message.gpsFlutter;
+            if (message.wifiIP != null && message.hasOwnProperty("wifiIP"))
+                object.wifiIP = message.wifiIP;
             return object;
         };
 
@@ -1264,8 +1333,9 @@ $root.tutorial = (function() {
          * Properties of a TimerTimeStamp.
          * @memberof tutorial
          * @interface ITimerTimeStamp
-         * @property {number|null} [tick] TimerTimeStamp tick
+         * @property {number|null} [tick32] TimerTimeStamp tick32
          * @property {google.protobuf.ITimestamp|null} [gpsTime] TimerTimeStamp gpsTime
+         * @property {Long|null} [tick64] TimerTimeStamp tick64
          */
 
         /**
@@ -1284,12 +1354,12 @@ $root.tutorial = (function() {
         }
 
         /**
-         * TimerTimeStamp tick.
-         * @member {number} tick
+         * TimerTimeStamp tick32.
+         * @member {number} tick32
          * @memberof tutorial.TimerTimeStamp
          * @instance
          */
-        TimerTimeStamp.prototype.tick = 0;
+        TimerTimeStamp.prototype.tick32 = 0;
 
         /**
          * TimerTimeStamp gpsTime.
@@ -1298,6 +1368,14 @@ $root.tutorial = (function() {
          * @instance
          */
         TimerTimeStamp.prototype.gpsTime = null;
+
+        /**
+         * TimerTimeStamp tick64.
+         * @member {Long} tick64
+         * @memberof tutorial.TimerTimeStamp
+         * @instance
+         */
+        TimerTimeStamp.prototype.tick64 = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
          * Creates a new TimerTimeStamp instance using the specified properties.
@@ -1323,10 +1401,12 @@ $root.tutorial = (function() {
         TimerTimeStamp.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.tick != null && Object.hasOwnProperty.call(message, "tick"))
-                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.tick);
+            if (message.tick32 != null && Object.hasOwnProperty.call(message, "tick32"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.tick32);
             if (message.gpsTime != null && Object.hasOwnProperty.call(message, "gpsTime"))
                 $root.google.protobuf.Timestamp.encode(message.gpsTime, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.tick64 != null && Object.hasOwnProperty.call(message, "tick64"))
+                writer.uint32(/* id 4, wireType 0 =*/32).uint64(message.tick64);
             return writer;
         };
 
@@ -1362,11 +1442,15 @@ $root.tutorial = (function() {
                 var tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.tick = reader.uint32();
+                        message.tick32 = reader.uint32();
                         break;
                     }
                 case 3: {
                         message.gpsTime = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 4: {
+                        message.tick64 = reader.uint64();
                         break;
                     }
                 default:
@@ -1404,14 +1488,17 @@ $root.tutorial = (function() {
         TimerTimeStamp.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.tick != null && message.hasOwnProperty("tick"))
-                if (!$util.isInteger(message.tick))
-                    return "tick: integer expected";
+            if (message.tick32 != null && message.hasOwnProperty("tick32"))
+                if (!$util.isInteger(message.tick32))
+                    return "tick32: integer expected";
             if (message.gpsTime != null && message.hasOwnProperty("gpsTime")) {
                 var error = $root.google.protobuf.Timestamp.verify(message.gpsTime);
                 if (error)
                     return "gpsTime." + error;
             }
+            if (message.tick64 != null && message.hasOwnProperty("tick64"))
+                if (!$util.isInteger(message.tick64) && !(message.tick64 && $util.isInteger(message.tick64.low) && $util.isInteger(message.tick64.high)))
+                    return "tick64: integer|Long expected";
             return null;
         };
 
@@ -1427,13 +1514,22 @@ $root.tutorial = (function() {
             if (object instanceof $root.tutorial.TimerTimeStamp)
                 return object;
             var message = new $root.tutorial.TimerTimeStamp();
-            if (object.tick != null)
-                message.tick = object.tick >>> 0;
+            if (object.tick32 != null)
+                message.tick32 = object.tick32 >>> 0;
             if (object.gpsTime != null) {
                 if (typeof object.gpsTime !== "object")
                     throw TypeError(".tutorial.TimerTimeStamp.gpsTime: object expected");
                 message.gpsTime = $root.google.protobuf.Timestamp.fromObject(object.gpsTime);
             }
+            if (object.tick64 != null)
+                if ($util.Long)
+                    (message.tick64 = $util.Long.fromValue(object.tick64)).unsigned = true;
+                else if (typeof object.tick64 === "string")
+                    message.tick64 = parseInt(object.tick64, 10);
+                else if (typeof object.tick64 === "number")
+                    message.tick64 = object.tick64;
+                else if (typeof object.tick64 === "object")
+                    message.tick64 = new $util.LongBits(object.tick64.low >>> 0, object.tick64.high >>> 0).toNumber(true);
             return message;
         };
 
@@ -1451,13 +1547,23 @@ $root.tutorial = (function() {
                 options = {};
             var object = {};
             if (options.defaults) {
-                object.tick = 0;
+                object.tick32 = 0;
                 object.gpsTime = null;
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, true);
+                    object.tick64 = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.tick64 = options.longs === String ? "0" : 0;
             }
-            if (message.tick != null && message.hasOwnProperty("tick"))
-                object.tick = message.tick;
+            if (message.tick32 != null && message.hasOwnProperty("tick32"))
+                object.tick32 = message.tick32;
             if (message.gpsTime != null && message.hasOwnProperty("gpsTime"))
                 object.gpsTime = $root.google.protobuf.Timestamp.toObject(message.gpsTime, options);
+            if (message.tick64 != null && message.hasOwnProperty("tick64"))
+                if (typeof message.tick64 === "number")
+                    object.tick64 = options.longs === String ? String(message.tick64) : message.tick64;
+                else
+                    object.tick64 = options.longs === String ? $util.Long.prototype.toString.call(message.tick64) : options.longs === Number ? new $util.LongBits(message.tick64.low >>> 0, message.tick64.high >>> 0).toNumber(true) : message.tick64;
             return object;
         };
 

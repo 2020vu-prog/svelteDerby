@@ -10,6 +10,7 @@
     import CaptureVideo from "./CaptureVideo.svelte";
     import RaceStandingList from "./RaceStandingList.svelte";
     import RacePhaseList from "./RacePhaseList.svelte";
+    import RacePhaseElapsed from "./RacePhaseElapsed.svelte";
     import ChartList from "./ChartListRouter.svelte";
     import ChartList1 from "./ChartList.svelte";
     import ChartList2 from "./ChartList2.svelte";
@@ -71,6 +72,7 @@
         "/": RaceStandingList,
         "/RsList/:type": RaceStandingList,
         "/RpList": RacePhaseList,
+        "/RpElapsed/:rpKey": RacePhaseElapsed,
         "/drivers/:selectable?": DriverList,
         "/login": Login,
         "/ManualTimerAdd/:rpKey/:winningLane?/:winningTime?": ManualTimerAdd,
