@@ -37,9 +37,13 @@ $root.tutorial = (function() {
          * @property {string|null} [wirelessMac] TimerHealth wirelessMac
          * @property {number|null} [wifiRss] TimerHealth wifiRss
          * @property {number|null} [maxPublishAckMs] TimerHealth maxPublishAckMs
-         * @property {number|null} [gpsUptime] TimerHealth gpsUptime
+         * @property {number|null} [gpsUptimeContiguous] TimerHealth gpsUptimeContiguous
          * @property {number|null} [gpsFlutter] TimerHealth gpsFlutter
          * @property {string|null} [wifiIP] TimerHealth wifiIP
+         * @property {Long|null} [versionStamp] TimerHealth versionStamp
+         * @property {boolean|null} [overlayFsEnabled] TimerHealth overlayFsEnabled
+         * @property {number|null} [gpsUptimeTotal] TimerHealth gpsUptimeTotal
+         * @property {number|null} [gpsInitialAcquisitionSecondsAfterBoot] TimerHealth gpsInitialAcquisitionSecondsAfterBoot
          */
 
         /**
@@ -162,12 +166,12 @@ $root.tutorial = (function() {
         TimerHealth.prototype.maxPublishAckMs = 0;
 
         /**
-         * TimerHealth gpsUptime.
-         * @member {number} gpsUptime
+         * TimerHealth gpsUptimeContiguous.
+         * @member {number} gpsUptimeContiguous
          * @memberof tutorial.TimerHealth
          * @instance
          */
-        TimerHealth.prototype.gpsUptime = 0;
+        TimerHealth.prototype.gpsUptimeContiguous = 0;
 
         /**
          * TimerHealth gpsFlutter.
@@ -184,6 +188,38 @@ $root.tutorial = (function() {
          * @instance
          */
         TimerHealth.prototype.wifiIP = "";
+
+        /**
+         * TimerHealth versionStamp.
+         * @member {Long} versionStamp
+         * @memberof tutorial.TimerHealth
+         * @instance
+         */
+        TimerHealth.prototype.versionStamp = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+        /**
+         * TimerHealth overlayFsEnabled.
+         * @member {boolean} overlayFsEnabled
+         * @memberof tutorial.TimerHealth
+         * @instance
+         */
+        TimerHealth.prototype.overlayFsEnabled = false;
+
+        /**
+         * TimerHealth gpsUptimeTotal.
+         * @member {number} gpsUptimeTotal
+         * @memberof tutorial.TimerHealth
+         * @instance
+         */
+        TimerHealth.prototype.gpsUptimeTotal = 0;
+
+        /**
+         * TimerHealth gpsInitialAcquisitionSecondsAfterBoot.
+         * @member {number} gpsInitialAcquisitionSecondsAfterBoot
+         * @memberof tutorial.TimerHealth
+         * @instance
+         */
+        TimerHealth.prototype.gpsInitialAcquisitionSecondsAfterBoot = 0;
 
         /**
          * Creates a new TimerHealth instance using the specified properties.
@@ -235,12 +271,20 @@ $root.tutorial = (function() {
                 writer.uint32(/* id 12, wireType 5 =*/101).float(message.wifiRss);
             if (message.maxPublishAckMs != null && Object.hasOwnProperty.call(message, "maxPublishAckMs"))
                 writer.uint32(/* id 13, wireType 0 =*/104).uint32(message.maxPublishAckMs);
-            if (message.gpsUptime != null && Object.hasOwnProperty.call(message, "gpsUptime"))
-                writer.uint32(/* id 14, wireType 0 =*/112).uint32(message.gpsUptime);
+            if (message.gpsUptimeContiguous != null && Object.hasOwnProperty.call(message, "gpsUptimeContiguous"))
+                writer.uint32(/* id 14, wireType 0 =*/112).uint32(message.gpsUptimeContiguous);
             if (message.gpsFlutter != null && Object.hasOwnProperty.call(message, "gpsFlutter"))
                 writer.uint32(/* id 15, wireType 0 =*/120).uint32(message.gpsFlutter);
             if (message.wifiIP != null && Object.hasOwnProperty.call(message, "wifiIP"))
                 writer.uint32(/* id 16, wireType 2 =*/130).string(message.wifiIP);
+            if (message.versionStamp != null && Object.hasOwnProperty.call(message, "versionStamp"))
+                writer.uint32(/* id 17, wireType 0 =*/136).uint64(message.versionStamp);
+            if (message.overlayFsEnabled != null && Object.hasOwnProperty.call(message, "overlayFsEnabled"))
+                writer.uint32(/* id 18, wireType 0 =*/144).bool(message.overlayFsEnabled);
+            if (message.gpsUptimeTotal != null && Object.hasOwnProperty.call(message, "gpsUptimeTotal"))
+                writer.uint32(/* id 19, wireType 0 =*/152).uint32(message.gpsUptimeTotal);
+            if (message.gpsInitialAcquisitionSecondsAfterBoot != null && Object.hasOwnProperty.call(message, "gpsInitialAcquisitionSecondsAfterBoot"))
+                writer.uint32(/* id 20, wireType 0 =*/160).uint32(message.gpsInitialAcquisitionSecondsAfterBoot);
             return writer;
         };
 
@@ -328,7 +372,7 @@ $root.tutorial = (function() {
                         break;
                     }
                 case 14: {
-                        message.gpsUptime = reader.uint32();
+                        message.gpsUptimeContiguous = reader.uint32();
                         break;
                     }
                 case 15: {
@@ -337,6 +381,22 @@ $root.tutorial = (function() {
                     }
                 case 16: {
                         message.wifiIP = reader.string();
+                        break;
+                    }
+                case 17: {
+                        message.versionStamp = reader.uint64();
+                        break;
+                    }
+                case 18: {
+                        message.overlayFsEnabled = reader.bool();
+                        break;
+                    }
+                case 19: {
+                        message.gpsUptimeTotal = reader.uint32();
+                        break;
+                    }
+                case 20: {
+                        message.gpsInitialAcquisitionSecondsAfterBoot = reader.uint32();
                         break;
                     }
                 default:
@@ -415,15 +475,27 @@ $root.tutorial = (function() {
             if (message.maxPublishAckMs != null && message.hasOwnProperty("maxPublishAckMs"))
                 if (!$util.isInteger(message.maxPublishAckMs))
                     return "maxPublishAckMs: integer expected";
-            if (message.gpsUptime != null && message.hasOwnProperty("gpsUptime"))
-                if (!$util.isInteger(message.gpsUptime))
-                    return "gpsUptime: integer expected";
+            if (message.gpsUptimeContiguous != null && message.hasOwnProperty("gpsUptimeContiguous"))
+                if (!$util.isInteger(message.gpsUptimeContiguous))
+                    return "gpsUptimeContiguous: integer expected";
             if (message.gpsFlutter != null && message.hasOwnProperty("gpsFlutter"))
                 if (!$util.isInteger(message.gpsFlutter))
                     return "gpsFlutter: integer expected";
             if (message.wifiIP != null && message.hasOwnProperty("wifiIP"))
                 if (!$util.isString(message.wifiIP))
                     return "wifiIP: string expected";
+            if (message.versionStamp != null && message.hasOwnProperty("versionStamp"))
+                if (!$util.isInteger(message.versionStamp) && !(message.versionStamp && $util.isInteger(message.versionStamp.low) && $util.isInteger(message.versionStamp.high)))
+                    return "versionStamp: integer|Long expected";
+            if (message.overlayFsEnabled != null && message.hasOwnProperty("overlayFsEnabled"))
+                if (typeof message.overlayFsEnabled !== "boolean")
+                    return "overlayFsEnabled: boolean expected";
+            if (message.gpsUptimeTotal != null && message.hasOwnProperty("gpsUptimeTotal"))
+                if (!$util.isInteger(message.gpsUptimeTotal))
+                    return "gpsUptimeTotal: integer expected";
+            if (message.gpsInitialAcquisitionSecondsAfterBoot != null && message.hasOwnProperty("gpsInitialAcquisitionSecondsAfterBoot"))
+                if (!$util.isInteger(message.gpsInitialAcquisitionSecondsAfterBoot))
+                    return "gpsInitialAcquisitionSecondsAfterBoot: integer expected";
             return null;
         };
 
@@ -468,12 +540,27 @@ $root.tutorial = (function() {
                 message.wifiRss = Number(object.wifiRss);
             if (object.maxPublishAckMs != null)
                 message.maxPublishAckMs = object.maxPublishAckMs >>> 0;
-            if (object.gpsUptime != null)
-                message.gpsUptime = object.gpsUptime >>> 0;
+            if (object.gpsUptimeContiguous != null)
+                message.gpsUptimeContiguous = object.gpsUptimeContiguous >>> 0;
             if (object.gpsFlutter != null)
                 message.gpsFlutter = object.gpsFlutter >>> 0;
             if (object.wifiIP != null)
                 message.wifiIP = String(object.wifiIP);
+            if (object.versionStamp != null)
+                if ($util.Long)
+                    (message.versionStamp = $util.Long.fromValue(object.versionStamp)).unsigned = true;
+                else if (typeof object.versionStamp === "string")
+                    message.versionStamp = parseInt(object.versionStamp, 10);
+                else if (typeof object.versionStamp === "number")
+                    message.versionStamp = object.versionStamp;
+                else if (typeof object.versionStamp === "object")
+                    message.versionStamp = new $util.LongBits(object.versionStamp.low >>> 0, object.versionStamp.high >>> 0).toNumber(true);
+            if (object.overlayFsEnabled != null)
+                message.overlayFsEnabled = Boolean(object.overlayFsEnabled);
+            if (object.gpsUptimeTotal != null)
+                message.gpsUptimeTotal = object.gpsUptimeTotal >>> 0;
+            if (object.gpsInitialAcquisitionSecondsAfterBoot != null)
+                message.gpsInitialAcquisitionSecondsAfterBoot = object.gpsInitialAcquisitionSecondsAfterBoot >>> 0;
             return message;
         };
 
@@ -504,9 +591,17 @@ $root.tutorial = (function() {
                 object.wirelessMac = "";
                 object.wifiRss = 0;
                 object.maxPublishAckMs = 0;
-                object.gpsUptime = 0;
+                object.gpsUptimeContiguous = 0;
                 object.gpsFlutter = 0;
                 object.wifiIP = "";
+                if ($util.Long) {
+                    var long = new $util.Long(0, 0, true);
+                    object.versionStamp = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.versionStamp = options.longs === String ? "0" : 0;
+                object.overlayFsEnabled = false;
+                object.gpsUptimeTotal = 0;
+                object.gpsInitialAcquisitionSecondsAfterBoot = 0;
             }
             if (message.stamp != null && message.hasOwnProperty("stamp"))
                 object.stamp = $root.tutorial.TimerTimeStamp.toObject(message.stamp, options);
@@ -534,12 +629,23 @@ $root.tutorial = (function() {
                 object.wifiRss = options.json && !isFinite(message.wifiRss) ? String(message.wifiRss) : message.wifiRss;
             if (message.maxPublishAckMs != null && message.hasOwnProperty("maxPublishAckMs"))
                 object.maxPublishAckMs = message.maxPublishAckMs;
-            if (message.gpsUptime != null && message.hasOwnProperty("gpsUptime"))
-                object.gpsUptime = message.gpsUptime;
+            if (message.gpsUptimeContiguous != null && message.hasOwnProperty("gpsUptimeContiguous"))
+                object.gpsUptimeContiguous = message.gpsUptimeContiguous;
             if (message.gpsFlutter != null && message.hasOwnProperty("gpsFlutter"))
                 object.gpsFlutter = message.gpsFlutter;
             if (message.wifiIP != null && message.hasOwnProperty("wifiIP"))
                 object.wifiIP = message.wifiIP;
+            if (message.versionStamp != null && message.hasOwnProperty("versionStamp"))
+                if (typeof message.versionStamp === "number")
+                    object.versionStamp = options.longs === String ? String(message.versionStamp) : message.versionStamp;
+                else
+                    object.versionStamp = options.longs === String ? $util.Long.prototype.toString.call(message.versionStamp) : options.longs === Number ? new $util.LongBits(message.versionStamp.low >>> 0, message.versionStamp.high >>> 0).toNumber(true) : message.versionStamp;
+            if (message.overlayFsEnabled != null && message.hasOwnProperty("overlayFsEnabled"))
+                object.overlayFsEnabled = message.overlayFsEnabled;
+            if (message.gpsUptimeTotal != null && message.hasOwnProperty("gpsUptimeTotal"))
+                object.gpsUptimeTotal = message.gpsUptimeTotal;
+            if (message.gpsInitialAcquisitionSecondsAfterBoot != null && message.hasOwnProperty("gpsInitialAcquisitionSecondsAfterBoot"))
+                object.gpsInitialAcquisitionSecondsAfterBoot = message.gpsInitialAcquisitionSecondsAfterBoot;
             return object;
         };
 

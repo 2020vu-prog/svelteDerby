@@ -145,16 +145,24 @@
 
         <ul>
             <li>Timer Id: {timerPbConfig.timerMqttClientId}</li>
+            <li>Timer Code Version: {recentHealth.versionStamp}</li>
             <li>Last Status: {recentHealth.ageSeconds} seconds ago</li>
             <li>CPU Temp: {recentHealth.tempFmt}</li>
             <li>CPU Uptime: {R100(recentHealth.cpuUptime / 60)} minutes</li>
-            <li>Gps Uptime: {R100(recentHealth.gpsUptime / 60)} minutes</li>
+            {#if recentHealth.gpsInitialAcquisitionSecondsAfterBoot}
+            <li>Gps Acquistion delay: {recentHealth.gpsInitialAcquisitionSecondsAfterBoot} seconds</li>
+            <li>Gps Total Uptime: {R100(recentHealth.gpsUptimeTotal / 60)} minutes</li>
+            <li>Gps Recent Uptime: {R100(recentHealth.gpsUptimeContiguous / 60)} minutes</li>
             <li>Gps Flutter: {recentHealth.gpsFlutter}</li>
             <li>Gps PPS: {recentHealth.gpsEmittingPps}</li>
+            {:else}
+            <li>Gps Not yet acquired</li>
+            {/if}
             <li>Chrony PPS: {recentHealth.chronyUsingPps}</li>
             <li>Free Mem: {recentHealth.ramFreeKB} KB</li>
             <li>SSID: {recentHealth.ssid}</li>
             <li>IP: {recentHealth.wifiIP}</li>
+            <li>OverlayFS: {recentHealth.overlayFsEnabled}</li>
         </ul>
 
     </Collapse>
