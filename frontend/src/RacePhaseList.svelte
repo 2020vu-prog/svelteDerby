@@ -7,12 +7,14 @@
         carFilter,
         doRefreshBlocks,
         uiPageSize,
+        initialReloadRoute,
     } from "./stores.js";
     import RacePhase from "./RacePhase.svelte";
     import CarFilter from "./CarFilter.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
     import { onMount } from "svelte";
     import { getMainFull } from "./utils.js";
+    import { location } from "svelte-spa-router";
     var mainFullPx = 300;
     var phaseList = [];
     var start;
@@ -28,6 +30,7 @@
     onMount(async () => {
         //mainFullPx = getMainFull(["#rpTitle"]) - 36
         mainFullPx = getMainFull(["#rpTitle"]);
+        $initialReloadRoute = $location;
     });
     const filterMatchesX = (phase, lclFilter, nobKey) => {
         const fm = filterMatches(phase, lclFilter, nobKey);
