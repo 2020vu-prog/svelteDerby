@@ -1,13 +1,10 @@
 <script>
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
-    import { doRefreshBlocks } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
     import OrgName from "./OrgName.svelte";
     import { raceConfig } from "./stores.js";
     import { onMount } from "svelte";
-    import { Auth } from "aws-amplify";
-    import axios from "axios";
     import { push, pop, replace } from "svelte-spa-router";
     import {
         getCacheKey,

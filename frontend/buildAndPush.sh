@@ -21,4 +21,4 @@ function s3PushOLD {
 	echo cloudfront endpoint: $DERBY_CLOUDFRONT
 }
 
-npm i &&  npm run build && ./s3Push.sh
+make install &&  npm run build && ./s3Push.sh

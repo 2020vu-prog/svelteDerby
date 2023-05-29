@@ -19,7 +19,6 @@
         raceConfig,
         axios,
     } from "./stores.js";
-    import { Auth } from "aws-amplify";
     import Amplify, { PubSub } from "aws-amplify";
     import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
     import { db } from "./eventDb.js";
