@@ -132,6 +132,15 @@
     function R100(x) {
         return Math.round(x * 100) / 100;
     }
+    function getUptimePct(recentHealth) {
+        if (recentHealth.cpuUptime) {
+            return `${
+                R100(recentHealth.gpsUptimeTotal / recentHealth.cpuUptime) * 100
+            }%`;
+        } else {
+            return "";
+        }
+    }
 </script>
 
 <div>
@@ -156,7 +165,7 @@
                 </li>
                 <li>
                     Gps Total Uptime: {R100(recentHealth.gpsUptimeTotal / 60)}
-                    minutes
+                    minutes ({getUptimePct(recentHealth)})
                 </li>
                 <li>
                     Gps Recent Uptime: {R100(recentHealth.gpsUptimeContiguous / 60)}

@@ -1278,6 +1278,16 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
     };
 }
 
+
+async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
+    log.debug(
+        "snsApplyPbTimerHandler Message received from SNS2:",
+        snsPublishedTimestamp,
+        snsMessageJson,
+    );
+    log.debug(
+        "snsApplyPbTimerHandler finishBlocks:",snsMessageJson.finishBlocks,)
+}
 async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug(
         "applyTimerHandler Message received from SNS2:",
@@ -1538,6 +1548,12 @@ exports.handler = async function (event) {
     if (event.Records[0].Sns) {
         var snsMessage = event.Records[0].Sns.Message;
         const snsMessageJson = JSON.parse(snsMessage);
+        log.debug(
+            "snsTopic: ",
+            snsMessageJson.snsTopicArn,
+            " snsMessageJson:  ",
+            snsMessageJson
+        );
 
         log.debug("sns message: : ", snsMessageJson);
         // ugly workaround for cron events not invoking lambda directly
@@ -1556,9 +1572,13 @@ exports.handler = async function (event) {
             await announceResults.propagateIotFromSns(snsMessageJson);
             return "Polly Success";
         }
-
-        var snsTimestamp = event.Records[0].Sns.Timestamp;
-        await snsApplyTimerHandler(snsMessageJson, snsTimestamp);
+        const snsTimestamp = event.Records[0].Sns.Timestamp;
+        if (snsMessageJson.source=== "protobufElapsedMqttIngester") {
+            await snsApplyPbTimerHandler(snsMessageJson, snsTimestamp);
+        }
+        else{
+            await snsApplyTimerHandler(snsMessageJson, snsTimestamp);
+        }
         return "Success";
     }
     if (event.Records[0].s3) {
