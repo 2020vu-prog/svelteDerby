@@ -13,21 +13,227 @@
     export let params = {};
     onMount(async () => {
         log.debug("RacePhaseElapsed:", params);
+        recalcLaneData(finishBlocks);
     });
-    const laneData = [
+    function bySeq(a, b) {
+        return a.timerConfig.seq - b.timerConfig.seq;
+    }
+    function recalcLaneData(finishBlocks) {
+        laneData = [];
+        const sortedFB = finishBlocks.sort(bySeq);
+        var prevFB = {
+            XXtimerConfig: {
+                timerName: "none",
+            },
+        };
+        sortedFB.forEach((fb) => {
+            if (prevFB.timerConfig) {
+                laneData.push({
+                    timer: "SplitTime",
+                    l1: fb.gpsNoseMs[0] - prevFB.gpsNoseMs[0],
+                    delta: prevFB.timerConfig.timerName,
+                    l2: fb.gpsNoseMs[1] - prevFB.gpsNoseMs[1],
+                });
+            }
+            laneData.push({
+                timer: fb.timerConfig.timerName,
+                l1: fb.gpsNoseMs[0],
+                delta: "",
+                l2: fb.gpsNoseMs[1],
+            });
+            prevFB = fb;
+        });
+    }
+    const finishBlocks = [
+        {
+            timerName: "hill",
+            timerConfig: {
+                timerName: "hill",
+                timerMqttClientId: "TimerJan22Test",
+                useGpsTime: true,
+                orgId: "Test.cad81",
+                orgIz: "Test",
+                sensorLogic: "LanePhotoEyes",
+                timerConfigLanePhotoEye: {
+                    maxCarLenMS: 800,
+                    minCarLenMS: 2,
+                    maxPerfCount: 2,
+                    clearMS: 5000,
+                },
+                maxTrackSeconds: 120,
+                deleted: false,
+                seq: 500,
+            },
+            events: [
+                {
+                    lane: "lane1",
+                    noseTime: {
+                        pinNumber: 17,
+                        stamp: {
+                            gpsTime: {
+                                seconds: "1685586842",
+                                nanos: 385190000,
+                            },
+                            tick64: "14797331264",
+                        },
+                        pinState: "BLOCKED",
+                        pinName: "lane1",
+                    },
+                    tailTime: {
+                        pinNumber: 17,
+                        stamp: {
+                            gpsTime: {
+                                seconds: "1685586842",
+                                nanos: 534019000,
+                            },
+                            tick64: "14797480094",
+                        },
+                        pinState: "CLEAR",
+                        pinName: "lane1",
+                    },
+                    lanePairFound: true,
+                },
+                {
+                    lane: "lane2",
+                    noseTime: {
+                        pinNumber: 22,
+                        stamp: {
+                            gpsTime: {
+                                seconds: "1685586840",
+                                nanos: 557179000,
+                            },
+                            tick64: "14795503249",
+                        },
+                        pinState: "BLOCKED",
+                        pinName: "lane2",
+                    },
+                    tailTime: {
+                        pinNumber: 22,
+                        stamp: {
+                            gpsTime: {
+                                seconds: "1685586840",
+                                nanos: 873719000,
+                            },
+                            tick64: "14795819790",
+                        },
+                        pinState: "CLEAR",
+                        pinName: "lane2",
+                    },
+                    lanePairFound: true,
+                },
+            ],
+            rpiNoseMicros: ["14797331264", "14795503249"],
+            rpiDeltaTickMicros: -1828015,
+            gpsAvailable: true,
+            vvv: "20:04",
+            gpsDeltaMicros: -1828011,
+            gpsNoseMicros: ["1685586842385190", "1685586840557179"],
+            gpsNoseMs: [1685586842385, 1685586840557],
+        },
+        {
+            timerName: "Finish",
+            timerConfig: {
+                timerName: "Finish",
+                timerMqttClientId: "IL-CHI-TIMER-20230521",
+                useGpsTime: true,
+                orgId: "Test.cad81",
+                orgIz: "Test",
+                sensorLogic: "LanePhotoEyes",
+                timerConfigLanePhotoEye: {
+                    maxCarLenMS: 800,
+                    minCarLenMS: 2,
+                    maxPerfCount: 2,
+                    clearMS: 5000,
+                },
+                maxTrackSeconds: 180,
+                deleted: false,
+                seq: 888,
+            },
+            events: [
+                {
+                    lane: "lane1",
+                    noseTime: {
+                        pinNumber: 17,
+                        stamp: {
+                            gpsTime: {
+                                seconds: "1685586856",
+                                nanos: 317513000,
+                            },
+                            tick64: "55635875745",
+                        },
+                        pinState: "BLOCKED",
+                        pinName: "lane1",
+                    },
+                    tailTime: {
+                        pinNumber: 17,
+                        stamp: {
+                            gpsTime: {
+                                seconds: "1685586856",
+                                nanos: 538878000,
+                            },
+                            tick64: "55636097111",
+                        },
+                        pinState: "CLEAR",
+                        pinName: "lane1",
+                    },
+                    lanePairFound: true,
+                },
+                {
+                    lane: "lane2",
+                    noseTime: {
+                        pinNumber: 22,
+                        stamp: {
+                            gpsTime: {
+                                seconds: "1685586857",
+                                nanos: 240768000,
+                            },
+                            tick64: "55636799007",
+                        },
+                        pinState: "BLOCKED",
+                        pinName: "lane2",
+                    },
+                    tailTime: {
+                        pinNumber: 22,
+                        stamp: {
+                            gpsTime: {
+                                seconds: "1685586857",
+                                nanos: 524517000,
+                            },
+                            tick64: "55637082758",
+                        },
+                        pinState: "CLEAR",
+                        pinName: "lane2",
+                    },
+                    lanePairFound: true,
+                },
+            ],
+            rpiNoseMicros: ["55635875745", "55636799007"],
+            rpiDeltaTickMicros: 923262,
+            gpsAvailable: true,
+            vvv: "20:04",
+            gpsDeltaMicros: 923255,
+            gpsNoseMicros: ["1685586856317513", "1685586857240768"],
+            gpsNoseMs: [1685586856317, 1685586857240],
+        },
+    ];
+
+    var laneData = [
         {
             timer: "Ramps",
             l1: 123,
+            delta: "-",
             l2: 123,
         },
         {
             timer: "Hill ",
             l1: 456.77,
+            delta: ".010 *",
             l2: 456.78,
         },
         {
             timer: "Finish",
             l1: 887.655,
+            delta: ".020 *",
             l2: 887.657,
         },
     ];
@@ -38,6 +244,7 @@
         <tr>
             <th>Timer</th>
             <th>Lane1</th>
+            <th>&lt;=&gt;</th>
             <th>Lane2</th>
         </tr>
     </thead>
@@ -46,6 +253,7 @@
             <tr>
                 <th scope="row">{row.timer}</th>
                 <td>{row.l1}</td>
+                <td>{row.delta}</td>
                 <td>{row.l2}</td>
             </tr>
         {/each}

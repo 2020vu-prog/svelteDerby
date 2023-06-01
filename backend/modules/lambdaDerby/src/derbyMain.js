@@ -1278,15 +1278,65 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
     };
 }
 
-
 async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug(
         "snsApplyPbTimerHandler Message received from SNS2:",
         snsPublishedTimestamp,
-        snsMessageJson,
+        snsMessageJson
     );
     log.debug(
-        "snsApplyPbTimerHandler finishBlocks:",snsMessageJson.finishBlocks,)
+        "snsApplyPbTimerHandler finishBlocks:",
+        snsMessageJson.finishBlocks
+    );
+    log.debug("snsApplyPbTimerHandler newXmitMs:", snsMessageJson.newXmitMs);
+
+    //const finishLineBlock = snsMessageJson.finishBlocks[0]; //needFilter!! //verify
+    var finishLineBlock = snsMessageJson.finishBlocks.filter(
+        (flb) => flb.timerName === "Finish"
+    );
+
+    if (finishLineBlock && finishLineBlock.length == 1) {
+        finishLineBlock = finishLineBlock[0]; //change array to filtered object
+    } else {
+        throw ("missing finishLineBlock", finishLineBlock);
+    }
+
+    const rp = await getApplyableNextOnBlocks(
+        parseInt(snsMessageJson.newXmitMs),
+        snsPublishedTimestamp,
+        finishLineBlock.timerConfig.orgId,
+        finishLineBlock.timerConfig.orgIz
+    );
+
+    log.debug("snsApplyPbTimerHandler rp:", rp);
+    //throw "snsApplyPbTimerHandler unfinished.";
+
+    var l1Micros = parseInt(finishLineBlock.rpiNoseMicros[0]);
+    var l2Micros = parseInt(finishLineBlock.rpiNoseMicros[1]);
+    var byLine = "rpi.local";
+
+    // don't publish fractional ms for gps.  it will inevitably conflict with elapsed times!
+    if (finishLineBlock.gpsAvailable) {
+        l1Micros = finishLineBlock.gpsNoseMs[0] * 1000;
+        l2Micros = finishLineBlock.gpsNoseMs[1] * 1000;
+        byLine = "rpi.gps";
+    }
+    entityFactory = new EntityFactory({
+        orgId: finishLineBlock.timerConfig.orgId,
+        by: byLine,
+        TTL: rp.TTL,
+    });
+    ddbUtils.setEntityFactory(entityFactory);
+
+    const req = {
+        orgId: finishLineBlock.timerConfig.orgId,
+        orgIz: finishLineBlock.timerConfig.orgIz,
+        SK: rp.SK,
+        phr: [l1Micros, l2Micros],
+    };
+    log.debug("snsApplyPbTimerHandler formatted:", req);
+    const applied = await applyFinishTime(req);
+    log.debug("snsApplyPbTimerHandler rc:", applied);
 }
 async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug(
@@ -1294,7 +1344,6 @@ async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         snsPublishedTimestamp,
         snsMessageJson
     );
-    const snsPubDate = Date.parse(snsPublishedTimestamp);
 
     const json = snsMessageJson;
     if (json && json.timerConfig && json.deltas && json.deltas.length > 0) {
@@ -1309,58 +1358,27 @@ async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         ddbUtils.setEntityFactory(entityFactory);
 
         const deltaLanes = json.deltas[0].lanes;
-        const nextOnBlocks = await ddbUtils.ddbQueryRpNextOnBlocks(
-            json.timerConfig // need orgId, orgIz
-        );
         const candidateBlock = json.deltas[0].cBlock;
-
-        if (!nextOnBlocks.length > 0) {
-            log.debug("applyTimerHandler Message : blocks are empty 0.");
-            return;
-        }
-        const rp = nextOnBlocks[0]; // TODO: get oldest!
-        if (!rp) {
-            log.debug("applyTimerHandler Message : blocks are empty 1.");
-            return;
-        }
-        log.debug(
-            "applyTimerHandler Message : snsPubDate:",
-            snsPubDate,
-            " rpDate:",
-            rp.at
-        );
-
-        // wall time may slip on pi.   if sns time (from AWS datacenter) is older than NOB time. don't apply time.
-        if (snsPublishedTimestamp < rp.at) {
-            log.debug(
-                "applyTimerHandler Message : skipping stale SNS finish time : ",
-                snsPubDate,
-                " rpDate:",
-                rp.at
-            );
-            return;
-        }
+        var cblockAuditTime = 0;
         if (candidateBlock && candidateBlock[0]) {
             const firstCblock = candidateBlock[0]; // first block is close enough for this edit
             log.debug(
-                "auditCblock: first candidateBlock: ",
-                firstCblock,
-                " vs: ",
-                rp
+                "snsApplyTimerHandler auditCblock: first candidateBlock: ",
+                firstCblock
             );
-            if (firstCblock.pubTime < rp.at) {
-                log.debug(
-                    "auditCblock: ignoring finishTime that is older than nextOnBlocks"
-                );
-                return;
-            } else {
-                log.debug(
-                    "auditCblock: allowing finishTime that is newer than nextOnBlocks"
-                );
-            }
+            cblockAuditTime = firstCblock.pubTime;
         } else {
-            log.debug("auditCblock: finishTime not Audited.  missing cblock");
+            log.debug(
+                "snsApplyTimerHandler auditCblock: finishTime not Audited.  missing cblock"
+            );
+            cblockAuditTime = 0;
         }
+        const rp = await getApplyableNextOnBlocks(
+            cblockAuditTime,
+            snsPublishedTimestamp,
+            json.timerConfig.orgId,
+            json.timerConfig.orgIz
+        );
 
         log.debug("applyTimerHandler nob:", rp);
         if (rp) {
@@ -1381,6 +1399,60 @@ async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     }
 }
 
+async function getApplyableNextOnBlocks(
+    recordMs,
+    snsPublishedTimestamp,
+    orgId,
+    orgIz
+) {
+    const snsPubDate = Date.parse(snsPublishedTimestamp);
+
+    const nextOnBlocks = await ddbUtils.ddbQueryRpNextOnBlocks(
+        { orgId: orgId, orgIz: orgIz }
+        //json.timerConfig // need orgId, orgIz
+    );
+
+    if (!nextOnBlocks.length > 0) {
+        throw "getApplyableNextOnBlocks Message : blocks are empty 0.";
+    }
+    const rp = nextOnBlocks[0]; // TODO: get oldest!
+    if (!rp) {
+        throw "getApplyableNextOnBlocks Message : blocks are empty 1.";
+        return;
+    }
+    log.debug(
+        "getApplyableNextOnBlocks Message : snsPubDate:",
+        snsPubDate,
+        " rpDate:",
+        rp.at
+    );
+
+    // wall time may slip on pi.   if sns time (from AWS datacenter) is older than NOB time. don't apply time.
+    if (snsPublishedTimestamp < rp.at) {
+        throw (
+            ("getApplyableNextOnBlocks Message : skipping stale SNS finish time : ",
+            snsPubDate,
+            " rpDate:",
+            rp.at)
+        );
+        return;
+    }
+    if (recordMs) {
+        if (recordMs < rp.at) {
+            throw "getApplyableNextOnBlocks auditRecordMs: ignoring finishTime that is older than nextOnBlocks";
+            return;
+        } else {
+            log.debug(
+                "getApplyableNextOnBlocks auditRecordMs: allowing finishTime that is newer than nextOnBlocks"
+            );
+        }
+    } else {
+        log.debug(
+            "getApplyableNextOnBlocks auditRecordMs: finishTime not Audited.  missing recordMs"
+        );
+    }
+    return rp;
+}
 async function apiGatewayHandler(event) {
     const dbArn = process.env.DynamoDbArn;
 
@@ -1573,13 +1645,17 @@ exports.handler = async function (event) {
             return "Polly Success";
         }
         const snsTimestamp = event.Records[0].Sns.Timestamp;
-        if (snsMessageJson.source=== "protobufElapsedMqttIngester") {
-            await snsApplyPbTimerHandler(snsMessageJson, snsTimestamp);
+        try {
+            if (snsMessageJson.source === "protobufElapsedMqttIngester") {
+                await snsApplyPbTimerHandler(snsMessageJson, snsTimestamp);
+            } else {
+                await snsApplyTimerHandler(snsMessageJson, snsTimestamp);
+            }
+            return "Success";
+        } catch (err) {
+            log.debug("snsApplyFinishError Error : ", err);
+            return "SNS Error";
         }
-        else{
-            await snsApplyTimerHandler(snsMessageJson, snsTimestamp);
-        }
-        return "Success";
     }
     if (event.Records[0].s3) {
         const s3Event = event.Records[0].s3;

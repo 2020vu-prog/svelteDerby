@@ -129,6 +129,17 @@
             }
         }
     }
+    function secondsToHHMMSS(seconds) {
+        var hoursLeft = Math.floor(seconds / 3600);
+        var minLeft = Math.floor((seconds - hoursLeft * 3600) / 60);
+        var secondsLeft = seconds - hoursLeft * 3600 - minLeft * 60;
+        secondsLeft = Math.round(secondsLeft * 100) / 100;
+        var answer = "";
+        answer += hoursLeft < 10 ? "0" + hoursLeft : hoursLeft;
+        answer += ":" + (minLeft < 10 ? "0" + minLeft : minLeft);
+        answer += ":" + (secondsLeft < 10 ? "0" + secondsLeft : secondsLeft);
+        return answer;
+    }
     function R100(x) {
         return Math.round(x * 100) / 100;
     }
@@ -155,21 +166,22 @@
         <ul>
             <li>Timer Id: {timerPbConfig.timerMqttClientId}</li>
             <li>Timer Code Version: {recentHealth.versionStamp}</li>
-            <li>Last Status: {recentHealth.ageSeconds} seconds ago</li>
+            <li>
+                Last Status: {secondsToHHMMSS(recentHealth.ageSeconds)} seconds
+                ago
+            </li>
             <li>CPU Temp: {recentHealth.tempFmt}</li>
-            <li>CPU Uptime: {R100(recentHealth.cpuUptime / 60)} minutes</li>
+            <li>CPU Uptime: {secondsToHHMMSS(recentHealth.cpuUptime)}</li>
             {#if recentHealth.gpsInitialAcquisitionSecondsAfterBoot}
                 <li>
-                    Gps Acquistion delay: {recentHealth.gpsInitialAcquisitionSecondsAfterBoot}
-                    seconds
+                    Gps Acquistion delay: {secondsToHHMMSS(recentHealth.gpsInitialAcquisitionSecondsAfterBoot)}
                 </li>
                 <li>
-                    Gps Total Uptime: {R100(recentHealth.gpsUptimeTotal / 60)}
-                    minutes ({getUptimePct(recentHealth)})
+                    Gps Total Uptime: {secondsToHHMMSS(recentHealth.gpsUptimeTotal)}
+                    ({getUptimePct(recentHealth)})
                 </li>
                 <li>
-                    Gps Recent Uptime: {R100(recentHealth.gpsUptimeContiguous / 60)}
-                    minutes
+                    Gps Recent Uptime: {secondsToHHMMSS(recentHealth.gpsUptimeContiguous)}
                 </li>
                 <li>Gps Flutter: {recentHealth.gpsFlutter}</li>
                 <li>Gps PPS: {recentHealth.gpsEmittingPps}</li>
