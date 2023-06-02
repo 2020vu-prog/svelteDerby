@@ -91,6 +91,7 @@ addPermission(
 addPermission(
     "Anonymous",
     [
+        "/getPhaseElapsed",
         "/getRaceHistory",
         "/requestMqttSubPermission",
         "/listMediaPrefix",

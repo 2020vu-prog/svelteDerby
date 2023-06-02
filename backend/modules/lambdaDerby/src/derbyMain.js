@@ -464,6 +464,19 @@ async function cloneRs(srcRs) {
     }
 }
 
+const getPhaseElapsed = async (json) => {
+    if (!json) {
+        json = {};
+    }
+    log.debug("getPhaseElapsed: " + JSON.stringify(json));
+    const rc = await ddbUtils.ddbQueryPkSk(
+        `${json.orgId}:RpElapsed`,
+        `${json.sk}`,
+        process.env.ElapsedTempDbTable
+    );
+    log.debug("getPhaseElapsed", rc);
+    return rc;
+};
 const deleteRacePhase = async (json) => {
     log.debug("deleteRacePhase: " + JSON.stringify(json));
     const rpFound = await ddbUtils.ddbQueryPkSk(`${json.orgId}:RP`, json.SK);
@@ -1067,6 +1080,13 @@ const routeMap = {
             );
         },
     },
+    "/getPhaseElapsed": {
+        h: async (event) => {
+            return buildResponse(
+                await getPhaseElapsed(event.queryStringParameters)
+            );
+        },
+    },
     "/RaceStanding/addTag": {
         h: async (event) => {
             return buildResponse(
@@ -1291,15 +1311,16 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug("snsApplyPbTimerHandler newXmitMs:", snsMessageJson.newXmitMs);
 
     //const finishLineBlock = snsMessageJson.finishBlocks[0]; //needFilter!! //verify
-    var finishLineBlock = snsMessageJson.finishBlocks.filter(
+    var finishLineBlockList = snsMessageJson.finishBlocks.filter(
         (flb) => flb.timerName === "Finish"
     );
 
-    if (finishLineBlock && finishLineBlock.length == 1) {
-        finishLineBlock = finishLineBlock[0]; //change array to filtered object
+    if (finishLineBlockList && finishLineBlockList.length == 1) {
+        //ok
     } else {
         throw ("missing finishLineBlock", finishLineBlock);
     }
+    const finishLineBlock = finishLineBlockList[0]; //change array to filtered object
 
     const rp = await getApplyableNextOnBlocks(
         parseInt(snsMessageJson.newXmitMs),
@@ -1336,7 +1357,15 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     };
     log.debug("snsApplyPbTimerHandler formatted:", req);
     const applied = await applyFinishTime(req);
-    log.debug("snsApplyPbTimerHandler rc:", applied);
+    log.debug("snsApplyPbTimerHandler aft rc:", applied);
+
+    const fbJson = {
+        PK: `${finishLineBlock.timerConfig.orgId}:RpElapsed`,
+        SK: rp.SK,
+        fbList: JSON.stringify(finishLineBlockList),
+        TTL: rp.TTL,
+    };
+    await ddbUtils.ddbPut(fbJson, process.env.ElapsedTempDbTable);
 }
 async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug(

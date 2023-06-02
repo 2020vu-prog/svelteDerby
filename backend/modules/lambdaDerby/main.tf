@@ -4,6 +4,7 @@ variable DynamoDbArn {}
 variable DistDbArn {}
 variable TimerDbArn {}
 variable TimerProtobufDbArn {}
+variable ElapsedTempDbArn {}
 variable AwsRegion {}
 variable   CcaQueueId  {}
 variable   CcaQueueArn  {}
@@ -34,6 +35,10 @@ locals{
       timerDbList= split("/",var.TimerDbArn)
       TimerDbTable= element(local.timerDbList,length(local.timerDbList)-1)
       
+      etList= split("/",var.ElapsedTempDbArn)
+      ElapsedTempDbTable= element(local.etList,length(local.etList)-1)
+
+
       timerProtobufDbList= split("/",var.TimerProtobufDbArn)
       TimerProtobufDbTable= element(local.timerProtobufDbList,length(local.timerProtobufDbList)-1)
 
@@ -134,7 +139,7 @@ resource "aws_iam_role" "iam_for_lambda" {
 
 resource "aws_cloudwatch_log_group" "derbyMainLogRetention" {
   name              = "/aws/lambda/${local.mainLambdaName}"
-  retention_in_days = 90
+  retention_in_days = 1
 }
 resource "aws_lambda_function" "lambda" {
   function_name = local.mainLambdaName
@@ -145,7 +150,7 @@ resource "aws_lambda_function" "lambda" {
   timeout = 10 // increased for bulkAdd
   role    = aws_iam_role.iam_for_lambda.arn
   handler = "derbyMain.handler"
-  runtime = "nodejs12.x"
+  runtime = "nodejs14.x"
   memory_size=1024
   publish = true
   tags=local.tags
@@ -156,6 +161,10 @@ resource "aws_lambda_function" "lambda" {
 
       DistDbTable= local.DistDbTable
       DistDbArn= var.DistDbArn
+
+      ElapsedTempDbTable= local.ElapsedTempDbTable
+      ElapsedTempDbArn= var.ElapsedTempDbArn
+
 
       // used to populate mp3
       DstBucket     = var.S3DistBucket
@@ -228,6 +237,7 @@ data "aws_iam_policy_document" "cloudwatch_allow_doc" {
                 var.DynamoDbArn,
                 var.DistDbArn,
                 var.TimerDbArn,
+                var.ElapsedTempDbArn,
                 var.TimerProtobufDbArn
         ]   
     }   

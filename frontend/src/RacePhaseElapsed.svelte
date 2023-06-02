@@ -10,11 +10,54 @@
         Table,
     } from "sveltestrap";
     import { onMount } from "svelte";
+    import { sleep } from "./utils.js";
+    import { statusMessage, raceConfig, axios } from "./stores";
+
     export let params = {};
+    let rpKey = "";
+    let spinning = true;
     onMount(async () => {
         log.debug("RacePhaseElapsed:", params);
         recalcLaneData(finishBlocks);
+        rpKey = params.rpKey;
+        await loadFinishBlocks();
     });
+    async function loadFinishBlocks() {
+        const orgIz = $raceConfig.orgIz;
+        const orgId = $raceConfig.orgId;
+
+        const url = `/getPhaseElapsed?orgIz=${orgIz}&orgId=${orgId}&sk=${rpKey}`;
+        try {
+            await sleep(1);
+            const response = await $axios.get($raceConfig.baseUrl + url);
+            spinning = false;
+            if (response.error) {
+                log.debug("loadFinishBlocks:", response);
+                //TODO: not working!?
+                $statusMessage = {
+                    text: `loadFinishBlocks Failed: ${response.error}.`,
+                    type: "error",
+                };
+            } else {
+                /*
+                $statusMessage = {
+                    text: `getTimerHistory Complete.`,
+                    type: "success",
+                };
+                */
+
+                const fbList = response.data.fbList;
+                log.debug("fbList: ", fbList);
+                const fbJson = JSON.parse(fbList);
+                recalcLaneData(fbJson);
+            }
+        } catch (err) {
+            $statusMessage = {
+                text: `loadFinishBlocks Failed: ${err}.`,
+                type: "error",
+            };
+        }
+    }
     function bySeq(a, b) {
         return a.timerConfig.seq - b.timerConfig.seq;
     }
@@ -35,10 +78,18 @@
                     l2: fb.gpsNoseMs[1] - prevFB.gpsNoseMs[1],
                 });
             }
+            var delta = fb.gpsNoseMs[1] - fb.gpsNoseMs[0];
+            if (delta == 0) {
+                delta = `Tie`;
+            } else if (delta < 0) {
+                delta = `${Math.abs(delta)} 🏁`;
+            } else {
+                delta = `🏁 ${Math.abs(delta)}`;
+            }
             laneData.push({
                 timer: fb.timerConfig.timerName,
                 l1: fb.gpsNoseMs[0],
-                delta: "",
+                delta: delta,
                 l2: fb.gpsNoseMs[1],
             });
             prevFB = fb;
@@ -239,23 +290,30 @@
     ];
 </script>
 
-<Table striped>
-    <thead>
-        <tr>
-            <th>Timer</th>
-            <th>Lane1</th>
-            <th>&lt;=&gt;</th>
-            <th>Lane2</th>
-        </tr>
-    </thead>
-    <tbody>
-        {#each laneData as row (row.timer)}
+{#if spinning}
+    <div>
+        Spinning!
+        <img alt="spinner" src="data/circles.svg" width="250px" />
+    </div>
+{:else}
+    <Table striped>
+        <thead>
             <tr>
-                <th scope="row">{row.timer}</th>
-                <td>{row.l1}</td>
-                <td>{row.delta}</td>
-                <td>{row.l2}</td>
+                <th>Timer</th>
+                <th>Lane1</th>
+                <th>&lt;=&gt;</th>
+                <th>Lane2</th>
             </tr>
-        {/each}
-    </tbody>
-</Table>
+        </thead>
+        <tbody>
+            {#each laneData as row (row.timer)}
+                <tr>
+                    <th scope="row">{row.timer}</th>
+                    <td>{row.l1}</td>
+                    <td>{row.delta}</td>
+                    <td>{row.l2}</td>
+                </tr>
+            {/each}
+        </tbody>
+    </Table>
+{/if}

@@ -120,10 +120,11 @@ class DdbUtils {
         try {
             var data = await this.ddbClient.query(params);
             log.debug("ddbQueryPkSk: ", data); // successful response
-            const udata = this.unmarshallResultsToArray(
-                data,
-                new EntityFactory({})
-            );
+            var factory = new EntityFactory({});
+            if (process.env.ElapsedTempDbTable === tableName) {
+                factory = null;
+            }
+            const udata = this.unmarshallResultsToArray(data, factory);
 
             if (udata && udata[0]) {
                 return udata[0]; // exact key lookup should not get multipe entries
