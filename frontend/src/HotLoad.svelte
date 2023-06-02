@@ -518,40 +518,64 @@
     });
 
     async function announceFromMqtt(mqMsg) {
-        log.debug("mqMsg: ", mqMsg);
-        log.debug(`mqMsg: ${mqMsg}`, mqMsg);
-        log.debug(`mqMsg already parsed?: ${mqMsg.outputUri}`);
+        log.debug("announceFromMqtt: ", mqMsg);
+        log.debug(`announceFromMqtt: ${mqMsg}`, mqMsg);
+        log.debug(`announceFromMqtt already parsed?: ${mqMsg.outputUri}`);
         //const parsedMsg = JSON.parse(mqMsg);
         const parsedMsg = mqMsg;
         const mediaMatch = mqMsg.outputUri.match(/\/media\/.*/);
         if (mediaMatch && mediaMatch[0]) {
             const path = mediaMatch[0];
-            log.debug(`paMessage path: ${path}`);
+            $statusMessage = {
+                text: `Audio queueing.`,
+                type: "success",
+            };
+            log.debug(`announceFromMqtt path: ${path}`);
             queueAudio(path);
         } else {
-            log.debug(`paMessage MISSING path`);
+            log.debug(`announceFromMqtt MISSING path`);
+            $statusMessage = {
+                text: `Audio missing path.`,
+                type: "error",
+            };
         }
     }
+
+    var recentPA = ""; // jun 2023 workaround for duplicate subscribed issue
     function queueAudio(path) {
-        pendingAudioList.push(path);
-        triggerAudioPlayer();
+        if (recentPA === path) {
+            tattle(`skipping duplicate request ${path}`);
+        } else {
+            recentPA = path;
+
+            tattle(`queueing ${path}`);
+            pendingAudioList.push(path);
+            triggerAudioPlayer();
+        }
     }
     var audioPlaying = false;
     function triggerAudioPlayer() {
+        tattle("trigger begin");
         if (pendingAudioList.length == 0) return; // no-op.
         if (audioPlaying) return; // no concurrent audio players!
 
         audioPlaying = true;
         const audio = new Audio(pendingAudioList.shift());
+        tattle("trigger shifted");
         audio.onended = async function () {
             await sleep(2000);
             audioPlaying = false;
+            tattle("trigger onend");
             triggerAudioPlayer(); // won't do anything unless requests were queued up while playing
         };
         audio.play();
     }
     function sleep(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+    function tattle(msg) {
+        // root cause looks like double subscribe.
+        //log.debug("tattle :", msg, pendingAudioList.length);
     }
     const doRefresh = async () => {
         refreshInProgressButton = true;

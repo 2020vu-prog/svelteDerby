@@ -249,6 +249,24 @@
             };
         }
     }
+    function fmtPinTime(timerPin) {
+        if (!timerPin.stamp.gpsTime) {
+            //log.debug("fmtPinTime baled", timerPin);
+            return timerPin.stamp.tick64;
+        }
+        const m1 = 1000 * 1000;
+        const ms =
+            timerPin.stamp.gpsTime.seconds * 1000 +
+            Math.round(timerPin.stamp.gpsTime.nanos / m1);
+        //log.debug("fmtPinTime from ", timerPin, " gave:", ms);
+        let gpsDate = new Date(ms);
+        return gpsDate.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            fractionalSecondDigits: 3,
+        });
+    }
 </script>
 
 <style>
@@ -302,7 +320,7 @@
 {#each getSortedHistory(lanePbTimerPinHistoryMap) as tp}
     <div>
         <code>
-            {tp.stamp.tick64} Lane{tp.pinName}
+            {fmtPinTime(tp)} Lane{tp.pinName}
             {#if isPinBlocked(tp)}Blocked{:else}Clear{/if}
         </code>
     </div>
