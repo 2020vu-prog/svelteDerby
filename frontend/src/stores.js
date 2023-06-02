@@ -85,6 +85,7 @@ export const mqttEnabled = persistable("pref:mqttEnabled", true);
 export const mqttTriggerVideoCapture = writable(0);
 export const beginAnonymousLogin = writable(false);
 export const timerState = writable({});
+export const timerPbMap = writable({});
 export const uiPageSize = persistable("pref:uiPageSize", undefined);
 //export const uiPageSize = writable(100);
 export const raceConfig = persistable("pref:uiRaceConfig", {

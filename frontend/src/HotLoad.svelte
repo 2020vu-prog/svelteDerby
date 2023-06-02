@@ -16,6 +16,7 @@
         mqttTriggerVideoCapture,
         mqttEnabled,
         timerState,
+        timerPbMap,
         raceConfig,
         axios,
     } from "./stores.js";
@@ -161,12 +162,12 @@
             onTimerMqttData
         );
     }
-    function onTimerMqttData(json) {
+    function onTimerMqttData(json, topic) {
         log.debug("onTimerMqttData");
         potentialCaptureJ(json);
-        publishTimerState(json);
+        publishTimerState(json, topic);
     }
-    function publishTimerState(json) {
+    function publishTimerState(json, topic) {
         //{"microb": 26520205700, "pinNumber": "24", "pinName": "oneHz", "pubTime": 1598832946117, "seq": 13413, "pinState": 1, "micros": 26520205700, "pinType": "clock", "microP
         //legacy timer
         if (json.pinType) {
@@ -179,7 +180,9 @@
             }
         } else {
             // probably protobuf binary, not json!
-            log.debug("publishTimerState:", json);
+            log.debug(`publishTimerState: [${topic}]`, json);
+            $timerPbMap[topic] = json;
+            $timerPbMap = $timerPbMap; //tickle state listeners
         }
     }
     function potentialCaptureJ(json) {
@@ -274,7 +277,7 @@
             next: async (data) => {
                 log.debug(`${tag}: ${topicP} paMessage received`, data);
                 log.debug(`${tag}: ${topicP} paMessage value`, data.value);
-                onMsg(data.value);
+                onMsg(data.value, topicP);
             },
             error: (error) => {
                 console.error(`${tag}: ${topicP} AWS iot error:`, error);
