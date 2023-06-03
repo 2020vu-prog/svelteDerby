@@ -85,15 +85,15 @@
                 if (delta == 0) {
                     delta = `Tie`;
                 } else if (delta < 0) {
-                    delta = `${Math.abs(delta)} 🏁`;
+                    delta = `${Math.abs(delta)}🏁`;
                 } else {
-                    delta = `🏁 ${Math.abs(delta)}`;
+                    delta = `🏁${Math.abs(delta)}`;
                 }
                 laneData.push({
                     timer: fb.timerConfig.timerName,
-                    l1: fb.gpsNoseMs[0],
+                    l1: fmtMsHHMMSS(fb.gpsNoseMs[0]),
                     delta: delta,
-                    l2: fb.gpsNoseMs[1],
+                    l2: fmtMsHHMMSS(fb.gpsNoseMs[1]),
                 });
                 prevFB = fb;
             } else {
@@ -104,6 +104,15 @@
                     l2: fb.rpiNoseMicros[1],
                 });
             }
+        });
+    }
+    function fmtMsHHMMSS(ms) {
+        let gpsDate = new Date(ms);
+        return gpsDate.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            fractionalSecondDigits: 3,
         });
     }
     const finishBlocks = [
