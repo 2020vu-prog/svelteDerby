@@ -66,6 +66,7 @@
             log.debug(`TimerPbAligment topic:  ${timerTopic}`);
             $mqttTimerTopic = timerTopic;
             $mqttTimerSubscribe = true;
+            await getTimerHistoryFromApi();
         }
     });
 
@@ -131,34 +132,36 @@
             const tdlBinary = Base64.toUint8Array(tjson.b64);
             const tdl = Timer.TimerDataList.decode(tdlBinary);
             log.debug(`syncPbState. tdl:`, tdl);
-
-            for (let td of tdl.timerData) {
-                // init state if empty
-                if (
-                    td.timerPulse &&
-                    Object.keys(lanePbTimerPinHistoryMap).length == 0
-                ) {
-                    log.debug(`syncPbState. tpulse:`, td);
-                    const fake1 = {
-                        pinName: Timer.PinName.lane1,
-                        stamp: td.timerPulse.stamp,
-                        pinState: td.timerPulse.lane1,
-                    };
-                    potentialPinRefresh(fake1);
-                    const fake2 = {
-                        pinName: Timer.PinName.lane2,
-                        stamp: td.timerPulse.stamp,
-                        pinState: td.timerPulse.lane2,
-                    };
-                    potentialPinRefresh(fake2);
-                }
-                if (td.timerPin) {
-                    log.debug(`syncPbState. td:`, td);
-                    potentialPinRefresh(td.timerPin);
-                }
-            }
-            repaintFromCache();
+            processTdl(tdl);
         }
+    }
+    function processTdl(tdl) {
+        for (let td of tdl.timerData) {
+            // init state if empty
+            if (
+                td.timerPulse &&
+                Object.keys(lanePbTimerPinHistoryMap).length == 0
+            ) {
+                log.debug(`syncPbState. tpulse:`, td);
+                const fake1 = {
+                    pinName: Timer.PinName.lane1,
+                    stamp: td.timerPulse.stamp,
+                    pinState: td.timerPulse.lane1,
+                };
+                potentialPinRefresh(fake1);
+                const fake2 = {
+                    pinName: Timer.PinName.lane2,
+                    stamp: td.timerPulse.stamp,
+                    pinState: td.timerPulse.lane2,
+                };
+                potentialPinRefresh(fake2);
+            }
+            if (td.timerPin) {
+                log.debug(`syncPbState. td:`, td);
+                potentialPinRefresh(td.timerPin);
+            }
+        }
+        repaintFromCache();
     }
     function syncState() {
         for (let [lane, laneState] of Object.entries($timerState)) {
@@ -194,8 +197,8 @@
         }
     }
 
-    async function getTimerHistory() {
-        log.debug("getTimerHistory:");
+    async function getTimerHistoryFromApi() {
+        log.debug("getTimerHistoryFromApi:");
         //await sleep(3000)
 
         const orgIz = $raceConfig.orgIz;
@@ -207,19 +210,19 @@
         try {
             const response = await $axios.get($raceConfig.baseUrl + url);
             if (response.error) {
-                log.debug("getTimerHistory:", response);
+                log.debug("getTimerHistoryFromApi:", response);
                 //TODO: not working!?
                 $statusMessage = {
-                    text: `getTimerHistory Failed: ${response.error}.`,
+                    text: `getTimerHistoryFromApi Failed: ${response.error}.`,
                     type: "error",
                 };
             } else {
                 $statusMessage = {
-                    text: `getTimerHistory Complete.`,
+                    text: `getTimerHistoryFromApi Complete.`,
                     type: "success",
                 };
                 historyList = response.data;
-                log.debug("getTimerHistory: ", historyList);
+                log.debug("getTimerHistoryFromApi: ", historyList);
                 if (historyList && historyList.length > 0) {
                     for (let h of historyList) {
                         if (h && h.data) {
@@ -233,18 +236,19 @@
                         //log.debug("getTimerHistory h: ", h.SK," buf8:",buf8);
                         if (h.SK.startsWith("9999:")) {
                             const c = Timer.TimerConfig.decode(buf8);
-                            log.debug("getTimerPbConfig: 2:", c);
+                            log.debug("getTimerHistoryFromApi: tc:", c);
                         } else {
-                            const c = Timer.TimerDataList.decode(buf8);
-                            //log.debug("getTimerDataList: 2:", c);
+                            const tdl = Timer.TimerDataList.decode(buf8);
+                            log.debug("getTimerHistoryFromApi: tdl:", tdl);
+                            processTdl(tdl);
                         }
                     }
                 }
             }
         } catch (err) {
-            log.error("getTimerHistory error: ", err);
+            log.error("getTimerHistoryFromApi error: ", err);
             $statusMessage = {
-                text: "getTimerHistory error: " + err,
+                text: "getTimerHistoryFromApi error: " + err,
                 type: "error",
             };
         }

@@ -18,7 +18,7 @@
     let spinning = true;
     onMount(async () => {
         log.debug("RacePhaseElapsed:", params);
-        recalcLaneData(finishBlocks);
+        //recalcLaneData(finishBlocks);
         rpKey = params.rpKey;
         await loadFinishBlocks();
     });
@@ -35,7 +35,7 @@
                 log.debug("loadFinishBlocks:", response);
                 //TODO: not working!?
                 $statusMessage = {
-                    text: `loadFinishBlocks Failed: ${response.error}.`,
+                    text: `loadFinishBlocks api Failed: ${response.error}.`,
                     type: "error",
                 };
             } else {
@@ -49,13 +49,15 @@
                 const fbList = response.data.fbList;
                 log.debug("fbList: ", fbList);
                 const fbJson = JSON.parse(fbList);
+                log.debug("fbJson: ", fbJson);
                 recalcLaneData(fbJson);
             }
         } catch (err) {
             $statusMessage = {
-                text: `loadFinishBlocks Failed: ${err}.`,
+                text: `loadFinishBlocks calc Failed: ${err}.`,
                 type: "error",
             };
+            log.error(`loadFinishBlocks calc Failed:`, err);
         }
     }
     function bySeq(a, b) {
@@ -78,21 +80,30 @@
                     l2: fb.gpsNoseMs[1] - prevFB.gpsNoseMs[1],
                 });
             }
-            var delta = fb.gpsNoseMs[1] - fb.gpsNoseMs[0];
-            if (delta == 0) {
-                delta = `Tie`;
-            } else if (delta < 0) {
-                delta = `${Math.abs(delta)} 🏁`;
+            if (fb.gpsNoseMs && fb.gpsNoseMs.length > 0) {
+                var delta = fb.gpsNoseMs[1] - fb.gpsNoseMs[0];
+                if (delta == 0) {
+                    delta = `Tie`;
+                } else if (delta < 0) {
+                    delta = `${Math.abs(delta)} 🏁`;
+                } else {
+                    delta = `🏁 ${Math.abs(delta)}`;
+                }
+                laneData.push({
+                    timer: fb.timerConfig.timerName,
+                    l1: fb.gpsNoseMs[0],
+                    delta: delta,
+                    l2: fb.gpsNoseMs[1],
+                });
+                prevFB = fb;
             } else {
-                delta = `🏁 ${Math.abs(delta)}`;
+                laneData.push({
+                    timer: fb.timerConfig.timerName,
+                    l1: fb.rpiNoseMicros[0],
+                    delta: "delta",
+                    l2: fb.rpiNoseMicros[1],
+                });
             }
-            laneData.push({
-                timer: fb.timerConfig.timerName,
-                l1: fb.gpsNoseMs[0],
-                delta: delta,
-                l2: fb.gpsNoseMs[1],
-            });
-            prevFB = fb;
         });
     }
     const finishBlocks = [
