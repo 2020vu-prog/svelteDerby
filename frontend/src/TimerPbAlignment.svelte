@@ -90,17 +90,21 @@
     }
     function repaintFromCache() {
         log.debug(`repaintFromCache. `, lanePbTimerPinRecentMap);
+        /*
         const allE = calcFinish.calcFinishFilteredMain(
             RawFacade.fromTimerPins(Object.values(lanePbTimerPinRecentMap))
         );
         log.debug("allE:", allE);
+        */
 
         for (const [key, timerPin] of Object.entries(lanePbTimerPinRecentMap)) {
             if (key == Timer.PinName.lane1) {
                 laneStatusList.lane1.blocked = isPinBlocked(timerPin);
+                laneStatusList.lane1.timerPin = timerPin;
             }
             if (key == Timer.PinName.lane2) {
                 laneStatusList.lane2.blocked = isPinBlocked(timerPin);
+                laneStatusList.lane2.timerPin = timerPin;
             }
             log.debug("repaintFromCache:k", key, " v:", timerPin);
         }
@@ -109,18 +113,35 @@
         lanePbTimerPinHistoryMap = lanePbTimerPinHistoryMap;
     }
     function setPaddlePosition() {
-        if (!timerPbConfig.timerConfigOpposedStarter){
+        if (!timerPbConfig.timerConfigOpposedStarter) {
             paddlePosition = "";
             return;
         }
-        for (let pp of timerPbConfig.timerConfigOpposedStarter.paddlesUp){
+        var matchUp = 0;
+        for (let pp of timerPbConfig.timerConfigOpposedStarter.paddlesUp) {
             //const pinName=pp.timerConfigOpposedPosition
-            const pinName=pp.pinName
-            const pinStateCurrent=pp.pinState
-            log.debug("setpp:",pinName,pinStateCurrent)
-            log.debug("setpp:",lanePbTimerPinRecentMap[pinName])
-            
+            const pinName = pp.pinName;
+            const pinStateConfigUp = pp.pinState;
+
+            log.debug("setpp configUp:", pinName, pinStateConfigUp);
+            log.debug("setpp:", lanePbTimerPinRecentMap[pinName]);
+            if (lanePbTimerPinRecentMap[pinName].pinState == pinStateConfigUp) {
+                log.debug("setpp match.");
+                matchUp += 1;
+            }
         }
+        log.debug("setpp matchUp:", matchUp);
+        if (matchUp == 2) {
+            paddlePosition = "Paddles UP";
+            return;
+        }
+        if (matchUp == 0) {
+            paddlePosition = "Paddles DOWN";
+            return;
+        }
+
+        paddlePosition = "Paddles in motion?";
+        return;
         if (laneStatusList.lane1.blocked && !laneStatusList.lane2.blocked) {
             paddlePosition = "Paddles UP";
             return;
