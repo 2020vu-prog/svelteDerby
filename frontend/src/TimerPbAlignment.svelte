@@ -1,6 +1,11 @@
 <script>
     import log from "loglevel";
-    import { tutorial as Timer } from "./generated/timer_pb.js";
+    import { tutorial as Timer } from "@rr1.us/timer_protobuf";
+    import {
+        CalcFinish,
+        RawFacade,
+        PbUtils,
+    } from "@rr1.us/timer_protobuf/calcFinishPb.js";
     import { Card, CardBody, CardHeader } from "sveltestrap";
     import { Base64 } from "js-base64";
     import TimerPbHealth from "./TimerPbHealth.svelte";
@@ -31,6 +36,8 @@
     var timerTopic = "";
     var timerPbConfig = {};
     var historyList = [];
+    var calcFinish = {};
+    var paddlePosition = "";
     const laneStatusList = {
         lane1: {
             blocked: true,
@@ -58,6 +65,7 @@
         timerName = decodeURI(params.timerName);
         log.debug("TimerPbAlignment TimerName:", timerName);
         [timerPbConfig] = await getTimerPbConfig(timerName);
+        calcFinish = new CalcFinish(timerPbConfig);
 
         log.debug("TimerPbAlignment dexie:", timerPbConfig);
         if (timerPbConfig && timerPbConfig.timerMqttClientId) {
@@ -82,6 +90,11 @@
     }
     function repaintFromCache() {
         log.debug(`repaintFromCache. `, lanePbTimerPinRecentMap);
+        const allE = calcFinish.calcFinishFilteredMain(
+            RawFacade.fromTimerPins(Object.values(lanePbTimerPinRecentMap))
+        );
+        log.debug("allE:", allE);
+
         for (const [key, timerPin] of Object.entries(lanePbTimerPinRecentMap)) {
             if (key == Timer.PinName.lane1) {
                 laneStatusList.lane1.blocked = isPinBlocked(timerPin);
@@ -91,8 +104,32 @@
             }
             log.debug("repaintFromCache:k", key, " v:", timerPin);
         }
+        setPaddlePosition();
         laneStatusList = laneStatusList;
         lanePbTimerPinHistoryMap = lanePbTimerPinHistoryMap;
+    }
+    function setPaddlePosition() {
+        if (!timerPbConfig.timerConfigOpposedStarter){
+            paddlePosition = "";
+            return;
+        }
+        for (let pp of timerPbConfig.timerConfigOpposedStarter.paddlesUp){
+            //const pinName=pp.timerConfigOpposedPosition
+            const pinName=pp.pinName
+            const pinStateCurrent=pp.pinState
+            log.debug("setpp:",pinName,pinStateCurrent)
+            log.debug("setpp:",lanePbTimerPinRecentMap[pinName])
+            
+        }
+        if (laneStatusList.lane1.blocked && !laneStatusList.lane2.blocked) {
+            paddlePosition = "Paddles UP";
+            return;
+        }
+        if (laneStatusList.lane2.blocked && !laneStatusList.lane1.blocked) {
+            paddlePosition = "Paddles Down";
+            return;
+        }
+        paddlePosition = "Paddles in motion?";
     }
     function isPinBlocked(timerPin) {
         log.debug("isPinBlocked:", timerPin);
@@ -314,6 +351,9 @@
                         Lane {lane.replace(/[A-Z]+/i, '')}
                         <strong>{ls.blocked ? 'BLOCKED' : 'CLEAR'}</strong>
                     </h5>
+                    {#if paddlePosition}
+                        <h6>{paddlePosition}</h6>
+                    {/if}
                 </CardBody>
             </Card>
         </div>

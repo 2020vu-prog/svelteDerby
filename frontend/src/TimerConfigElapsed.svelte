@@ -11,7 +11,7 @@
         initialReloadRoute,
     } from "./stores.js";
     import { getTimerPbConfig } from "./utils.js";
-    import { tutorial as Timer } from "./generated/timer_pb.js";
+    import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { push, replace, querystring, pop } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -110,11 +110,11 @@
         //pbForm.timerConfigOpposedStarter_paddlesUp.push(new Timer.TimerConfigOpposedPosition)
         //pbForm.timerConfigOpposedStarter_paddlesUp.push(new Timer.TimerConfigOpposedPosition)
         pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState =
-            Timer.PinState.OFF;
+            Timer.PinState.BLOCKED;
         pbForm.timerConfigOpposedStarter_paddlesUp_0_pinName =
             Timer.PinName.lane1;
         pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState =
-            Timer.PinState.ON;
+            Timer.PinState.CLEAR;
         pbForm.timerConfigOpposedStarter_paddlesUp_1_pinName =
             Timer.PinName.lane2;
         /*
@@ -148,13 +148,13 @@
         );
         if (
             pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState ==
-            Timer.PinState.ON
+            Timer.PinState.CLEAR
         ) {
             pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState =
-                Timer.PinState.OFF;
+                Timer.PinState.BLOCKED;
         } else {
             pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState =
-                Timer.PinState.ON;
+                Timer.PinState.CLEAR;
         }
         log.debug("unflat", unflatten(pbForm, { delimiter: "_" }));
         return;
@@ -459,8 +459,8 @@
                 <Input
                     type="select"
                     bind:value={pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState}>
-                    <option value={Timer.PinState.OFF}>Off</option>
-                    <option value={Timer.PinState.ON}>On</option>
+                    <option value={Timer.PinState.BLOCKED}>Blocked</option>
+                    <option value={Timer.PinState.CLEAR}>Clear</option>
                 </Input>
             </Label>
         </FormGroup>
@@ -471,8 +471,8 @@
                     type="select"
                     disabled
                     bind:value={pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState}>
-                    <option value={Timer.PinState.OFF}>Off</option>
-                    <option value={Timer.PinState.ON}>On</option>
+                    <option value={Timer.PinState.BLOCKED}>Blocked</option>
+                    <option value={Timer.PinState.CLEAR}>Clear</option>
                 </Input>
             </Label>
         </FormGroup>

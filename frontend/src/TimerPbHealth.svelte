@@ -8,7 +8,7 @@
         ModalFooter,
         ModalHeader,
     } from "sveltestrap";
-    import { tutorial as Timer } from "./generated/timer_pb.js";
+    import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
     import { statusMessage, raceConfig, axios } from "./stores";
     import { getTimerPbConfig } from "./utils.js";
@@ -29,9 +29,27 @@
     let open = false;
     var timerPbConfig = {};
     const toggle = () => (open = !open);
-    onMount(async () => {
+    onMount(() => {
         //params.timerName=uriDecode(params.timerName);
         //timerName=decodeURI(params.timerName)
+        onMountAsync();
+        const interval = setInterval(() => {
+            rerenderStatusAge();
+        }, 1000);
+
+        return () => {
+            clearInterval(interval);
+        };
+    });
+    function rerenderStatusAge() {
+        if (recentHealth && recentHealth.ageSeconds && healthMs) {
+            recentHealth.ageSeconds = Math.floor(
+                (new Date().getTime() - healthMs) / 1000
+            );
+            recentHealth = recentHealth;
+        }
+    }
+    async function onMountAsync() {
         log.debug("TimerPbHealth TimerName:", timerName);
         [timerPbConfig] = await getTimerPbConfig(timerName);
 
@@ -39,7 +57,7 @@
         if (timerPbConfig && timerPbConfig.seq) {
             await getTimerHistory();
         }
-    });
+    }
     async function getTimerHistory() {
         log.debug("getTimerHistory:");
         //await sleep(3000)
