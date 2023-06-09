@@ -183,7 +183,7 @@
 
         <ul>
             <li>Timer Id: {timerPbConfig.timerMqttClientId}</li>
-            <li>Timer Code Version: {recentHealth.versionStamp}</li>
+            <li>Timer Code Version: {recentHealth.versionStamp.toString(16)}</li>
             <li>
                 Last Status: {secondsToHHMMSS(recentHealth.ageSeconds)} seconds
                 ago

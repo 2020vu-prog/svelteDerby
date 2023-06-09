@@ -125,6 +125,10 @@
 
             log.debug("setpp configUp:", pinName, pinStateConfigUp);
             log.debug("setpp:", lanePbTimerPinRecentMap[pinName]);
+            if (!lanePbTimerPinRecentMap[pinName]){
+                paddlePosition = "Paddles ?";
+                return;
+            }
             if (lanePbTimerPinRecentMap[pinName].pinState == pinStateConfigUp) {
                 log.debug("setpp match.");
                 matchUp += 1;
