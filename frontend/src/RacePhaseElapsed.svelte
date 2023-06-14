@@ -9,6 +9,7 @@
         Badge,
         Table,
     } from "sveltestrap";
+    import { fmtPinTime } from "./utils.js";
     import { onMount } from "svelte";
     import { sleep } from "./utils.js";
     import { statusMessage, raceConfig, axios } from "./stores";
@@ -72,6 +73,8 @@
             },
         };
         sortedFB.forEach((fb) => {
+            var flag1 = "";
+            var flag2 = "";
             if (prevFB.timerConfig) {
                 laneData.push({
                     timer: "SplitTime",
@@ -85,14 +88,18 @@
                 if (delta == 0) {
                     delta = `Tie`;
                 } else if (delta < 0) {
-                    delta = `${Math.abs(delta)}🏁`;
+                    delta = `${Math.abs(delta)}`;
+                    flag2 = "🏁";
                 } else {
-                    delta = `🏁${Math.abs(delta)}`;
+                    delta = `${Math.abs(delta)}`;
+                    flag1 = "🏁";
                 }
                 laneData.push({
                     timer: fb.timerConfig.timerName,
                     l1: fmtMsHHMMSS(fb.gpsNoseMs[0]),
+                    flag1: flag1,
                     delta: delta,
+                    flag2: flag2,
                     l2: fmtMsHHMMSS(fb.gpsNoseMs[1]),
                 });
                 prevFB = fb;
@@ -321,7 +328,9 @@
             <tr>
                 <th>Timer</th>
                 <th>Lane1</th>
+                <th>&nbsp;</th>
                 <th>&lt;=&gt;</th>
+                <th>&nbsp;</th>
                 <th>Lane2</th>
             </tr>
         </thead>
@@ -330,7 +339,13 @@
                 <tr>
                     <th scope="row">{row.timer}</th>
                     <td>{row.l1}</td>
+                    <td>
+                        {#if row.flag1}{row.flag1}{/if}
+                    </td>
                     <td>{row.delta}</td>
+                    <td>
+                        {#if row.flag2}{row.flag2}{/if}
+                    </td>
                     <td>{row.l2}</td>
                 </tr>
             {/each}

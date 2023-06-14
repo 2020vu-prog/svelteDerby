@@ -275,3 +275,39 @@ export async function getTimerPbConfig(timerName) {
     }
     return [];
 }
+export function fmtPinTime(timerPin) {
+    if (!timerPin.stamp.gpsTime) {
+        //log.debug("fmtPinTime baled", timerPin);
+        const us = timerPin.stamp.tick64;
+        //log.debug("fmtPinTime us", us);
+        //log.debug("fmtPinTime us", typeof us);
+        const ms = us / 1000;
+        //log.debug("fmtPinTime from ", timerPin, " gave:", ms);
+        let rpiDate = new Date(ms);
+        return (
+            "T: " +
+            rpiDate.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                fractionalSecondDigits: 2, //this will round differently here than delta.  suppress resolution!
+                timeZone: "UTC",
+                //hour12: false,
+                hourCycle: "h23",
+            })
+        );
+        //return timerPin.stamp.tick64;
+    }
+    const m1 = 1000 * 1000;
+    const ms =
+        timerPin.stamp.gpsTime.seconds * 1000 +
+        Math.round(timerPin.stamp.gpsTime.nanos / m1);
+    //log.debug("fmtPinTime from ", timerPin, " gave:", ms);
+    let gpsDate = new Date(ms);
+    return gpsDate.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        fractionalSecondDigits: 3,
+    });
+}

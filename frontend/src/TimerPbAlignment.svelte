@@ -21,7 +21,7 @@
     } from "./stores.js";
     import SpinnerButton from "./SpinnerButton.svelte";
     import { onMount, onDestroy } from "svelte";
-    import { getTimerPbConfig } from "./utils.js";
+    import { getTimerPbConfig, fmtPinTime } from "./utils.js";
     import {
         Button,
         Collapse,
@@ -125,7 +125,7 @@
 
             log.debug("setpp configUp:", pinName, pinStateConfigUp);
             log.debug("setpp:", lanePbTimerPinRecentMap[pinName]);
-            if (!lanePbTimerPinRecentMap[pinName]){
+            if (!lanePbTimerPinRecentMap[pinName]) {
                 paddlePosition = "Paddles ?";
                 return;
             }
@@ -314,24 +314,6 @@
                 type: "error",
             };
         }
-    }
-    function fmtPinTime(timerPin) {
-        if (!timerPin.stamp.gpsTime) {
-            //log.debug("fmtPinTime baled", timerPin);
-            return timerPin.stamp.tick64;
-        }
-        const m1 = 1000 * 1000;
-        const ms =
-            timerPin.stamp.gpsTime.seconds * 1000 +
-            Math.round(timerPin.stamp.gpsTime.nanos / m1);
-        //log.debug("fmtPinTime from ", timerPin, " gave:", ms);
-        let gpsDate = new Date(ms);
-        return gpsDate.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            fractionalSecondDigits: 3,
-        });
     }
 </script>
 

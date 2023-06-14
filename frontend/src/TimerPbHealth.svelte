@@ -183,7 +183,6 @@
 
         <ul>
             <li>Timer Id: {timerPbConfig.timerMqttClientId}</li>
-            <li>Timer Code Version: {recentHealth.versionStamp.toString(16)}</li>
             <li>
                 Last Status: {secondsToHHMMSS(recentHealth.ageSeconds)} seconds
                 ago
@@ -210,6 +209,12 @@
             <li>Free Mem: {recentHealth.ramFreeKB} KB</li>
             <li>SSID: {recentHealth.ssid}</li>
             <li>IP: {recentHealth.wifiIP}</li>
+            <li>
+                Timer Code Version:
+                {#if recentHealth.versionStamp}
+                    {recentHealth.versionStamp.toString(16)}
+                {:else}Unknown{/if}
+            </li>
             <li>OverlayFS: {recentHealth.overlayFsEnabled}</li>
         </ul>
 
