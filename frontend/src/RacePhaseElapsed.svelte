@@ -65,7 +65,7 @@
         return a.timerConfig.seq - b.timerConfig.seq;
     }
     function fbHasGps(fb) {
-            return (fb && fb.gpsNoseMs && fb.gpsNoseMs.length > 0) ;
+        return fb && fb.gpsNoseMs && fb.gpsNoseMs.length > 0;
     }
     function recalcLaneData(finishBlocks) {
         laneData = [];
@@ -85,9 +85,8 @@
                     delta: prevFB.timerConfig.timerName,
                     l2: fb.gpsNoseMs[1] - prevFB.gpsNoseMs[1],
                 });
-            }
-            else{
-                prevFB={}  //invalidate potential split
+            } else {
+                prevFB = {}; //invalidate potential split
             }
             if (fbHasGps(fb)) {
                 var delta = fb.gpsNoseMs[1] - fb.gpsNoseMs[0];
