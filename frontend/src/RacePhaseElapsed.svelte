@@ -64,6 +64,9 @@
     function bySeq(a, b) {
         return a.timerConfig.seq - b.timerConfig.seq;
     }
+    function fbHasGps(fb) {
+            return (fb && fb.gpsNoseMs && fb.gpsNoseMs.length > 0) ;
+    }
     function recalcLaneData(finishBlocks) {
         laneData = [];
         const sortedFB = finishBlocks.sort(bySeq);
@@ -75,7 +78,7 @@
         sortedFB.forEach((fb) => {
             var flag1 = "";
             var flag2 = "";
-            if (prevFB.timerConfig) {
+            if (prevFB.timerConfig && fbHasGps(fb)) {
                 laneData.push({
                     timer: "SplitTime",
                     l1: fb.gpsNoseMs[0] - prevFB.gpsNoseMs[0],
@@ -83,7 +86,10 @@
                     l2: fb.gpsNoseMs[1] - prevFB.gpsNoseMs[1],
                 });
             }
-            if (fb.gpsNoseMs && fb.gpsNoseMs.length > 0) {
+            else{
+                prevFB={}  //invalidate potential split
+            }
+            if (fbHasGps(fb)) {
                 var delta = fb.gpsNoseMs[1] - fb.gpsNoseMs[0];
                 if (delta == 0) {
                     delta = `Tie`;

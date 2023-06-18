@@ -1362,7 +1362,8 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     const fbJson = {
         PK: `${finishLineBlock.timerConfig.orgId}:RpElapsed`,
         SK: rp.SK,
-        fbList: JSON.stringify(finishLineBlockList),
+        //fbList: JSON.stringify(finishLineBlockList),
+        fbList: JSON.stringify( snsMessageJson.finishBlocks),
         TTL: rp.TTL,
     };
     await ddbUtils.ddbPut(fbJson, process.env.ElapsedTempDbTable);
