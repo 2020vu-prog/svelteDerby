@@ -159,15 +159,27 @@
         return answer;
     }
     function R100(x) {
-        return Math.round(x * 100) / 100;
+        return (Math.round(x * 100) / 100).toFixed(2);
     }
     function getUptimePct(recentHealth) {
         if (recentHealth.cpuUptime) {
-            return `${
-                R100(recentHealth.gpsUptimeTotal / recentHealth.cpuUptime) * 100
-            }%`;
+            return `${R100(
+                (recentHealth.gpsUptimeTotal / recentHealth.cpuUptime) * 100
+            )}%`;
         } else {
             return "";
+        }
+    }
+    function fmtGitHash() {
+        if (recentHealth.versionStamp) {
+            let dirty = "";
+            if (recentHealth.gitDirty) {
+                dirty = "(Dirty)";
+            }
+            const hash = recentHealth.versionStamp.toString(16);
+            return `${hash}${dirty}`;
+        } else {
+            return "Unknown";
         }
     }
 </script>
@@ -209,12 +221,7 @@
             <li>Free Mem: {recentHealth.ramFreeKB} KB</li>
             <li>SSID: {recentHealth.ssid}</li>
             <li>IP: {recentHealth.wifiIP}</li>
-            <li>
-                Timer Code Version:
-                {#if recentHealth.versionStamp}
-                    {recentHealth.versionStamp.toString(16)}
-                {:else}Unknown{/if}
-            </li>
+            <li>Timer GitHash: {fmtGitHash()}</li>
             <li>OverlayFS: {recentHealth.overlayFsEnabled}</li>
         </ul>
 
