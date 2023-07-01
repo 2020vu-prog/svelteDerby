@@ -28,7 +28,9 @@
     var tcFromDexie = {};
     var activeTimerSha;
     var mounted = false;
-    const params = {};
+    const searchParams = new URLSearchParams($querystring);
+    const timerName = searchParams.get("timerName");
+    const timerId = searchParams.get("timerId");
     var alignmentDisabled = true;
 
     var submitDisabled = false;
@@ -38,9 +40,8 @@
     //loadDefaults();
 
     onMount(async () => {
-        log.debug("tce mounted focus:", $querystring);
+        log.debug("tce mounted focus:", $querystring, timerName);
         log.debug("tce TimerPbConfig: initial timerTopic:", $mqttTimerTopic);
-        params.timerName = decodeURI($querystring);
 
         loadInitialData();
         //$initialReloadRoute = $location
@@ -53,14 +54,11 @@
     $: refreshDataFromDb($doRefreshBlocks);
 
     async function loadInitialData() {
-        log.debug("tcinit: param:", params);
         await loadDefaults();
-        if (!params.timerName) {
+        if (!timerName) {
             return;
         }
-        const [timerPbConfig, tcFromDexie] = await getTimerPbConfig(
-            params.timerName
-        );
+        const [timerPbConfig, tcFromDexie] = await getTimerPbConfig(timerName);
 
         if (tcFromDexie && timerPbConfig) {
             log.debug("tcinit timerPbConfig: 2:", timerPbConfig);
@@ -314,13 +312,13 @@
 
 <h3>Timer Config Elapsed</h3>
 <br />
-<SpinnerButton
-    disabled={alignmentDisabled}
-    on:click={() => push(`/timerPbAlignment/${params.timerName}`)}>
-    Timer Alignment
-</SpinnerButton>
-{#if params.timerName}
-    <TimerPbHealth timerName={params.timerName} />
+{#if timerName && timerId}
+    <SpinnerButton
+        disabled={alignmentDisabled}
+        on:click={() => push(`/timerPbAlignment?timerName=${timerName}&timerId=${timerId}`)}>
+        Timer Alignment
+    </SpinnerButton>
+    <TimerPbHealth {timerName} {timerId} />
 {/if}
 <Form>
     <FormGroup>

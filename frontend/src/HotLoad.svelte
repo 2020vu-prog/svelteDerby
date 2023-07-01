@@ -11,12 +11,11 @@
         carFilter,
         statusMessage,
         autoAnnounceResults,
-        mqttTimerSubscribe,
-        mqttTimerTopic,
+        mqttMapSubscribe,
+        mqttMapData,
         mqttTriggerVideoCapture,
         mqttEnabled,
         timerState,
-        timerPbMap,
         raceConfig,
         axios,
     } from "./stores.js";
@@ -24,7 +23,11 @@
     import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
+    import { onDestroy } from "svelte";
+    import { tick } from "svelte";
+
     import aws_exports from "./aws-exports";
+    import { exclude_internal_props } from "svelte/internal";
     const { v4: uuidv4 } = require("uuid");
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -129,13 +132,14 @@
             },
         });
 
-        syncAutoAnnounceSubscription();
-        syncVideoCaptureSubscription();
+        //syncAutoAnnounceSubscription();
+        //syncVideoCaptureSubscription();
     }
 
     // toggle subscription when prefs change.
-    $: syncAutoAnnounceSubscription($autoAnnounceResults);
-    $: syncVideoCaptureSubscription($mqttTimerSubscribe);
+    //$: syncAutoAnnounceSubscription($autoAnnounceResults);
+    //$: syncVideoCaptureSubscription($mqttTimerSubscribe);
+    $: syncMapSubscriptions($mqttMapSubscribe);
 
     function potentialReloadPage() {
         log.debug("potentialReloadPage: begin");
@@ -146,44 +150,31 @@
             location.reload();
         }
     }
-    async function syncVideoCaptureSubscription() {
-        const tag = "tag:syncVideoCaptureSubscription";
+    async function syncMapSubscriptions() {
+        const tag = "tag:syncMapSubscriptions";
+        const topics = Object.keys($mqttMapSubscribe);
+        for (let topic of topics) {
+            const expires = $mqttMapSubscribe[topic];
+            const subscribeEnabled = expires && expires > new Date().getTime();
+            log.info(
+                `${new Date().toLocaleTimeString()} ${tag} ${topic} ${subscribeEnabled} ${expires}`
+            );
 
-        // TODO: use race timer id instead of wildcard in topic.   don't fire capture for other timers!!!
-        log.info(`mqttTimerTopic stored:` + $mqttTimerTopic);
+            /*
         const timerTopic = $mqttTimerTopic.includes("/")
             ? $mqttTimerTopic
             : `derby/${$mqttTimerTopic}/rpi/+`;
-        log.info(`mqttTimerTopic subscribing: ${timerTopic}`);
-        syncSubscription(
-            "timerSubscription",
-            $mqttTimerSubscribe,
-            timerTopic,
-            onTimerMqttData
-        );
-    }
-    function onTimerMqttData(json, topic) {
-        log.debug("onTimerMqttData");
-        potentialCaptureJ(json);
-        publishTimerState(json, topic);
-    }
-    function publishTimerState(json, topic) {
-        //{"microb": 26520205700, "pinNumber": "24", "pinName": "oneHz", "pubTime": 1598832946117, "seq": 13413, "pinState": 1, "micros": 26520205700, "pinType": "clock", "microP
-        //legacy timer
-        if (json.pinType) {
-            const pinType = json.pinType;
-            const pinName = json.pinName;
-            const pinState = json.pinState;
-            if (pinType === "lane") {
-                $timerState[pinName] = pinState;
-                $timerState = $timerState;
-            }
-        } else {
-            // probably protobuf binary, not json!
-            log.debug(`publishTimerState: [${topic}]`, json);
-            $timerPbMap[topic] = json;
-            $timerPbMap = $timerPbMap; //tickle state listeners
+            */
+            syncSubscription(subscribeEnabled, topic, onMapMqttData);
         }
+    }
+    async function onMapMqttData(json, topic) {
+        log.debug(`syncMap ononMapMqttData: ${topic}`);
+        // potentialCaptureJ(json);
+
+        $mqttMapData[topic] = json;
+        $mqttMapData = $mqttMapData; //tickle state listeners
+        await tick();
     }
     function potentialCaptureJ(json) {
         log.debug("potentialCaptureJ: ", json);
@@ -224,24 +215,8 @@
         return false;
     }
 
-    async function syncAutoAnnounceSubscription() {
-        const tag = "tag:syncAutoAnnounceSubscription";
-
-        const paTopic = "derby/" + $raceConfig.orgId + "/pa";
-        syncSubscription(
-            "paSubscription",
-            $autoAnnounceResults,
-            paTopic,
-            announceFromMqtt
-        );
-    }
-    async function syncSubscription(
-        subscriptionName,
-        subEnabled,
-        topicP,
-        onMsg
-    ) {
-        const tag = "tag:syncSubscription:" + subscriptionName;
+    async function syncSubscription(subEnabled, topicP, onMsg) {
+        const tag = "tag:syncSubscription:" + topicP;
         if (activeIotWatch && activeIotWatch.plugged) {
         } else {
             log.debug(`${tag} skipping, not ready`);
@@ -249,23 +224,18 @@
         }
         log.debug(`${tag}: ${subEnabled} `);
         if (subEnabled) {
-            if (activeIotWatch[subscriptionName]) {
+            if (activeIotWatch[topicP]) {
                 // no action needed.
                 log.debug(`${tag}: ${topicP} subscribe stand down`);
             } else {
                 log.debug(`${tag}: Subscribing ${topicP}`);
-                activeIotWatch[subscriptionName] = await mySubscribe(
-                    topicP,
-                    onMsg
-                );
+                activeIotWatch[topicP] = await mySubscribe(topicP, onMsg);
             }
         } else {
-            if (activeIotWatch[subscriptionName]) {
-                log.debug(
-                    `${tag}: UnSubscribing ${activeIotWatch[subscriptionName]}`
-                );
-                activeIotWatch[subscriptionName].unsubscribe();
-                delete activeIotWatch[subscriptionName];
+            if (activeIotWatch[topicP]) {
+                log.debug(`${tag}: UnSubscribing ${activeIotWatch[topicP]}`);
+                activeIotWatch[topicP].unsubscribe();
+                delete activeIotWatch[topicP];
             } else {
                 log.debug(`${tag}: ${topicP} unsubscribe stand down`);
             }
@@ -275,9 +245,9 @@
         const tag = "tag:mySubscribe";
         return PubSub.subscribe(topicP).subscribe({
             next: async (data) => {
-                log.debug(`${tag}: ${topicP} paMessage received`, data);
-                log.debug(`${tag}: ${topicP} paMessage value`, data.value);
-                onMsg(data.value, topicP);
+                log.debug(`${tag}: ${topicP} mqMessage received`, data);
+                log.debug(`${tag}: ${topicP} mqMessage value`, data.value);
+                await onMsg(data.value, topicP);
             },
             error: (error) => {
                 console.error(`${tag}: ${topicP} AWS iot error:`, error);
@@ -515,7 +485,22 @@
         ecFromDexie = await db.EventConfig.toArray();
         mounted = true;
         checkIfRaceFrozenAndDisplayMessage();
+        watchMqttSubscriptions();
     });
+    function watchMqttSubscriptions() {
+        log.debug("syncMap HotLoad watchMqttSubscriptions. 0");
+        const interval = setInterval(function () {
+            log.debug("syncMap HotLoad watchMqttSubscriptions. 1");
+            syncMapSubscriptions();
+        }, 60000);
+
+        /*
+        onDestroy(() => {
+            log.debug("syncMap HotLoad watchMqttSubscriptions. 9");
+            clearInterval(interval);
+        });
+        */
+    }
 
     async function announceFromMqtt(mqMsg) {
         log.debug("announceFromMqtt: ", mqMsg);

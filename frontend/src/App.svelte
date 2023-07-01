@@ -103,7 +103,7 @@
         "/timerConfigList": TimerConfigList,
         "/timerConfigElapsed": TimerConfigElapsed,
         "/timerAlignment": TimerAlignment,
-        "/timerPbAlignment/:timerName": TimerPbAlignment,
+        "/timerPbAlignment": TimerPbAlignment,
         "/rawTimerList": RawTimerList,
         "/spMediaList/:dbName/:dbKey": MediaList,
         "/forceReloadPage": ForceReloadPage,

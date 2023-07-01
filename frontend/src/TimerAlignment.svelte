@@ -11,7 +11,7 @@
     } from "./stores.js";
     import SpinnerButton from "./SpinnerButton.svelte";
     import { onMount, onDestroy } from "svelte";
-    const laneStatusList = {
+    var laneStatusList = {
         lane1: {
             blocked: true,
             src: ["/data/1c.mp3", "/data/1b.mp3"],

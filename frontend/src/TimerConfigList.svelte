@@ -35,7 +35,9 @@
     };
     const navToTcDetail = (tc) => {
         log.debug("navToTcDetail:", tc);
-        push("/timerConfigElapsed?" + tc.SK);
+        push(
+            `/timerConfigElapsed?timerName=${tc.SK}&timerId=${tc.timerMqttClientId}`
+        );
     };
     function getSortedTc(tcFromDexie) {
         tcFromDexie.sort((a, b) => {
@@ -87,7 +89,9 @@ report elapsed time split(s).
         </CardHeader>
         <CardBody>
             <div style="display: inline">
-                <TimerPbHealth timerName={tc.timerName} />
+                <TimerPbHealth
+                    timerName={tc.timerName}
+                    timerId={tc.timerMqttClientId} />
             </div>
 
         </CardBody>

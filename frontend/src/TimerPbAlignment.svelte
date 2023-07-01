@@ -11,17 +11,20 @@
     import TimerPbHealth from "./TimerPbHealth.svelte";
     import {
         axios,
-        mqttTimerSubscribe,
-        mqttTimerTopic,
         timerState,
-        timerPbMap,
+        //
+        mqttMapData,
         raceConfig,
         statusMessage,
         doRefreshBlocks,
     } from "./stores.js";
     import SpinnerButton from "./SpinnerButton.svelte";
     import { onMount, onDestroy } from "svelte";
-    import { getTimerPbConfig, fmtPinTime } from "./utils.js";
+    import {
+        getTimerPbConfig,
+        fmtPinTime,
+        MqttMapSubscription,
+    } from "./utils.js";
     import {
         Button,
         Collapse,
@@ -30,15 +33,20 @@
         ModalFooter,
         ModalHeader,
     } from "sveltestrap";
-
-    export let params = {};
-    var timerName = "";
+    import { querystring } from "svelte-spa-router";
+    const searchParams = new URLSearchParams($querystring);
+    const timerName = searchParams.get("timerName");
+    const timerId = searchParams.get("timerId");
+    if (timerName && timerId) {
+        timerTopic = `rr1Timer/${timerId}`;
+        MqttMapSubscription(timerTopic);
+    }
     var timerTopic = "";
     var timerPbConfig = {};
     var historyList = [];
     var calcFinish = {};
     var paddlePosition = "";
-    const laneStatusList = {
+    var laneStatusList = {
         lane1: {
             blocked: true,
             src: ["/data/1c.mp3", "/data/1b.mp3"],
@@ -54,15 +62,10 @@
         syncState($timerState);
     }
     $: {
-        syncPbState($timerPbMap);
+        syncPbState($mqttMapData);
     }
-    onDestroy(() => {
-        $mqttTimerSubscribe = false;
-    });
 
     onMount(async () => {
-        //params.timerName=uriDecode(params.timerName);
-        timerName = decodeURI(params.timerName);
         log.debug("TimerPbAlignment TimerName:", timerName);
         [timerPbConfig] = await getTimerPbConfig(timerName);
         calcFinish = new CalcFinish(timerPbConfig);
@@ -72,8 +75,8 @@
             //await getTimerHistory();
             timerTopic = `rr1Timer/${timerPbConfig.timerMqttClientId}`;
             log.debug(`TimerPbAligment topic:  ${timerTopic}`);
-            $mqttTimerTopic = timerTopic;
-            $mqttTimerSubscribe = true;
+            //$mqttTimerTopic = timerTopic;
+            //$mqttTimerSubscribe = true;
             await getTimerHistoryFromApi();
         }
     });
@@ -185,13 +188,20 @@
             lanePbTimerPinHistoryMap[histKey] = timerPin;
         }
     }
+    let prevB64 = "";
     function syncPbState() {
         log.debug(`syncPbState. topic: [${timerTopic}]`);
-
-        if ($timerPbMap[timerTopic]) {
-            const tjson = $timerPbMap[timerTopic];
-            log.debug(`syncPbState. json:`, tjson);
-            const tdlBinary = Base64.toUint8Array(tjson.b64);
+        if (timerTopic && $mqttMapData[timerTopic]) {
+            const msg = $mqttMapData[timerTopic];
+            if (!msg) {
+                return;
+            }
+            if (msg.b64 == prevB64) {
+                return;
+            }
+            prevB64 = msg.b64;
+            log.debug(`syncPbState. json:`, msg);
+            const tdlBinary = Base64.toUint8Array(msg.b64);
             const tdl = Timer.TimerDataList.decode(tdlBinary);
             log.debug(`syncPbState. tdl:`, tdl);
             processTdl(tdl);
@@ -338,8 +348,8 @@
 
 <h3>Timer Alignment [{timerName}]</h3>
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
-{#if timerName}
-    <TimerPbHealth {timerName} />
+{#if timerName && timerId}
+    <TimerPbHealth {timerName} {timerId} />
 {/if}
 <div class="row">
 

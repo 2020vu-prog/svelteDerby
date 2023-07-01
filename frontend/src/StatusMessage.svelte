@@ -8,7 +8,7 @@
     } from "./stores.js";
     import { onMount } from "svelte";
 
-    var messages = [];
+    let messages = [];
     const messageDuration = {
         error: 10000,
         success: 5000,
@@ -49,7 +49,7 @@
                 key: $statusMessage.key,
                 orgId: $raceConfig.orgId,
             };
-            var prior;
+            let prior;
             messages.forEach((msg, index) => {
                 if (msg.key && msg.key === $statusMessage.key) {
                     prior = index;

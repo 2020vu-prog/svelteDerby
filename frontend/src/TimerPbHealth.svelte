@@ -1,5 +1,6 @@
 <script>
     import log from "loglevel";
+    import { Base64 } from "js-base64";
     import {
         Button,
         Collapse,
@@ -10,15 +11,17 @@
     } from "sveltestrap";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
-    import { statusMessage, raceConfig, axios } from "./stores";
-    import { getTimerPbConfig } from "./utils.js";
+    import { statusMessage, raceConfig, axios, mqttMapData } from "./stores";
+    import { getTimerPbConfig, MqttMapSubscription } from "./utils.js";
 
     export let timerName;
+    export let timerId;
     var historyList = [];
     let healthColor = "info";
     let healthMs = 0;
     let spinning = true;
     let recentHealth = {};
+    let timerTopic = "";
     const satelliteEmoji = "🛰️";
     const errorEmoji = "️⛔";
     const unknownEmoji = "️❓";
@@ -29,6 +32,13 @@
     let open = false;
     var timerPbConfig = {};
     const toggle = () => (open = !open);
+    if (timerName && timerId) {
+        timerTopic = `rr1Timer/${timerId}`;
+        MqttMapSubscription(timerTopic);
+    } else {
+        log.warn("pbHealth: No timerid", timerId, timerName);
+    }
+
     onMount(() => {
         //params.timerName=uriDecode(params.timerName);
         //timerName=decodeURI(params.timerName)
@@ -38,11 +48,37 @@
         }, 1000);
 
         return () => {
+            const now = new Date().toLocaleTimeString();
+            log.debug(`${now} pbhealth ${timerName} ondestroy: `, interval);
             clearInterval(interval);
         };
     });
+
+    $: {
+        handleInboundMqttData($mqttMapData);
+    }
+    let prevB64 = "";
+    function handleInboundMqttData() {
+        if (!timerTopic) {
+            return;
+        }
+        const msg = $mqttMapData[timerTopic];
+        if (!msg) {
+            return;
+        }
+        const now = new Date().toLocaleTimeString();
+        if (msg.b64 == prevB64) {
+            return;
+        }
+        prevB64 = msg.b64;
+        log.debug(`${now} handleInboundMqttData: `, timerTopic, msg);
+        const bdata = Base64.toUint8Array(msg.b64);
+        const c = Timer.TimerDataList.decode(bdata);
+        showHealth(c);
+    }
     function rerenderStatusAge() {
-        if (recentHealth && recentHealth.ageSeconds && healthMs) {
+        //log.debug(`rrs ${timerName}`,recentHealth,healthMs)
+        if (recentHealth && healthMs) {
             recentHealth.ageSeconds = Math.floor(
                 (new Date().getTime() - healthMs) / 1000
             );
@@ -54,6 +90,7 @@
         [timerPbConfig] = await getTimerPbConfig(timerName);
 
         log.debug("TimerPbHealth dexie:", timerPbConfig);
+
         if (timerPbConfig && timerPbConfig.seq) {
             await getTimerHistory();
         }
@@ -124,12 +161,18 @@
 
         for (let td of tdl.timerData) {
             if (td.timerHealth) {
-                console.log(`thealth:`, td.timerHealth);
+                console.log(`thealth:`, td.timerHealth, "xmitMs", tdl.xmitMs);
                 if (tdl.xmitMs && tdl.xmitMs > healthMs) {
                     healthMs = tdl.xmitMs;
                     recentHealth = td.timerHealth;
                     recentHealth.ageSeconds = Math.floor(
                         (new Date().getTime() - healthMs) / 1000
+                    );
+                    console.log(
+                        `ageSeconds:`,
+                        recentHealth.ageSeconds,
+                        healthMs,
+                        new Date().getTime()
                     );
                     recentHealth.tempFmt = `${R100(recentHealth.cpuTempC)}°C`;
                     healthText = healthTextDefault;
@@ -195,6 +238,7 @@
 
         <ul>
             <li>Timer Id: {timerPbConfig.timerMqttClientId}</li>
+            <li>Timer Idp: {timerId}</li>
             <li>
                 Last Status: {secondsToHHMMSS(recentHealth.ageSeconds)} seconds
                 ago

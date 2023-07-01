@@ -13,9 +13,9 @@
     import StatusMessage from "./StatusMessage.svelte";
 
     import { onMount } from "svelte";
-    var mounted = false;
-    var thisBottomNav;
-    var placeholderHeight = "0px";
+    let mounted = false;
+    let thisBottomNav;
+    let placeholderHeight = "0px";
 
     onMount(async () => {
         mounted = true;
@@ -24,7 +24,7 @@
         log.debug("current page is ", $location);
     }
     $: {
-        var bottomNavHeight = 0;
+        let bottomNavHeight = 0;
         if ($showBottomNav && mounted && thisBottomNav) {
             bottomNavHeight = thisBottomNav.offsetHeight;
         }
@@ -35,7 +35,7 @@
 
     /* Toggle between adding and removing the "responsive" class to the navbar when the user clicks on the icon */
     const myFunction = () => {
-        var x = document.getElementById("bottomNavBar");
+        let x = document.getElementById("bottomNavBar");
         if (x.className === "navbar") {
             x.className += " responsive";
         } else {

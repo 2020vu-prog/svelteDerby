@@ -16,6 +16,7 @@ import {
     raceConfig as raceConfigStore,
     roleMap as roleMapStore,
     getChartCacheKey,
+    mqttMapSubscribe as mqttMapSubscribeStore,
 } from "./stores.js";
 import { logout as cognitoLogout } from "./stores/auth.js";
 import { get } from "svelte/store";
@@ -309,5 +310,34 @@ export function fmtPinTime(timerPin) {
         minute: "2-digit",
         second: "2-digit",
         fractionalSecondDigits: 3,
+    });
+}
+
+import { onDestroy } from "svelte";
+
+export function MqttMapSubscription(topic) {
+    const tag = "syncMap:";
+    const frequencyMs = 29000;
+    const updateStoreFunc = function () {
+        const mqttMapSubscribe = get(mqttMapSubscribeStore);
+        mqttMapSubscribe[topic] = new Date().getTime() + frequencyMs + 5000;
+        mqttMapSubscribeStore.set(mqttMapSubscribe);
+        log.debug(
+            `${new Date().toLocaleTimeString()} ${tag} MqttMapSubscription: set:`,
+            topic
+        );
+    };
+    updateStoreFunc(); // initial update
+
+    // recurring update
+    const interval = setInterval(updateStoreFunc, frequencyMs);
+
+    // this s/b safe... https://svelte.dev/tutorial/ondestroy
+    onDestroy(() => {
+        clearInterval(interval);
+        log.debug(
+            `${new Date().toLocaleTimeString()} ${tag} MqttMapSubscription: destroy:`,
+            topic
+        );
     });
 }
