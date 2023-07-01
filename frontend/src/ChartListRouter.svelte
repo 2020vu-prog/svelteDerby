@@ -12,3 +12,4 @@
         }
     });
 </script>
+Routing to preferred chart list.
