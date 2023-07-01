@@ -328,6 +328,7 @@
 <SpinnerButton
     on:click={clickedCapture}
     spinning={captureSpinning}
-    disabled={captureDisabled}>
+    disabled={captureDisabled}
+>
     Capture&Upload
 </SpinnerButton>

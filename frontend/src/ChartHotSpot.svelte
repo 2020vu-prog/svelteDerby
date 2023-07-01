@@ -166,8 +166,10 @@
         on:panmove={handlePanMove}
         on:panend={handlePanEnd}
         style="position: absolute;width: {scaledWidth}px;height: {scaledHeight}px;z-index:
-        2;left: {scaledLeft}px;top: {scaledTop}px;">
-        {pos} {posHtml}
+        2;left: {scaledLeft}px;top: {scaledTop}px;"
+    >
+        {pos}
+        {posHtml}
     </div>
 {:else}
     <div
@@ -175,7 +177,9 @@
         id={pos}
         on:click={() => gotoChartPos()}
         style="position: absolute;width: {scaledWidth}px;height: {scaledHeight}px;z-index:
-        2;left: {scaledLeft}px;top: {scaledTop}px;">
-        {pos} {posHtml}
+        2;left: {scaledLeft}px;top: {scaledTop}px;"
+    >
+        {pos}
+        {posHtml}
     </div>
 {/if}

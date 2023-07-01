@@ -118,7 +118,9 @@
             <h4>Archive Details</h4>
             <h6>
                 <span>
-                    This event will archive at: {new Date(ecFromDexie[0].TTL * 1000).toLocaleString()}
+                    This event will archive at: {new Date(
+                        ecFromDexie[0].TTL * 1000
+                    ).toLocaleString()}
                 </span>
             </h6>
         </div>

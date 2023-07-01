@@ -22,13 +22,15 @@
         fill={bgColor}
         stroke={fgColor}
         stroke-width={radius}
-        stroke-dasharray={dashArray} />
+        stroke-dasharray={dashArray}
+    />
     <text
         x="50%"
         y="50%"
         dominant-baseline="middle"
         text-anchor="middle"
-        style="font-size: {radius / 3}px; fill: white">
+        style="font-size: {radius / 3}px; fill: white"
+    >
         {Math.round(percent)}%
     </text>
 </svg>

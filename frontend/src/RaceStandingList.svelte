@@ -114,15 +114,14 @@
 </script>
 
 <style>
-
 </style>
 
-{#if params.type === 'Pending'}
+{#if params.type === "Pending"}
     <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
 {/if}
 
 {#each standingList as item (item.at)}
-    {#if item.type === 'NOB'}
+    {#if item.type === "NOB"}
         <h4>Next On Blocks</h4>
 
         {#if $nextOnBlockKey.length > 0}
@@ -130,7 +129,8 @@
                 refreshTime={$doRefreshBlocks}
                 phaseKey={$nextOnBlockKey}
                 at={$racePhaseMap[$nextOnBlockKey].at}
-                compressedLayout={true} />
+                compressedLayout={true}
+            />
         {:else}Starting Blocks are empty{/if}
 
         <hr />

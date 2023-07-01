@@ -10,4 +10,4 @@ export jslist=$(echo  \
     backend/scratch509/iotLambda1/src/*.ts \
 )
 
-prettier --write --plugin-search-dir=./frontend $jslist
+prettier --write --plugin-search-dir=./frontend --svelte-bracket-new-line=false $jslist

@@ -186,13 +186,15 @@
         <div
             style="margin: 0; position: absolute; top: 50%; left: 50%;
             -ms-transform: translate(-50%, -50%); transform: translate(-50%,
-            -50%); text-align:center;">
+            -50%); text-align:center;"
+        >
             <img
                 width="85"
                 height="85"
                 src="data/circles.svg"
                 alt="Loading..."
-                class="filter-black" />
+                class="filter-black"
+            />
             <h5>Loading Media</h5>
         </div>
     {/if}
@@ -205,20 +207,23 @@
             {#each getMediaItems(mediaList) as mediaItem (mediaItem.Key)}
                 <Card
                     class="mt-3 border border-info"
-                    on:click={() => playMedia(mediaItem.Key)}>
-
+                    on:click={() => playMedia(mediaItem.Key)}
+                >
                     <CardTitle
                         color="info"
                         class="bg-info text-white"
-                        style="text-align: center;">
+                        style="text-align: center;"
+                    >
                         {getMediaMMDDYYHHMMSS(mediaItem)}
                     </CardTitle>
                     <CardBody>
-
                         <span style="display: inline; height:fill-parent">
                             <Icon
                                 class="xLargeIcon"
-                                icon={mediaItem.Key.endsWith('.mp3') ? faVolumeUp : faVideo} />
+                                icon={mediaItem.Key.endsWith(".mp3")
+                                    ? faVolumeUp
+                                    : faVideo}
+                            />
                         </span>
                         &nbsp;&nbsp;
                         <div style="display: inline; height: fill-parent">
@@ -230,7 +235,8 @@
                             <video width="320" height="240" autoplay controls>
                                 <source
                                     src={getMediaHref(selectedVideo)}
-                                    type="video/mp4" />
+                                    type="video/mp4"
+                                />
                                 Your browser does not support the video tag.
                             </video>
                         {/if}
@@ -238,7 +244,8 @@
                             <audio controls>
                                 <source
                                     src={getMediaHref(selectedAudio)}
-                                    type="audio/mpeg" />
+                                    type="audio/mpeg"
+                                />
                                 Your browser does not support the audio element.
                             </audio>
                         {/if}
@@ -249,5 +256,4 @@
     {:else}
         <b>No Media found</b>
     {/if}
-
 </div>

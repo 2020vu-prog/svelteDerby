@@ -75,13 +75,13 @@
 
 <h4>{mode} Org User</h4>
 <form>
-
     <label>
         Email:
         <input
             type="text"
             bind:value={userForm.email}
-            placeholder="user@example.com" />
+            placeholder="user@example.com"
+        />
     </label>
     <!--
     <label>
@@ -98,7 +98,7 @@
         </select>
     </label>
 
-    {#if mode == 'Update'}
+    {#if mode == "Update"}
         <label>
             Delete User
             <input type="checkbox" bind:checked={userForm.deleteFlag} />
@@ -107,7 +107,8 @@
     <SpinnerButton
         disabled={submitDisabled}
         on:click={handleSubmit}
-        spinning={submitSpinning}>
+        spinning={submitSpinning}
+    >
         {mode}
     </SpinnerButton>
 </form>

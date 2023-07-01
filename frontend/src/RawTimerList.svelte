@@ -196,35 +196,37 @@
 
     <!-- TODO: add keyed each block -->
     {#each winnerDeltas.reverse() as winnerDelta}
-        <div
-            class="well well-sm "
-            style="background: {getBgColor(winnerDelta)}">
+        <div class="well well-sm" style="background: {getBgColor(winnerDelta)}">
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <span class="spanRight">{getHHMMSS(winnerDelta)}</span>
                 </div>
                 {#if getWinTimeMs(winnerDelta)}
                     <p class="successMessage">
-                        Winner: {getWinLane(winnerDelta)} Time: {Math.abs(getWinTimeMs(winnerDelta))}
+                        Winner: {getWinLane(winnerDelta)} Time: {Math.abs(
+                            getWinTimeMs(winnerDelta)
+                        )}
                     </p>
                 {/if}
                 <RawTimerLane
                     lane="Lane1"
-                    laneJson={JSON.stringify(winnerDelta.lanes.lane1)} />
+                    laneJson={JSON.stringify(winnerDelta.lanes.lane1)}
+                />
                 <RawTimerLane
                     lane="Lane2"
-                    laneJson={JSON.stringify(winnerDelta.lanes.lane2)} />
+                    laneJson={JSON.stringify(winnerDelta.lanes.lane2)}
+                />
                 <p />
                 {#await shouldAllowApply(winnerDelta)}
                     <p>Loading</p>
                 {:then rc}
                     {#if rc}
                         <SpinnerButton
-                            on:click={() => pushToManualTimer(winnerDelta)}>
+                            on:click={() => pushToManualTimer(winnerDelta)}
+                        >
                             Apply
                         </SpinnerButton>
                     {/if}
-
                 {/await}
             </div>
         </div>

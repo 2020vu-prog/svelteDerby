@@ -30,7 +30,8 @@
         type="number"
         maxLength="3"
         size="3"
-        bind:value={$carFilter} />
+        bind:value={$carFilter}
+    />
 {:else}
     <span on:click={toggleEdit}>
         <Icon icon={faFilter} />

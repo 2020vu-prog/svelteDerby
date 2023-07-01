@@ -150,9 +150,11 @@
                     checked={timerMatchCheck(activeTimer)}
                     id={getTimerId(activeTimer)}
                     name="activeTimerOption"
-                    on:click={() => clickActivateHost(activeTimer)} />
+                    on:click={() => clickActivateHost(activeTimer)}
+                />
                 <label style="display: inline" for={getTimerId(activeTimer)}>
-                    {getTimerName(activeTimer)} {activeTimer.ipAddress}
+                    {getTimerName(activeTimer)}
+                    {activeTimer.ipAddress}
                 </label>
                 <br />
                 <br />

@@ -223,7 +223,8 @@
                     <div on:click={() => navToChartDetail(bmd)}>
                         <div
                             style="display: flex; align-items: center;
-                            justify-content: center; text-align: center">
+                            justify-content: center; text-align: center"
+                        >
                             <h3 style="display: inline; margin: 0">
                                 {bmd.bracketName}
                             </h3>
@@ -231,7 +232,8 @@
                             <img
                                 width="24"
                                 height="24"
-                                src="up-right-arrow.svg" />
+                                src="up-right-arrow.svg"
+                            />
                         </div>
 
                         {#if userHasPermission}
@@ -240,8 +242,8 @@
                                     on:click={(event) => {
                                         push(`/ChartFill/${bmd.SK}`);
                                         event.stopPropagation();
-                                    }}>
-
+                                    }}
+                                >
                                     <Icon class="xLargeEdit" icon={faDice} />
                                 </span>
                                 &nbsp; &nbsp;
@@ -249,8 +251,8 @@
                                     on:click={(event) => {
                                         push(`/ChartEdit/${bmd.SK}`);
                                         event.stopPropagation();
-                                    }}>
-
+                                    }}
+                                >
                                     <Icon class="xLargeEdit" icon={faEdit} />
                                 </span>
                             </span>
@@ -263,25 +265,34 @@
                     <div
                         style="width: fill-parent; text-align:center; padding:
                         0.5px; background: linear-gradient(to right, {$theme}
-                        {currentShowingStat == 'Phases' ? bmd.completePhasePercent : bmd.completeHeatPercent}%,
-                        transparent 0), linear-gradient(to left, lightgray {100 - (currentShowingStat == 'Phases' ? bmd.completePhasePercent : bmd.completeHeatPercent)}%,
+                        {currentShowingStat == 'Phases'
+                            ? bmd.completePhasePercent
+                            : bmd.completeHeatPercent}%,
+                        transparent 0), linear-gradient(to left, lightgray {100 -
+                            (currentShowingStat == 'Phases'
+                                ? bmd.completePhasePercent
+                                : bmd.completeHeatPercent)}%,
                         transparent 0)"
                         on:click={(event) => {
-                            currentShowingStat == 'Heats' ? (currentShowingStat = 'Phases') : (currentShowingStat = 'Heats');
+                            currentShowingStat == "Heats"
+                                ? (currentShowingStat = "Phases")
+                                : (currentShowingStat = "Heats");
                             event.stopPropagation();
-                        }}>
-
+                        }}
+                    >
                         <span style="color: white">
                             {#if !bmd.cp || bmd.cp == 0}
                                 0 {currentShowingStat} Done
                             {:else if bmd.cp == bmd.tp}
-                                {currentShowingStat == 'Heats' ? bmd.ch : bmd.cp}
+                                {currentShowingStat == "Heats"
+                                    ? bmd.ch
+                                    : bmd.cp}
                                 {currentShowingStat} Done
-                            {:else if currentShowingStat == 'Heats'}
-                                {bmd.ch}/{bmd.th}{bmd.showAsterisk ? '*' : ''}
+                            {:else if currentShowingStat == "Heats"}
+                                {bmd.ch}/{bmd.th}{bmd.showAsterisk ? "*" : ""}
                                 Heats Done
                             {:else}
-                                {bmd.cp}/{bmd.tp}{bmd.showAsterisk ? '*' : ''}
+                                {bmd.cp}/{bmd.tp}{bmd.showAsterisk ? "*" : ""}
                                 Phases Done
                             {/if}
                         </span>

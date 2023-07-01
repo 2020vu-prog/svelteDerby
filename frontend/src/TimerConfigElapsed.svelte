@@ -315,7 +315,9 @@
 {#if timerName && timerId}
     <SpinnerButton
         disabled={alignmentDisabled}
-        on:click={() => push(`/timerPbAlignment?timerName=${timerName}&timerId=${timerId}`)}>
+        on:click={() =>
+            push(`/timerPbAlignment?timerName=${timerName}&timerId=${timerId}`)}
+    >
         Timer Alignment
     </SpinnerButton>
     <TimerPbHealth {timerName} {timerId} />
@@ -327,7 +329,8 @@
             <Input
                 disabled={pbForm.timerNameDisabled}
                 type="text"
-                bind:value={pbForm.timerName} />
+                bind:value={pbForm.timerName}
+            />
         </Label>
     </FormGroup>
     <FormGroup>
@@ -336,7 +339,8 @@
             <Input
                 disabled={pbForm.seqDisabled}
                 type="number"
-                bind:value={pbForm.seq} />
+                bind:value={pbForm.seq}
+            />
             <FormText color="muted">
                 Sequence is used to indicate position of timer on the track when
                 there are multiple timers. Lower numbers are closer to the
@@ -384,7 +388,7 @@
         </Label>
     </FormGroup>
     {#if pbForm.sensorLogic == Timer.SensorLogic.LanePhotoEyes}
-        {#if pbForm.timerName == 'Finish'}
+        {#if pbForm.timerName == "Finish"}
             <!--
 
     <PrefFormInput title="Foo" helpText="bar">
@@ -400,7 +404,8 @@
                     <Input
                         type="number"
                         bind:value={pbForm.maxTrackSeconds}
-                        placeholder="45" />
+                        placeholder="45"
+                    />
                     <FormText color="muted">
                         This field is used to control elapsed time. It can be
                         ignored when elapsed times are not needed. It is the
@@ -408,7 +413,6 @@
                         run the track (in seconds).
                     </FormText>
                 </Label>
-
             </FormGroup>
         {/if}
         <FormGroup>
@@ -417,8 +421,8 @@
                 <Input
                     type="number"
                     bind:value={pbForm.timerConfigLanePhotoEye_clearMS}
-                    placeholder="3000" />
-
+                    placeholder="3000"
+                />
             </Label>
         </FormGroup>
         <FormGroup>
@@ -427,7 +431,8 @@
                 <Input
                     type="number"
                     bind:value={pbForm.timerConfigLanePhotoEye_maxCarLenMS}
-                    placeholder="700" />
+                    placeholder="700"
+                />
             </Label>
         </FormGroup>
         <FormGroup>
@@ -436,7 +441,8 @@
                 <Input
                     type="number"
                     bind:value={pbForm.timerConfigLanePhotoEye_minCarLenMS}
-                    placeholder="300" />
+                    placeholder="300"
+                />
             </Label>
         </FormGroup>
         <FormGroup>
@@ -445,7 +451,8 @@
                 <Input
                     type="number"
                     bind:value={pbForm.timerConfigLanePhotoEye_maxPerfCount}
-                    placeholder="1" />
+                    placeholder="1"
+                />
             </Label>
         </FormGroup>
 
@@ -456,7 +463,8 @@
                 Paddles Up Lane1:
                 <Input
                     type="select"
-                    bind:value={pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState}>
+                    bind:value={pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState}
+                >
                     <option value={Timer.PinState.BLOCKED}>Blocked</option>
                     <option value={Timer.PinState.CLEAR}>Clear</option>
                 </Input>
@@ -468,7 +476,8 @@
                 <Input
                     type="select"
                     disabled
-                    bind:value={pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState}>
+                    bind:value={pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState}
+                >
                     <option value={Timer.PinState.BLOCKED}>Blocked</option>
                     <option value={Timer.PinState.CLEAR}>Clear</option>
                 </Input>
@@ -480,19 +489,22 @@
                 <Input
                     type="number"
                     bind:value={pbForm.timerConfigOpposedStarter_maxTransitionMS}
-                    placeholder="50" />
+                    placeholder="50"
+                />
             </Label>
         </FormGroup>
     {/if}
     <TimerSelection
         isProtobuf="true"
         on:timerSelected={handleTimerSelection}
-        activeTimerKey={pbForm.timerMqttClientId} />
+        activeTimerKey={pbForm.timerMqttClientId}
+    />
 
     <SpinnerButton
         disabled={submitDisabled}
         on:click={handleSubmit}
-        spinning={submitSpinning}>
+        spinning={submitSpinning}
+    >
         Update
     </SpinnerButton>
 </Form>

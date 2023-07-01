@@ -55,7 +55,6 @@
 <h3>Add Organization</h3>
 
 <form on:submit|preventDefault={handleSubmit}>
-
     <label>
         Name:
         <input
@@ -65,7 +64,8 @@
             placeholder="Organization Name"
             on:keyup={() => {
                 syncAddButton();
-            }} />
+            }}
+        />
     </label>
     <label>
         LowCarLane1:
@@ -73,7 +73,8 @@
             type="checkbox"
             id="lcl1"
             on:change={syncAddButton()}
-            bind:checked={orgForm.lcl1} />
+            bind:checked={orgForm.lcl1}
+        />
     </label>
     <button id="formSubmitButton" type="submit" disabled>Add</button>
 </form>

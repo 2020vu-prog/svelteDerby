@@ -83,7 +83,8 @@ report elapsed time split(s).
                     <EllipsisButton
                         on:message={toggleToolbar}
                         dbName="Foo"
-                        dbKey={tc.at} />
+                        dbKey={tc.at}
+                    />
                 </span>
             </CardTitle>
         </CardHeader>
@@ -91,9 +92,9 @@ report elapsed time split(s).
             <div style="display: inline">
                 <TimerPbHealth
                     timerName={tc.timerName}
-                    timerId={tc.timerMqttClientId} />
+                    timerId={tc.timerMqttClientId}
+                />
             </div>
-
         </CardBody>
     </Card>
 {/each}

@@ -77,14 +77,13 @@
 {#each Object.entries(laneStatusList) as [lane, ls]}
     <Card class="mt-3 border border-info">
         <CardHeader class="bg-info">
-            Lane {lane.replace(/[A-Z]+/i, '')} &nbsp;&nbsp;&nbsp;Audio:
-            &nbsp;&nbsp;
+            Lane {lane.replace(/[A-Z]+/i, "")} &nbsp;&nbsp;&nbsp;Audio: &nbsp;&nbsp;
             <input type="checkbox" bind:checked={ls.checked} />
         </CardHeader>
         <CardBody style="background-color:{ls.blocked ? 'red' : 'lightgreen'}">
             <h3>
-                Lane {lane.replace(/[A-Z]+/i, '')}
-                <strong>{ls.blocked ? 'BLOCKED' : 'CLEAR'}</strong>
+                Lane {lane.replace(/[A-Z]+/i, "")}
+                <strong>{ls.blocked ? "BLOCKED" : "CLEAR"}</strong>
             </h3>
         </CardBody>
     </Card>

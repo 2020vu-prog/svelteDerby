@@ -59,13 +59,13 @@
 <!-- @format -->
 {#if $chartClickLoggerShow}
     <span style="position: absolute; z-index: 9; top:100px;left:0px;">
-
         <input
             id="cclInput"
             type="string"
             maxLength="7"
             size="7"
-            bind:value={$chartClickLoggerId} />
+            bind:value={$chartClickLoggerId}
+        />
         <p />
         <button on:click={copyJson}>Copy Json</button>
     </span>

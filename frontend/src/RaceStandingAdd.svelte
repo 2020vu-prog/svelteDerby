@@ -146,8 +146,9 @@
             placeholder="Car 1"
             id="cn1"
             on:keyup={() => {
-                changeFocus(carNumberForm.car1, 'A');
-            }} />
+                changeFocus(carNumberForm.car1, "A");
+            }}
+        />
         <p>{getDriverName(carNumberForm.car1)}</p>
     </label>
 
@@ -158,15 +159,17 @@
             placeholder="Car 2"
             id="cn2"
             on:keyup={() => {
-                changeFocus(carNumberForm.car2, 'B');
-            }} />
+                changeFocus(carNumberForm.car2, "B");
+            }}
+        />
         <p>{getDriverName(carNumberForm.car2)}</p>
     </label>
     <SpinnerButton
         disabled={submitDisabled}
         on:click={handleSubmit}
         spinning={submitSpinning}
-        focused={submitFocused}>
+        focused={submitFocused}
+    >
         Add
     </SpinnerButton>
 </form>

@@ -184,7 +184,6 @@
     <button on:click={doLogOut}>Log Out</button>
 {:else}
     <div>
-
         {#await promise}
             <p>Logging in...</p>
         {:catch error}
@@ -195,52 +194,57 @@
                 <input
                     type="checkbox"
                     on:click={toggleMode}
-                    bind:checked={isSigningIn} />
+                    bind:checked={isSigningIn}
+                />
                 <span class="slider round" />
             </label>
-            {#if mode === 'signin'}
+            {#if mode === "signin"}
                 Switch to Sign Up
             {:else}Switch to Sign In{/if}
         </div>
-        {#if mode === 'signin'}
+        {#if mode === "signin"}
             <h1>Sign In</h1>
-        {:else if mode === 'confirm'}
+        {:else if mode === "confirm"}
             <h1>Confirm Signup</h1>
         {:else}
             <h1>Sign Up</h1>
         {/if}
         <form on:submit|preventDefault={handleSubmit}>
-            {#if mode !== 'confirm'}
+            {#if mode !== "confirm"}
                 <label>
                     Username:
                     <input
                         type="text"
                         bind:value={$loginFormState.username}
-                        placeholder="your username" />
+                        placeholder="your username"
+                    />
                 </label>
                 <label>
                     Password:
                     <input
                         type="password"
-                        bind:value={$loginFormState.password} />
+                        bind:value={$loginFormState.password}
+                    />
                 </label>
             {/if}
-            {#if mode === 'signup'}
+            {#if mode === "signup"}
                 <label>
                     Email (for confirmation code):
                     <input
                         type="email"
                         bind:value={$loginFormState.email}
-                        placeholder="real@email.com" />
+                        placeholder="real@email.com"
+                    />
                 </label>
             {/if}
-            {#if mode === 'confirm'}
+            {#if mode === "confirm"}
                 <label>
                     6 digit Confirmation:
                     <input
                         type="text"
                         bind:value={$loginFormState.confirmCode}
-                        placeholder="e.g. 123456" />
+                        placeholder="e.g. 123456"
+                    />
                 </label>
             {/if}
             <button type="submit">Submit</button>

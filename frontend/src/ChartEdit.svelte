@@ -73,7 +73,6 @@
 <h3>Edit Chart</h3>
 
 <form>
-
     <label>
         Bracket Name:
         <input bind:value={chartForm.name} placeholder="Bracket Name" />

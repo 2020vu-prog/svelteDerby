@@ -39,15 +39,16 @@
 <div>
     <h4>History</h4>
     {#each history as entity (entity.at)}
-        {#if entity.PK.endsWith(':RP')}
+        {#if entity.PK.endsWith(":RP")}
             <RacePhase
                 source="EventHistory"
                 historyPK={params.PK}
                 refreshTime="1"
                 phaseKey={entity.classKey}
-                at={entity.at} />
+                at={entity.at}
+            />
         {/if}
-        {#if entity.PK.endsWith(':RS')}
+        {#if entity.PK.endsWith(":RS")}
             <RaceStanding standing={entity} source="EventHistory" />
         {/if}
     {/each}

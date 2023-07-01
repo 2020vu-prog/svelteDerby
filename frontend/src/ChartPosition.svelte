@@ -229,7 +229,6 @@
 
 <h2>Heat: {params.chartPosition}</h2>
 <form>
-
     <div class="card">
         <div class="container">
             <div id="seedADiv">
@@ -237,8 +236,9 @@
                 <select
                     bind:this={posForm.A.select}
                     bind:value={posForm.A.seedType}
-                    on:change={() => updateInputUI('A', posForm.A.seedType)}
-                    disabled>
+                    on:change={() => updateInputUI("A", posForm.A.seedType)}
+                    disabled
+                >
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
@@ -250,9 +250,10 @@
                         bind:value={posForm.A.carNumber}
                         placeholder="Car Number 1"
                         on:keyup={() => {
-                            changeFocus(posForm.A.carNumber, 'A');
+                            changeFocus(posForm.A.carNumber, "A");
                         }}
-                        disabled />
+                        disabled
+                    />
                     <p>{getDriverName(posForm.A.carNumber)}</p>
                 </div>
             </div>
@@ -266,8 +267,9 @@
                 <select
                     bind:this={posForm.B.select}
                     bind:value={posForm.B.seedType}
-                    on:change={() => updateInputUI('B', posForm.B.seedType)}
-                    disabled>
+                    on:change={() => updateInputUI("B", posForm.B.seedType)}
+                    disabled
+                >
                     <option value="ptcp">Racer</option>
                     <option value="bye">Bye</option>
                     <option value="forfeit">Forfeit</option>
@@ -279,9 +281,10 @@
                         bind:value={posForm.B.carNumber}
                         placeholder="Car Number 2"
                         on:keyup={() => {
-                            changeFocus(posForm.B.carNumber, 'B');
+                            changeFocus(posForm.B.carNumber, "B");
                         }}
-                        disabled />
+                        disabled
+                    />
 
                     <p>{getDriverName(posForm.B.carNumber)}</p>
                 </div>
@@ -296,7 +299,8 @@
         <SpinnerButton
             disabled={submitDisabled}
             on:click={handleSubmit}
-            spinning={submitSpinning}>
+            spinning={submitSpinning}
+        >
             Update
         </SpinnerButton>
     {/if}

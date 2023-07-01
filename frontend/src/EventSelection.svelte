@@ -124,7 +124,8 @@
 <div>
     <MaterialAdd
         overrideOrgIz={params.orgIz}
-        clickHandleRoute="/eventAdd/{params.orgIz}/Add" />
+        clickHandleRoute="/eventAdd/{params.orgIz}/Add"
+    />
 
     <h4>
         EventSelection for
@@ -133,9 +134,8 @@
 
     <p />
 
-    {#if currentViewMode != 'Unknown'}
+    {#if currentViewMode != "Unknown"}
         <div>
-
             {#each getOrgEventsAsList(currentViewMode) as eventConfig}
                 <Card class="mt-3 border border-info">
                     <CardBody>

@@ -166,7 +166,6 @@
 </style>
 
 <div id="dlTitle">
-
     <h4>{getTitle()}</h4>
     <SpinnerButton on:click={clearSelect}>Clear Selection</SpinnerButton>
 
@@ -181,7 +180,6 @@
 
 {#each wip as item, index (item.path)}
     <Card class="mt-3 border border-info">
-
         <CardBody>
             <div style="display: inline">
                 <h6>{item.systemName}</h6>
@@ -190,14 +188,16 @@
                     <input
                         type="number"
                         bind:value={item.delay}
-                        placeholder="Seconds" />
+                        placeholder="Seconds"
+                    />
                 {/if}
                 {#if isNavMode()}
                     Display:
                     <input
                         type="text"
                         bind:value={item.text}
-                        placeholder={item.systemName} />
+                        placeholder={item.systemName}
+                    />
                     <span style="display: inline; float: right">
                         <input
                             type="checkbox"
@@ -205,7 +205,8 @@
                             on:click={(event) => {
                                 updateSelectTotal();
                                 event.stopPropagation();
-                            }} />
+                            }}
+                        />
                     </span>
                 {/if}
             </div>

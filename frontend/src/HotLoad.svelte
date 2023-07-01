@@ -668,8 +668,11 @@
 {:else}
     <SpinnerButton
         on:click={doRefresh}
-        spinning={refreshInProgressButton || refreshInProgressMq || refreshInProgressCca}
-        {btnClass}>
+        spinning={refreshInProgressButton ||
+            refreshInProgressMq ||
+            refreshInProgressCca}
+        {btnClass}
+    >
         Refresh
     </SpinnerButton>
 {/if}

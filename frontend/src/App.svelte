@@ -403,7 +403,6 @@
         {/if}
     </a>
     <div id="myLinks">
-
         {#each menuMap as menuOption}
             {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
                 <a on:click={() => navTo(menuOption.menuRoute)}>

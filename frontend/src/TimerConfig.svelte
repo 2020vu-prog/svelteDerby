@@ -118,10 +118,10 @@
 
 <h3>Timer Config</h3>
 <br />
-<SpinnerButton on:click={() => push('/spMediaList/*/*')}>
+<SpinnerButton on:click={() => push("/spMediaList/*/*")}>
     List All Media
 </SpinnerButton>
-<SpinnerButton on:click={() => push('/timerAlignment')}>
+<SpinnerButton on:click={() => push("/timerAlignment")}>
     Timer Alignment
 </SpinnerButton>
 
@@ -133,39 +133,45 @@
         <input
             type="number"
             bind:value={loginForm.clearMS}
-            placeholder="3000" />
+            placeholder="3000"
+        />
     </label>
     <label>
         MaxCarLenMS:
         <input
             type="number"
             bind:value={loginForm.maxCarLenMS}
-            placeholder="700" />
+            placeholder="700"
+        />
     </label>
     <label>
         MinCarLenMS:
         <input
             type="number"
             bind:value={loginForm.minCarLenMS}
-            placeholder="300" />
+            placeholder="300"
+        />
     </label>
     <label>
         Max Perf:
         <input
             type="number"
             bind:value={loginForm.maxPerfCount}
-            placeholder="1" />
+            placeholder="1"
+        />
     </label>
     <br />
     <TimerSelection
         isProtobuf=""
         on:timerSelected={handleTimerSelection}
-        activeTimerKey={activeTimerSha} />
+        activeTimerKey={activeTimerSha}
+    />
 
     <SpinnerButton
         disabled={submitDisabled}
         on:click={handleSubmit}
-        spinning={submitSpinning}>
+        spinning={submitSpinning}
+    >
         Update
     </SpinnerButton>
 </form>

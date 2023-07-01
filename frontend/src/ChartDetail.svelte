@@ -324,15 +324,14 @@
 <svelte:head>
     <script
         src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"
-        on:load={jqLoaded}>
-
+        on:load={jqLoaded}
+    >
     </script>
 </svelte:head>
 <h3 style="text-align:center;z-index: 9;">
     Chart Name: {bmdFromDexie.bracketName}
 </h3>
 <div id="top" class="container" style="position: absolute; z-index: 8;">
-
     {#each Object.values(brackets2.imgPositions) as bracket, pos}
         <ChartHotSpot
             id={pos}
@@ -341,9 +340,15 @@
             left={bracket.left}
             top={bracket.top}
             chartId={params.chartId}
-            on:hotMove={(e) => hotMoved(e, Object.keys(brackets2.imgPositions)[pos])}
+            on:hotMove={(e) =>
+                hotMoved(e, Object.keys(brackets2.imgPositions)[pos])}
             isPannable={$chartClickLoggerShow}
-            isSeed={brackets2.seeds.indexOf(Object.keys(brackets2.imgPositions)[pos]) > -1 ? true : false} />
+            isSeed={brackets2.seeds.indexOf(
+                Object.keys(brackets2.imgPositions)[pos]
+            ) > -1
+                ? true
+                : false}
+        />
     {/each}
     <img
         on:load={imgLoadComplete}
@@ -352,7 +357,8 @@
         src={bracketImgSrc}
         alt="bracketImage"
         bind:this={thisChartImage}
-        on:click={logClickPosition} />
+        on:click={logClickPosition}
+    />
 
     <ChartClickLogger on:copyJson={copyJson} />
 </div>

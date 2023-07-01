@@ -58,7 +58,6 @@
 </script>
 
 <style>
-
 </style>
 
 <MaterialAdd clickHandleRoute="/raceStandingAdd/RacePhase" />
@@ -73,5 +72,6 @@
     <RacePhase
         refreshTime={$doRefreshBlocks}
         phaseKey={item.classKey}
-        at={item.at} />
+        at={item.at}
+    />
 {/each}

@@ -241,7 +241,6 @@
 <h3>{mode} Driver</h3>
 
 <form>
-
     <label>
         Car Number:
         <input
@@ -250,8 +249,9 @@
             bind:value={driverForm.carNumber}
             placeholder="Car Number"
             on:keyup={() => {
-                changeFocus(driverForm.carNumber, 'A');
-            }} />
+                changeFocus(driverForm.carNumber, "A");
+            }}
+        />
     </label>
     <label>
         Driver Name:
@@ -261,8 +261,9 @@
             bind:value={driverForm.driverName}
             placeholder="Driver Name"
             on:keyup={() => {
-                changeFocus(null, 'B');
-            }} />
+                changeFocus(null, "B");
+            }}
+        />
     </label>
     <label>
         Phonetic Name Type:
@@ -282,17 +283,19 @@
             <input
                 type="text"
                 bind:value={driverForm.pName}
-                placeholder={`Phonetic name (${driverForm.pType})`} />
+                placeholder={`Phonetic name (${driverForm.pType})`}
+            />
         </label>
     {/if}
-    {#if showPhoneticInfo && driverForm.pType == 'X-SAMPA'}
+    {#if showPhoneticInfo && driverForm.pType == "X-SAMPA"}
         <p>
             The phonetic name field uses a plain-text version of the IPA
             (International Phonetic Alphabet) called X-SAMPA. For an english to
             X-SAMPA chart click
             <a
                 target="_blank"
-                href="https://docs.aws.amazon.com/polly/latest/dg/ph-table-english-uk.html">
+                href="https://docs.aws.amazon.com/polly/latest/dg/ph-table-english-uk.html"
+            >
                 here
             </a>
             .
@@ -304,7 +307,8 @@
     <SpinnerButton
         disabled={submitDisabled}
         on:click={handleSubmit}
-        spinning={submitSpinning}>
+        spinning={submitSpinning}
+    >
         {mode}
     </SpinnerButton>
     {#if allowDriverJson}
@@ -324,8 +328,8 @@
                 name="driverJsonFileTag"
                 accept="application/json"
                 type="file"
-                on:change={(e) => onFileSelected(e)} />
+                on:change={(e) => onFileSelected(e)}
+            />
         </div>
     {/if}
-
 </form>

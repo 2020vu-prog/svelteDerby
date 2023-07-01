@@ -199,14 +199,16 @@
         <span
             class="navbarItem"
             style="background-color: {$theme}"
-            on:click={() => gotoTimer()}>
+            on:click={() => gotoTimer()}
+        >
             Timer
         </span>
     {/if}
     <span
         class="navbarItem"
         style="background-color: {$theme}"
-        on:click={gotoHistory}>
+        on:click={gotoHistory}
+    >
         History
     </span>
 
@@ -214,7 +216,8 @@
         <span
             class="navbarItem"
             style="background-color: {$theme}"
-            on:click={() => gotoBracket()}>
+            on:click={() => gotoBracket()}
+        >
             Bracket
         </span>
     {/if}
@@ -223,31 +226,35 @@
         <span
             class="navbarItem"
             style="background-color: {$theme}"
-            on:click|preventDefault={maybeDelete}>
+            on:click|preventDefault={maybeDelete}
+        >
             Delete
         </span>
     {/if}
-    {#if dbName === 'RacePhase'}
+    {#if dbName === "RacePhase"}
         <span
             class="navbarItem"
             style="background-color: {$theme}"
-            on:click|preventDefault={gotoListMedia}>
+            on:click|preventDefault={gotoListMedia}
+        >
             Video
         </span>
     {/if}
-    {#if dbName === 'RacePhase'}
+    {#if dbName === "RacePhase"}
         <span
             class="navbarItem"
             style="background-color: {$theme}"
-            on:click|preventDefault={gotoElapsed}>
+            on:click|preventDefault={gotoElapsed}
+        >
             Elapsed
         </span>
     {/if}
-    {#if window.location.href.includes('RsList/Pending') && isAnnounceAllowed()}
+    {#if window.location.href.includes("RsList/Pending") && isAnnounceAllowed()}
         <span
             class="navbarItem"
             style="background-color: {$theme}"
-            on:click|preventDefault={callCars}>
+            on:click|preventDefault={callCars}
+        >
             Call To Race
         </span>
     {/if}

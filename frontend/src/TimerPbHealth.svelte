@@ -235,26 +235,30 @@
         {/if}
     </Button>
     <Collapse isOpen={open} {toggle}>
-
         <ul>
             <li>Timer Id: {timerPbConfig.timerMqttClientId}</li>
             <li>Timer Idp: {timerId}</li>
             <li>
-                Last Status: {secondsToHHMMSS(recentHealth.ageSeconds)} seconds
-                ago
+                Last Status: {secondsToHHMMSS(recentHealth.ageSeconds)} seconds ago
             </li>
             <li>CPU Temp: {recentHealth.tempFmt}</li>
             <li>CPU Uptime: {secondsToHHMMSS(recentHealth.cpuUptime)}</li>
             {#if recentHealth.gpsInitialAcquisitionSecondsAfterBoot}
                 <li>
-                    Gps Acquistion delay: {secondsToHHMMSS(recentHealth.gpsInitialAcquisitionSecondsAfterBoot)}
+                    Gps Acquistion delay: {secondsToHHMMSS(
+                        recentHealth.gpsInitialAcquisitionSecondsAfterBoot
+                    )}
                 </li>
                 <li>
-                    Gps Total Uptime: {secondsToHHMMSS(recentHealth.gpsUptimeTotal)}
+                    Gps Total Uptime: {secondsToHHMMSS(
+                        recentHealth.gpsUptimeTotal
+                    )}
                     ({getUptimePct(recentHealth)})
                 </li>
                 <li>
-                    Gps Recent Uptime: {secondsToHHMMSS(recentHealth.gpsUptimeContiguous)}
+                    Gps Recent Uptime: {secondsToHHMMSS(
+                        recentHealth.gpsUptimeContiguous
+                    )}
                 </li>
                 <li>Gps Flutter: {recentHealth.gpsFlutter}</li>
                 <li>Gps PPS: {recentHealth.gpsEmittingPps}</li>
@@ -268,6 +272,5 @@
             <li>Timer GitHash: {fmtGitHash()}</li>
             <li>OverlayFS: {recentHealth.overlayFsEnabled}</li>
         </ul>
-
     </Collapse>
 </div>

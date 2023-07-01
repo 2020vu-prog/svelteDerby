@@ -130,7 +130,6 @@
 <h3>{params.mode} Event</h3>
 
 <form>
-
     <label>
         Name:
         <input
@@ -140,7 +139,8 @@
             placeholder="Event Name"
             on:keyup={() => {
                 syncAddButton();
-            }} />
+            }}
+        />
     </label>
     <label>
         PA Channel:
@@ -150,8 +150,8 @@
             placeholder="Zello Channel"
             on:keyup={() => {
                 syncAddButton();
-            }} />
-
+            }}
+        />
     </label>
     <label>
         LowCarLane1:
@@ -159,19 +159,22 @@
             type="checkbox"
             id="lcl1"
             on:change={syncAddButton()}
-            bind:checked={orgForm.lcl1} />
+            bind:checked={orgForm.lcl1}
+        />
     </label>
     <label>
         Limit Pending 1 Race At a Time:
         <input
             type="checkbox"
             id="pending1Race"
-            bind:checked={orgForm.pending1Race} />
+            bind:checked={orgForm.pending1Race}
+        />
     </label>
     <SpinnerButton
         disabled={submitDisabled}
         on:click={handleSubmit}
-        spinning={submitSpinning}>
+        spinning={submitSpinning}
+    >
         {params.mode}
     </SpinnerButton>
 </form>

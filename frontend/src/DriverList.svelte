@@ -104,7 +104,6 @@
 </style>
 
 <div id="dlTitle">
-
     <h4>
         Driver
         {#if selectable}Selection{:else}List{/if}
@@ -131,18 +130,20 @@
     items={carNumberList}
     bind:start
     bind:end
-    let:item>
+    let:item
+>
     <Card
         class="mt-3 border border-info"
-        on:click={() => carAndDriverOnClick(item)}>
-
+        on:click={() => carAndDriverOnClick(item)}
+    >
         <CardBody>
             <div style="display: inline">
                 <CarAndDriver
                     number={item}
                     at={safeGetAt($driverMap, item)}
                     isWinner=""
-                    phaseLetter="" />
+                    phaseLetter=""
+                />
 
                 {#if selectable}
                     <span style="display: inline; float: right">
@@ -152,7 +153,8 @@
                             on:click={(event) => {
                                 updateSelectTotal();
                                 event.stopPropagation();
-                            }} />
+                            }}
+                        />
                     </span>
                 {:else if editable}
                     <span
@@ -160,7 +162,8 @@
                             push(`/driverAdd/${item}`);
                             event.stopPropagation();
                         }}
-                        style="display: inline; float: right">
+                        style="display: inline; float: right"
+                    >
                         <Icon class="xLargeEdit" icon={faEdit} />
                     </span>
                 {/if}

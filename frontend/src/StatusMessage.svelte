@@ -126,13 +126,13 @@
 
 <div class="toasty">
     {#each messages as message}
-        {#if message.type === 'error'}
+        {#if message.type === "error"}
             <p class="errorMessage">{message.text}</p>
         {/if}
-        {#if message.type === 'success'}
+        {#if message.type === "success"}
             <p class="successMessage">{message.text}</p>
         {/if}
-        {#if message.type === 'archiveWarning'}
+        {#if message.type === "archiveWarning"}
             <p class="archiveWarningMessage">{message.text}</p>
         {/if}
     {/each}

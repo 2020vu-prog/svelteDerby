@@ -162,9 +162,7 @@
 </div>
 
 <form>
-
     <div class="row">
-
         <div class="column">
             <h3>Lane 1</h3>
             <h4>Car Number: {carNumber1}</h4>
@@ -175,10 +173,10 @@
                     size="4"
                     type="number"
                     bind:value={resultForm.lane1}
-                    placeholder="Lane1[{carNumber1}] MS" />
+                    placeholder="Lane1[{carNumber1}] MS"
+                />
                 MS
             </label>
-
         </div>
 
         <div class="column">
@@ -191,20 +189,19 @@
                     size="4"
                     type="number"
                     bind:value={resultForm.lane2}
-                    placeholder="Lane2[{carNumber2}] MS" />
+                    placeholder="Lane2[{carNumber2}] MS"
+                />
                 MS
             </label>
-
         </div>
-
     </div>
     <div style="width: 100%; text-align: center;">
         <SpinnerButton
             disabled={submitDisabled}
             on:click={handleSubmit}
-            spinning={submitSpinning}>
+            spinning={submitSpinning}
+        >
             Apply Time
         </SpinnerButton>
     </div>
-
 </form>

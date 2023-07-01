@@ -33,6 +33,6 @@
     }
 </script>
 
-{#if display != 'false'}
+{#if display != "false"}
     <button on:click={() => performAnonymousLogin()}>Login Anonymously</button>
 {/if}

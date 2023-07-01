@@ -185,7 +185,6 @@
 <h3>Fill Chart [Initial Seeds]</h3>
 
 <form>
-
     <label>
         Bracket Name:
         <input bind:value={chartForm.name} disabled="true" />
@@ -196,7 +195,8 @@
             on:click={(event) => {
                 push(`/drivers/selectable=true`);
                 event.stopPropagation();
-            }}>
+            }}
+        >
             Select Drivers
         </SpinnerButton>
         {#if $selectedDriverList.length}
@@ -204,7 +204,8 @@
                 on:click={(event) => {
                     fillRandom();
                     event.stopPropagation();
-                }}>
+                }}
+            >
                 Fill Chart With [{$selectedDriverList.length}] Drivers
             </SpinnerButton>
             <p />

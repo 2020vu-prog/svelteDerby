@@ -90,7 +90,8 @@
         {#if shouldDisplay(bmd)}
             <Card
                 class="mt-3 border border-info"
-                on:click={() => navToChartDetail(bmd)}>
+                on:click={() => navToChartDetail(bmd)}
+            >
                 <CardBody>
                     <div style="display: inline">{bmd.bracketName}</div>
 
@@ -100,7 +101,8 @@
                                 on:click={(event) => {
                                     push(`/ChartFill/${bmd.SK}`);
                                     event.stopPropagation();
-                                }}>
+                                }}
+                            >
                                 <Icon class="xLargeEdit" icon={faDice} />
                             </span>
                             &nbsp; &nbsp;
@@ -108,8 +110,8 @@
                                 on:click={(event) => {
                                     push(`/ChartEdit/${bmd.SK}`);
                                     event.stopPropagation();
-                                }}>
-
+                                }}
+                            >
                                 <Icon class="xLargeEdit" icon={faEdit} />
                             </span>
                         </span>

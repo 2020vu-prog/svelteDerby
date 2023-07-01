@@ -126,7 +126,6 @@
 </style>
 
 <div class="settings">
-
     <h1>Preferences</h1>
     <hr />
 
@@ -166,19 +165,20 @@
         <h6>
             This toggles whether the bottom nav is shown or hidden on
             <strong>all screens.</strong>
-
         </h6>
     </div>
     <hr />
     <div
         class="singularSettingDiv"
-        on:click={() => push('/routeSelection/nav')}>
+        on:click={() => push("/routeSelection/nav")}
+    >
         <h4>Custom NavBar</h4>
     </div>
     <hr />
     <div
         class="singularSettingDiv"
-        on:click={() => push('/routeSelection/carousel')}>
+        on:click={() => push("/routeSelection/carousel")}
+    >
         <h4>Carousel</h4>
     </div>
     <hr />
@@ -197,7 +197,8 @@
         <select
             id="themeSelector"
             bind:value={themeSelected}
-            on:change={() => updateTheme()}>
+            on:change={() => updateTheme()}
+        >
             <option class="colorOption" value="#4CAF50">Default (Green)</option>
             <option class="colorOption">Pink</option>
             <option class="colorOption">Fuchsia</option>
@@ -272,13 +273,14 @@
         <input
             type="checkbox"
             bind:checked={disableCache}
-            on:click={() => clickDisableCache()} />
+            on:click={() => clickDisableCache()}
+        />
         <h6>
             This is used when selecting a race created within the last 5
             minutes.
         </h6>
     </div>
-    <div on:click={() => push('/about')}>
+    <div on:click={() => push("/about")}>
         <hr />
 
         <div class="singularSettingDiv">

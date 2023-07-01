@@ -255,18 +255,18 @@
 <svelte:head>
     <script
         src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"
-        on:load={jqLoaded}>
-
+        on:load={jqLoaded}
+    >
     </script>
 </svelte:head>
 <link
     rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+    href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css"
+/>
 
 <h3>Add Chart</h3>
 
 <form>
-
     <label>
         Chart Type:
         <div id="jstree_demo_div" />
@@ -275,20 +275,17 @@
 
     <p style="float:left">Day:</p>
     <div class="switch-toggle" style="max-height: 38px;">
-
         <input id="sat" name="day" type="radio" bind:group={day} value="Sat" />
         <label for="sat" onclick="">Sat</label>
 
         <input id="sun" name="day" type="radio" bind:group={day} value="Sun" />
         <label for="sun" onclick="">Sun</label>
-
     </div>
     <br />
     <br />
 
     <p style="float:left">Time:</p>
     <div class="switch-toggle" style="max-height: 38px;">
-
         <input id="am" name="time" type="radio" bind:group={time} value="AM" />
         <label for="am" onclick="">AM</label>
 
@@ -300,7 +297,8 @@
             name="time"
             type="radio"
             bind:group={time}
-            value="Double" />
+            value="Double"
+        />
         <label for="double" onclick="">Double</label>
 
         <input
@@ -308,21 +306,21 @@
             name="time"
             type="radio"
             bind:group={time}
-            value="Single" />
+            value="Single"
+        />
         <label for="single" onclick="">Single</label>
-
     </div>
     <br />
     <br />
     <p style="float:left">Division:</p>
     <div class="switch-toggle" style="max-height: 38px;">
-
         <input
             id="stock"
             name="class"
             type="radio"
             bind:group={division}
-            value="Stock" />
+            value="Stock"
+        />
         <label for="stock" onclick="">Stock</label>
 
         <input
@@ -330,7 +328,8 @@
             name="class"
             type="radio"
             bind:group={division}
-            value="SS" />
+            value="SS"
+        />
         <label for="ss" onclick="">SS</label>
 
         <input
@@ -338,7 +337,8 @@
             name="class"
             type="radio"
             bind:group={division}
-            value="Masters" />
+            value="Masters"
+        />
         <label for="masters" onclick="">Masters</label>
 
         <input
@@ -346,7 +346,8 @@
             name="class"
             type="radio"
             bind:group={division}
-            value="Legacy" />
+            value="Legacy"
+        />
         <label for="legacy" onclick="">Legacy</label>
 
         <input
@@ -354,9 +355,9 @@
             name="class"
             type="radio"
             bind:group={division}
-            value="Wrap" />
+            value="Wrap"
+        />
         <label for="wrap" onclick="">Wrap</label>
-
     </div>
     <br />
     <br />
@@ -367,7 +368,8 @@
         <input
             type="text"
             bind:value={loginForm.chartName}
-            placeholder="Chart Name" />
+            placeholder="Chart Name"
+        />
     </label>
 
     <br />
@@ -375,7 +377,8 @@
     <SpinnerButton
         disabled={submitDisabled}
         on:click={handleSubmit}
-        spinning={submitSpinning}>
+        spinning={submitSpinning}
+    >
         Add
     </SpinnerButton>
 </form>

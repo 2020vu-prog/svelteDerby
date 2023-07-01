@@ -174,7 +174,8 @@
         number={params.number}
         at={safeGetAt($driverMap, params.number)}
         isWinner=""
-        phaseLetter="" />
+        phaseLetter=""
+    />
 </div>
 <hr />
 <br />
@@ -188,7 +189,7 @@
         {numPhasesWon}/{racePhaseList.length}
         <br />
         <strong>Avg. Win Time:</strong>
-        {phaseWinSum > 0 ? Math.round(phaseWinSum / numPhasesWon) : '--'} ms
+        {phaseWinSum > 0 ? Math.round(phaseWinSum / numPhasesWon) : "--"} ms
     </div>
     <div class="column">
         <h2>Heats:</h2>
@@ -198,7 +199,7 @@
         {numHeatsWon}/{numHeatsRaced}
         <br />
         <strong>Avg. Win Time:</strong>
-        {heatWinSum > 0 ? Math.round(heatWinSum / numHeatsWon) : '--'} ms
+        {heatWinSum > 0 ? Math.round(heatWinSum / numHeatsWon) : "--"} ms
         <br />
     </div>
 </div>

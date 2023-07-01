@@ -51,7 +51,8 @@
         alt="noflag"
         src="data/checkered-flag-svgrepo-com.svg"
         width="25px"
-        style="visibility:hidden" />
+        style="visibility:hidden"
+    />
 {/if}
 
 <b class="bigText">{number}</b>

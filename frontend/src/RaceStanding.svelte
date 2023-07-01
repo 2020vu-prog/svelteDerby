@@ -77,7 +77,6 @@
 </script>
 
 {#if shouldRender(standing, at)}
-
     <Card class="mt-3 border border-info cjw-border-5">
         <CardHeader class="bg-info text-white">
             <CardTitle>
@@ -88,20 +87,21 @@
                         <EllipsisButton
                             on:message={toggleToolbar}
                             dbName="RaceStanding"
-                            dbKey={standing.classKey} />
+                            dbKey={standing.classKey}
+                        />
                     {/if}
                 </span>
             </CardTitle>
         </CardHeader>
         <CardBody>
-
             <ul class="list-group">
                 <li class="list-group-item">
                     <CarAndDriver
                         number={standing.carNumbers[0]}
                         isWinner={isWinner(1, 0, at)}
                         phaseLetter=""
-                        at={safeGetAt($driverMap, standing.carNumbers[0])} />
+                        at={safeGetAt($driverMap, standing.carNumbers[0])}
+                    />
                     <span class="spanRight">
                         {#if showTag(1, at)}
                             <Badge pill class="bigText">{showTag(1, at)}</Badge>
@@ -128,7 +128,8 @@
                         number={standing.carNumbers[1]}
                         isWinner={isWinner(2, 0, at)}
                         phaseLetter=""
-                        at={safeGetAt($driverMap, standing.carNumbers[1])} />
+                        at={safeGetAt($driverMap, standing.carNumbers[1])}
+                    />
                     <span class="spanRight">
                         {#if showTag(2, at)}
                             <Badge pill class="bigText">{showTag(2, at)}</Badge>
@@ -156,15 +157,15 @@
         {#if showToolbar}
             <CardFooter
                 style="padding: 5px 1px !important"
-                class="bg-info text-white">
-
+                class="bg-info text-white"
+            >
                 <ComponentToolbar
                     dbName="RaceStanding"
                     dbKey={standing.classKey}
                     bracketLink={getBracketLink(standing)}
-                    cn={standing.carNumbers} />
+                    cn={standing.carNumbers}
+                />
             </CardFooter>
         {/if}
-
     </Card>
 {/if}

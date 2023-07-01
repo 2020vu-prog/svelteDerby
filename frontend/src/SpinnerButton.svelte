@@ -42,7 +42,8 @@
     class="btn {btnClass}"
     bind:this={thisButton}
     type="button"
-    on:click={doClick}>
+    on:click={doClick}
+>
     <slot />
     {#if spinning}
         <img alt="spinner" src="data/circles.svg" width="25px" />

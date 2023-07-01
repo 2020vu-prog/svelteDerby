@@ -94,31 +94,38 @@
 {#if $showBottomNav}
     <div
         class="bottomNavScrollPlaceholder"
-        style="height: {placeholderHeight};" />
+        style="height: {placeholderHeight};"
+    />
 {/if}
 <div class="footer">
-
     <StatusMessage />
     {#if $showBottomNav}
         <div
             bind:this={thisBottomNav}
             class="navbar"
             id="bottomNavBar"
-            style="z-index:20">
+            style="z-index:20"
+        >
             {#each $selectedToolbarList as item, index (item.path)}
                 <a
                     href="/#/{item.path}"
-                    style="background-color: {getIsSelected(item.path, $location) ? $theme : '#333'}">
+                    style="background-color: {getIsSelected(
+                        item.path,
+                        $location
+                    )
+                        ? $theme
+                        : '#333'}"
+                >
                     {item.text}
                 </a>
             {/each}
             <a
                 href="javascript:void(0);"
                 class="icon"
-                on:click|preventDefault={myFunction}>
+                on:click|preventDefault={myFunction}
+            >
                 &#9776;
             </a>
         </div>
     {/if}
-
 </div>
