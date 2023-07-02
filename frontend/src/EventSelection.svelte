@@ -37,8 +37,13 @@
         populateSelectedEventMap(currentViewMode);
 
         const orgEvents = Object.values(selectedEventMap);
+        /*
         orgEvents.sort((a, b) => {
             return getRaceName(a).localeCompare(getRaceName(b));
+        });
+        */
+        orgEvents.sort((a, b) => {
+            return getRaceDate(b) - getRaceDate(a);
         });
         return orgEvents;
     };
@@ -89,6 +94,12 @@
     };
     const getRaceName = (config) => {
         return config.name ? config.name : config.orgId;
+    };
+    const getRaceDate = (config) => {
+        return config.at;
+    };
+    const fmtRaceDate = (config) => {
+        return new Date(config.at).toLocaleDateString();
     };
 
     function getInactiveMode(ignoredParamater) {
@@ -141,6 +152,7 @@
                     <CardBody>
                         <div on:click={() => doSelect(eventConfig)}>
                             <a href="javascript:void(0);">
+                                [{fmtRaceDate(eventConfig)}]
                                 {getRaceName(eventConfig)}
                             </a>
                         </div>
