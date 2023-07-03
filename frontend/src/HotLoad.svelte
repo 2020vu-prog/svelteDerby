@@ -28,6 +28,10 @@
 
     import aws_exports from "./aws-exports";
     import { exclude_internal_props } from "svelte/internal";
+    //var mqSem = require("semaphore")(1);
+    import { Lock } from "semaphore-async-await";
+    const mqttSubLock = new Lock(1);
+
     const { v4: uuidv4 } = require("uuid");
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -132,15 +136,29 @@
             },
         });
 
-        //syncAutoAnnounceSubscription();
+        syncAutoAnnounceSubscription();
+        syncAutoAnnounceSubscription();
+        syncAutoAnnounceSubscription();
         //syncVideoCaptureSubscription();
     }
 
     // toggle subscription when prefs change.
-    //$: syncAutoAnnounceSubscription($autoAnnounceResults);
+    $: syncAutoAnnounceSubscription($autoAnnounceResults);
     //$: syncVideoCaptureSubscription($mqttTimerSubscribe);
     $: syncMapSubscriptions($mqttMapSubscribe);
 
+    async function syncAutoAnnounceSubscription() {
+        const shouldSub = $autoAnnounceResults && $mqttEnabled && !isArchived();
+        log.debug("syncAutoAnnounceSubscription: voice ", shouldSub);
+
+        const paTopic = "derby/" + $raceConfig.orgId + "/pa";
+        await syncSubscription(shouldSub, paTopic, onVoiceMqttData);
+        log.debug("syncAutoAnnounceSubscription: done.");
+    }
+    function onVoiceMqttData(json, topic) {
+        log.debug("onVoiceMqttData: begin:", json);
+        announceFromMqtt(json);
+    }
     function potentialReloadPage() {
         log.debug("potentialReloadPage: begin");
         const oneMinute = 60 * 1000;
@@ -217,6 +235,21 @@
 
     async function syncSubscription(subEnabled, topicP, onMsg) {
         const tag = "tag:syncSubscription:" + topicP;
+        log.debug(`${tag} begin`);
+        /*
+        mqSem.take(function () {
+            _syncSubscription(subEnabled, topicP, onMsg);
+            mqSem.leave()
+        });
+        */
+        await mqttSubLock.acquire();
+        await _syncSubscription(subEnabled, topicP, onMsg);
+        await mqttSubLock.release();
+        log.debug(`${tag} done`);
+    }
+    async function _syncSubscription(subEnabled, topicP, onMsg) {
+        const tag = "tag:_syncSubscription:" + topicP;
+        log.debug(`${tag} begin`);
         if (activeIotWatch && activeIotWatch.plugged) {
         } else {
             log.debug(`${tag} skipping, not ready`);
@@ -240,6 +273,7 @@
                 log.debug(`${tag}: ${topicP} unsubscribe stand down`);
             }
         }
+        log.debug(`${tag} done`);
     }
     async function mySubscribe(topicP, onMsg) {
         const tag = "tag:mySubscribe";
@@ -480,12 +514,12 @@
     var mounted = false;
     const pendingAudioList = [];
 
+    watchMqttSubscriptions();
     onMount(async () => {
         pageLoadTimeMs = new Date().getTime();
         ecFromDexie = await db.EventConfig.toArray();
         mounted = true;
         checkIfRaceFrozenAndDisplayMessage();
-        watchMqttSubscriptions();
     });
     function watchMqttSubscriptions() {
         log.debug("syncMap HotLoad watchMqttSubscriptions. 0");
@@ -494,12 +528,10 @@
             syncMapSubscriptions();
         }, 60000);
 
-        /*
         onDestroy(() => {
             log.debug("syncMap HotLoad watchMqttSubscriptions. 9");
             clearInterval(interval);
         });
-        */
     }
 
     async function announceFromMqtt(mqMsg) {
