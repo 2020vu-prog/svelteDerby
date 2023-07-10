@@ -347,7 +347,7 @@ entityFactories[BrackePosLit] = class BracketPos extends EntityBase {
 };
 
 entityFactories["RacePhase"] = class RacePhase extends EntityBase {
-    static members = ["cn", "phr", "rs", "pl", "Bp"];
+    static members = ["cn", "phr", "rs", "pl", "Bp", "pt"];
     static canBuild(json) {
         return json.PK && json.PK.endsWith(RacePhaseEid);
     }
@@ -385,14 +385,38 @@ entityFactories["RacePhase"] = class RacePhase extends EntityBase {
     get carNumbers() {
         return this.cn;
     }
+    set carNumbers(cn) {
+        return (this.cn = cn);
+    }
     get phaseLiteral() {
         return this.pl;
     }
     set phaseLiteral(pl) {
         return (this.pl = pl);
     }
+    get phaseType() {
+        return this.pt;
+    }
+    set phaseType(pt) {
+        return (this.pt = pt);
+    }
+    get pendingNeeded() {
+        if (this.pt && this.pt.startsWith("H")) {
+            return false;
+        }
+        if (this.pt && this.pt.startsWith("T")) {
+            return false;
+        }
+        if (this.pt && this.pt.startsWith("F")) {
+            return false;
+        }
+        return true;
+    }
     isWinner(lane, shouldWinOnTie) {
         if (!this.phr) {
+            return undefined;
+        }
+        if (!this.pendingNeeded) {
             return undefined;
         }
         var phaseWinTime = this.getPhaseDeltaMS();
@@ -460,6 +484,9 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     }
     get carNumbers() {
         return this.cn;
+    }
+    set carNumbers(cn) {
+        return (this.cn = cn);
     }
     get tags() {
         if (this.tg) {

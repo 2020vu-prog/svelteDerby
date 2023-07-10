@@ -35,6 +35,7 @@ export async function getHistoryEntity(PK, SK, at) {
     return rc;
 }
 export async function fmtChartPosition(RpRs) {
+    const pendingNeeded = isPendingNeeded(RpRs);
     if (RpRs.bracketPos && RpRs.bracketPos.includes(":")) {
         const [bmdKey, heat] = RpRs.bracketPos.split(":");
         log.debug("getting bmd:", bmdKey);
@@ -42,10 +43,31 @@ export async function fmtChartPosition(RpRs) {
         const bmd = await db.BracketMetaData.get(bmdKey);
         log.debug("found bmd:", bmd);
         if (bmd) {
-            return `${bmd.bracketName} -- Heat: ${heat}`;
+            return [`${bmd.bracketName} -- Heat: ${heat}`, pendingNeeded];
         }
     }
-    return "Heat: Adhoc";
+    if (RpRs.pt && RpRs.pt.startsWith("H")) {
+        return ["Hot Run", pendingNeeded];
+    }
+    if (RpRs.pt && RpRs.pt.startsWith("T")) {
+        return ["Trial Run", pendingNeeded];
+    }
+    if (RpRs.pt && RpRs.pt.startsWith("F")) {
+        return ["Fun Run", pendingNeeded];
+    }
+    return ["Heat: Adhoc", pendingNeeded];
+}
+export function isPendingNeeded(RpRs) {
+    if (RpRs.pt && RpRs.pt.startsWith("H")) {
+        return false;
+    }
+    if (RpRs.pt && RpRs.pt.startsWith("T")) {
+        return false;
+    }
+    if (RpRs.pt && RpRs.pt.startsWith("F")) {
+        return false;
+    }
+    return true;
 }
 
 export function getBracketLink(RpRs) {

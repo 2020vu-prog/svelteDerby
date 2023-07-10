@@ -9,10 +9,13 @@
     export let phaseLetter;
     export let timerLink;
     export let number;
+    export let phaseClass = "btn-warning";
     let name = "";
     export let at;
     onMount(async () => {
-        log.debug(`CarAndDriver onMount: ${number} `);
+        log.debug(
+            `CarAndDriver onMount: ${number} winner ${isWinner} pl ${phaseLetter} `
+        );
         name = getDriverName(number, at);
     });
     $: {
@@ -43,7 +46,7 @@
 {#if isWinner}
     <img alt="flag" src="data/checkered-flag-svgrepo-com.svg" width="25px" />
 {:else if phaseLetter}
-    <button type="button" class="btn btn-warning" on:click={() => gotoTimer()}>
+    <button type="button" class="btn {phaseClass}" on:click={() => gotoTimer()}>
         {phaseLetter}
     </button>
 {:else}

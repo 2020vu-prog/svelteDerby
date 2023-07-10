@@ -245,7 +245,9 @@
                 </select>
                 <div id="seedACarInput">
                     <input
-                        type="number"
+                        type="text"
+                        pattern="\d*"
+                        inputmode="numeric"
                         bind:this={posForm.A.input}
                         bind:value={posForm.A.carNumber}
                         placeholder="Car Number 1"
@@ -276,7 +278,9 @@
                 </select>
                 <div id="seedBCarInput">
                     <input
-                        type="number"
+                        type="text"
+                        pattern="\d*"
+                        inputmode="numeric"
                         bind:this={posForm.B.input}
                         bind:value={posForm.B.carNumber}
                         placeholder="Car Number 2"

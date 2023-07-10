@@ -32,7 +32,7 @@
     const updateBoundVars = async (paramStanding) => {
         at = standing.at;
         hhmmss = hhmmssFmt(standing.at);
-        chartPosition = await fmtChartPosition(standing);
+        [chartPosition] = await fmtChartPosition(standing);
     };
     $: {
         log.debug("rp changed:", at);

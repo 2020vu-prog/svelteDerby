@@ -12,17 +12,24 @@
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
     import { db } from "./eventDb.js";
+    import { fmtChartPosition } from "./utils.js";
 
     export let params = {};
 
+    let rpFromDexie = {};
+    let pendingNeeded = true;
     var submitDisabled = false;
     var submitSpinning = false;
 
     log.debug("ManualTimeAdd", params);
 
     onMount(async () => {
+        let ignoreHeat = "";
         checkAndApplyURLParams();
         await getCarNumbersFromRP();
+        log.debug("ManualTimeAdd rpd pn:", rpFromDexie);
+        [ignoreHeat, pendingNeeded] = await fmtChartPosition(rpFromDexie);
+        //log.debug("ManualTimeAdd pn:", pendingNeeded);
     });
 
     function validateTimerData(laneX) {
@@ -135,7 +142,6 @@
     }
 
     async function getCarNumbersFromRP() {
-        var rpFromDexie;
         rpFromDexie = await db.RacePhase.get(params.rpKey);
         carNumber1 = rpFromDexie.cn[0];
         carNumber2 = rpFromDexie.cn[1];
@@ -162,46 +168,52 @@
 </div>
 
 <form>
-    <div class="row">
-        <div class="column">
-            <h3>Lane 1</h3>
-            <h4>Car Number: {carNumber1}</h4>
-            <h5>Racer: {getDriverName(Number(carNumber1))}</h5>
-            <label>
-                Lane 1 Won by
-                <input
-                    size="4"
-                    type="number"
-                    bind:value={resultForm.lane1}
-                    placeholder="Lane1[{carNumber1}] MS"
-                />
-                MS
-            </label>
-        </div>
+    {#if pendingNeeded}
+        <div class="row">
+            <div class="column">
+                <h3>Lane 1</h3>
+                <h4>Car Number: {carNumber1}</h4>
+                <h5>Racer: {getDriverName(carNumber1)}</h5>
+                <label>
+                    Lane 1 Won by
+                    <input
+                        size="4"
+                        type="number"
+                        bind:value={resultForm.lane1}
+                        placeholder="Lane1[{carNumber1}] MS"
+                    />
+                    MS
+                </label>
+            </div>
 
-        <div class="column">
-            <h3>Lane 2</h3>
-            <h4>Car Number: {carNumber2}</h4>
-            <h5>Racer: {getDriverName(Number(carNumber2))}</h5>
-            <label>
-                Lane 2 Won by
-                <input
-                    size="4"
-                    type="number"
-                    bind:value={resultForm.lane2}
-                    placeholder="Lane2[{carNumber2}] MS"
-                />
-                MS
-            </label>
+            <div class="column">
+                <h3>Lane 2</h3>
+                <h4>Car Number: {carNumber2}</h4>
+                <h5>Racer: {getDriverName(carNumber2)}</h5>
+                <label>
+                    Lane 2 Won by
+                    <input
+                        size="4"
+                        type="number"
+                        bind:value={resultForm.lane2}
+                        placeholder="Lane2[{carNumber2}] MS"
+                    />
+                    MS
+                </label>
+            </div>
         </div>
-    </div>
-    <div style="width: 100%; text-align: center;">
-        <SpinnerButton
-            disabled={submitDisabled}
-            on:click={handleSubmit}
-            spinning={submitSpinning}
-        >
-            Apply Time
+        <div style="width: 100%; text-align: center;">
+            <SpinnerButton
+                disabled={submitDisabled}
+                on:click={handleSubmit}
+                spinning={submitSpinning}
+            >
+                Apply Time
+            </SpinnerButton>
+        </div>
+    {:else}
+        <SpinnerButton on:click={handleSubmit} spinning={submitSpinning}>
+            Complete Phase
         </SpinnerButton>
-    </div>
+    {/if}
 </form>

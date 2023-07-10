@@ -175,6 +175,9 @@ const stringIsTrue = (stringValue) => {
     return stringValue.toLowerCase() == "true" ? true : false;
 };
 
+const noopAsync = async (json) => {
+    return []; // empty list will cause rsUpdate to stand down
+};
 const applyFinishTime = async (json) => {
     log.debug("applyFinishTime 413: " + JSON.stringify(json));
     const tgtRpList = await ddbUtils.ddbQueryRpByKey(json);
@@ -186,10 +189,13 @@ const applyFinishTime = async (json) => {
     }
     const tgtRp = tgtRpList[0];
     tgtRp.phr = json.phr; //TODO: verify client sent array of ints in "phr"
-    const rsPromise = ddbUtils.ddbQueryRsByKey({
-        orgId: tgtRp.orgId,
-        SK: tgtRp.rs,
-    });
+    let rsPromise = noopAsync(); // default to noop.
+    if (isPendingNeeded(tgtRp)) {
+        rsPromise = ddbUtils.ddbQueryRsByKey({
+            orgId: tgtRp.orgId,
+            SK: tgtRp.rs,
+        });
+    }
     const rpUpdatePromise = ddbUtils.addSingle(tgtRp);
     const [rsFoundList, rpUpdate] = await Promise.all([
         rsPromise,
@@ -230,10 +236,12 @@ const applyFinishTime = async (json) => {
         }
         await Promise.all(finishPromises);
     } else {
-        return {
-            status: "error",
-            error: "No raceStanding found!",
-        };
+        if (isPendingNeeded(tgtRp)) {
+            return {
+                status: "error",
+                error: "No raceStanding found!",
+            };
+        }
     }
 
     return {
@@ -499,32 +507,24 @@ const deleteRacePhase = async (json) => {
     return await ddbUtils.addSingle(rpFound);
 };
 
+function isPendingNeeded(racePhase) {
+    return typeof racePhase.pt === "null" || racePhase.pt === "R";
+}
 async function addBlocks(json) {
-    log.debug("addBlocks: " + JSON.stringify(json));
+    log.debug("addBlocks: " + JSON.stringify(json), typeof json.pt);
     json.PK = ":RP"; // force RacePhase
 
+    const pendingNeeded = isPendingNeeded(json);
+    log.debug("addBlocks 2: " + JSON.stringify(json), pendingNeeded);
     const waitRp = ddbUtils.ddbQueryRpNextOnBlocks({ orgId: json.orgId });
     //const waitRp = ddbUtils.ddbQueryRpDuplicateCheck(json);
-    const waitRs = ddbUtils.ddbQueryRsExistsAndPendingCheck(json);
+    let waitRs = noopAsync(); // default to noop.
+    if (pendingNeeded) {
+        waitRs = ddbUtils.ddbQueryRsExistsAndPendingCheck(json);
+    }
     const [rpFound, rsFound] = await Promise.all([waitRp, waitRs]);
     log.debug("rpFound", rpFound);
     log.debug("rsFound", rsFound);
-    if (rsFound.length == 0) {
-        return {
-            status: "error",
-            error: "No Pending race found",
-        };
-    }
-    if (rsFound[0].nextRace().toString() == json.cn.toString()) {
-    } else {
-        return {
-            status: "error",
-
-            error: "Cars in wrong lane(s)",
-            expected: rsFound[0].nextRace().toString(),
-            requested: json.cn.toString(),
-        };
-    }
     if (rpFound.length > 0) {
         return {
             status: "error",
@@ -533,18 +533,36 @@ async function addBlocks(json) {
                 rpFound[0].carNumbers.toString(),
         };
     }
+    if (pendingNeeded) {
+        if (rsFound.length == 0) {
+            return {
+                status: "error",
+                error: "No Pending race found",
+            };
+        }
+        if (rsFound[0].nextRace().toString() == json.cn.toString()) {
+        } else {
+            return {
+                status: "error",
 
-    // link racePhase to RaceStanding!
-    json["rs"] = rsFound[0].SK;
+                error: "Cars in wrong lane(s)",
+                expected: rsFound[0].nextRace().toString(),
+                requested: json.cn.toString(),
+            };
+        }
 
-    json["pl"] = rsFound[0].getPhaseLiteral(json.cn);
-    if (rsFound[0].Bp) json["Bp"] = rsFound[0].Bp;
+        // link racePhase to RaceStanding!
+        json["rs"] = rsFound[0].SK;
+
+        json["pl"] = rsFound[0].getPhaseLiteral(json.cn);
+        if (rsFound[0].Bp) json["Bp"] = rsFound[0].Bp;
+    }
 
     const rpResult = await ddbUtils.addSingle(json);
     log.debug("addBlocks tgtRp:", rpResult);
 
     await announceResults.formatAndSubmitNextOnBlocks(
-        rsFound[0],
+        pendingNeeded ? rsFound[0] : null,
         rpResult.entity
     );
     return rpResult;

@@ -23,6 +23,7 @@
         getBracketLink,
         hhmmssFmt,
         getHistoryEntity,
+        isPendingNeeded,
     } from "./utils.js";
     export let compressedLayout;
     export let refreshTime;
@@ -36,7 +37,9 @@
     let rp = racePhase;
     let hhmmss;
     let chartPosition;
+    let pendingNeeded = true;
     let bgColor;
+    let phaseClass;
     let showToolbar = false;
 
     function isHistory() {
@@ -55,8 +58,13 @@
         }
         rp = racePhase;
         hhmmss = hhmmssFmt(at);
-        bgColor = getBgColor();
-        chartPosition = await fmtChartPosition(racePhase);
+        [chartPosition, pendingNeeded] = await fmtChartPosition(racePhase);
+        bgColor = getBgColor(pendingNeeded);
+        if (bgColor === "Gray") {
+            phaseClass = "btn-light";
+        } else {
+            phaseClass = "btn-warning";
+        }
         boundVars = true;
     };
     $: {
@@ -70,6 +78,9 @@
             log.debug("nob getBgColor key:" + JSON.stringify($nextOnBlockKey));
             log.debug("nob refresh:", refreshTime);
 
+            if (!pendingNeeded) {
+                return "yellow";
+            }
             return racePhase.rs ? "Green" : "Red";
         } else {
             return "Gray";
@@ -86,10 +97,29 @@
         }
         return phaseWinTime.toString().padStart(3, "0");
     };
+    const getPhaseClass = (racePhase) => {};
     const getPhaseIcon = (racePhase) => {
+        const i = _getPhaseIcon(racePhase);
+        if (i === "H") {
+            return "🔥";
+        }
+        if (i === "F") {
+            return "😊";
+        }
+        if (i === "T") {
+            //return "🧪";
+            return "🥼";
+        }
+        return i;
+    };
+    const _getPhaseIcon = (racePhase) => {
+        if (!isPendingNeeded(racePhase)) {
+            return racePhase.pt.charAt(0); //phasetype as icon for hot/trial/test
+        }
         if (racePhase.phaseResults) {
             return undefined; // No Phase icon for completed phase.
         }
+
         return racePhase.phaseLiteral;
     };
     const getPhaseLetter = (racePhase) => {
@@ -169,6 +199,7 @@
                             number={rp.carNumbers[0]}
                             isWinner={racePhase.isWinner(1, true)}
                             phaseLetter={getPhaseIcon(rp)}
+                            {phaseClass}
                             timerLink={getTimerLink(rp)}
                             at={safeGetAt($driverMap, rp.carNumbers[0])}
                         />
@@ -185,6 +216,7 @@
                             number={rp.carNumbers[1]}
                             isWinner={racePhase.isWinner(2, true)}
                             phaseLetter={getPhaseIcon(rp)}
+                            {phaseClass}
                             timerLink={getTimerLink(rp)}
                             at={safeGetAt($driverMap, rp.carNumbers[1])}
                         />

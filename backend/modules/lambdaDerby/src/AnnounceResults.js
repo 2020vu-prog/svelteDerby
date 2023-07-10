@@ -191,7 +191,7 @@ class AnnounceResults {
     }
     async formatAndSubmitNextOnBlocks(tgtRs, tgtRp) {
         log.debug("formatAndSubmitNextOnBlocks rs: ", tgtRs, " rp: ", tgtRp);
-        const orgId = tgtRs.orgId;
+        const orgId = tgtRp.orgId;
         const mediaPrefix = this.getMediaPrefix(tgtRp);
         const paMessage = await this.formatNextOnBlockAnnouncement(
             orgId,
@@ -233,6 +233,10 @@ class AnnounceResults {
         log.debug(`lookupNames: ${orgId} cars:`, this.namesByCarNumber);
     }
     async lookupName(carNumber, orgId) {
+        if (!carNumber) {
+            log.debug(`lookupName: SKIPPING: [${carNumber}] org: ${orgId}`);
+            return;
+        }
         if (this.ddbUtils) {
             const ptcp = await this.ddbUtils.ddbQueryPkSk(
                 `${orgId}:PTCP`,
@@ -266,19 +270,32 @@ class AnnounceResults {
         await this.lookupNames(tgtRp.carNumbers, orgId);
         var rc = "";
 
-        const spokenCarAndDriver1 = this.getSpokenCarAndDriver(
-            tgtRp.carNumbers[0]
+        const spokenPhase = this.expandPhaseForSpeech(tgtRp.pl, tgtRp.pt);
+
+        rc += `Attention race fans! Next up ${spokenPhase}. `;
+        if (tgtRp.carNumbers[0]) {
+            const spokenCarAndDriver = this.getSpokenCarAndDriver(
+                tgtRp.carNumbers[0]
+            );
+            rc += ` In lane 1, is ${spokenCarAndDriver}.`;
+        }
+        if (tgtRp.carNumbers[1]) {
+            const spokenCarAndDriver = this.getSpokenCarAndDriver(
+                tgtRp.carNumbers[1]
+            );
+            rc += ` In lane 2, is ${spokenCarAndDriver}.`;
+        }
+
+        const ssml = `<speak>${rc}</speak>`.replace(
+            new RegExp("  *", "g"),
+            " "
         );
-        const spokenCarAndDriver2 = this.getSpokenCarAndDriver(
-            tgtRp.carNumbers[1]
-        );
-        const spokenPhase = this.expandPhaseForSpeech(tgtRp.pl);
-        rc += `Attention race fans! Next up ${spokenPhase}. In lane 1, is ${spokenCarAndDriver1}. In lane 2, is${spokenCarAndDriver2}`;
-        const ssml = `<speak>${rc}</speak>`;
+
         log.debug("NOB ANNOUNCEMENT RESULT ssml: ", ssml);
         return ssml;
     }
     async formatResultAnnouncement(tgtRs, orgId) {
+        console.log("formatResultAnnouncement:", tgtRs);
         var rc = "";
         var aPhaseMsg = "";
         var aWinCarNumber = "";
@@ -291,7 +308,7 @@ class AnnounceResults {
         await this.lookupNames(tgtRs.carNumbers, orgId);
 
         [aWinCarNumber, aPhaseMsg] = this.formatResultMsg(
-            this.expandPhaseForSpeech("A"),
+            this.expandPhaseForSpeech("A", ""),
             tgtRs.carNumbers,
             tgtRs.phase1DeltaMS
         );
@@ -301,7 +318,7 @@ class AnnounceResults {
         }
         if (isDefined(tgtRs.phase2DeltaMS)) {
             [bWinCarNumber, bPhaseMsg] = this.formatResultMsg(
-                this.expandPhaseForSpeech("B"),
+                this.expandPhaseForSpeech("B", ""),
                 tgtRs.carNumbers,
                 tgtRs.phase2DeltaMS
             );
@@ -331,8 +348,20 @@ class AnnounceResults {
         log.debug("ANNOUNCEMENT RESULT ssml: ", ssml);
         return ssml;
     }
-    expandPhaseForSpeech(pl) {
-        return `Phase <say-as interpret-as="characters" >${pl}</say-as>`;
+    expandPhaseForSpeech(pl, pt) {
+        if (!pt || pt === "R") {
+            return `Phase <say-as interpret-as="characters" >${pl}</say-as>`;
+        }
+        if (pt.startsWith("T")) {
+            return `is a Trial Run`;
+        }
+        if (pt.startsWith("F")) {
+            return `is a Fun Run`;
+        }
+        if (pt.startsWith("H")) {
+            return `is a Hot Run`;
+        }
+        return "Unknown Phase Type";
     }
     expandDigitsForSpeech(cn) {
         return `<say-as interpret-as="characters" >${cn}</say-as>`;
@@ -364,8 +393,13 @@ class AnnounceResults {
     }
     getSpokenCarAndDriver(carNumber) {
         const spokenCar = this.expandDigitsForSpeech(carNumber.toString());
+        let rc = ` Car ${spokenCar}`;
         const spokenDriver = this.getDrivenByPhoneticName(carNumber);
-        return ` Car ${spokenCar}, ${spokenDriver} `;
+        if (spokenDriver) {
+            rc += `, ${spokenDriver}`;
+        }
+        //return ` Car ${spokenCar}, ${spokenDriver} `;
+        return rc;
     }
     formatResultMsgWithCar(winningCar, phaseDescriptor, phaseResultMS) {
         var rc = "";

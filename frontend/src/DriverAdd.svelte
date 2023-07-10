@@ -131,7 +131,7 @@
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
-            number: Number(driverForm.carNumber),
+            number: driverForm.carNumber,
             name: driverForm.driverName,
             pName: driverForm.pName,
             pType: driverForm.pType ? driverForm.pType : undefined,
@@ -245,7 +245,9 @@
         Car Number:
         <input
             id="carNumber"
-            type="number"
+            type="text"
+            pattern="\d*"
+            inputmode="numeric"
             bind:value={driverForm.carNumber}
             placeholder="Car Number"
             on:keyup={() => {
