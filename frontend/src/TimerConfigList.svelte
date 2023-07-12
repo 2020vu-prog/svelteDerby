@@ -74,27 +74,18 @@ report elapsed time split(s).
     <Card class="mtj-3 border border-info">
         <CardHeader class="bg-info text-white">
             <CardTitle>
-                <span on:click={() => navToTcDetail(tc)}>
+                <span on:keyup={() => {}} on:click={() => navToTcDetail(tc)}>
                     {tc.sortKey}
                     <nbsp />
                     {annotat(tc)}
                 </span>
                 <span class="spanRight">
-                    <EllipsisButton
-                        on:message={toggleToolbar}
-                        dbName="Foo"
-                        dbKey={tc.at}
+                    <TimerPbHealth
+                        timerName={tc.timerName}
+                        timerId={tc.timerMqttClientId}
                     />
                 </span>
             </CardTitle>
         </CardHeader>
-        <CardBody>
-            <div style="display: inline">
-                <TimerPbHealth
-                    timerName={tc.timerName}
-                    timerId={tc.timerMqttClientId}
-                />
-            </div>
-        </CardBody>
     </Card>
 {/each}
