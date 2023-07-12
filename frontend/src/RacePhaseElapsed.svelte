@@ -15,6 +15,7 @@
     import { statusMessage, raceConfig, axios } from "./stores";
 
     export let params = {};
+    let sampleDemoData = true;
     let rpKey = "";
     let spinning = true;
     onMount(async () => {
@@ -49,9 +50,12 @@
 
                 const fbList = response.data.fbList;
                 log.debug("fbList: ", fbList);
-                const fbJson = JSON.parse(fbList);
-                log.debug("fbJson: ", fbJson);
-                recalcLaneData(fbJson);
+                if (fbList) {
+                    const fbJson = JSON.parse(fbList);
+                    log.debug("fbJson: ", fbJson);
+                    recalcLaneData(fbJson);
+                    sampleDemoData = false;
+                }
             }
         } catch (err) {
             $statusMessage = {
@@ -328,6 +332,9 @@
         <img alt="spinner" src="data/circles.svg" width="250px" />
     </div>
 {:else}
+    {#if sampleDemoData}
+        <h1 style="color:red">SAMPLE -- DEMO DATA</h1>
+    {/if}
     <Table striped>
         <thead>
             <tr>

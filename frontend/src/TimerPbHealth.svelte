@@ -82,6 +82,7 @@
             recentHealth.ageSeconds = Math.floor(
                 (new Date().getTime() - healthMs) / 1000
             );
+            recentHealth.cpuIncrementingUptime=recentHealth.cpuUptime+recentHealth.ageSeconds
             recentHealth = recentHealth;
         }
     }
@@ -174,6 +175,7 @@
                         healthMs,
                         new Date().getTime()
                     );
+                    recentHealth.cpuIncrementingUptime=recentHealth.cpuUptime
                     recentHealth.tempFmt = `${R100(recentHealth.cpuTempC)}°C`;
                     healthText = healthTextDefault;
                     if (recentHealth.ageSeconds > 72) {
@@ -242,7 +244,7 @@
                 Last Status: {secondsToHHMMSS(recentHealth.ageSeconds)} seconds ago
             </li>
             <li>CPU Temp: {recentHealth.tempFmt}</li>
-            <li>CPU Uptime: {secondsToHHMMSS(recentHealth.cpuUptime)}</li>
+            <li>CPU Uptime: {secondsToHHMMSS(recentHealth.cpuIncrementingUptime)}</li>
             {#if recentHealth.gpsInitialAcquisitionSecondsAfterBoot}
                 <li>
                     Gps Acquistion delay: {secondsToHHMMSS(
