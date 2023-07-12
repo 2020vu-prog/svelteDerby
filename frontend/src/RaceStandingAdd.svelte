@@ -21,15 +21,16 @@
     var submitDisabled = true;
     var submitSpinning = false;
     const PhaseTypes = {
-        R: { type: "2 Car Race" },
-        T: { type: "2 Car Trial" },
-        F: { type: "2 Car Fun Run" },
-        H1: { type: "Lane1 Hot Run", disabledLane: 2 },
-        T1: { type: "Lane1 Trial Run", disabledLane: 2 },
-        F1: { type: "Lane1 Fun Run", disabledLane: 2 },
-        H2: { type: "Lane2 Hot Run", disabledLane: 1 },
-        T2: { type: "Lane2 Trial Run", disabledLane: 1 },
-        F2: { type: "Lane2 Fun Run", disabledLane: 1 },
+        R: { type: "Race" },
+        T: { type: "Trial Run" },
+        F: { type: "Fun Run" },
+        H: { type: "Hot Run" },
+        //H1: { type: "Lane1 Hot Run", disabledLane: 2 },
+        //T1: { type: "Lane1 Trial Run", disabledLane: 2 },
+        //F1: { type: "Lane1 Fun Run", disabledLane: 2 },
+        //H2: { type: "Lane2 Hot Run", disabledLane: 1 },
+        //T2: { type: "Lane2 Trial Run", disabledLane: 1 },
+        //F2: { type: "Lane2 Fun Run", disabledLane: 1 },
     };
     let car1Disable = false;
     let car2Disable = false;
@@ -156,8 +157,14 @@
                 submitFocused = true;
             }
         } else {
-            submitDisabled = true;
-            submitDisabled = false; //test
+            if (
+                participantValid(carNumberForm.car1) ||
+                participantValid(carNumberForm.car2)
+            ) {
+                submitDisabled = false; //trial/fun/hot run
+            } else {
+                submitDisabled = true;
+            }
             //log.debug("sync add button FAIL");
         }
     }
