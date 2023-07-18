@@ -58,6 +58,12 @@
                         hostname: "none",
                         emoji: "❌",
                     });
+                } else {
+                    if (isProtobuf) {
+                        activeTimerList.sort((b, a) =>
+                            a.connectAt.localeCompare(b.connectAt)
+                        );
+                    }
                 }
                 log.debug("activeTimerList: ", activeTimerList);
                 //TODO: refreshDataFromDb();

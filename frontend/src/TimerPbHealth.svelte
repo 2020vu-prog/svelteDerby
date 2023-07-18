@@ -239,8 +239,7 @@
     </Button>
     <Collapse isOpen={open} {toggle}>
         <ul>
-            <li>Timer Id: {timerPbConfig.timerMqttClientId}</li>
-            <li>Timer Idp: {timerId}</li>
+            <li>Timer Id: {timerId}</li>
             <li>
                 Last Status: {secondsToHHMMSS(recentHealth.ageSeconds)} seconds ago
             </li>
