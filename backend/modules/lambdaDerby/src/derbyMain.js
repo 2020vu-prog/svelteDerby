@@ -1635,14 +1635,14 @@ async function addOrgUser(json) {
 async function getUserRoles(orgIz, email) {
     var roleList = getLegacyRoles(orgIz, email);
     var rolesByUser = await ddbUtils.ddbQueryOrgPerms({ orgIz: orgIz });
-    log.debug("rolesByUser event", rolesByUser);
+    log.debug(`rolesByUser event [${email}]`, rolesByUser);
 
     /*
     if (rolesByUser && rolesByUser[email] && rolesByUser[email].roleList) {
         roleList = [...roleList, ...rolesByUser[email].roleList];
     }
     */
-    if (rolesByUser && rolesByUser.length > 0) {
+    if (email && rolesByUser && rolesByUser.length > 0) {
         rolesByUser = rolesByUser.filter(
             (ouser) => ouser.SK.toLowerCase() === email.toLowerCase()
         );

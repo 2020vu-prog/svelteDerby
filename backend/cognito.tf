@@ -138,6 +138,21 @@ export default awsmobile;
   filename = "${path.module}/../frontend/src/aws-exports.js"
 }
 
+resource "null_resource" "anon_cognito_user" {
+  triggers = {
+    user_pool_id = "${aws_cognito_user_pool.derbyUserPool.id}.20230731"
+  }
+  provisioner "local-exec" {
+    command = <<-EOT
+    aws cognito-idp admin-create-user --user-pool-id ${aws_cognito_user_pool.derbyUserPool.id} \
+         --username Anonymous \
+        --user-attributes Name=email,Value=anonymous@tbarn.com  
+    aws cognito-idp admin-set-user-password --permanent --user-pool-id ${aws_cognito_user_pool.derbyUserPool.id} --username Anonymous --password 'DERBYderby12345!' 
+    EOT
+    //command = "aws cognito-idp admin-create-user --user-pool-id ${aws_cognito_user_pool.derbyUserPool.id} --username Anonymous"
+  }
+}
+
 output "derbyUserPool" {
   value = aws_cognito_user_pool.derbyUserPool
 }
