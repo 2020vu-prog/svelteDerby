@@ -3,7 +3,7 @@ locals {
   dbName             = "DerbyMain"
   distDbName         = "DerbyDist"
   timerDbName        = "DerbyTimer"
-  elapsedTempDbName        = "ElapsedTemp"
+  elapsedTempDbName  = "ElapsedTemp"
   S3DistBucketPrefix = "derby-dst-bucket"
 }
 resource "aws_dynamodb_table" "timer-dynamodb-table" {
@@ -56,11 +56,11 @@ resource "aws_dynamodb_table" "derby-dynamodb-table" {
   }
 }
 resource "aws_dynamodb_table" "elapsed-temp-table" {
-  name             = local.elapsedTempDbName
-  billing_mode     = "PAY_PER_REQUEST"
-  hash_key         = "PK"
-  range_key        = "SK"
-  stream_enabled   = false
+  name           = local.elapsedTempDbName
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "PK"
+  range_key      = "SK"
+  stream_enabled = false
   attribute {
     name = "PK"
     type = "S"
