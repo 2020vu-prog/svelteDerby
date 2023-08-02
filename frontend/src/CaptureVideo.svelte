@@ -180,7 +180,7 @@
     var mainStream;
     function handleGotMedia(stream, snum) {
         log.debug("getUserMedia() got stream:", stream);
-        window.stream = stream;
+        //window.stream = stream; // why expose globally? chrome isn't closing stream...
 
         const gumVideo = document.querySelector(`video#gum${snum}`);
         gumVideo.srcObject = stream;
