@@ -10,6 +10,7 @@
     import { getTimerPbConfig, MqttMapSubscription } from "./utils.js";
     import { mqttMapData } from "./stores.js";
     export let timerId = "";
+    export let verbose = "truthyString";
     let timerTopic = "";
     const dispatch = createEventDispatcher();
     if (timerId) {
@@ -89,4 +90,6 @@
         return false;
     }
 </script>
-Id: {timerId}
+{#if verbose}
+    Id: {timerId}
+{/if}

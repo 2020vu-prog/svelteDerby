@@ -35,7 +35,7 @@
     } from "sveltestrap";
     import { querystring } from "svelte-spa-router";
     const { v4: uuidv4 } = require("uuid");
-    ``
+
     const searchParams = new URLSearchParams($querystring);
     const timerName = searchParams.get("timerName");
     const timerId = searchParams.get("timerId");
@@ -282,12 +282,12 @@
         const loIso = new Date(new Date().getTime() - lowMS).toISOString();
         const url = `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}&loIso=${loIso}`;
         try {
-            const histLoadingKey=                    uuidv4();
-                $statusMessage = {
-                    text: `loading History.`,
-                    type: "success",
-                    key: histLoadingKey,
-                };
+            const histLoadingKey = uuidv4();
+            $statusMessage = {
+                text: `loading History.`,
+                type: "success",
+                key: histLoadingKey,
+            };
             const response = await $axios.get($raceConfig.baseUrl + url);
             if (response.error) {
                 log.debug("getTimerHistoryFromApi:", response);

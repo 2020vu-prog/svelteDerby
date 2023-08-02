@@ -37,12 +37,12 @@
             : `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`;
         //const response = await axios.get($raceConfig.baseUrl + endPoint, {
         try {
-            const tsLoadingKey=                    uuidv4();
-                $statusMessage = {
-                    text: `loading ActiveTimers.`,
-                    type: "success",
-                    key: tsLoadingKey,
-                };
+            const tsLoadingKey = uuidv4();
+            $statusMessage = {
+                text: `loading ActiveTimers.`,
+                type: "success",
+                key: tsLoadingKey,
+            };
             const response = await $axios.get(
                 $raceConfig.baseUrl + activeTimerUrl
             );
@@ -59,7 +59,7 @@
                     TTL: 1, //delete msg!
                     type: "success",
                     key: tsLoadingKey,
-                }
+                };
                 activeTimerList = response.data;
                 if (testNone && activeTimerList.length == 0) {
                     activeTimerList.push({

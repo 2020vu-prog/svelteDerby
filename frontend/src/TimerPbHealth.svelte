@@ -11,8 +11,9 @@
     } from "sveltestrap";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
-    import { statusMessage, raceConfig, axios, mqttMapData } from "./stores";
-    import { getTimerPbConfig, MqttMapSubscription } from "./utils.js";
+    import { statusMessage, raceConfig, axios } from "./stores";
+    import { getTimerPbConfig } from "./utils.js";
+    import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
 
     export let timerName;
     export let timerId;
@@ -21,7 +22,6 @@
     let healthMs = 0;
     let spinning = true;
     let recentHealth = {};
-    let timerTopic = "";
     const satelliteEmoji = "🛰️";
     const errorEmoji = "️⛔";
     const unknownEmoji = "️❓";
@@ -32,12 +32,6 @@
     let open = false;
     var timerPbConfig = {};
     const toggle = () => (open = !open);
-    if (timerName && timerId) {
-        timerTopic = `rr1Timer/${timerId}`;
-        MqttMapSubscription(timerTopic);
-    } else {
-        log.warn("pbHealth: No timerid", timerId, timerName);
-    }
 
     onMount(() => {
         //params.timerName=uriDecode(params.timerName);
@@ -54,28 +48,6 @@
         };
     });
 
-    $: {
-        handleInboundMqttData($mqttMapData);
-    }
-    let prevB64 = "";
-    function handleInboundMqttData() {
-        if (!timerTopic) {
-            return;
-        }
-        const msg = $mqttMapData[timerTopic];
-        if (!msg) {
-            return;
-        }
-        const now = new Date().toLocaleTimeString();
-        if (msg.b64 == prevB64) {
-            return;
-        }
-        prevB64 = msg.b64;
-        log.debug(`${now} handleInboundMqttData: `, timerTopic, msg);
-        const bdata = Base64.toUint8Array(msg.b64);
-        const c = Timer.TimerDataList.decode(bdata);
-        showHealth(c);
-    }
     function rerenderStatusAge() {
         //log.debug(`rrs ${timerName}`,recentHealth,healthMs)
         if (recentHealth && healthMs) {
@@ -158,7 +130,7 @@
         }
     }
     function showHealth(tdl) {
-        //console.log(`tdl: ${tdl}`)
+        //console.log(`showHealth tdl: ${tdl}`);
         //return
 
         for (let td of tdl.timerData) {
@@ -243,6 +215,15 @@
 </script>
 
 <div>
+    {#key timerId}
+        <TimerSubscribeStub
+            {timerId}
+            verbose=""
+            on:timerDataList={(e) => {
+                showHealth(e.detail);
+            }}
+        />
+    {/key}
     <Button color={healthColor} on:click={toggle}>
         {healthText}
         {#if spinning}
