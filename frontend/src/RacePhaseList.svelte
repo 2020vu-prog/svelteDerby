@@ -69,9 +69,11 @@
 </div>
 
 {#each phaseList as item (item.at)}
-    <RacePhase
-        refreshTime={$doRefreshBlocks}
-        phaseKey={item.classKey}
-        at={item.at}
-    />
+    {#key item.at}
+        <RacePhase
+            refreshTime={$doRefreshBlocks}
+            phaseKey={item.classKey}
+            at={item.at}
+        />
+    {/key}
 {/each}
