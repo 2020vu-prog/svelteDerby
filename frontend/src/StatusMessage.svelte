@@ -62,6 +62,7 @@
                 messages.push(newMsg); // add new msg
             }
             messages = messages;
+            clearNow(); //in case anything deleted by short TTL
             clearLater(getDurationMs($statusMessage));
             $statusMessage = {};
         }
@@ -92,7 +93,7 @@
     };
     const getTtl = (statusMessage) => {
         if (statusMessage.TTL) {
-            log.debug("HAS A TTL");
+            log.debug(`HAS A TTL ${statusMessage.TTL}`);
             return statusMessage.TTL;
         } else {
             return new Date().getTime() + getDurationMs(statusMessage);

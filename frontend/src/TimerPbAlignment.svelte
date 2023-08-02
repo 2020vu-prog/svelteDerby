@@ -34,6 +34,8 @@
         ModalHeader,
     } from "sveltestrap";
     import { querystring } from "svelte-spa-router";
+    const { v4: uuidv4 } = require("uuid");
+    ``
     const searchParams = new URLSearchParams($querystring);
     const timerName = searchParams.get("timerName");
     const timerId = searchParams.get("timerId");
@@ -280,6 +282,12 @@
         const loIso = new Date(new Date().getTime() - lowMS).toISOString();
         const url = `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}&loIso=${loIso}`;
         try {
+            const histLoadingKey=                    uuidv4();
+                $statusMessage = {
+                    text: `loading History.`,
+                    type: "success",
+                    key: histLoadingKey,
+                };
             const response = await $axios.get($raceConfig.baseUrl + url);
             if (response.error) {
                 log.debug("getTimerHistoryFromApi:", response);
@@ -290,8 +298,9 @@
                 };
             } else {
                 $statusMessage = {
-                    text: `getTimerHistoryFromApi Complete.`,
-                    type: "success",
+                    text: `getTimerHistoryFromApi foo.`,
+                    TTL: 1, //delete msg!
+                    key: histLoadingKey,
                 };
                 historyList = response.data;
                 log.debug("getTimerHistoryFromApi: ", historyList);
@@ -379,7 +388,7 @@
     <div>
         <code>
             {fmtPinTime(tp)} Lane{tp.pinName}
-            {#if isPinBlocked(tp)}Blocked{:else}Clear{/if}
+            {#if isPinBlocked(tp)}🔴 Blocked{:else}🟢 Clear{/if}
         </code>
     </div>
 {/each}

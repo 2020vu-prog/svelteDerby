@@ -6,6 +6,7 @@
     import { axios, raceConfig, statusMessage } from "./stores.js";
     import { onMount } from "svelte";
     import { createEventDispatcher } from "svelte";
+    const { v4: uuidv4 } = require("uuid");
     //    import { Jumper } from 'svelte-loading-spinners';
 
     const dispatch = createEventDispatcher();
@@ -36,6 +37,12 @@
             : `/getActiveTimers?orgIz=${orgIz}&orgId=${orgId}`;
         //const response = await axios.get($raceConfig.baseUrl + endPoint, {
         try {
+            const tsLoadingKey=                    uuidv4();
+                $statusMessage = {
+                    text: `loading ActiveTimers.`,
+                    type: "success",
+                    key: tsLoadingKey,
+                };
             const response = await $axios.get(
                 $raceConfig.baseUrl + activeTimerUrl
             );
@@ -48,9 +55,11 @@
                 };
             } else {
                 $statusMessage = {
-                    text: `getActiveTimers Complete.`,
+                    text: `Loaded`,
+                    TTL: 1, //delete msg!
                     type: "success",
-                };
+                    key: tsLoadingKey,
+                }
                 activeTimerList = response.data;
                 if (testNone && activeTimerList.length == 0) {
                     activeTimerList.push({
