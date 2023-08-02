@@ -11,6 +11,10 @@
         mqttTimerSubscribe,
         mqttTimerTopic,
     } from "./stores.js";
+    import TimerSelectByName from "./TimerSelectByName.svelte";
+    import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
+    var timerId = "";
+
     var mediaRecorder = [];
     var recordedBlobs = [];
     var downloadPending;
@@ -136,6 +140,14 @@
         return parseRez()[0];
     }
     async function doStart() {
+        if (!timerId) {
+            $statusMessage = {
+                text: `Missing selected Timer[2].`,
+                type: "error",
+            };
+            return;
+        }
+
         $mqttTimerSubscribe = true;
         const snum = 0;
         recordSpinning = true;
@@ -292,6 +304,17 @@
         mediaRecorder[snum].start();
         log.debug("recordStream done", snum);
     }
+    function handleTimerSelect(event) {
+        log.debug("handleTimerSelect got event:", event.detail);
+        if (event.detail.decoded) {
+            log.debug(
+                "handleTimerSelect got id:",
+                event.detail.decoded.timerMqttClientId
+            );
+            timerId = event.detail.decoded.timerMqttClientId;
+            log.debug("handleTimerSelect set:", timerId);
+        }
+    }
 </script>
 
 <h1>Capture Video</h1>
@@ -321,6 +344,16 @@
 <input bind:value={perspective} />
 <label>Linked Timer</label>
 <input bind:value={$mqttTimerTopic} disabled />
+<label>Linked Timer2</label>
+<TimerSelectByName on:select={handleTimerSelect} preSelect="Finish" />
+{#key timerId}
+    <TimerSubscribeStub
+        {timerId}
+        on:videoKey={(e) => {
+            deferredCapture(e.detail);
+        }}
+    />
+{/key}
 <p />
 <SpinnerButton on:click={doStart} spinning={recordSpinning}>
     Record

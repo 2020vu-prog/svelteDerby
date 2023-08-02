@@ -188,49 +188,10 @@
     }
     async function onMapMqttData(json, topic) {
         log.debug(`syncMap ononMapMqttData: ${topic}`);
-        // potentialCaptureJ(json);
 
         $mqttMapData[topic] = json;
         $mqttMapData = $mqttMapData; //tickle state listeners
         await tick();
-    }
-    function potentialCaptureJ(json) {
-        log.debug("potentialCaptureJ: ", json);
-        var timerKey;
-        if (json.microb) {
-            timerKey = "MQTT-" + json.microb;
-        } else {
-            timerKey = "MQTT-" + uuidv4();
-        }
-        if (json.pinType) {
-            const pinType = json.pinType;
-            const pinState = json.pinState;
-            log.debug(`potentialCapture: pinType: ${pinType}`);
-
-            // mqtt message being processed out of sequence??
-            // RacePhase only sees leading edge of car.  don't capture video on a trailing edge event!
-            // (It should be throttled if it is recv'd in correct order, but that didn't happen)
-            if (pinType === "lane" && pinState === 1) {
-                if (!shouldThrottle()) {
-                    $mqttTriggerVideoCapture = timerKey;
-                }
-            }
-        }
-    }
-
-    /*
-    Only request capture once every 15 seconds...
-    * safety valve for flickering photoeye.
-    * capture on first transition of finish only.  
-    */
-    var recentCapture = 0;
-    function shouldThrottle() {
-        const now = new Date().getTime();
-        if (recentCapture + 15000 > now) {
-            return true;
-        }
-        recentCapture = now;
-        return false;
     }
 
     async function syncSubscription(subEnabled, topicP, onMsg) {

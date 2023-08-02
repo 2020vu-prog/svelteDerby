@@ -177,7 +177,9 @@
                         new Date().getTime()
                     );
                     recentHealth.cpuIncrementingUptime = recentHealth.cpuUptime;
-                    recentHealth.tempFmt = `${R100(recentHealth.cpuTempC)}°C`;
+                    recentHealth.tempFmt = `${R10(
+                        recentHealth.cpuTempC
+                    )}°C ${cToF(recentHealth.cpuTempC)}`;
                     healthText = healthTextDefault;
                     if (recentHealth.ageSeconds > 72) {
                         healthColor = "danger";
@@ -204,8 +206,18 @@
         answer += ":" + (secondsLeft < 10 ? "0" + secondsLeft : secondsLeft);
         return answer;
     }
+    function cToF(x) {
+        if (x) {
+            const f = (9 / 5) * x + 32;
+            return `${R10(f)}°F`;
+        }
+        return "";
+    }
     function R100(x) {
         return (Math.round(x * 100) / 100).toFixed(2);
+    }
+    function R10(x) {
+        return (Math.round(x * 10) / 10).toFixed(1);
     }
     function getUptimePct(recentHealth) {
         if (recentHealth.cpuUptime) {
