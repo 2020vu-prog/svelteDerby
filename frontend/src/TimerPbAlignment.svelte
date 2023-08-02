@@ -298,7 +298,7 @@
                 };
             } else {
                 $statusMessage = {
-                    text: `getTimerHistoryFromApi foo.`,
+                    text: `Loaded`,
                     TTL: 1, //delete msg!
                     key: histLoadingKey,
                 };
