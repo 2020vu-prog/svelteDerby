@@ -4,7 +4,7 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { createEventDispatcher } from "svelte";
-    import { getTimerPbConfig  } from "./utils.js";
+    import { getTimerPbConfig } from "./utils.js";
     let tcList = [];
     let selectedTc = "";
     export let preSelect = "";

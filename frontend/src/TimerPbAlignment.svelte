@@ -43,6 +43,7 @@
         timerTopic = `rr1Timer/${timerId}`;
         MqttMapSubscription(timerTopic);
     }
+    var historyAgeMinutes = 20;
     var timerTopic = "";
     var timerPbConfig = {};
     var historyList = [];
@@ -88,7 +89,13 @@
     function getSortedHistory(hmap) {
         log.debug("getSortedHistory0", lanePbTimerPinHistoryMap);
         const rc = Object.values(hmap).sort((a, b) => {
-            return b.stamp.tick64 - a.stamp.tick64;
+            // tick64 resets on rpi reboot, and then sort is random.
+            // fix is to use xmitMS as higher priority sort key
+            if (b.xmitMs == a.xmitMs) {
+                return b.stamp.tick64 - a.stamp.tick64;
+            } else {
+                return b.xmitMs - a.xmitMs;
+            }
         });
         log.debug("getSortedHistory1", rc);
         return rc;
@@ -165,7 +172,7 @@
         log.debug("isPinBlocked:", timerPin);
         return timerPin.pinState == Timer.PinState.BLOCKED;
     }
-    function potentialPinRefresh(timerPin) {
+    function potentialPinRefresh(xmitMs, timerPin) {
         log.debug(`ppr:`, timerPin);
         if (!lanePbTimerPinRecentMap[timerPin.pinName]) {
             //first time init
@@ -187,6 +194,7 @@
         ) {
             log.debug(`ppr: hist`, timerPin);
             const histKey = `${timerPin.stamp.tick64}:${timerPin.pinName}`;
+            timerPin.xmitMs = xmitMs; //hack! xmitMs not a timerPin member!
             lanePbTimerPinHistoryMap[histKey] = timerPin;
         }
     }
@@ -217,22 +225,23 @@
                 Object.keys(lanePbTimerPinHistoryMap).length == 0
             ) {
                 log.debug(`syncPbState. tpulse:`, td);
+                const fakeMs = new Date().getTime();
                 const fake1 = {
                     pinName: Timer.PinName.lane1,
                     stamp: td.timerPulse.stamp,
                     pinState: td.timerPulse.lane1,
                 };
-                potentialPinRefresh(fake1);
+                //potentialPinRefresh(fakeMs,fake1);
                 const fake2 = {
                     pinName: Timer.PinName.lane2,
                     stamp: td.timerPulse.stamp,
                     pinState: td.timerPulse.lane2,
                 };
-                potentialPinRefresh(fake2);
+                //potentialPinRefresh(fakeMs,fake2);
             }
             if (td.timerPin) {
                 log.debug(`syncPbState. td:`, td);
-                potentialPinRefresh(td.timerPin);
+                potentialPinRefresh(tdl.xmitMs, td.timerPin);
             }
         }
         repaintFromCache();
@@ -278,7 +287,8 @@
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
         //const lowMS = 1000 * 3600 * 720;
-        const lowMS = 1000 * 3600 * 0.3;
+        //const lowMS = 1000 * 3600 * 0.3;
+        const lowMS = historyAgeMinutes * 60 * 1000;
         const loIso = new Date(new Date().getTime() - lowMS).toISOString();
         const url = `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}&loIso=${loIso}`;
         try {
@@ -359,6 +369,14 @@
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
 {#if timerName && timerId}
     <TimerPbHealth {timerName} {timerId} />
+    Age:
+    <input
+        on:blur={() => {
+            getTimerHistoryFromApi();
+        }}
+        bind:value={historyAgeMinutes}
+        placeholder="HistoryAge"
+    />
 {/if}
 <div class="row">
     {#each Object.entries(laneStatusList) as [lane, ls]}
