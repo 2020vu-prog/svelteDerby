@@ -382,6 +382,7 @@
             {#if showAge}
                 Age:
                 <input
+                    type="number"
                     on:blur={() => {
                         getTimerHistoryFromApi();
                     }}
