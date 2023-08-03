@@ -89,7 +89,7 @@
     function getSortedHistory(hmap) {
         log.debug("getSortedHistory0", lanePbTimerPinHistoryMap);
         const rc = Object.values(hmap).sort((a, b) => {
-            // tick64 resets on rpi reboot, and then sort is random.
+            // tick64 resets on rpi reboot, and then sort intermingles events from multiple runs.
             // fix is to use xmitMS as higher priority sort key
             if (b.xmitMs == a.xmitMs) {
                 return b.stamp.tick64 - a.stamp.tick64;
