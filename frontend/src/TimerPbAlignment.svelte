@@ -344,6 +344,7 @@
             };
         }
     }
+    let showAge = false;
 </script>
 
 <style>
@@ -367,17 +368,30 @@
 
 <h3>Timer Alignment [{timerName}]</h3>
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
-{#if timerName && timerId}
-    <TimerPbHealth {timerName} {timerId} />
-    Age:
-    <input
-        on:blur={() => {
-            getTimerHistoryFromApi();
-        }}
-        bind:value={historyAgeMinutes}
-        placeholder="HistoryAge"
-    />
-{/if}
+<div class="row">
+    {#if timerName && timerId}
+        <div class="column">
+            <TimerPbHealth {timerName} {timerId} />
+        </div>
+        <div class="column">
+            <span
+                on:click={() => {
+                    showAge = !showAge;
+                }}>⚙️</span
+            >
+            {#if showAge}
+                Age:
+                <input
+                    on:blur={() => {
+                        getTimerHistoryFromApi();
+                    }}
+                    bind:value={historyAgeMinutes}
+                    placeholder="HistoryAge"
+                />
+            {/if}
+        </div>
+    {/if}
+</div>
 <div class="row">
     {#each Object.entries(laneStatusList) as [lane, ls]}
         <div class="column" style="background-color:#bbb;">
