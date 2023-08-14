@@ -200,6 +200,14 @@
             return "";
         }
     }
+    function fmtVersionStamp() {
+        if (recentHealth.buildEpoch) {
+            return new Date(recentHealth.buildEpoch*1000).toLocaleString()
+        }
+        else{
+            return ""
+        }
+    }
     function fmtGitHash() {
         if (recentHealth.versionStamp) {
             let dirty = "";
@@ -268,7 +276,9 @@
             <li>Free Mem: {recentHealth.ramFreeKB} KB</li>
             <li>SSID: {recentHealth.ssid}</li>
             <li>IP: {recentHealth.wifiIP}</li>
+            <li>Rss: {recentHealth.wifiRss}</li>
             <li>Timer GitHash: {fmtGitHash()}</li>
+            <li>Timer Build: {fmtVersionStamp()}</li>
             <li>OverlayFS: {recentHealth.overlayFsEnabled}</li>
         </ul>
     </Collapse>
