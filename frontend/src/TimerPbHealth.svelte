@@ -202,10 +202,9 @@
     }
     function fmtVersionStamp() {
         if (recentHealth.buildEpoch) {
-            return new Date(recentHealth.buildEpoch*1000).toLocaleString()
-        }
-        else{
-            return ""
+            return new Date(recentHealth.buildEpoch * 1000).toLocaleString();
+        } else {
+            return "";
         }
     }
     function fmtGitHash() {
@@ -250,6 +249,11 @@
                     recentHealth.cpuIncrementingUptime
                 )}
             </li>
+            {#if recentHealth.cpuIdlePercent}
+                <li>
+                    CPU Load: {100 - recentHealth.cpuIdlePercent}%
+                </li>
+            {/if}
             {#if recentHealth.gpsInitialAcquisitionSecondsAfterBoot}
                 <li>
                     Gps Acquistion delay: {secondsToHHMMSS(
