@@ -132,6 +132,10 @@
 
         //syncStarterLane2(paddlesUpLane1)
         pbForm.timerConfigOpposedStarter_maxTransitionMS = 49;
+
+        pbForm.timerConfigLanePhotoEye_paddlesDropped_pinState =
+            Timer.PinState.BLOCKED;
+
         log.debug("dflts:", pbForm);
         log.debug("unflat", unflatten(pbForm, { delimiter: "_" }));
         //const b = Timer.TimerConfig.encode(timerConfig).finish()
@@ -256,8 +260,14 @@
 
         if (payload.sensorLogic == Timer.SensorLogic.LanePhotoEyes) {
             payload.timerConfigOpposedStarter = null;
+            payload.timerConfigRampPhotoEye = null;
         }
         if (payload.sensorLogic == Timer.SensorLogic.OpposedStarterReeds) {
+            payload.timerConfigLanePhotoEye = null;
+            payload.timerConfigRampPhotoEye = null;
+        }
+        if (payload.sensorLogic == Timer.SensorLogic.RampPhotoEyes) {
+            payload.timerConfigOpposedStarter = null;
             payload.timerConfigLanePhotoEye = null;
         }
         const c = Timer.TimerConfig.encode(payload).finish();
@@ -357,8 +367,11 @@
                 <option value={Timer.SensorLogic.LanePhotoEyes}>
                     PhotoEye
                 </option>
+                <option value={Timer.SensorLogic.RampPhotoEyes}>
+                    Starter 1 PhotoEye
+                </option>
                 <option value={Timer.SensorLogic.OpposedStarterReeds}>
-                    Starter
+                    Starter Opposed Switches
                 </option>
             </Input>
         </Label>
@@ -389,15 +402,6 @@
     </FormGroup>
     {#if pbForm.sensorLogic == Timer.SensorLogic.LanePhotoEyes}
         {#if pbForm.timerName == "Finish"}
-            <!--
-
-    <PrefFormInput title="Foo" helpText="bar">
-        <input type="number" bind:value={loginForm.maxTrackSeconds} placeholder="45" />
-    </PrefFormInput>
-    <PrefFormInput title="Foo2" helpText="bar2">
-        <input type="checkbox" bind:checked={bar2} />
-    </PrefFormInput>
-    -->
             <FormGroup>
                 <Label>
                     MaxTrackSeconds:
@@ -491,6 +495,19 @@
                     bind:value={pbForm.timerConfigOpposedStarter_maxTransitionMS}
                     placeholder="50"
                 />
+            </Label>
+        </FormGroup>
+    {:else if pbForm.sensorLogic == Timer.SensorLogic.RampPhotoEyes}
+        <FormGroup>
+            <Label>
+                Lane1 Sensor When paddles Down:
+                <Input
+                    type="select"
+                    bind:value={pbForm.timerConfigLanePhotoEye_paddlesDropped_pinState}
+                >
+                    <option value={Timer.PinState.BLOCKED}>Blocked</option>
+                    <option value={Timer.PinState.CLEAR}>Clear</option>
+                </Input>
             </Label>
         </FormGroup>
     {/if}
