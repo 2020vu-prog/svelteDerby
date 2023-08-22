@@ -56,6 +56,18 @@
             );
             recentHealth.cpuIncrementingUptime =
                 recentHealth.cpuUptime + recentHealth.ageSeconds;
+            healthText = healthTextDefault;
+                    if (recentHealth.ageSeconds > 72) {
+                        healthColor = "danger";
+                        healthText = healthTextBase + errorEmoji;
+                    } else {
+                        healthColor = "success";
+                        healthText = healthTextBase + heartbeatEmoji;
+                        if (recentHealth.gpsEmittingPps) {
+                            healthText += satelliteEmoji;
+                        }
+                    }
+
             recentHealth = recentHealth;
         }
     }
@@ -138,7 +150,9 @@
                 console.log(`thealth:`, td.timerHealth, "xmitMs", tdl.xmitMs);
                 if (tdl.xmitMs && tdl.xmitMs > healthMs) {
                     healthMs = tdl.xmitMs;
+                    rerenderStatusAge() 
                     recentHealth = td.timerHealth;
+                    /*
                     recentHealth.ageSeconds = Math.floor(
                         (new Date().getTime() - healthMs) / 1000
                     );
@@ -148,21 +162,12 @@
                         healthMs,
                         new Date().getTime()
                     );
+                    */
                     recentHealth.cpuIncrementingUptime = recentHealth.cpuUptime;
                     recentHealth.tempFmt = `${R10(
                         recentHealth.cpuTempC
                     )}°C ${cToF(recentHealth.cpuTempC)}`;
-                    healthText = healthTextDefault;
-                    if (recentHealth.ageSeconds > 72) {
-                        healthColor = "danger";
-                        healthText = healthTextBase + errorEmoji;
-                    } else {
-                        healthColor = "success";
-                        healthText = healthTextBase + heartbeatEmoji;
-                        if (recentHealth.gpsEmittingPps) {
-                            healthText += satelliteEmoji;
-                        }
-                    }
+
                 }
             }
         }
@@ -281,6 +286,8 @@
             <li>SSID: {recentHealth.ssid}</li>
             <li>IP: {recentHealth.wifiIP}</li>
             <li>Rss: {recentHealth.wifiRss}</li>
+            <li>Xmit Credits: {recentHealth.xmitCredits}</li>
+            <li>mqtt Connections: {recentHealth.mqttConnections}</li>
             <li>Timer GitHash: {fmtGitHash()}</li>
             <li>Timer Build: {fmtVersionStamp()}</li>
             <li>OverlayFS: {recentHealth.overlayFsEnabled}</li>

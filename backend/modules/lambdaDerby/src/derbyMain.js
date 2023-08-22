@@ -8,6 +8,7 @@ const path = require("path");
 //    console.log("tbp:",timer_protobuf_1.tutorial.TimerConfig.decode);
 
 const { Base64 } = require("js-base64");
+const { CalcFinish, RawFacade, PbUtils } = require("@rr1.us/timer_protobuf/calcFinishPb");
 
 const log = require("loglevel");
 

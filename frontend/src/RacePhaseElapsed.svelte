@@ -94,33 +94,41 @@
             }
             if (fbHasGps(fb)) {
                 var delta = fb.gpsNoseMs[1] - fb.gpsNoseMs[0];
-                if (delta == 0) {
-                    delta = `Tie`;
-                } else if (delta < 0) {
-                    delta = `${Math.abs(delta)}`;
-                    flag2 = "🏁";
-                } else {
-                    delta = `${Math.abs(delta)}`;
-                    flag1 = "🏁";
-                }
+                const deltaObj = annotateDelta(delta);
+
                 laneData.push({
                     timer: fb.timerConfig.timerName,
                     l1: fmtMsHHMMSS(fb.gpsNoseMs[0]),
-                    flag1: flag1,
-                    delta: delta,
-                    flag2: flag2,
                     l2: fmtMsHHMMSS(fb.gpsNoseMs[1]),
+                    ...deltaObj,
                 });
+
                 prevFB = fb;
             } else {
+                    const delta=(fb.rpiNoseMicros[1] - fb.rpiNoseMicros[0]) / 1000
+                const deltaObj = annotateDelta(delta);
                 laneData.push({
                     timer: fb.timerConfig.timerName,
                     l1: fb.rpiNoseMicros[0],
-                    delta: "delta",
                     l2: fb.rpiNoseMicros[1],
+                    ...deltaObj,
                 });
             }
         });
+    }
+    function annotateDelta(delta) {
+        const rc = {};
+        if (delta == 0) {
+            rc.delta = `Tie`;
+        } else if (delta < 0) {
+            rc.delta = `${Math.abs(delta)}`;
+            rc.flag2 = "🏁";
+        } else {
+            rc.delta = `${Math.abs(delta)}`;
+            rc.flag1 = "🏁";
+        }
+
+        return rc;
     }
     function fmtMsHHMMSS(ms) {
         let gpsDate = new Date(ms);
