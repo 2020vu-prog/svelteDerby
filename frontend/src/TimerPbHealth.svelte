@@ -152,17 +152,6 @@
                     healthMs = tdl.xmitMs;
                     rerenderStatusAge() 
                     recentHealth = td.timerHealth;
-                    /*
-                    recentHealth.ageSeconds = Math.floor(
-                        (new Date().getTime() - healthMs) / 1000
-                    );
-                    console.log(
-                        `ageSeconds:`,
-                        recentHealth.ageSeconds,
-                        healthMs,
-                        new Date().getTime()
-                    );
-                    */
                     recentHealth.cpuIncrementingUptime = recentHealth.cpuUptime;
                     recentHealth.tempFmt = `${R10(
                         recentHealth.cpuTempC

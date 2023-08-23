@@ -85,9 +85,9 @@
             if (prevFB.timerConfig && fbHasGps(fb)) {
                 laneData.push({
                     timer: "SplitTime",
-                    l1: fb.gpsNoseMs[0] - prevFB.gpsNoseMs[0],
+                    l1: (fb.gpsNoseMs[0] - prevFB.gpsNoseMs[0])/1000,
                     delta: prevFB.timerConfig.timerName,
-                    l2: fb.gpsNoseMs[1] - prevFB.gpsNoseMs[1],
+                    l2: (fb.gpsNoseMs[1] - prevFB.gpsNoseMs[1])/1000,
                 });
             } else {
                 prevFB = {}; //invalidate potential split

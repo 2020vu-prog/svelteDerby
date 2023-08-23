@@ -170,6 +170,7 @@
         flex: 1 1 0px;
     }
 </style>
+{#key at}
 
 {#if refreshTime && shouldRender(rp, boundVars)}
     {#if !compressedLayout}
@@ -286,3 +287,4 @@
         </Card>
     {/if}
 {/if}
+{/key}
