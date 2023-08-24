@@ -8,7 +8,7 @@ const path = require("path");
 //    console.log("tbp:",timer_protobuf_1.tutorial.TimerConfig.decode);
 
 const { Base64 } = require("js-base64");
-const { CalcFinish, RawFacade, PbUtils } = require("@rr1.us/timer_protobuf/calcFinishPb");
+//const { CalcFinish, RawFacade, PbUtils } = require("@rr1.us/timer_protobuf/calcFinishPb");
 
 const log = require("loglevel");
 
@@ -1361,10 +1361,10 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         l2Micros = finishLineBlock.gpsNoseMs[1] * 1000;
         byLine = "rpi.gps";
     }
-    if(rp.cn[0] && isNaN(l1Micros)){
+    if(!rp.cn[0] || isNaN(l1Micros)){
         throw `missing time for car [${rp.cn}] in lane 1`
     }
-    if(rp.cn[1] && isNaN(l2Micros)){
+    if(!rp.cn[1] || isNaN(l2Micros)){
         throw `missing time for car [${rp.cn}] in lane 2`
     }
     entityFactory = new EntityFactory({
