@@ -1361,6 +1361,12 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         l2Micros = finishLineBlock.gpsNoseMs[1] * 1000;
         byLine = "rpi.gps";
     }
+    if(rp.cn[0] && isNaN(l1Micros)){
+        throw `missing time for car [${rp.cn}] in lane 1`
+    }
+    if(rp.cn[1] && isNaN(l2Micros)){
+        throw `missing time for car [${rp.cn}] in lane 2`
+    }
     entityFactory = new EntityFactory({
         orgId: finishLineBlock.timerConfig.orgId,
         by: byLine,
