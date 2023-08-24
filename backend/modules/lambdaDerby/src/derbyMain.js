@@ -1362,10 +1362,10 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         byLine = "rpi.gps";
     }
     if(rp.cn[0] && !validNumericTime(l1Micros)){
-        throw `missing time for car [${rp.cn}] in lane 1`
+        throw `missing time [${l1Micros}] for car [${rp.cn}] in lane 1`
     }
     if(rp.cn[1] && !validNumericTime(l2Micros)){
-        throw `missing time for car [${rp.cn}] in lane 2`
+        throw `missing time [${l2Micros}] for car [${rp.cn}] in lane 2`
     }
     entityFactory = new EntityFactory({
         orgId: finishLineBlock.timerConfig.orgId,
@@ -1397,7 +1397,7 @@ function validNumericTime(rpiTime){
     if (isNaN(rpiTime)){
         return false
     }
-    if (rpiTime){
+    if (!rpiTime){
         return false
     }
     return true
