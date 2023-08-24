@@ -1378,7 +1378,7 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         orgId: finishLineBlock.timerConfig.orgId,
         orgIz: finishLineBlock.timerConfig.orgIz,
         SK: rp.SK,
-        phr: [l1Micros, l2Micros],
+        phr: [dbFmtTimer(l1Micros), dbFmtTimer(l2Micros)],
     };
     log.debug("snsApplyPbTimerHandler formatted:", req);
     const applied = await applyFinishTime(req);
@@ -1392,6 +1392,12 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         TTL: rp.TTL,
     };
     await ddbUtils.ddbPut(fbJson, process.env.ElapsedTempDbTable);
+}
+function dbFmtTimer(rpiTime){
+    if (isNaN(rpiTime)){
+        return 0 // dynamo won't save NaN
+    }
+    return rpiTime
 }
 function validNumericTime(rpiTime){
     if (isNaN(rpiTime)){
