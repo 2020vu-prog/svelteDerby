@@ -53,7 +53,8 @@
                 if (fbList) {
                     const fbJson = JSON.parse(fbList);
                     log.debug("fbJson: ", fbJson);
-                    recalcLaneData(fbJson);
+                    log.debug("fb cn : ", response.data.cn);
+                    recalcLaneData(fbJson, response.data.cn);
                     sampleDemoData = false;
                 }
             }
@@ -71,13 +72,26 @@
     function fbHasGps(fb) {
         return fb && fb.gpsNoseMs && fb.gpsNoseMs.length > 0;
     }
-    function recalcLaneData(finishBlocks) {
+    function recalcLaneData(finishBlocks, cnList) {
         laneData = [];
+        if (cnList) {
+            laneData.push({
+                timer: "Car #",
+                l1: cnList[0],
+                l2: cnList[1],
+                delta: "",
+            });
+        }
         const sortedFB = finishBlocks.sort(bySeq);
         var prevFB = {
             XXtimerConfig: {
                 timerName: "none",
             },
+        };
+        const calcSplit = (nose, prevNose) => {
+            if (!nose) return "";
+            if (!prevNose) return "";
+            return (nose - prevNose) / 1000;
         };
         sortedFB.forEach((fb) => {
             var flag1 = "";
@@ -85,16 +99,19 @@
             if (prevFB.timerConfig && fbHasGps(fb)) {
                 laneData.push({
                     timer: "Split",
-                    l1: (fb.gpsNoseMs[0] - prevFB.gpsNoseMs[0])/1000,
+                    l1: calcSplit(fb.gpsNoseMs[0], prevFB.gpsNoseMs[0]),
                     //delta: prevFB.timerConfig.timerName,
                     delta: "",
-                    l2: (fb.gpsNoseMs[1] - prevFB.gpsNoseMs[1])/1000,
+                    l2: calcSplit(fb.gpsNoseMs[1], prevFB.gpsNoseMs[1]),
                 });
             } else {
                 prevFB = {}; //invalidate potential split
             }
             if (fbHasGps(fb)) {
-                var delta = fb.gpsNoseMs[1] - fb.gpsNoseMs[0];
+                var delta = NaN;
+                if (fb.gpsNoseMs[1] && fb.gpsNoseMs[0]) {
+                    delta = fb.gpsNoseMs[1] - fb.gpsNoseMs[0];
+                }
                 const deltaObj = annotateDelta(delta);
 
                 laneData.push({
@@ -106,7 +123,10 @@
 
                 prevFB = fb;
             } else {
-                    const delta=(fb.rpiNoseMicros[1] - fb.rpiNoseMicros[0]) / 1000
+                //no gps
+
+                const delta =
+                    (fb.rpiNoseMicros[1] - fb.rpiNoseMicros[0]) / 1000;
                 const deltaObj = annotateDelta(delta);
                 laneData.push({
                     timer: fb.timerConfig.timerName,
@@ -118,7 +138,12 @@
         });
     }
     function annotateDelta(delta) {
-        const rc = {};
+        const rc = {
+            delta: "",
+        };
+        if (isNaN(delta)) {
+            return rc; //stand down
+        }
         if (delta == 0) {
             rc.delta = `Tie`;
         } else if (delta < 0) {
@@ -132,6 +157,9 @@
         return rc;
     }
     function fmtMsHHMMSS(ms) {
+        if (!ms) {
+            return "";
+        }
         let gpsDate = new Date(ms);
         return gpsDate.toLocaleTimeString([], {
             hour: "2-digit",
@@ -347,12 +375,12 @@
     <Table striped bordered size="sm">
         <thead>
             <tr>
-                <th >Timer</th>
-                <th >Lane1</th>
+                <th>Timer</th>
+                <th>Lane1</th>
                 <th>&nbsp;</th>
-                <th >&lt;=&gt;</th>
+                <th>&lt;=&gt;</th>
                 <th>&nbsp;</th>
-                <th >Lane2</th>
+                <th>Lane2</th>
             </tr>
         </thead>
         <tbody>
