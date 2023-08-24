@@ -84,9 +84,10 @@
             var flag2 = "";
             if (prevFB.timerConfig && fbHasGps(fb)) {
                 laneData.push({
-                    timer: "SplitTime",
+                    timer: "Split",
                     l1: (fb.gpsNoseMs[0] - prevFB.gpsNoseMs[0])/1000,
-                    delta: prevFB.timerConfig.timerName,
+                    //delta: prevFB.timerConfig.timerName,
+                    delta: "",
                     l2: (fb.gpsNoseMs[1] - prevFB.gpsNoseMs[1])/1000,
                 });
             } else {
@@ -343,15 +344,15 @@
     {#if sampleDemoData}
         <h1 style="color:red">SAMPLE -- DEMO DATA</h1>
     {/if}
-    <Table striped>
+    <Table striped style="width:100%;display:inline-block;">
         <thead>
             <tr>
-                <th>Timer</th>
-                <th>Lane1</th>
+                <th style="width:10%">Timer</th>
+                <th style="width:35%">Lane1</th>
                 <th>&nbsp;</th>
-                <th>&lt;=&gt;</th>
+                <th style="width:5%">&lt;=&gt;</th>
                 <th>&nbsp;</th>
-                <th>Lane2</th>
+                <th style="width:35%">Lane2</th>
             </tr>
         </thead>
         <tbody>
