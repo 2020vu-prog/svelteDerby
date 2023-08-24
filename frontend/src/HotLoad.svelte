@@ -532,22 +532,22 @@
         }
     }
     var audioPlaying = false;
-    var lastPlayed=""
+    var lastPlayed = "";
     function getNextAudio() {
-        while(pendingAudioList.length > 0){
-            const nextAudio=pendingAudioList.shift()
-            if(nextAudio && nextAudio!=lastPlayed){
-                lastPlayed=nextAudio
-                return nextAudio
+        while (pendingAudioList.length > 0) {
+            const nextAudio = pendingAudioList.shift();
+            if (nextAudio && nextAudio != lastPlayed) {
+                lastPlayed = nextAudio;
+                return nextAudio;
             }
         }
-        return ""
+        return "";
     }
     function triggerAudioPlayer() {
         tattle("trigger begin");
         if (audioPlaying) return; // no concurrent audio players!
-        const nextAudio=getNextAudio()
-        if(!nextAudio) return;
+        const nextAudio = getNextAudio();
+        if (!nextAudio) return;
 
         audioPlaying = true;
         const audio = new Audio(nextAudio);

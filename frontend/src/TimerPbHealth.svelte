@@ -57,16 +57,16 @@
             recentHealth.cpuIncrementingUptime =
                 recentHealth.cpuUptime + recentHealth.ageSeconds;
             healthText = healthTextDefault;
-                    if (recentHealth.ageSeconds > 72) {
-                        healthColor = "danger";
-                        healthText = healthTextBase + errorEmoji;
-                    } else {
-                        healthColor = "success";
-                        healthText = healthTextBase + heartbeatEmoji;
-                        if (recentHealth.gpsEmittingPps) {
-                            healthText += satelliteEmoji;
-                        }
-                    }
+            if (recentHealth.ageSeconds > 72) {
+                healthColor = "danger";
+                healthText = healthTextBase + errorEmoji;
+            } else {
+                healthColor = "success";
+                healthText = healthTextBase + heartbeatEmoji;
+                if (recentHealth.gpsEmittingPps) {
+                    healthText += satelliteEmoji;
+                }
+            }
 
             recentHealth = recentHealth;
         }
@@ -150,13 +150,12 @@
                 console.log(`thealth:`, td.timerHealth, "xmitMs", tdl.xmitMs);
                 if (tdl.xmitMs && tdl.xmitMs > healthMs) {
                     healthMs = tdl.xmitMs;
-                    rerenderStatusAge() 
+                    rerenderStatusAge();
                     recentHealth = td.timerHealth;
                     recentHealth.cpuIncrementingUptime = recentHealth.cpuUptime;
                     recentHealth.tempFmt = `${R10(
                         recentHealth.cpuTempC
                     )}°C ${cToF(recentHealth.cpuTempC)}`;
-
                 }
             }
         }

@@ -1361,11 +1361,11 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         l2Micros = finishLineBlock.gpsNoseMs[1] * 1000;
         byLine = "rpi.gps";
     }
-    if(rp.cn[0] && !validNumericTime(l1Micros)){
-        throw `missing time [${l1Micros}] for car [${rp.cn}] in lane 1`
+    if (rp.cn[0] && !validNumericTime(l1Micros)) {
+        throw `missing time [${l1Micros}] for car [${rp.cn}] in lane 1`;
     }
-    if(rp.cn[1] && !validNumericTime(l2Micros)){
-        throw `missing time [${l2Micros}] for car [${rp.cn}] in lane 2`
+    if (rp.cn[1] && !validNumericTime(l2Micros)) {
+        throw `missing time [${l2Micros}] for car [${rp.cn}] in lane 2`;
     }
     entityFactory = new EntityFactory({
         orgId: finishLineBlock.timerConfig.orgId,
@@ -1387,27 +1387,27 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     const fbJson = {
         PK: `${finishLineBlock.timerConfig.orgId}:RpElapsed`,
         SK: rp.SK,
-        cn: rp.cn,  //augment with car number(s)
+        cn: rp.cn, //augment with car number(s)
         //fbList: JSON.stringify(finishLineBlockList),
         fbList: JSON.stringify(snsMessageJson.finishBlocks),
         TTL: rp.TTL,
     };
     await ddbUtils.ddbPut(fbJson, process.env.ElapsedTempDbTable);
 }
-function dbFmtTimer(rpiTime){
-    if (isNaN(rpiTime)){
-        return 0 // dynamo won't save NaN
+function dbFmtTimer(rpiTime) {
+    if (isNaN(rpiTime)) {
+        return 0; // dynamo won't save NaN
     }
-    return rpiTime
+    return rpiTime;
 }
-function validNumericTime(rpiTime){
-    if (isNaN(rpiTime)){
-        return false
+function validNumericTime(rpiTime) {
+    if (isNaN(rpiTime)) {
+        return false;
     }
-    if (!rpiTime){
-        return false
+    if (!rpiTime) {
+        return false;
     }
-    return true
+    return true;
 }
 async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug(
