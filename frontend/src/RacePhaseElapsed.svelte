@@ -344,15 +344,15 @@
     {#if sampleDemoData}
         <h1 style="color:red">SAMPLE -- DEMO DATA</h1>
     {/if}
-    <Table striped style="width:100%;display:inline-block;">
+    <Table striped bordered size="sm">
         <thead>
             <tr>
-                <th style="width:10%">Timer</th>
-                <th style="width:35%">Lane1</th>
+                <th >Timer</th>
+                <th >Lane1</th>
                 <th>&nbsp;</th>
-                <th style="width:5%">&lt;=&gt;</th>
+                <th >&lt;=&gt;</th>
                 <th>&nbsp;</th>
-                <th style="width:35%">Lane2</th>
+                <th >Lane2</th>
             </tr>
         </thead>
         <tbody>

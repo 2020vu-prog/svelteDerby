@@ -1387,6 +1387,7 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     const fbJson = {
         PK: `${finishLineBlock.timerConfig.orgId}:RpElapsed`,
         SK: rp.SK,
+        cn: rp.cn,  //augment with car number(s)
         //fbList: JSON.stringify(finishLineBlockList),
         fbList: JSON.stringify(snsMessageJson.finishBlocks),
         TTL: rp.TTL,
