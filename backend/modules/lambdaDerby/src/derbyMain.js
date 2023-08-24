@@ -1361,10 +1361,10 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         l2Micros = finishLineBlock.gpsNoseMs[1] * 1000;
         byLine = "rpi.gps";
     }
-    if(!rp.cn[0] || isNaN(l1Micros)){
+    if(rp.cn[0] && !validNumericTime(l1Micros)){
         throw `missing time for car [${rp.cn}] in lane 1`
     }
-    if(!rp.cn[1] || isNaN(l2Micros)){
+    if(rp.cn[1] && !validNumericTime(l2Micros)){
         throw `missing time for car [${rp.cn}] in lane 2`
     }
     entityFactory = new EntityFactory({
@@ -1392,6 +1392,15 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         TTL: rp.TTL,
     };
     await ddbUtils.ddbPut(fbJson, process.env.ElapsedTempDbTable);
+}
+function validNumericTime(rpiTime){
+    if (isNaN(rpiTime)){
+        return false
+    }
+    if (rpiTime){
+        return false
+    }
+    return true
 }
 async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug(

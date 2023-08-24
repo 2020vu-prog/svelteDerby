@@ -513,7 +513,7 @@ class DdbUtils {
 
         try {
             var data = await this.ddbClient.query(params);
-            log.debug("ddbQueryRpNextOnBlocks: ", data); // successful response
+            log.debug("ddbQueryRpNextOnBlocks: ", JSON.stringify( data)); // successful response
 
             const udata = this.unmarshallResultsToArray(
                 data,

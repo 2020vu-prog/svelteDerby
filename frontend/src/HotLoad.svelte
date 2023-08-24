@@ -532,13 +532,25 @@
         }
     }
     var audioPlaying = false;
+    var lastPlayed=""
+    function getNextAudio() {
+        while(pendingAudioList.length > 0){
+            const nextAudio=pendingAudioList.shift()
+            if(nextAudio && nextAudio!=lastPlayed){
+                lastPlayed=nextAudio
+                return nextAudio
+            }
+        }
+        return ""
+    }
     function triggerAudioPlayer() {
         tattle("trigger begin");
-        if (pendingAudioList.length == 0) return; // no-op.
         if (audioPlaying) return; // no concurrent audio players!
+        const nextAudio=getNextAudio()
+        if(!nextAudio) return;
 
         audioPlaying = true;
-        const audio = new Audio(pendingAudioList.shift());
+        const audio = new Audio(nextAudio);
         tattle("trigger shifted");
         audio.onended = async function () {
             await sleep(2000);
@@ -553,7 +565,7 @@
     }
     function tattle(msg) {
         // root cause looks like double subscribe.
-        //log.debug("tattle :", msg, pendingAudioList.length);
+        log.debug("tattle :", msg, pendingAudioList.length);
     }
     const doRefresh = async () => {
         refreshInProgressButton = true;
