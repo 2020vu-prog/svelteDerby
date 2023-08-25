@@ -160,7 +160,8 @@
         if (!ms) {
             return "";
         }
-        if (ms==2) { //hard-coded 'no gps?'
+        if (ms == 2) {
+            //hard-coded 'no gps?'
             return "";
         }
         let gpsDate = new Date(ms);

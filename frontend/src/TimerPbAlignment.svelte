@@ -32,6 +32,9 @@
         ModalBody,
         ModalFooter,
         ModalHeader,
+        FormGroup,
+        Label,
+        Input,
     } from "sveltestrap";
     import { querystring } from "svelte-spa-router";
     const { v4: uuidv4 } = require("uuid");
@@ -44,6 +47,8 @@
         MqttMapSubscription(timerTopic);
     }
     var historyAgeMinutes = 20;
+    var historyStartTime;
+    var historyStartDate;
     var timerTopic = "";
     var timerPbConfig = {};
     var historyList = [];
@@ -67,6 +72,8 @@
     $: {
         syncPbState($mqttMapData);
     }
+    $: sortedPbTimerPinHistory = getSortedHistory(lanePbTimerPinHistoryMap);
+    $: repaintFromCache(sortedPbTimerPinHistory);
 
     onMount(async () => {
         log.debug("TimerPbAlignment TimerName:", timerName);
@@ -86,6 +93,7 @@
 
     const lanePbTimerPinRecentMap = {};
     var lanePbTimerPinHistoryMap = {};
+    var sortedPbTimerPinHistory = [];
     function getSortedHistory(hmap) {
         log.debug("getSortedHistory0", lanePbTimerPinHistoryMap);
         const rc = Object.values(hmap).sort((a, b) => {
@@ -109,20 +117,20 @@
         log.debug("allE:", allE);
         */
 
-        for (const [key, timerPin] of Object.entries(lanePbTimerPinRecentMap)) {
-            if (key == Timer.PinName.lane1) {
+        for (const timerPin of sortedPbTimerPinHistory) {
+            if (timerPin.pinName == Timer.PinName.lane1) {
                 laneStatusList.lane1.blocked = isPinBlocked(timerPin);
                 laneStatusList.lane1.timerPin = timerPin;
             }
-            if (key == Timer.PinName.lane2) {
+            if (timerPin.pinName == Timer.PinName.lane2) {
                 laneStatusList.lane2.blocked = isPinBlocked(timerPin);
                 laneStatusList.lane2.timerPin = timerPin;
             }
-            log.debug("repaintFromCache:k", key, " v:", timerPin);
+            log.debug("repaintFromCache:v:", timerPin);
         }
         setPaddlePosition();
         laneStatusList = laneStatusList;
-        lanePbTimerPinHistoryMap = lanePbTimerPinHistoryMap;
+        //        lanePbTimerPinHistoryMap = lanePbTimerPinHistoryMap;
     }
     function setPaddlePosition() {
         if (!timerPbConfig.timerConfigOpposedStarter) {
@@ -196,6 +204,7 @@
             const histKey = `${timerPin.stamp.tick64}:${timerPin.pinName}`;
             timerPin.xmitMs = xmitMs; //hack! xmitMs not a timerPin member!
             lanePbTimerPinHistoryMap[histKey] = timerPin;
+            lanePbTimerPinHistoryMap = lanePbTimerPinHistoryMap;
         }
     }
     let prevB64 = "";
@@ -244,7 +253,6 @@
                 potentialPinRefresh(tdl.xmitMs, td.timerPin);
             }
         }
-        repaintFromCache();
     }
     function syncState() {
         for (let [lane, laneState] of Object.entries($timerState)) {
@@ -281,16 +289,36 @@
     }
 
     async function getTimerHistoryFromApi() {
-        log.debug("getTimerHistoryFromApi:");
-        //await sleep(3000)
-
+        log.debug(
+            "xgetTimerHistoryFromApi:x, ",
+            historyStartTime,
+            " :",
+            historyStartDate
+        );
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
         //const lowMS = 1000 * 3600 * 720;
         //const lowMS = 1000 * 3600 * 0.3;
         const lowMS = historyAgeMinutes * 60 * 1000;
         const loIso = new Date(new Date().getTime() - lowMS).toISOString();
-        const url = `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}&loIso=${loIso}`;
+        const req = {
+            orgIz: orgIz,
+            orgId: orgId,
+            timerName: timerPbConfig.timerMqttClientId,
+            loIso: loIso,
+        };
+        if (historyStartDate && historyStartTime) {
+            const hiDate = new Date(`${historyStartDate}T${historyStartTime}`);
+            const hiIso = hiDate.toISOString();
+            log.debug("xgetTimerHistoryFromApi:i, ", hiIso);
+            req.hiIso = hiIso; // override hiIso (normally server will dflt to current)
+            req.loIso = new Date(hiDate.getTime() - lowMS).toISOString();
+        }
+        //await sleep(3000)
+
+        //const url = `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}&loIso=${loIso}&hiIso=${hiIso}`;
+        const endPoint = `/getTimerPbHistory`;
+
         try {
             const histLoadingKey = uuidv4();
             $statusMessage = {
@@ -298,7 +326,10 @@
                 type: "success",
                 key: histLoadingKey,
             };
-            const response = await $axios.get($raceConfig.baseUrl + url);
+            //    const response = await $axios.get($raceConfig.baseUrl + url);
+            const response = await $axios.get($raceConfig.baseUrl + endPoint, {
+                params: req,
+            });
             if (response.error) {
                 log.debug("getTimerHistoryFromApi:", response);
                 //TODO: not working!?
@@ -389,6 +420,29 @@
                     bind:value={historyAgeMinutes}
                     placeholder="HistoryAge"
                 />
+                <FormGroup>
+                    <Label for="startDate">Start Date</Label>
+                    <Input
+                        bind:value={historyStartDate}
+                        type="date"
+                        name="startdate"
+                        id="startDate"
+                        placeholder="date placeholder"
+                    />
+                </FormGroup>
+                <FormGroup>
+                    <Label for="startTime">Start Time</Label>
+                    <Input
+                        type="time"
+                        name="startTime"
+                        id="startTime"
+                        on:blur={() => {
+                            getTimerHistoryFromApi();
+                        }}
+                        bind:value={historyStartTime}
+                        placeholder="time placeholder"
+                    />
+                </FormGroup>
             {/if}
         </div>
     {/if}
@@ -417,7 +471,7 @@
     {/each}
 </div>
 
-{#each getSortedHistory(lanePbTimerPinHistoryMap) as tp}
+{#each sortedPbTimerPinHistory as tp}
     <div>
         <code>
             {fmtPinTime(tp)} Lane{tp.pinName}
