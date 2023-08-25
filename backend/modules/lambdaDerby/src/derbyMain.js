@@ -1100,6 +1100,7 @@ const routeMap = {
         },
     },
     "/getPhaseElapsed": {
+        allowFrozen: true,
         h: async (event) => {
             return buildResponse(
                 await getPhaseElapsed(event.queryStringParameters)

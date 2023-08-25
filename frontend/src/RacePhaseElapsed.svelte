@@ -160,6 +160,9 @@
         if (!ms) {
             return "";
         }
+        if (ms==2) { //hard-coded 'no gps?'
+            return "";
+        }
         let gpsDate = new Date(ms);
         return gpsDate.toLocaleTimeString([], {
             hour: "2-digit",
