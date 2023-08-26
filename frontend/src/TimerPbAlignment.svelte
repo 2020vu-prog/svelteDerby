@@ -1,5 +1,7 @@
 <script>
     import log from "loglevel";
+    //import parse from 'date-fns/parse'
+
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import {
         CalcFinish,
@@ -48,6 +50,7 @@
     }
     var historyAgeMinutes = 20;
     var historyStartTime;
+    //var historyStartDate=new Date().toLocaleDateString();
     var historyStartDate;
     var timerTopic = "";
     var timerPbConfig = {};
@@ -76,7 +79,9 @@
     $: repaintFromCache(sortedPbTimerPinHistory);
 
     onMount(async () => {
-        log.debug("TimerPbAlignment TimerName:", timerName);
+        log.debug(
+            `TimerPbAlignment TimerNamedt: ${timerName} [${historyStartDate}]`
+        );
         [timerPbConfig] = await getTimerPbConfig(timerName);
         calcFinish = new CalcFinish(timerPbConfig);
 
@@ -307,8 +312,14 @@
             timerName: timerPbConfig.timerMqttClientId,
             loIso: loIso,
         };
-        if (historyStartDate && historyStartTime) {
-            const hiDate = new Date(`${historyStartDate}T${historyStartTime}`);
+        if (historyStartTime) {
+            const hiSeed = `${historyStartDate}T${historyStartTime}`;
+            log.debug(`hiSeed: [${hiSeed}]`, hiSeed);
+
+            //const hiDate = new Date(`${historyStartDate}T${historyStartTime}`);
+            const hiDate = Date.parse(hiSeed);
+            //const hiDate = parse(hiSeed)
+            log.debug("hiDate:", hiDate);
             const hiIso = hiDate.toISOString();
             log.debug("xgetTimerHistoryFromApi:i, ", hiIso);
             req.hiIso = hiIso; // override hiIso (normally server will dflt to current)
@@ -376,6 +387,25 @@
         }
     }
     let showAge = false;
+    let xmitHH = 0;
+    function xmitHourChanged(timerPin, i) {
+        if (i == 0) {
+            xmitHH = 0; //reset
+        }
+        if (timerPin && timerPin.xmitMs) {
+            const modHH = Math.floor(timerPin.xmitMs / (3600 * 1000));
+            if (modHH !== xmitHH) {
+                xmitHH = modHH;
+                return true;
+            }
+        }
+        return false;
+    }
+    function fmtXmitHour(timerPin, i) {
+        const modHH = Math.floor(timerPin.xmitMs / (3600 * 1000));
+        const xmitDate = new Date(modHH * 3600 * 1000).toLocaleString();
+        return `--- Xmit: ${xmitDate}`;
+    }
 </script>
 
 <style>
@@ -420,14 +450,16 @@
                     bind:value={historyAgeMinutes}
                     placeholder="HistoryAge"
                 />
+                <!--
+
                 <FormGroup>
                     <Label for="startDate">Start Date</Label>
                     <Input
-                        bind:value={historyStartDate}
                         type="date"
                         name="startdate"
                         id="startDate"
                         placeholder="date placeholder"
+                        bind:value={historyStartDate}
                     />
                 </FormGroup>
                 <FormGroup>
@@ -443,6 +475,7 @@
                         placeholder="time placeholder"
                     />
                 </FormGroup>
+                -->
             {/if}
         </div>
     {/if}
@@ -471,7 +504,14 @@
     {/each}
 </div>
 
-{#each sortedPbTimerPinHistory as tp}
+{#each sortedPbTimerPinHistory as tp, i}
+    {#if xmitHourChanged(tp, i)}
+        <div>
+            <code style="background-color:#bbb;">
+                {fmtXmitHour(tp, i)}
+            </code>
+        </div>
+    {/if}
     <div>
         <code>
             {fmtPinTime(tp)} Lane{tp.pinName}
