@@ -247,27 +247,25 @@ export async function refreshOrgRoles(orgIz) {
         orgIz: orgIz,
         userEmail: userEmail,
     };
-    axios
-        .get(`${raceConfig.baseUrl}/getOrgRoles`, {
+    try {
+        const response = await axios.get(`${raceConfig.baseUrl}/getOrgRoles`, {
             params: req,
-        })
-        .then(async (response) => {
-            log.debug("refreshOrgRoles: raw:", response.data);
-            const roleMap = get(roleMapStore);
-            log.debug("refreshOrgRoles: old:", roleMap);
-            if (!roleMap[userEmail]) {
-                roleMap[userEmail] = {};
-            }
-            log.debug("refreshOrgRoles: p1:", roleMap);
-            if (response.data && response.data.roleList) {
-                roleMap[userEmail][orgIz] = response.data.roleList;
-                log.debug("refreshOrgRoles: now:", roleMap);
-                roleMapStore.set(roleMap);
-            }
-        })
-        .catch((err) => {
-            log.debug(err);
         });
+        log.debug("refreshOrgRoles: raw:", response.data);
+        const roleMap = get(roleMapStore);
+        log.debug("refreshOrgRoles: old:", roleMap);
+        if (!roleMap[userEmail]) {
+            roleMap[userEmail] = {};
+        }
+        log.debug("refreshOrgRoles: p1:", roleMap);
+        if (response.data && response.data.roleList) {
+            roleMap[userEmail][orgIz] = response.data.roleList;
+            log.debug("refreshOrgRoles: now:", roleMap);
+            roleMapStore.set(roleMap);
+        }
+    } catch (err) {
+        log.debug(err);
+    }
 }
 
 export async function getChartJson(jsonPath) {
