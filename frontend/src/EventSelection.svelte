@@ -11,6 +11,7 @@
         clearOldStatusMessages,
         statusMessage,
         axios,
+        userEmail,
     } from "./stores.js";
 
     import SpinnerButton from "./SpinnerButton.svelte";
@@ -34,10 +35,18 @@
         log.debug("EventSelection: bound eventMap: ", eventMap);
     }
     $: {
-        log.debug("EventSelection: current page is ", $location);
+        //recheck auto select after login/eventmap populated!
+        potentialAutoSelect($userEmail, eventMap);
     }
     function activateNewest() {
+        if (!$userEmail) {
+            //auto select requires auth :-(
+            return false;
+        }
         const orgEvents = Object.values(eventMap);
+        if (orgEvents.length == 0) {
+            return false;
+        }
         let selectedConfig = {
             at: 0,
         };
@@ -96,17 +105,16 @@
         log.debug("EventSelection: current page is ", $location);
         await refreshOrgEvents();
         await refreshOrgRoles(params.orgIz);
-        /*
-        const searchParams = new URLSearchParams($querystring);
-        const autoSelect = searchParams.get("autoSelect");
-        if (autoSelect) {
-            */
+
+        potentialAutoSelect();
+    });
+    function potentialAutoSelect() {
         if (isAutoSelectRequested()) {
             // qr code 'autoSelect'!
             log.debug("autoSelect after refreshOrgEvents from:", eventMap);
             activateNewest();
         }
-    });
+    }
     function isAutoSelectRequested() {
         if (new URLSearchParams($querystring).get("as")) {
             // qr code 'autoSelect'!
