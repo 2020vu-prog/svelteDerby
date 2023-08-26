@@ -36,17 +36,25 @@
     }
     $: {
         //recheck auto select after login/eventmap populated!
-        potentialAutoSelect($userEmail, eventMap);
+        if (mounted) potentialAutoSelect($userEmail);
     }
+    let activating = false;
     function activateNewest() {
         if (!$userEmail) {
             //auto select requires auth :-(
-            return false;
+            return;
         }
         const orgEvents = Object.values(eventMap);
         if (orgEvents.length == 0) {
-            return false;
+            return;
         }
+
+        //only one activation allowed!
+        if (activating) {
+            return;
+        }
+        activating = true;
+
         let selectedConfig = {
             at: 0,
         };
@@ -101,12 +109,13 @@
         }
     };
 
+    let mounted = false;
     onMount(async () => {
         log.debug("EventSelection: current page is ", $location);
         await refreshOrgEvents();
         await refreshOrgRoles(params.orgIz);
 
-        potentialAutoSelect();
+        mounted = true;
     });
     function potentialAutoSelect() {
         if (isAutoSelectRequested()) {
