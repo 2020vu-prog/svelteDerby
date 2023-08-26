@@ -42,15 +42,24 @@
     function activateNewest() {
         if (!$userEmail) {
             //auto select requires auth :-(
+            $statusMessage = {
+                text: `AS: No Eligible user.`,
+            };
             return;
         }
         const orgEvents = Object.values(eventMap);
         if (orgEvents.length == 0) {
+            $statusMessage = {
+                text: `AS: No Eligible map.`,
+            };
             return;
         }
 
         //only one activation allowed!
         if (activating) {
+            $statusMessage = {
+                text: `AS: Skipping, previous runner.`,
+            };
             return;
         }
         activating = true;
@@ -66,7 +75,7 @@
 
         if (!selectedConfig.SK) {
             $statusMessage = {
-                text: `No Eligible event.`,
+                text: `AS: No Eligible event.`,
             };
             return;
         }
