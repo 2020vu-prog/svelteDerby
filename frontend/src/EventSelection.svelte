@@ -9,6 +9,7 @@
         raceConfig,
         getCacheKey,
         clearOldStatusMessages,
+        statusMessage,
         axios,
     } from "./stores.js";
 
@@ -17,7 +18,7 @@
     import MaterialAdd from "./MaterialAdd.svelte";
     import OrgName from "./OrgName.svelte";
     import { onMount } from "svelte";
-    import { push, pop, replace } from "svelte-spa-router";
+    import { location, replace, querystring } from "svelte-spa-router";
     import { dbReset } from "./eventDb.js";
 
     import { refreshOrgRoles } from "./utils.js";
@@ -30,9 +31,31 @@
     var eventMap = {};
     var selectedEventMap = {};
     $: {
-        log.debug("bound eventMap: ", eventMap);
+        log.debug("EventSelection: bound eventMap: ", eventMap);
     }
+    $: {
+        log.debug("EventSelection: current page is ", $location);
+    }
+    function activateNewest() {
+        const orgEvents = Object.values(eventMap);
+        let selectedConfig = {
+            at: 0,
+        };
+        for (const cfg of orgEvents) {
+            if (cfg.at > selectedConfig.at) {
+                selectedConfig = cfg;
+            }
+        }
 
+        if (!selectedConfig.SK) {
+            $statusMessage = {
+                text: `No Eligible event.`,
+            };
+            return;
+        }
+
+        doSelect(selectedConfig);
+    }
     const getOrgEventsAsList = (viewMode) => {
         populateSelectedEventMap(currentViewMode);
 
@@ -51,26 +74,49 @@
         log.debug("refreshOrgEvents:");
 
         const cacheKey = getCacheKey();
-        $axios
-            .get(
-                $raceConfig.baseUrl +
-                    `/listOrgEvents?orgIz=${params.orgIz}&cache=${cacheKey}`
-            )
-            .then((response) => {
-                log.debug("refreshOrgEvents length:" + response.data.length);
-                log.debug("refreshOrgEvents:", response.data);
-                eventMap = response.data;
-                currentViewMode = "Active";
-            })
-            .catch((err) => {
-                log.debug(err);
+        try {
+            const endPoint = "/listOrgEvents";
+            const req = {
+                orgIz: params.orgIz,
+                cache: cacheKey,
+            };
+            const response = await $axios.get($raceConfig.baseUrl + endPoint, {
+                params: req,
             });
+            log.debug("refreshOrgEvents length:" + response.data.length);
+            log.debug("refreshOrgEvents:", response.data);
+            eventMap = response.data;
+            currentViewMode = "Active";
+        } catch (err) {
+            log.debug(err);
+        }
     };
 
     onMount(async () => {
+        log.debug("EventSelection: current page is ", $location);
         await refreshOrgEvents();
         await refreshOrgRoles(params.orgIz);
+        /*
+        const searchParams = new URLSearchParams($querystring);
+        const autoSelect = searchParams.get("autoSelect");
+        if (autoSelect) {
+            */
+        if (isAutoSelectRequested()) {
+            // qr code 'autoSelect'!
+            log.debug("autoSelect after refreshOrgEvents from:", eventMap);
+            activateNewest();
+        }
     });
+    function isAutoSelectRequested() {
+        if (new URLSearchParams($querystring).get("as")) {
+            // qr code 'autoSelect'!
+            return true;
+        }
+        if ($location.startsWith("/as/")) {
+            return true;
+        }
+    }
+
     const requestClearStore = () => {
         $doRefreshBlocks = -1;
     };
