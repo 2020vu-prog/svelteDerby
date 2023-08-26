@@ -171,20 +171,23 @@ axiosCommon.interceptors.response.use(
     (error) => {
         log.debug("AINT error: ", error);
 
+            const originalRequest = error.config
+            const orUrl=originalRequest?originalRequest.url:"A77";
         if (
             error.response &&
             error.response.data &&
             error.response.data.message
         ) {
             log.debug("AINT2 error: ", JSON.stringify(error.response.data));
+
             statusMessage.set({
-                text: "ERR A12: " + error.response.data.message,
+                text: "ERR A12: " + error.response.data.message+ " "+ orUrl,
                 type: "error",
             });
             return Promise.reject(error.response.data);
         }
         statusMessage.set({
-            text: "failed3: " + error.message,
+            text: "AINT failed3: " + error.message,
             type: "error",
         });
         return Promise.reject(error.message);
