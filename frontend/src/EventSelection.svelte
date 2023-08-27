@@ -58,11 +58,11 @@
         //only one activation allowed!
         if (activating) {
             $statusMessage = {
-                text: `AS: Skipping, previous runner.`,
+                text: `AS: Skipping, previous runner: ${userEmail} ${activating}`,
             };
             return;
         }
-        activating = true;
+        activating = $userEmail
 
         let selectedConfig = {
             at: 0,
