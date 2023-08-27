@@ -3,8 +3,7 @@
     const { v4: uuidv4 } = require("uuid");
 
     import Router from "svelte-spa-router";
-    import { link, location } from "svelte-spa-router";
-    import { push, pop, replace } from "svelte-spa-router";
+    import { location, replace } from "svelte-spa-router";
 
     import BottomNav from "./BottomNav.svelte";
     import CaptureVideo from "./CaptureVideo.svelte";
@@ -277,20 +276,28 @@
         replaceRouteOnInitialLoad(isMounted, $userEmail);
     }
     async function replaceRouteOnInitialLoad() {
+        const tag = "replaceRouteOnInitialLoad";
         const now = new Date().getTime();
         if (!isMounted || !$userEmail) {
-            console.log("ignoring not mounted", isMounted);
-            console.log("ignoring not email", $userEmail);
+            console.log(`${tag} ignoring not mounted`, isMounted);
+            console.log(`${tag} ignoring not email`, $userEmail);
             return;
         }
         if (isMounted + 10000 < now) {
-            console.log("ignoring stale state change from onload handler");
+            console.log(
+                `${tag} ignoring stale state change from onload handler`
+            );
             return;
         }
         const cfg = await db.EventConfig.toArray();
-        log.debug("config:", cfg);
+        log.debug(`${tag} config:`, cfg);
+        log.debug(`${tag} location:`, $location);
 
-        if (cfg.length) {
+        if (false) {
+        } else if ($location.startsWith("/as/")) {
+            log.debug(`${tag} honoring auto select:`, $location);
+            replace($location);
+        } else if (cfg.length) {
             await reloadEvent(cfg[0]);
             if ($initialReloadRoute) {
                 replace($initialReloadRoute);

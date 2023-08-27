@@ -140,9 +140,41 @@ axiosCommon.interceptors.request.use(function (config) {
     //const token = store.getState().session.token;
     const raceConfigVal = getStore(raceConfig);
     config.headers["x-event-ts"] = raceConfigVal.at;
+    const bearer = getRR1AuthTokenNow();
+    config.headers["Authorization"] = bearer;
+    config.headers["cjwrr1"] = `cjwrr1`;
 
     return config;
 });
+//response interceptor
+axiosCommon.interceptors.response.use(
+    (res) => {
+        console.log("AC:passthrough");
+        return res;
+    },
+    async function (error) {
+        console.log("AC:error0", error);
+        const originalRequest = error.config;
+        let refreshTokenError, res;
+        if (error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            console.log("AC:refreshing");
+            await getRR1AuthTokenSlow(originalRequest);
+            console.log("AC:refreshed");
+
+            //return [null, await axios.request(originalRequest)];
+
+            if (refreshTokenError) {
+                return Promise.reject(refreshTokenError);
+            }
+            return Promise.resolve(res);
+        }
+        console.log("AC:reject");
+        return Promise.reject(error);
+    }
+);
+
+/*
 axiosCommon.interceptors.response.use(
     (response) => {
         if (response.status === 401) {
@@ -193,31 +225,40 @@ axiosCommon.interceptors.response.use(
         return Promise.reject(error.message);
     }
 );
+*/
 async function getAxiosCommon() {
-    //TODO: flush bearer token when email changes
+    await getRR1AuthTokenSlow("initial get.");
+    return axiosCommon;
+}
+function getRR1AuthTokenNow() {
     var bearer = getStore(userJwtStore);
     if (bearer) {
         var decoded = jwt.decode(bearer);
         log.debug("decoded jwt:", decoded);
         const now = new Date().getTime() / 1000;
         if (decoded && decoded.exp && decoded.exp > now + 30) {
-            log.debug("getAxiosCommon re-using token");
-            axiosCommon.defaults.headers.common["Authorization"] = bearer;
+            log.debug("getRR1AuthTokenNow re-using token");
+            // axiosCommon.defaults.headers.common["Authorization"] = bearer;
         } else {
-            log.debug("getAxiosCommon expiring token");
+            log.debug("getRR1AuthTokenNow expiring token");
             bearer = "";
             userJwtStore.set(bearer);
         }
     }
+    return bearer;
+}
+async function getRR1AuthTokenSlow(rsn) {
+    log.debug("getRR1AuthTokenSlow rsn: ", rsn);
+    //TODO: flush bearer token when email changes
+    let bearer = getRR1AuthTokenNow();
+
     if (!bearer) {
         const currentSession = await Auth.currentSession();
         bearer = currentSession.idToken.jwtToken;
         userJwtStore.set(bearer);
-        axiosCommon.defaults.headers.common["Authorization"] = bearer;
     }
-    log.debug("bearer:", bearer);
-    //axiosCommon.defaults.headers.common["Authorization"] = "401me";
-    return axiosCommon;
+    log.debug("getRR1AuthTokenSlow rc: bearer:", bearer);
+    return bearer;
 }
 
 const sortBy = (field, reverse, primer) => {
