@@ -40,6 +40,8 @@
     }
     let activating = false;
     function activateNewest() {
+        const tag = "activateNewest";
+        log.debug(`${tag} email: ${$userEmail}`);
         if (!$userEmail) {
             //auto select requires auth :-(
             $statusMessage = {
@@ -57,12 +59,14 @@
 
         //only one activation allowed!
         if (activating) {
+            const msg = `AS: Skipping, previous runner: ${userEmail} ${activating}`;
+            log.debug(`${tag} ${msg}`);
             $statusMessage = {
-                text: `AS: Skipping, previous runner: ${userEmail} ${activating}`,
+                text: msg,
             };
             return;
         }
-        activating = $userEmail
+        activating = $userEmail;
 
         let selectedConfig = {
             at: 0,
