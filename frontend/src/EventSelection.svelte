@@ -42,9 +42,6 @@
     }
     $: {
         //recheck auto select after login/eventmap populated!
-        //potentialAutoSelect($userEmail, mounted);
-
-        // august 2023-- the if wrapper NEVER called the function!!??
         if (mounted) potentialAutoSelect($userEmail);
     }
     let activating = false;
