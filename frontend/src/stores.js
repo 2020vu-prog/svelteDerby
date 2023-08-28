@@ -88,6 +88,7 @@ export const mqttEnabled = persistable("pref:mqttEnabled", true);
 export const mqttTriggerVideoCapture = writable(0);
 export const beginAnonymousLogin = writable(false);
 export const timerState = writable({});
+export const recentRefreshMs = writable(0);
 export const uiPageSize = persistable("pref:uiPageSize", undefined);
 //export const uiPageSize = writable(100);
 export const raceConfig = persistable("pref:uiRaceConfig", {
@@ -159,9 +160,18 @@ axiosCommon.interceptors.response.use(
         if (error.response.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
             console.log("AC:refreshing");
-            await getRR1AuthTokenSlow(originalRequest);
+            statusMessage.set({
+                text: "Renewing Credentials...",
+            });
+            const bt = await getRR1AuthTokenSlow(originalRequest);
             console.log("AC:refreshed");
 
+            statusMessage.set({
+                text: `Renewed Credentials... ${bt.length}`,
+            });
+            const retryPromise = axios.request(originalRequest);
+            console.log("AC:retry:", retryPromise);
+            return retryPromise;
             return [null, await axios.request(originalRequest)];
 
             if (refreshTokenError) {
@@ -240,6 +250,8 @@ function getRR1AuthTokenNow() {
         if (decoded && decoded.exp) {
             exp = decoded.exp;
         }
+        const tte = exp - now;
+        log.debug("getRR1AuthTokenNow tte:", tte);
         if (exp > now + 30) {
             log.debug("getRR1AuthTokenNow re-using token");
             // axiosCommon.defaults.headers.common["Authorization"] = bearer;

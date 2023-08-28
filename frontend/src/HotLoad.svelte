@@ -18,6 +18,7 @@
         timerState,
         raceConfig,
         axios,
+        recentRefreshMs,
     } from "./stores.js";
     import Amplify, { PubSub } from "aws-amplify";
     import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
@@ -568,6 +569,8 @@
         log.debug("tattle :", msg, pendingAudioList.length);
     }
     const doRefresh = async () => {
+        const tag = "doRefresh";
+        log.debug(`${tag} begin`);
         refreshInProgressButton = true;
         //await dbInit();
         log.debug("old nobKey:", $nextOnBlockKey);
@@ -602,6 +605,8 @@
             }
         }
         refreshInProgressButton = false;
+        $recentRefreshMs = new Date().getTime();
+        log.debug(`${tag} done ${$recentRefreshMs}`);
     };
     function isArchived(ttlSecondsUnusedSvelteTrigger) {
         log.debug("isArchived passed ecFromDexie: ", ecFromDexie);

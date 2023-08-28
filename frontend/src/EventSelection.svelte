@@ -12,14 +12,19 @@
         statusMessage,
         axios,
         userEmail,
+        recentRefreshMs,
     } from "./stores.js";
 
     import SpinnerButton from "./SpinnerButton.svelte";
 
     import MaterialAdd from "./MaterialAdd.svelte";
     import OrgName from "./OrgName.svelte";
-    import { onMount } from "svelte";
-    import { location, replace, querystring } from "svelte-spa-router";
+    import { onMount, tick } from "svelte";
+    import {
+        location as ssrLocation,
+        replace,
+        querystring,
+    } from "svelte-spa-router";
     import { dbReset } from "./eventDb.js";
 
     import { refreshOrgRoles } from "./utils.js";
@@ -27,6 +32,7 @@
 
     export let params = {};
 
+    let waitingForReloadBeginMs = 0;
     var currentViewMode = "Unknown";
 
     var eventMap = {};
@@ -36,21 +42,31 @@
     }
     $: {
         //recheck auto select after login/eventmap populated!
+        //potentialAutoSelect($userEmail, mounted);
+
+        // august 2023-- the if wrapper NEVER called the function!!??
         if (mounted) potentialAutoSelect($userEmail);
     }
     let activating = false;
-    function activateNewest() {
+    // headsup: caller does not await...
+    async function activateNewest() {
         const tag = "activateNewest";
         log.debug(`${tag} email: ${$userEmail}`);
         if (!$userEmail) {
+            log.debug(`${tag} email bypass`);
             //auto select requires auth :-(
             $statusMessage = {
                 text: `AS: No Eligible user.`,
             };
             return;
         }
+        // could be already loaded, but initial load
+        //  fails when anon user not logged in yet (no email)
+        // force reload here.  s/b cached & quick
+        await refreshOrgEvents();
         const orgEvents = Object.values(eventMap);
         if (orgEvents.length == 0) {
+            log.debug(`${tag} event bypass`);
             $statusMessage = {
                 text: `AS: No Eligible map.`,
             };
@@ -124,13 +140,21 @@
 
     let mounted = false;
     onMount(async () => {
-        log.debug("EventSelection: current page is ", $location);
-        await refreshOrgEvents();
-        await refreshOrgRoles(params.orgIz);
+        log.debug("EventSelection: current page is ", $ssrLocation);
+        try {
+            await refreshOrgEvents();
+            await refreshOrgRoles(params.orgIz);
+        } catch (err) {
+            log.error("EventSelection: mount error;", err);
+        }
 
         mounted = true;
     });
     function potentialAutoSelect() {
+        log.debug(`potentialAutoSelect begin ${$userEmail}`);
+        if (!mounted) return;
+        if (!$userEmail) return;
+        log.debug("potentialAutoSelect continue");
         if (isAutoSelectRequested()) {
             // qr code 'autoSelect'!
             log.debug("autoSelect after refreshOrgEvents from:", eventMap);
@@ -142,7 +166,7 @@
             // qr code 'autoSelect'!
             return true;
         }
-        if ($location.startsWith("/as/")) {
+        if ($ssrLocation.startsWith("/as/")) {
             return true;
         }
     }
@@ -163,11 +187,22 @@
         log.debug("selecting config:", config);
 
         $raceConfig = config;
+        waitingForReloadBeginMs = new Date().getTime();
+    };
+
+    $: {
+        if ($recentRefreshMs) reloadWaitComplete();
+    }
+
+    function reloadWaitComplete(requestMS) {
+        if (!waitingForReloadBeginMs) return;
+        if (waitingForReloadBeginMs > $recentRefreshMs) return;
+
         $clearOldStatusMessages = true;
 
-        await setJwt(); // need mqtt perms if initial login didn't have selected org.
+        //await setJwt(); // need mqtt perms if initial login didn't have selected org.
         replace("/RpList");
-    };
+    }
     const getRaceName = (config) => {
         return config.name ? config.name : config.orgId;
     };
@@ -220,8 +255,13 @@
     </h4>
 
     <p />
-
-    {#if currentViewMode != "Unknown"}
+    {#if waitingForReloadBeginMs}
+        <h4>
+            Loading Event... Please Wait
+            <br />
+            <SpinnerButton spinning="true">Loading</SpinnerButton>
+        </h4>
+    {:else if currentViewMode != "Unknown"}
         <div>
             {#each getOrgEventsAsList(currentViewMode) as eventConfig}
                 <Card class="mt-3 border border-info">
