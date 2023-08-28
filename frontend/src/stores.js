@@ -5,7 +5,7 @@ import axiosCommon from "axios";
 import { Auth } from "aws-amplify";
 const jwt = require("jsonwebtoken");
 const semver = require("semver");
-
+const { v4: uuidv4 } = require("uuid");
 import { persistable } from "./storedb.js";
 import { derived, writable, readable, get as getStore } from "svelte/store";
 import { buildVersion } from "./utils.js";
@@ -142,6 +142,7 @@ axiosCommon.interceptors.request.use(function (config) {
     const raceConfigVal = getStore(raceConfig);
     config.headers["x-event-ts"] = raceConfigVal.at;
     const bearer = getRR1AuthTokenNow();
+    console.log(`AC: setup... ${bearer.length}`);
     config.headers["Authorization"] = bearer;
     config.headers["cjwrr1"] = `cjwrr1`;
 
@@ -154,25 +155,38 @@ axiosCommon.interceptors.response.use(
         return res;
     },
     async function (error) {
+        const axErrorKey = uuidv4();
         console.log("AC:error0", error);
         const originalRequest = error.config;
         let refreshTokenError, res;
         if (error.response.status === 401 && !originalRequest._retry) {
+            userJwtStore.set(""); // whatever this was didn't work.
             originalRequest._retry = true;
             console.log("AC:refreshing");
             statusMessage.set({
                 text: "Renewing Credentials...",
+                key: axErrorKey,
             });
             const bt = await getRR1AuthTokenSlow(originalRequest);
             console.log("AC:refreshed");
+            console.log(`AC: New Credentials... ${bt.length}`);
 
-            statusMessage.set({
-                text: `Renewed Credentials... ${bt.length}`,
-            });
-            const retryPromise = axios.request(originalRequest);
+            if (bt && bt.length > 0) {
+                statusMessage.set({
+                    text: `Renewed Credentials... ${bt.length}`,
+                    key: axErrorKey,
+                    type: "success",
+                });
+            } else {
+                statusMessage.set({
+                    text: `Renewal Failed. ${bt.length}`,
+                    key: axErrorKey,
+                });
+            }
+            const retryPromise = axiosCommon.request(originalRequest);
             console.log("AC:retry:", retryPromise);
             return retryPromise;
-            return [null, await axios.request(originalRequest)];
+            return [null, await axiosCommon.request(originalRequest)];
 
             if (refreshTokenError) {
                 return Promise.reject(refreshTokenError);
@@ -244,7 +258,7 @@ function getRR1AuthTokenNow() {
     var bearer = getStore(userJwtStore);
     if (bearer) {
         var decoded = jwt.decode(bearer);
-        log.debug("decoded jwt:", decoded);
+        log.debug("AC: decoded jwt:", decoded);
         const now = new Date().getTime() / 1000;
         let exp = 0;
         if (decoded && decoded.exp) {
@@ -252,6 +266,9 @@ function getRR1AuthTokenNow() {
         }
         const tte = exp - now;
         log.debug("getRR1AuthTokenNow tte:", tte);
+        /*
+        let intercept deal with dead tokens....
+
         if (exp > now + 30) {
             log.debug("getRR1AuthTokenNow re-using token");
             // axiosCommon.defaults.headers.common["Authorization"] = bearer;
@@ -263,6 +280,7 @@ function getRR1AuthTokenNow() {
             // don't persist empty token.  it publishes invalid derived $userEmail!
             //userJwtStore.set(bearer);
         }
+        */
     }
     return bearer;
 }
