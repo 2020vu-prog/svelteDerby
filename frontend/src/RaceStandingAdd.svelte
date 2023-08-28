@@ -111,6 +111,13 @@
             ],
             pt: carNumberForm.promptPhaseType,
         };
+        if (req.cn[0] === req.cn[1]) {
+            $statusMessage = {
+                text: `Car numbers must not match [${req.cn[0]}] [${req.cn[1]}]`,
+                type: "error",
+            };
+            return;
+        }
 
         //no double click
         if (submitSpinning) {
