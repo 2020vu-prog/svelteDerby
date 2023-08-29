@@ -245,6 +245,17 @@ const applyFinishTime = async (json) => {
         }
     }
 
+    // if using magic car 00008, auto create another trial run when we mark one complete.
+    //   intended to 'log' elapsed times while running an adjacent race on another org/ AWS account.
+    if (tgtRp && tgtRp.cn && tgtRp.cn[0] == "00008") {
+        await addBlocks({
+            orgId: tgtRp.orgId,
+            orgIz: tgtRp.orgIz,
+            cn: ["00008", "00009"],
+            pt: "T",
+        });
+    }
+
     return {
         status: "ok",
     };
