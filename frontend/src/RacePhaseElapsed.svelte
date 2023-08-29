@@ -72,6 +72,7 @@
     function fbHasGps(fb) {
         return fb && fb.gpsNoseMs && fb.gpsNoseMs.length > 0;
     }
+    const calcStyle = "color:lawngreen;";
     function recalcLaneData(finishBlocks, cnList) {
         laneData = [];
         if (cnList) {
@@ -88,16 +89,33 @@
                 timerName: "none",
             },
         };
+        const calcElapsed = (laneIndex, sortedFB) => {
+            let min = Number.MAX_SAFE_INTEGER;
+            let max = 0;
+            sortedFB.forEach((fb) => {
+                if (fbHasGps(fb) && fb.gpsNoseMs[laneIndex]) {
+                    min = Math.min(min, fb.gpsNoseMs[laneIndex]);
+                    max = Math.max(max, fb.gpsNoseMs[laneIndex]);
+                    //console.log(`min ${min} max: ${max}`)
+                }
+            });
+            if (max > min) {
+                return max - min;
+            }
+            return "";
+        };
         const calcSplit = (nose, prevNose) => {
             if (!nose) return "";
             if (!prevNose) return "";
             return (nose - prevNose) / 1000;
         };
+
         sortedFB.forEach((fb) => {
             var flag1 = "";
             var flag2 = "";
             if (prevFB.timerConfig && fbHasGps(fb)) {
                 laneData.push({
+                    nameStyle: calcStyle,
                     timer: "Split",
                     l1: calcSplit(fb.gpsNoseMs[0], prevFB.gpsNoseMs[0]),
                     //delta: prevFB.timerConfig.timerName,
@@ -135,6 +153,15 @@
                     ...deltaObj,
                 });
             }
+        });
+
+        laneData.push({
+            nameStyle: calcStyle,
+            timer: "Elapsed",
+            l1: calcElapsed(0, sortedFB),
+            //delta: prevFB.timerConfig.timerName,
+            delta: "",
+            l2: calcElapsed(1, sortedFB),
         });
     }
     function annotateDelta(delta) {
@@ -390,7 +417,7 @@
         <tbody>
             {#each laneData as row (row.timer)}
                 <tr>
-                    <th scope="row">{row.timer}</th>
+                    <th scope="row" style={row.nameStyle}>{row.timer} </th>
                     <td>{row.l1}</td>
                     <td>
                         {#if row.flag1}{row.flag1}{/if}
