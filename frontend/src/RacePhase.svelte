@@ -171,120 +171,119 @@
     }
 </style>
 {#key at}
-
-{#if refreshTime && shouldRender(rp, boundVars)}
-    {#if !compressedLayout}
-        <Card
-            class="mt-3 border border-info cjw-border-5"
-            style="background: {bgColor}"
-        >
-            <CardHeader class="bg-info text-white">
-                <CardTitle color="info">
-                    <span on:click={gotoBracket}>{chartPosition}</span>
-                    <span class="spanRight">
-                        {hhmmss}
-                        {#if !isHistory()}
-                            <EllipsisButton
-                                on:message={toggleToolbar}
-                                dbName="RacePhase"
-                                dbKey={phaseKey}
-                            />
-                        {/if}
-                    </span>
-                </CardTitle>
-            </CardHeader>
-            <CardBody color="info">
-                <ul class="list-group">
-                    <li class="list-group-item">
-                        <CarAndDriver
-                            number={rp.carNumbers[0]}
-                            isWinner={racePhase.isWinner(1, true)}
-                            phaseLetter={getPhaseIcon(rp)}
-                            {phaseClass}
-                            timerLink={getTimerLink(rp)}
-                            at={safeGetAt($driverMap, rp.carNumbers[0])}
-                        />
-                        {#if racePhase.isWinner(1, true)}
-                            <span class="spanRight">
-                                <Badge pill class="bigText">
-                                    {getPhaseLetter(rp)}:{getWinTime(1, rp)}
-                                </Badge>
-                            </span>
-                        {/if}
-                    </li>
-                    <li class="list-group-item">
-                        <CarAndDriver
-                            number={rp.carNumbers[1]}
-                            isWinner={racePhase.isWinner(2, true)}
-                            phaseLetter={getPhaseIcon(rp)}
-                            {phaseClass}
-                            timerLink={getTimerLink(rp)}
-                            at={safeGetAt($driverMap, rp.carNumbers[1])}
-                        />
-                        {#if racePhase.isWinner(2, true)}
-                            <span class="spanRight">
-                                <Badge pill class="bigText">
-                                    {getPhaseLetter(rp)}:{getWinTime(2, rp)}
-                                </Badge>
-                            </span>
-                        {/if}
-                    </li>
-                </ul>
-                {#if isHistory()}
-                    <span style="color: white">User: {rp.by}</span>
-                {/if}
-            </CardBody>
-            {#if showToolbar}
-                <CardFooter
-                    style="padding: 5px 1px !important"
-                    class="bg-info text-white"
-                >
-                    <ComponentToolbar
-                        dbName="RacePhase"
-                        dbKey={phaseKey}
-                        timerLink={getTimerLink(rp)}
-                        bracketLink={getBracketLink(rp)}
-                    />
-                </CardFooter>
-            {/if}
-        </Card>
-    {:else}
-        <Card
-            class="mt-3 "
-            style="background: {bgColor}"
-            on:click={() => (compressedLayout = false)}
-        >
-            <CardBody color="info" style="padding: 10px !important">
-                <ul class="list-group">
-                    <li
-                        class="list-group-item"
-                        style="display: flex; flex-direction:row;"
-                    >
-                        <div class="column" style="text-align: center">
-                            <CarAndDriverVertical
+    {#if refreshTime && shouldRender(rp, boundVars)}
+        {#if !compressedLayout}
+            <Card
+                class="mt-3 border border-info cjw-border-5"
+                style="background: {bgColor}"
+            >
+                <CardHeader class="bg-info text-white">
+                    <CardTitle color="info">
+                        <span on:click={gotoBracket}>{chartPosition}</span>
+                        <span class="spanRight">
+                            {hhmmss}
+                            {#if !isHistory()}
+                                <EllipsisButton
+                                    on:message={toggleToolbar}
+                                    dbName="RacePhase"
+                                    dbKey={phaseKey}
+                                />
+                            {/if}
+                        </span>
+                    </CardTitle>
+                </CardHeader>
+                <CardBody color="info">
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <CarAndDriver
                                 number={rp.carNumbers[0]}
+                                isWinner={racePhase.isWinner(1, true)}
+                                phaseLetter={getPhaseIcon(rp)}
+                                {phaseClass}
+                                timerLink={getTimerLink(rp)}
                                 at={safeGetAt($driverMap, rp.carNumbers[0])}
                             />
-                        </div>
-
-                        <div style="text-align: center;" class="column">
-                            <button type="button" class="btn btn-warning">
-                                {getPhaseIcon(rp)}
-                            </button>
-                            <br />
-                            {chartPosition}
-                        </div>
-
-                        <div class="column" style="text-align: center">
-                            <CarAndDriverVertical
+                            {#if racePhase.isWinner(1, true)}
+                                <span class="spanRight">
+                                    <Badge pill class="bigText">
+                                        {getPhaseLetter(rp)}:{getWinTime(1, rp)}
+                                    </Badge>
+                                </span>
+                            {/if}
+                        </li>
+                        <li class="list-group-item">
+                            <CarAndDriver
                                 number={rp.carNumbers[1]}
+                                isWinner={racePhase.isWinner(2, true)}
+                                phaseLetter={getPhaseIcon(rp)}
+                                {phaseClass}
+                                timerLink={getTimerLink(rp)}
                                 at={safeGetAt($driverMap, rp.carNumbers[1])}
                             />
-                        </div>
-                    </li>
-                </ul>
-            </CardBody>
-        </Card>
+                            {#if racePhase.isWinner(2, true)}
+                                <span class="spanRight">
+                                    <Badge pill class="bigText">
+                                        {getPhaseLetter(rp)}:{getWinTime(2, rp)}
+                                    </Badge>
+                                </span>
+                            {/if}
+                        </li>
+                    </ul>
+                    {#if isHistory()}
+                        <span style="color: white">User: {rp.by}</span>
+                    {/if}
+                </CardBody>
+                {#if showToolbar}
+                    <CardFooter
+                        style="padding: 5px 1px !important"
+                        class="bg-info text-white"
+                    >
+                        <ComponentToolbar
+                            dbName="RacePhase"
+                            dbKey={phaseKey}
+                            timerLink={getTimerLink(rp)}
+                            bracketLink={getBracketLink(rp)}
+                        />
+                    </CardFooter>
+                {/if}
+            </Card>
+        {:else}
+            <Card
+                class="mt-3 "
+                style="background: {bgColor}"
+                on:click={() => (compressedLayout = false)}
+            >
+                <CardBody color="info" style="padding: 10px !important">
+                    <ul class="list-group">
+                        <li
+                            class="list-group-item"
+                            style="display: flex; flex-direction:row;"
+                        >
+                            <div class="column" style="text-align: center">
+                                <CarAndDriverVertical
+                                    number={rp.carNumbers[0]}
+                                    at={safeGetAt($driverMap, rp.carNumbers[0])}
+                                />
+                            </div>
+
+                            <div style="text-align: center;" class="column">
+                                <button type="button" class="btn btn-warning">
+                                    {getPhaseIcon(rp)}
+                                </button>
+                                <br />
+                                {chartPosition}
+                            </div>
+
+                            <div class="column" style="text-align: center">
+                                <CarAndDriverVertical
+                                    number={rp.carNumbers[1]}
+                                    at={safeGetAt($driverMap, rp.carNumbers[1])}
+                                />
+                            </div>
+                        </li>
+                    </ul>
+                </CardBody>
+            </Card>
+        {/if}
     {/if}
-{/if}
 {/key}
