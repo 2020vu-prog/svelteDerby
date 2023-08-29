@@ -1329,6 +1329,16 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
     };
 }
 
+async function snsApplyPbLogMessage(snsMessageJson, snsPublishedTimestamp) {
+    // add ssml markup.  (svelte does this for manual announcements.)
+    const paMessage = `<speak>${snsMessageJson.logMessage.message}</speak>`;
+    const orgId = snsMessageJson.timerConfig.orgId;
+    const mp3ObjectPath = await announceResults.submitToPolly(paMessage, orgId);
+
+    log.debug("snsApplyPbLogMessage: " + paMessage + " gave: ", mp3ObjectPath);
+
+    await announceResults.propagateIotGeneric(orgId, mp3ObjectPath);
+}
 async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug(
         "snsApplyPbTimerHandler Message received from SNS2:",
@@ -1729,8 +1739,11 @@ exports.handler = async function (event) {
         }
         const snsTimestamp = event.Records[0].Sns.Timestamp;
         try {
-            if (snsMessageJson.source === "protobufElapsedMqttIngester") {
+            if (false) {
+            } else if (snsMessageJson.recordType === "protobufFinishBlock") {
                 await snsApplyPbTimerHandler(snsMessageJson, snsTimestamp);
+            } else if (snsMessageJson.recordType === "protobufLogMessage") {
+                await snsApplyPbLogMessage(snsMessageJson, snsTimestamp);
             } else {
                 await snsApplyTimerHandler(snsMessageJson, snsTimestamp);
             }
