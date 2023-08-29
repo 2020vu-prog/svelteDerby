@@ -72,7 +72,7 @@
     function fbHasGps(fb) {
         return fb && fb.gpsNoseMs && fb.gpsNoseMs.length > 0;
     }
-    const calcStyle = "color:lawngreen;";
+    const calcStyle = "color:ForestGreen;";
     function recalcLaneData(finishBlocks, cnList) {
         laneData = [];
         if (cnList) {
