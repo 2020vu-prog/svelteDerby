@@ -21,6 +21,14 @@ resource "aws_cognito_user_pool" "derbyUserPool" {
 resource "aws_cognito_user_pool_client" "sveltePoolClient" {
   name = "sveltePoolClient"
 
+      access_token_validity                         = 720 
+      id_token_validity                             = 720
+
+      token_validity_units {
+          access_token  = "minutes"
+          id_token      = "minutes"
+          refresh_token = "days" 
+        }
   user_pool_id = aws_cognito_user_pool.derbyUserPool.id
 }
 resource "aws_cognito_user_pool_client" "svelteHostedPoolClient" {
