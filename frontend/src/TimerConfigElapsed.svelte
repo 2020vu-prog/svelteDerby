@@ -219,6 +219,14 @@
             };
             return false;
         }
+        //long names will mess with eplapsed tbl fmt!
+        if (pbForm.timerName.length > 7) {
+            $statusMessage = {
+                text: "TimerName too long. [max 7 chars]",
+                type: "error",
+            };
+            return false;
+        }
         if (!pbForm.timerMqttClientId) {
             $statusMessage = {
                 text: "Timer Selection required",

@@ -407,26 +407,26 @@
         <thead>
             <tr>
                 <th>Timer</th>
+                <th>&nbsp;</th>
                 <th>Lane1</th>
-                <th>&nbsp;</th>
                 <th>&lt;=&gt;</th>
-                <th>&nbsp;</th>
                 <th>Lane2</th>
+                <th>&nbsp;</th>
             </tr>
         </thead>
         <tbody>
             {#each laneData as row (row.timer)}
                 <tr>
                     <th scope="row" style={row.nameStyle}>{row.timer} </th>
-                    <td>{row.l1}</td>
                     <td>
                         {#if row.flag1}{row.flag1}{/if}
                     </td>
+                    <td>{row.l1}</td>
                     <td>{row.delta}</td>
+                    <td>{row.l2}</td>
                     <td>
                         {#if row.flag2}{row.flag2}{/if}
                     </td>
-                    <td>{row.l2}</td>
                 </tr>
             {/each}
         </tbody>
