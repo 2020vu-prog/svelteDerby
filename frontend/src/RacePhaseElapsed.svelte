@@ -100,7 +100,7 @@
                 }
             });
             if (max > min) {
-                return max - min;
+                return `${((max - min) / 1000).toFixed(3)}`;
             }
             return "";
         };
