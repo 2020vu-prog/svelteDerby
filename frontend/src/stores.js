@@ -150,9 +150,28 @@ axiosCommon.interceptors.request.use(function (config) {
 });
 //response interceptor
 axiosCommon.interceptors.response.use(
-    (res) => {
+    (response) => {
         console.log("AC:passthrough");
-        return res;
+        if (response.status === 401) {
+            log.debug("AINT: You are not authorized");
+        }
+        if (response.status === 200 && response.headers["x-client-minimum"]) {
+            log.debug("AINT: headers: ", response.headers);
+            if (
+                semver.lt(buildVersion(), response.headers["x-client-minimum"])
+            ) {
+                location.reload();
+            }
+        }
+        if (response.data.error) {
+            log.debug("AINT 200 with error:", response);
+            statusMessage.set({
+                text: response.data.error,
+                type: "error",
+            });
+            return Promise.reject(response.data.error);
+        }
+        return response;
     },
     async function (error) {
         const axErrorKey = uuidv4();

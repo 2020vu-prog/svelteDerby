@@ -193,6 +193,7 @@
         }
         let gpsDate = new Date(ms);
         return gpsDate.toLocaleTimeString([], {
+            hour12: false, //AM PM format wastes space
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit",
