@@ -80,7 +80,7 @@
         "/driverAdd/:number?": DriverAdd,
         "/driverInfo/:number?": DriverInfo,
         "/eventSelection/:orgIz": EventSelection,
-        "/as/:orgIz": EventSelection, //autoSelect shortcut
+        "/as/:orgIz/:orgId": EventSelection, //autoSelect shortcut
         "/eventAdd/:orgIz/:mode": EventAdd,
         "/historyList/:PK/:SK": HistoryList,
         "/orgUserList": OrgUserList,

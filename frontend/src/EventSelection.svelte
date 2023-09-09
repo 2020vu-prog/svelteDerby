@@ -44,7 +44,7 @@
         //recheck auto select after login/eventmap populated!
         if (mounted) potentialAutoSelect($userEmail);
     }
-    let activating = false;
+    let previousActivate = false;
     // headsup: caller does not await...
     async function activateNewest() {
         const tag = "activateNewest";
@@ -71,22 +71,31 @@
         }
 
         //only one activation allowed!
-        if (activating) {
-            const msg = `AS: Skipping, previous runner: ${userEmail} ${activating}`;
+        if (previousActivate) {
+            const msg = `AS: Skipping, previous runner: ${userEmail} ${previousActivate}`;
             log.debug(`${tag} ${msg}`);
             $statusMessage = {
                 text: msg,
             };
             return;
         }
-        activating = $userEmail;
+        previousActivate = $userEmail;
 
         let selectedConfig = {
             at: 0,
         };
-        for (const cfg of orgEvents) {
-            if (cfg.at > selectedConfig.at) {
-                selectedConfig = cfg;
+        // did AS qr code request specific event?
+        if (params.orgId) {
+            for (const cfg of orgEvents) {
+                if (cfg.orgId === params.orgId) {
+                    selectedConfig = cfg;
+                }
+            }
+        } else { // newest
+            for (const cfg of orgEvents) {
+                if (cfg.at > selectedConfig.at) {
+                    selectedConfig = cfg;
+                }
             }
         }
 

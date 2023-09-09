@@ -10,6 +10,7 @@
         mediaFileType,
         uiPageSize,
         mqttEnabled,
+        raceConfig,
     } from "./stores.js";
 
     $: {
@@ -31,7 +32,16 @@
     let themeSelected;
     var selectedPageSize = undefined;
 
+    function getUrl() {
+        const url = new URL(window.location.href);
+        const orgIz = $raceConfig.orgIz;
+        const orgId = $raceConfig.orgId;
+
+        const link = `${url.protocol}//${url.hostname}:${url.port}/#/as/${orgIz}/${orgId}`;
+        return encodeURIComponent(link);
+    }
     onMount(async () => {
+        log.debug(`qr: ${getUrl()}`);
         if (getCacheKey()) {
             disableCache = true;
         } else {
@@ -296,6 +306,12 @@
         </div>
         <hr />
     </div>
+
+    <img
+        src="https://api.qrserver.com/v1/create-qr-code/?data={getUrl()}&amp;size=200x200"
+        alt=""
+        title=""
+    />
 
     <BottomNav />
 </div>
