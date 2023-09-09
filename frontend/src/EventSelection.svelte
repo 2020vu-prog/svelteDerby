@@ -91,7 +91,8 @@
                     selectedConfig = cfg;
                 }
             }
-        } else { // newest
+        } else {
+            // newest
             for (const cfg of orgEvents) {
                 if (cfg.at > selectedConfig.at) {
                     selectedConfig = cfg;
