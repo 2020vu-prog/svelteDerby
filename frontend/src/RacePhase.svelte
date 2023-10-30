@@ -98,9 +98,9 @@
         return phaseWinTime.toString().padStart(3, "0");
     };
     const getPhaseClass = (racePhase) => {};
-    const trialRunEmoji="⚗️";
-    const hotRunEmoji= "🔥";
-    const funRunEmoji= "😊";
+    const trialRunEmoji = "⚗️";
+    const hotRunEmoji = "🔥";
+    const funRunEmoji = "😊";
     const getPhaseIcon = (racePhase) => {
         const i = _getPhaseIcon(racePhase);
         if (i === "H") {
