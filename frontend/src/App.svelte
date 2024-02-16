@@ -4,7 +4,9 @@
 
     import Router from "svelte-spa-router";
     import { location, replace } from "svelte-spa-router";
+    import { querystring } from "svelte-spa-router";
 
+    import Splash from "./Splash.svelte";
     import BottomNav from "./BottomNav.svelte";
     import CaptureVideo from "./CaptureVideo.svelte";
     import RaceStandingList from "./RaceStandingList.svelte";
@@ -45,6 +47,7 @@
     import MediaList from "./MediaList.svelte";
 
     import ForceReloadPage from "./ForceReloadPage.svelte";
+    import LoginH from "./LoginH.svelte";
     import Login from "./Login.svelte";
     import HotLoad from "./HotLoad.svelte";
     import ElectronTimerRelay from "./ElectronTimerRelay.svelte";
@@ -64,7 +67,7 @@
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
     import { isEmailAllowedRoutePath, sleep } from "./utils.js";
-
+    import { setIdTokenFromCognitoCallback } from "./utilHosted.js";
     import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
     const routes = {
         // Exact path
@@ -74,6 +77,7 @@
         "/RpElapsed/:rpKey": RacePhaseElapsed,
         "/drivers/:selectable?": DriverList,
         "/login": Login,
+        "/loginH": LoginH,
         "/ManualTimerAdd/:rpKey/:winningLane?/:winningTime?": ManualTimerAdd,
         "/ManualAnnouncement": ManualAnnouncement,
         "/raceStandingAdd/:type": RaceStandingAdd,
@@ -252,6 +256,11 @@
                 menuRoute: "/login",
                 alwaysShow: true,
             },
+            {
+                text: "L0",
+                menuRoute: "/loginH",
+                alwaysShow: true,
+            },
         ];
     }
     const reloadEvent = async (raceConfigParam) => {
@@ -267,6 +276,7 @@
     };
     onMount(async () => {
         log.debug("mounted app");
+        setIdTokenFromCognitoCallback();
         logUserInIfNecessary();
 
         isMounted = new Date().getTime();
@@ -291,10 +301,13 @@
         }
         const cfg = await db.EventConfig.toArray();
         log.debug(`${tag} config:`, cfg);
-        log.debug(`${tag} location:`, $location);
+        log.debug(`${tag} location:`, $location, " qs:", $querystring);
 
         if (false) {
         } else if ($location.startsWith("/as/")) {
+            log.debug(`${tag} honoring auto select:`, $location);
+            replace($location);
+        } else if ($location.startsWith("/loginH")) {
             log.debug(`${tag} honoring auto select:`, $location);
             replace($location);
         } else if (cfg.length) {
@@ -425,6 +438,7 @@
     </a>
 </div>
 <main>
+    <Splash />
     <Router {routes} />
 </main>
 <BottomNav />

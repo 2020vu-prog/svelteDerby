@@ -1,7 +1,7 @@
 data "aws_region" "current" {}
 resource "aws_cognito_user_pool" "derbyUserPool" {
   name = "derbyUserPool"
-  //domain                     = "cf-test-rr1-us"
+//  domain                     = "cf-test-rr1-us"
   email_verification_subject = "User Verification for ${var.DeployEnvironment}"
   auto_verified_attributes   = ["email"]
   schema {
@@ -17,6 +17,10 @@ resource "aws_cognito_user_pool" "derbyUserPool" {
       min_length = "0"
     }
   }
+  //lambda_config {
+  //  create_auth_challenge = module.cognito_define_auth_function.lambda_function_arn
+
+  //}
 }
 resource "aws_cognito_user_pool_client" "sveltePoolClient" {
   name = "sveltePoolClient"
@@ -103,6 +107,8 @@ locals {
     "aws_cognito_region"           = "${data.aws_region.current.name}",
     "aws_user_pools_id"            = "${aws_cognito_user_pool.derbyUserPool.id}",
     "aws_user_pools_web_client_id" = "${aws_cognito_user_pool_client.sveltePoolClient.id}",
+    "aws_user_pools_hosted_client_id" = aws_cognito_user_pool_client.hosted_client.id,
+
     "aws_pubsub_region"            = "${data.aws_region.current.name}",
     "aws_pubsub_endpoint"          = "wss://${data.aws_iot_endpoint.mqtt.endpoint_address}/mqtt",
     "oauth"                        = {}
@@ -135,8 +141,10 @@ const awsmobile = {
     "aws_cognito_region": "${data.aws_region.current.name}",
     "aws_user_pools_id": "${aws_cognito_user_pool.derbyUserPool.id}",
     "aws_user_pools_web_client_id": "${aws_cognito_user_pool_client.sveltePoolClient.id}",
+    "aws_user_pools_hosted_client_id": "${aws_cognito_user_pool_client.hosted_client.id}",
     "aws_pubsub_region": "${data.aws_region.current.name}",
     "aws_pubsub_endpoint": "wss://${data.aws_iot_endpoint.mqtt.endpoint_address}/mqtt",
+    "hosted_url": "https://${aws_cognito_user_pool.derbyUserPool.domain}.auth.${data.aws_region.current.name}.amazoncognito.com",
     "oauth": {}
 };
 

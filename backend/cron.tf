@@ -3,6 +3,8 @@ module "lambda-cloudwatch-trigger" {
   region                = var.AwsRegion
   component             = "cron_derby_archiver"
   deployment_identifier = "production"
+  version = "1.1.0-rc.5"
+
 
   lambda_arn                 = module.derbyMainLambda.qualified_arn
   lambda_function_name       = module.derbyMainLambda.function_name

@@ -1,8 +1,9 @@
 import log from "loglevel";
 
-import axiosCommon from "axios";
+import axiosXyz from "axios";
 
 import { Auth } from "aws-amplify";
+const axiosCommon = axiosXyz.create();
 const jwt = require("jsonwebtoken");
 const semver = require("semver");
 const { v4: uuidv4 } = require("uuid");
@@ -67,6 +68,7 @@ export const developerMode = persistable("pref:developerMode", false);
 export const developerLogging = persistable("pref:developerLogging");
 export const enableFractionalMs = persistable("pref:enableFractionalMs", false);
 export const defaultPhaseType = persistable("pref:defaultPhaseType", "R");
+export const lastSplash = persistable("pref:lastSplash", 0);
 
 export const pendingSortAlgorithm = persistable(
     "pref:pendingSortAlgorithm",
