@@ -2,6 +2,7 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
+    import * as axiosVanilla  from "axios";
     import {
         driverMap,
         nextOnBlockKey,
@@ -19,9 +20,12 @@
         raceConfig,
         axios,
         recentRefreshMs,
+        mqttPsUrlMap,
     } from "./stores.js";
-    import Amplify, { PubSub } from "aws-amplify";
-    import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
+    //import { mqtt } from "mqtt";
+    import * as mqtt from "mqtt";
+    //import Amplify, { PubSub } from "aws-amplify";
+    //import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import { onDestroy } from "svelte";
@@ -36,12 +40,16 @@
     const { v4: uuidv4 } = require("uuid");
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
+    let mqClient = "";
     var pageLoadTimeMs = 0;
     const nextPhaseTopic = "nextPhase";
     const iosTriggerTopic = "iosTrigger";
     var client;
     var btnClass = "btn-info";
-    const activeIotWatch = {};
+    let activeIotWatch = {
+        errors:[],
+        topic:{}
+    };
 
     var refreshInProgressButton = false;
     var refreshInProgressMq = false;
@@ -51,7 +59,7 @@
     //TODO: these should happen consecutively.
     // always clearStore() before doRefresh()
     $: {
-        log.debug("Race config changed. refreshing.");
+        log.debug("Race config changed. refreshing.",JSON.stringify($raceConfig));
         doRefresh($raceConfig); // call doRefresh if/when RaceConfig changes.
     }
     $: {
@@ -68,17 +76,54 @@
         checkIfRaceFrozenAndDisplayMessage($raceConfig);
     }
 
-    async function watchIot() {
+    function applyBtnClass(){
+        if (!$mqttEnabled) {
+            btnClass = "btn-info";
+            return;
+        }
+        if(activeIotWatch['errors'].length>0){
+            btnClass = "btn-danger";
+            return;
+        }
+        if (mqClient && mqClient.connected){
+                btnClass = "btn-success";
+        }else{
+
+                btnClass = "btn-warning";
+        }
+
+    }
+    function resetMqtt(){
+        activeIotWatch = {
+            errors:[],
+            topic:{}
+        };
+        if(mqClient){
+            mqClient.end();
+            mqClient=""
+        }
+        applyBtnClass()
+    }
+    async function watchIot(from) {
+        applyBtnClass();
+
         if (!$raceConfig.orgId) {
+            resetMqtt()
             log.debug("watchIot : no org:  skip");
             return; // nothing to watch
         }
         if (!$mqttEnabled) {
+            resetMqtt()
             log.debug("watchIot : not enabled:  skip", $mqttEnabled);
-            btnClass = "btn-info";
             return; // nothing to watch
         }
-        log.debug("watchIot : do mqtt:  ", $mqttEnabled);
+        if(isArchived()){
+
+            resetMqtt()
+            log.debug("watchIot : isArchived!skip");
+            return; // nothing to watch
+        }
+        log.debug("watchIot : do mqtt:  ", $mqttEnabled,"from:",from);
 
         /*
         const ccSession = await Auth.currentSession();
@@ -94,7 +139,18 @@
         */
 
         if (activeIotWatch && !activeIotWatch.plugged) {
+            await refreshPsUrl();
+            mqClient = mqtt.connect($mqttPsUrlMap.url);
+            mqClient.on("message", onMsgGeneric);
+            mqClient.on("connect", applyBtnClass);
+            mqClient.on("disconnect", applyBtnClass);
+            mqClient.on("close", applyBtnClass);
+            mqClient.on("offline", applyBtnClass);
+            mqClient.on("error", applyBtnClass);
+
+            activeIotWatch.plugged = true; // first time only.
             //await requstPermissionHack(cognitoIdentityId);
+            /*
             Amplify.addPluggable(
                 new AWSIoTProvider({
                     aws_pubsub_region: aws_exports.aws_pubsub_region,
@@ -102,22 +158,17 @@
                 })
             );
             activeIotWatch.plugged = true; // first time only.
+            */
         }
 
         const topic = "derby/" + $raceConfig.orgId + "/dist";
 
-        if (activeIotWatch.subbedTopic === topic) {
-            log.debug("watchIot : already subscribed skip");
-            return;
-        }
 
-        if (activeIotWatch.subscription) {
-            log.debug("watchIot: UnSubscribing", activeIotWatch.subscription);
-            activeIotWatch.subscription.unsubscribe();
-        }
         log.debug("watchIot: Subscribing to:", topic);
-        activeIotWatch.subbedTopic = topic;
-        btnClass = "btn-success";
+        //mqClient.subscribe(topic, {}, onSubscribed);
+        syncSubscription(true, topic, applyFromMqMsg)
+
+        /*
         activeIotWatch.subscription = PubSub.subscribe(topic).subscribe({
             next: async (data) => {
                 btnClass = "btn-success";
@@ -137,6 +188,7 @@
             },
         });
 
+        */
         syncAutoAnnounceSubscription();
         syncAutoAnnounceSubscription();
         syncAutoAnnounceSubscription();
@@ -148,6 +200,76 @@
     //$: syncVideoCaptureSubscription($mqttTimerSubscribe);
     $: syncMapSubscriptions($mqttMapSubscribe);
 
+    async function refreshPsUrl() {
+         //   log.debug("refresh ps ",$mqttPsUrlMap);
+        //log.debug("refresh ps0",$mqttPsUrlMap.epoch +(600*1000))
+        //log.debug("refresh ps1",new Date().getTime())
+        if($mqttPsUrlMap && 
+        $mqttPsUrlMap.epoch &&
+        $mqttPsUrlMap.epoch +(300*1000) > new Date().getTime()){
+            log.debug("refresh ps bpass");
+            return;
+        }
+            log.debug("refresh ps stale");
+        const response = await axiosVanilla.get(aws_exports.mqtt_ps_url, {
+            headers: {
+                "x-invoke-key": aws_exports.mqtt_ps_key,
+            },
+        });
+        if (response.data.url) {
+            log.debug("refresh ps good");
+            $mqttPsUrlMap = {
+                url:response.data.url,
+                epoch:new Date().getTime(),
+            }
+        } else {
+            log.debug("refresh ps fail");
+        }
+    }
+
+    function onSubscribed(err,granted) {
+        if(err){
+            activeIotWatch['errors'].push(err);
+            applyBtnClass();
+        }
+        console.log("onSubscribed", err,JSON.stringify(granted));
+    }
+    const msgQ=[]
+    async function onMsgGeneric(topic, message) {
+        // message is Buffer
+        console.log("onMsgGeneric", topic, message.toString());
+        if (!activeIotWatch.topic[topic]){
+        console.log("onMsgGeneric skipping, no handler:", topic );
+
+        }
+        msgQ.push({
+            topic: topic,
+            message:message,
+        })
+        potentialDrainQ()
+
+
+        //await sleep(1000); // does parent await for handler??
+        //TODO: parent does NOT wait. we should queue and single thread
+        console.log("onMsgGeneric done")
+    }
+
+
+            let drainingQ=false
+        function potentialDrainQ(){
+            if(drainingQ)return
+            drainingQ=true
+        console.log("draining begin")
+            while (msgQ.length>0){
+                console.log("draining ONE")
+                const m=msgQ.pop()
+                const jsonMsg = JSON.parse(m.message.toString());
+                activeIotWatch.topic[m.topic](jsonMsg)
+            }
+        console.log("draining done")
+            drainingQ=false
+        }
+        
     async function syncAutoAnnounceSubscription() {
         const shouldSub = $autoAnnounceResults && $mqttEnabled && !isArchived();
         log.debug("syncAutoAnnounceSubscription: voice ", shouldSub);
@@ -195,21 +317,21 @@
         await tick();
     }
 
-    async function syncSubscription(subEnabled, topicP, onMsg) {
+    async function syncSubscription(subEnabled, topicP, onMsgh) {
         const tag = "tag:syncSubscription:" + topicP;
         log.debug(`${tag} begin`);
         /*
         mqSem.take(function () {
-            _syncSubscription(subEnabled, topicP, onMsg);
+            _syncSubscription(subEnabled, topicP, onMsgh);
             mqSem.leave()
         });
         */
         await mqttSubLock.acquire();
-        await _syncSubscription(subEnabled, topicP, onMsg);
+        await _syncSubscription(subEnabled, topicP, onMsgh);
         await mqttSubLock.release();
         log.debug(`${tag} done`);
     }
-    async function _syncSubscription(subEnabled, topicP, onMsg) {
+    async function _syncSubscription(subEnabled, topicP, onMsgh) {
         const tag = "tag:_syncSubscription:" + topicP;
         log.debug(`${tag} begin`);
         if (activeIotWatch && activeIotWatch.plugged) {
@@ -219,31 +341,34 @@
         }
         log.debug(`${tag}: ${subEnabled} `);
         if (subEnabled) {
-            if (activeIotWatch[topicP]) {
+            if (activeIotWatch.topic[topicP]) {
                 // no action needed.
                 log.debug(`${tag}: ${topicP} subscribe stand down`);
             } else {
                 log.debug(`${tag}: Subscribing ${topicP}`);
-                activeIotWatch[topicP] = await mySubscribe(topicP, onMsg);
+                activeIotWatch.topic[topicP] = await mySubscribe(topicP, onMsgh);
             }
         } else {
-            if (activeIotWatch[topicP]) {
-                log.debug(`${tag}: UnSubscribing ${activeIotWatch[topicP]}`);
-                activeIotWatch[topicP].unsubscribe();
-                delete activeIotWatch[topicP];
+            if (activeIotWatch.topic[topicP]) {
+                log.debug(`${tag}: UnSubscribing ${activeIotWatch.topic[topicP]}`);
+                //activeIotWatch[topicP].unsubscribe();
+                mqClient.unsubscribe(topicP);
+                delete activeIotWatch.topic[topicP];
             } else {
                 log.debug(`${tag}: ${topicP} unsubscribe stand down`);
             }
         }
         log.debug(`${tag} done`);
     }
-    async function mySubscribe(topicP, onMsg) {
+    async function mySubscribe(topicP, onMsgh) {
         const tag = "tag:mySubscribe";
+        mqClient.subscribe(topicP, {}, onSubscribed);
+        return onMsgh
         return PubSub.subscribe(topicP).subscribe({
             next: async (data) => {
                 log.debug(`${tag}: ${topicP} mqMessage received`, data);
                 log.debug(`${tag}: ${topicP} mqMessage value`, data.value);
-                await onMsg(data.value, topicP);
+                await onMsgh(data.value, topicP);
             },
             error: (error) => {
                 console.error(`${tag}: ${topicP} AWS iot error:`, error);
@@ -571,6 +696,11 @@
     const doRefresh = async () => {
         const tag = "doRefresh";
         log.debug(`${tag} begin`);
+        if (refreshInProgressButton) {
+            log.debug(`${tag} skipped, already working`);
+            return
+
+        }
         refreshInProgressButton = true;
         //await dbInit();
         log.debug("old nobKey:", $nextOnBlockKey);
@@ -584,7 +714,7 @@
         if ($raceConfig.archived === "true") {
             await loadArchivedData();
         } else {
-            watchIot();
+            await watchIot("fdr");
 
             const url =
                 $raceConfig.baseUrl +
@@ -609,7 +739,10 @@
         log.debug(`${tag} done ${$recentRefreshMs}`);
     };
     function isArchived(ttlSecondsUnusedSvelteTrigger) {
-        log.debug("isArchived passed ecFromDexie: ", ecFromDexie);
+        log.debug("isArchived passed ecFromDexie: ", ecFromDexie,JSON.stringify($raceConfig));
+        if($raceConfig && $raceConfig.archived){
+            return true
+        }
         return ecFromDexie && ecFromDexie[0] && ecFromDexie[0].archived;
     }
     function checkIfRaceFrozenAndDisplayMessage() {
@@ -672,7 +805,8 @@
 </script>
 
 {#if isArchived(ecFromDexie, $raceConfig)}
-    <SpinnerButton spinning={false} disabled={true}>
+    <SpinnerButton spinning={false} disabled={true}
+      >
         Race Archived
     </SpinnerButton>
 {:else}

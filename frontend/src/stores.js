@@ -92,6 +92,7 @@ export const beginAnonymousLogin = writable(false);
 export const timerState = writable({});
 export const recentRefreshMs = writable(0);
 export const uiPageSize = persistable("pref:uiPageSize", undefined);
+export const mqttPsUrlMap= persistable("mqttPsUrlMap", {});
 //export const uiPageSize = writable(100);
 export const raceConfig = persistable("pref:uiRaceConfig", {
     orgName: "",
