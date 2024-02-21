@@ -21,4 +21,5 @@ function s3PushOLD {
 	echo cloudfront endpoint: $DERBY_CLOUDFRONT
 }
 
+export NODE_OPTIONS=--openssl-legacy-provider
 make install &&  npm run build && ./s3Push.sh
