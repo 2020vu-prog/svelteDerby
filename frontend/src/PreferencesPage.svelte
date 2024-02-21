@@ -11,6 +11,7 @@
         uiPageSize,
         mqttEnabled,
         raceConfig,
+        mqttPsUrlMap,
     } from "./stores.js";
 
     $: {
@@ -32,6 +33,10 @@
     let themeSelected;
     var selectedPageSize = undefined;
 
+    function getHostname() {
+        const url = new URL(window.location.href);
+        return url.hostname
+    }
     function getUrl() {
         const url = new URL(window.location.href);
         const orgIz = $raceConfig.orgIz;
@@ -66,6 +71,9 @@
     }
     async function clickDisableCache() {
         log.debug("check do");
+        $mqttPsUrlMap.expires=2
+        $mqttPsUrlMap=$mqttPsUrlMap
+
         if (!disableCache) {
             // negated test, b/c clickhandler called before bind value :-(
             //$.disableCache = new Date().getTime();
@@ -309,9 +317,11 @@
 
     <img
         src="https://api.qrserver.com/v1/create-qr-code/?data={getUrl()}&amp;size=200x200"
-        alt=""
+        alt="{getUrl()}"
         title=""
     />
+    <p></p>
+    {getHostname()}
 
     <BottomNav />
 </div>
