@@ -48,6 +48,7 @@
     var btnClass = "btn-info";
     let activeIotWatch = {
         errors:[],
+        currentDistTopic:"",
         topic:{}
     };
 
@@ -57,13 +58,18 @@
 
     var ecFromDexie = [];
     //TODO: these should happen consecutively.
-    // always clearStore() before doRefresh()
+    // always clearStore() before doRefreshViaHttp()
+    /*
     $: {
         log.debug("Race config changed. refreshing.",JSON.stringify($raceConfig));
-        doRefresh($raceConfig); // call doRefresh if/when RaceConfig changes.
+        doRefreshViaHttp($raceConfig); // call doRefresh if/when RaceConfig changes.
     }
     $: {
         watchIot($mqttEnabled);
+    }
+    */
+    $: {
+        configChanged($raceConfig,$mqttEnabled)
     }
 
     $: {
@@ -77,8 +83,12 @@
     }
 
     function applyBtnClass(){
+        if (isArchived()) {
+            btnClass = "btn-secondary";
+            return;
+        }
         if (!$mqttEnabled) {
-            btnClass = "btn-info";
+            btnClass = "btn-secondary";
             return;
         }
         if(activeIotWatch['errors'].length>0){
@@ -96,33 +106,47 @@
     function resetMqtt(){
         activeIotWatch = {
             errors:[],
-            topic:{}
+            topic:{},
+        currentDistTopic:""
+
         };
+
         if(mqClient){
             mqClient.end();
             mqClient=""
         }
         applyBtnClass()
     }
-    async function watchIot(from) {
-        applyBtnClass();
-
+    async function configChanged(){
         if (!$raceConfig.orgId) {
             resetMqtt()
-            log.debug("watchIot : no org:  skip");
-            return; // nothing to watch
-        }
-        if (!$mqttEnabled) {
-            resetMqtt()
-            log.debug("watchIot : not enabled:  skip", $mqttEnabled);
+            log.debug("configChanged : no org:  skip");
             return; // nothing to watch
         }
         if(isArchived()){
-
             resetMqtt()
-            log.debug("watchIot : isArchived!skip");
-            return; // nothing to watch
+            log.debug("configChanged : isArchived!skip",$raceConfig.orgId);
+            doRefreshViaHttp();
+            return;
         }
+        if (!$mqttEnabled) {
+            resetMqtt()
+            log.debug("configChanged : not enabled:  skip", $mqttEnabled);
+            doRefreshViaHttp();
+            return;
+        }
+        if(activeIotWatch.currentDistTopic !==getDistTopic()){
+            log.debug("configChanged : mqtt reset");
+            resetMqtt() //fall thru to re-connect
+        }
+        // watchIot will call doRefreshViaHttp() onConnect
+        log.debug("configChanged : fall through");
+        await watchIot("configChanged") 
+
+    }
+    async function watchIot(from) {
+        applyBtnClass();
+
         log.debug("watchIot : do mqtt:  ", $mqttEnabled,"from:",from);
 
         /*
@@ -140,9 +164,12 @@
 
         if (activeIotWatch && !activeIotWatch.plugged) {
             await refreshPsUrl();
-            mqClient = mqtt.connect($mqttPsUrlMap.url);
+            mqClient = mqtt.connect($mqttPsUrlMap.url,{
+                transformWsUrl: transformWsUrl,
+                reconnectPeriod:3,
+            });
             mqClient.on("message", onMsgGeneric);
-            mqClient.on("connect", applyBtnClass);
+            mqClient.on("connect", onConnect);
             mqClient.on("disconnect", applyBtnClass);
             mqClient.on("close", applyBtnClass);
             mqClient.on("offline", applyBtnClass);
@@ -161,12 +188,13 @@
             */
         }
 
-        const topic = "derby/" + $raceConfig.orgId + "/dist";
+        const topic = getDistTopic()
 
 
         log.debug("watchIot: Subscribing to:", topic);
         //mqClient.subscribe(topic, {}, onSubscribed);
         syncSubscription(true, topic, applyFromMqMsg)
+        activeIotWatch.currentDistTopic=topic
 
         /*
         activeIotWatch.subscription = PubSub.subscribe(topic).subscribe({
@@ -194,6 +222,16 @@
         syncAutoAnnounceSubscription();
         //syncVideoCaptureSubscription();
     }
+    function getDistTopic(){
+        if($raceConfig && $raceConfig.orgId){
+
+            const topic = "derby/" + $raceConfig.orgId + "/dist";
+            return topic
+        }else{
+            return "";
+        }
+
+    }
 
     // toggle subscription when prefs change.
     $: syncAutoAnnounceSubscription($autoAnnounceResults);
@@ -201,12 +239,13 @@
     $: syncMapSubscriptions($mqttMapSubscribe);
 
     async function refreshPsUrl() {
+       
          //   log.debug("refresh ps ",$mqttPsUrlMap);
         //log.debug("refresh ps0",$mqttPsUrlMap.epoch +(600*1000))
         //log.debug("refresh ps1",new Date().getTime())
         if($mqttPsUrlMap && 
-        $mqttPsUrlMap.epoch &&
-        $mqttPsUrlMap.epoch +(300*1000) > new Date().getTime()){
+        $mqttPsUrlMap.expires &&
+        $mqttPsUrlMap.expires *1000 > new Date().getTime()){
             log.debug("refresh ps bpass");
             return;
         }
@@ -220,7 +259,7 @@
             log.debug("refresh ps good");
             $mqttPsUrlMap = {
                 url:response.data.url,
-                epoch:new Date().getTime(),
+                expires:response.data.expires,
             }
         } else {
             log.debug("refresh ps fail");
@@ -232,14 +271,19 @@
             activeIotWatch['errors'].push(err);
             applyBtnClass();
         }
-        console.log("onSubscribed", err,JSON.stringify(granted));
+        log.debug("onSubscribed", err,JSON.stringify(granted));
     }
     const msgQ=[]
+    async function onConnect(topic, message) {
+        applyBtnClass()
+        doRefreshViaHttp();
+
+    }
     async function onMsgGeneric(topic, message) {
         // message is Buffer
-        console.log("onMsgGeneric", topic, message.toString());
+        log.debug("onMsgGeneric", topic, message.toString());
         if (!activeIotWatch.topic[topic]){
-        console.log("onMsgGeneric skipping, no handler:", topic );
+        log.debug("onMsgGeneric skipping, no handler:", topic );
 
         }
         msgQ.push({
@@ -251,7 +295,7 @@
 
         //await sleep(1000); // does parent await for handler??
         //TODO: parent does NOT wait. we should queue and single thread
-        console.log("onMsgGeneric done")
+        log.debug("onMsgGeneric done")
     }
 
 
@@ -259,14 +303,14 @@
         function potentialDrainQ(){
             if(drainingQ)return
             drainingQ=true
-        console.log("draining begin")
+        log.debug("draining begin")
             while (msgQ.length>0){
-                console.log("draining ONE")
+                log.debug("draining ONE")
                 const m=msgQ.pop()
                 const jsonMsg = JSON.parse(m.message.toString());
                 activeIotWatch.topic[m.topic](jsonMsg)
             }
-        console.log("draining done")
+        log.debug("draining done")
             drainingQ=false
         }
         
@@ -497,7 +541,7 @@
         const elapsedTime = new Date().getTime() - startTime;
 
         $statusMessage = {
-            text: `Refresh took ${elapsedTime}`,
+            text: `DB took ${elapsedTime}`,
             type: "success",
             key: "refreshTime",
         };
@@ -693,7 +737,7 @@
         // root cause looks like double subscribe.
         log.debug("tattle :", msg, pendingAudioList.length);
     }
-    const doRefresh = async () => {
+    const doRefreshViaHttp = async () => {
         const tag = "doRefresh";
         log.debug(`${tag} begin`);
         if (refreshInProgressButton) {
@@ -714,7 +758,8 @@
         if ($raceConfig.archived === "true") {
             await loadArchivedData();
         } else {
-            await watchIot("fdr");
+            //watchIot can now invoke http refresh on re-connect
+            //await watchIot("fdr"); 
 
             const url =
                 $raceConfig.baseUrl +
@@ -743,7 +788,8 @@
         if($raceConfig && $raceConfig.archived){
             return true
         }
-        return ecFromDexie && ecFromDexie[0] && ecFromDexie[0].archived;
+        return false;
+        //return ecFromDexie && ecFromDexie[0] && ecFromDexie[0].archived;
     }
     function checkIfRaceFrozenAndDisplayMessage() {
         if (
@@ -802,16 +848,26 @@
         }
         refreshInProgressCca = false;
     }
+    let recentPsUrl="";
+    function transformWsUrl  (url, options, client)  {
+      //client.options.username = `token=${this.get_current_auth_token()}`;
+      //client.options.clientId = `${this.get_updated_clientId()}`;
+
+            refreshPsUrl(); // async request but transform won't await.  issue the request so it will be avlbl on subsequent retry...
+
+            return $mqttPsUrlMap.url
+    }
 </script>
 
 {#if isArchived(ecFromDexie, $raceConfig)}
     <SpinnerButton spinning={false} disabled={true}
+        {btnClass}
       >
         Race Archived
     </SpinnerButton>
 {:else}
     <SpinnerButton
-        on:click={doRefresh}
+        on:click={doRefreshViaHttp}
         spinning={refreshInProgressButton ||
             refreshInProgressMq ||
             refreshInProgressCca}
