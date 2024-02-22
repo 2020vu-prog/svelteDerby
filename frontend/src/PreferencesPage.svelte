@@ -72,6 +72,8 @@
     async function clickDisableCache() {
         log.debug("check do");
         $mqttPsUrlMap.expires=2
+        $mqttPsUrlMap.requested=2
+        $mqttPsUrlMap.issued=2
         $mqttPsUrlMap=$mqttPsUrlMap
 
         if (!disableCache) {
