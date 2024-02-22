@@ -238,17 +238,32 @@
     //$: syncVideoCaptureSubscription($mqttTimerSubscribe);
     $: syncMapSubscriptions($mqttMapSubscribe);
 
+    async function isPsMapExpired() {
+        const now=new Date().getTime()
+        if($mqttPsUrlMap && 
+        $mqttPsUrlMap.expires &&
+        $mqttPsUrlMap.expires *1000 > now){
+            log.debug("isPsMapExpired ps bpass0");
+            return true;
+        }
+        // todo: aws urll expiring after 5 minutes instead of 1 hour !??
+        if($mqttPsUrlMap && 
+        $mqttPsUrlMap.issued &&
+        $mqttPsUrlMap.issued +(5*60*1000) > now){
+            return false
+        }
+        return true
+    }
     async function refreshPsUrl() {
+        if(! isPsMapExpired()){
+            log.debug("refresh ps bpass");
+            return;
+
+        }
        
          //   log.debug("refresh ps ",$mqttPsUrlMap);
         //log.debug("refresh ps0",$mqttPsUrlMap.epoch +(600*1000))
         //log.debug("refresh ps1",new Date().getTime())
-        if($mqttPsUrlMap && 
-        $mqttPsUrlMap.expires &&
-        $mqttPsUrlMap.expires *1000 > new Date().getTime()){
-            log.debug("refresh ps bpass");
-            return;
-        }
             log.debug("refresh ps stale");
         const response = await axiosVanilla.get(aws_exports.mqtt_ps_url, {
             headers: {
@@ -260,6 +275,7 @@
             $mqttPsUrlMap = {
                 url:response.data.url,
                 expires:response.data.expires,
+                issued: new Date().getTime(),
             }
         } else {
             log.debug("refresh ps fail");
