@@ -238,28 +238,45 @@
     //$: syncVideoCaptureSubscription($mqttTimerSubscribe);
     $: syncMapSubscriptions($mqttMapSubscribe);
 
-    async function isPsMapExpired() {
+    function isPsMapRefreshNeeded() {
         const now=new Date().getTime()
+        /* ps url expires early :-(
         if($mqttPsUrlMap && 
         $mqttPsUrlMap.expires &&
         $mqttPsUrlMap.expires *1000 > now){
             log.debug("isPsMapExpired ps bpass0");
-            return true;
+            return false;
         }
+        */
         // todo: aws urll expiring after 5 minutes instead of 1 hour !??
         if($mqttPsUrlMap && 
         $mqttPsUrlMap.issued &&
         $mqttPsUrlMap.issued +(5*60*1000) > now){
+            log.debug("refresh ps bpass: issue recent");
             return false
-        }
+        } 
+
+        //no aggressive retries.  give backend a chance to reply!
+        if($mqttPsUrlMap && 
+        $mqttPsUrlMap.requested &&
+        $mqttPsUrlMap.requested +(30*1000) > now){
+            log.debug("refresh ps bpass: request recent");
+            return false
+        } 
+            log.debug("refresh ps bpass: NOT");
+        
         return true
     }
     async function refreshPsUrl() {
-        if(! isPsMapExpired()){
-            log.debug("refresh ps bpass");
+        if(! isPsMapRefreshNeeded()){
+            log.debug("refresh ps bpass: BPASS");
             return;
 
         }
+
+            log.debug("refresh ps bpass:  PROCEED");
+        $mqttPsUrlMap.requested=new Date().getTime();
+        $mqttPsUrlMap = $mqttPsUrlMap 
        
          //   log.debug("refresh ps ",$mqttPsUrlMap);
         //log.debug("refresh ps0",$mqttPsUrlMap.epoch +(600*1000))
@@ -276,6 +293,7 @@
                 url:response.data.url,
                 expires:response.data.expires,
                 issued: new Date().getTime(),
+                requested:$mqttPsUrlMap.requested,
             }
         } else {
             log.debug("refresh ps fail");
