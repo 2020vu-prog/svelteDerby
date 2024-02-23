@@ -274,7 +274,7 @@
 
         }
 
-            log.debug("refresh ps bpass:  PROCEED");
+        log.debug("refresh ps bpass:  PROCEED");
         $mqttPsUrlMap.requested=new Date().getTime();
         $mqttPsUrlMap = $mqttPsUrlMap 
        
@@ -297,12 +297,18 @@
             }
         } else {
             log.debug("refresh ps fail");
+            $mqttPsUrlMap.url="";
+            $mqttPsUrlMap = $mqttPsUrlMap 
         }
     }
 
     function onSubscribed(err,granted) {
         if(err){
             activeIotWatch['errors'].push(err);
+            $statusMessage = {
+            text: err,
+            type: "error",
+        };
             applyBtnClass();
         }
         log.debug("onSubscribed", err,JSON.stringify(granted));
