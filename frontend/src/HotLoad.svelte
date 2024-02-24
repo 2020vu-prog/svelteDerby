@@ -348,7 +348,7 @@
                 log.debug("draining ONE")
                 const m=msgQ.pop()
                 const jsonMsg = JSON.parse(m.message.toString());
-                activeIotWatch.topic[m.topic](jsonMsg)
+                activeIotWatch.topic[m.topic](jsonMsg,m.topic)
             }
         log.debug("draining done")
             drainingQ=false
@@ -394,7 +394,7 @@
         }
     }
     async function onMapMqttData(json, topic) {
-        log.debug(`syncMap ononMapMqttData: ${topic}`);
+        log.debug(`syncMap onMapMqttData: ${topic}`);
 
         $mqttMapData[topic] = json;
         $mqttMapData = $mqttMapData; //tickle state listeners
