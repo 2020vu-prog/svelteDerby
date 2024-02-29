@@ -141,6 +141,19 @@ resource "aws_cloudwatch_log_group" "derbyMainLogRetention" {
   name              = "/aws/lambda/${local.mainLambdaName}"
   retention_in_days = 1
 }
+resource "aws_lambda_function_url" "lambda" {
+  function_name      = aws_lambda_function.lambda.function_name
+  authorization_type = "NONE"
+  cors  {
+    allow_credentials = true
+    allow_origins     = ["*"]
+    allow_methods     = ["*"]
+    allow_headers     = ["date", "keep-alive", "x-invoke-key"]
+    expose_headers    = ["keep-alive", "date", "x-invoke-key"]
+    max_age           = 86400
+  }
+}
+
 resource "aws_lambda_function" "lambda" {
   function_name = local.mainLambdaName
 
@@ -307,4 +320,7 @@ output "function_name" {
 }
 output "version" {
   value = "${aws_lambda_function.lambda.version}"
+}
+output "lambda_function_url" {
+  value = aws_lambda_function_url.lambda.function_url
 }

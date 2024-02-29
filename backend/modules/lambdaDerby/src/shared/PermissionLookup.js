@@ -58,11 +58,7 @@ function roleHasRoutePath(routeType, orgIz, roleList, routePath) {
     const permKeys = getRolePermissions(roleList);
     return isRoutePathInPermissionList(routeType, permKeys, routePath);
 }
-function hasRoutePath(routeType, orgIz, userMail, routePath) {
-    const grantedRoles = getLegacyRoles(orgIz, userMail);
-    const permKeys = getRolePermissions(grantedRoles);
-    return isRoutePathInPermissionList(routeType, permKeys, routePath);
-}
+
 function isRoutePathInPermissionList(routeType, permList, routePath) {
     log.debug("permList:", permList);
     var rc = false;

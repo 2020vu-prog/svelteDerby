@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-dynamodb-v2-node": "0.1.0-preview.2",
+    "aws-jwt-verify": "^4.0.1",
     "csv-parse": "^5.4.0",
     "handlebars": "^4.7.8",
     "js-base64": "^3.7.5",
@@ -24,6 +25,7 @@
   },
   "bundledDependencies": [
     "@aws-sdk/client-dynamodb-v2-node",
+    "aws-jwt-verify",
     "csv-parse",
     "jsonwebtoken",
     "jwk-to-pem",
@@ -33,6 +35,7 @@
   ],
   "bundleDependencies": [
     "@aws-sdk/client-dynamodb-v2-node",
+    "aws-jwt-verify",
     "csv-parse",
     "jsonwebtoken",
     "jwk-to-pem",

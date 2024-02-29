@@ -50,6 +50,7 @@
         "jsonwebtoken": "^8.5.1",
         "loglevel": "^1.7.1",
         "long": "^5.2.3",
+        "mqtt": "^4.3.8",
         "protobufjs": "^7.2.3",
         "semaphore-async-await": "^1.5.1",
         "semver": "^7.3.2",

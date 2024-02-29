@@ -1,6 +1,14 @@
 "use strict";
 const clientMinimumVersion = "1.1.24";
 const derbyMainVersion = "1.1.15";
+const { CognitoJwtVerifier } = require("aws-jwt-verify");
+const awsCognitoSettings=JSON.parse(process.env.AwsCognitoSettingsJson)
+const jwtVerifier = CognitoJwtVerifier.create({
+    userPoolId: awsCognitoSettings.aws_user_pools_id,
+    tokenUse: "id",
+    //tokenUse: "access",
+    clientId: awsCognitoSettings.aws_user_pools_hosted_client_id,
+  });
 const crypto = require("crypto");
 const path = require("path");
 //const timer_protobuf_1 = require("timer_protobuf");
@@ -23,7 +31,6 @@ const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
 const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
 const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
-var jwt = require("jsonwebtoken");
 const TmpCache = require("./tmpCache.js");
 const DdbUtils = require("./DdbUtils");
 const ArchiveUtils = require("./ArchiveUtils");
@@ -993,7 +1000,6 @@ const getEventKey = (event) => {
     return getOrgIz(event) + ":" + getOrgId(event);
 };
 async function getOrgRoles(event, apiProps) {
-    const json = JSON.parse(event.body);
 
     log.debug("getOrgRoles: apiEmail:", apiProps);
     log.debug("getOrgRoles: qsEmail:", event.queryStringParameters);
@@ -1013,6 +1019,10 @@ async function getOrgRoles(event, apiProps) {
                 email: apiProps.email.toLowerCase(),
             };
         }
+    }
+    return { // no roles on error
+        roleList: [],
+        email: apiProps.email.toLowerCase(),
     }
     return { statusCode: 403, error: "email not aligned" };
 }
@@ -1575,7 +1585,23 @@ async function apiGatewayHandler(event) {
         );
     }
 
-    const decodedJwt = jwt.decode(event.headers.Authorization);
+    var decodedJwt={
+            email: "Anonymous"
+        }
+    try {
+        const start=new Date().getTime()
+        const payload = await jwtVerifier.verify(
+            event.headers.authorization
+        );
+        const elapsed=new Date().getTime() - start
+        console.log("Token is valid. Payload:", payload," elapsed: ",elapsed);
+        if(payload && payload.email_verified && payload.email){
+            decodedJwt=payload
+        }
+      } catch(err){
+        console.log("Token not valid!",err); // decodedJwt will remain 'anonymous'
+      }
+
     const eventKey = getEventKey(event);
     const orgId = getOrgId(event);
     const orgIz = getOrgIz(event);
@@ -1697,12 +1723,29 @@ async function getUserRoles(orgIz, email) {
     }
     return roleList;
 }
+function lowercaseHeaders(event) {
+    var headerKeys= Object.keys(event.headers);
+
+    headerKeys.forEach((headerKey) => {
+        if(headerKey!==headerKey.toLowerCase()){
+            event.headers[headerKey.toLowerCase()]=event.headers[headerKey]
+        }
+    });
+}
 exports.handler = async function (event) {
     log.debug("Received event:", JSON.stringify(event, null, 4));
-    if (event && event.path) {
+    if (event && event.path) { // api gateway format v1
+        lowercaseHeaders(event)
+        //log.debug("Modified event:", JSON.stringify(event, null, 4));
         const response = await apiGatewayHandler(event);
         return response;
     }
+    if (event && event.rawPath) { // api gateway format v2 (lambda function url!)
+        event.path=event.rawPath
+        const response = await apiGatewayHandler(event);
+        return response;
+    }
+
 
     if (event.source == "aws.events") {
         log.debug("handling archive rulefrom cron0");

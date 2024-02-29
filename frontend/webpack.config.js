@@ -80,8 +80,7 @@ module.exports = {
         host: "0.0.0.0",
         proxy: {
             "/app": {
-                target:
-                    "https://se6e6ch1m4.execute-api.us-east-2.amazonaws.com/test/",
+                target: "https://dd5oqqc7cmn2u.cloudfront.net",
                 changeOrigin: true,
             },
             "/archive": {

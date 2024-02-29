@@ -10,7 +10,7 @@ resource "aws_cognito_user_pool" "derbyUserPool" {
 
     developer_only_attribute = false
     mutable                  = false
-    required                 = false
+    required                 = true
 
     string_attribute_constraints {
       max_length = "2048"
@@ -57,6 +57,19 @@ resource "aws_cognito_user_pool_client" "svelteHostedPoolClient" {
     "COGNITO",
     "Google",
   ]
+// wtf... these are for hosted ui!
+  logout_urls                                 = [
+        "https://0.0.0.0:8080/",
+        "https://localhost:5173/",
+        "https://d38fl44wj64v4n.cloudfront.net/",
+        "https://${local.DnsCfAliasFq}/",
+        ]
+  callback_urls                                 = [
+        "https://0.0.0.0:8080/",
+        "https://localhost:5173/",
+        "https://d38fl44wj64v4n.cloudfront.net/",
+        "https://${local.DnsCfAliasFq}/",
+        ]
 }
 resource "aws_cognito_identity_provider" "google" {
   user_pool_id  = aws_cognito_user_pool.derbyUserPool.id
@@ -153,6 +166,7 @@ const awsmobile = {
     "hosted_url": "https://${aws_cognito_user_pool.derbyUserPool.domain}.auth.${data.aws_region.current.name}.amazoncognito.com",
     "mqtt_ps_url": "${data.aws_ssm_parameter.iot_access_url.value}",
     "mqtt_ps_key": "${data.aws_ssm_parameter.iot_access_key.value}",
+    "derby_main_url": "${module.derbyMainLambda.lambda_function_url}",
     "oauth": {}
 };
 

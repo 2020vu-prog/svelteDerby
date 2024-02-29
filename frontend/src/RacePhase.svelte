@@ -66,6 +66,9 @@
             phaseClass = "btn-warning";
         }
         boundVars = true;
+        //log.debug("rp changed:", at);
+        at=at+"UI";//since this method is async force the ui to (re)-render
+        //log.debug("rp changed2:", at);
     };
     $: {
         log.debug("rp changed:", at);

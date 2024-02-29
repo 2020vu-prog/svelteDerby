@@ -14,11 +14,14 @@ locals {
   s3_svelte_origin_id  = "s3SvelteOrigin"
   s3_archive_origin_id = "s3ArchiveOrigin"
   app_timer_origin_id  = "lambdaTimerApiGateway"
-  app_origin_id        = "lambdaApiGateway"
+  app_origin_id        = "lambdaDerbyMainFunctionUrl"
   useRoute53DnsCount   = local.use_default_cert ? 0 : 1
   use_default_cert     = var.AcmArn == ""
-  invoke_host_temp     = replace(aws_api_gateway_deployment.derbyMain.invoke_url, "https://", "")
-  invoke_host          = replace(local.invoke_host_temp, "/\\/.*/", "")
+  //invoke_host_temp     = replace(aws_api_gateway_deployment.derbyMain.invoke_url, "https://", "")
+  //invoke_host          = replace(local.invoke_host_temp, "/\\/.*/", "")
+
+  derbyMain_host_temp     = replace( module.derbyMainLambda.lambda_function_url, "https://", "")
+  derbyMain_host          = replace(local.derbyMain_host_temp, "/\\/.*/", "")
   DnsCfAliasFq         = "${var.DnsCloudfrontHostAlias}.${var.DnsDomain}"
 
 }
@@ -154,10 +157,10 @@ resource "aws_cloudfront_distribution" "derbyApp" {
   }
 
   origin {
-    //domain_name = aws_api_gateway_deployment.derbyMain.invoke_url
     //domain_name = "05wv6js1p4.execute-api.us-east-2.amazonaws.com"
-    domain_name = local.invoke_host
-    origin_path = "/test"
+    //domain_name = local.invoke_host
+    domain_name = local.derbyMain_host
+    //origin_path = "/"
 
     origin_id = local.app_origin_id
 
