@@ -48,7 +48,6 @@
 
     import ForceReloadPage from "./ForceReloadPage.svelte";
     import LoginH from "./LoginH.svelte";
-    import Login from "./Login.svelte";
     import HotLoad from "./HotLoad.svelte";
     import ElectronTimerRelay from "./ElectronTimerRelay.svelte";
     import {
@@ -58,7 +57,6 @@
         roleMap,
         developerLogging,
         statusMessage,
-        beginAnonymousLogin,
         userId,
         carouselRun,
         carouselList,
@@ -68,7 +66,6 @@
     import { db, localConfigDb } from "./eventDb.js";
     import { isEmailAllowedRoutePath, sleep } from "./utils.js";
     import { setIdTokenFromCognitoCallback } from "./utilHosted.js";
-    import AutoAnonymousLogin from "./AutoAnonymousLogin.svelte";
     const routes = {
         // Exact path
         "/": RaceStandingList,
@@ -76,7 +73,6 @@
         "/RpList": RacePhaseList,
         "/RpElapsed/:rpKey": RacePhaseElapsed,
         "/drivers/:selectable?": DriverList,
-        "/login": Login,
         "/loginH": LoginH,
         "/ManualTimerAdd/:rpKey/:winningLane?/:winningTime?": ManualTimerAdd,
         "/ManualAnnouncement": ManualAnnouncement,
@@ -253,11 +249,6 @@
             },
             {
                 text: loginLabel,
-                menuRoute: "/login",
-                alwaysShow: true,
-            },
-            {
-                text: "L0",
                 menuRoute: "/loginH",
                 alwaysShow: true,
             },
@@ -277,7 +268,6 @@
     onMount(async () => {
         log.debug("mounted app");
         setIdTokenFromCognitoCallback();
-        logUserInIfNecessary();
 
         isMounted = new Date().getTime();
     });
@@ -325,10 +315,12 @@
         if (menuOption.alwaysShow) return true;
 
         //return raceConfigParam.orgIz && raceConfigParam.orgId;
+        /*
         log.debug(
             `iuarp: ${email} `,
             isEmailAllowedRoutePath(email, menuOption.menuRoute)
         );
+        */
         return (
             raceConfigParam.orgIz &&
             raceConfigParam.orgId &&
@@ -363,13 +355,7 @@
         */
     }
 
-    async function logUserInIfNecessary() {
-        await sleep(2500); // let things settle before possibly logging user out erroneously.
-        if (!$userEmail) {
-            log.debug("User is not logged in, requesting autoAnonymousLogin.");
-            $beginAnonymousLogin = true;
-        }
-    }
+
 </script>
 
 <style>
@@ -412,14 +398,13 @@
 
 <svelte:window on:pageshow={onPageShow} />
 
-<AutoAnonymousLogin display="false" />
 <ElectronTimerRelay />
 
 <!-- Top Navigation Menu -->
 <div id="topnav" class="topnav" style="z-index: 20; ">
     <a style="background-color: {$theme}" class="active">
         {getTitle($raceConfig)}&nbsp;
-        {#if $userEmail && $raceConfig}
+        {#if $raceConfig}
             <HotLoad />
         {/if}
     </a>

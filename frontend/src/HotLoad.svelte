@@ -24,8 +24,6 @@
     } from "./stores.js";
     //import { mqtt } from "mqtt";
     import * as mqtt from "mqtt";
-    //import Amplify, { PubSub } from "aws-amplify";
-    //import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import { onDestroy } from "svelte";
@@ -118,6 +116,7 @@
         applyBtnClass()
     }
     async function configChanged(){
+            log.debug("configChanged : begin:",$raceConfig.orgId);
         if (!$raceConfig.orgId) {
             resetMqtt()
             log.debug("configChanged : no org:  skip");
@@ -176,16 +175,6 @@
             mqClient.on("error", applyBtnClass);
 
             activeIotWatch.plugged = true; // first time only.
-            //await requstPermissionHack(cognitoIdentityId);
-            /*
-            Amplify.addPluggable(
-                new AWSIoTProvider({
-                    aws_pubsub_region: aws_exports.aws_pubsub_region,
-                    aws_pubsub_endpoint: aws_exports.aws_pubsub_endpoint,
-                })
-            );
-            activeIotWatch.plugged = true; // first time only.
-            */
         }
 
         const topic = getDistTopic()

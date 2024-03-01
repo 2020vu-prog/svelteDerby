@@ -1,12 +1,10 @@
 import log from "loglevel";
-import { store as AuthStore } from "./stores/auth.js";
 import axios from "axios";
 import { Base64 } from "js-base64";
 import { tutorial as Timer } from "@rr1.us/timer_protobuf";
 const {
     hasSvelteRoutePath,
 } = require("../../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
-import { Auth } from "aws-amplify";
 import { db } from "./eventDb.js";
 import {
     userEmail as userEmailStore,
@@ -17,8 +15,8 @@ import {
     roleMap as roleMapStore,
     getChartCacheKey,
     mqttMapSubscribe as mqttMapSubscribeStore,
+    nowDate,
 } from "./stores.js";
-import { logout as cognitoLogout } from "./stores/auth.js";
 import { get } from "svelte/store";
 import { localConfigDb } from "./eventDb.js";
 
@@ -78,8 +76,19 @@ export function getBracketLink(RpRs) {
         return undefined; // No bracketLink for adhoc.
     }
 }
-export function isAllowedRoutePath(routePath, orgIz = null) {
+function getRoleListByOrgUser(userEmail,orgIz){
+
     const roleMap = get(roleMapStore);
+    //log.debug("isAllowedRoutePath map:", userEmail,orgIz);
+    //log.debug("isAllowedRoutePath map:", roleMap);
+    if (userEmail && orgIz && roleMap[userEmail] && roleMap[userEmail][orgIz]) {
+        return roleMap[userEmail][orgIz];
+    }
+    else{
+        return [] //no roles
+    }
+}
+export function isAllowedRoutePath(routePath, orgIz = null) {
     const userEmail = get(userEmailStore);
     // orgIz usually can default to active RaceConfig.
     //   eventSelection may try to add an event for a different org.
@@ -89,12 +98,9 @@ export function isAllowedRoutePath(routePath, orgIz = null) {
         orgIz = raceConfig.orgIz;
     }
     log.debug("isAllowedRoutePath effective org:", userEmail, orgIz);
-    if (userEmail && orgIz && roleMap[userEmail] && roleMap[userEmail][orgIz]) {
-        const roleList = roleMap[userEmail][orgIz];
-        return roleMap && hasSvelteRoutePath(null, roleList, routePath);
-    } else {
-        return false;
-    }
+    const roleList = getRoleListByOrgUser(userEmail,orgIz);
+    log.debug("isAllowedRoutePath roles:",roleList)
+    return hasSvelteRoutePath(null, roleList, routePath);
 }
 // deprecated
 export function isEmailAllowedRoutePath(email, routePath) {
@@ -106,23 +112,7 @@ export async function isUserAllowedRoutePath(routePath) {
     return isAllowedRoutePath(routePath);
     //return isEmailAllowedRoutePath(email, routePath);
 }
-export async function setJwt() {
-    const session = get(AuthStore); // s/b lowercase!
-    console.log("seeking jwt as :", session);
-    if (
-        session &&
-        session.signInUserSession &&
-        session.signInUserSession.idToken &&
-        session.signInUserSession.idToken.jwtToken
-    ) {
-        const token = session.signInUserSession.idToken.jwtToken;
-        console.log("Setting jwt as :", token);
-        userJwtStore.set(token);
-        await movedFromIot();
-    }
-    return;
-    //if(session.signInUserSession.idToken.jwtToken)
-}
+
 async function requstPermissionHack(cognitoIdentityId) {
     if (!cognitoIdentityId) {
         log.debug("mfi.bypass rph. no id");
@@ -149,22 +139,10 @@ async function requstPermissionHack(cognitoIdentityId) {
             log.debug("mfi. requstPermissionHack failed:", err);
         });
 }
-async function movedFromIot() {
-    const ccSession = await Auth.currentSession();
-    log.debug("mfi.auth ccSession :", ccSession);
-    const ccInfo = await Auth.currentCredentials();
-    var cognitoIdentityId = "";
-    if (ccInfo && ccInfo.data) {
-        cognitoIdentityId = ccInfo.data.IdentityId;
-        log.debug("mfi.auth ccInfo cognitoIdentityId:", cognitoIdentityId);
-        await requstPermissionHack(cognitoIdentityId);
-    } else {
-        log.debug("mfi.auth ccInfo empty:", ccInfo);
-    }
-}
+
 
 export function logout() {
-    cognitoLogout();
+    //cognitoLogout();
     userJwtStore.set("");
 }
 export function safeGetAt(map, key) {

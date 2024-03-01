@@ -2,7 +2,6 @@ import log from "loglevel";
 
 import axiosXyz from "axios";
 
-import { Auth } from "aws-amplify";
 const axiosCommon = axiosXyz.create();
 const jwt = require("jsonwebtoken");
 const semver = require("semver");
@@ -177,6 +176,7 @@ axiosCommon.interceptors.response.use(
         return response;
     },
     async function (error) {
+        return Promise.reject(error);
         const axErrorKey = uuidv4();
         console.log("AC:error0", error);
         const originalRequest = error.config;
@@ -273,7 +273,7 @@ axiosCommon.interceptors.response.use(
 );
 */
 async function getAxiosCommon() {
-    await getRR1AuthTokenSlow("initial get.");
+    //await getRR1AuthTokenSlow("initial get.");
     return axiosCommon;
 }
 function getRR1AuthTokenNow() {
@@ -288,35 +288,7 @@ function getRR1AuthTokenNow() {
         }
         const tte = exp - now;
         log.debug("getRR1AuthTokenNow tte:", tte);
-        /*
-        let intercept deal with dead tokens....
-
-        if (exp > now + 30) {
-            log.debug("getRR1AuthTokenNow re-using token");
-            // axiosCommon.defaults.headers.common["Authorization"] = bearer;
-        } else {
-            log.debug("getRR1AuthTokenNow expiring token:", bearer);
-            log.debug("getRR1AuthTokenNow expiring obj:", decoded);
-            log.debug("getRR1AuthTokenNow expiring exp:", exp);
-            bearer = "";
-            // don't persist empty token.  it publishes invalid derived $userEmail!
-            //userJwtStore.set(bearer);
-        }
-        */
     }
-    return bearer;
-}
-async function getRR1AuthTokenSlow(rsn) {
-    log.debug("getRR1AuthTokenSlow rsn: ", rsn);
-    //TODO: flush bearer token when email changes
-    let bearer = getRR1AuthTokenNow();
-
-    if (!bearer) {
-        const currentSession = await Auth.currentSession();
-        bearer = currentSession.idToken.jwtToken;
-        userJwtStore.set(bearer);
-    }
-    log.debug("getRR1AuthTokenSlow rc:", bearer);
     return bearer;
 }
 

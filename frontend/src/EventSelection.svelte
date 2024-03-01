@@ -28,7 +28,6 @@
     import { dbReset } from "./eventDb.js";
 
     import { refreshOrgRoles } from "./utils.js";
-    import { setJwt } from "./utils.js";
 
     export let params = {};
 
@@ -183,6 +182,15 @@
     };
     const doSelect = async (config) => {
         log.debug("selected:", config);
+        if($raceConfig.orgIz===config.orgIz
+        && $raceConfig.orgId===config.orgId){
+            $statusMessage = {
+                text: `Event already active.`,
+            };
+            replace("/RpList");
+            return;
+        }
+
         await dbReset();
         log.debug("db reset complete.");
 
@@ -192,6 +200,7 @@
         config.baseUrl = "/app";
         config.title = getRaceName(config);
         log.debug("selecting config:", config);
+
 
         $raceConfig = config;
         waitingForReloadBeginMs = new Date().getTime();
@@ -207,7 +216,6 @@
 
         $clearOldStatusMessages = true;
 
-        //await setJwt(); // need mqtt perms if initial login didn't have selected org.
         replace("/RpList");
     }
     const getRaceName = (config) => {
