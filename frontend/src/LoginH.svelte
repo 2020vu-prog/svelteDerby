@@ -8,7 +8,8 @@
         dbChangeTime,
         statusMessage,
         userExpCountDownSecs,
-	userEmail
+        userEmail,
+        userId,
     } from './stores.js'
     let loginUrl = "http://www.google.com"
     onMount(async () => {
@@ -54,7 +55,7 @@ const regex = /\/+/gi;
 Login
 {#if $userEmail }
 <br />
-User: [{$userEmail}]
+User: [{$userId}][{$userEmail}]
 {hhmmss($userExpCountDownSecs)}
 {/if}
 <br />

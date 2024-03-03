@@ -32,10 +32,12 @@ function dtoken(bearerToken, prop) {
     if (decoded) {
         //log.debug("derive dtoken decoded jwt:", decoded);
         //log.debug("derive dtoken decoded prop:", decoded[prop]);
-        return decoded[prop];
-    } else {
-        return "";
+        if(decoded.exp && decoded.exp > new Date().getTime()/1000){
+
+            return decoded[prop];
+        }
     }
+    return "";
 }
 export const userJwtStore = persistable("userJwt", "");
 //export const userEmail = persistable("userEmail", "");
