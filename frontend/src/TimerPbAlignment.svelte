@@ -122,7 +122,9 @@
         log.debug("allE:", allE);
         */
 
-        for (const timerPin of sortedPbTimerPinHistory) {
+        for (var i = sortedPbTimerPinHistory.length - 1; i >= 0; i--) {
+
+            const timerPin  =sortedPbTimerPinHistory[i]
             if (timerPin.pinName == Timer.PinName.lane1) {
                 laneStatusList.lane1.blocked = isPinBlocked(timerPin);
                 laneStatusList.lane1.timerPin = timerPin;
@@ -186,6 +188,13 @@
         return timerPin.pinState == Timer.PinState.BLOCKED;
     }
     function potentialPinRefresh(xmitMs, timerPin) {
+        if(
+            timerPin.pinName == Timer.PinName.lane1 ||
+            timerPin.pinName == Timer.PinName.lane2
+        ){}
+           else{
+            return
+           }
         log.debug(`ppr:`, timerPin);
         if (!lanePbTimerPinRecentMap[timerPin.pinName]) {
             //first time init
