@@ -417,7 +417,7 @@
     }
     function getLaneStatusColor(ls) {
         switch(getLaneStatusText(ls)){
-            case "UNKNOWN":
+            case "STALE":
                 return 'yellow'
             case "BLOCKED":
                 return 'red'
@@ -427,7 +427,7 @@
         }
     function getLaneStatusText(ls) {
         if (ls.blocked=== undefined) {
-            return 'UNKNOWN'
+            return 'STALE'
         }
         return ls.blocked ? "BLOCKED" : "CLEAR"
     }
@@ -483,10 +483,13 @@
     {#each Object.entries(laneStatusList) as [lane, ls]}
         <div class="column" style="background-color:#bbb;">
             <Card class="mt-3 border border-info">
+                <!--
+
                 <CardHeader class="bg-info">
                     Lane {lane.replace(/[A-Z]+/i, "")} &nbsp;&nbsp;&nbsp;Audio: &nbsp;&nbsp;
                     <input type="checkbox" bind:checked={ls.checked} />
                 </CardHeader>
+                -->
                 <CardBody
                     style="background-color: {getLaneStatusColor(ls)}"
                 >
