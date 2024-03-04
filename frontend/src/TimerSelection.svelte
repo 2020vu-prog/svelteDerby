@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
-    import { sleep } from "./utils.js";
+    import { sleep ,secondsToHHMMSS} from "./utils.js";
     import SpinnerButton from "./SpinnerButton.svelte";
     import { axios, raceConfig, statusMessage } from "./stores.js";
     import { onMount } from "svelte";
@@ -141,6 +141,22 @@
         }
         return "";
     }
+    function getTimerUptime(activeTimer) {
+        if (!isProtobuf) {
+            return ""
+        }
+        if (!activeTimer.connectAt) {
+            return ""
+        }
+        let endTime=new Date().getTime()
+        if (activeTimer.disconnectAt) {
+            endTime=Date.parse(activeTimer.disconnectAt)
+        }
+        const beginTime=Date.parse(activeTimer.connectAt)
+        let upSeconds=Math.floor((endTime - beginTime)/1000)
+        return `[${secondsToHHMMSS(upSeconds)}]`
+
+    }
     function getTimerName(activeTimer) {
         if (isProtobuf) {
             return `${getTimerEmoji(activeTimer)} ${activeTimer.clientId}`;
@@ -170,6 +186,7 @@
                 <label style="display: inline" for={getTimerId(activeTimer)}>
                     {getTimerName(activeTimer)}
                     {activeTimer.ipAddress}
+                    {getTimerUptime(activeTimer)}
                 </label>
                 <br />
                 <br />

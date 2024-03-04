@@ -12,7 +12,7 @@
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
     import { statusMessage, raceConfig, axios } from "./stores";
-    import { getTimerPbConfig } from "./utils.js";
+    import { getTimerPbConfig ,secondsToHHMMSS} from "./utils.js";
     import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
 
     export let timerName;
@@ -159,17 +159,6 @@
                 }
             }
         }
-    }
-    function secondsToHHMMSS(seconds) {
-        var hoursLeft = Math.floor(seconds / 3600);
-        var minLeft = Math.floor((seconds - hoursLeft * 3600) / 60);
-        var secondsLeft = seconds - hoursLeft * 3600 - minLeft * 60;
-        secondsLeft = Math.round(secondsLeft * 100) / 100;
-        var answer = "";
-        answer += hoursLeft < 10 ? "0" + hoursLeft : hoursLeft;
-        answer += ":" + (minLeft < 10 ? "0" + minLeft : minLeft);
-        answer += ":" + (secondsLeft < 10 ? "0" + secondsLeft : secondsLeft);
-        return answer;
     }
     function cToF(x) {
         if (x) {
