@@ -59,12 +59,12 @@
     var paddlePosition = "";
     var laneStatusList = {
         lane1: {
-            blocked: true,
+            blocked: undefined,
             src: ["/data/1c.mp3", "/data/1b.mp3"],
             checked: false,
         },
         lane2: {
-            blocked: true,
+            blocked: undefined,
             src: ["/data/2c.mp3", "/data/2b.mp3"],
             checked: false,
         },
@@ -415,6 +415,22 @@
         const xmitDate = new Date(modHH * 3600 * 1000).toLocaleString();
         return `--- Xmit: ${xmitDate}`;
     }
+    function getLaneStatusColor(ls) {
+        switch(getLaneStatusText(ls)){
+            case "UNKNOWN":
+                return 'yellow'
+            case "BLOCKED":
+                return 'red'
+            case "CLEAR":
+                return 'lightgreen'
+        }
+        }
+    function getLaneStatusText(ls) {
+        if (ls.blocked=== undefined) {
+            return 'UNKNOWN'
+        }
+        return ls.blocked ? "BLOCKED" : "CLEAR"
+    }
 </script>
 
 <style>
@@ -459,32 +475,6 @@
                     bind:value={historyAgeMinutes}
                     placeholder="HistoryAge"
                 />
-                <!--
-
-                <FormGroup>
-                    <Label for="startDate">Start Date</Label>
-                    <Input
-                        type="date"
-                        name="startdate"
-                        id="startDate"
-                        placeholder="date placeholder"
-                        bind:value={historyStartDate}
-                    />
-                </FormGroup>
-                <FormGroup>
-                    <Label for="startTime">Start Time</Label>
-                    <Input
-                        type="time"
-                        name="startTime"
-                        id="startTime"
-                        on:blur={() => {
-                            getTimerHistoryFromApi();
-                        }}
-                        bind:value={historyStartTime}
-                        placeholder="time placeholder"
-                    />
-                </FormGroup>
-                -->
             {/if}
         </div>
     {/if}
@@ -498,11 +488,14 @@
                     <input type="checkbox" bind:checked={ls.checked} />
                 </CardHeader>
                 <CardBody
-                    style="background-color:{ls.blocked ? 'red' : 'lightgreen'}"
+                    style="background-color: {getLaneStatusColor(ls)}"
                 >
                     <h5>
                         Lane {lane.replace(/[A-Z]+/i, "")}
-                        <strong>{ls.blocked ? "BLOCKED" : "CLEAR"}</strong>
+                        <strong>
+                        {getLaneStatusText(ls)}
+                        </strong>
+
                     </h5>
                     {#if paddlePosition}
                         <h6>{paddlePosition}</h6>
