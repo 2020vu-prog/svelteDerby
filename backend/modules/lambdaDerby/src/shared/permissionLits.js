@@ -91,6 +91,7 @@ addPermission(
 addPermission(
     "Anonymous",
     [
+        "/iot/discover",
         "/getPhaseElapsed",
         "/getRaceHistory",
         "/requestMqttSubPermission",

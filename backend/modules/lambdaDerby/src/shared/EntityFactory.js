@@ -586,7 +586,7 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     }
 };
 entityFactories["Participant"] = class Participant extends EntityBase {
-    static members = ["name", "number", "pName", "pType"];
+    static members = ["name", "number", "pName", "pType","spon","notes"];
     static eid = ":PTCP";
     static canBuild(json) {
         return json.PK && json.PK.endsWith(ParticipantEid);
@@ -617,6 +617,18 @@ entityFactories["Participant"] = class Participant extends EntityBase {
     }
     get phoneticType() {
         return this.pType;
+    }
+    set carSponsor(spon) {
+        return (this.spon = spon);
+    }
+    get carSponsor() {
+        return this.spon;
+    }
+    set carNotes(notes) {
+        return (this.notes = notes);
+    }
+    get carNotes() {
+        return this.notes;
     }
     get ssmlName() {
         if (this.pType === "X-SAMPA") {

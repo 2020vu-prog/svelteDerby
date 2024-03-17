@@ -123,6 +123,8 @@
         log.debug("driverAdd: updateBoundVars gave:", driverForm);
         driverForm.carNumber = ptcpFromDexie.number;
         driverForm.driverName = ptcpFromDexie.name;
+        driverForm.carSponsor = ptcpFromDexie.spon;
+        driverForm.carNotes = ptcpFromDexie.notes;
         driverForm.sampa = ptcpFromDexie.sampa;
     };
     async function handleSubmit() {
@@ -133,6 +135,8 @@
             orgIz: $raceConfig.orgIz,
             number: driverForm.carNumber,
             name: driverForm.driverName,
+            spon: driverForm.carSponsor,
+            notes: driverForm.carNotes,
             pName: driverForm.pName,
             pType: driverForm.pType ? driverForm.pType : undefined,
         };
@@ -265,6 +269,23 @@
             on:keyup={() => {
                 changeFocus(null, "B");
             }}
+        />
+    </label>
+    <label>
+        Car Sponsor:
+        <input
+            id="carSponsor"
+            type="text"
+            bind:value={driverForm.carSponsor}
+            placeholder="Car Sponsor"
+        />
+    </label>
+    <label>
+        Notes:
+        <textarea
+            id="carNotes"
+            bind:value={driverForm.carNotes}
+            placeholder="Car Notes"
         />
     </label>
     <label>
