@@ -85,6 +85,7 @@
         if (!(await finishTimerAlreadyExists())) {
             pbForm.timerName = "Finish";
             pbForm.timerNameDisabled = true;
+            pbForm.seq="900"
         } else {
             pbForm.timerNameDisabled = false;
         }

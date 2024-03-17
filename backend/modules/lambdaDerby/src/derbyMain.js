@@ -999,6 +999,18 @@ const getOrgIz = (event) => {
 const getEventKey = (event) => {
     return getOrgIz(event) + ":" + getOrgId(event);
 };
+async function iotDiscover(event, apiProps) {
+
+            return {
+                priority:100, //TODO
+                "backends":[
+                    "cf.test.rr1.us",
+                    "c.comicNotARealDomainButKKindOfLongish",
+                ],
+                authUrl: "https://xcfoeorhj5s4ubgaawz2rv45re0nxyqh.lambda-url.us-east-2.on.aws/iot/auth",
+                bundleUrl: "https://cf.test.rr1.us/gpsRelay.tar.zst",
+            };
+}
 async function getOrgRoles(event, apiProps) {
 
     log.debug("getOrgRoles: apiEmail:", apiProps);
@@ -1027,6 +1039,15 @@ async function getOrgRoles(event, apiProps) {
     return { statusCode: 403, error: "email not aligned" };
 }
 const routeMap = {
+    "/iot/discover": {
+        allowFrozen: true,
+        allowMissingTtl: true,
+        allowMissingOrgId: true,
+        allowMissingOrgIz: true,
+        h: async (event, apiProps) => {
+            return buildResponse(await iotDiscover(event, apiProps));
+        },
+    },
     "/getOrgRoles": {
         allowFrozen: true,
         allowMissingTtl: true,
