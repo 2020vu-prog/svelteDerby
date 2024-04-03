@@ -106,6 +106,7 @@ function axSet(setF) {
     return () => {};
 }
 export const getAxios = readable(getAxiosCommon, axSet);
+export const getAxiosNew = readable(getAxiosNewInstance, axSet);
 //
 // helper function to call getAxios transparently (and async)
 //
@@ -274,6 +275,9 @@ axiosCommon.interceptors.response.use(
     }
 );
 */
+function getAxiosNewInstance() {
+    return axiosXyz.create();
+}
 async function getAxiosCommon() {
     //await getRR1AuthTokenSlow("initial get.");
     return axiosCommon;
@@ -309,8 +313,12 @@ const sortBy = (field, reverse, primer) => {
         return (a = key(a)), (b = key(b)), reverse * ((a > b) - (b > a));
     };
 };
-function getDefaultFileFormat() {
+export function isIos(){
     const iOS = navigator.userAgent.match(/(iPad|iPhone|iPod)/i) ? true : false;
+    return iOS
+}
+function getDefaultFileFormat() {
+    const iOS = isIos()
     if (iOS) {
         return "Mp4";
     }

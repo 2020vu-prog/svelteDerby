@@ -5,11 +5,13 @@
     import SpinnerButton from "./SpinnerButton.svelte";
     import {
         statusMessage,
-        getAxios,
+        getAxiosNew,
+        axios,
         raceConfig,
         mqttTriggerVideoCapture,
         mqttTimerSubscribe,
         mqttTimerTopic,
+        isIos,
     } from "./stores.js";
     import TimerSelectByName from "./TimerSelectByName.svelte";
     import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
@@ -35,6 +37,13 @@
                 text: `Missing selected Timer. Go to Timer Config and verify that a timer has been chosen.`,
                 type: "error",
             };
+        }
+        if(isIos()){
+            $statusMessage = {
+                text: `Video capture does not work on iOS.  Please use android for video.`,
+                type: "error",
+            };
+
         }
     });
     onDestroy(() => {
@@ -71,13 +80,13 @@
         };
         try {
             const endPoint = "/requestS3PutObjectUrl";
-            const axios = await $getAxios();
+            //const axios = await $getAxios();
             const req = {
                 key: `${uploadKey}-${perspective}.webm`,
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
             };
-            const response = await axios.get($raceConfig.baseUrl + endPoint, {
+            const response = await $axios.get($raceConfig.baseUrl + endPoint, {
                 params: req,
             });
             log.debug("requestS3PutObjectUrl response", response);
@@ -90,16 +99,14 @@
                     },
                 };
 
-                const axiosGeneric = axios.create({
-                    headers: { "X-Custom-Header": "none" },
-                });
+                const axiosGeneric = $getAxiosNew();
                 $statusMessage = {
                     text: `Beginning upload s3.`,
                     type: "success",
                     key: uploadKey,
                 };
 
-                delete axiosGeneric.defaults.headers.common["Authorization"];
+                //delete axiosGeneric.defaults.headers.common["Authorization"];
                 const putRc = await axiosGeneric.put(
                     response.data.signedUrl,
                     videoData,
@@ -121,6 +128,7 @@
             } else {
             }
         } catch (err) {
+                log.debug("requestS3PutObjectUrl caught:", err);
             $statusMessage = {
                 text: err,
                 type: "error",
