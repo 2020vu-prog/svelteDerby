@@ -4,7 +4,7 @@ const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3();
 var iotdata;
-
+log.setLevel(log.levels.TRACE);
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
 
 log.debug("Loading function");
@@ -44,8 +44,8 @@ const propagateIot = async (json) => {
         //log.debug(data);
         return { status: "ok", detail: "Published" };
     } catch (err) {
-        log.debug("Iot Error.", err);
-        log.debug(err, err.stack); // an error occurred
+        log.error("Iot Error.", err);
+        log.error(err, err.stack); // an error occurred
         return { error: err };
     }
 };
@@ -118,6 +118,9 @@ exports.handler = async (event) => {
                 log.debug("DB/Iot await failed");
                 log.debug(err);
             }
+        }
+        else{
+                log.debug("skipped:", record.eventName, record.eventID);
         }
     });
     return "message";

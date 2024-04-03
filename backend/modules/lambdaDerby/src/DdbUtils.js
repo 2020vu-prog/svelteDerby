@@ -300,7 +300,7 @@ class DdbUtils {
             KeyConditionExpression:
                 "DP = :dp and DS BETWEEN :loMicros  and :hiMicros",
             ReturnConsumedCapacity: "TOTAL",
-            Limit: limit,
+            //Limit: limit,
             ScanIndexForward: false, // sort descending
             ExpressionAttributeValues: containsValues,
         };
@@ -324,7 +324,7 @@ class DdbUtils {
         } catch (err) {
             log.debug("queryRaceHistory failed: ", err, err.stack); // an error occurred
         }
-        return [{ error: "Query History Failed" }, cacheMaxSeconds];
+        return [{ error: "Query History Failed" }, 5];
     }
     async ddbQueryEventConfig(eventKey) {
         var containsValues = {};
