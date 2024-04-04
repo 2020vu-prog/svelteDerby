@@ -284,6 +284,11 @@
         beginCapture(blob, uploadPending);
     }
 
+    function growBlob(event,snum){
+        if (event && event.data && event.data.size > 0) {
+            recordedBlobs[snum].push(event.data);
+        }
+    }
     function recordStream(stream, snum) {
         if (!stream) {
             log.debug("recordStream skipping. no stream");
@@ -302,15 +307,11 @@
         mediaRecorder[snum].ondataavailable = (event) => {
             log.debug("Recorder data-available", snum);
             log.debug("Recorder data-available", event.data);
-            if (event.data && event.data.size > 0) {
-                recordedBlobs[snum].push(event.data);
-            }
+            growBlob(event,snum)
         };
         mediaRecorder[snum].onstop = (event) => {
             log.debug("Recorder stopped: ", event.data);
-            if (event.data && event.data.size > 0) {
-                recordedBlobs[snum].push(event.data);
-            }
+            growBlob(event,snum)
 
                 accrueBlobs(snum)
             if (uploadPending) {
@@ -386,3 +387,7 @@
 >
     Capture&Upload
 </SpinnerButton>
+<br/>
+<br/>
+<br/>
+<br/>
