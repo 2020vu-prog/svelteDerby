@@ -13,13 +13,24 @@
         mqttTimerTopic,
         isIos,
     } from "./stores.js";
+
+    import {
+        hhmmssFmt,
+    } from "./utils.js";
+
     import TimerSelectByName from "./TimerSelectByName.svelte";
     import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
     var timerId = "";
 
     var mediaRecorder = [];
     var recordedBlobs = [];
-    var downloadPending;
+    function newBlobTracker(){
+        return{
+            blobData:[],
+            blobStart:0,
+            blobEnd:0,
+        }
+    }
     var uploadPending;
     var nextSnum = 0; // 2 streams.  this will toggle b/t 0,1
     var timerHandle;
@@ -229,7 +240,25 @@
         captureOldest(); // stop oldest and upload it
         videoRefreshCount = 0;
     }
+    const fillerUp=[]
+    const fillerMax=10
+    function accrueBlobs(snum){
+        const blob = new Blob(recordedBlobs[snum]);
+        fillerUp.push(blob)
+        while(fillerUp.length>fillerMax){
+            fillerUp.shift()
+        }
+        const now= hhmmssFmt( new Date())
+        const msg=`fillerUp: ${fillerUp.length} bsize: ${blob.size} ${now}`
+        log.debug(msg)
+        $statusMessage = {
+                    text: msg,
+                    key: "dillerup",
+                };
+
+    }
     function myTimer() {
+        log.debug(`myTimer`)
         captureOldest(); // keep video clips short
         if (videoRefreshCount++ > 1) {
             captureDisabled = false;
@@ -254,20 +283,7 @@
         const blob = new Blob(recordedBlobs[snum]);
         beginCapture(blob, uploadPending);
     }
-    function beginDownload(snum) {
-        const blob = new Blob(recordedBlobs[snum], { type: mimeType });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.style.display = "none";
-        a.href = url;
-        a.download = `test.${fileExt}`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }, 100);
-    }
+
     function recordStream(stream, snum) {
         if (!stream) {
             log.debug("recordStream skipping. no stream");
@@ -296,15 +312,12 @@
                 recordedBlobs[snum].push(event.data);
             }
 
+                accrueBlobs(snum)
             if (uploadPending) {
                 beginUpload(snum, uploadPending);
                 uploadPending = undefined;
             }
-            if (downloadPending) {
-                beginDownload(snum, downloadPending);
-                downloadPending = undefined;
-            }
-            //clearInterval(timerHandle);
+
 
             recordStream(mainStream, snum);
         };
