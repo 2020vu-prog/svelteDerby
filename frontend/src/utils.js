@@ -340,6 +340,7 @@ export function MqttMapSubscription(topic) {
     });
 }
 export function secondsToHHMMSS(seconds) {
+    seconds = Math.round(seconds * 100) / 100;
     var hoursLeft = Math.floor(seconds / 3600);
     var minLeft = Math.floor((seconds - hoursLeft * 3600) / 60);
     var secondsLeft = seconds - hoursLeft * 3600 - minLeft * 60;

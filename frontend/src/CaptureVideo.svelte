@@ -16,19 +16,24 @@
 
     import {
         hhmmssFmt,
+        secondsToHHMMSS,
     } from "./utils.js";
 
     import TimerSelectByName from "./TimerSelectByName.svelte";
     import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
     var timerId = "";
 
+    var showAdvanced=false
     var mediaRecorder = [];
-    var recordedBlobs = [];
-    function newBlobTracker(){
+    var activeSnipList = [];
+    var oldestSnipHHMMSS=""
+    function newVideoSnip(){
         return{
-            blobData:[],
-            blobStart:0,
-            blobEnd:0,
+            snipVideoData:[],
+            snipStart: Date.now(),
+            snipEnd:0,
+            isRecording:true,
+            pendingUploadKey: undefined,  //allow active videoto auto upload onStop
         }
     }
     var uploadPending;
@@ -42,6 +47,7 @@
     var videoBitsPerSecond = "1000000";
     const tag = "CaptureVideo";
     var perspective = "Finish";
+    var snipAgeSeconds = 300
     onMount(async () => {
         if (!$mqttTimerTopic) {
             $statusMessage = {
@@ -78,14 +84,83 @@
             }
         });
     }
+    function clickedCalcCapture() {
+        const lo=Date.now()-60000
+        const hi=lo+300
+        const sMatch=findSnipMatch(lo,hi)
+        if(sMatch){
+
+            const oldSnip=sMatch
+            const hhmmss = hhmmssFmt(oldSnip.snipStart);
+            const key=`${oldSnip.snipStart}-TestCalc`;
+            captureSpinning = true
+            doUploadToServer(oldSnip, key) 
+        }
+        else{
+            log.debug("VCALC: no eligible snippets")
+        }
+    }
+    function clickedAgingCapture() {
+        if(videoSnipHistory.length>2){
+            const oldSnip=videoSnipHistory[0];
+            const hhmmss = hhmmssFmt(oldSnip.snipStart);
+            const key=`${oldSnip.snipStart}-TestAge`;
+            captureSpinning = true
+            doUploadToServer(oldSnip, key) 
+        }
+    }
+    function isTimeInSnip(snip,xMs,rsn){
+            log.debug(`VCALC: istis BEGIN ${rsn}: `,snip,xMs)
+        //TODO: active snips!
+     //       log.debug("VCALC: wtf: ",xMs,snip.snipStart,snip.snipEnd)
+    //        log.debug("VCALC: wtf2: ",xMs,snip)
+        const rc=(xMs > snip.snipStart && xMs < snip.snipEnd)
+            rc && log.debug(`VCALC: istis ${rsn} true: `,snip,xMs)
+        return rc
+    }
+    function getSnipDistance(snip,loMs,hiMs){
+            log.debug("VCALC: wtf3z: ",isTimeInSnip(snip,hiMs,'hcrack'))
+            log.debug("VCALC: wtf3a: ",loMs,hiMs,snip)
+        const beginD=loMs-snip.snipStart
+        const endD=snip.snipEnd-hiMs
+            log.debug("VCALC: wtf3b: ",beginD,endD,snip)
+        return Math.min(beginD,endD)
+
+    }
+    function findSnipMatch(lo,hi){
+            const candidates=[]
+            for (let idx in videoSnipHistory) {
+                const snip1=videoSnipHistory[idx]
+                if(isTimeInSnip(snip1,lo,'lo') &&
+                   isTimeInSnip(snip1,hi,'hi') ){
+            log.debug("VCALC: pushing: ",lo,hi,snip1)
+                    candidates.push(snip1)
+                }
+            }
+            log.debug("VCALC: candidates: ",candidates.length);
+            var rc=undefined;
+            var fitDistance=0
+            for (let idx in candidates) {
+                const snip=candidates[idx]
+                const thisFit=getSnipDistance(snip,lo,hi)
+            log.debug("VCALC: may tf: ",thisFit)
+                if(thisFit>fitDistance){
+                    fitDistance=thisFit
+                    rc=snip
+                }
+            }
+            log.debug("VCALC: using Fd: ",fitDistance)
+            return rc
+    }
     function clickedCapture() {
         const now = new Date().getTime();
         deferredCapture(`${now}-TestClick`);
     }
 
-    async function beginCapture(videoData, uploadKey) {
+    async function doUploadToServer(videoSnip, uploadKey) {
+        const videoDataBlob=new Blob(videoSnip.snipVideoData)
         $statusMessage = {
-            text: `Beginning upload.`,
+            text: `Beginning upload. ${uploadKey}`,
             type: "success",
             key: uploadKey,
         };
@@ -120,12 +195,12 @@
                 //delete axiosGeneric.defaults.headers.common["Authorization"];
                 const putRc = await axiosGeneric.put(
                     response.data.signedUrl,
-                    videoData,
+                    videoDataBlob,
                     options
                 );
                 log.debug("s3PutResponse", putRc);
                 $statusMessage = {
-                    text: `Completed upload s3 ${videoData.size}`,
+                    text: `Completed upload s3 ${videoDataBlob.size}`,
                     type: "success",
                     key: uploadKey,
                 };
@@ -240,21 +315,27 @@
         captureOldest(); // stop oldest and upload it
         videoRefreshCount = 0;
     }
-    const fillerUp=[]
-    const fillerMax=10
-    function accrueBlobs(snum){
-        const blob = new Blob(recordedBlobs[snum]);
-        fillerUp.push(blob)
-        while(fillerUp.length>fillerMax){
-            fillerUp.shift()
+    const videoSnipHistory=[]
+    function accrueSnips(snum){
+        //const blob = new Blob(activeSnipList[snum].snipVideoData);
+        videoSnipHistory.push(activeSnipList[snum])
+        const thresh=Date.now() - (snipAgeSeconds*1000)
+        while(videoSnipHistory.length>0 && videoSnipHistory[0].snipStart<thresh){
+            videoSnipHistory.shift()
         }
-        const now= hhmmssFmt( new Date())
-        const msg=`fillerUp: ${fillerUp.length} bsize: ${blob.size} ${now}`
+        if(videoSnipHistory.length>0){
+            oldestSnipHHMMSS=`${secondsToHHMMSS((Date.now() - videoSnipHistory[0].snipStart)/1000)}`
+        }else{
+            oldestSnipHHMMSS=""
+        }
+        /*
+        const msg=`videoSnipHistory: ${videoSnipHistory.length}  ${now}`
         log.debug(msg)
         $statusMessage = {
                     text: msg,
                     key: "dillerup",
                 };
+                */
 
     }
     function myTimer() {
@@ -279,14 +360,11 @@
     const mimeType = "video/webm";
     const videoCodecs = "codecs=vp8";
     const fileExt = mimeType.split("/")[1];
-    function beginUpload(snum, uploadKey) {
-        const blob = new Blob(recordedBlobs[snum]);
-        beginCapture(blob, uploadPending);
-    }
 
     function growBlob(event,snum){
         if (event && event.data && event.data.size > 0) {
-            recordedBlobs[snum].push(event.data);
+            activeSnipList[snum].snipVideoData.push(event.data);
+            activeSnipList[snum].snipEnd=Date.now() // end will update with each append
         }
     }
     function recordStream(stream, snum) {
@@ -300,7 +378,7 @@
             mimeType: `${mimeType}; ${videoCodecs}`,
             videoBitsPerSecond: parseInt(videoBitsPerSecond, 10),
         };
-        recordedBlobs[snum] = [];
+        activeSnipList[snum] = newVideoSnip()
         mediaRecorder[snum] = new MediaRecorder(stream, options);
 
         //event is a BlobEvent
@@ -312,10 +390,11 @@
         mediaRecorder[snum].onstop = (event) => {
             log.debug("Recorder stopped: ", event.data);
             growBlob(event,snum)
+            activeSnipList[snum].isRecording=false
 
-                accrueBlobs(snum)
+                accrueSnips(snum)
             if (uploadPending) {
-                beginUpload(snum, uploadPending);
+                doUploadToServer(activeSnipList[snum], uploadPending);
                 uploadPending = undefined;
             }
 
@@ -342,31 +421,46 @@
 <h1>Capture Video</h1>
 
 <video id="gum0" playsinline autoplay muted />
-<label>Resolution</label>
+<label>
+    Advanced:
+    <input type="checkbox" bind:checked={showAdvanced} />
+</label>
+
+{#if showAdvanced}
+<label>Resolution
+
 <select bind:value={resolution}>
     <option>320x240</option>
     <option>640x480</option>
     <option>720x576</option>
     <option>1920x1080</option>
 </select>
-<label>Frame Rate</label>
+</label>
+<label>Frame Rate
 <select bind:value={frameRate}>
     <option>5</option>
     <option>15</option>
     <option>30</option>
 </select>
-<label>videoBitsPerSecond</label>
+</label>
+<label>videoBitsPerSecond
 <select bind:value={videoBitsPerSecond}>
     <option>500000</option>
     <option>1000000</option>
     <option>2000000</option>
     <option>8000000</option>
 </select>
-<label>Perspective</label>
+</label>
+<label>Age of oldest snippet (seconds)
+<input 
+    bind:value={snipAgeSeconds}
+    type="number" />
+</label>
+{/if}
+<label>Perspective
 <input bind:value={perspective} />
+</label>
 <label>Linked Timer</label>
-<input bind:value={$mqttTimerTopic} disabled />
-<label>Linked Timer2</label>
 <TimerSelectByName on:select={handleTimerSelect} preSelect="Finish" />
 {#key timerId}
     <TimerSubscribeStub
@@ -386,6 +480,22 @@
     disabled={captureDisabled}
 >
     Capture&Upload
+</SpinnerButton>
+<br/>
+<SpinnerButton
+    on:click={clickedAgingCapture}
+    spinning={captureSpinning}
+    disabled={captureDisabled}
+>
+    Upload oldest [{oldestSnipHHMMSS}]
+</SpinnerButton>
+<br/>
+<SpinnerButton
+    on:click={clickedCalcCapture}
+    spinning={captureSpinning}
+    disabled={captureDisabled}
+>
+    Upload Calculated
 </SpinnerButton>
 <br/>
 <br/>
