@@ -7,6 +7,7 @@ terraform {
       version = "~> 4.0"
     }
   }
+  backend "s3" { key = "backend/code" }
 }
 provider "aws" {
 

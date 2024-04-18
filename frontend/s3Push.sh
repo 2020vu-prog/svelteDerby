@@ -1,4 +1,4 @@
-source ./generatedTargets.sh
+source "./generatedTargets-${TF_VAR_DeployEnvironment}.sh"
 bucket=$DERBY_SPA_S3_BUCKET
 echo "###"
 echo "### push no-cache"

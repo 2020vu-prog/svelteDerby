@@ -122,7 +122,17 @@ resource "aws_s3_bucket" "dstBucket" {
 resource "aws_s3_bucket_acl" "dstBucket" {
   bucket = aws_s3_bucket.dstBucket.id
   acl    = "private"
+  depends_on = [aws_s3_bucket_ownership_controls.dstBucket]
+
 }
+
+resource "aws_s3_bucket_ownership_controls" "dstBucket" {
+  bucket = aws_s3_bucket.dstBucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_cors_configuration" "dstBucket" {
   bucket = aws_s3_bucket.dstBucket.id
 

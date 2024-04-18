@@ -15,8 +15,16 @@ resource "aws_s3_bucket" "lambdaSrcBucket" {
   bucket_prefix = "vod-lambda-src-"
 }
 resource "aws_s3_bucket_acl" "lambdaSrcBucket" {
+  depends_on = [aws_s3_bucket_ownership_controls.lambdaSrcBucket]
+
   bucket = aws_s3_bucket.lambdaSrcBucket.id
   acl    = "private"
+}
+resource "aws_s3_bucket_ownership_controls" "lambdaSrcBucket" {
+  bucket = aws_s3_bucket.lambdaSrcBucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
 resource "aws_s3_object" "vod_src_file_upload" {

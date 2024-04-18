@@ -1,5 +1,5 @@
 resource "local_file" "testCognitoSettings" {
-  filename = "${path.module}/test/aws-exports.json"
+  filename = "${path.module}/test/aws-exports-${var.DeployEnvironment}.json"
 
   content = <<-EOT
 {

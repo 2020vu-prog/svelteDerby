@@ -31,8 +31,15 @@ resource "aws_s3_bucket" "svelteBucket" {
 
 }
 resource "aws_s3_bucket_acl" "svelteBucket" {
+  depends_on = [aws_s3_bucket_ownership_controls.svelteBucket]
   bucket = aws_s3_bucket.svelteBucket.id
   acl    = "private"
+}
+resource "aws_s3_bucket_ownership_controls" "svelteBucket" {
+  bucket = aws_s3_bucket.svelteBucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 resource "aws_s3_bucket" "cdnLogBucket" {
   bucket_prefix = "svelte-cdn-logs"
@@ -56,8 +63,16 @@ resource "aws_s3_bucket_lifecycle_configuration" "cdnLogBucket" {
 
 }
 resource "aws_s3_bucket_acl" "cdnLogBucket_acl" {
+  depends_on = [aws_s3_bucket_ownership_controls.cdnLogBucket]
+
   bucket = aws_s3_bucket.cdnLogBucket.id
   acl    = "private"
+}
+resource "aws_s3_bucket_ownership_controls" "cdnLogBucket" {
+  bucket = aws_s3_bucket.cdnLogBucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
 data "aws_iam_policy_document" "s3_svelte_policy" {
@@ -396,7 +411,7 @@ resource "aws_route53_record" "www_cf" {
 }
 
 resource "local_file" "publish_bash_targets" {
-  filename = "${path.module}/../frontend/generatedTargets.sh"
+  filename = "${path.module}/../frontend/generatedTargets-${var.DeployEnvironment}.sh"
   content  = <<-EOT
 export DERBY_SPA_S3_BUCKET="${aws_s3_bucket.svelteBucket.id}"
 export DERBY_CLOUDFRONT="https://${aws_cloudfront_distribution.derbyApp.domain_name}"

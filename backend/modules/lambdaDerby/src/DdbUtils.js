@@ -103,7 +103,7 @@ class DdbUtils {
         }
         return rc;
     }
-    async ddbQueryPkSk(pk, sk, tableName = process.env.DynamoDbTable) {
+    async ddbQueryRawPkSk(pk, sk, tableName = process.env.DynamoDbTable) {
         const containsValues = {};
         containsValues[":pk"] = { S: pk };
         containsValues[":sk"] = { S: sk };
@@ -119,7 +119,16 @@ class DdbUtils {
 
         try {
             var data = await this.ddbClient.query(params);
-            log.debug("ddbQueryPkSk: ", data); // successful response
+            log.debug("ddbQueryRawPkSk: ", data); // successful response
+		return data
+        } catch (err) {
+            log.debug("ddbQueryRawPkSk failed: ", err, err.stack); // an error occurred
+            throw err;
+        }
+    }
+    async ddbQueryPkSk(pk, sk, tableName = process.env.DynamoDbTable) {
+        try {
+	    const data=await this.ddbQueryRawPkSk(pk, sk, tableName )
             var factory = new EntityFactory({});
             if (process.env.ElapsedTempDbTable === tableName) {
                 factory = null;
@@ -164,7 +173,7 @@ class DdbUtils {
             log.debug("ddbQueryPkAll failed: ", err, err.stack); // an error occurred
             throw err;
         }
-    }
+    } 
     promoteToObject(unmarshalled, factory) {
         if (factory) {
             return factory.build(unmarshalled);

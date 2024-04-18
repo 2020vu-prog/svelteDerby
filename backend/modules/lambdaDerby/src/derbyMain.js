@@ -999,17 +999,54 @@ const getOrgIz = (event) => {
 const getEventKey = (event) => {
     return getOrgIz(event) + ":" + getOrgId(event);
 };
+async function iotDefaultPri(event) {
+	let backendPri=5;
+
+	const environ=process.env.DeployEnvironment
+	if(environ.search(/test/i) >=0){
+		backendPri=900;
+	}
+	if(environ.search(/stage/i) >=0){
+		backendPri=200;
+	}
+	if(environ.search(/prod/i) >=0){
+		backendPri=500;
+	}
+	return backendPri
+
+}
+async function iotOverridePri(event) {
+    const discoverOvrd = await ddbUtils.ddbQueryRawPkSk(
+		`DiscoverTimerOverride`,
+            event.headers["x-rr1-timer"],
+        process.env.TimerProtobufDbArn
+    );
+	    log.debug("iotOverridePri: ddbRC:", discoverOvrd);
+
+    if (discoverOvrd && discoverOvrd.Items.length &&  discoverOvrd.Items[0].pri){
+	    log.debug("iotOverridePri: using:", discoverOvrd.Items[0].pri);
+		return discoverOvrd.Items[0].pri.N
+    }
+    return 0
+}
 async function iotDiscover(event, apiProps) {
+	const backendPri= Math.max(
+		await iotDefaultPri(event),
+		await iotOverridePri(event),
+	)
 
             return {
-                priority:100, //TODO
+                priority: backendPri,
                 "backends":[
                     "cf.test.rr1.us",
+                    "cf.stage.rr1.us",
+                    "cf.www.rr1.us",
                     "c.comicNotARealDomainButKKindOfLongish",
                 ],
-                authUrl: "https://xcfoeorhj5s4ubgaawz2rv45re0nxyqh.lambda-url.us-east-2.on.aws/iot/auth",
+                authUrl: `${process.env.IotPiAccessUrl}iot/auth`,
                 bundleUrl: "https://cf.test.rr1.us/gpsRelay.tar.zst",
             };
+                //authUrl: "https://xcfoeorhj5s4ubgaawz2rv45re0nxyqh.lambda-url.us-east-2.on.aws/iot/auth",
 }
 async function getOrgRoles(event, apiProps) {
 
@@ -1039,8 +1076,7 @@ async function getOrgRoles(event, apiProps) {
     return { statusCode: 403, error: "email not aligned" };
 }
 const routeMap = {
-    "/iot/discover": {
-        allowFrozen: true,
+    "/iot/discover": { allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
         allowMissingOrgIz: true,

@@ -53,6 +53,9 @@ locals{
 data "aws_iot_endpoint" "mqtt" {
   endpoint_type="iot:Data-ATS"
 }
+data "aws_ssm_parameter" "iot_pi_access_url" {
+  name           = "/iot/IotPiAccessUrl"
+}
 
 resource "aws_lambda_permission" "with_sns" {
   statement_id  = "AllowExecutionFromSNS"
@@ -163,12 +166,14 @@ resource "aws_lambda_function" "lambda" {
   timeout = 10 // increased for bulkAdd
   role    = aws_iam_role.iam_for_lambda.arn
   handler = "derbyMain.handler"
-  runtime = "nodejs14.x"
+  runtime = "nodejs16.x"
   memory_size=1024
   publish = true
   tags=local.tags
   environment {
     variables = {
+      IotPiAccessUrl=data.aws_ssm_parameter.iot_pi_access_url.value
+      DeployEnvironment= var.DeployEnvironment
       DynamoDbTable= local.DynamoDbTable
       DynamoDbArn= var.DynamoDbArn
 

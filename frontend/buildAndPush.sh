@@ -1,6 +1,7 @@
 #!/bin/bash
 function s3PushOLD {
-	source ./generatedTargets.sh
+	source "./generatedTargets-${TF_VAR_DeployEnvironment}.sh"
+	#source ./generatedTargets.sh
 	bucket=$DERBY_SPA_S3_BUCKET
 	echo "########"
 	echo "######## Begin no-cache"
