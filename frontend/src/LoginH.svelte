@@ -2,6 +2,8 @@
     import Dexie from 'dexie';
 	import aws_exports from "./aws-exports";
     import { onMount } from 'svelte';
+    import SpinnerButton from "./SpinnerButton.svelte";
+    import { logout } from './utils.js'
     import {
         backendHost,
         axios,
@@ -12,6 +14,7 @@
         userId,
     } from './stores.js'
     let loginUrl = "http://www.google.com"
+    let logoutUrl = "http://www.google.com"
     onMount(async () => {
         hostedLogin()
     }
@@ -24,6 +27,7 @@
         const redir = `redirect_uri=${encodedRedir}`
         //loginUrl = `https://cf-test-rr1-us.auth.us-east-2.amazoncognito.com/oauth2/authorize?${clientId}&response_type=token&scope=email+openid+phone&${redir}`
         loginUrl = `${aws_exports.hosted_url}/oauth2/authorize?${clientId}&response_type=token&scope=email+openid+phone&${redir}`
+        logoutUrl = `${aws_exports.hosted_url}/logout?${clientId}&logout_uri=${encodedRedir}`
 const regex = /\/+/gi;
 
         console.log("login1:", loginUrl)
@@ -51,13 +55,32 @@ const regex = /\/+/gi;
             ("0" + ss).slice(-2)
         );
     }
+    function clickedLogout() {
+        logout()
+        window.location.href=logoutUrl
+    }
+    function clickedLogin() {
+        window.location.href=loginUrl
+    }
 </script>
-Login
 {#if $userEmail }
 <br />
 User: [{$userId}][{$userEmail}]
 {hhmmss($userExpCountDownSecs)}
+<br />
+<SpinnerButton
+    on:click={clickedLogout}
+>
+    Logout
+</SpinnerButton>
+{:else}
+<br />
+Click below to proceed to external (Amazon/AWS) login page.
+<br />
+<SpinnerButton
+    on:click={clickedLogin}
+>
+    Login
+</SpinnerButton>
+<br />
 {/if}
-<br />
-Click <a href={loginUrl}>here</a> to proceed to external login page.
-<br />

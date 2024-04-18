@@ -1652,7 +1652,7 @@ async function apiGatewayHandler(event) {
         );
         const elapsed=new Date().getTime() - start
         console.log("Token is valid. Payload:", payload," elapsed: ",elapsed);
-        if(payload && payload.email_verified && payload.email){
+        if(payload && payload.email){
             decodedJwt=payload
         }
       } catch(err){

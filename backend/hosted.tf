@@ -26,8 +26,8 @@ resource "aws_cognito_user_pool_client" "hosted_client" {
   prevent_user_existence_errors                 = "LEGACY"
   read_attributes                               = ["address", "birthdate", "email", "email_verified", "family_name", "gender", "given_name", "locale", "middle_name", "name", "nickname", "phone_number", "phone_number_verified", "picture", "preferred_username", "profile", "updated_at", "website", "zoneinfo"]
   refresh_token_validity                        = 30
-  supported_identity_providers                  = ["COGNITO" ]
-  #supported_identity_providers                  = ["COGNITO", "Google"]
+  #supported_identity_providers                  = ["COGNITO" ]
+  supported_identity_providers                  = ["COGNITO", "Google"]
   user_pool_id                                  = aws_cognito_user_pool.derbyUserPool.id
   write_attributes                              = ["address", "birthdate", "email", "family_name", "gender", "given_name", "locale", "middle_name", "name", "nickname", "phone_number", "picture", "preferred_username", "profile", "updated_at", "website", "zoneinfo"]
   token_validity_units {

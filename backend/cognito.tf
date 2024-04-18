@@ -1,3 +1,5 @@
+variable "GoogleClientId" {}
+variable "GoogleClientSecret" {}
 locals {
 	cognitoDomain= replace(var.DnsDomain, "/\\./", "-")
 
@@ -86,8 +88,8 @@ resource "aws_cognito_identity_provider" "google" {
 
   provider_details = {
     authorize_scopes                = "email"
-    client_id                       = "REDACTED_GOOGLE_OAUTH_CLIENT_ID"
-    client_secret                   = "REDACTED_GOOGLE_OAUTH_CLIENT_SECRET"
+    client_id                       = var.GoogleClientId
+    client_secret                   = var.GoogleClientSecret
     "attributes_url"                = "https://people.googleapis.com/v1/people/me?personFields="
     "attributes_url_add_attributes" = "true"
     "authorize_url"                 = "https://accounts.google.com/o/oauth2/v2/auth"
