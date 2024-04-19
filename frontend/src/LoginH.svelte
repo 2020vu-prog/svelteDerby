@@ -3,7 +3,7 @@
 	import aws_exports from "./aws-exports";
     import { onMount } from 'svelte';
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { logout } from './utils.js'
+    import {logout, sleep} from './utils.js'
     import {
         backendHost,
         axios,
@@ -15,6 +15,7 @@
     } from './stores.js'
     let loginUrl = "http://www.google.com"
     let logoutUrl = "http://www.google.com"
+    let redirecting=false
     onMount(async () => {
         hostedLogin()
     }
@@ -55,18 +56,31 @@ const regex = /\/+/gi;
             ("0" + ss).slice(-2)
         );
     }
-    function clickedLogout() {
+    async function clickedLogout() {
+        redirecting=true
         logout()
+        await sleep(300)
         window.location.href=logoutUrl
     }
-    function clickedLogin() {
+    async function clickedLogin() {
+        redirecting=true
+        await sleep(300)
         window.location.href=loginUrl
     }
 </script>
-{#if $userEmail }
+{#if redirecting}
+<SpinnerButton
+    spinning
+>
+Loading
+</SpinnerButton>
+{:else if $userEmail }
 <br />
-User: [{$userId}][{$userEmail}]
-{hhmmss($userExpCountDownSecs)}
+User:  [{$userId}]
+<br />
+Email: [{$userEmail}]
+<br />
+Token expiration: {hhmmss($userExpCountDownSecs)}
 <br />
 <SpinnerButton
     on:click={clickedLogout}

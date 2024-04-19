@@ -64,7 +64,11 @@
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
-    import { isEmailAllowedRoutePath, sleep } from "./utils.js";
+    import {
+         isEmailAllowedRoutePath,
+         sleep ,
+         refreshOrgRoles,
+        } from "./utils.js";
     import { setIdTokenFromCognitoCallback } from "./utilHosted.js";
     const routes = {
         // Exact path
@@ -267,7 +271,10 @@
     };
     onMount(async () => {
         log.debug("mounted app");
-        setIdTokenFromCognitoCallback();
+        const orgIz=$raceConfig.orgIz
+        await setIdTokenFromCognitoCallback();
+        await refreshOrgRoles(orgIz);
+
 
         isMounted = new Date().getTime();
     });
