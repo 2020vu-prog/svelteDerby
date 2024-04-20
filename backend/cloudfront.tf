@@ -210,7 +210,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
   http_version        = "http2and3"
 
 
-  aliases = local.use_default_cert ? null : [local.DnsCfAliasFq]
+  aliases = local.use_default_cert ? null : [local.DnsCfAliasFq,var.DnsDomain]
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
@@ -400,13 +400,22 @@ resource "aws_route53_record" "www_cf" {
   name    = local.DnsCfAliasFq
   type    = "A"
 
-
+  alias {
+    name                   = aws_cloudfront_distribution.derbyApp.domain_name
+    zone_id                = aws_cloudfront_distribution.derbyApp.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+resource "aws_route53_record" "base_cf" {
+  count   = local.useRoute53DnsCount
+  zone_id = data.aws_route53_zone.derby_zone[0].zone_id
+  name    = var.DnsDomain
+  type    = "A"
 
   alias {
     name                   = aws_cloudfront_distribution.derbyApp.domain_name
     zone_id                = aws_cloudfront_distribution.derbyApp.hosted_zone_id
     evaluate_target_health = false
-
   }
 }
 

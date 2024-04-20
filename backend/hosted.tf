@@ -9,12 +9,14 @@ resource "aws_cognito_user_pool_client" "hosted_client" {
 	"https://localhost:5173/",
 	"https://d38fl44wj64v4n.cloudfront.net/",
         "https://${local.DnsCfAliasFq}/",
+        "https://${var.DnsDomain}/",
 	]
   callback_urls                                 = [
 	"https://0.0.0.0:8080/",
 	"https://localhost:5173/",
 	"https://d38fl44wj64v4n.cloudfront.net/",
         "https://${local.DnsCfAliasFq}/",
+        "https://${var.DnsDomain}/",
 	]
   default_redirect_uri                          = null
   enable_propagate_additional_user_context_data = false

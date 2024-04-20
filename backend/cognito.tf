@@ -87,7 +87,7 @@ resource "aws_cognito_identity_provider" "google" {
   provider_type = "Google"
 
   provider_details = {
-    authorize_scopes                = "email"
+    authorize_scopes                = "email profile"
     client_id                       = var.GoogleClientId
     client_secret                   = var.GoogleClientSecret
     "attributes_url"                = "https://people.googleapis.com/v1/people/me?personFields="
@@ -101,6 +101,8 @@ resource "aws_cognito_identity_provider" "google" {
   attribute_mapping = {
     email    = "email"
     username = "sub"
+    name = "name"
+    profile = "profile"
   }
 }
 resource "aws_cognito_user_pool_client" "idpLink" {
@@ -178,6 +180,7 @@ const awsmobile = {
     "mqtt_ps_url": "${data.aws_ssm_parameter.iot_access_url.value}",
     "mqtt_ps_key": "${data.aws_ssm_parameter.iot_access_key.value}",
     "derby_main_url": "${module.derbyMainLambda.lambda_function_url}",
+    "DeployEnvironment": "${var.DeployEnvironment}",
     "oauth": {}
 };
 

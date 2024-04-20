@@ -569,11 +569,13 @@
 
         const elapsedTime = new Date().getTime() - startTime;
 
+        /*
         $statusMessage = {
             text: `DB took ${elapsedTime}`,
             type: "success",
             key: "refreshTime",
         };
+        */
 
         return hist;
     }
