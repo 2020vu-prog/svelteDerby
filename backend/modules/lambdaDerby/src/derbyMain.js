@@ -1004,12 +1004,12 @@ async function iotDefaultPri(event) {
 
 	const environ=process.env.DeployEnvironment
 	if(environ.search(/test/i) >=0){
-		backendPri=900;
+		backendPri=100;
 	}
 	if(environ.search(/stage/i) >=0){
 		backendPri=200;
 	}
-	if(environ.search(/prod/i) >=0){
+	if(environ.search(/go-derby-prod/i) >=0){
 		backendPri=500;
 	}
 	return backendPri
@@ -1038,8 +1038,10 @@ async function iotDiscover(event, apiProps) {
             return {
                 priority: backendPri,
                 "backends":[
+                    "go.rr1.us",
                     "cf.test.rr1.us",
-                    "cf.stage.rr1.us",
+                    "test.rr1.us",
+                    "stage.rr1.us",
                     "cf.www.rr1.us",
                     "c.comicNotARealDomainButKKindOfLongish",
                 ],
