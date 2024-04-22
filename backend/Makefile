@@ -11,9 +11,12 @@ $(SUBDIRS):
 
 .PHONY: all $(SUBDIRS) tfplan lambdaPkgs auto tfauto
 
-tfplan: $(SUBDIRS)
+tfplan: $(SUBDIRS) terraEnv
 	terraform apply
-tfauto: $(SUBDIRS)
+tfauto: $(SUBDIRS) terraEnv
 	terraform apply -auto-approve
 valid:
 	terraform validate -json
+
+terraEnv:
+	grep -c "${TF_VAR_BackendBucket}" .terraform/terraform.tfstate  || terraform init -reconfigure  -backend-config=${TF_BACKEND_CONFIG}

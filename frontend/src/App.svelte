@@ -2,6 +2,7 @@
     import log from "loglevel";
     const { v4: uuidv4 } = require("uuid");
 
+    import aws_exports from "./aws-exports";
     import Router from "svelte-spa-router";
     import { location, replace } from "svelte-spa-router";
     import { querystring } from "svelte-spa-router";
@@ -271,13 +272,30 @@
     };
     onMount(async () => {
         log.debug("mounted app");
+        setEnvTitle()
         const orgIz=$raceConfig.orgIz
         await setIdTokenFromCognitoCallback();
         await refreshOrgRoles(orgIz);
-
+        let msg='Using public access'
+        if ($userEmail){
+            msg=`Logged in: [${$userEmail}]`
+        }
+        $statusMessage = {
+            text: msg,
+            type: "success",
+        };
 
         isMounted = new Date().getTime();
     });
+        function setEnvTitle(){
+            if (aws_exports.DeployEnvironment === 'go-derby-prod'){
+                document.title = `Go RR1`
+            }else{
+                document.title = `${aws_exports.DeployEnvironment} Derby App`
+            }
+
+
+        }
     $: {
         // $userEmail required so bearer token is ready when calling apis
         replaceRouteOnInitialLoad(isMounted, $userEmail);
