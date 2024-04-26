@@ -168,7 +168,11 @@ Resources:
           Application: !Sub "${AWS::StackName}"
       Runtime:  python3.12
       Timeout: 120
-  
+  LambdaConvertLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties: 
+      RetentionInDays: 7
+      LogGroupName: !Join ["", ["/aws/lambda/", !Ref LambdaConvert]] 
   MediaBucket:
     Properties:
       WebsiteConfiguration:
