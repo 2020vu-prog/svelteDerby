@@ -1,3 +1,4 @@
+/*
 module "lambda-cloudwatch-trigger" {
   source                = "infrablocks/lambda-cloudwatch-events-trigger/aws"
   region                = var.AwsRegion
@@ -10,3 +11,4 @@ module "lambda-cloudwatch-trigger" {
   lambda_function_name       = module.derbyMainLambda.function_name
   lambda_schedule_expression = "cron(55 * * * ? *)"
 }
+*/

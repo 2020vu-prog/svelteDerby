@@ -3,3 +3,4 @@ install: environment
 
 environment:
 	cd src && ln -sf aws-exports-${TF_VAR_DeployEnvironment}.js aws-exports.js
+	cd public && sed "s/__AppShortName/${TF_VAR_AppShortName}/" < manifest.template > manifest.json

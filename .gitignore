@@ -26,3 +26,4 @@ build/
 
 .DS_Store
 /frontend/src/config/doNotEditChartKey.json
+frontend/public/manifest.json
