@@ -20,3 +20,6 @@ valid:
 
 terraEnv:
 	grep -c "${TF_VAR_BackendBucket}" .terraform/terraform.tfstate  || terraform init -reconfigure  -backend-config=${TF_BACKEND_CONFIG}
+
+vod: terraEnv
+	terraform taint module.vodTranscode.aws_cloudformation_stack.vodTranscodeStack

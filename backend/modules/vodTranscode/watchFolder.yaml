@@ -157,6 +157,7 @@ Resources:
       FunctionName: !Sub ${AWS::StackName}-convert
       Description: Converts input video  
       Handler: convert.handler
+      MemorySize: 512
       Role: !GetAtt LambdaRole.Arn
       Code:
         S3Bucket: !Ref LambdaSrcBucket
