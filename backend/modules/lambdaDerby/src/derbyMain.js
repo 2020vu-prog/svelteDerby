@@ -289,7 +289,7 @@ async function requestIotVideoUpload(tgtRp){
         };
         try {
             log.debug("requestIotVideoUpload request:", params);
-            var data = await this.iotdata.publish(params).promise();
+            var data = await iotdata.publish(params).promise();
             log.debug("requestIotVideoUpload Success.", params);
             return { status: "ok", detail: "Published" };
         } catch (err) {
