@@ -231,6 +231,7 @@
             {
                 text: "Raw Timer List",
                 menuRoute: "/rawTimerList",
+                neverShow: true,
             },
             {
                 text: "Org Users",
@@ -338,6 +339,7 @@
     }
     const shouldDisplay = (email, menuOption, raceConfigParam) => {
         if (menuOption.alwaysShow) return true;
+        if (menuOption.neverShow) return false;
 
         //return raceConfigParam.orgIz && raceConfigParam.orgId;
         /*
