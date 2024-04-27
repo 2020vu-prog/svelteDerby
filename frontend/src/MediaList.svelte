@@ -19,6 +19,7 @@
     } from "./stores.js";
     import { tick } from "svelte";
     import { db } from "./eventDb.js";
+    import MediaViewer from "./MediaViewer.svelte";
 
     export let params = {};
 
@@ -239,6 +240,9 @@
                                 />
                                 Your browser does not support the video tag.
                             </video>
+                            <!-- 
+                            <MediaViewer/>
+                        -->
                         {/if}
                         {#if selectedAudio === mediaItem.Key}
                             <audio controls>

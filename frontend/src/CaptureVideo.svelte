@@ -86,7 +86,7 @@
     }
     function clickedCalcCapture() {
         const lo=Date.now()-60000
-        const hi=lo+300
+        const hi=lo+1500
         const sMatch=findSnipMatch(lo,hi)
         if(sMatch){
 
@@ -110,7 +110,7 @@
         }
     }
     function isTimeInSnip(snip,xMs,rsn){
-            log.debug(`VCALC: istis BEGIN ${rsn}: `,snip,xMs)
+            //log.debug(`VCALC: istis BEGIN ${rsn}: `,snip,xMs)
         //TODO: active snips!
      //       log.debug("VCALC: wtf: ",xMs,snip.snipStart,snip.snipEnd)
     //        log.debug("VCALC: wtf2: ",xMs,snip)
@@ -119,24 +119,19 @@
         return rc
     }
     function getSnipDistance(snip,loMs,hiMs){
-            log.debug("VCALC: wtf3z: ",isTimeInSnip(snip,hiMs,'hcrack'))
-            log.debug("VCALC: wtf3a: ",loMs,hiMs,snip)
+            //log.debug("VCALC: wtf3z: ",isTimeInSnip(snip,hiMs,'hcrack'))
+            //log.debug("VCALC: wtf3a: ",loMs,hiMs,snip)
         const beginD=loMs-snip.snipStart
         const endD=snip.snipEnd-hiMs
-            log.debug("VCALC: wtf3b: ",beginD,endD,snip)
+            //log.debug("VCALC: wtf3b: ",beginD,endD,snip)
         return Math.min(beginD,endD)
 
     }
     function findSnipMatch(lo,hi){
-            const candidates=[]
-            for (let idx in videoSnipHistory) {
-                const snip1=videoSnipHistory[idx]
-                if(isTimeInSnip(snip1,lo,'lo') &&
-                   isTimeInSnip(snip1,hi,'hi') ){
-            log.debug("VCALC: pushing: ",lo,hi,snip1)
-                    candidates.push(snip1)
-                }
-            }
+            const candidates=videoSnipHistory.filter((snipp)=>{
+                return(isTimeInSnip(snipp,lo,'lo') &&
+                   isTimeInSnip(snipp,hi,'hi') )
+            })
             log.debug("VCALC: candidates: ",candidates.length);
             var rc=undefined;
             var fitDistance=0
