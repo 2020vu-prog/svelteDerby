@@ -204,10 +204,14 @@ const applyFinishTime = async (json) => {
             SK: tgtRp.rs,
         });
     }
+    
     const rpUpdatePromise = ddbUtils.addSingle(tgtRp);
-    const [rsFoundList, rpUpdate] = await Promise.all([
+    const iotVideoRequestPromise = requestIotVideoUpload(tgtRp);
+
+    const [rsFoundList, rpUpdate, iotVideoResult] = await Promise.all([
         rsPromise,
         rpUpdatePromise,
+        iotVideoRequestPromise,
     ]);
 
     log.debug("applyFinishTime 413 rsFoundList: ", rsFoundList);
@@ -267,6 +271,35 @@ const applyFinishTime = async (json) => {
         status: "ok",
     };
 };
+let iotdata=""
+async function requestIotVideoUpload(tgtRp){
+
+        if (!iotdata) {
+            // first time
+            iotdata = new AWS.IotData({
+                endpoint: process.env.IotEndpoint,
+            });
+        }
+        const payload = { ...tgtRp};
+        const timerName="Finish" //finish timer
+        const params = {
+            topic: `derby/${tgtRp.orgId}/video/${timerName}`,
+            payload: JSON.stringify(payload),
+            qos: 0,
+        };
+        try {
+            log.debug("requestIotVideoUpload request:", params);
+            var data = await this.iotdata.publish(params).promise();
+            log.debug("requestIotVideoUpload Success.", params);
+            return { status: "ok", detail: "Published" };
+        } catch (err) {
+            log.debug("requestIotVideoUpload Error.", err);
+            log.debug(err, err.stack); // an error occurred
+            return { error: err };
+        }
+
+
+}
 
 // srcRs / bracketPos can be null.  Not both.
 const advanceChartPos = async (srcRs, bracketPos) => {
