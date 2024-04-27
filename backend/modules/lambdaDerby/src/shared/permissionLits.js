@@ -46,7 +46,7 @@ addPermission(
     ["/addPending"],
     ["/raceStandingAdd/RaceStanding"]
 );
-addPermission("CanAddBlocks", ["/addBlocks"], ["/raceStandingAdd/RacePhase"]);
+addPermission("CanAddBlocks", ["/addBlocks"], ["/raceStandingAdd/RacePhase","/spMediaList"]);
 // TODO: qualify with metadata!
 addPermission("CanAddChart", ["/addChart", "/listChartTypes"], ["/chartAdd"]);
 

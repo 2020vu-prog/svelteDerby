@@ -221,8 +221,8 @@
                 alwaysShow: true,
             },
             {
-                text: "Timer Config (Original)",
-                menuRoute: "/timerConfig",
+                text: "List All Media",
+                menuRoute: "/spMediaList/*/*",
             },
             {
                 text: "Timer Config (Elapsed)",
