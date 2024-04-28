@@ -206,7 +206,7 @@ const applyFinishTime = async (json) => {
     }
     
     const rpUpdatePromise = ddbUtils.addSingle(tgtRp);
-    const iotVideoRequestPromise = requestIotVideoUpload(tgtRp);
+    const iotVideoRequestPromise = requestIotVideoUploadByRP(tgtRp);
 
     const [rsFoundList, rpUpdate, iotVideoResult] = await Promise.all([
         rsPromise,
@@ -272,7 +272,16 @@ const applyFinishTime = async (json) => {
     };
 };
 let iotdata=""
-async function requestIotVideoUpload(tgtRp){
+async function requestIotVideoUploadByRP(tgtRp){
+    const vr={
+        orgId:tgtRp.orgId,
+        orgIz:tgtRp.orgIz,
+        tgtTimeMs:Math.floor(tgtRp.phr/1000), // micros->millis
+        prefix: `${tgtRp.orgId}/${tgtRp.PK}-Finish`,
+    }
+    await requestIotVideoUploadRaw(vr)
+}
+async function requestIotVideoUploadRaw(videoRequest){
 
         if (!iotdata) {
             // first time
@@ -280,10 +289,10 @@ async function requestIotVideoUpload(tgtRp){
                 endpoint: process.env.IotEndpoint,
             });
         }
-        const payload = { ...tgtRp};
+        const payload = { ...videoRequest};
         const timerName="Finish" //finish timer
         const params = {
-            topic: `derby/${tgtRp.orgId}/video/${timerName}`,
+            topic: `derby/${videoRequest.orgId}/video/${timerName}`,
             payload: JSON.stringify(payload),
             qos: 0,
         };
@@ -1366,6 +1375,21 @@ const routeMap = {
             const policyName = "SubToAnyTopic"; // should be pre-existing from terraform
             const data = await attachPrincipalPolicy(policyName, qsp.principal);
             return buildResponse(data);
+        },
+    },
+    "/requestVideoUpload": {
+        h: async (event) => {
+//            var json = JSON.parse(event.body);
+            const qsp = event.queryStringParameters;
+            const vr={
+                orgId:qsp.orgId,
+                orgIz:qsp.orgIz,
+                tgtTimeMs:qsp.tgtTimeMs,
+                prefix: `${qsp.orgId}/TestUpload-${qsp.timerName}`,
+            }
+
+            await requestIotVideoUploadRaw(vr)
+            return buildResponse({ requested: qsp.timerName });
         },
     },
     "/requestS3PutObjectUrl": {

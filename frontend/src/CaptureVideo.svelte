@@ -22,6 +22,7 @@
     import TimerSelectByName from "./TimerSelectByName.svelte";
     import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
     var timerId = "";
+    var timerName = "";
 
     var showAdvanced=false
     var mediaRecorder = [];
@@ -42,6 +43,8 @@
     var recordSpinning = false;
     var captureSpinning = false;
     var captureDisabled = true;
+    var remoteeSpinning = false;
+    var remoteeDisabled = false;
     var resolution = "640x480";
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
@@ -107,6 +110,50 @@
             const key=`${oldSnip.snipStart}-TestAge`;
             captureSpinning = true
             doUploadToServer(oldSnip, key) 
+        }
+    }
+    async function clickedRequestCapture() {
+        const uploadKey="clickedRequestCapture"
+        if(!timerName){
+            $statusMessage = {
+                text: `No timer selected.`,
+                type: "error",
+                key: uploadKey,
+            };
+            return
+        }
+
+            remoteeSpinning = true
+        $statusMessage = {
+            text: `Beginning Request.`,
+            type: "success",
+            key: uploadKey,
+        };
+        try {
+            const endPoint = "/requestVideoUpload";
+            const req = {
+                tgtTimeMs:Date.now()-10000,
+                timerName: timerName,
+                orgId: $raceConfig.orgId,
+                orgIz: $raceConfig.orgIz,
+            };
+            const response = await $axios.get($raceConfig.baseUrl + endPoint, {
+                params: req,
+            });
+            log.debug("clickedRequestCapture response", response);
+            $statusMessage = {
+                text: `Completed [${timerName}] Request.`,
+                type: "success",
+                key: uploadKey,
+            };
+        } catch (err) {
+                log.debug("clickedRequestCapture caught:", err);
+            $statusMessage = {
+                text: err,
+                type: "error",
+            };
+        } finally {
+            remoteeSpinning = false;
         }
     }
     function isTimeInSnip(snip,xMs,rsn){
@@ -408,6 +455,7 @@
                 event.detail.decoded.timerMqttClientId
             );
             timerId = event.detail.decoded.timerMqttClientId;
+            timerName = event.detail.text;
             log.debug("handleTimerSelect set:", timerId);
         }
     }
@@ -491,6 +539,14 @@
     disabled={captureDisabled}
 >
     Upload Calculated
+</SpinnerButton>
+<br/>
+<SpinnerButton
+    on:click={clickedRequestCapture}
+    spinning={remoteeSpinning}
+    disabled={remoteeDisabled}
+>
+   Request Remote Capture
 </SpinnerButton>
 <br/>
 <br/>
