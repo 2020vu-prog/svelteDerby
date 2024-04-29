@@ -53,6 +53,14 @@
     const tag = "CaptureVideo";
     var perspective = "";
     var snipAgeSeconds = 300
+    var timerSelectMode="normal"
+    $:{ if(recordSpinning){
+            timerSelectMode="disabled"
+        }else{
+            timerSelectMode="normal"
+
+        }
+}
     onMount(async () => {
         if(isIos()){
             $statusMessage = {
@@ -555,7 +563,7 @@ placeholder="Overhead"
  />
 </label>
 <label>Linked Timer</label>
-<TimerSelectByName on:select={handleTimerSelect} preSelect="Finish" />
+<TimerSelectByName on:select={handleTimerSelect} preSelect="Finish" mode={timerSelectMode}/>
 
 {#key timerTopic}
     <MqttSubscribeStub
