@@ -283,10 +283,12 @@ async function requestIotVideoUploadByRP(tgtRp){
         tgtTimeMs=Date.now()
         //return;
     }
+    const timerName="Finish" //finish timer
     const vr={
         orgId:tgtRp.orgId,
         orgIz:tgtRp.orgIz,
         tgtTimeMs:tgtTimeMs,
+        timerName,
         prefix: `RP-${tgtRp.SK}-Finish`,
     }
     await requestIotVideoUploadRaw(vr)
@@ -300,9 +302,8 @@ async function requestIotVideoUploadRaw(videoRequest){
             });
         }
         const payload = { ...videoRequest};
-        const timerName="Finish" //finish timer
         const params = {
-            topic: `derby/${videoRequest.orgId}/video/${timerName}`,
+            topic: `derby/${videoRequest.orgId}/video/${videoRequest.timerName}`,
             payload: JSON.stringify(payload),
             qos: 0,
         };
@@ -1394,6 +1395,7 @@ const routeMap = {
             const vr={
                 orgId:qsp.orgId,
                 orgIz:qsp.orgIz,
+                timerName:qsp.timerName,
                 tgtTimeMs:parseInt(qsp.tgtTimeMs),
                 //prefix: `${qsp.orgId}-${qsp.tgtTimeMs}-TestUpload-${qsp.timerName}`,
                 prefix: `${qsp.tgtTimeMs}-TestRequest-${qsp.timerName}`,
