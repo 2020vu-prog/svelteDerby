@@ -9,6 +9,7 @@
         axios,
         raceConfig,
         isIos,
+        videoPerspective,
     } from "./stores.js";
 
     import {
@@ -51,7 +52,6 @@
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
     const tag = "CaptureVideo";
-    var perspective = "";
     var snipAgeSeconds = 300
     var timerSelectMode="normal"
     $:{ if(recordSpinning){
@@ -263,11 +263,11 @@
         try {
             const endPoint = "/requestS3PutObjectUrl";
             //const axios = await $getAxios();
-            if(!perspective){
-                perspective=uuidv4().substring(0, 5);
+            if(!$videoPerspective){
+                $videoPerspective=uuidv4().substring(0, 5);
             }
             const req = {
-                key: `${uploadKey}_${perspective}.webm`,
+                key: `${uploadKey}_${$videoPerspective}.webm`,
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
             };
@@ -558,7 +558,7 @@
 </label>
 {/if}
 <label>Perspective
-<input bind:value={perspective}
+<input bind:value={$videoPerspective}
 placeholder="Overhead"
  />
 </label>

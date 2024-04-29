@@ -70,6 +70,7 @@ export const developerLogging = persistable("pref:developerLogging");
 export const enableFractionalMs = persistable("pref:enableFractionalMs", false);
 export const defaultPhaseType = persistable("pref:defaultPhaseType", "R");
 export const lastSplash = persistable("pref:lastSplash", 0);
+export const videoPerspective = persistable("pref:videoPerspective");
 
 export const pendingSortAlgorithm = persistable(
     "pref:pendingSortAlgorithm",
