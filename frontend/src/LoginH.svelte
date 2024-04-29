@@ -13,6 +13,7 @@
         userEmail,
         userId,
     } from './stores.js'
+    
     let loginUrl = "http://www.google.com"
     let logoutUrl = "http://www.google.com"
     let redirecting=false
@@ -97,4 +98,6 @@ Click below to proceed to external (Amazon/AWS) login page.
     Login
 </SpinnerButton>
 <br />
+This site replaces the former site (cf.derby.rr1.us).
+If you had a user/password on that site you will need to SIGN UP again using the SAME email address.
 {/if}
