@@ -50,6 +50,9 @@
     function getMediaPrefix(racePhase) {
         const rc = [];
         if (racePhase && racePhase.phr && racePhase.phr.length) {
+            rc.push(
+                        `${$raceConfig.orgId}/RP-${racePhase.SK.toString()}`
+                )
             //const prefixSeed = Math.min(...racePhase.phr);
             const psList = [...racePhase.phr];
             psList.sort(function (a, b) {
@@ -57,6 +60,7 @@
             });
             psList
                 .filter((ps) => ps > 0)
+                .filter((ps) => ps > 10000000)
                 .forEach((prefixSeed) => {
                     rc.push(
                         `${$raceConfig.orgId}/MQTT-${prefixSeed.toString()}`

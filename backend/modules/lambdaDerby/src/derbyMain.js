@@ -271,13 +271,23 @@ const applyFinishTime = async (json) => {
         status: "ok",
     };
 };
+function getLowestPhrMillis(rp){
+    const lowest=Math.min(rp.phr)
+    return Math.floor(lowest/1000)// micros->millis
+}
 let iotdata=""
 async function requestIotVideoUploadByRP(tgtRp){
+    let tgtTimeMs=getLowestPhrMillis(tgtRp)
+    if (!tgtTimeMs){
+        // allow capture to proceed.... helpful for testing...
+        tgtTimeMs=Date.now()
+        //return;
+    }
     const vr={
         orgId:tgtRp.orgId,
         orgIz:tgtRp.orgIz,
-        tgtTimeMs:Math.floor(tgtRp.phr/1000), // micros->millis
-        prefix: `${tgtRp.orgId}/${tgtRp.PK}-Finish`,
+        tgtTimeMs:tgtTimeMs,
+        prefix: `RP-${tgtRp.SK}-Finish`,
     }
     await requestIotVideoUploadRaw(vr)
 }
@@ -1384,8 +1394,9 @@ const routeMap = {
             const vr={
                 orgId:qsp.orgId,
                 orgIz:qsp.orgIz,
-                tgtTimeMs:qsp.tgtTimeMs,
-                prefix: `${qsp.orgId}/TestUpload-${qsp.timerName}`,
+                tgtTimeMs:parseInt(qsp.tgtTimeMs),
+                //prefix: `${qsp.orgId}-${qsp.tgtTimeMs}-TestUpload-${qsp.timerName}`,
+                prefix: `${qsp.tgtTimeMs}-TestRequest-${qsp.timerName}`,
             }
 
             await requestIotVideoUploadRaw(vr)

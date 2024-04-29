@@ -15,14 +15,17 @@
     } from "./stores.js";
 
     import {
+        sleep,
         hhmmssFmt,
         secondsToHHMMSS,
     } from "./utils.js";
 
+    const { v4: uuidv4 } = require("uuid");
     import TimerSelectByName from "./TimerSelectByName.svelte";
-    import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
+    import MqttSubscribeStub from "./MqttSubscribeStub.svelte";
     var timerId = "";
     var timerName = "";
+    var timerTopic="";
 
     var showAdvanced=false
     var mediaRecorder = [];
@@ -49,15 +52,9 @@
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
     const tag = "CaptureVideo";
-    var perspective = "Finish";
+    var perspective = "";
     var snipAgeSeconds = 300
     onMount(async () => {
-        if (!$mqttTimerTopic) {
-            $statusMessage = {
-                text: `Missing selected Timer. Go to Timer Config and verify that a timer has been chosen.`,
-                type: "error",
-            };
-        }
         if(isIos()){
             $statusMessage = {
                 text: `Video capture does not work on iOS.  Please use android for video.`,
@@ -67,7 +64,7 @@
         }
     });
     onDestroy(() => {
-        $mqttTimerSubscribe = false;
+        //$mqttTimerSubscribe = false;
         if (timerHandle) {
             clearInterval(timerHandle);
             timerHandle = undefined;
@@ -112,6 +109,47 @@
             doUploadToServer(oldSnip, key) 
         }
     }
+    async function handleRemoteRequest(json){
+        const tag = "handleRemoteRequest";
+        //const json=JSON.parse(jsonString)
+            log.debug(`${tag}: invoked: ${JSON.stringify(json)}`);
+        if(!json.tgtTimeMs){
+            log.error(`${tag}: INVALID`);
+            return
+        }
+        if(!json.prefix){
+            log.error(`${tag}: INVALID`);
+            return
+        }
+        const lo=json.tgtTimeMs-500
+        const hi=json.tgtTimeMs+500
+        const futureHi=(hi - Date.now())+5000
+        if (futureHi>0){ //wait for video capture if hi is 'now-ish' or future
+            log.debug(`${tag}: waiting ${futureHi}`);
+            await sleep(futureHi)
+            log.debug(`${tag}: waited  ${futureHi}`);
+        }
+        else{
+            log.debug(`${tag}: noWait ${futureHi}`);
+
+        }
+
+        const sMatch=findSnipMatch(lo,hi)
+        if(sMatch){
+            const oldSnip=sMatch
+            const hhmmss = hhmmssFmt(oldSnip.snipStart);
+            const key=`${oldSnip.snipStart}-TestRmt`;
+            captureSpinning = true
+            doUploadToServer(oldSnip, json.prefix) 
+        }else{
+
+            $statusMessage = {
+                text: `Remote Video capture snip NOT FOUND!.`,
+                type: "error",
+            };
+
+        }
+    }
     async function clickedRequestCapture() {
         const uploadKey="clickedRequestCapture"
         if(!timerName){
@@ -132,7 +170,7 @@
         try {
             const endPoint = "/requestVideoUpload";
             const req = {
-                tgtTimeMs:Date.now()-10000,
+                tgtTimeMs:Date.now()+10000,
                 timerName: timerName,
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
@@ -209,8 +247,11 @@
         try {
             const endPoint = "/requestS3PutObjectUrl";
             //const axios = await $getAxios();
+            if(!perspective){
+                perspective=uuidv4().substring(0, 5);
+            }
             const req = {
-                key: `${uploadKey}-${perspective}.webm`,
+                key: `${uploadKey}_${perspective}.webm`,
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
             };
@@ -284,7 +325,7 @@
             return;
         }
 
-        $mqttTimerSubscribe = true;
+        //$mqttTimerSubscribe = false;
         const snum = 0;
         recordSpinning = true;
         const constraints = {
@@ -328,11 +369,12 @@
     }
     var videoRefreshCount = 0;
     $: {
-        deferredCapture(`${$mqttTriggerVideoCapture}`);
+        //deferredCapture(`${$mqttTriggerVideoCapture}`);
     }
     function isString(x) {
         return Object.prototype.toString.call(x) === "[object String]";
     }
+
     /*
      **  capture was observed to quit prior to cars breaking photo eye
      **  this is due to last frame captured too old.
@@ -346,6 +388,7 @@
     }
     async function doCaptureAndUpload(uploadKey) {
         const tag = "doCaptureAndUpload";
+            log.debug(`${tag}: invoked: ${uploadKey}`);
         if (captureDisabled) {
             log.debug(`${tag}: skipping, not armed`);
             return;
@@ -456,6 +499,7 @@
             );
             timerId = event.detail.decoded.timerMqttClientId;
             timerName = event.detail.text;
+            timerTopic = `derby/${$raceConfig.orgId}/video/${timerName}`
             log.debug("handleTimerSelect set:", timerId);
         }
     }
@@ -501,18 +545,22 @@
 </label>
 {/if}
 <label>Perspective
-<input bind:value={perspective} />
+<input bind:value={perspective}
+placeholder="Overhead"
+ />
 </label>
 <label>Linked Timer</label>
 <TimerSelectByName on:select={handleTimerSelect} preSelect="Finish" />
-{#key timerId}
-    <TimerSubscribeStub
-        {timerId}
-        on:videoKey={(e) => {
-            deferredCapture(e.detail);
+
+{#key timerTopic}
+    <MqttSubscribeStub
+        mqTopic={timerTopic}
+        on:mqMessage={(e) => {
+            handleRemoteRequest(e.detail);
         }}
     />
 {/key}
+
 <p />
 <SpinnerButton on:click={doStart} spinning={recordSpinning}>
     Record
@@ -525,6 +573,8 @@
     Capture&Upload
 </SpinnerButton>
 <br/>
+<!--
+
 <SpinnerButton
     on:click={clickedAgingCapture}
     spinning={captureSpinning}
@@ -541,12 +591,13 @@
     Upload Calculated
 </SpinnerButton>
 <br/>
+ -->
 <SpinnerButton
     on:click={clickedRequestCapture}
     spinning={remoteeSpinning}
     disabled={remoteeDisabled}
 >
-   Request Remote Capture
+   Simulate [{timerName}] Capture
 </SpinnerButton>
 <br/>
 <br/>
