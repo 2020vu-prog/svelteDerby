@@ -8,9 +8,6 @@
         getAxiosNew,
         axios,
         raceConfig,
-        mqttTriggerVideoCapture,
-        mqttTimerSubscribe,
-        mqttTimerTopic,
         isIos,
     } from "./stores.js";
 
@@ -31,6 +28,8 @@
     var mediaRecorder = [];
     var activeSnipList = [];
     var oldestSnipHHMMSS=""
+    const mqttMsgKey="mqttMsgKey"
+
     function newVideoSnip(){
         return{
             snipVideoData:[],
@@ -64,7 +63,6 @@
         }
     });
     onDestroy(() => {
-        //$mqttTimerSubscribe = false;
         if (timerHandle) {
             clearInterval(timerHandle);
             timerHandle = undefined;
@@ -125,12 +123,23 @@
         const hi=json.tgtTimeMs+500
         const futureHi=(hi - Date.now())+5000
         if (futureHi>0){ //wait for video capture if hi is 'now-ish' or future
+            $statusMessage = {
+                    text: `Video upload in [${futureHi/1000}] seconds.`,
+                    key: mqttMsgKey,
+                    type: "success",
+                    TTL:Date.now()+futureHi,
+            };
             log.debug(`${tag}: waiting ${futureHi}`);
             await sleep(futureHi)
             log.debug(`${tag}: waited  ${futureHi}`);
         }
         else{
             log.debug(`${tag}: noWait ${futureHi}`);
+            $statusMessage = {
+                    text: `Video upload processing.`,
+                    key: mqttMsgKey,
+                    type: "success",
+            };
 
         }
 
@@ -151,12 +160,11 @@
         }
     }
     async function clickedRequestCapture() {
-        const uploadKey="clickedRequestCapture"
         if(!timerName){
             $statusMessage = {
                 text: `No timer selected.`,
                 type: "error",
-                key: uploadKey,
+                key: mqttMsgKey,
             };
             return
         }
@@ -165,7 +173,7 @@
         $statusMessage = {
             text: `Beginning Request.`,
             type: "success",
-            key: uploadKey,
+            key: mqttMsgKey,
         };
         try {
             const endPoint = "/requestVideoUpload";
@@ -182,7 +190,7 @@
             $statusMessage = {
                 text: `Completed [${timerName}] Request.`,
                 type: "success",
-                key: uploadKey,
+                key: mqttMsgKey,
             };
         } catch (err) {
                 log.debug("clickedRequestCapture caught:", err);
@@ -325,7 +333,6 @@
             return;
         }
 
-        //$mqttTimerSubscribe = false;
         const snum = 0;
         recordSpinning = true;
         const constraints = {
@@ -368,9 +375,7 @@
         timerHandle = setInterval(myTimer, 2500);
     }
     var videoRefreshCount = 0;
-    $: {
-        //deferredCapture(`${$mqttTriggerVideoCapture}`);
-    }
+
     function isString(x) {
         return Object.prototype.toString.call(x) === "[object String]";
     }
