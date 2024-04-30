@@ -1,6 +1,8 @@
 <script>
     import log from "loglevel";
 
+    import { tick } from 'svelte';
+
     import SpinnerButton from "./SpinnerButton.svelte";
     import { driverMap, axios, raceConfig, statusMessage } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
@@ -9,6 +11,10 @@
     import { participantValid, participantFocusCompletion } from "./utils.js";
     import { isAllowedRoutePath } from "./utils.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
+    import { stringify as csvStringify} from 'csv-stringify/lib/sync';
+    import { parse as csvParse } from 'csv-parse/lib/sync';
+
+
     import Icon from "fa-svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -26,10 +32,12 @@
         mode = params.number ? "Update" : "Add";
         document.getElementById("carNumber").focus();
         mounted = true;
+        /*
         $statusMessage = {
             text: `Ready to ${mode} Driver`,
             type: "success",
         };
+        */
         await refreshDataFromDb();
         syncAddButton();
         allowDriverJson = await isAllowedRoutePath(
@@ -48,9 +56,53 @@
             fmtAndPostDrivers(e.target.result);
         };
     };
-    async function fmtAndPostDrivers(rawJson) {
-        log.debug("OFS fmtAndPostDrivers:", rawJson);
-        const bulkObject = JSON.parse(rawJson);
+    async function fmtAndPostDrivers(rawData) {
+        log.debug("OFS fmtAndPostDrivers:", rawData);
+        if( InputFileContentType=="application/json"){
+            await fmtAndPostJson(rawData)
+        }
+        if( InputFileContentType=="application/csv"){
+            await fmtAndPostCsv(rawData)
+        }
+    }
+    async function fmtAndPostCsv(rawData) {
+        log.debug("fmtAndPostCsv:", rawData);
+        const records = csvParse(rawData, {
+            columns: true,
+            skip_empty_lines: true
+        });
+        const xmap=getCsvXrefAsMap()
+        const jrecList=[]
+
+        log.debug("fmtAndPostCsv p:", JSON.stringify(records));
+        records.forEach(crec=>{
+            const drvr={ // placeholders: backend will overwrite
+                "orgId": "Test.4b117",
+                "orgIz": "Test",
+                "PK": "Test.4b117:PTCP",
+            }
+            for (const [fldName, fldValue] of Object.entries(crec)) {
+                drvr[xmap[fldName]]=fldValue;
+            }
+            if(drvr.name && drvr.number){
+                jrecList.push(drvr)
+            }
+            
+        });
+        log.debug("fmtAndPostCsv j:", JSON.stringify(jrecList));
+        const req = {
+            orgId: $raceConfig.orgId,
+            orgIz: $raceConfig.orgIz,
+            bulk: jrecList,
+        };
+
+        postDrivers(req);
+
+    }
+    async function fmtAndPostJson(rawData) {
+
+
+        const bulkObject = JSON.parse(rawData);
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
@@ -82,15 +134,60 @@
             log.debug("addBulk failed: " + err);
         }
     }
-    function uploadDriverJson() {
+    let InputFileContentType=""
+    async function uploadDriverJson() {
+        InputFileContentType="application/json"
+        await tick()
         document.getElementById("driverJsonFileTag").click();
     }
-    function downloadDriverJson(filename, text) {
-        console.log("downloading:", $raceConfig);
+    async function uploadDriverCsv() {
+        InputFileContentType="application/csv"
+        await tick()
+        document.getElementById("driverJsonFileTag").click();
+    }
+    const csvXref=[
+        ['CarNumber','ShortName','Sponsor','Notes','PhoneticType','PhoneticName'],
+        ['number','name','spon','notes','pType','pName'],
+
+    ]
+    function getCsvXrefAsMap(){
+        const rc={}
+        csvXref[0].forEach((literal,idx)=>{
+            rc[literal]=csvXref[1][idx]
+        })
+        return rc
+    }
+    function downloadDriverCsv() {
+        console.log("downloading csv:`:", $raceConfig);
+        console.log("downloading csv xmap:`:", JSON.stringify(getCsvXrefAsMap()));
 
         const eventName = $raceConfig.name;
-        filename = `drivers-${eventName}.json`;
-        text = JSON.stringify($driverMap);
+        const filename = `drivers-${eventName}.csv`;
+        const rows=[csvXref[0]]
+        let mapToArray = Array.from(Object.values($driverMap));
+        mapToArray.forEach(drvr => {
+            console.log(JSON.stringify(drvr))
+            const row=[]
+            csvXref[1].forEach(fld=>row.push(drvr[fld]))
+
+            //rows.push([drvr.number,drvr.name,drvr.spon,drvr.notes])
+            rows.push(row)
+        });
+        const output = csvStringify(rows,{
+            quoted: true
+        })
+        const text = output //generate($driverMap);
+        downloadFile(filename,text)
+    }
+    function downloadDriverJson() {
+        console.log("downloading json:", $raceConfig);
+
+        const eventName = $raceConfig.name;
+        const filename = `drivers-${eventName}.json`;
+        const text = JSON.stringify($driverMap);
+        downloadFile(filename,text)
+    }
+    function downloadFile(filename,text){
         var element = document.createElement("a");
         element.setAttribute(
             "href",
@@ -254,6 +351,7 @@
             inputmode="numeric"
             bind:value={driverForm.carNumber}
             placeholder="Car Number"
+            disabled={mode==="Update"}
             on:keyup={() => {
                 changeFocus(driverForm.carNumber, "A");
             }}
@@ -285,7 +383,7 @@
         <textarea
             id="carNotes"
             bind:value={driverForm.carNotes}
-            placeholder="Car Notes"
+            placeholder="Driver Notes"
         />
     </label>
     <label>
@@ -339,17 +437,21 @@
         <br />
         <br />
         <br />
+        <h4>Driver CSV</h4>
+        <SpinnerButton on:click={downloadDriverCsv}>Download</SpinnerButton>
+        <SpinnerButton on:click={uploadDriverCsv}>Upload</SpinnerButton>
         <br />
         <h4>Driver json</h4>
         <SpinnerButton on:click={downloadDriverJson}>Download</SpinnerButton>
         <SpinnerButton on:click={uploadDriverJson}>Upload</SpinnerButton>
+        <br />
 
         <!-- this is unstyled file input tag, so hide it!-->
         <div style="height: 0px;width:0px; overflow:hidden;">
             <input
                 id="driverJsonFileTag"
                 name="driverJsonFileTag"
-                accept="application/json"
+                accept={InputFileContentType}
                 type="file"
                 on:change={(e) => onFileSelected(e)}
             />
