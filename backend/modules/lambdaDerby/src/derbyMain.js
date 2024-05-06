@@ -1193,7 +1193,7 @@ const routeMap = {
         allowMissingOrgId: true,
         h: async (event, apiProps) => {
             return buildResponse(
-                await listOrgUser(JSON.parse(event.body), apiProps)
+                await listOrgUser(event, apiProps)
             );
         },
     },
@@ -1803,7 +1803,7 @@ async function apiGatewayHandler(event) {
         error: "Unhandled",
     });
 }
-async function listOrgUser(json, apiProps) {
+async function listOrgUser(event, apiProps) {
     const rolesByOrg = await ddbUtils.ddbQueryOrgPerms({
         orgIz: apiProps.orgIz,
     });

@@ -23,3 +23,6 @@ terraEnv:
 
 vod: terraEnv
 	terraform taint module.vodTranscode.aws_cloudformation_stack.vodTranscodeStack
+
+frontend:
+	(cd ../frontend/ && ./buildAndPush.sh)
