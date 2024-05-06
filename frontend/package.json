@@ -44,6 +44,7 @@
         "csv-stringify": "^6.4.6",
         "dexie": "^2.0.4",
         "flat": "^5.0.2",
+        "iso8601-duration": "^2.1.2",
         "js-base64": "^3.7.5",
         "jsonwebtoken": "^8.5.1",
         "loglevel": "^1.7.1",

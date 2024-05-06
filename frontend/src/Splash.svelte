@@ -3,10 +3,12 @@
     import { Modal, ModalHeader, ModalBody } from "sveltestrap";
     import { onMount } from "svelte";
     import { lastSplash } from "./stores.js";
-    const frequency = 3600 * 1000 * 8;
+    import { end, toSeconds ,parse} from "iso8601-duration";
+
     function overDue() {
-        const now = new Date().getTime();
-        const rc = now > $lastSplash + frequency;
+        const now=Date.now()
+        const nextShownMs=toSeconds(parse("PT8H"))*1000
+        const rc = now > $lastSplash + nextShownMs;
         if (rc) {
             $lastSplash = now;
         }
