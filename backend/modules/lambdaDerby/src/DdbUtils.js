@@ -240,6 +240,12 @@ class DdbUtils {
             log.debug("ddbQueryTimerPbHistory: ", data); // successful response
             log.debug("ddbQueryTimerPbHistory: " + JSON.stringify(data)); // successful response
             const rc = this.unmarshallResultsToArray(data);
+            for(const item of rc){
+                if(item.data){ //Buffer->JSON Sucks (large/verbose)
+                    item.data64=Buffer.from(item.data).toString("base64");
+                    delete item.data
+                }
+            }
 
             return rc;
         } catch (err) {

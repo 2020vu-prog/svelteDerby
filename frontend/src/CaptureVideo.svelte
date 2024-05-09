@@ -454,9 +454,9 @@
         mediaRecorder[snum].stop();
     }
     //const mimeType = "video/webm";
-    //const videoCodecs = "codecs=vp9";
+    const videoCodecs = "codecs=vp9";
     const mimeType = "video/webm";
-    const videoCodecs = "codecs=vp8";
+    //const videoCodecs = "codecs=vp8";
     const fileExt = mimeType.split("/")[1];
 
     function growBlob(event,snum){

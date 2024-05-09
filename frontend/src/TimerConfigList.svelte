@@ -11,6 +11,8 @@
     import { initialReloadRoute } from "./stores.js";
     import { doRefreshBlocks } from "./stores.js";
     import TimerPbHealth from "./TimerPbHealth.svelte";
+    import SpinnerButton from "./SpinnerButton.svelte";
+    
     var tcFromDexie = [{ timerName: "Initializing..." }];
     onMount(async () => {
         refreshDataFromDb();
@@ -46,8 +48,9 @@
 
         return tcFromDexie;
     }
-    function toggleToolbar(event) {
-        log.debug("toggleToolbar info event: ", event.detail.text);
+    function provisionWifi() {
+        push("/provisionWifi")
+        //push("/RpList")
         //showToolbar = !showToolbar;
     }
     function annotat(tc) {
@@ -89,3 +92,9 @@ report elapsed time split(s).
         </CardHeader>
     </Card>
 {/each}
+<p />
+<SpinnerButton
+on:click={provisionWifi}
+>
+Setup Timer WiFi
+</SpinnerButton>

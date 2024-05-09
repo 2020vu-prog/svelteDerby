@@ -36,6 +36,7 @@
     import RawTimerList from "./RawTimerList.svelte";
     import AboutPage from "./AboutPage.svelte";
     import PreferencesPage from "./PreferencesPage.svelte";
+    import ProvisionWifi from "./ProvisionWifi.svelte";
     import ChartDetail from "./ChartDetail.svelte";
     import ChartPosition from "./ChartPosition.svelte";
     import TimerConfig from "./TimerConfig.svelte";
@@ -94,6 +95,7 @@
         "/orgAdd": OrgAdd,
         "/about": AboutPage,
         "/preferences": PreferencesPage,
+        "/provisionWifi": ProvisionWifi,
         "/chartDetail/:chartId": ChartDetail,
         "/chartPosition/:chartId/:chartPosition": ChartPosition,
         "/chartList": ChartList,

@@ -113,13 +113,15 @@
                 log.debug("getTimerHistory: ", historyList);
                 if (historyList && historyList.length > 0) {
                     for (let h of historyList) {
-                        if (h && h.data) {
+                        if (h && h.data64) {
                         } else {
                             continue;
                         }
-                        const buf = h.data;
+
+                        //const buf = h.data;
                         //log.debug("getTimerHistory h: ", h.SK," buf:",buf);
-                        const buf8 = buf.data;
+                        //const buf8 = buf.data;
+                        const buf8=Buffer.from(h.data64, 'base64')
 
                         //log.debug("getTimerHistory h: ", h.SK," buf8:",buf8);
                         if (h.SK.startsWith("9999:")) {
