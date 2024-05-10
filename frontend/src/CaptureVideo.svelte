@@ -10,6 +10,7 @@
         raceConfig,
         isIos,
         videoPerspective,
+        videoCaptureCodec,
     } from "./stores.js";
 
     import {
@@ -454,9 +455,7 @@
         mediaRecorder[snum].stop();
     }
     //const mimeType = "video/webm";
-    const videoCodecs = "codecs=vp9";
     const mimeType = "video/webm";
-    //const videoCodecs = "codecs=vp8";
     const fileExt = mimeType.split("/")[1];
 
     function growBlob(event,snum){
@@ -473,7 +472,7 @@
 
         log.debug("recordStream", stream, snum);
         var options = {
-            mimeType: `${mimeType}; ${videoCodecs}`,
+            mimeType: `${mimeType}; codecs=${$videoCaptureCodec}`,
             videoBitsPerSecond: parseInt(videoBitsPerSecond, 10),
         };
         activeSnipList[snum] = newVideoSnip()
@@ -527,8 +526,15 @@
 </label>
 
 {#if showAdvanced}
-<label>Resolution
 
+<label>Codec
+<select bind:value={$videoCaptureCodec}>
+    <option>vp8</option>
+    <option>vp9</option>
+</select>
+</label>
+
+<label>Resolution
 <select bind:value={resolution}>
     <option>320x240</option>
     <option>640x480</option>
@@ -536,6 +542,7 @@
     <option>1920x1080</option>
 </select>
 </label>
+
 <label>Frame Rate
 <select bind:value={frameRate}>
     <option>5</option>
@@ -543,6 +550,7 @@
     <option>30</option>
 </select>
 </label>
+
 <label>videoBitsPerSecond
 <select bind:value={videoBitsPerSecond}>
     <option>500000</option>

@@ -69,6 +69,7 @@ export const developerMode = persistable("pref:developerMode", false);
 export const developerLogging = persistable("pref:developerLogging");
 export const enableFractionalMs = persistable("pref:enableFractionalMs", false);
 export const defaultPhaseType = persistable("pref:defaultPhaseType", "R");
+export const videoCaptureCodec = persistable("pref:videoCaptureCodec", "vp8");
 export const lastSplash = persistable("pref:lastSplash", 0);
 export const videoPerspective = persistable("pref:videoPerspective");
 
