@@ -37,6 +37,9 @@
     const ALL_PREFIX = "_ALL_";
 
     onMount(async () => {
+        // neuter chrome long press default
+        window.oncontextmenu = function() { return false; }
+
         if (params.dbName === "RacePhase") {
             rpFromDexie = await db.RacePhase.get(params.dbKey);
             log.debug("rpFromDexie:", rpFromDexie);
@@ -133,7 +136,7 @@
         await tick()
         vtime=vp
     }
-    async function playMedia(key) {
+    async function showMedia(key) {
         selectedVideo = null;
         selectedAudio = null;
        // await tick();
@@ -190,6 +193,22 @@
         const lcKey = item.Key.toLowerCase();
         return lcKey.endsWith(lcType) || lcKey.endsWith("mp3");
     }
+    let animateDir=0
+    let animateRequest=0
+    function slowV(direction){
+        animateDir=direction
+        animateRequest=Date.now()
+        animateLoop(animateRequest)
+        //log.debug("slowV",direction)
+    }
+    async function animateLoop(arParam){
+        //log.debug("animateLoop ad",animateDir)
+
+        while(animateDir!=0 && arParam===animateRequest){
+            await sleep(200)
+            stepMedia(animateDir)
+        }
+    }
     function stepMedia(direction){
         const step=.02
         vtime=vtime+ (step *direction)
@@ -233,7 +252,7 @@
             {#each getMediaItems(mediaList) as mediaItem (mediaItem.Key)}
                 <Card
                     class="mt-3 border border-info"
-                    on:click={() => playMedia(mediaItem.Key)}
+                    on:click={() => showMedia(mediaItem.Key)}
                 >
                     <CardTitle
                         color="info"
@@ -287,6 +306,10 @@
         {/if}
             <span
                             on:click={() => stepMedia(-1)}
+                            on:mousedown={()=>slowV(-1)}
+                            on:touchstart={()=>slowV(-1)}
+                            on:mouseup={()=>slowV(0)}
+                            on:touchend={()=>slowV(0)}
             >
             <p></p>
                             <Icon
@@ -301,6 +324,10 @@
         &nbsp;
             <span
                             on:click={() => stepMedia(+1)}
+                            on:mousedown={()=>slowV(+1)}
+                            on:touchstart={()=>slowV(+1)}
+                            on:mouseup={()=>slowV(0)}
+                            on:touchend={()=>slowV(0)}
             >
                             <Icon
                             class="xLargeIcon"
