@@ -3,13 +3,15 @@
 
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
 
+    import { faBackward } from "@fortawesome/free-solid-svg-icons/faBackward";
+    import { faForward } from "@fortawesome/free-solid-svg-icons/faForward";
     import { faVideo } from "@fortawesome/free-solid-svg-icons/faVideo";
     import { faVolumeUp } from "@fortawesome/free-solid-svg-icons/faVolumeUp";
     import Icon from "fa-svelte";
 
     import SpinnerButton from "./SpinnerButton.svelte";
     import { doRefreshBlocks } from "./stores.js";
-    import { hhmmssFmt, isEmailAllowedRoutePath } from "./utils.js";
+    import { hhmmssFmt, isEmailAllowedRoutePath, sleep } from "./utils.js";
     import { onMount } from "svelte";
     import {
         axios,
@@ -22,6 +24,7 @@
     import MediaViewer from "./MediaViewer.svelte";
 
     export let params = {};
+    var vtime=1;
 
     var loadingMedia = true;
     var rpFromDexie;
@@ -29,8 +32,10 @@
     var selectedVideo;
     var selectedAudio;
     var linkFrom = "";
+    var paused=true
     const SKIP_PREFIX = "_SKIP_";
     const ALL_PREFIX = "_ALL_";
+
     onMount(async () => {
         if (params.dbName === "RacePhase") {
             rpFromDexie = await db.RacePhase.get(params.dbKey);
@@ -117,10 +122,21 @@
         }
         return [];
     }
+    $:{
+        console.log(`video changed: ${selectedVideo}`)
+        vtime=0
+        futureVtime(1)
+        paused=true
+    }
+    async function futureVtime(vp){
+//        await sleep(5000)
+        await tick()
+        vtime=vp
+    }
     async function playMedia(key) {
         selectedVideo = null;
         selectedAudio = null;
-        await tick();
+       // await tick();
         if (key.toString().endsWith(".mp3"))
             //new Audio(getMediaHref(key)).play();
             selectedAudio = key;
@@ -129,6 +145,7 @@
 
             selectedVideo = key;
         }
+        paused=true
     }
     function getMediaHref(key) {
         return `/${key}`;
@@ -172,6 +189,10 @@
 
         const lcKey = item.Key.toLowerCase();
         return lcKey.endsWith(lcType) || lcKey.endsWith("mp3");
+    }
+    function stepMedia(direction){
+        const step=.02
+        vtime=vtime+ (step *direction)
     }
 </script>
 
@@ -237,7 +258,10 @@
 
                         {#if selectedVideo === mediaItem.Key}
                             <br />
-                            <video width="320" height="240" autoplay controls>
+                            <video width="320" height="240" controls 
+                            		bind:currentTime={vtime}		
+                            		bind:paused
+                                    >
                                 <source
                                     src={getMediaHref(selectedVideo)}
                                     type="video/mp4"
@@ -261,6 +285,29 @@
                 </Card>
             {/each}
         {/if}
+            <span
+                            on:click={() => stepMedia(-1)}
+            >
+            <p></p>
+                            <Icon
+                            class="xLargeIcon"
+                            icon={ faBackward}
+                        />
+        </span>
+        &nbsp;
+        &nbsp;
+        &nbsp;
+        &nbsp;
+        &nbsp;
+            <span
+                            on:click={() => stepMedia(+1)}
+            >
+                            <Icon
+                            class="xLargeIcon"
+                            icon={ faForward}
+                        />
+            <p></p>
+        </span>
     {:else}
         <b>No Media found</b>
     {/if}
