@@ -52,6 +52,7 @@
     import LoginH from "./LoginH.svelte";
     import HotLoad from "./HotLoad.svelte";
     import ElectronTimerRelay from "./ElectronTimerRelay.svelte";
+    import MediaViewer from "./MediaViewer.svelte";
     import {
         raceConfig,
         theme,
@@ -113,6 +114,7 @@
         "/timerPbAlignment": TimerPbAlignment,
         "/rawTimerList": RawTimerList,
         "/spMediaList/:dbName/:dbKey": MediaList,
+        "/mediaDemo":MediaViewer,
         "/forceReloadPage": ForceReloadPage,
         "/captureVideo": CaptureVideo,
         // '/raceStandingAdd': RaceStandingAdd,

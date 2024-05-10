@@ -3,6 +3,7 @@
 
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
 
+    import { push, pop, replace } from "svelte-spa-router";
     import { faBackward } from "@fortawesome/free-solid-svg-icons/faBackward";
     import { faForward } from "@fortawesome/free-solid-svg-icons/faForward";
     import { faVideo } from "@fortawesome/free-solid-svg-icons/faVideo";
@@ -18,6 +19,7 @@
         raceConfig,
         statusMessage,
         mediaFileType,
+        videoHref,
     } from "./stores.js";
     import { tick } from "svelte";
     import { db } from "./eventDb.js";
@@ -139,6 +141,9 @@
     async function showMedia(key) {
         selectedVideo = null;
         selectedAudio = null;
+        $videoHref=getMediaHref(key)
+        push("/mediaDemo")
+        return
        // await tick();
         if (key.toString().endsWith(".mp3"))
             //new Audio(getMediaHref(key)).play();
@@ -212,6 +217,9 @@
     function stepMedia(direction){
         const step=.02
         vtime=vtime+ (step *direction)
+    }
+    function mediaDemo(){
+        push("/mediaDemo")
     }
 </script>
 
@@ -287,9 +295,6 @@
                                 />
                                 Your browser does not support the video tag.
                             </video>
-                            <!-- 
-                            <MediaViewer/>
-                        -->
                         {/if}
                         {#if selectedAudio === mediaItem.Key}
                             <audio controls>
@@ -304,6 +309,7 @@
                 </Card>
             {/each}
         {/if}
+                            <!--
             <span
                             on:click={() => stepMedia(-1)}
                             on:mousedown={()=>slowV(-1)}
@@ -335,7 +341,13 @@
                         />
             <p></p>
         </span>
+    -->
     {:else}
         <b>No Media found</b>
     {/if}
+                            <!--
+
+                            <MediaViewer/>
+    <SpinnerButton on:click={mediaDemo}>demo</SpinnerButton>
+                            -->
 </div>

@@ -1,5 +1,8 @@
 
 <script>
+	import {
+        videoHref,
+    } from "./stores.js";
 //https://svelte.dev/examples/media-elements
 	// These values are bound to properties of the video
 	let time = 0;
@@ -62,13 +65,15 @@
 	}
 </script>
 
-<h1>Caminandes: Llamigos</h1>
-<p>From <a href="https://studio.blender.org/films">Blender Studio</a>. CC-BY</p>
+  <!--
+<h1>XYZ Video</h1>
+
+		src="https://sveltejs.github.io/assets/caminandes-llamigos.mp4"
+  -->
 
 <div>
 	<video
-		poster="https://sveltejs.github.io/assets/caminandes-llamigos.jpg"
-		src="https://sveltejs.github.io/assets/caminandes-llamigos.mp4"
+		src={$videoHref}
 		on:mousemove={handleMove}
 		on:touchmove|preventDefault={handleMove}
 		on:mousedown={handleMousedown}
