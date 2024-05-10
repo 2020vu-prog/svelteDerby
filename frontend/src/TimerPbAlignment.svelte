@@ -20,8 +20,9 @@
         statusMessage,
         doRefreshBlocks,
     } from "./stores.js";
+    import { end, toSeconds ,parse} from "iso8601-duration";
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy, tick } from "svelte";
     import {
         getTimerPbConfig,
         fmtPinTime,
@@ -48,7 +49,7 @@
         timerTopic = `rr1Timer/${timerId}`;
         MqttMapSubscription(timerTopic);
     }
-    var historyAgeMinutes = 20;
+    var historyAgeDuration = "PT20M";
     var historyStartTime;
     //var historyStartDate=new Date().toLocaleDateString();
     var historyStartDate;
@@ -302,6 +303,7 @@
         }
     }
 
+    const invalidIsoKey="iik"
     async function getTimerHistoryFromApi() {
         log.debug(
             "xgetTimerHistoryFromApi:x, ",
@@ -313,7 +315,35 @@
         const orgId = $raceConfig.orgId;
         //const lowMS = 1000 * 3600 * 720;
         //const lowMS = 1000 * 3600 * 0.3;
-        const lowMS = historyAgeMinutes * 60 * 1000;
+       let historySecondsDuration=0 
+        try{
+
+            historySecondsDuration=toSeconds(parse(historyAgeDuration.toUpperCase()));
+            $statusMessage = {
+                text: `Duration: ${historySecondsDuration}.`,
+                type: "success",
+            };
+            await tick()
+            $statusMessage = {
+                text: `duration.`,
+                type: "error",
+                TTL: 1,
+                key: invalidIsoKey,
+            };
+            await tick()
+        }
+        catch(e){
+            $statusMessage = {
+                text: `Invalid duration. ${e}`,
+                type: "error",
+                key: invalidIsoKey,
+            };
+            console.error("invalid duration",e)
+            return
+        }
+        log.debug(`historyMsDuration ${historySecondsDuration}`)
+        const lowMS = historySecondsDuration * 1000;
+
         const loIso = new Date(new Date().getTime() - lowMS).toISOString();
         const req = {
             orgIz: orgIz,
@@ -469,11 +499,11 @@
             {#if showAge}
                 Age:
                 <input
-                    type="number"
+                    type="text"
                     on:blur={() => {
                         getTimerHistoryFromApi();
                     }}
-                    bind:value={historyAgeMinutes}
+                    bind:value={historyAgeDuration}
                     placeholder="HistoryAge"
                 />
             {/if}

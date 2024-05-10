@@ -12,6 +12,7 @@
         mqttEnabled,
         raceConfig,
         mqttPsUrlMap,
+        developerMode,
     } from "./stores.js";
 
     $: {
@@ -37,13 +38,17 @@
         const url = new URL(window.location.href);
         return url.hostname
     }
-    function getUrl() {
+    function getUrl(encode) {
         const url = new URL(window.location.href);
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
 
         const link = `${url.protocol}//${url.hostname}:${url.port}/#/as/${orgIz}/${orgId}`;
-        return encodeURIComponent(link);
+        if(encode){
+            return encodeURIComponent(link);
+        }else{
+            return link
+        }
     }
     onMount(async () => {
         log.debug(`qr: ${getUrl()}`);
@@ -147,6 +152,20 @@
 
 <div class="settings">
     <h1>Preferences</h1>
+    <br />
+    <h2>Sharing</h2>
+    <hr />
+    <img
+        src="https://api.qrserver.com/v1/create-qr-code/?data={getUrl()}&amp;size=200x200"
+        alt="{getUrl()}"
+        title=""
+    />
+    <p></p>
+    {getHostname()}
+    {#if $developerMode}
+    <br>
+        {getUrl()}
+    {/if}
     <hr />
 
     <br />
@@ -317,13 +336,6 @@
         <hr />
     </div>
 
-    <img
-        src="https://api.qrserver.com/v1/create-qr-code/?data={getUrl()}&amp;size=200x200"
-        alt="{getUrl()}"
-        title=""
-    />
-    <p></p>
-    {getHostname()}
 
     <BottomNav />
 </div>
