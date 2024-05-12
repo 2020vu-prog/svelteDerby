@@ -3,6 +3,10 @@
 	import {
         videoHref,
     } from "./stores.js";
+	import Icon from "fa-svelte";
+    import { faBackward } from "@fortawesome/free-solid-svg-icons/faBackward";
+    import { faForward } from "@fortawesome/free-solid-svg-icons/faForward";
+	import { sleep} from './utils.js'
 //https://svelte.dev/examples/media-elements
 	// These values are bound to properties of the video
 	let time = 0;
@@ -15,14 +19,18 @@
 	// Used to track time of last mouse down event
 	let lastMouseDown;
 
-	function handleMove(e) {
-        console.log("MM")
+	function makeControlsVisible(){
 		// Make the controls visible, but fade out after
 		// 2.5 seconds of inactivity
 		clearTimeout(showControlsTimeout);
 		showControlsTimeout = setTimeout(() => (showControls = false), 2500);
 		showControls = true;
+		
+	}
+	function handleMove(e) {
+        console.log("MM")
 
+		makeControlsVisible()
 		if (!duration) return; // video not loaded yet
 		if (e.type !== 'touchmove' && !(e.buttons & 1)) return; // mouse not down
 
@@ -63,6 +71,29 @@
 
 		return `${minutes}:${seconds}`;
 	}
+
+
+	let animateDir=0
+    let animateRequest=0
+    function slowV(direction){
+        animateDir=direction
+        animateRequest=Date.now()
+        animateLoop(animateRequest)
+        //log.debug("slowV",direction)
+    }
+    async function animateLoop(arParam){
+        //log.debug("animateLoop ad",animateDir)
+
+        while(animateDir!=0 && arParam===animateRequest){
+            await sleep(200)
+            stepMedia(animateDir)
+        }
+    }
+    function stepMedia(direction){
+        const step=.02
+        time=time+ (step *direction)
+		makeControlsVisible()
+    }
 </script>
 
   <!--
@@ -89,12 +120,43 @@
 		<progress value={time / duration || 0} />
 
 		<div class="info">
-			<span class="time">{format(time)}</span>
-			<span>click anywhere to {paused ? 'play' : 'pause'} / drag to seek</span>
-			<span class="time">{format(duration)}</span>
+			<span class="time overlay">{format(time)}</span>
+			<span class="overlay">click anywhere to {paused ? 'play' : 'pause'} / drag to seek</span>
+			<span class="time overlay">{format(duration)}</span>
 		</div>
 	</div>
 </div>
+            <span
+                            on:click={() => stepMedia(-1)}
+                            on:mousedown={()=>slowV(-1)}
+                            on:touchstart={()=>slowV(-1)}
+                            on:mouseup={()=>slowV(0)}
+                            on:touchend={()=>slowV(0)}
+            >
+            <p></p>
+                            <Icon
+                            class="xLargeIcon"
+                            icon={ faBackward}
+                        />
+        </span>
+        &nbsp;
+        &nbsp;
+        &nbsp;
+        &nbsp;
+        &nbsp;
+            <span
+                            on:click={() => stepMedia(+1)}
+                            on:mousedown={()=>slowV(+1)}
+                            on:touchstart={()=>slowV(+1)}
+                            on:mouseup={()=>slowV(0)}
+                            on:touchend={()=>slowV(0)}
+            >
+                            <Icon
+                            class="xLargeIcon"
+                            icon={ faForward}
+                        />
+            <p></p>
+        </span>
 
 <style>
 	div {
@@ -114,7 +176,7 @@
 		justify-content: space-between;
 	}
 
-	span {
+	span.overlay {
 		padding: 0.2em 0.5em;
 		color: white;
 		text-shadow: 0 0 8px black;
