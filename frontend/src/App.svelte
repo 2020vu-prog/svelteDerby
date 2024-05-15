@@ -22,6 +22,7 @@
     import DriverList from "./DriverList.svelte";
     import DriverAdd from "./DriverAdd.svelte";
     import DriverInfo from "./DriverInfo.svelte";
+    import DownloadCsv from "./DownloadCsv.svelte";
     import EventSelection from "./EventSelection.svelte";
     import EventAdd from "./EventAdd.svelte";
     import HistoryList from "./HistoryList.svelte";
@@ -86,6 +87,7 @@
         "/raceStandingAdd/:type": RaceStandingAdd,
         "/driverAdd/:number?": DriverAdd,
         "/driverInfo/:number?": DriverInfo,
+        "/downloadCsv":DownloadCsv ,
         "/eventSelection/:orgIz": EventSelection,
         "/as/:orgIz/:orgId": EventSelection, //autoSelect shortcut
         "/eventAdd/:orgIz/:mode": EventAdd,

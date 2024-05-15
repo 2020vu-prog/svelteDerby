@@ -9,7 +9,7 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { participantValid, participantFocusCompletion } from "./utils.js";
-    import { isAllowedRoutePath } from "./utils.js";
+    import { isAllowedRoutePath , downloadFile} from "./utils.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import { stringify as csvStringify} from 'csv-stringify/lib/sync';
     import { parse as csvParse } from 'csv-parse/lib/sync';
@@ -187,21 +187,7 @@
         const text = JSON.stringify($driverMap);
         downloadFile(filename,text)
     }
-    function downloadFile(filename,text){
-        var element = document.createElement("a");
-        element.setAttribute(
-            "href",
-            "data:text/plain;charset=utf-8," + encodeURIComponent(text)
-        );
-        element.setAttribute("download", filename);
 
-        element.style.display = "none";
-        document.body.appendChild(element);
-
-        element.click();
-
-        document.body.removeChild(element);
-    }
     async function refreshDataFromDb(trigger) {
         if (!params.number) return;
 

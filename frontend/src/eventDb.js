@@ -30,6 +30,9 @@ db.version(13).stores({
 db.version(14).stores({
     TimerPbConfig: "SK",
 });
+db.version(15).stores({
+    TmpTimerElapsed: "SK",
+});
 
 //export dbTools ;
 export async function dbReset() {

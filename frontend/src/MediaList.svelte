@@ -142,14 +142,14 @@
         selectedVideo = null;
         selectedAudio = null;
         $videoHref=getMediaHref(key)
-        push("/mediaDemo")
-        return
        // await tick();
         if (key.toString().endsWith(".mp3"))
             //new Audio(getMediaHref(key)).play();
             selectedAudio = key;
         else {
             //document.location = getMediaHref(key);
+            push("/mediaDemo")
+            return
 
             selectedVideo = key;
         }
