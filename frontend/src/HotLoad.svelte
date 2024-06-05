@@ -362,7 +362,7 @@
         const now = new Date().getTime();
         if (now < lastClick + thresh2Secs) {
             $statusMessage = {
-                text: `Reloading page, please wait.`,
+                text: `Reloading page, please Wait.`,
                 type: "success",
             }
 
@@ -370,7 +370,7 @@
             await sleep(1000);
             expirePsUrl()
             log.debug("potentialDoubleClickReloadPage: fired");
-            Location.reload();
+            window.location.reload();
         }
             lastClick=now
     }
