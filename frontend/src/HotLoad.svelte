@@ -793,8 +793,12 @@
         // root cause looks like double subscribe.
         log.debug("tattle :", msg, pendingAudioList.length);
     }
-    const doRefreshViaHttp = async () => {
+    function doRefreshClicked(){
         potentialDoubleClickReloadPage();
+        doRefreshViaHttp();
+
+    }
+    const doRefreshViaHttp = async () => {
         const tag = "doRefresh";
         log.debug(`${tag} begin`);
         if (refreshInProgressButton) {
@@ -924,7 +928,7 @@
     </SpinnerButton>
 {:else}
     <SpinnerButton
-        on:click={doRefreshViaHttp}
+        on:click={doRefreshClicked}
         spinning={refreshInProgressButton ||
             refreshInProgressMq ||
             refreshInProgressCca}
