@@ -370,7 +370,7 @@
             await sleep(1000);
             expirePsUrl()
             log.debug("potentialDoubleClickReloadPage: fired");
-            location.reload();
+            Location.reload();
         }
             lastClick=now
     }
