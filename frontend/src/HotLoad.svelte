@@ -165,7 +165,7 @@
             await refreshPsUrl();
             mqClient = mqtt.connect($mqttPsUrlMap.url,{
                 transformWsUrl: transformWsUrl,
-                reconnectPeriod:3,
+                reconnectPeriod:4000,
             });
             mqClient.on("message", onMsgGeneric);
             mqClient.on("connect", onConnect);
@@ -277,7 +277,7 @@
             },
         });
         if (response.data.url) {
-            log.debug("refresh ps good");
+            log.debug("refresh ps good:",JSON.stringify(response.data));
             $mqttPsUrlMap = {
                 url:response.data.url,
                 expires:response.data.expires,
@@ -354,6 +354,31 @@
     function onVoiceMqttData(json, topic) {
         log.debug("onVoiceMqttData: begin:", json);
         announceFromMqtt(json);
+    }
+    let lastClick=0
+    async function potentialDoubleClickReloadPage() {
+        log.debug("potentialDoubleClickReloadPage: begin");
+        const thresh2Secs = 2 * 1000;
+        const now = new Date().getTime();
+        if (now < lastClick + thresh2Secs) {
+            $statusMessage = {
+                text: `Reloading page, please wait.`,
+                type: "success",
+            }
+
+            await tick();
+            await sleep(1000);
+            expirePsUrl()
+            log.debug("potentialDoubleClickReloadPage: fired");
+            location.reload();
+        }
+            lastClick=now
+    }
+    function expirePsUrl(){
+        $mqttPsUrlMap.expires=2
+        $mqttPsUrlMap.requested=2
+        $mqttPsUrlMap.issued=2
+        $mqttPsUrlMap=$mqttPsUrlMap
     }
     function potentialReloadPage() {
         log.debug("potentialReloadPage: begin");
@@ -769,6 +794,7 @@
         log.debug("tattle :", msg, pendingAudioList.length);
     }
     const doRefreshViaHttp = async () => {
+        potentialDoubleClickReloadPage();
         const tag = "doRefresh";
         log.debug(`${tag} begin`);
         if (refreshInProgressButton) {

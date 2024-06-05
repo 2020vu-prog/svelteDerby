@@ -358,7 +358,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
   restrictions {
     geo_restriction {
       restriction_type = "whitelist"
-      locations        = ["US", "CA", "BZ"]
+      locations        = ["US", "CA", "BZ", "FR"]
     }
   }
 
