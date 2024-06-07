@@ -33,6 +33,13 @@
             push(timerLink);
         }
     };
+    function getSponsor (number)  {
+        if (number && $driverMap[number]) {
+            return $driverMap[number].spon;
+        } else {
+            return " ";
+        }
+    }
     const getDriverName = (number) => {
         //log.debug("gdn: "+carNumber)
         if (number && $driverMap[number]) {
@@ -60,3 +67,7 @@
 
 <b class="bigText">{number}</b>
 {name}
+{#if getSponsor(number)}
+    <br />
+    <b>{getSponsor(number)}</b>
+{/if}
