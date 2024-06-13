@@ -274,13 +274,32 @@ export async function getTimerPbConfig(timerName) {
     }
     return [];
 }
+export function getTimerPinGpsMS(timerPin){
+    const m1 = 1000 * 1000;
+    const ms =
+        timerPin.stamp.gpsTime.seconds * 1000 +
+        Math.round(timerPin.stamp.gpsTime.nanos / m1);
+        return ms
+}
+export function getTimerPinTickMS(timerPin){
+    const us = timerPin.stamp.tick64;
+    //log.debug("fmtPinTime us", us);
+    //log.debug("fmtPinTime us", typeof us);
+    const ms = us / 1000;
+    return ms
+}
+export function getTimerPinActiveMS(timerPin) {
+    if (!timerPin.stamp.gpsTime) {
+        return [getTimerPinTickMS(timerPin),'tick64']
+    }else{
+        return [getTimerPinGpsMS(timerPin),'gps']
+
+    }
+
+}
 export function fmtPinTime(timerPin) {
     if (!timerPin.stamp.gpsTime) {
-        //log.debug("fmtPinTime baled", timerPin);
-        const us = timerPin.stamp.tick64;
-        //log.debug("fmtPinTime us", us);
-        //log.debug("fmtPinTime us", typeof us);
-        const ms = us / 1000;
+        const ms=getTimerPinTickMS(timerPin)
         //log.debug("fmtPinTime from ", timerPin, " gave:", ms);
         let rpiDate = new Date(ms);
         return (
@@ -297,11 +316,9 @@ export function fmtPinTime(timerPin) {
         );
         //return timerPin.stamp.tick64;
     }
-    const m1 = 1000 * 1000;
-    const ms =
-        timerPin.stamp.gpsTime.seconds * 1000 +
-        Math.round(timerPin.stamp.gpsTime.nanos / m1);
+
     //log.debug("fmtPinTime from ", timerPin, " gave:", ms);
+        const ms=getTimerPinGpsMS(timerPin)
     let gpsDate = new Date(ms);
     return gpsDate.toLocaleTimeString([], {
         hour: "2-digit",

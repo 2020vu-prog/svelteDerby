@@ -22,11 +22,14 @@
     } from "./stores.js";
     import { end, toSeconds ,parse} from "iso8601-duration";
     import SpinnerButton from "./SpinnerButton.svelte";
+    import TimerPbCard from "./TimerPbCard.svelte";
+
     import { onMount, onDestroy, tick } from "svelte";
     import {
         getTimerPbConfig,
         fmtPinTime,
         MqttMapSubscription,
+        getTimerPinActiveMS,
     } from "./utils.js";
     import {
         Button,
@@ -215,9 +218,9 @@
             timerPin.pinName == Timer.PinName.lane1 ||
             timerPin.pinName == Timer.PinName.lane2
         ) {
-            log.debug(`ppr: hist`, timerPin);
             const histKey = `${timerPin.stamp.tick64}:${timerPin.pinName}`;
             timerPin.xmitMs = xmitMs; //hack! xmitMs not a timerPin member!
+            log.debug(`ppr: hist`, timerPin);
             lanePbTimerPinHistoryMap[histKey] = timerPin;
             lanePbTimerPinHistoryMap = lanePbTimerPinHistoryMap;
         }
@@ -462,6 +465,34 @@
         }
         return ls.blocked ? "BLOCKED" : "CLEAR"
     }
+    function markupPins(sortedPbTimerPinHistory){
+        const markupPinList=[]
+        let wip=[]
+        const cb=function(tp){
+            if(wip.length>0){
+                    markupPinList.push(wip)
+                    wip=[]
+            }
+        }
+        sortedPbTimerPinHistory.forEach((tp)=>{
+            tp.ui='timerPin'
+            if(wip.length>0){
+                const [wipMs,wipOrigin]=getTimerPinActiveMS(wip[0])
+                const [tpMs,tpOrigin]=getTimerPinActiveMS(tp)
+                const delta=wipMs-tpMs
+                log.debug(`cb: ${wipMs} ${tpMs} :${delta}`,tp)
+                if(delta > 8000|| tpOrigin !==wipOrigin){
+                    cb()
+                }
+            }
+            if(tp){
+                wip.push(tp)
+            }
+
+        })
+        cb() //final brk
+        return markupPinList
+    }
 </script>
 
 <style>
@@ -540,18 +571,7 @@
     {/each}
 </div>
 
-{#each sortedPbTimerPinHistory as tp, i}
-    {#if xmitHourChanged(tp, i)}
-        <div>
-            <code style="background-color:#bbb;">
-                {fmtXmitHour(tp, i)}
-            </code>
-        </div>
-    {/if}
-    <div>
-        <code>
-            {fmtPinTime(tp)} Lane{tp.pinName}
-            {#if isPinBlocked(tp)}🔴 Blocked{:else}🟢 Clear{/if}
-        </code>
-    </div>
+{#each markupPins(sortedPbTimerPinHistory) as cdBlock}
+
+    <TimerPbCard cdBlock={cdBlock} timerPbConfig={timerPbConfig}/>
 {/each}
