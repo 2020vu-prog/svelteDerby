@@ -60,11 +60,13 @@
         userEmail,
         roleMap,
         developerLogging,
+        developerMode,
         statusMessage,
         userId,
         carouselRun,
         carouselList,
         initialReloadRoute,
+        getOrgName,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -361,7 +363,13 @@
         );
     };
     const getTitle = (cfg) => {
-        if (cfg && cfg.name) return cfg.name;
+        let orgIz=''
+        if ($developerMode && cfg && cfg.orgIz){
+            orgIz=cfg.orgIz
+            //orgIz=orgIz.replace(/.*:/,'')
+            orgIz=orgIz+':'
+        }
+        if (cfg && cfg.name) return `${orgIz}${cfg.name}`;
         else return "";
     };
     /* Toggle between showing and hiding the navigation menu links when the user clicks on the hamburger menu / bar icon */

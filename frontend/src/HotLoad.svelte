@@ -924,7 +924,7 @@
     <SpinnerButton spinning={false} disabled={true}
         {btnClass}
       >
-        Race Archived
+        Archived
     </SpinnerButton>
 {:else}
     <SpinnerButton
