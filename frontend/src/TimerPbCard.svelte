@@ -9,64 +9,66 @@ export let timerPbConfig={}
 export let cdBlock=[]
 function getWinMessage(cdBlock){
     const rc=[]
-    const l1nosePin=getOldest(cdBlock,Timer.PinState.BLOCKED,Timer.PinName.lane1)
-    const l2nosePin=getOldest(cdBlock,Timer.PinState.BLOCKED,Timer.PinName.lane2)
-    const l1tailPin=getNewest(cdBlock,Timer.PinState.CLEAR,Timer.PinName.lane1)
-    const l2tailPin=getNewest(cdBlock,Timer.PinState.CLEAR,Timer.PinName.lane2)
-    if(!l1nosePin){
-        rc.push('❌ Missing lane 1 Nose')
-    }
-    if(!l2nosePin){
-        rc.push('❌ Missing lane 2 Nose')
-    }
-    if(!l1tailPin){
-        rc.push('❌ Missing lane 1 Tail')
-    }
-    if(!l2tailPin){
-        rc.push('❌ Missing lane 2 Tail')
-    }
-    if(rc.length==0){
-        auditLaneState(cdBlock,Timer.PinName.lane1,rc)
-        auditLaneState(cdBlock,Timer.PinName.lane2,rc)
-    }
-    if(l1nosePin&&l2nosePin && l1tailPin && l2tailPin){
-        const l1perf=getPerfCount(cdBlock,Timer.PinState.BLOCKED,Timer.PinName.lane1)
-        const l2perf=getPerfCount(cdBlock,Timer.PinState.BLOCKED,Timer.PinName.lane2)
-
-        const [l1noseMs]=getTimerPinActiveMS(l1nosePin)
-        const [l2noseMs]=getTimerPinActiveMS(l2nosePin)
-        const [l1tailMs]=getTimerPinActiveMS(l1tailPin)
-        const [l2tailMs]=getTimerPinActiveMS(l2tailPin)
+    const [l1noseMs,l1Src]=calcCarAttributes(rc,cdBlock,Timer.PinName.lane1)
+    const [l2noseMs,l2Src]=calcCarAttributes(rc,cdBlock,Timer.PinName.lane2)
+    if(l1Src&&l2Src ){
         const deltaMs=l2noseMs-l1noseMs
         const winLane=deltaMs>0?'L1':'L2'
-        const l1lengthMs=l1tailMs-l1noseMs
-        const l2lengthMs=l2tailMs-l2noseMs
-        
         rc.push(`Winner: ${winLane}: ${Math.abs(deltaMs)}`)
-        rc.push(`L1 length: ${l1lengthMs} perfs: ${l1perf}`)
-        rc.push(`L2 length: ${l2lengthMs} perfs: ${l2perf}`)
-        auditCarAttributes(l1lengthMs,l1perf,Timer.PinName.lane1,rc)
-        auditCarAttributes(l2lengthMs,l2perf,Timer.PinName.lane2,rc)
-
     }
     return rc
 
 }
+function calcCarAttributes(rc,cdBlock,pinName){
+    const laneLit=`Lane${pinName}`
+    const perfCount=getPerfCount(cdBlock,Timer.PinState.BLOCKED,pinName)
+
+    const lXnosePin=getOldest(cdBlock,Timer.PinState.BLOCKED,pinName)
+    const lXtailPin=getNewest(cdBlock,Timer.PinState.CLEAR,pinName)
+    const missing=[]
+    if(!lXnosePin){
+        missing.push('Nose')
+    }
+    if(!lXtailPin){
+        missing.push('Tail')
+    }
+    if(missing.length===0){
+        auditLaneState(cdBlock,pinName,rc)
+        const [lXnoseMs,noseSrc]=getTimerPinActiveMS(lXnosePin)
+        const [lXtailMs,tailSrc]=getTimerPinActiveMS(lXtailPin)
+        const lXlengthMs=lXtailMs-lXnoseMs
+        //rc.push(`${laneLit} length: ${lXlengthMs} perfs: ${perfCount}`)
+        auditCarAttributes(lXlengthMs,perfCount,pinName,rc)
+        return[lXnoseMs,noseSrc]
+    }
+    else{
+        rc.push(`❌ Missing ${laneLit} [${missing}]`)
+    }
+    return[]
+}
 function auditCarAttributes(lengthMs,perf,pinName,msgs){
 
+    const laneLit=`Lane${pinName}`
     if(! timerPbConfig.timerConfigLanePhotoEye){
         msgs.push(`❌ missing timer config`)
         return
     }
+    let lenEmoji='✅'
+    let perfEmoji='✅'
+    // 1❌: too small
+    // 2❌: too big
+    // 3❌: config err, min > max
     if(lengthMs<timerPbConfig.timerConfigLanePhotoEye.minCarLenMS){
-        msgs.push(`❌ Lane${pinName} car length less than minimum.`)
+        lenEmoji='❌'
     }
     if(lengthMs>timerPbConfig.timerConfigLanePhotoEye.maxCarLenMS){
-        msgs.push(`❌ Lane${pinName} car length > maximum.`)
+        lenEmoji='❌❌'
     }
     if(perf>timerPbConfig.timerConfigLanePhotoEye.maxPerfCount){
-        msgs.push(`❌ Lane${pinName} perforations > maximum.`)
+        perfEmoji='❌'
     }
+
+    msgs.push(`${laneLit} length${lenEmoji}: ${lengthMs} perfs${perfEmoji}: ${perf}`)
 }
 function auditLaneState(cdBlock,pinName,msgs){
     const matchList=cdBlock.
