@@ -52,7 +52,9 @@
         timerTopic = `rr1Timer/${timerId}`;
         MqttMapSubscription(timerTopic);
     }
-    var historyAgeDuration = "PT20M";
+    let historySpinning=false
+    var historyBeginAgeDuration = "PT20M";
+    var historyEndAgeDuration = "PT0S";
     var historyStartTime;
     //var historyStartDate=new Date().toLocaleDateString();
     var historyStartDate;
@@ -87,6 +89,10 @@
             `TimerPbAlignment TimerNamedt: ${timerName} [${historyStartDate}]`
         );
         [timerPbConfig] = await getTimerPbConfig(timerName);
+        log.debug(
+            `TimerPbAlignment ${timerName} [${timerPbConfig}]`
+        );
+
         calcFinish = new CalcFinish(timerPbConfig);
 
         log.debug("TimerPbAlignment dexie:", timerPbConfig);
@@ -318,12 +324,14 @@
         const orgId = $raceConfig.orgId;
         //const lowMS = 1000 * 3600 * 720;
         //const lowMS = 1000 * 3600 * 0.3;
-       let historySecondsDuration=0 
+       let historyBeginSecondsDuration=0 
+       let historyEndSecondsDuration=0 
         try{
 
-            historySecondsDuration=toSeconds(parse(historyAgeDuration.toUpperCase()));
+            historyBeginSecondsDuration=toSeconds(parse(historyBeginAgeDuration.toUpperCase()));
+            historyEndSecondsDuration=toSeconds(parse(historyEndAgeDuration.toUpperCase()));
             $statusMessage = {
-                text: `Duration: ${historySecondsDuration}.`,
+                text: `Duration: ${historyBeginSecondsDuration}:${historyEndSecondsDuration}`,
                 type: "success",
             };
             await tick()
@@ -344,35 +352,23 @@
             console.error("invalid duration",e)
             return
         }
-        log.debug(`historyMsDuration ${historySecondsDuration}`)
-        const lowMS = historySecondsDuration * 1000;
+        log.debug(`historyMsDuration ${historyBeginSecondsDuration}`)
+        const lowMS = historyBeginSecondsDuration * 1000;
+        const hiMS = historyEndSecondsDuration * 1000;
 
         const loIso = new Date(new Date().getTime() - lowMS).toISOString();
+        const hiIso = new Date(new Date().getTime() - hiMS).toISOString();
         const req = {
             orgIz: orgIz,
             orgId: orgId,
             timerName: timerPbConfig.timerMqttClientId,
             loIso: loIso,
+            hiIso: hiIso,
         };
-        if (historyStartTime) {
-            const hiSeed = `${historyStartDate}T${historyStartTime}`;
-            log.debug(`hiSeed: [${hiSeed}]`, hiSeed);
-
-            //const hiDate = new Date(`${historyStartDate}T${historyStartTime}`);
-            const hiDate = Date.parse(hiSeed);
-            //const hiDate = parse(hiSeed)
-            log.debug("hiDate:", hiDate);
-            const hiIso = hiDate.toISOString();
-            log.debug("xgetTimerHistoryFromApi:i, ", hiIso);
-            req.hiIso = hiIso; // override hiIso (normally server will dflt to current)
-            req.loIso = new Date(hiDate.getTime() - lowMS).toISOString();
-        }
-        //await sleep(3000)
-
-        //const url = `/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}&timerName=${timerPbConfig.timerMqttClientId}&loIso=${loIso}&hiIso=${hiIso}`;
         const endPoint = `/getTimerPbHistory`;
 
         try {
+            historySpinning=true
             const histLoadingKey = uuidv4();
             $statusMessage = {
                 text: `loading History.`,
@@ -428,6 +424,7 @@
                 type: "error",
             };
         }
+            historySpinning=false
     }
     let showAge = false;
     let xmitHH = 0;
@@ -466,6 +463,14 @@
         return ls.blocked ? "BLOCKED" : "CLEAR"
     }
     function markupPins(sortedPbTimerPinHistory){
+        let clearMS=10000
+        if(timerPbConfig &&
+            timerPbConfig.timerConfigLanePhotoEye &&
+            timerPbConfig.timerConfigLanePhotoEye.clearMS){
+            clearMS=timerPbConfig.timerConfigLanePhotoEye.clearMS
+        }
+            log.debug(`TimerPbAlignment clearMS: ${timerPbConfig}`)
+            log.debug(`TimerPbAlignment clearMS: ${clearMS}`)
         const markupPinList=[]
         let wip=[]
         const cb=function(tp){
@@ -481,7 +486,7 @@
                 const [tpMs,tpOrigin]=getTimerPinActiveMS(tp)
                 const delta=wipMs-tpMs
                 log.debug(`cb: ${wipMs} ${tpMs} :${delta}`,tp)
-                if(delta > 8000|| tpOrigin !==wipOrigin){
+                if(delta > clearMS|| tpOrigin !==wipOrigin){
                     cb()
                 }
             }
@@ -528,15 +533,24 @@
                 }}>⚙️</span
             >
             {#if showAge}
-                Age:
+                <br/>
+                End Age:
                 <input
                     type="text"
-                    on:blur={() => {
-                        getTimerHistoryFromApi();
-                    }}
-                    bind:value={historyAgeDuration}
+                    bind:value={historyEndAgeDuration}
+                    placeholder="HistoryEndAge"
+                />
+                <br/>
+                Begin Age:
+                <input
+                    type="text"
+                    bind:value={historyBeginAgeDuration}
                     placeholder="HistoryAge"
                 />
+                <br/>
+                <SpinnerButton on:click={getTimerHistoryFromApi} spinning={historySpinning}>
+                    Get History
+                </SpinnerButton>
             {/if}
         </div>
     {/if}
