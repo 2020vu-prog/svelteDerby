@@ -1,6 +1,8 @@
 <script>
     import log from "loglevel";
 
+    import QRCode from 'qrcode'
+
     import {
         theme,
         showChart1,
@@ -34,9 +36,24 @@
     let themeSelected;
     var selectedPageSize = undefined;
 
+    var qrCodeUrl=''
     function getHostname() {
         const url = new URL(window.location.href);
         return url.hostname
+    }
+    async function getQrSvg() {
+        const myUrl=getUrl()
+        try {
+            console.log(await QRCode.toString(myUrl,{type:'svg'}))
+//            console.log(await QRCode.toDataURL(myUrl,{type:'svg'}))
+            qrCodeUrl=await QRCode.toDataURL(myUrl)
+            log.debug(qrCodeUrl)
+            return qrCodeUrl;
+        } catch (err) {
+            console.error(err)
+        }
+        return ''
+
     }
     function getUrl(encode) {
         const url = new URL(window.location.href);
@@ -56,6 +73,7 @@
     }
     onMount(async () => {
         log.debug(`qr: ${getUrl()}`);
+        getQrSvg()
         if (getCacheKey()) {
             disableCache = true;
         } else {
@@ -160,7 +178,7 @@
     <h2>Sharing</h2>
     <hr />
     <img
-        src="https://api.qrserver.com/v1/create-qr-code/?data={getUrl()}&amp;size=200x200"
+        src={qrCodeUrl}
         alt="{getUrl()}"
         title=""
     />
