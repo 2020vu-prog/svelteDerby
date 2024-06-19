@@ -43,7 +43,11 @@
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
 
-        const link = `${url.protocol}//${url.hostname}:${url.port}/#/as/${orgIz}/${orgId}`;
+        let pport=''
+        if(url.port){
+            pport=`:${url.port}`
+        }
+        const link = `${url.protocol}//${url.hostname}${pport}/#/as/${orgIz}/${orgId}`;
         if(encode){
             return encodeURIComponent(link);
         }else{
