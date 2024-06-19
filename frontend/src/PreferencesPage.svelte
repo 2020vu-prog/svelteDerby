@@ -37,6 +37,7 @@
     var selectedPageSize = undefined;
 
     var qrCodeUrl=''
+    var qrsvg=''
     function getHostname() {
         const url = new URL(window.location.href);
         return url.hostname
@@ -44,10 +45,11 @@
     async function getQrSvg() {
         const myUrl=getUrl()
         try {
-            console.log(await QRCode.toString(myUrl,{type:'svg'}))
+            qrsvg=await QRCode.toString(myUrl,{type:'svg'})
+            log.debug(qrsvg.length,':',qrsvg)
 //            console.log(await QRCode.toDataURL(myUrl,{type:'svg'}))
             qrCodeUrl=await QRCode.toDataURL(myUrl)
-            log.debug(qrCodeUrl)
+            log.debug(qrCodeUrl.length,':',qrCodeUrl)
             return qrCodeUrl;
         } catch (err) {
             console.error(err)
@@ -177,11 +179,15 @@
     <br />
     <h2>Sharing</h2>
     <hr />
+    {@html qrsvg}
+    <!-- 
+
     <img
         src={qrCodeUrl}
         alt="{getUrl()}"
         title=""
     />
+    -->
     <p></p>
     {getHostname()}
     {#if $developerMode}
