@@ -57,7 +57,6 @@ function auditCarAttributes(lengthMs,perf,pinName,msgs){
     let perfEmoji='✅'
     // 1❌: too small
     // 2❌: too big
-    // 3❌: config err, min > max
     if(lengthMs<timerPbConfig.timerConfigLanePhotoEye.minCarLenMS){
         lenEmoji='❌'
     }
