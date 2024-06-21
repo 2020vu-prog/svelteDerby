@@ -2,13 +2,30 @@
 import log from "loglevel";
 import { onMount } from "svelte";
 import         {hhmmssFmt,} from './utils.js'
+import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        CardFooter,
+        Badge,
+    } from "sveltestrap";
+    import { db } from "./eventDb.js";
 export let bp;
+export let index;
+let bmdFromDexie={}
 onMount(async () => {
         log.debug("history bp");
         log.debug(JSON.stringify(bp));
+        if(index==0){
+            bmdFromDexie = await db.BracketMetaData.get(getChartId());
+        }
 })
 function getHeat(){
     return(bp.SK.replace(/.*:/,''))
+}
+function getChartId(){
+    return(bp.SK.replace(/:.*/,''))
 }
 function xlateStatus(status){
     if(status==='ptcp'){
@@ -18,26 +35,35 @@ function xlateStatus(status){
 
 }
 </script>
-<p/>
-<h6>
-
---------- Heat: {getHeat()}
-</h6>
+{#if bmdFromDexie.bracketName}
+    <h4>
+        {bmdFromDexie.bracketName}
+    </h4>
+{/if}
+<Card class="mt-3 border border-info cjw-border-5">
+    <CardHeader class="bg-info text-white">
+        <CardTitle>
+            <span >Heat: {getHeat()}</span>
+            <span class="spanRight">
 {hhmmssFmt(bp.at)}
-        <br/>
-By: {bp.by}
-        <br/>
-        <ul>
+            </span>
+        </CardTitle>
+    </CardHeader>
+    <CardBody>
+        By: {bp.by}
+        <ul class="list-group">
 
-{#each Object.keys(bp.pos) as pos }
-
-<li>
+        {#each Object.keys(bp.pos) as pos }
     
-        {pos}:
-        {xlateStatus(bp.pos[pos].status)}:
-        {bp.pos[pos].ptcp}
-        <br/>
-</li>
-{/each}
+            <li class="list-group-item">
+                {pos}:
+                {xlateStatus(bp.pos[pos].status)}:
+                {bp.pos[pos].ptcp}
+            </li>
+        {/each}
         
         </ul>
+
+    </CardBody>
+
+</Card>

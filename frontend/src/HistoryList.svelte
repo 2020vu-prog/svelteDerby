@@ -38,7 +38,7 @@
 
 <div>
     <h4>History</h4>
-    {#each history as entity (entity.at)}
+    {#each history as entity,i (entity.at)}
         {#if entity.PK.endsWith(":RP")}
             <RacePhase
                 source="EventHistory"
@@ -52,7 +52,7 @@
             <RaceStanding standing={entity} source="EventHistory" />
         {/if}
         {#if entity.PK.endsWith(":Bp")}
-            <HistoryBracketPos bp={entity}/>
+            <HistoryBracketPos index={i} bp={entity}/>
         {/if}
     {/each}
 </div>
