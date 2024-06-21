@@ -95,6 +95,10 @@ Click below to proceed to external (Amazon/AWS) login page.
     Login
 </SpinnerButton>
 <br />
-This site replaces the former site (cf.derby.rr1.us).
-If you had a user/password on that site you will need to SIGN UP again using the SAME email address.
+User information was reset (deleted) for all userids on this site on 
+<strong>
+June 21, 2024
+</strong> 
+<br />
+If you had a user/password that was created before then, you will need to SIGN UP again using the SAME email address.
 {/if}
