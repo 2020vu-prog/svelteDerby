@@ -208,6 +208,10 @@
             }
         }
     };
+    function pushHistory(){
+        const chartKey=`${params.chartId}:${params.chartPosition}`
+        push(`/historyList/${$raceConfig.orgId}:Bp/${chartKey}`)
+    }
 </script>
 
 <style>
@@ -298,6 +302,10 @@
     <br />
     <br />
     <br />
+
+        <SpinnerButton on:click={pushHistory} >
+            History
+        </SpinnerButton>
 
     {#if editable}
         <SpinnerButton

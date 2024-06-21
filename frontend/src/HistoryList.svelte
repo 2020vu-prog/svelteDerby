@@ -6,7 +6,7 @@
     import { db } from "./eventDb.js";
     import RacePhase from "./RacePhase.svelte";
     import RaceStanding from "./RaceStanding.svelte";
-
+    import HistoryBracketPos from "./HistoryBracketPos.svelte"
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let params = {};
@@ -50,6 +50,9 @@
         {/if}
         {#if entity.PK.endsWith(":RS")}
             <RaceStanding standing={entity} source="EventHistory" />
+        {/if}
+        {#if entity.PK.endsWith(":Bp")}
+            <HistoryBracketPos bp={entity}/>
         {/if}
     {/each}
 </div>
