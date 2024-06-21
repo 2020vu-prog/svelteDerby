@@ -96,5 +96,5 @@ report elapsed time split(s).
 <SpinnerButton
 on:click={provisionWifi}
 >
-Setup Timer WiFi
+Setup Timer WiFi Instructions
 </SpinnerButton>

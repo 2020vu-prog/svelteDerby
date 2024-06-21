@@ -5,61 +5,54 @@ import SpinnerButton from "./SpinnerButton.svelte";
 
 import * as axiosVanilla  from "axios";
 import { axios, raceConfig, statusMessage, userEmail } from "./stores.js";
+import { onMount } from "svelte";
+import QRCode from 'qrcode'
 
-const pbForm={}
-let spinning=false
-async function applyUserPw(){
-    spinning=true
-
-   // curl -v -XPOST http://10.42.0.1:5000/networks --data $'{\n  "ssid": "cjw",\n  "pw": "river222"\n}' --header 'Content-Type: application/json'
-    const req = {
-        ssid:pbForm.ssid,
-        pw:pbForm.pw
-        };
-
-        const endpoint ="https://0.0.0.0:8081//networks"
-       // const endpoint ="http://10.42.0.1:5000/networks"
-
-        try {
-            const response = await axiosVanilla.post(
-                endpoint,
-                req
-            );
-        }
-        catch(e){
-
-        }
+const configLink="http://10.42.0.1:5000/index.html"
+let qrsvg=''
+onMount(async () => {
+        getQrSvg()
 }
-</script>
-<h4>Setp Timer WiFi</h4>
-<Form>
-    <FormGroup>
-        <Label>
-           SSID:
-            <Input
-                disabled={false}
-                type="text"
-                bind:value={pbForm.ssid}
-            />
-        </Label>
-    </FormGroup>
-<FormGroup>
-    <Label>
-        Password
-        <Input
-            disabled={false}
-            type="text"
-            bind:value={pbForm.pw}
-        />
-        <FormText color="muted">
-        </FormText>
-    </Label>
-</FormGroup>
-</Form>
+);
+async function getQrSvg() {
+        try {
+            qrsvg=await QRCode.toString(configLink,{type:'svg'})
+            return qrsvg;
+        } catch (err) {
+            console.error(err)
+        }
+        return ''
 
-<SpinnerButton
-on:click={applyUserPw}
-{spinning}
->
-Apply
-</SpinnerButton>
+    }
+</script>
+<h4>Setup Timer WiFi</h4>
+<ul>
+    <li>
+        Power on timer and wait 3 minutes
+    </li>
+    <li>
+        Connect phone wifi to timer. 
+    </li>
+    <li>
+        SSID is <strong> RR1T-[TimerName] </strong>
+        Password is <strong> setup999 </strong> 
+    </li>
+    <li>
+        it won't have internet access, and you may have to re-assure your phone you want to <strong>CONNECT ANYWAY</strong>
+    </li>
+    <li>
+        Browse to <a href={configLink}>{configLink}</a> link.  (you may have turn off your main internet to get the page to load)
+    </li>
+    <li>
+        configure desired / hotspot network info and hit <strong>Apply</strong>
+    </li>
+    <li>
+        Wait one minute
+    </li>
+    <li>
+        Return to the <a href="/#/timerConfigList">Elapsed Timer Config</a>
+        Press the <strong>+</strong> icon and add your timer!
+    </li>
+</ul>
+
+{@html qrsvg}
