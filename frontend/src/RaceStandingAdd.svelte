@@ -20,6 +20,7 @@
     var submitFocused = false;
     var submitDisabled = true;
     var submitSpinning = false;
+    var blocksOccupied = true;
     const PhaseTypes = {
         R: { type: "Race" },
         T: { type: "Trial Run" },
@@ -88,10 +89,15 @@
         }
         return "";
     }
+
+    $: {
+        blocksOccupied = $nextOnBlockKey.length > 0;
+    }
+
     async function handleSubmit() {
         const endPoint = unMapType("endPoint");
 
-        if (endPoint == "/addBlocks" && $nextOnBlockKey.length > 0) {
+        if (endPoint == "/addBlocks" && blocksOccupied) {
             $statusMessage = {
                 text:
                     "You cannot add a race to the blocks when the blocks are already occupied.",
@@ -204,6 +210,14 @@
 <h3>{title}</h3>
 
 <form>
+    {#if unMapType("endPoint") == "/addBlocks"}
+        <h4>
+            Blocks are 
+            <strong style="background-color: {blocksOccupied ? '#FF0000' : 'lightgreen'}">
+                {blocksOccupied ? "OCCUPIED" : "EMPTY"}
+            </strong>
+        </h4>
+    {/if}
     {#if unMapType("promptPhaseType")}
         <select
             bind:value={carNumberForm.promptPhaseType}
