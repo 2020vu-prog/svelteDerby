@@ -45,7 +45,8 @@
 
     const navToChartDetail = (bmd) => {
         log.debug("navToChartDetail:", bmd);
-        push("/ChartDetail/" + bmd.SK);
+        //push("/ChartDetail/" + bmd.SK);
+        push("/ChartDetailCardList/" + bmd.SK);
     };
     async function getSortedBmd() {
         bmdFromDexie = await updateBmds();

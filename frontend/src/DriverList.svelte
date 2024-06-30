@@ -19,7 +19,7 @@
     import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
     import { push, pop, location } from "svelte-spa-router";
-    import { getMainFull } from "./utils.js";
+    import { getMainFull, filterMatches } from "./utils.js";
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
     export let params = {};
@@ -44,11 +44,7 @@
         log.debug("DriverList location: ", $location); // trigger param reload on location change
         selectable = params.selectable;
     }
-    const filterMatches = (driver, lclFilter) => {
-        if (!lclFilter) return true;
-        let re = new RegExp("^" + lclFilter);
-        return String(driver).match(re);
-    };
+
     const getCarNumbersAsList = (driverMap, carFilter) => {
         return Object.keys(driverMap)
             .filter((carNumber) => filterMatches(carNumber, carFilter))
@@ -96,10 +92,6 @@
 <style>
     div :global(.xLargeEdit) {
         font-size: 28px;
-    }
-
-    input[type="checkbox"] {
-        transform: scale(2);
     }
 </style>
 
@@ -149,6 +141,7 @@
                     <span style="display: inline; float: right">
                         <input
                             type="checkbox"
+                            class="big"
                             bind:checked={wip[item]}
                             on:click={(event) => {
                                 updateSelectTotal();

@@ -1,0 +1,262 @@
+<script>
+    import './Charts.css';
+    import log from "loglevel";
+    import { push, pop, replace } from "svelte-spa-router";
+    import ChartDetailCardHeats from "./ChartDetailCardHeats.svelte";
+    import CarFilter from "./CarFilter.svelte";
+    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import { onMount } from "svelte";
+    import { db } from "./eventDb.js";
+    import {
+        carFilter,
+        getChartCacheKey,
+        driverMap,
+        spinnerPanelBusy,
+        statusMessage,
+    } from "./stores.js";
+    import { parseHeatPos, sleep, getChartJson , filterMatches} from "./utils.js";
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
+
+    export let params = {};
+    const loggedImgPositions = {};
+    var showChartClickLogger = false;
+    var bmdFromDexie = {};
+    var bracketImgSrc = "data/circles.svg";
+    var mounted = false;
+    var imageLoaded = false;
+    var jsReady = false;
+    onMount(async () => {
+        mounted = true;
+        //tryBuild();
+        $spinnerPanelBusy=true
+        await refreshDataFromDb();
+        //await sleep(2000)
+        $spinnerPanelBusy=false
+
+    });
+    $: shown=filterShown($carFilter) //recalc when filter changes!
+    
+    var brackets2 = {
+        imgSize: { height: 1700, width: 2200 },
+        imgPositions: {},
+        seeds: [],
+        progress: {},
+    };
+    const refreshDataFromDb = async (trigger) => {
+        log.debug("refreshDataFromDb data:", trigger);
+
+        bmdFromDexie = await db.BracketMetaData.get(params.chartId);
+        log.debug("refreshDataFromDb gave:", bmdFromDexie);
+
+        const chartCacheKey = getChartCacheKey();
+        bracketImgSrc = `/data/brackets/${bmdFromDexie.imgPath}?cacheKey=${chartCacheKey}`;
+        //await getChartImage(bmdFromDexie.imgPath);
+        const chartjson = await getChartJson(bmdFromDexie.jsonPath);
+        log.debug("refreshDataFromDb chartjson:", chartjson);
+        if (chartjson) {
+            brackets2 = chartjson;
+            roundMap=await getRounds(chartjson)
+            shown=filterShown()
+        } 
+    };
+    let roundRecap={}
+    let roundMap={}
+    async function getRounds(chartjson){
+        const rc={}
+        const heats=Object.keys(chartjson.progress)
+
+        for (const heat of heats) {
+            const heatDetail=chartjson.progress[heat]
+            const round=heatDetail['#Round']
+            const HeatNumber=heatDetail.HeatNumber
+            if(!rc[round]){rc[round]={}}
+            if(!roundRecap[round]){roundRecap[round]={}}
+            rc[round][HeatNumber]=heatDetail
+            for (const letter of ['A','B']) {
+                const augState=await augmentChartState(chartjson,params.chartId,heat,letter)
+                heatDetail[`${letter}state`]=augState
+                roundRecap[round][augState.bracketClass]=true
+            }
+        }
+        //log.debug('cdcl:',JSON.stringify(rc))
+        //log.debug('cdbc:',JSON.stringify(roundRecap))
+        return rc
+    }
+
+    let shown={}
+    async function augmentChartState (chartjson,chartId,heatPos,heatLetter)  {
+        let posHtml=""
+        let bracketClass=""
+        const isSeed= chartjson.seeds.indexOf(
+                `${heatPos}${heatLetter}`
+            ) > -1
+                ? true
+                : false;
+        const bracketPosKey = `${chartId}:${heatPos}`;
+        log.debug("augmentChartState bracketPosKey: ", bracketPosKey);
+        const bpFromDexie = await db.BracketPos.get(bracketPosKey);
+        log.debug("augmentChartState gave:", bpFromDexie);
+        if (isSeed) {
+            bracketClass = "pendingSeed";
+        }
+
+        if (heatLetter &&bpFromDexie && bpFromDexie.pos && bpFromDexie.pos[heatLetter]) {
+            if (bpFromDexie.pos[heatLetter].status == "ptcp") {
+                posHtml = ` - ${
+                    bpFromDexie.pos[heatLetter].ptcp
+                } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}`;
+                if (bpFromDexie.pos[heatLetter].ptcp) {
+                    bracketClass = "havePtcp";
+                }
+            } else if (bpFromDexie.pos[heatLetter].status == "bye") {
+                posHtml = ` - Bye`;
+                bracketClass = "haveBye";
+            } else if (bpFromDexie.pos[heatLetter].status == "forfeit") {
+                posHtml = ` - ${
+                    bpFromDexie.pos[heatLetter].ptcp
+                } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}(F)`;
+                bracketClass = "haveForfeit";
+            }
+        }
+
+        let rsFromDexie = await db.RaceStanding.get(bracketPosKey);
+        log.debug("isSeed: ", isSeed,rsFromDexie);
+        if (rsFromDexie) {
+            if (rsFromDexie.del) {
+                rsFromDexie = null;
+            }
+        }
+        if (rsFromDexie) {
+            const entityFactory = new EntityFactory({});
+            const rs = entityFactory.build(rsFromDexie);
+
+            //we have 2 car numbers
+            if (!rs.ph1 && !rs.ph2) {
+                bracketClass = "ready";
+            } else if (rs.ph1 && !rs.ph2) {
+                bracketClass = "phaseOneComplete";
+            } else if (rs.isComplete()) {
+                bracketClass = "complete";
+            }
+            log.debug("isSeed2: ", isSeed,bracketClass);
+        }
+
+        //await getChartImage(bmdFromDexie.imgPath);
+        //await getChartImage(bmdFromDexie.jsonPath);
+        return {
+            bracketClass,
+            posHtml,
+            isSeed,
+            rsFromDexie,
+        }
+    };
+    const getDriverName = (number) => {
+        if (number && $driverMap[number]) {
+            return $driverMap[number].name;
+        } else {
+            return " ";
+        }
+    };
+    function getRoundClass(roundRecap,round){
+        for (const bClass of ['pendingSeed','ready','phaseOneComplete','complete']) {
+            if(roundRecap[round][bClass]){
+                return bClass
+            }
+        }
+        return undefined
+    }
+
+    const unPos = /^ - /i;
+    function posFilterMatch(Xstate){
+        const carNumber=Xstate.posHtml.replace(unPos,'')
+
+        log.debug('filterShown2:', carNumber)
+        Xstate.filterMatches=filterMatches(carNumber,$carFilter)
+        return Xstate.filterMatches
+        //return filterMatches(carNumber,$carFilter)
+    }
+    function filterShown(){
+        let count=0
+        const newShown={}
+        if( !$carFilter){
+            return newShown
+        }
+        for (const round of Object.keys(roundMap)) {
+            for (const heat of Object.keys(roundMap[round])) {
+                const heatDetail=roundMap[round][heat]
+                log.debug('filterShown:', heatDetail.Astate.posHtml )
+                if(posFilterMatch(heatDetail.Astate)||
+                   posFilterMatch(heatDetail.Bstate)){
+
+                    newShown[round]=true
+                    count++
+                   }
+                
+            }
+            
+        }
+        $statusMessage = {
+            text: `Filter Matched: ${count}`,
+            type: "success",
+            key: "filterMatchCount",
+        };
+        roundMap=roundMap // republish with filter mods
+        return newShown
+    }
+    function roundClicked(round){
+        if($carFilter){
+            shown=filterShown()
+            return
+        }
+        shown={}
+        shown[round]=!shown[round]
+    }
+    function gotoChartPdf(){
+        replace(`/ChartDetail/${params.chartId}`)
+    }
+    </script>
+
+<h3 style="text-align:center;z-index: 9;"
+    on:click={gotoChartPdf}>
+    Chart Name: {bmdFromDexie.bracketName}
+    <CarFilter />
+</h3>
+
+{#each Object.keys(roundMap) as round}
+
+    <Card
+        class="mt-3 border border-info"
+        on:click={(event) => { roundClicked(round) }}
+    >
+    <CardBody>
+        <div style="display: inline"
+        class={getRoundClass(roundRecap,round)}
+        >
+        Round:
+        {#if shown[round]}
+            <strong>
+            {round}
+            </strong>
+        {:else}
+            {round}
+        {/if}
+
+        {#if ! $carFilter}
+            <span style="display: inline; float: right">
+                <input
+                    type="checkbox"
+                    class="big"
+                    bind:checked={shown[round]}
+                    on:click={(event) => {
+                        event.stopPropagation();
+                    }}
+                />
+            </span>
+        {/if}
+        </div>
+    </CardBody>
+    </Card>
+    {#if shown[round]}
+        <ChartDetailCardHeats chartId={params.chartId} heats={roundMap[round]}/>
+    {/if}
+{/each}

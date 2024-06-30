@@ -58,11 +58,7 @@
         }
     }
 
-    const filterMatches = (driver, lclFilter) => {
-        if (!lclFilter) return true;
-        let re = new RegExp("^" + lclFilter);
-        return String(driver).match(re);
-    };
+
 
     const augmentDataFromDb = async (trigger) => {
         log.debug("refreshDataFromDb data:", trigger);

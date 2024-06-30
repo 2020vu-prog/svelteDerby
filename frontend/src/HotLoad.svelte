@@ -21,6 +21,7 @@
         axios,
         recentRefreshMs,
         mqttPsUrlMap,
+        reRenderHotLoad,
     } from "./stores.js";
     //import { mqtt } from "mqtt";
     import * as mqtt from "mqtt";
@@ -370,7 +371,8 @@
             await sleep(1000);
             expirePsUrl()
             log.debug("potentialDoubleClickReloadPage: fired");
-            window.location.reload();
+            //recentRefreshMs window.location.reload();
+            $reRenderHotLoad=Date.now()
         }
             lastClick=now
     }

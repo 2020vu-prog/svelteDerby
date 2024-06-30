@@ -384,3 +384,8 @@ export function downloadFile(filename,text){
 
     document.body.removeChild(element);
 }
+export const filterMatches = (carNumber, lclFilter) => {
+    if (!lclFilter) return true;
+    let re = new RegExp("^" + lclFilter);
+    return String(carNumber).match(re);
+};

@@ -1,4 +1,5 @@
 <script>
+    import './Charts.css';
     import log from "loglevel";
 
     import { push, pop, replace } from "svelte-spa-router";
@@ -129,33 +130,6 @@
     };
 </script>
 
-<style>
-    div.overlay {
-        /* applied to all */
-        border: 1px solid black;
-        color: black;
-    }
-
-    div.ready {
-        background: green;
-        color: white;
-    }
-
-    div.pendingSeed {
-        background: red;
-        color: white;
-    }
-
-    div.complete {
-        background: gray;
-        color: white;
-    }
-
-    div.phaseOneComplete {
-        background: yellow;
-        color: black;
-    }
-</style>
 
 {#if isPannable}
     <div

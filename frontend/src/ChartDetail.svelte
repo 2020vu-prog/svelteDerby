@@ -1,6 +1,7 @@
 <script>
     import log from "loglevel";
 
+    import { push, pop, replace } from "svelte-spa-router";
     import ChartHotSpot from "./ChartHotSpot.svelte";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -10,6 +11,7 @@
         chartClickLoggerId,
         chartClickLoggerShow,
         getChartCacheKey,
+        spinnerPanelBusy,
     } from "./stores.js";
     import { parseHeatPos, sleep, getChartJson } from "./utils.js";
 
@@ -22,9 +24,11 @@
     var imageLoaded = false;
     var jsReady = false;
     onMount(async () => {
+        $spinnerPanelBusy=true
         mounted = true;
         tryBuild();
         await refreshDataFromDb();
+        $spinnerPanelBusy=false
     });
     const refreshDataFromDb = async (trigger) => {
         log.debug("refreshDataFromDb data:", trigger);
@@ -310,6 +314,9 @@
         }
         return number + ""; // always return a string
     }
+    function gotoChartCardList(){
+        replace(`/ChartDetailCardList/${params.chartId}`)
+    }
 </script>
 
 <style>
@@ -328,7 +335,8 @@
     >
     </script>
 </svelte:head>
-<h3 style="text-align:center;z-index: 9;">
+<h3 style="text-align:center;z-index: 9;"
+    on:click={gotoChartCardList}>
     Chart Name: {bmdFromDexie.bracketName}
 </h3>
 <div id="top" class="container" style="position: absolute; z-index: 8;">

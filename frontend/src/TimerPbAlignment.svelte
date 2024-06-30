@@ -501,9 +501,7 @@
 </script>
 
 <style>
-    input[type="checkbox"] {
-        transform: scale(2);
-    }
+
     * {
         box-sizing: border-box;
     }

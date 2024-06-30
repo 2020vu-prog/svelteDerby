@@ -7,6 +7,7 @@
     import { location, replace } from "svelte-spa-router";
     import { querystring } from "svelte-spa-router";
 
+    import SpinnerPanel from "./SpinnerPanel.svelte";
     import Splash from "./Splash.svelte";
     import BottomNav from "./BottomNav.svelte";
     import CaptureVideo from "./CaptureVideo.svelte";
@@ -39,6 +40,7 @@
     import PreferencesPage from "./PreferencesPage.svelte";
     import ProvisionWifi from "./ProvisionWifi.svelte";
     import ChartDetail from "./ChartDetail.svelte";
+    import ChartDetailCardList from "./ChartDetailCardList.svelte";
     import ChartPosition from "./ChartPosition.svelte";
     import TimerConfig from "./TimerConfig.svelte";
     import TimerConfigList from "./TimerConfigList.svelte";
@@ -67,6 +69,7 @@
         carouselList,
         initialReloadRoute,
         getOrgName,
+        reRenderHotLoad,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -102,6 +105,7 @@
         "/preferences": PreferencesPage,
         "/provisionWifi": ProvisionWifi,
         "/chartDetail/:chartId": ChartDetail,
+        "/chartDetailCardList/:chartId": ChartDetailCardList,
         "/chartPosition/:chartId/:chartPosition": ChartPosition,
         "/chartList": ChartList,
         "/chartList1": ChartList1,
@@ -446,7 +450,9 @@
     <a style="background-color: {$theme}" class="active">
         {getTitle($raceConfig)}&nbsp;
         {#if $raceConfig}
+            {#key $reRenderHotLoad}
             <HotLoad />
+            {/key}
         {/if}
     </a>
     <div id="myLinks">
@@ -464,6 +470,7 @@
     </a>
 </div>
 <main>
+    <SpinnerPanel/>
     <Splash />
     <Router {routes} />
 </main>
