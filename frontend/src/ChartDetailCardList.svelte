@@ -216,9 +216,11 @@
     }
     </script>
 
-<h3 style="text-align:center;z-index: 9;"
-    on:click={gotoChartPdf}>
-    Chart Name: {bmdFromDexie.bracketName}
+<h3 style="text-align:center;z-index: 9;">
+    <span
+        on:click={gotoChartPdf}>
+        Chart Name: {bmdFromDexie.bracketName}
+    </span>
     <CarFilter />
 </h3>
 
