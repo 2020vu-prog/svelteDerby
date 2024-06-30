@@ -62,16 +62,16 @@
     let roundRecap={}
     let roundMap={}
     async function getRounds(chartjson){
-        const rc={}
+        const newRoundMap={}
         const heats=Object.keys(chartjson.progress)
 
         for (const heat of heats) {
             const heatDetail=chartjson.progress[heat]
             const round=heatDetail['#Round']
             const HeatNumber=heatDetail.HeatNumber
-            if(!rc[round]){rc[round]={}}
+            if(!newRoundMap[round]){newRoundMap[round]={}}
             if(!roundRecap[round]){roundRecap[round]={}}
-            rc[round][HeatNumber]=heatDetail
+            newRoundMap[round][HeatNumber]=heatDetail
             for (const letter of ['A','B']) {
                 const augState=await augmentChartState(chartjson,params.chartId,heat,letter)
                 heatDetail[`${letter}state`]=augState
@@ -80,7 +80,7 @@
         }
         //log.debug('cdcl:',JSON.stringify(rc))
         //log.debug('cdbc:',JSON.stringify(roundRecap))
-        return rc
+        return newRoundMap
     }
 
     let shown={}

@@ -51,8 +51,7 @@
         //return bmdArray;
     };
     const navToChartDetail = (bmd) => {
-        log.debug("navToChartDetail:", bmd);
-        push("/ChartDetailCardList/" + bmd.SK);
+        push("/ChartDetail/" + bmd.SK);
     };
     function getSortedBmd(bmdFromDexie) {
         bmdFromDexie.sort((a, b) => {
