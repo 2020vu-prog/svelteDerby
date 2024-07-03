@@ -342,6 +342,7 @@
 <div id="top" class="container" style="position: absolute; z-index: 8;">
     {#each Object.values(brackets2.imgPositions) as bracket, pos}
         <ChartHotSpot
+            chartJson={brackets2}
             id={pos}
             pos={Object.keys(brackets2.imgPositions)[pos]}
             {scale}
@@ -351,11 +352,6 @@
             on:hotMove={(e) =>
                 hotMoved(e, Object.keys(brackets2.imgPositions)[pos])}
             isPannable={$chartClickLoggerShow}
-            isSeed={brackets2.seeds.indexOf(
-                Object.keys(brackets2.imgPositions)[pos]
-            ) > -1
-                ? true
-                : false}
         />
     {/each}
     <img

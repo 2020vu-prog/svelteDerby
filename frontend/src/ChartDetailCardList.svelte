@@ -14,7 +14,7 @@
         spinnerPanelBusy,
         statusMessage,
     } from "./stores.js";
-    import { parseHeatPos, sleep, getChartJson , filterMatches} from "./utils.js";
+    import { augmentChartState, sleep, getChartJson , filterMatches} from "./utils.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let params = {};
@@ -55,7 +55,10 @@
         log.debug("refreshDataFromDb chartjson:", chartjson);
         if (chartjson) {
             brackets2 = chartjson;
+            //console.profile('getRoundsy')
+
             roundMap=await getRounds(chartjson)
+            //console.profileEnd('getRoundsy')
             shown=filterShown()
         } 
     };
@@ -84,79 +87,7 @@
     }
 
     let shown={}
-    async function augmentChartState (chartjson,chartId,heatPos,heatLetter)  {
-        let posHtml=""
-        let bracketClass=""
-        const isSeed= chartjson.seeds.indexOf(
-                `${heatPos}${heatLetter}`
-            ) > -1
-                ? true
-                : false;
-        const bracketPosKey = `${chartId}:${heatPos}`;
-        log.debug("augmentChartState bracketPosKey: ", bracketPosKey);
-        const bpFromDexie = await db.BracketPos.get(bracketPosKey);
-        log.debug("augmentChartState gave:", bpFromDexie);
-        if (isSeed) {
-            bracketClass = "pendingSeed";
-        }
 
-        if (heatLetter &&bpFromDexie && bpFromDexie.pos && bpFromDexie.pos[heatLetter]) {
-            if (bpFromDexie.pos[heatLetter].status == "ptcp") {
-                posHtml = ` - ${
-                    bpFromDexie.pos[heatLetter].ptcp
-                } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}`;
-                if (bpFromDexie.pos[heatLetter].ptcp) {
-                    bracketClass = "havePtcp";
-                }
-            } else if (bpFromDexie.pos[heatLetter].status == "bye") {
-                posHtml = ` - Bye`;
-                bracketClass = "haveBye";
-            } else if (bpFromDexie.pos[heatLetter].status == "forfeit") {
-                posHtml = ` - ${
-                    bpFromDexie.pos[heatLetter].ptcp
-                } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}(F)`;
-                bracketClass = "haveForfeit";
-            }
-        }
-
-        let rsFromDexie = await db.RaceStanding.get(bracketPosKey);
-        log.debug("isSeed: ", isSeed,rsFromDexie);
-        if (rsFromDexie) {
-            if (rsFromDexie.del) {
-                rsFromDexie = null;
-            }
-        }
-        if (rsFromDexie) {
-            const entityFactory = new EntityFactory({});
-            const rs = entityFactory.build(rsFromDexie);
-
-            //we have 2 car numbers
-            if (!rs.ph1 && !rs.ph2) {
-                bracketClass = "ready";
-            } else if (rs.ph1 && !rs.ph2) {
-                bracketClass = "phaseOneComplete";
-            } else if (rs.isComplete()) {
-                bracketClass = "complete";
-            }
-            log.debug("isSeed2: ", isSeed,bracketClass);
-        }
-
-        //await getChartImage(bmdFromDexie.imgPath);
-        //await getChartImage(bmdFromDexie.jsonPath);
-        return {
-            bracketClass,
-            posHtml,
-            isSeed,
-            rsFromDexie,
-        }
-    };
-    const getDriverName = (number) => {
-        if (number && $driverMap[number]) {
-            return $driverMap[number].name;
-        } else {
-            return " ";
-        }
-    };
     function getRoundClass(roundRecap,round){
         for (const bClass of ['pendingSeed','ready','phaseOneComplete','complete']) {
             if(roundRecap[round][bClass]){

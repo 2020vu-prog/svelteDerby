@@ -5,7 +5,7 @@
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
-    import { parseHeatPos } from "./utils.js";
+    import { parseHeatPos,augmentChartState } from "./utils.js";
     import { doRefreshBlocks, driverMap } from "./stores.js";
     import { pannable } from "./pannable.js";
     import { createEventDispatcher } from "svelte";
@@ -16,8 +16,8 @@
     export let scale;
     export let pos;
     export let chartId;
-    export let isSeed;
     export let isPannable;
+    export let chartJson;
     const dispatch = createEventDispatcher();
 
     let scaledTop;
@@ -50,57 +50,15 @@
     var rsFromDexie = {};
     var posHtml = "";
     const refreshDataFromDb = async (trigger) => {
-        const bracketPosKey = `${chartId}:${heatPos}`;
-        log.debug("bracketPosKey: ", bracketPosKey);
-        bpFromDexie = await db.BracketPos.get(bracketPosKey);
-        log.debug("refreshDataFromDb gave:", bpFromDexie);
-        if (isSeed) {
-            bracketClass = "pendingSeed";
-        }
+  
+        const rc=await augmentChartState(chartJson,chartId,heatPos,heatLetter)
 
-        if (bpFromDexie && bpFromDexie.pos && bpFromDexie.pos[heatLetter]) {
-            if (bpFromDexie.pos[heatLetter].status == "ptcp") {
-                posHtml = ` - ${
-                    bpFromDexie.pos[heatLetter].ptcp
-                } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}`;
-                if (bpFromDexie.pos[heatLetter].ptcp) {
-                    bracketClass = "havePtcp";
-                }
-            } else if (bpFromDexie.pos[heatLetter].status == "bye") {
-                posHtml = ` - Bye`;
-                bracketClass = "haveBye";
-            } else if (bpFromDexie.pos[heatLetter].status == "forfeit") {
-                posHtml = ` - ${
-                    bpFromDexie.pos[heatLetter].ptcp
-                } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}(F)`;
-                bracketClass = "haveForfeit";
-            }
-        }
+        //log.debug('acs:',JSON.stringify(rc))
+        bracketClass=rc.bracketClass
+        posHtml=rc.posHtml
 
-        rsFromDexie = await db.RaceStanding.get(bracketPosKey);
-        log.debug("isSeed: ", isSeed);
-        if (rsFromDexie) {
-            if (rsFromDexie.del) {
-                rsFromDexie = null;
-            }
-        }
-        if (rsFromDexie) {
-            const entityFactory = new EntityFactory({});
-            const rs = entityFactory.build(rsFromDexie);
+    }
 
-            //we have 2 car numbers
-            if (!rs.ph1 && !rs.ph2) {
-                bracketClass = "ready";
-            } else if (rs.ph1 && !rs.ph2) {
-                bracketClass = "phaseOneComplete";
-            } else if (rs.isComplete()) {
-                bracketClass = "complete";
-            }
-        }
-
-        //await getChartImage(bmdFromDexie.imgPath);
-        //await getChartImage(bmdFromDexie.jsonPath);
-    };
     function handlePanStart() {
         log.debug("chs panStart  ");
     }
@@ -121,13 +79,6 @@
         log.debug("chs panMoved.");
     }
 
-    const getDriverName = (number) => {
-        if (number && $driverMap[number]) {
-            return $driverMap[number].name;
-        } else {
-            return " ";
-        }
-    };
 </script>
 
 
