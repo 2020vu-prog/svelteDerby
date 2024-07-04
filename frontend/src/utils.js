@@ -247,9 +247,32 @@ export async function refreshOrgRoles(orgIz) {
     }
 }
 
-export async function getChartJson(jsonPath) {
-    log.debug("utils getChartJson", jsonPath);
+export async function getChartJson(bmdFromDexie) {
 
+    const bmdJson= await db.BmdJson.get(bmdFromDexie.SK);
+    log.debug("utils getChartJson cache:", bmdJson);
+    if(bmdJson){
+        return bmdJson
+    }
+    const cacheItem=await getChartJsonAxios(bmdFromDexie)
+    const bmdJsonCache={
+        SK:bmdFromDexie.SK,
+        ...cacheItem
+    }
+    log.debug("utils getChartJson gave", bmdFromDexie);
+    try {
+        await db.BmdJson.put(bmdJsonCache)
+        log.debug("utils getChartJson cache saved:", bmdFromDexie);
+    } catch (err) {
+        log.debug("utils getChartJson cache write failed: " + err);
+    }
+    return cacheItem
+
+
+}
+async function getChartJsonAxios(bmdFromDexie) {
+    log.debug("utils getChartJsonAxios begin", bmdFromDexie);
+    const jsonPath=bmdFromDexie.jsonPath
     const chartCacheKey = getChartCacheKey();
     try {
         const response = await axios.get(
@@ -257,7 +280,7 @@ export async function getChartJson(jsonPath) {
         );
         return response.data;
     } catch (err) {
-        log.debug("utils getChartJson failed: " + err);
+        log.debug("utils getChartJsonAxios failed: " + err);
     }
 }
 export async function getTimerPbConfig(timerName) {

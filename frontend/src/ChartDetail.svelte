@@ -19,7 +19,7 @@
     const loggedImgPositions = {};
     var showChartClickLogger = false;
     var bmdFromDexie = {};
-    var bracketImgSrc = "data/circles.svg";
+    var bracketImgSrc = "";
     var mounted = false;
     var imageLoaded = false;
     var jsReady = false;
@@ -40,7 +40,7 @@
         const chartCacheKey = getChartCacheKey();
         bracketImgSrc = `/data/brackets/${bmdFromDexie.imgPath}?cacheKey=${chartCacheKey}`;
         //await getChartImage(bmdFromDexie.imgPath);
-        const chartjson = await getChartJson(bmdFromDexie.jsonPath);
+        const chartjson = await getChartJson(bmdFromDexie);
         log.debug("refreshDataFromDb chartjson:", chartjson);
         if (chartjson) {
             brackets2 = chartjson;
@@ -329,11 +329,14 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <svelte:head>
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"
-        on:load={jqLoaded}
-    >
-    </script>
+    <!-- skip jquery load unless editing chart-->
+    {#if $chartClickLoggerShow}
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"
+            on:load={jqLoaded}
+        >
+        </script>
+    {/if}
 </svelte:head>
 <h3 style="text-align:center;z-index: 9;"
     on:click={gotoChartCardList}>
@@ -354,6 +357,7 @@
             isPannable={$chartClickLoggerShow}
         />
     {/each}
+    {#if bracketImgSrc}
     <img
         on:load={imgLoadComplete}
         style={imgStyle}
@@ -363,6 +367,8 @@
         bind:this={thisChartImage}
         on:click={logClickPosition}
     />
+    {/if}
+    
 
     <ChartClickLogger on:copyJson={copyJson} />
 </div>

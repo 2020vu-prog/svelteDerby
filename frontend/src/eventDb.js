@@ -33,6 +33,9 @@ db.version(14).stores({
 db.version(15).stores({
     TmpTimerElapsed: "SK",
 });
+db.version(16).stores({
+    BmdJson: "SK",
+});
 
 //export dbTools ;
 export async function dbReset() {

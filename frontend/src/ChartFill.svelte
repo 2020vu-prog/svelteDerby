@@ -115,7 +115,7 @@
         const bmdFromDexie = await db.BracketMetaData.get(params.chartId);
 
         log.debug("chartFill: refreshDataFromDb gave:", bmdFromDexie);
-        const chartjson = await getChartJson(bmdFromDexie.jsonPath);
+        const chartjson = await getChartJson(bmdFromDexie);
         if (chartjson) {
             log.debug("chartFill: seeds:", chartjson.seeds);
             seeds = chartjson.seeds;

@@ -21,7 +21,6 @@
     const loggedImgPositions = {};
     var showChartClickLogger = false;
     var bmdFromDexie = {};
-    var bracketImgSrc = "data/circles.svg";
     var mounted = false;
     var imageLoaded = false;
     var jsReady = false;
@@ -49,9 +48,8 @@
         log.debug("refreshDataFromDb gave:", bmdFromDexie);
 
         const chartCacheKey = getChartCacheKey();
-        bracketImgSrc = `/data/brackets/${bmdFromDexie.imgPath}?cacheKey=${chartCacheKey}`;
         //await getChartImage(bmdFromDexie.imgPath);
-        const chartjson = await getChartJson(bmdFromDexie.jsonPath);
+        const chartjson = await getChartJson(bmdFromDexie);
         log.debug("refreshDataFromDb chartjson:", chartjson);
         if (chartjson) {
             brackets2 = chartjson;
