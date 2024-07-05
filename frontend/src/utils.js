@@ -427,6 +427,7 @@ export async function augmentChartState (chartjson,chartId,heatPos,heatLetter)  
     log.debug("augmentChartState gave:", bpFromDexie);
     if (isSeed) {
         bracketClass = "pendingSeed";
+        posHtml='- SEED'
     }
 
     if (heatLetter &&bpFromDexie && bpFromDexie.pos && bpFromDexie.pos[heatLetter]) {
@@ -445,8 +446,14 @@ export async function augmentChartState (chartjson,chartId,heatPos,heatLetter)  
                 bpFromDexie.pos[heatLetter].ptcp
             } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}(F)`;
             bracketClass = "haveForfeit";
-        }
+        } 
     }
+        else {
+            const waiting=getChartAdvancementOrigin(chartjson,chartId,heatPos,heatLetter)  
+            if(waiting){
+                posHtml = ` - ${waiting}`
+            }
+        }
 
     let rsFromDexie = await db.RaceStanding.get(bracketPosKey);
     log.debug("isSeed: ", isSeed,rsFromDexie);
@@ -487,3 +494,22 @@ const getDriverName = (number) => {
         return " ";
     }
 };
+function getChartAdvancementOrigin(chartjson,chartId,heatPos,heatLetter)  {
+    const needle=`${heatPos}${heatLetter}`
+    
+    const cjp=chartjson.progress
+    for (const originHeat of Object.keys(cjp)) {
+        if(cjp[originHeat].WinnerDest===needle){
+            return `W ${fmtChartOrigin(cjp,originHeat)}`
+        }
+        if(cjp[originHeat].LoserDest===needle){
+            return `L ${fmtChartOrigin(cjp,originHeat)}`
+        }
+    }
+    return ''
+}
+function fmtChartOrigin(cjp,originHeat){
+    const r=cjp[originHeat]['#Round']
+    return `[${r}]Heat[${originHeat}]`
+
+}
