@@ -15,6 +15,7 @@
         statusMessage,
     } from "./stores.js";
     import { augmentChartState, sleep, getChartJson , filterMatches} from "./utils.js";
+    import { tick } from "svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let params = {};
@@ -143,8 +144,17 @@
     function gotoChartPdf(){
         replace(`/ChartDetail/${params.chartId}`)
     }
+    let cur=''
+    async function tabClicked(tab){
+        $carFilter=""
+        await tick()
+        cur=tab
+        shown={}
+        shown[tab]=true
+    }
     </script>
-
+<style>
+</style>
 <h3 style="text-align:center;z-index: 9;">
     <span
         on:click={gotoChartPdf}>
@@ -153,8 +163,29 @@
     <CarFilter />
 </h3>
 
+
+
+{#each Object.keys(roundMap) as tab}
+<!-- 
+
+        <div style="display: inline"
+        class={getRoundClass(roundRecap,tab)}
+        >
+-->
+    <button 
+    class="tabs
+    {getRoundClass(roundRecap,tab)}"
+    class:selected={cur === tab} on:click={() => {cur = tab;tabClicked(tab);}}>
+        {tab}
+    </button>
+
+{/each}
+
+{#key shown}
+    
 {#each Object.keys(roundMap) as round}
 
+    {#if shown[round]}
     <Card
         class="mt-3 border border-info"
         on:click={(event) => { roundClicked(round) }}
@@ -164,30 +195,15 @@
         class={getRoundClass(roundRecap,round)}
         >
         Round:
-        {#if shown[round]}
             <strong>
             {round}
             </strong>
-        {:else}
-            {round}
-        {/if}
 
-        {#if ! $carFilter}
-            <span style="display: inline; float: right">
-                <input
-                    type="checkbox"
-                    class="big"
-                    bind:checked={shown[round]}
-                    on:click={(event) => {
-                        event.stopPropagation();
-                    }}
-                />
-            </span>
-        {/if}
         </div>
     </CardBody>
     </Card>
-    {#if shown[round]}
         <ChartDetailCardHeats chartId={params.chartId} heats={roundMap[round]}/>
     {/if}
 {/each}
+
+{/key }

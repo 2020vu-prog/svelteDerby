@@ -6,6 +6,22 @@ div.overlay {
     color: black;
 }
 
+button.tabs {
+}
+button.ready {
+    border: 10px solid green ;
+}
+button.pendingSeed {
+    border: 10px solid red ;
+}
+button.complete {
+    border: 10px solid gray ;
+}
+
+button.phaseOneComplete {
+    border: 10px solid yellow ;
+}
+
 div.ready {
     background: green;
     color: white;

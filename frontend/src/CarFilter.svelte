@@ -27,7 +27,9 @@
     </span>
     <input
         id="cfInput"
-        type="number"
+        type="text"
+        pattern="\d*"
+        inputmode="numeric"
         maxLength="3"
         size="3"
         bind:value={$carFilter}
