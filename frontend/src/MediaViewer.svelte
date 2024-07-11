@@ -1,5 +1,6 @@
 
 <script>
+	    import log from "loglevel";
 	import {
         videoHref,
     } from "./stores.js";
@@ -31,6 +32,7 @@
         console.log("MM")
 
 		makeControlsVisible()
+		if (!isNumber(duration)) return; // video not loaded yet
 		if (!duration) return; // video not loaded yet
 		if (e.type !== 'touchmove' && !(e.buttons & 1)) return; // mouse not down
 
@@ -63,7 +65,7 @@
 	}
 
 	function format(seconds) {
-		if (isNaN(seconds)) return '...';
+		if (!isNumber(seconds)) return '...';
 
 		const minutes = Math.floor(seconds / 60);
 		seconds = Math.floor(seconds % 60);
@@ -94,6 +96,17 @@
         time=time+ (step *direction)
 		makeControlsVisible()
     }
+	function isNumber(x){
+		return !isNaN(x)   && isFinite(x)
+	}
+	function getProgress(time,duration){
+		if (isNumber(time)&& isNumber(duration) && duration){
+			return time / duration 
+		}
+		else{
+			return 0
+		}
+	}
 </script>
 
   <!--
@@ -117,7 +130,7 @@
 	</video>
 
 	<div class="controls" style="opacity: {duration && showControls ? 1 : 0}">
-		<progress value={time / duration || 0} />
+		<progress value={getProgress(time , duration )} />
 
 		<div class="info">
 			<span class="time overlay">{format(time)}</span>
