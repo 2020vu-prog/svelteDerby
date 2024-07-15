@@ -170,7 +170,7 @@
         let d=Date.parse(mediaItem.LastModified)
         const meta=extractS3VideoMeta(mediaItem.Key)
         if (meta&&meta.tgtTimeMs) {
-            //d=meta.tgtTimeMs
+            d=meta.tgtTimeMs
         }
 
 
