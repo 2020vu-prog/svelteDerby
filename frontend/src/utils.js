@@ -164,6 +164,16 @@ export function parseHeatPos(cp) {
     const heatLetter = cp.replace(/^[0-9]*/, "");
     return [heatNumber, heatLetter];
 }
+export function mmddyyFmt(at) {
+    var time = new Date(at);
+    return (
+        ("0" + time.getMonth()).slice(-2) +
+        "/" +
+        ("0" + time.getDate()).slice(-2) +
+        "/" +
+        ("0" + time.getFullYear()).slice(-2)
+    );
+}
 export function hhmmssFmt(at) {
     // var time = new Date(racePhase.lastUpdate);
     var time = new Date(at);

@@ -8,11 +8,17 @@
 	import Icon from "fa-svelte";
     import { faBackward } from "@fortawesome/free-solid-svg-icons/faBackward";
     import { faForward } from "@fortawesome/free-solid-svg-icons/faForward";
-	import { sleep,extractS3VideoMeta} from './utils.js'
+	import { sleep,
+		extractS3VideoMeta,
+		hhmmssFmt, 
+         mmddyyFmt,
+	
+	} from './utils.js'
 	import { tick } from 'svelte';
 //https://svelte.dev/examples/media-elements
 	// These values are bound to properties of the video
 	let time = 0;
+	let startFormatted=0
 	let tgtTimeSeconds=getTgtTimeSeconds()
 	let duration;
 	let paused = true;
@@ -26,6 +32,13 @@
 
 	function getTgtTimeSeconds(){
 		const meta=extractS3VideoMeta($videoHref)
+		if(meta && meta.tgtTimeMs){
+			startFormatted=
+				mmddyyFmt(meta.tgtTimeMs) +
+				" " +
+				hhmmssFmt(meta.tgtTimeMs)
+			log.debug(`tti2: ${startFormatted}`)
+		}
 		if(meta && meta.snipStart && meta.tgtTimeMs){
 			const tt= (meta.tgtTimeMs -meta.snipStart)/1000
 			log.debug(`tt: ${tt}`)
@@ -138,6 +151,11 @@
 		src="https://sveltejs.github.io/assets/caminandes-llamigos.mp4"
   -->
 
+  {#if startFormatted}
+	<h6>
+		{startFormatted}
+	</h6>
+  {/if}
 <div>
 	<video
 		src={$videoHref}

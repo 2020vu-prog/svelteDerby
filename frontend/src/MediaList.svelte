@@ -14,6 +14,7 @@
     import { doRefreshBlocks } from "./stores.js";
     import {
          hhmmssFmt, 
+         mmddyyFmt,
         isEmailAllowedRoutePath, 
         sleep ,
         extractS3VideoMeta,
@@ -166,22 +167,20 @@
     function getMediaMMDDYYHHMMSS(mediaItem) {
         log.debug("LMOD:", mediaItem.LastModified);
         log.debug("LMOD parsed:", Date.parse(mediaItem.LastModified));
+        let d=Date.parse(mediaItem.LastModified)
+        const meta=extractS3VideoMeta(mediaItem.Key)
+        if (meta&&meta.tgtTimeMs) {
+            //d=meta.tgtTimeMs
+        }
+
+
         return (
-            mmddyyFmt(Date.parse(mediaItem.LastModified)) +
+            mmddyyFmt(d)+
             " " +
-            hhmmssFmt(Date.parse(mediaItem.LastModified))
+            hhmmssFmt(d)
         );
     }
-    function mmddyyFmt(at) {
-        var time = new Date(at);
-        return (
-            ("0" + time.getMonth()).slice(-2) +
-            "/" +
-            ("0" + time.getDate()).slice(-2) +
-            "/" +
-            ("0" + time.getFullYear()).slice(-2)
-        );
-    }
+
 
     function getDisplayName(key) {
         const meta=extractS3VideoMeta(key)
