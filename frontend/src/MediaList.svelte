@@ -12,7 +12,12 @@
 
     import SpinnerButton from "./SpinnerButton.svelte";
     import { doRefreshBlocks } from "./stores.js";
-    import { hhmmssFmt, isEmailAllowedRoutePath, sleep } from "./utils.js";
+    import {
+         hhmmssFmt, 
+        isEmailAllowedRoutePath, 
+        sleep ,
+        extractS3VideoMeta,
+        } from "./utils.js";
     import { onMount } from "svelte";
     import {
         axios,
@@ -179,6 +184,11 @@
     }
 
     function getDisplayName(key) {
+        const meta=extractS3VideoMeta(key)
+        if (meta&&(meta.perspective||meta.timerName)) {
+            return `${meta.timerName} ${meta.perspective}`
+        }
+
         if (linkFrom == ALL_PREFIX) {
             //This is the list all media screen. Show a slightly more detailed path.
             return key.replace("media/" + $raceConfig.orgId + "/", "");

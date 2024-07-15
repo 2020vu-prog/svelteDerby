@@ -91,31 +91,7 @@
             }
         });
     }
-    function clickedCalcCapture() {
-        const lo=Date.now()-60000
-        const hi=lo+1500
-        const sMatch=findSnipMatch(lo,hi)
-        if(sMatch){
 
-            const oldSnip=sMatch
-            const hhmmss = hhmmssFmt(oldSnip.snipStart);
-            const key=`${oldSnip.snipStart}-TestCalc`;
-            captureSpinning = true
-            doUploadToServer(oldSnip, key) 
-        }
-        else{
-            log.debug("VCALC: no eligible snippets")
-        }
-    }
-    function clickedAgingCapture() {
-        if(videoSnipHistory.length>2){
-            const oldSnip=videoSnipHistory[0];
-            const hhmmss = hhmmssFmt(oldSnip.snipStart);
-            const key=`${oldSnip.snipStart}-TestAge`;
-            captureSpinning = true
-            doUploadToServer(oldSnip, key) 
-        }
-    }
     async function handleRemoteRequest(json){
         const tag = "handleRemoteRequest";
         //const json=JSON.parse(jsonString)
@@ -158,6 +134,7 @@
             const hhmmss = hhmmssFmt(oldSnip.snipStart);
             const key=`${oldSnip.snipStart}-TestRmt`;
             captureSpinning = true
+            oldSnip.tgtTimeMs=json.tgtTimeMs
             doUploadToServer(oldSnip, json.prefix) 
         }else{
 
@@ -168,6 +145,9 @@
 
         }
     }
+    function nowFloor(){
+        return Math.floor(Date.now()/5000)*5000
+    }   
     async function clickedRequestCapture() {
         if(!timerName){
             $statusMessage = {
@@ -187,7 +167,7 @@
         try {
             const endPoint = "/requestVideoUpload";
             const req = {
-                tgtTimeMs:Date.now()+10000,
+                tgtTimeMs:nowFloor()+5000,
                 timerName: timerName,
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
@@ -254,7 +234,45 @@
         deferredCapture(`${now}-TestClick`);
     }
 
-    async function doUploadToServer(videoSnip, uploadKey) {
+    function embedMeta(uploadKey,videoSnip){
+        let tgtTimeMs=videoSnip.tgtTimeMs
+        if(! tgtTimeMs){
+            const m=/\d\d\d\d+/.exec(uploadKey);
+            log.debug(`infer tgtTime: ${JSON.stringify(m)}`)
+            if(m && m.length>0){
+                const candidate=parseInt(m[0])
+                if (candidate>=videoSnip.snipStart
+                && candidate<=videoSnip.snipEnd){
+                    tgtTimeMs=candidate
+                }
+            }
+        }
+        // LANDMINE!!
+        // . s3 upload works with long fname/url,
+        // but mediaconvert job submit FAILS when ss3 url too long :-(
+        // . limit approx 256 chars?!?!?!
+        const meta={
+               // perspective: $videoPerspective,
+                p: $videoPerspective,
+                //snipStart: videoSnip.snipStart,
+                ss: videoSnip.snipStart,
+                //snipEnd: videoSnip.snipEnd,
+                se: videoSnip.snipEnd,
+                tt: tgtTimeMs,
+                n : timerName,
+        }
+        const metaJson=JSON.stringify(meta)
+        const metaEnc=encodeURIComponent(metaJson)
+        log.debug(`metaEnc: ${metaEnc}`)
+        const regex = /%/gi;
+        const metaEnc2=metaEnc.replaceAll(regex,'_')
+        log.debug(`metaEnc2: ${metaEnc2}`)
+
+        //return $videoPerspective
+        return `__${metaEnc2}__`
+
+    }
+    async function doUploadToServer(videoSnip, uploadKey ){
         const videoDataBlob=new Blob(videoSnip.snipVideoData)
         $statusMessage = {
             text: `Beginning upload. ${uploadKey}`,
@@ -268,7 +286,9 @@
                 $videoPerspective=uuidv4().substring(0, 5);
             }
             const req = {
-                key: `${uploadKey}_${$videoPerspective}.webm`,
+                key: `${uploadKey}_${embedMeta(uploadKey, videoSnip)}.webm`,
+                //snipStart: videoSnip.snipStart,
+                //snipEnd: videoSnip.snipEnd,
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
             };
@@ -594,25 +614,7 @@ placeholder="Overhead"
     Capture&Upload
 </SpinnerButton>
 <br/>
-<!--
 
-<SpinnerButton
-    on:click={clickedAgingCapture}
-    spinning={captureSpinning}
-    disabled={captureDisabled}
->
-    Upload oldest [{oldestSnipHHMMSS}]
-</SpinnerButton>
-<br/>
-<SpinnerButton
-    on:click={clickedCalcCapture}
-    spinning={captureSpinning}
-    disabled={captureDisabled}
->
-    Upload Calculated
-</SpinnerButton>
-<br/>
- -->
 <SpinnerButton
     on:click={clickedRequestCapture}
     spinning={remoteeSpinning}

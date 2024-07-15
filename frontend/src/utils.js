@@ -513,3 +513,25 @@ function fmtChartOrigin(cjp,originHeat){
     return `[${r}]Heat[${originHeat}]`
 
 }
+export function extractS3VideoMeta(key) {
+    const m=/__(_7B.*_7D)__/.exec(key);
+    if (m&&m.length>1){
+        log.debug(`found meta: ${m[1]}`)
+        const metaJson=decodeURIComponent(m[1].replaceAll(/_/ig,'%'))
+
+        log.debug(`found metaJson: ${metaJson}`)
+        if (metaJson){
+            const meta=JSON.parse(metaJson)
+            meta.perspective=meta.p
+            meta.timerName=meta.n
+            meta.snipEnd=meta.se
+            meta.snipStart=meta.ss
+            meta.tgtTimeMs=meta.tt
+
+            if(!meta.perspective){meta.perspective=''}
+            if(!meta.timerName){meta.timerName=''}
+            return meta
+        }
+    }
+    return undefined
+}

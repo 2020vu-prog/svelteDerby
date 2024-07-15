@@ -3,16 +3,20 @@
 	    import log from "loglevel";
 	import {
         videoHref,
+		developerMode,
     } from "./stores.js";
 	import Icon from "fa-svelte";
     import { faBackward } from "@fortawesome/free-solid-svg-icons/faBackward";
     import { faForward } from "@fortawesome/free-solid-svg-icons/faForward";
-	import { sleep} from './utils.js'
+	import { sleep,extractS3VideoMeta} from './utils.js'
+	import { tick } from 'svelte';
 //https://svelte.dev/examples/media-elements
 	// These values are bound to properties of the video
 	let time = 0;
+	let tgtTimeSeconds=getTgtTimeSeconds()
 	let duration;
 	let paused = true;
+	let video
 
 	let showControls = true;
 	let showControlsTimeout;
@@ -20,6 +24,17 @@
 	// Used to track time of last mouse down event
 	let lastMouseDown;
 
+	function getTgtTimeSeconds(){
+		const meta=extractS3VideoMeta($videoHref)
+		if(meta && meta.snipStart && meta.tgtTimeMs){
+			const tt= (meta.tgtTimeMs -meta.snipStart)/1000
+			log.debug(`tt: ${tt}`)
+			time=tt
+			return tt
+
+		}
+		return 0
+	}
 	function makeControlsVisible(){
 		// Make the controls visible, but fade out after
 		// 2.5 seconds of inactivity
@@ -107,6 +122,14 @@
 			return 0
 		}
 	}
+	async function seekToFinish(){
+		video.pause();
+		time=0
+		await tick()
+		time=tgtTimeSeconds;
+		makeControlsVisible()
+		
+	}
 </script>
 
   <!--
@@ -125,6 +148,7 @@
 		bind:currentTime={time}
 		bind:duration
 		bind:paused
+		bind:this={video}
 	>
 		<track kind="captions" />
 	</video>
@@ -154,6 +178,12 @@
         </span>
         &nbsp;
         &nbsp;
+		{#if tgtTimeSeconds}
+		<img alt="flag" 
+			on:click={seekToFinish}
+			src="data/checkered-flag-svgrepo-com.svg" 
+			width="25px" />
+		{/if}
         &nbsp;
         &nbsp;
         &nbsp;
@@ -170,7 +200,10 @@
                         />
             <p></p>
         </span>
-
+		{#if $developerMode}
+		<br/>
+		  Offset: {tgtTimeSeconds}
+		{/if}
 <style>
 	div {
 		position: relative;
