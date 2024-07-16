@@ -54,6 +54,7 @@
     var videoBitsPerSecond = "1000000";
     const tag = "CaptureVideo";
     var snipAgeSeconds = 300
+    var snipLengthSeconds=6
     var timerSelectMode="normal"
     $:{ if(recordSpinning){
             timerSelectMode="disabled"
@@ -361,7 +362,16 @@
             };
             return;
         }
+        if( snipLengthSeconds >12 || snipLengthSeconds <4 ){
+       
+            $statusMessage = {
+                text: `Snip length s/b 4<->12.`,
+                type: "error",
+            };
+            return;
+        }
 
+        showAdvanced=false
         const snum = 0;
         recordSpinning = true;
         const constraints = {
@@ -401,7 +411,8 @@
         recordStream(stream, 1);
         mainStream = stream;
 
-        timerHandle = setInterval(myTimer, 2500);
+        // 2 concurrent recording sessions.  end each at half desired length
+        timerHandle = setInterval(myTimer, Math.floor((snipLengthSeconds*1000)/2));
     }
     var videoRefreshCount = 0;
 
@@ -584,6 +595,11 @@
     bind:value={snipAgeSeconds}
     type="number" />
 </label>
+<label>Snippet length (seconds)
+    <input 
+        bind:value={snipLengthSeconds}
+        type="number" />
+    </label>
 {/if}
 <label>Perspective
 <input bind:value={$videoPerspective}
