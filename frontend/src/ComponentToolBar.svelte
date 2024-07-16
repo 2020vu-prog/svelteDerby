@@ -1,6 +1,14 @@
 <script>
     import log from "loglevel";
 
+    import { 
+        Button, 
+        Modal,
+        ModalBody,
+        ModalFooter,
+        ModalHeader ,
+    } from 'sveltestrap';
+
     import { theme, driverMap } from "./stores.js";
     import { axios, raceConfig, statusMessage, userEmail } from "./stores.js";
 
@@ -13,12 +21,19 @@
 
     export let dbName;
     export let dbKey;
+    let modalDeleteTgtName='none'
     export let timerLink;
     export let bracketLink;
     export let cn;
 
     const mediaLink = `/spMediaList/${dbName}/${dbKey}`;
     const elapsedLink = `/RpElapsed/${dbKey}`;
+    let modalOpen = false;
+  const modalToggle = () => (modalOpen = !modalOpen);
+  function deleteConfimed(){
+    modalToggle()
+    doDelete(dbName, dbKey, modalDeleteTgtName);
+  }
     onMount(async () => {
         log.debug("timerLink: ", timerLink);
         log.debug("bracketLink: ", bracketLink);
@@ -32,23 +47,18 @@
         log.debug("toolbar maybeDelete key", dbName, dbKey);
         const tgt = await db[dbName].get(dbKey);
         log.debug("toolbar maybeDelete tgt", tgt);
-        var tgtName = "";
         if (dbName === "RacePhase") {
-            tgtName = "Blocks";
+            modalDeleteTgtName = "Blocks";
         } else if (dbName === "RaceStanding" && tgt.ph2) {
-            tgtName = "B-Phase";
+            modalDeleteTgtName = "B-Phase";
         } else if (dbName === "RaceStanding" && tgt.ph1) {
-            tgtName = "A-Phase";
+            modalDeleteTgtName = "A-Phase";
         } else if (dbName === "RaceStanding") {
-            tgtName = "Pending";
+            modalDeleteTgtName = "Pending";
         }
-        // used to test "invalid request"
         //tgtName = `${tgtName}X`
-        if (tgtName) {
-            var result = confirm(`Proceed with [${tgtName}] delete? `);
-            if (result) {
-                doDelete(dbName, dbKey, tgtName);
-            }
+        if (modalDeleteTgtName) {
+            modalOpen=true
         }
     }
 
@@ -194,6 +204,20 @@
     }
 </style>
 
+<div style="color:black">
+
+
+<Modal isOpen={modalOpen} toggle={modalToggle} fullscreen>
+    <ModalHeader toggle={modalToggle}>Confirm delete?</ModalHeader>
+      <ModalBody>
+        Proceed with [{modalDeleteTgtName}] delete? 
+      </ModalBody>
+      <ModalFooter>
+        <Button color="primary" on:click={deleteConfimed}>Delete</Button>
+        <Button color="secondary" on:click={modalToggle}>Cancel</Button>
+      </ModalFooter>
+    </Modal>
+  </div>
 <div class="navbar" id="myNavbar" style="z-index:20">
     {#if timerLink && isManualTimerAllowed()}
         <span
