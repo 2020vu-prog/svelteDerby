@@ -15,11 +15,12 @@
 	
 	} from './utils.js'
 	import { tick } from 'svelte';
+	import { onMount } from "svelte";
 //https://svelte.dev/examples/media-elements
 	// These values are bound to properties of the video
 	let time = 0;
 	let startFormatted=0
-	let tgtTimeSeconds=getTgtTimeSeconds()
+	let tgtTimeSeconds=0
 	let duration;
 	let paused = true;
 	let video
@@ -29,9 +30,16 @@
 
 	// Used to track time of last mouse down event
 	let lastMouseDown;
+	onMount(async () => {
+        log.warn("mounting media");
+		setTgtTimeSeconds()
+		seekToFinish()
+    });
 
-	function getTgtTimeSeconds(){
+	function setTgtTimeSeconds(){
 		const meta=extractS3VideoMeta($videoHref)
+		tgtTimeSeconds=0
+
 		if(meta && meta.tgtTimeMs){
 			startFormatted=
 				mmddyyFmt(meta.tgtTimeMs) +
@@ -43,10 +51,9 @@
 			const tt= (meta.tgtTimeMs -meta.snipStart)/1000
 			log.debug(`tt: ${tt}`)
 			time=tt
-			return tt
+			tgtTimeSeconds=tt
 
 		}
-		return 0
 	}
 	function makeControlsVisible(){
 		// Make the controls visible, but fade out after
