@@ -92,10 +92,14 @@
                 };
             }
         } catch (e) {
+            log.debug('caught err:',e)
+            /*
+            our axios looks to be doing this...
             $statusMessage = {
-                text: response.data.error,
+                text: e,
                 type: "error",
             };
+            */
         }
     }
 
