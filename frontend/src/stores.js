@@ -70,6 +70,7 @@ export const developerLogging = persistable("pref:developerLogging");
 export const enableFractionalMs = persistable("pref:enableFractionalMs", false);
 export const defaultPhaseType = persistable("pref:defaultPhaseType", "R");
 export const videoCaptureCodec = persistable("pref:videoCaptureCodec", "vp8");
+export const videoClientTimeAdjustmentMs = persistable("pref:videoClientTimeAdjustmentMs", -1800);
 export const videoHref = writable("");
 export const lastSplash = persistable("pref:lastSplash", 0);
 export const videoPerspective = persistable("pref:videoPerspective");

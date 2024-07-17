@@ -11,6 +11,7 @@
         isIos,
         videoPerspective,
         videoCaptureCodec,
+        videoClientTimeAdjustmentMs
     } from "./stores.js";
 
     import {
@@ -108,8 +109,9 @@
             log.error(`${tag}: INVALID`);
             return
         }
-        const lo=json.tgtTimeMs-500
-        const hi=json.tgtTimeMs+500
+        const tgtAdjMs=json.tgtTimeMs+$videoClientTimeAdjustmentMs
+        const lo=tgtAdjMs-500
+        const hi=tgtAdjMs+500
         const futureHi=(hi - Date.now())+5000
         if (futureHi>0){ //wait for video capture if hi is 'now-ish' or future
             $statusMessage = {
@@ -138,7 +140,7 @@
             const hhmmss = hhmmssFmt(oldSnip.snipStart);
             const key=`${oldSnip.snipStart}-TestRmt`;
             captureSpinning = true
-            oldSnip.tgtTimeMs=json.tgtTimeMs
+            oldSnip.tgtTimeMs=tgtAdjMs
             doUploadToServer(oldSnip, json.prefix) 
         }else{
 
@@ -624,7 +626,12 @@
     <input 
         bind:value={snipLengthSeconds}
         type="number" />
-    </label>
+</label>
+<label>Client time adjustment (milliseconds)
+    <input 
+        bind:value={$videoClientTimeAdjustmentMs}
+        type="number" />
+</label>
 {/if}
 <label>Perspective
 <input bind:value={$videoPerspective}
