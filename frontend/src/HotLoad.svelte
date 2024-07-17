@@ -103,6 +103,7 @@
 
     }
     function resetMqtt(){
+        log.debug('resetMqtt')
         activeIotWatch = {
             errors:[],
             topic:{},
@@ -704,12 +705,19 @@
     const pendingAudioList = [];
 
     watchMqttSubscriptions();
-    onMount(async () => {
+    onMount( () => {
+        onMountAsync()
+        return () => {
+            log.debug("HotLoad unmount");
+            resetMqtt()
+        };
+    });
+    async function onMountAsync(){
         pageLoadTimeMs = new Date().getTime();
         ecFromDexie = await db.EventConfig.toArray();
         mounted = true;
         checkIfRaceFrozenAndDisplayMessage();
-    });
+    }
     function watchMqttSubscriptions() {
         log.debug("syncMap HotLoad watchMqttSubscriptions. 0");
         const interval = setInterval(function () {
