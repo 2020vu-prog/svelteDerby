@@ -289,7 +289,7 @@ async function requestIotVideoUploadByRP(tgtRp){
         orgIz:tgtRp.orgIz,
         tgtTimeMs:tgtTimeMs,
         timerName,
-        prefix: `RP-${tgtRp.SK}-Finish`,
+        prefix: `RP-${tgtRp.SK}`,
     }
     await requestIotVideoUploadRaw(vr)
 }
@@ -301,7 +301,10 @@ async function requestIotVideoUploadRaw(videoRequest){
                 endpoint: process.env.IotEndpoint,
             });
         }
-        const payload = { ...videoRequest};
+        const payload = { 
+            ...videoRequest,
+            issuedMs:Date.now(),
+        };
         const params = {
             topic: `derby/${videoRequest.orgId}/video/${videoRequest.timerName}`,
             payload: JSON.stringify(payload),
@@ -1398,7 +1401,7 @@ const routeMap = {
                 timerName:qsp.timerName,
                 tgtTimeMs:parseInt(qsp.tgtTimeMs),
                 //prefix: `${qsp.orgId}-${qsp.tgtTimeMs}-TestUpload-${qsp.timerName}`,
-                prefix: `${qsp.tgtTimeMs}-TestRequest-${qsp.timerName}`,
+                prefix: `${qsp.tgtTimeMs}-TestRemote`,
             }
 
             await requestIotVideoUploadRaw(vr)
@@ -1437,7 +1440,10 @@ const routeMap = {
             var signedUrl = s3.getSignedUrl("putObject", params);
             log.debug("For params:", params, " The signed URL is", signedUrl);
 
-            return buildResponse({ signedUrl: signedUrl });
+            return buildResponse({ 
+                signedUrl: signedUrl,
+                issuedMs:Date.now(),
+            });
         },
     },
     "/manageDiscord": {

@@ -534,9 +534,10 @@ export function extractS3VideoMeta(key) {
             const meta=JSON.parse(metaJson)
             meta.perspective=meta.p
             meta.timerName=meta.n
-            meta.snipEnd=meta.se
             meta.snipStart=meta.ss
-            meta.tgtTimeMs=meta.tt
+            if(meta.lMs) meta.snipEnd=meta.lMs+meta.snipStart
+            if(meta.tt) meta.tgtTimeMs=meta.tt //deprecated
+            if(meta.toMs)meta.tgtTimeMs=meta.toMs +meta.snipStart
 
             if(!meta.perspective){meta.perspective=''}
             if(!meta.timerName){meta.timerName=''}

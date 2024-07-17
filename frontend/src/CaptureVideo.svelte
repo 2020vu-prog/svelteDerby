@@ -96,7 +96,10 @@
     async function handleRemoteRequest(json){
         const tag = "handleRemoteRequest";
         //const json=JSON.parse(jsonString)
-            log.debug(`${tag}: invoked: ${JSON.stringify(json)}`);
+        log.debug(`${tag}: invoked: ${JSON.stringify(json)}`);
+
+        auditClientTime(json.issuedMs,tag)
+
         if(!json.tgtTimeMs){
             log.error(`${tag}: INVALID`);
             return
@@ -258,8 +261,8 @@
                 //snipStart: videoSnip.snipStart,
                 ss: videoSnip.snipStart,
                 //snipEnd: videoSnip.snipEnd,
-                se: videoSnip.snipEnd,
-                tt: tgtTimeMs,
+                lMs: videoSnip.snipEnd-videoSnip.snipStart,
+                toMs: tgtTimeMs-videoSnip.snipStart,
                 n : timerName,
         }
         const metaJson=JSON.stringify(meta)
@@ -273,7 +276,12 @@
         return `__${metaEnc2}__`
 
     }
+    function auditClientTime(issuedMs,tag){
+        const offset=issuedMs - Date.now()
+        log.debug(`auditClientTime ${tag}: ${offset}`)
+    }
     async function doUploadToServer(videoSnip, uploadKey ){
+        const tag='doUploadToServer'
         const videoDataBlob=new Blob(videoSnip.snipVideoData)
         $statusMessage = {
             text: `Beginning upload. ${uploadKey}`,
@@ -297,6 +305,9 @@
                 params: req,
             });
             log.debug("requestS3PutObjectUrl response", response);
+            if (response.data.issuedMs) {
+                auditClientTime(response.data.issuedMs,tag)
+            }
             if (response.data.signedUrl) {
                 const options = {
                     headers: {
@@ -372,6 +383,7 @@
         }
 
         showAdvanced=false
+        hidePreview=false
         const snum = 0;
         recordSpinning = true;
         const constraints = {
@@ -546,14 +558,27 @@
             log.debug("handleTimerSelect set:", timerId);
         }
     }
+    let videoDisplay=''
+    let hidePreview=false
+    $:{
+        if(hidePreview){
+            videoDisplay="display:none"
+        }else{
+            videoDisplay=""
+        }
+    }
 </script>
 
 <h1>Capture Video</h1>
 
-<video id="gum0" playsinline autoplay muted />
+<video style={videoDisplay} id="gum0" playsinline autoplay muted />
+<label>
+    Hide Preview:
+    <input class="big" type="checkbox" bind:checked={hidePreview} />
+</label>
 <label>
     Advanced:
-    <input type="checkbox" bind:checked={showAdvanced} />
+    <input class="big" type="checkbox" bind:checked={showAdvanced} />
 </label>
 
 {#if showAdvanced}
