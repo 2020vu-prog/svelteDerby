@@ -736,6 +736,7 @@
                 text: `Audio queueing.`,
                 type: "success",
             };
+            await tick(); // duplicate msgs??
             log.debug(`announceFromMqtt path: ${path}`);
             queueAudio(path);
         } else {
