@@ -4,6 +4,9 @@
     import { createEventDispatcher } from "svelte";
     import { theme } from "./stores.js";
     import { onMount } from "svelte";
+    import { longpress } from './utilActions.js';
+
+
     import CirclesSvg from './CirclesSvg.svelte'
     export let disabled = false;
     export let spinning = false;
@@ -24,6 +27,10 @@
     }
 
     const dispatch = createEventDispatcher();
+    function doPress() {
+        log.debug("SpinnerButton: longpress.");
+        dispatch("press");
+    }
     function doClick() {
         dispatch("click");
     }
@@ -44,6 +51,8 @@
     bind:this={thisButton}
     type="button"
     on:click={doClick}
+    use:longpress
+    on:longpress={doPress}
 >
     <slot />
     {#if spinning}

@@ -22,6 +22,7 @@
         recentRefreshMs,
         mqttPsUrlMap,
         reRenderHotLoad,
+        developerMode,
     } from "./stores.js";
     //import { mqtt } from "mqtt";
     import * as mqtt from "mqtt";
@@ -39,6 +40,7 @@
     const { v4: uuidv4 } = require("uuid");
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
+    const uuidConst = uuidv4();
     let mqClient = "";
     var pageLoadTimeMs = 0;
     const nextPhaseTopic = "nextPhase";
@@ -357,14 +359,10 @@
         log.debug("onVoiceMqttData: begin:", json);
         announceFromMqtt(json);
     }
-    let lastClick=0
     async function potentialDoubleClickReloadPage() {
         log.debug("potentialDoubleClickReloadPage: begin");
-        const thresh2Secs = 2 * 1000;
-        const now = new Date().getTime();
-        if (now < lastClick + thresh2Secs) {
             $statusMessage = {
-                text: `Reloading page, please Wait.`,
+                text: `Refreshing token, please Wait.`,
                 type: "success",
             }
 
@@ -373,9 +371,10 @@
             expirePsUrl()
             log.debug("potentialDoubleClickReloadPage: fired");
             //recentRefreshMs window.location.reload();
-            $reRenderHotLoad=Date.now()
-        }
-            lastClick=now
+
+            // install our uuid to requests reload.
+            // --limits request to once per instance
+            $reRenderHotLoad=uuidConst 
     }
     function expirePsUrl(){
         $mqttPsUrlMap.expires=2
@@ -713,6 +712,11 @@
         };
     });
     async function onMountAsync(){
+        /*
+        document.addEventListener("contextmenu", function (e){
+            e.preventDefault();
+        }, false);
+        */
         pageLoadTimeMs = new Date().getTime();
         ecFromDexie = await db.EventConfig.toArray();
         mounted = true;
@@ -732,6 +736,9 @@
     }
 
     async function announceFromMqtt(mqMsg) {
+        const qid=$developerMode?uuidConst:"";
+
+        log.debug("announceFromMqtt qid: ",  qid);
         log.debug("announceFromMqtt: ", mqMsg);
         log.debug(`announceFromMqtt: ${mqMsg}`, mqMsg);
         log.debug(`announceFromMqtt already parsed?: ${mqMsg.outputUri}`);
@@ -741,7 +748,7 @@
         if (mediaMatch && mediaMatch[0]) {
             const path = mediaMatch[0];
             $statusMessage = {
-                text: `Audio queueing.`,
+                text: `Audio queueing.${qid}`,
                 type: "success",
             };
             await tick(); // duplicate msgs??
@@ -805,8 +812,12 @@
         log.debug("tattle :", msg, pendingAudioList.length);
     }
     function doRefreshClicked(){
-        potentialDoubleClickReloadPage();
+        //potentialDoubleClickReloadPage();
         doRefreshViaHttp();
+
+    }
+    function doRefreshPressed(){
+        potentialDoubleClickReloadPage();
 
     }
     const doRefreshViaHttp = async () => {
@@ -940,6 +951,7 @@
 {:else}
     <SpinnerButton
         on:click={doRefreshClicked}
+        on:press={doRefreshPressed}
         spinning={refreshInProgressButton ||
             refreshInProgressMq ||
             refreshInProgressCca}
