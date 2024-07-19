@@ -51,7 +51,7 @@
     bind:this={thisButton}
     type="button"
     on:click={doClick}
-    use:longpress
+    use:longpress={1500}
     on:longpress={doPress}
 >
     <slot />
