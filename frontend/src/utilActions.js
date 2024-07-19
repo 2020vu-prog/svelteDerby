@@ -13,11 +13,11 @@ export function longpress(node, threshold = 500) {
 		
 		const cancel = () => {
 			clearTimeout(timeout);
-			node.removeEventListener('mousemove', cancel);
+			//node.removeEventListener('mousemove', cancel);
 			node.removeEventListener('mouseup', cancel);
 		};
 		
-		node.addEventListener('mousemove', cancel);
+		//node.addEventListener('mousemove', cancel);
 		node.addEventListener('mouseup', cancel);
 	}
 	
