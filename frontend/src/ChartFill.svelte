@@ -9,6 +9,8 @@
         selectedDriverList,
         selectedDriverMap,
     } from "./stores.js";
+    import prand from 'pure-rand';
+
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -33,29 +35,26 @@
         await refreshDataFromDb();
         await getChartIsEmpty();
     });
-    function getShaCars(seed, carList) {
-        var rc = [];
-        var shaMap = {};
-        log.debug("getShaCars: Begin:", seed);
-
-        carList.forEach((carNumber) => {
-            const seededCar = "" + carNumber + ":" + seed;
-            const sha = crypto
-                .createHash("sha256")
-                .update(seededCar)
-                .digest("hex");
-            shaMap[sha] = carNumber;
-        });
-        var shaKeys = Object.keys(shaMap);
-        shaKeys.sort();
-
-        shaKeys.forEach((shaKey) => {
-            const nextCar = shaMap[shaKey];
-            log.debug("getShaCars: ", nextCar, " shaKey:", shaKey);
-            rc.push(nextCar);
-        });
-        return rc;
+    function getPrngCars(seed, carList){
+        log.debug(`ChartFill getPrngCars ${seed} input: `, carList);
+        const g = prand.xoroshiro128plus(seed);
+        const rand = (min, max) => {
+            return prand.unsafeUniformIntDistribution(min, max, g);
+        };
+        fisherYates(carList, rand);
+        log.debug(`ChartFill getPrngCars ${seed}  gave: `, carList);
     }
+    function fisherYates(data, rand) {
+  // for i from n−1 downto 1 do
+  //j ← random integer such that 0 ≤ j ≤ i
+  //exchange a[j] and a[i]
+  for (let i = data.length - 1; i >= 1; --i) {
+    const j = rand(0, i); // such that 0 ≤ j ≤ i
+    const tmp = data[j];
+    data[j] = data[i];
+    data[i] = tmp;
+  }
+}
     async function fillRandom() {
         const fillMap = {};
         if ($selectedDriverList.length == 0) {
@@ -72,7 +71,10 @@
         }
 
         log.debug("ChartFill filling: ", params);
-        const loadMe = getShaCars(new Date().getTime(), $selectedDriverList);
+        log.debug("ChartFill cars0: ", $selectedDriverList);
+        getPrngCars(chartBmdSeed, $selectedDriverList);
+        getPrngCars(new Date().getTime(), $selectedDriverList);
+        const loadMe = [...$selectedDriverList]
         log.debug("ChartFill fill order: ", loadMe);
         seeds.forEach((seed) => {
             const heat = seed.slice(0, -1); //'abcde'
@@ -101,6 +103,7 @@
         for (const heat of Object.keys(fillMap).reverse()) {
             await handleSubmit(heat, fillMap[heat]);
             piePercent = (++currentPiePart / numPieParts) * 100;
+            await sleep(100);
         }
         await sleep(1500);
         pieShowing = false;
@@ -128,6 +131,7 @@
         log.debug("chartFill: updateBoundVars gave:", chartForm);
         chartForm.name = bmdFromDexie.bracketName;
         chartForm.id = bmdFromDexie.SK;
+        chartBmdSeed=bmdFromDexie.at
     };
 
     async function getChartIsEmpty() {
@@ -180,6 +184,7 @@
     }
 
     const chartForm = { name: undefined };
+    let chartBmdSeed=42
 </script>
 
 <h3>Fill Chart [Initial Seeds]</h3>
@@ -215,13 +220,14 @@
         <p />
         Chart already loaded.
     {/if}
-    {#each seeds as seed}
-        <Card class="mt-3 border border-info">
-            <CardBody>{seed}</CardBody>
-        </Card>
-    {/each}
 
     {#if pieShowing}
         <PieProgress pieTitle="AutoFill Progress" {piePercent} />
+    {:else}
+        {#each seeds as seed}
+            <Card class="mt-3 border border-info">
+                <CardBody>{seed}</CardBody>
+            </Card>
+        {/each}
     {/if}
 </form>
