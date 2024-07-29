@@ -71,10 +71,17 @@
         }
 
         log.debug("ChartFill filling: ", params);
-        log.debug("ChartFill cars0: ", $selectedDriverList);
-        getPrngCars(chartBmdSeed, $selectedDriverList);
-        getPrngCars(new Date().getTime(), $selectedDriverList);
         const loadMe = [...$selectedDriverList]
+
+        const prngSeedList=[
+            42,
+            chartBmdSeed,
+            new Date().getTime(),
+        ]
+        for (const prngSeed of prngSeedList) {
+            getPrngCars(prngSeed, loadMe);
+        }
+        
         log.debug("ChartFill fill order: ", loadMe);
         seeds.forEach((seed) => {
             const heat = seed.slice(0, -1); //'abcde'
@@ -178,7 +185,7 @@
                 };
             }
         } catch (err) {
-            pieShowing = false;
+            //pieShowing = false;
             log.debug("addChartPosition failed: " + err);
         }
     }
@@ -214,7 +221,7 @@
                 Fill Chart With [{$selectedDriverList.length}] Drivers
             </SpinnerButton>
             <p />
-            Selected: {$selectedDriverList}
+            Selected: {$selectedDriverList.join(', ')}
         {/if}
     {:else}
         <p />
