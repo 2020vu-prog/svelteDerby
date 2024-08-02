@@ -10,7 +10,7 @@ function shaSeed(pseed){
                 .createHash("sha256")
                 .update(pseed+'')
                 .digest("hex");
-	const shaNum=parseInt(sha.substring(0, 16),16)
+	const shaNum=parseInt(sha.substring(0, 14),16)
         log.debug(`shaSeed ${pseed} sha: ${sha} `);
         log.debug(`shaSeed ${pseed} shaNum: ${shaNum} `);
 	//return Math.floor(shaNum);
@@ -18,7 +18,7 @@ function shaSeed(pseed){
 }
     function getPrngCars(seed, carList){
         log.debug(`ChartFill getPrngCars ${seed} input: `, carList);
-	seed=shaSeed(seed)
+        //seed=shaSeed(seed)
         const g = prand.xoroshiro128plus(seed);
         const rand = (min, max) => {
             return prand.unsafeUniformIntDistribution(min, max, g);
@@ -50,18 +50,18 @@ function dumpJson(l) {
 }
 
     function t1(pseed) {
-	const cars=10
+        const cars=10
 
-	const loadMe= [...Array(cars).keys()]
+        const loadMe= [...Array(cars).keys()]
         const prngSeedList=[
-            pseed-Math.floor(Math.random() *60000),
+            //pseed-Math.floor(Math.random() *60000),
             pseed,
-            (pseed-700) ^ (Math.random() * 0x100000000),
-            pseed ^ (Math.random() * 0x100000000),
-	    4,
-            (Math.random() * 0x100000000),
-            (Math.random() * 0x100000000),
-	    42,43,44,
+           // (pseed-700) ^ (Math.random() * 0x100000000),
+            //pseed ^ (Math.random() * 0x100000000),
+	    //4,
+        //Date.now() ^ (Math.random() * 0x100000000),
+            //(Math.random() * 0x100000000),
+	    //42,43,44,
         ]
         for (const prngSeed of prngSeedList) {
             getPrngCars(prngSeed, loadMe);
