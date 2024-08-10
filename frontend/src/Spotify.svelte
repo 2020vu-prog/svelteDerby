@@ -3,11 +3,16 @@
     import { onDestroy } from "svelte";
     import log from "loglevel";
     import { spotifyApiReady} from "./stores.js";
+    import { createEventDispatcher } from 'svelte'
+  const dispatch = createEventDispatcher()
     let spotifyLoaded=true
     let isMounted=false
     let gController=""
     export let href;
     export let autoPlay=false;
+    export const ppause = () => console.log("pause child");
+    export const pplay = () => console.log("play child");
+
     onMount(async () => {
         log.info("mounting");
         isMounted=true

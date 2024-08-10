@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
 
-    import Spotify from "./Spotify.svelte";
+    import Walkup from "./Walkup.svelte";
     import { raceConfig, statusMessage, driverMap, axios } from "./stores.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
@@ -85,4 +85,4 @@
 <button on:click={doTestAnnouncement}>Test Announcement</button>
 <button on:click={doResetPolly}>Reset Polly Bot</button>
 
-<Spotify/>
+<Walkup/>
