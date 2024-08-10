@@ -13,6 +13,7 @@
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import { stringify as csvStringify} from 'csv-stringify/lib/sync';
     import { parse as csvParse } from 'csv-parse/lib/sync';
+    import Spotify from "./Spotify.svelte";
 
 
     import Icon from "fa-svelte";
@@ -146,8 +147,8 @@
         document.getElementById("driverJsonFileTag").click();
     }
     const csvXref=[
-        ['CarNumber','ShortName','Sponsor','Notes','PhoneticType','PhoneticName'],
-        ['number','name','spon','notes','pType','pName'],
+        ['CarNumber','ShortName','Sponsor','Notes','PhoneticType','PhoneticName','WalkupLink'],
+        ['number','name','spon','notes','pType','pName','wLink'],
 
     ]
     function getCsvXrefAsMap(){
@@ -209,6 +210,7 @@
         driverForm.carSponsor = ptcpFromDexie.spon;
         driverForm.carNotes = ptcpFromDexie.notes;
         driverForm.sampa = ptcpFromDexie.sampa;
+        driverForm.walkupLink = ptcpFromDexie.wLink;
     };
     async function handleSubmit() {
         log.debug(`handleSubmit: ${mode}` + JSON.stringify(driverForm));
@@ -222,6 +224,7 @@
             notes: driverForm.carNotes,
             pName: driverForm.pName,
             pType: driverForm.pType ? driverForm.pType : undefined,
+            wLink: driverForm.walkupLink,
         };
 
         const newPtcp = driverForm.carNumber;
@@ -408,6 +411,15 @@
             .
         </p>
     {/if}
+    <label>
+        Walk up Spotify link
+        <input
+            id="walkUp"
+            type="text"
+            bind:value={driverForm.walkupLink}
+            placeholder="Walkup Link"
+        />
+    </label>
     <SpinnerButton on:click={requestSpeech} spinning={speakSpinning}>
         Speak
     </SpinnerButton>
@@ -444,3 +456,9 @@
         </div>
     {/if}
 </form>
+
+{#if driverForm.walkupLink}
+    {#key driverForm.walkupLink}
+        <Spotify autoPlay=false href={driverForm.walkupLink}/>
+    {/key}
+{/if}

@@ -586,7 +586,7 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     }
 };
 entityFactories["Participant"] = class Participant extends EntityBase {
-    static members = ["name", "number", "pName", "pType","spon","notes"];
+    static members = ["name", "number", "pName", "pType","spon","notes","wLink"];
     static eid = ":PTCP";
     static canBuild(json) {
         return json.PK && json.PK.endsWith(ParticipantEid);
@@ -605,6 +605,12 @@ entityFactories["Participant"] = class Participant extends EntityBase {
     }
     get classKey() {
         return this.SK;
+    }
+    set walkupLink(wLink) {
+        return (this.wLink = wLink);
+    }
+    get walkupLink() {
+        return this.wLink;
     }
     set phoneticName(pName) {
         return (this.pName = pName);

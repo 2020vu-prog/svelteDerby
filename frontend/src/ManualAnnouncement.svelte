@@ -1,11 +1,10 @@
 <script>
     import log from "loglevel";
 
+    import Spotify from "./Spotify.svelte";
     import { raceConfig, statusMessage, driverMap, axios } from "./stores.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
-
-    //import axios from "axios";
     async function doAnnounce() {
         if (!announceText) {
             return;
@@ -85,3 +84,5 @@
 <br />
 <button on:click={doTestAnnouncement}>Test Announcement</button>
 <button on:click={doResetPolly}>Reset Polly Bot</button>
+
+<Spotify/>

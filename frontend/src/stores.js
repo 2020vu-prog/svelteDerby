@@ -87,6 +87,7 @@ export const autoAnnounceResults = persistable(
     "pref:autoAnnounceResults",
     false
 );
+export const spotifyApiReady = writable(false); //only loads once globally
 export const mqttMapSubscribe = writable({}); //requests to subscribe.  keyed by topic
 export const mqttMapData = writable({}); //subscription data.  keyed by topic.
 export const mqttTimerSubscribe = writable(false);
