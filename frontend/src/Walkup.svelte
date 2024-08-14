@@ -3,7 +3,8 @@
 
     import { tick } from 'svelte';
 
-    import { racePhaseMap, nextOnBlockKey, mp3Playing, statusMessage } from "./stores.js";
+    import { racePhaseMap, nextOnBlockKey, mp3Playing } from "./stores.js";
+    import { persistable } from "./storedb.js";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { sleep } from "./utils.js";
@@ -13,11 +14,12 @@
     let playingHref=''
     let playSpotify
     let pauseSpotify
+    let playWalkup=persistable("pref:playWalkup", false)
     $:{
         potentialPlay($nextOnBlockKey)
     }
     $:{
-                mayToggleSpotify($mp3Playing,requestedHref)
+        mayToggleSpotify($mp3Playing,requestedHref)
     }
    function mayToggleSpotify(mp3Playing,requestedHref) {
             log.debug(`walkup: mayToggleSpotify [${requestedHref}] [${playingHref}]`)
@@ -69,11 +71,15 @@
 </script>
 <br />
 
+<label>
+    Play Walkup:&nbsp;
+    <input class="big" type="checkbox" bind:checked={$playWalkup} />
+</label>
 {#if playSpotify}
 <button on:click={playSpotify}>Play</button>
 <button on:click={pauseSpotify}>Pause</button>
 {/if}
-{#if playingHref}
+{#if playingHref && $playWalkup}
     {#key playingHref}
         <Spotify 
             autoPlay=false 
