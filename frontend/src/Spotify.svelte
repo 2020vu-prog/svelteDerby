@@ -10,8 +10,19 @@
     let gController=""
     export let href;
     export let autoPlay=false;
-    export const ppause = () => console.log("pause child");
-    export const pplay = () => console.log("play child");
+    export const ppause = () => {
+        if(gController){
+                gController.pause()
+        }
+        console.log("spotify pause child");
+    }
+
+    export const pplay = () => {
+        if(gController){
+                gController.play()
+        }
+        console.log("spotify play child");
+    }
 
     onMount(async () => {
         log.info("mounting");
@@ -59,7 +70,6 @@
                 }
                 //EmbedController.loadUri('spotify:episode:7makk4oTQel546B0PZlDM5');
                 const bib='https://open.spotify.com/track/08mG3Y1vljYA6bvDt4Wqkj?si=a2f3f0d6d08b4a35'
-                const podcast="https://open.spotify.com/embed/track/2DnJjbjNTV9Nd5NOa1KGba?utm_source=generator"
                 const vain="https://open.spotify.com/track/2DnJjbjNTV9Nd5NOa1KGba?si=07ae100fdc0e4f49"
                 const piano='https://open.spotify.com/track/70C4NyhjD5OZUMzvWZ3njJ?si=cf36bf7d9f48402c'
                 const jdg='https://open.spotify.com/track/2ZXsvL9DO2MPv43Ay1IxgR?si=f3142885f0294713'
@@ -83,9 +93,7 @@
                 go=href
                 EmbedController.loadUri(go);
 
-                setTimeout(()=>{
-                    EmbedController.pause();
-                }, 30000)
+
 
 
 
@@ -104,3 +112,4 @@
 </svelte:head>
 
 <iframe id="embed-iframe" style="border-radius:12px" src={href} width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+

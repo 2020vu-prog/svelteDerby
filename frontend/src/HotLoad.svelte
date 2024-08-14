@@ -23,6 +23,7 @@
         mqttPsUrlMap,
         reRenderHotLoad,
         developerMode,
+        mp3Playing,
     } from "./stores.js";
     //import { mqtt } from "mqtt";
     import * as mqtt from "mqtt";
@@ -776,6 +777,10 @@
         }
     }
     var audioPlaying = false;
+    $:{
+        $mp3Playing= audioPlaying
+
+    }
     var lastPlayed = "";
     function getNextAudio() {
         while (pendingAudioList.length > 0) {

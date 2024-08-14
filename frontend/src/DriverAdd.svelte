@@ -27,6 +27,8 @@
     var submitSpinning = false;
     var speakSpinning = false;
     var allowDriverJson = false;
+    let doPlay=false
+
     onMount(async () => {
         log.debug("mounted focus: ", params);
 
@@ -430,6 +432,16 @@
     >
         {mode}
     </SpinnerButton>
+    {#if driverForm.walkupLink}
+    <SpinnerButton on:click={()=>doPlay=true}>
+        Play
+    </SpinnerButton>
+    {/if}
+    {#if doPlay&& driverForm.walkupLink}
+        {#key driverForm.walkupLink}
+            <Spotify autoPlay=false href={driverForm.walkupLink}/>
+        {/key}
+    {/if}
     {#if allowDriverJson}
         <br />
         <br />
@@ -457,8 +469,3 @@
     {/if}
 </form>
 
-{#if driverForm.walkupLink}
-    {#key driverForm.walkupLink}
-        <Spotify autoPlay=false href={driverForm.walkupLink}/>
-    {/key}
-{/if}
