@@ -414,7 +414,13 @@
         </p>
     {/if}
     <label>
-        Walk up Spotify link
+        <a
+                target="_blank"
+                href="https://open.spotify.com/"
+        >
+            Walk up Spotify link
+        </a>
+
         <input
             id="walkUp"
             type="text"
