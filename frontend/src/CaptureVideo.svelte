@@ -1,6 +1,6 @@
 <script>
     import log from "loglevel";
-
+    import Walkup from "./Walkup.svelte";
     import { onMount, onDestroy } from "svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
     import {
@@ -674,3 +674,4 @@ placeholder="Overhead"
 <br/>
 <br/>
 <br/>
+<Walkup/>
