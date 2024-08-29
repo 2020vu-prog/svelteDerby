@@ -18,6 +18,7 @@
     let fullscreen = true;
     const toggle = () => (open = !open);
     onMount(() => {
+        setTimeout(()=>{open=false}, 10000);
         //open=true
     });
 </script>
