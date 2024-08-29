@@ -235,7 +235,7 @@
             pattern="\d*"
             inputmode="numeric"
             bind:value={carNumberForm.car1}
-            placeholder="Car 1"
+            placeholder="Lane 1"
             id="cn1"
             on:keyup={() => {
                 changeFocus(carNumberForm.car1, "A");
@@ -251,7 +251,7 @@
             pattern="\d*"
             inputmode="numeric"
             bind:value={carNumberForm.car2}
-            placeholder="Car 2"
+            placeholder="Lane 2"
             id="cn2"
             on:keyup={() => {
                 changeFocus(carNumberForm.car2, "B");
