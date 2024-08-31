@@ -166,8 +166,9 @@ export function parseHeatPos(cp) {
 }
 export function mmddyyFmt(at) {
     var time = new Date(at);
+    const month1=time.getMonth()+1
     return (
-        ("0" + time.getMonth()).slice(-2) +
+        ("0" + month1).slice(-2) +
         "/" +
         ("0" + time.getDate()).slice(-2) +
         "/" +
