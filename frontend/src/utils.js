@@ -54,7 +54,29 @@ export async function fmtChartPosition(RpRs) {
     if (RpRs.pt && RpRs.pt.startsWith("F")) {
         return ["Fun Run", pendingNeeded];
     }
+    if (RpRs.pt && RpRs.pt.startsWith("B")) {
+        return ["Bye Run", pendingNeeded];
+    }
     return ["Heat: Adhoc", pendingNeeded];
+}
+export function getRaceTypeEmoji(i){
+    const trialRunEmoji = "⚗️";
+    const hotRunEmoji = "🔥";
+    const funRunEmoji = "😊";
+    const byeRunEmoji = "👋";
+    if (i === "H") {
+        return hotRunEmoji;
+    }
+    if (i === "F") {
+        return funRunEmoji;
+    }
+    if (i === "T") {
+        return trialRunEmoji;
+    }
+    if (i === "B") {
+        return byeRunEmoji;
+    }
+    return ""
 }
 export function isPendingNeeded(RpRs) {
     if (RpRs.pt && RpRs.pt.startsWith("H")) {
@@ -64,6 +86,9 @@ export function isPendingNeeded(RpRs) {
         return false;
     }
     if (RpRs.pt && RpRs.pt.startsWith("F")) {
+        return false;
+    }
+    if (RpRs.pt && RpRs.pt.startsWith("B")) {
         return false;
     }
     return true;

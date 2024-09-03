@@ -24,6 +24,7 @@
         hhmmssFmt,
         getHistoryEntity,
         isPendingNeeded,
+        getRaceTypeEmoji,
     } from "./utils.js";
     export let compressedLayout;
     export let refreshTime;
@@ -101,19 +102,11 @@
         return phaseWinTime.toString().padStart(3, "0");
     };
     const getPhaseClass = (racePhase) => {};
-    const trialRunEmoji = "⚗️";
-    const hotRunEmoji = "🔥";
-    const funRunEmoji = "😊";
+
     const getPhaseIcon = (racePhase) => {
         const i = _getPhaseIcon(racePhase);
-        if (i === "H") {
-            return hotRunEmoji;
-        }
-        if (i === "F") {
-            return funRunEmoji;
-        }
-        if (i === "T") {
-            return trialRunEmoji;
+        if(getRaceTypeEmoji(i)){
+           return getRaceTypeEmoji(i)
         }
         return i;
     };

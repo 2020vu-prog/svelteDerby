@@ -361,6 +361,9 @@ class AnnounceResults {
         if (pt.startsWith("H")) {
             return `is a Hot Run`;
         }
+        if (pt.startsWith("B")) {
+            return `is a Bye Run`;
+        }
         return "Unknown Phase Type";
     }
     expandDigitsForSpeech(cn) {

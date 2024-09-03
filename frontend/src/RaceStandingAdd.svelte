@@ -12,7 +12,11 @@
     } from "./stores.js";
     import { onMount, tick } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
-    import { participantValid, participantFocusCompletion } from "./utils.js";
+    import { 
+        participantValid,
+        participantFocusCompletion,
+        getRaceTypeEmoji,
+    } from "./utils.js";
 
     export let params = {};
     log.debug("RaceStandingAdd", params);
@@ -26,6 +30,7 @@
         T: { type: "Trial Run" },
         F: { type: "Fun Run" },
         H: { type: "Hot Run" },
+        B: { type: "Bye Run" },
         //H1: { type: "Lane1 Hot Run", disabledLane: 2 },
         //T1: { type: "Lane1 Trial Run", disabledLane: 2 },
         //F1: { type: "Lane1 Fun Run", disabledLane: 2 },
@@ -266,6 +271,8 @@
         spinning={submitSpinning}
         focused={submitFocused}
     >
-        Add
+        {getRaceTypeEmoji(carNumberForm.promptPhaseType)}
+        Add 
+        {getRaceTypeEmoji(carNumberForm.promptPhaseType)}
     </SpinnerButton>
 </form>

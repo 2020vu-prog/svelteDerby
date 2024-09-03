@@ -410,6 +410,9 @@ entityFactories["RacePhase"] = class RacePhase extends EntityBase {
         if (this.pt && this.pt.startsWith("F")) {
             return false;
         }
+        if (this.pt && this.pt.startsWith("B")) {
+            return false;
+        }
         return true;
     }
     isWinner(lane, shouldWinOnTie) {
