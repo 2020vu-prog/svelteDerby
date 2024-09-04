@@ -54,7 +54,7 @@ export async function fmtChartPosition(RpRs) {
     if (RpRs.pt && RpRs.pt.startsWith("F")) {
         return ["Fun Run", pendingNeeded];
     }
-    if (RpRs.pt && RpRs.pt.startsWith("B")) {
+    if (RpRs.pt && RpRs.pt.startsWith("Y")) {
         return ["Bye Run", pendingNeeded];
     }
     return ["Heat: Adhoc", pendingNeeded];
@@ -73,24 +73,29 @@ export function getRaceTypeEmoji(i){
     if (i === "T") {
         return trialRunEmoji;
     }
-    if (i === "B") {
+    if (i === "Y") {
         return byeRunEmoji;
     }
     return ""
 }
+export function isPendingNeededForType(pt) {
+    //log.debug(`isPendingNeededForType ${pt}`)
+    if (!pt){
+        return true
+    }
+    if ( pt.startsWith("H") ){ return false;}
+    if ( pt.startsWith("T") ){ return false;}
+    if ( pt.startsWith("F") ){ return false;}
+    if ( pt.startsWith("B") ){ return false;}
+    
+    //return false
+    return true
+}
 export function isPendingNeeded(RpRs) {
-    if (RpRs.pt && RpRs.pt.startsWith("H")) {
-        return false;
+    if (RpRs.pt){
+        return isPendingNeededForType(RpRs.pt)
     }
-    if (RpRs.pt && RpRs.pt.startsWith("T")) {
-        return false;
-    }
-    if (RpRs.pt && RpRs.pt.startsWith("F")) {
-        return false;
-    }
-    if (RpRs.pt && RpRs.pt.startsWith("B")) {
-        return false;
-    }
+
     return true;
 }
 
@@ -571,4 +576,9 @@ export function extractS3VideoMeta(key) {
         }
     }
     return undefined
+}
+export function getEntityFactory(){
+    const entityFactory = new EntityFactory({});
+    return entityFactory
+
 }

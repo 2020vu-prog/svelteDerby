@@ -53,6 +53,9 @@ export const userExp = derived(userJwtStore, ($bearer) => {
 export const roleMap = persistable("roleMap", {});
 
 export const theme = persistable("pref:themeBg", "#4CAF50");
+/**
+ * @deprecated with pushStatusMessage()
+ */
 export const statusMessage = writable({});
 export const clearOldStatusMessages = writable(false);
 export const prefStore = writable({ initial: 1, disableCache: 2 });

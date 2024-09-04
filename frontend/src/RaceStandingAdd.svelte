@@ -2,6 +2,7 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
+    import AuditBlocks from "./AuditBlocks.svelte";
     import {
         raceConfig,
         driverMap,
@@ -19,7 +20,10 @@
     } from "./utils.js";
 
     export let params = {};
-    log.debug("RaceStandingAdd", params);
+    const mode=params.type
+    const modeRaceStanding='RaceStanding'
+    const modeRacePhase='RacePhase'
+    log.debug("RaceStandingAdd", params, mode);
     var mounted = false;
     var submitFocused = false;
     var submitDisabled = true;
@@ -30,7 +34,7 @@
         T: { type: "Trial Run" },
         F: { type: "Fun Run" },
         H: { type: "Hot Run" },
-        B: { type: "Bye Run" },
+        Y: { type: "Bye Run" },
         //H1: { type: "Lane1 Hot Run", disabledLane: 2 },
         //T1: { type: "Lane1 Trial Run", disabledLane: 2 },
         //F1: { type: "Lane1 Fun Run", disabledLane: 2 },
@@ -72,6 +76,11 @@
         log.debug("mounted type:", params.type);
         title = unMapType("title");
         document.getElementById("cn1").focus();
+        if(mode===modeRacePhase){
+            carNumberForm.promptPhaseType= $defaultPhaseType
+
+        }
+    
         mounted = true;
     });
     function changeFocus(carNumber, seedIdentifier) {
@@ -157,8 +166,7 @@
     function sleep(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
-    const carNumberForm = {
-        promptPhaseType: $defaultPhaseType,
+    let carNumberForm = {
     };
     function syncAddButton(advanceFocusToSubmit) {
         if (!mounted) {
@@ -215,7 +223,7 @@
 <h3>{title}</h3>
 
 <form>
-    {#if unMapType("endPoint") == "/addBlocks"}
+    {#if mode==modeRacePhase}
         <h4>
             Blocks are 
             <strong style="background-color: {blocksOccupied ? '#FF0000' : 'lightgreen'}">
@@ -265,6 +273,10 @@
         />
         <p>{getDriverName(carNumberForm.car2)}</p>
     </label>
+    {#if mode==modeRacePhase}
+        <AuditBlocks carNumberForm={carNumberForm} />
+        <br/>
+    {/if}
     <SpinnerButton
         disabled={submitDisabled}
         on:click={handleSubmit}

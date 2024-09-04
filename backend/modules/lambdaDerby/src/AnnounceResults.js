@@ -361,7 +361,7 @@ class AnnounceResults {
         if (pt.startsWith("H")) {
             return `is a Hot Run`;
         }
-        if (pt.startsWith("B")) {
+        if (pt.startsWith("Y")) {
             return `is a Bye Run`;
         }
         return "Unknown Phase Type";

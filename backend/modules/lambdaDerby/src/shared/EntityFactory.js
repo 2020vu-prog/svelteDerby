@@ -401,16 +401,16 @@ entityFactories["RacePhase"] = class RacePhase extends EntityBase {
         return (this.pt = pt);
     }
     get pendingNeeded() {
-        if (this.pt && this.pt.startsWith("H")) {
+        if (this.pt && this.pt.startsWith("H")) { //hot run
             return false;
         }
-        if (this.pt && this.pt.startsWith("T")) {
+        if (this.pt && this.pt.startsWith("T")) { //trial run
             return false;
         }
-        if (this.pt && this.pt.startsWith("F")) {
+        if (this.pt && this.pt.startsWith("F")) { //fun run
             return false;
         }
-        if (this.pt && this.pt.startsWith("B")) {
+        if (this.pt && this.pt.startsWith("Y")) { //bye run
             return false;
         }
         return true;
