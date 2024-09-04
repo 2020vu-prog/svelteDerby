@@ -83,10 +83,10 @@ export function isPendingNeededForType(pt) {
     if (!pt){
         return true
     }
-    if ( pt.startsWith("H") ){ return false;}
-    if ( pt.startsWith("T") ){ return false;}
-    if ( pt.startsWith("F") ){ return false;}
-    if ( pt.startsWith("B") ){ return false;}
+    if ( pt.startsWith("H") ){ return false;} //hot run
+    if ( pt.startsWith("T") ){ return false;} //trial run
+    if ( pt.startsWith("F") ){ return false;} //fun run
+    if ( pt.startsWith("Y") ){ return false;} //bye run
     
     //return false
     return true

@@ -237,7 +237,10 @@
             on:change={() => potentialDisableCars()}
         >
             {#each Object.keys(PhaseTypes) as pt}
-                <option value={pt}>{PhaseTypes[pt].type}</option>
+                <option value={pt}>
+                    {getRaceTypeEmoji(pt)}
+                    {PhaseTypes[pt].type}
+                </option>
             {/each}
         </select>
         <p />
