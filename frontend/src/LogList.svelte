@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
     export let msgs=[];
-    const showDebug=false
+    let showDebug=false
 
     function getMsgEmoji(msg){
         let lvl=msg.level
@@ -25,9 +25,13 @@
 
     }
 </script>
+<span 
+    on:click={() => showDebug=!showDebug}
+>
 {#each msgs as msg (msg.msg)}
     {#if showDebug || msg.level > log.levels.DEBUG}
         {getMsgEmoji(msg)} {msg.msg}
         <br/>
     {/if}
 {/each}
+</span>

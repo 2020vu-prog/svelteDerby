@@ -14,6 +14,7 @@
     import { statusMessage, raceConfig, axios } from "./stores";
     import { getTimerPbConfig ,secondsToHHMMSS} from "./utils.js";
     import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
+    import LogList from "./LogList.svelte";
 
     export let timerName;
     export let timerId;
@@ -161,6 +162,7 @@
                 }
             }
         }
+        buildMsgs(recentHealth)
     }
     function cToF(x) {
         if (x) {
@@ -203,6 +205,93 @@
             return "Unknown";
         }
     }
+    let msgs=[]
+    function msgCpuTemp(msgs,recentHealth){
+        let ll=log.levels.ERROR
+        if(recentHealth.cpuTempC <60){
+            ll= log.levels.WARN
+        }
+        if(recentHealth.cpuTempC <50){
+            ll= log.levels.INFO
+        }
+        msgs.push({msg: `CPU Temp: ${recentHealth.tempFmt}`,level: ll})
+    }
+    function msgFsOverlay(msgs,recentHealth){
+        const ll=recentHealth.overlayFsEnabled?log.levels.INFO:log.levels.WARN
+        msgs.push({msg: `OverlayFS: ${recentHealth.overlayFsEnabled}`,level: ll})
+
+    }
+
+    function msgChronyPPS(msgs,recentHealth){
+
+        const ll=recentHealth.chronyUsingPps?log.levels.DEBUG:log.levels.ERROR
+        msgs.push({msg: `Chrony PPS: ${recentHealth.chronyUsingPps}`,level: ll})
+    }
+    function msgCpuIdle(msgs,recentHealth){
+        if(! recentHealth.cpuIdlePercent){
+            return
+        }
+        const cpuLoad=100 - recentHealth.cpuIdlePercent
+        const ll=cpuLoad<25?log.levels.DEBUG:log.levels.WARN
+
+        msgs.push({msg: `CPU Load: ${cpuLoad}%`,level: ll})
+
+    }
+
+    function msgGpsAll(msgs,recentHealth){
+
+        msgs.push({msg:`GPS enabled: ${timerPbConfig.useGpsTime }`,level: log.levels.INFO})
+        let ll=log.levels.DEBUG
+        if(timerPbConfig.useGpsTime){
+            ll=log.levels.INFO
+        }
+        if (recentHealth.gpsInitialAcquisitionSecondsAfterBoot){
+            msgs.push({msg: `Gps Acquistion delay: ${secondsToHHMMSS(recentHealth.gpsInitialAcquisitionSecondsAfterBoot)}`,level: ll})
+            const m=`Gps Total Uptime: ${secondsToHHMMSS(
+                        recentHealth.gpsUptimeTotal
+                    )}
+                    (${getUptimePct(recentHealth)})
+                    `
+            msgs.push({msg: m,level: ll})
+            msgs.push({msg: `Gps Recent Uptime: ${secondsToHHMMSS(recentHealth.gpsUptimeContiguous)}`,level: ll})
+            msgs.push({msg: `Gps Flutter: ${recentHealth.gpsFlutter}`,level: ll})
+            msgs.push({msg: `Gps PPS: ${recentHealth.gpsEmittingPps}`,level: ll})
+        }else{
+            if(timerPbConfig.useGpsTime){
+                msgs.push({msg: `Gps Not yet acquired`,level: log.levels.ERROR})
+            }else{
+                msgs.push({msg: `Gps Not yet acquired`,level: log.levels.INFO})
+
+            }
+        }
+    }
+    function buildMsgs(recentHealth){
+        msgs=[]
+        msgs.push({msg: `Timer Id: ${timerId}`,level: log.levels.INFO})
+        msgs.push({msg: `Last Status: ${secondsToHHMMSS(recentHealth.ageSeconds)} seconds ago`,level: log.levels.INFO})
+        msgCpuTemp(msgs,recentHealth)
+        const m=`CPU Uptime: ${secondsToHHMMSS( recentHealth.cpuIncrementingUptime)}`
+        msgs.push({msg: m,level: log.levels.INFO})
+        msgCpuIdle(msgs,recentHealth)
+
+
+
+        msgGpsAll(msgs,recentHealth)
+        msgChronyPPS(msgs,recentHealth)
+        msgs.push({msg: `Free Mem: ${recentHealth.ramFreeKB} KB`,level: log.levels.INFO})
+        msgs.push({msg: `SSID: ${recentHealth.ssid}`,level: log.levels.INFO})
+        msgs.push({msg: `IP: ${recentHealth.wifiIP}`,level: log.levels.INFO})
+        msgs.push({msg: `Rss: ${recentHealth.wifiRss}`,level: log.levels.INFO})
+        msgs.push({msg: `Xmit Credits: ${recentHealth.xmitCredits}`,level: log.levels.INFO})
+        msgs.push({msg: `mqtt Connections: ${recentHealth.mqttConnections}`,level: log.levels.INFO})
+        msgs.push({msg: `Timer GitHash: ${fmtGitHash()}`,level: log.levels.INFO})
+        msgs.push({msg: `Timer Build: ${fmtVersionStamp()}`,level: log.levels.INFO})
+        msgFsOverlay(msgs,recentHealth)
+
+
+
+        msgs=msgs
+    }
 </script>
 
 <div>
@@ -222,54 +311,6 @@
         {/if}
     </Button>
     <Collapse isOpen={open} {toggle}>
-        <ul>
-            <li>Timer Id: {timerId}</li>
-            <li>
-                Last Status: {secondsToHHMMSS(recentHealth.ageSeconds)} seconds ago
-            </li>
-            <li>CPU Temp: {recentHealth.tempFmt}</li>
-            <li>
-                CPU Uptime: {secondsToHHMMSS(
-                    recentHealth.cpuIncrementingUptime
-                )}
-            </li>
-            {#if recentHealth.cpuIdlePercent}
-                <li>
-                    CPU Load: {100 - recentHealth.cpuIdlePercent}%
-                </li>
-            {/if}
-            {#if recentHealth.gpsInitialAcquisitionSecondsAfterBoot}
-                <li>
-                    Gps Acquistion delay: {secondsToHHMMSS(
-                        recentHealth.gpsInitialAcquisitionSecondsAfterBoot
-                    )}
-                </li>
-                <li>
-                    Gps Total Uptime: {secondsToHHMMSS(
-                        recentHealth.gpsUptimeTotal
-                    )}
-                    ({getUptimePct(recentHealth)})
-                </li>
-                <li>
-                    Gps Recent Uptime: {secondsToHHMMSS(
-                        recentHealth.gpsUptimeContiguous
-                    )}
-                </li>
-                <li>Gps Flutter: {recentHealth.gpsFlutter}</li>
-                <li>Gps PPS: {recentHealth.gpsEmittingPps}</li>
-            {:else}
-                <li>Gps Not yet acquired</li>
-            {/if}
-            <li>Chrony PPS: {recentHealth.chronyUsingPps}</li>
-            <li>Free Mem: {recentHealth.ramFreeKB} KB</li>
-            <li>SSID: {recentHealth.ssid}</li>
-            <li>IP: {recentHealth.wifiIP}</li>
-            <li>Rss: {recentHealth.wifiRss}</li>
-            <li>Xmit Credits: {recentHealth.xmitCredits}</li>
-            <li>mqtt Connections: {recentHealth.mqttConnections}</li>
-            <li>Timer GitHash: {fmtGitHash()}</li>
-            <li>Timer Build: {fmtVersionStamp()}</li>
-            <li>OverlayFS: {recentHealth.overlayFsEnabled}</li>
-        </ul>
+        <LogList {msgs}/>
     </Collapse>
 </div>
