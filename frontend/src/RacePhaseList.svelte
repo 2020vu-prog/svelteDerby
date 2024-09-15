@@ -55,6 +55,15 @@
             .filter((rp) => filterMatchesX(rp, lclFilter, nobKey))
             .slice(0, $uiPageSize);
     }
+    function getKey (at,i,nobKey){
+        if(i==0){
+            //re-render first entry when nob changes.
+            // (should fix intermmittent gray nob color)
+            return (at+':'+nobKey)
+        }else{
+            return at+''
+        }
+    }
 </script>
 
 <style>
@@ -68,8 +77,8 @@
     </h4>
 </div>
 
-{#each phaseList as item (item.at)}
-    {#key item.at}
+{#each phaseList as item ,i (item.at)}
+    {#key getKey(item.at,i,$nextOnBlockKey)}
         <RacePhase
             refreshTime={$doRefreshBlocks}
             phaseKey={item.classKey}
