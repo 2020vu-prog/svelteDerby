@@ -164,6 +164,23 @@
             return activeTimer.hostname;
         }
     }
+    let currentViewMode='Active'
+    function isCurrentViewActive(){
+        return currentViewMode === "Active"
+    }
+    function getInactiveMode(ignoredParamater) {
+        return isCurrentViewActive() ? "Offline" : "Active";
+    }
+    function shouldDisplay(currentViewMode,activeTimer){
+        if (activeTimer.disconnectAt) {
+            return !isCurrentViewActive()
+        }
+        if (activeTimer.connectAt) {
+            return isCurrentViewActive()
+        }
+        return false
+        
+    }
 </script>
 
 <h4>Timer Selection</h4>
@@ -174,6 +191,7 @@
     <br />
 {:else}
     {#each activeTimerList as activeTimer}
+        {#if shouldDisplay(currentViewMode,activeTimer) }
         <Card class="mt-3 border border-info">
             <CardBody style="background-color:{getBgColor(activeTimer)}">
                 <input
@@ -192,7 +210,12 @@
                 <br />
             </CardBody>
         </Card>
+        {/if}
     {/each}
+    <SpinnerButton on:click={() => (currentViewMode = getInactiveMode())}>
+        View {getInactiveMode(currentViewMode)} Timers
+    </SpinnerButton>
+    
     {#if activeTimerList.length == 0}
         <br />
         No Timers Found

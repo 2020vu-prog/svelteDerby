@@ -228,7 +228,7 @@
         msgs.push({msg: `Chrony PPS: ${recentHealth.chronyUsingPps}`,level: ll})
     }
     function msgCpuIdle(msgs,recentHealth){
-        if(! recentHealth.cpuIdlePercent){
+        if(undefined === recentHealth.cpuIdlePercent){
             return
         }
         const cpuLoad=100 - recentHealth.cpuIdlePercent

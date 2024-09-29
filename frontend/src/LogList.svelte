@@ -1,5 +1,6 @@
 <script>
     import log from "loglevel";
+    import WarningSvg from "./svg/warningSvg.svelte";
     export let msgs=[];
     let showDebug=false
 
@@ -16,7 +17,7 @@
             case log.levels.ERROR:
                 return "❌";
             case log.levels.WARN:
-                return "🟡";
+                return "⚠️";
             case log.levels.INFO:
                 //return "ℹ️";
                 return "️✅";
@@ -30,7 +31,12 @@
 >
 {#each msgs as msg (msg.msg)}
     {#if showDebug || msg.level > log.levels.DEBUG}
-        {getMsgEmoji(msg)} {msg.msg}
+        {#if msg.level == log.levels.WARN }
+            <WarningSvg/>
+        {:else}
+            {getMsgEmoji(msg)} 
+        {/if}
+        {msg.msg}
         <br/>
     {/if}
 {/each}
