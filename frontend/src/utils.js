@@ -20,9 +20,13 @@ import {
 } from "./stores.js";
 import { get } from "svelte/store";
 import { localConfigDb } from "./eventDb.js";
+import { location as spaLocation } from "svelte-spa-router";
 
 const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
+export function getSpaLocation(){
+    return get(spaLocation)
+}
 export async function getHistoryEntity(PK, SK, at) {
     const key = { PK: PK, SK: SK, at: at };
     log.debug("getHistoryEntity", key);

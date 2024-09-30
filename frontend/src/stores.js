@@ -8,7 +8,8 @@ const semver = require("semver");
 const { v4: uuidv4 } = require("uuid");
 import { persistable } from "./storedb.js";
 import { derived, writable, readable, get as getStore } from "svelte/store";
-import { buildVersion } from "./utils.js";
+import { buildVersion, getSpaLocation } from "./utils.js";
+import { replace} from "svelte-spa-router";
 
 function parseBool(val) {
     return val === true || val === "true";
@@ -181,6 +182,17 @@ axiosCommon.interceptors.response.use(
         }
         if (response.data.error) {
             log.debug("AINT 200 with error:", response);
+            if(response.data.error==="Unable to determine orgIz"){
+                log.debug("AINT current page is ", getSpaLocation());
+                if("/orgSelection"!==getSpaLocation()){
+                    statusMessage.set({
+                        text: "Please select event",
+                        type: "error",
+                    });
+                    replace("/orgSelection")
+                }
+
+            }
             statusMessage.set({
                 text: response.data.error,
                 type: "error",
