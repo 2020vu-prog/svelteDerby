@@ -54,10 +54,18 @@ export const userExp = derived(userJwtStore, ($bearer) => {
 export const roleMap = persistable("roleMap", {});
 
 export const theme = persistable("pref:themeBg", "#4CAF50");
+export function pushMessage(msg){
+    const sml=getStore(statusMessageList)
+    sml.push(msg)
+
+    statusMessageList.set(sml)
+}
 /**
  * @deprecated with pushStatusMessage()
  */
+
 export const statusMessage = writable({});
+export const statusMessageList = writable([]);
 export const clearOldStatusMessages = writable(false);
 export const prefStore = writable({ initial: 1, disableCache: 2 });
 export const doRefreshBlocks = writable(0);
@@ -185,7 +193,7 @@ axiosCommon.interceptors.response.use(
             if(response.data.error==="Unable to determine orgIz"){
                 log.debug("AINT current page is ", getSpaLocation());
                 if("/orgSelection"!==getSpaLocation()){
-                    statusMessage.set({
+                    pushMessage({
                         text: "Please select event",
                         type: "error",
                     });
@@ -193,7 +201,7 @@ axiosCommon.interceptors.response.use(
                 }
 
             }
-            statusMessage.set({
+            pushMessage({
                 text: response.data.error,
                 type: "error",
             });
@@ -211,7 +219,7 @@ axiosCommon.interceptors.response.use(
             userJwtStore.set(""); // whatever this was didn't work.
             originalRequest._retry = true;
             console.log("AC:refreshing");
-            statusMessage.set({
+            pushMessage({
                 text: "Renewing Credentials...",
                 key: axErrorKey,
             });
@@ -220,13 +228,13 @@ axiosCommon.interceptors.response.use(
             console.log(`AC: New Credentials... ${bt.length}`);
 
             if (bt && bt.length > 0) {
-                statusMessage.set({
+                pushMessage({
                     text: `Renewed Credentials... ${bt.length}`,
                     key: axErrorKey,
                     type: "success",
                 });
             } else {
-                statusMessage.set({
+                pushMessage({
                     text: `Renewal Failed. ${bt.length}`,
                     key: axErrorKey,
                 });
@@ -262,7 +270,7 @@ axiosCommon.interceptors.response.use(
         }
         if (response.data.error) {
             log.debug("AINT 200 with error:", response);
-            statusMessage.set({
+            pushMessage({
                 text: response.data.error,
                 type: "error",
             });
@@ -284,13 +292,13 @@ axiosCommon.interceptors.response.use(
         ) {
             log.debug("AINT2 error: ", JSON.stringify(error.response.data));
 
-            statusMessage.set({
+            pushMessage({
                 text: "ERR A12: " + error.response.data.message+ " "+ orUrl,
                 type: "error",
             });
             return Promise.reject(error.response.data);
         }
-        statusMessage.set({
+        pushMessage({
             text: "AINT failed3: " + error.message,
             type: "error",
         });

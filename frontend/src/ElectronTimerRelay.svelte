@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
     import { onMount } from "svelte";
-    import { axios, statusMessage, raceConfig } from "./stores.js";
+    import { axios, pushMessage, raceConfig } from "./stores.js";
 
     onMount(async () => {
         installTimerHook();
@@ -29,10 +29,10 @@
         } else if (timerResult.lane === "2") {
             phr = [winMicros, 0];
         } else {
-            $statusMessage = {
+            pushMessage( {
                 text: `Invalid Timer Lane ${timerResult.lane}`,
                 type: "error",
-            };
+            });
             return;
         }
         const req = {
@@ -51,15 +51,15 @@
             );
             if (response.data.error) {
                 log.debug("Timer post failed", response);
-                $statusMessage = {
+                pushMessage( {
                     text: response.data.error,
                     type: "error",
-                };
+                });
             } else {
                 log.debug(endPoint + " axios success");
-                $statusMessage = {
+                pushMessage( {
                     text: "Winning Time applied!",
-                };
+                });
             }
         } catch (err) {
             log.debug(endPoint + " failed: " + err);

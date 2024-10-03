@@ -12,7 +12,7 @@
         getChartCacheKey,
         driverMap,
         spinnerPanelBusy,
-        statusMessage,
+        pushMessage,
     } from "./stores.js";
     import { augmentChartState, sleep, getChartJson , filterMatches} from "./utils.js";
     import { tick } from "svelte";
@@ -125,11 +125,11 @@
             }
             
         }
-        $statusMessage = {
+        pushMessage( {
             text: `Filter Matched: ${count}`,
             type: "success",
             key: "filterMatchCount",
-        };
+        });
         roundMap=roundMap // republish with filter mods
         return newShown
     }

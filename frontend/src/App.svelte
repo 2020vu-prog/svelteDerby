@@ -63,7 +63,7 @@
         roleMap,
         developerLogging,
         developerMode,
-        statusMessage,
+        pushMessage,
         userId,
         carouselRun,
         carouselList,
@@ -293,10 +293,14 @@
         if ($userEmail){
             msg=`Logged in: [${$userEmail}]`
         }
-        $statusMessage = {
+        pushMessage( {
             text: msg,
             type: "success",
-        };
+        });
+        pushMessage( {
+            text: msg,
+            type: "success",
+        });
 
         isMounted = new Date().getTime();
     });
@@ -393,10 +397,10 @@
     };
     function onPageShow() {
         /*
-        $statusMessage = {
+        pushMessage( {
             text: `onPageShow`,
             type: "success",
-        };
+        });
         */
     }
 

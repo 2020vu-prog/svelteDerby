@@ -5,7 +5,7 @@
     import SpinnerButton from "./SpinnerButton.svelte";
     import {logout, sleep} from './utils.js'
     import {
-        statusMessage,
+        pushMessage,
         userExpCountDownSecs,
         userEmail,
         userId,

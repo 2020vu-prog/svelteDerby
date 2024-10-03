@@ -5,7 +5,7 @@
     import {
         axios,
         raceConfig,
-        statusMessage,
+        pushMessage,
         driverMap,
         enableFractionalMs,
     } from "./stores.js";
@@ -37,10 +37,10 @@
             return true; // skip edit if prefs allow
         }
         if (laneX.toString().includes(".")) {
-            $statusMessage = {
+            pushMessage( {
                 text: `Invalid Input: [${laneX}] (do not include decimal for time).`,
                 type: "error",
-            };
+            });
             return false;
         }
         return true;
@@ -86,10 +86,10 @@
             if (response.data.error) {
                 submitSpinning = false;
                 log.debug("add failed", response);
-                $statusMessage = {
+                pushMessage( {
                     text: response.data.error,
                     type: "error",
-                };
+                });
             } else {
                 log.debug(endPoint + " axios success");
                 pop();

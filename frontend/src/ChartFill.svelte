@@ -5,7 +5,7 @@
     import {
         axios,
         raceConfig,
-        statusMessage,
+        pushMessage,
         selectedDriverList,
         selectedDriverMap,
     } from "./stores.js";
@@ -63,10 +63,10 @@
         }
 
         if ($selectedDriverList.length > seeds.length) {
-            $statusMessage = {
+            pushMessage( {
                 text: `Selected [${$selectedDriverList.length}] drivers for a chart with only [${seeds.length}] seeds`,
                 type: "error",
-            };
+            });
             return;
         }
 
@@ -179,10 +179,10 @@
             );
             log.debug("addChartPosition axios success ", response);
             if (response.data.error) {
-                $statusMessage = {
+                pushMessage( {
                     text: response.data.error,
                     type: "error",
-                };
+                });
             }
         } catch (err) {
             //pieShowing = false;

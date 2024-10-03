@@ -6,7 +6,7 @@
     import {
         raceConfig,
         driverMap,
-        statusMessage,
+        pushMessage,
         nextOnBlockKey,
         axios,
         defaultPhaseType,
@@ -112,11 +112,11 @@
         const endPoint = unMapType("endPoint");
 
         if (endPoint == "/addBlocks" && blocksOccupied) {
-            $statusMessage = {
+            pushMessage( {
                 text:
                     "You cannot add a race to the blocks when the blocks are already occupied.",
                 type: "error",
-            };
+            });
             return;
         }
 
@@ -132,10 +132,10 @@
             pt: carNumberForm.promptPhaseType,
         };
         if (req.cn[0] === req.cn[1]) {
-            $statusMessage = {
+            pushMessage( {
                 text: `Car numbers must not match [${req.cn[0]}] [${req.cn[1]}]`,
                 type: "error",
-            };
+            });
             return;
         }
 

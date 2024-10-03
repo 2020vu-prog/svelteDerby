@@ -4,7 +4,7 @@
     import { tick } from 'svelte';
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { driverMap, axios, raceConfig, statusMessage } from "./stores.js";
+    import { driverMap, axios, raceConfig, pushMessage } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -35,12 +35,6 @@
         mode = params.number ? "Update" : "Add";
         document.getElementById("carNumber").focus();
         mounted = true;
-        /*
-        $statusMessage = {
-            text: `Ready to ${mode} Driver`,
-            type: "success",
-        };
-        */
         await refreshDataFromDb();
         syncAddButton();
         allowDriverJson = await isAllowedRoutePath(
@@ -128,10 +122,10 @@
                     },
                 }
             );
-            $statusMessage = {
+            pushMessage( {
                 text: `Driver json uploaded.`,
                 type: "success",
-            };
+            });
             pop();
         } catch (err) {
             log.debug("addBulk failed: " + err);
@@ -234,17 +228,17 @@
         submitSpinning = true;
         try {
             const response = await $axios.post(url, req);
-            $statusMessage = {
+            pushMessage( {
                 text: `Driver [${newPtcp}] Added.`,
                 type: "success",
-            };
+            });
             pop();
         } catch (error) {
             submitSpinning = false;
-            $statusMessage = {
+            pushMessage( {
                 text: "driverAdd failed: " + error,
                 type: "error",
-            };
+            });
             //log.debug("driverAdd failed: " + err)
         }
     }
@@ -310,20 +304,20 @@
         try {
             const response = await $axios.post(url, req);
             log.debug("speech: ", response);
-            $statusMessage = {
+            pushMessage( {
                 text: `Speech Processed.`,
                 type: "success",
-            };
+            });
             const audio = new Audio(`/${response.data.speechMp3}`);
             audio.onended = function () {
                 speakSpinning = false;
             };
             audio.play();
         } catch (error) {
-            $statusMessage = {
+            pushMessage( {
                 text: "speak failed: " + error,
                 type: "error",
-            };
+            });
             //log.debug("driverAdd failed: " + err)
         } finally {
         }

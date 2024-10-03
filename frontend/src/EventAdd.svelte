@@ -2,7 +2,7 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { axios, raceConfig, setCacheKey, statusMessage } from "./stores.js";
+    import { axios, raceConfig, setCacheKey, pushMessage } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     const { v4: uuidv4 } = require("uuid");
@@ -56,10 +56,10 @@
             .post($raceConfig.baseUrl + postPath, req)
             .then((response) => {
                 log.debug("addEventConfig axios success");
-                $statusMessage = {
+                pushMessage( {
                     text: `Event [${params.mode}] Complete.`,
                     type: "success",
-                };
+                });
                 if (params.mode === "Add") {
                     setCacheKey(new Date().getTime()); // force disable cache to expose new event on local browser.
                     pop();

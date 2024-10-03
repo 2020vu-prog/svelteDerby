@@ -2,7 +2,7 @@
     import log from "loglevel";
 
     import Walkup from "./Walkup.svelte";
-    import { raceConfig, statusMessage, driverMap, axios } from "./stores.js";
+    import { raceConfig, pushMessage, driverMap, axios } from "./stores.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
     async function doAnnounce() {
@@ -25,10 +25,10 @@
                 $raceConfig.baseUrl + endpoint,
                 req
             );
-            $statusMessage = {
+            pushMessage( {
                 text: `Announcement Requested.`,
                 type: "success",
-            };
+            });
             announceText = "";
         } catch (e) {
             //interceptor handles messaging

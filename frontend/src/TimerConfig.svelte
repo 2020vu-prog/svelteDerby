@@ -4,7 +4,7 @@
     import {
         axios,
         raceConfig,
-        statusMessage,
+        pushMessage,
         doRefreshBlocks,
         mqttTimerTopic,
     } from "./stores.js";
@@ -85,21 +85,21 @@
             const response = await $axios.post(url, req);
             if (response.error) {
                 //TODO: not working!?
-                $statusMessage = {
+                pushMessage( {
                     text: `TimerConfig Failed: ${response.error}.`,
                     type: "error",
-                };
+                });
             } else {
-                $statusMessage = {
+                pushMessage( {
                     text: `TimerConfig Processed.`,
                     type: "success",
-                };
+                });
             }
         } catch (error) {
-            $statusMessage = {
+            pushMessage( {
                 text: "TimerConfig error: " + error,
                 type: "error",
-            };
+            });
             log.debug(error);
         }
         submitSpinning = false;

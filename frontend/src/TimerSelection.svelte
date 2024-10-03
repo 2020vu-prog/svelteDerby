@@ -3,7 +3,7 @@
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { sleep ,secondsToHHMMSS} from "./utils.js";
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { axios, raceConfig, statusMessage } from "./stores.js";
+    import { axios, raceConfig, pushMessage } from "./stores.js";
     import { onMount } from "svelte";
     import { createEventDispatcher } from "svelte";
     const { v4: uuidv4 } = require("uuid");
@@ -38,28 +38,28 @@
         //const response = await axios.get($raceConfig.baseUrl + endPoint, {
         try {
             const tsLoadingKey = uuidv4();
-            $statusMessage = {
+            pushMessage( {
                 text: `loading ActiveTimers.`,
                 type: "success",
                 key: tsLoadingKey,
-            };
+            });
             const response = await $axios.get(
                 $raceConfig.baseUrl + activeTimerUrl
             );
             if (response.error) {
                 log.debug("getActiveTimers:", response);
                 //TODO: not working!?
-                $statusMessage = {
+                pushMessage( {
                     text: `getActiveTimers Failed: ${response.error}.`,
                     type: "error",
-                };
+                });
             } else {
-                $statusMessage = {
+                pushMessage( {
                     text: `Loaded`,
                     TTL: 1, //delete msg!
                     type: "success",
                     key: tsLoadingKey,
-                };
+                });
                 activeTimerList = response.data;
                 if (testNone && activeTimerList.length == 0) {
                     activeTimerList.push({
@@ -79,10 +79,10 @@
             }
             loading = false;
         } catch (err) {
-            $statusMessage = {
+            pushMessage( {
                 text: "getActiveTimers error: " + err,
                 type: "error",
-            };
+            });
         }
     }
     async function clickActivateHost(timer) {

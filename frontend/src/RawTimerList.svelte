@@ -3,7 +3,7 @@
 
     import SpinnerButton from "./SpinnerButton.svelte";
 
-    import { axios, raceConfig, statusMessage } from "./stores.js";
+    import { axios, raceConfig, pushMessage } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -44,10 +44,10 @@
         log.debug("rawTimer: refreshDataFromDb gave:", timerHistoryList);
         log.debug(`timerHistoryList: ${JSON.stringify(timerHistoryList)}`);
         if (timerHistoryList.error) {
-            $statusMessage = {
+            pushMessage( {
                 text: timerHistoryList.error,
                 type: "error",
-            };
+            });
 
             return;
         }
@@ -98,17 +98,17 @@
                 { params: req }
             );
             const data = response.data;
-            $statusMessage = {
+            pushMessage( {
                 text: `History loaded.`,
                 type: "success",
-            };
+            });
             return data;
         } catch (error) {
             log.debug(error);
-            $statusMessage = {
+            pushMessage( {
                 text: "rawTimer failed: " + err,
                 type: "error",
-            };
+            });
         }
     }
     function getHHMMSS(winnerDelta) {
@@ -159,10 +159,10 @@
                 )}`
             );
         } else {
-            $statusMessage = {
+            pushMessage( {
                 text: `There is no race on the blocks.`,
                 type: "error",
-            };
+            });
         }
     }
 

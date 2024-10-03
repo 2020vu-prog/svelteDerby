@@ -6,7 +6,7 @@
         carouselRun,
         customToolbarList,
         getDefaultToolbarList,
-        statusMessage,
+        pushMessage,
     } from "./stores.js";
     import { safeGetAt, sleep } from "./utils.js";
     import { onMount } from "svelte";

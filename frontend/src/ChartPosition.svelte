@@ -7,7 +7,7 @@
         raceConfig,
         driverMap,
         doRefreshBlocks,
-        statusMessage,
+        pushMessage,
         userEmail,
         axios,
     } from "./stores.js";
@@ -133,10 +133,10 @@
                     seedObject.ptcp = posForm[ab].carNumber.toString();
                 } else {
                     log.debug("invalid preSeed:", posForm[ab]);
-                    $statusMessage = {
+                    pushMessage( {
                         text: `Invalid Participant: [${posForm[ab].carNumber}]`,
                         type: "error",
-                    };
+                    });
                     return; // return from closure [AB]
                 }
             }
@@ -165,10 +165,10 @@
             .then((response) => {
                 log.debug("addChartPosition axios success ", response);
                 if (response.data.error) {
-                    $statusMessage = {
+                    pushMessage( {
                         text: response.data.error,
                         type: "error",
-                    };
+                    });
                 } else {
                     pop();
                 }

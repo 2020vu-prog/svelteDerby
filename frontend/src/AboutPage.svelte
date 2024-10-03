@@ -8,7 +8,7 @@
         developerMode,
         developerLogging,
         enableFractionalMs,
-        statusMessage,
+        pushMessage,
     } from "./stores.js";
     $: {
         document.documentElement.style.setProperty(
@@ -52,10 +52,10 @@
         if (devClickCount++ > 8) {
             log.warn("devmodeA");
             $developerMode = true;
-            $statusMessage = {
+            pushMessage( {
                 text: `Developer Mode Enabled.`,
                 type: "success",
-            };
+            });
         }
     }
 </script>

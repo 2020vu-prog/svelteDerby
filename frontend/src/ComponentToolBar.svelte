@@ -10,7 +10,7 @@
     } from 'sveltestrap';
 
     import { theme, driverMap } from "./stores.js";
-    import { axios, raceConfig, statusMessage, userEmail } from "./stores.js";
+    import { axios, raceConfig, pushMessage, userEmail } from "./stores.js";
 
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
@@ -81,24 +81,24 @@
                 req
             );
             if (response.data.status === "error") {
-                $statusMessage = {
+                pushMessage( {
                     text: response.data.error,
                     type: response.data.status,
-                };
+                });
             } else {
-                $statusMessage = {
+                pushMessage( {
                     text: `[${dbName}] Deleted.`,
                     type: "success",
-                };
+                });
             }
         } catch (e) {
             log.debug('caught err:',e)
             /*
             our axios looks to be doing this...
-            $statusMessage = {
+            pushMessage( {
                 text: e,
                 type: "error",
-            };
+            });
             */
         }
     }
@@ -120,21 +120,21 @@
                 req
             );
             if (response.data.status === "error") {
-                $statusMessage = {
+                pushMessage( {
                     text: response.data.error,
                     type: response.data.status,
-                };
+                });
             } else {
-                $statusMessage = {
+                pushMessage( {
                     text: `Cars called.`,
                     type: "success",
-                };
+                });
             }
         } catch (e) {
-            $statusMessage = {
+            pushMessage( {
                 text: e,
                 type: "error",
-            };
+            });
         }
     }
 

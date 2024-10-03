@@ -4,7 +4,7 @@
     import { onMount, onDestroy } from "svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
     import {
-        statusMessage,
+        pushMessage,
         getAxiosNew,
         axios,
         raceConfig,
@@ -66,10 +66,10 @@
 }
     onMount(async () => {
         if(isIos()){
-            $statusMessage = {
+            pushMessage( {
                 text: `Video capture does not work on iOS.  Please use android for video.`,
                 type: "error",
-            };
+            });
 
         }
     });
@@ -114,23 +114,23 @@
         const hi=tgtAdjMs+500
         const futureHi=(hi - Date.now())+5000
         if (futureHi>0){ //wait for video capture if hi is 'now-ish' or future
-            $statusMessage = {
+            pushMessage( {
                     text: `Video upload in [${futureHi/1000}] seconds.`,
                     key: mqttMsgKey,
                     type: "success",
                     TTL:Date.now()+futureHi,
-            };
+            });
             log.debug(`${tag}: waiting ${futureHi}`);
             await sleep(futureHi)
             log.debug(`${tag}: waited  ${futureHi}`);
         }
         else{
             log.debug(`${tag}: noWait ${futureHi}`);
-            $statusMessage = {
+            pushMessage( {
                     text: `Video upload processing.`,
                     key: mqttMsgKey,
                     type: "success",
-            };
+            });
 
         }
 
@@ -144,10 +144,10 @@
             doUploadToServer(oldSnip, json.prefix) 
         }else{
 
-            $statusMessage = {
+            pushMessage( {
                 text: `Remote Video capture snip NOT FOUND!.`,
                 type: "error",
-            };
+            });
 
         }
     }
@@ -156,20 +156,20 @@
     }   
     async function clickedRequestCapture() {
         if(!timerName){
-            $statusMessage = {
+            pushMessage( {
                 text: `No timer selected.`,
                 type: "error",
                 key: mqttMsgKey,
-            };
+            });
             return
         }
 
             remoteeSpinning = true
-        $statusMessage = {
+        pushMessage( {
             text: `Beginning Request.`,
             type: "success",
             key: mqttMsgKey,
-        };
+        });
         try {
             const endPoint = "/requestVideoUpload";
             const req = {
@@ -182,17 +182,17 @@
                 params: req,
             });
             log.debug("clickedRequestCapture response", response);
-            $statusMessage = {
+            pushMessage( {
                 text: `Completed [${timerName}] Request.`,
                 type: "success",
                 key: mqttMsgKey,
-            };
+            });
         } catch (err) {
                 log.debug("clickedRequestCapture caught:", err);
-            $statusMessage = {
+            pushMessage( {
                 text: err,
                 type: "error",
-            };
+            });
         } finally {
             remoteeSpinning = false;
         }
@@ -285,11 +285,11 @@
     async function doUploadToServer(videoSnip, uploadKey ){
         const tag='doUploadToServer'
         const videoDataBlob=new Blob(videoSnip.snipVideoData)
-        $statusMessage = {
+        pushMessage( {
             text: `Beginning upload. ${uploadKey}`,
             type: "success",
             key: uploadKey,
-        };
+        });
         try {
             const endPoint = "/requestS3PutObjectUrl";
             //const axios = await $getAxios();
@@ -320,11 +320,11 @@
                 };
 
                 const axiosGeneric = $getAxiosNew();
-                $statusMessage = {
+                pushMessage( {
                     text: `Beginning upload s3.`,
                     type: "success",
                     key: uploadKey,
-                };
+                });
 
                 //delete axiosGeneric.defaults.headers.common["Authorization"];
                 const putRc = await axiosGeneric.put(
@@ -333,26 +333,26 @@
                     options
                 );
                 log.debug("s3PutResponse", putRc);
-                $statusMessage = {
+                pushMessage( {
                     text: `Completed upload s3 ${videoDataBlob.size}`,
                     type: "success",
                     key: uploadKey,
-                };
+                });
             }
             if (response.data.error) {
                 log.debug("requestS3PutObjectUrl failed", response);
-                $statusMessage = {
+                pushMessage( {
                     text: response.data.error,
                     type: "error",
-                };
+                });
             } else {
             }
         } catch (err) {
                 log.debug("requestS3PutObjectUrl caught:", err);
-            $statusMessage = {
+            pushMessage( {
                 text: err,
                 type: "error",
-            };
+            });
         } finally {
             captureSpinning = false;
         }
@@ -369,18 +369,18 @@
     }
     async function doStart() {
         if (!timerId) {
-            $statusMessage = {
+            pushMessage( {
                 text: `Missing selected Timer[2].`,
                 type: "error",
-            };
+            });
             return;
         }
         if( snipLengthSeconds >12 || snipLengthSeconds <4 ){
        
-            $statusMessage = {
+            pushMessage( {
                 text: `Snip length s/b 4<->12.`,
                 type: "error",
-            };
+            });
             return;
         }
 
@@ -407,10 +407,10 @@
             handleGotMedia(stream, snum);
         } catch (e) {
             console.error("navigator.getUserMedia error:", e);
-            $statusMessage = {
+            pushMessage( {
                 text: e,
                 type: "error",
-            };
+            });
             //errorMsgElement.innerHTML = `navigator.getUserMedia error: ${ e.toString() }`;
         }
     }
@@ -475,10 +475,10 @@
         /*
         const msg=`videoSnipHistory: ${videoSnipHistory.length}  ${now}`
         log.debug(msg)
-        $statusMessage = {
+        pushMessage( {
                     text: msg,
                     key: "dillerup",
-                };
+                });
                 */
 
     }

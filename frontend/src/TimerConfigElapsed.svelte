@@ -5,7 +5,7 @@
     import {
         axios,
         raceConfig,
-        statusMessage,
+        pushMessage,
         doRefreshBlocks,
         mqttTimerTopic,
         initialReloadRoute,
@@ -214,39 +214,39 @@
     }
     function isFormValid() {
         if (!pbForm.timerName) {
-            $statusMessage = {
+            pushMessage( {
                 text: "TimerName required",
                 type: "error",
-            };
+            });
             return false;
         }
         //long names will mess with eplapsed tbl fmt!
         if (pbForm.timerName.length > 7) {
-            $statusMessage = {
+            pushMessage( {
                 text: "TimerName too long. [max 7 chars]",
                 type: "error",
-            };
+            });
             return false;
         }
         if (!pbForm.timerMqttClientId) {
-            $statusMessage = {
+            pushMessage( {
                 text: "Timer Selection required",
                 type: "error",
-            };
+            });
             return false;
         }
         if (!pbForm.seq) {
-            $statusMessage = {
+            pushMessage( {
                 text: "Timer Sequence required",
                 type: "error",
-            };
+            });
             return false;
         }
         if (parseInt(pbForm.seq) < 100 || parseInt(pbForm.seq) > 999) {
-            $statusMessage = {
+            pushMessage( {
                 text: "Timer Sequence must be n range of 100 - 999",
                 type: "error",
-            };
+            });
             return false;
         }
         return true;
@@ -298,22 +298,22 @@
             const response = await $axios.post(url, payloadWithPB);
             if (response.error) {
                 //TODO: not working!?
-                $statusMessage = {
+                pushMessage( {
                     text: `TimerConfigElapsed Failed: ${response.error}.`,
                     type: "error",
-                };
+                });
             } else {
-                $statusMessage = {
+                pushMessage( {
                     text: `TimerConfigElapsed Processed.`,
                     type: "success",
-                };
+                });
                 pop();
             }
         } catch (error) {
-            $statusMessage = {
+            pushMessage( {
                 text: "TimerConfigElapsed error: " + error,
                 type: "error",
-            };
+            });
             log.debug(error);
         }
         submitSpinning = false;

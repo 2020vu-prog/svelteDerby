@@ -23,7 +23,7 @@
     import {
         axios,
         raceConfig,
-        statusMessage,
+        pushMessage,
         mediaFileType,
         videoHref,
     } from "./stores.js";

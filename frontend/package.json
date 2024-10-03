@@ -1,6 +1,6 @@
 {
     "name": "svelte-app",
-    "version": "2.0.0+rc2",
+    "version": "2.0.0+rc3",
     "devDependencies": {
         "@babel/core": "^7.10.2",
         "@babel/plugin-proposal-class-properties": "^7.10.1",
@@ -27,9 +27,11 @@
     },
     "scripts": {
         "buildX": "npm version patch && cross-env NODE_ENV=production webpack",
-        "build": "./devEnv.sh && cross-env NODE_ENV=production webpack",
+        "build": "./devEnv.sh && cross-env NODE_ENV=production webpack ; ./copyVersioned.sh",
         "dev": "./devEnv.sh && webpack-dev-server --https --content-base public",
         "amplify-modelgen": "node amplify/scripts/amplify-modelgen.js",
+    "version": "echo $npm_package_version",
+
         "amplify-push": "node amplify/scripts/amplify-push.js"
     },
     "dependencies": {

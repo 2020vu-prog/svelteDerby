@@ -6,7 +6,7 @@
         mqttTimerSubscribe,
         timerState,
         raceConfig,
-        statusMessage,
+        pushMessage,
         doRefreshBlocks,
     } from "./stores.js";
     import SpinnerButton from "./SpinnerButton.svelte";

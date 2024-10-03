@@ -9,7 +9,7 @@
         raceConfig,
         getCacheKey,
         clearOldStatusMessages,
-        statusMessage,
+        pushMessage,
         axios,
         userEmail,
         recentRefreshMs,
@@ -51,9 +51,9 @@
         if (!$userEmail) {
             log.debug(`${tag} email bypass`);
             //auto select requires auth :-(
-            $statusMessage = {
+            pushMessage( {
                 text: `AS: No Eligible user.`,
-            };
+            });
             return;
         }
         // could be already loaded, but initial load
@@ -63,9 +63,9 @@
         const orgEvents = Object.values(eventMap);
         if (orgEvents.length == 0) {
             log.debug(`${tag} event bypass`);
-            $statusMessage = {
+            pushMessage( {
                 text: `AS: No Eligible map.`,
-            };
+            });
             return;
         }
 
@@ -73,9 +73,9 @@
         if (previousActivate) {
             const msg = `AS: Skipping, previous runner: ${userEmail} ${previousActivate}`;
             log.debug(`${tag} ${msg}`);
-            $statusMessage = {
+            pushMessage( {
                 text: msg,
-            };
+            });
             return;
         }
         previousActivate = $userEmail;
@@ -100,9 +100,9 @@
         }
 
         if (!selectedConfig.SK) {
-            $statusMessage = {
+            pushMessage( {
                 text: `AS: No Eligible event.`,
-            };
+            });
             return;
         }
 
@@ -184,9 +184,9 @@
         log.debug("selected:", config);
         if($raceConfig.orgIz===config.orgIz
         && $raceConfig.orgId===config.orgId){
-            $statusMessage = {
+            pushMessage( {
                 text: `Event already active.`,
-            };
+            });
             replace("/RpList");
             return;
         }

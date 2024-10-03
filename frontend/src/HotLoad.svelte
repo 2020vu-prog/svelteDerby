@@ -10,7 +10,7 @@
         standingsMap,
         racePhaseMap,
         carFilter,
-        statusMessage,
+        pushMessage,
         autoAnnounceResults,
         mqttMapSubscribe,
         mqttMapData,
@@ -299,10 +299,10 @@
     function onSubscribed(err,granted) {
         if(err){
             activeIotWatch['errors'].push(err);
-            $statusMessage = {
+            pushMessage( {
             text: err,
             type: "error",
-        };
+        });
             applyBtnClass();
         }
         log.debug("onSubscribed", err,JSON.stringify(granted));
@@ -362,10 +362,10 @@
     }
     async function potentialDoubleClickReloadPage() {
         log.debug("potentialDoubleClickReloadPage: begin");
-            $statusMessage = {
+            pushMessage( {
                 text: `Refreshing token, please Wait.`,
                 type: "success",
-            }
+            });
 
             await tick();
             await sleep(1000);
@@ -597,14 +597,6 @@
 
         const elapsedTime = new Date().getTime() - startTime;
 
-        /*
-        $statusMessage = {
-            text: `DB took ${elapsedTime}`,
-            type: "success",
-            key: "refreshTime",
-        };
-        */
-
         return hist;
     }
 
@@ -748,19 +740,19 @@
         const mediaMatch = mqMsg.outputUri.match(/\/media\/.*/);
         if (mediaMatch && mediaMatch[0]) {
             const path = mediaMatch[0];
-            $statusMessage = {
+            pushMessage( {
                 text: `Audio queueing.${qid}`,
                 type: "success",
-            };
+            });
             await tick(); // duplicate msgs??
             log.debug(`announceFromMqtt path: ${path}`);
             queueAudio(path);
         } else {
             log.debug(`announceFromMqtt MISSING path`);
-            $statusMessage = {
+            pushMessage( {
                 text: `Audio missing path.`,
                 type: "error",
-            };
+            });
         }
     }
 
@@ -890,7 +882,7 @@
             const eventConfigEntity = entityFactory.build(ecFromDexie[0]);
             const faReturn = eventConfigEntity.checkIfFrozenOrArchived();
             if (faReturn["status"] == "frozen") {
-                $statusMessage = {
+                pushMessage( {
                     text:
                         `This race is frozen. It will archive at: ` +
                         new Date(ecFromDexie[0].TTL * 1000),
@@ -899,7 +891,7 @@
                     TTL:
                         faReturn.secondsUntilArchive * 1000 +
                         new Date().getTime(),
-                };
+                });
             } else if (faReturn["status"] == "") {
                 var timerDueMs =
                     (faReturn.secondsUntilArchive -

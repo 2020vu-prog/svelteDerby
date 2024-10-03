@@ -13,7 +13,7 @@
     import { fmtPinTime } from "./utils.js";
     import { onMount } from "svelte";
     import { sleep } from "./utils.js";
-    import { statusMessage, raceConfig, axios } from "./stores";
+    import { pushMessage, raceConfig, axios } from "./stores";
 
     export let params = {};
     let sampleDemoData = true;
@@ -37,17 +37,11 @@
             if (response.error) {
                 log.debug("loadFinishBlocks:", response);
                 //TODO: not working!?
-                $statusMessage = {
+                pushMessage( {
                     text: `loadFinishBlocks api Failed: ${response.error}.`,
                     type: "error",
-                };
+                });
             } else {
-                /*
-                $statusMessage = {
-                    text: `getTimerHistory Complete.`,
-                    type: "success",
-                };
-                */
 
                 const fbList = response.data.fbList;
                 log.debug("fbList: ", fbList);
@@ -60,10 +54,10 @@
                 }
             }
         } catch (err) {
-            $statusMessage = {
+            pushMessage( {
                 text: `loadFinishBlocks calc Failed: ${err}.`,
                 type: "error",
-            };
+            });
             log.error(`loadFinishBlocks calc Failed:`, err);
         }
     }

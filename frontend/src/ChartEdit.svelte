@@ -2,7 +2,7 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { axios, raceConfig, statusMessage } from "./stores.js";
+    import { axios, raceConfig, pushMessage } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
@@ -52,17 +52,17 @@
         submitSpinning = true;
         try {
             const response = await $axios.post(url, req);
-            $statusMessage = {
+            pushMessage( {
                 text: `Chart [${chartForm.name}] Updated.`,
                 type: "success",
-            };
+            });
             pop();
         } catch (error) {
             submitSpinning = false;
-            $statusMessage = {
+            pushMessage( {
                 text: "chartEdit failed: " + error,
                 type: "error",
-            };
+            });
             //log.debug("driverAdd failed: " + err)
         }
     }

@@ -7,7 +7,7 @@
         carouselRun,
         customToolbarList,
         getDefaultToolbarList,
-        statusMessage,
+        pushMessage,
     } from "./stores.js";
     import { safeGetAt, sleep } from "./utils.js";
     import { onMount } from "svelte";
@@ -114,17 +114,17 @@
     async function showCarousel() {
         saveWip();
         if (!wip.find((item) => item.delay)) {
-            $statusMessage = {
+            pushMessage( {
                 text: `No delay values entered.`,
                 type: "error",
-            };
+            });
             return;
         }
 
-        $statusMessage = {
+        pushMessage( {
             text: `Carousel Mode will begin shortly.  PRESS your Browser reload button to stop it!`,
             type: "success",
-        };
+        });
         await sleep(2500);
         $carouselRun = true;
     }

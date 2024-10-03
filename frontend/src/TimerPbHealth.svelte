@@ -11,7 +11,7 @@
     } from "sveltestrap";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
-    import { statusMessage, raceConfig, axios } from "./stores";
+    import { pushMessage, raceConfig, axios } from "./stores";
     import { getTimerPbConfig ,secondsToHHMMSS} from "./utils.js";
     import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
     import LogList from "./LogList.svelte";
@@ -98,17 +98,11 @@
             if (response.error) {
                 log.debug("getTimerHistory:", response);
                 //TODO: not working!?
-                $statusMessage = {
+                pushMessage( {
                     text: `getTimerHistory Failed: ${response.error}.`,
                     type: "error",
-                };
+                });
             } else {
-                /*
-                $statusMessage = {
-                    text: `getTimerHistory Complete.`,
-                    type: "success",
-                };
-                */
 
                 historyList = response.data;
                 log.debug("getTimerHistory: ", historyList);
@@ -138,10 +132,10 @@
             }
         } catch (err) {
             log.error("getTimerHistory error: ", err);
-            $statusMessage = {
+            pushMessage( {
                 text: "getTimerHistory error: " + err,
                 type: "error",
-            };
+            });
         }
     }
     function showHealth(tdl) {

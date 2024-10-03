@@ -2,7 +2,8 @@
     import log from "loglevel";
 
     import {
-        statusMessage,
+        pushMessage,
+        statusMessageList,
         raceConfig,
         clearOldStatusMessages,
     } from "./stores.js";
@@ -25,10 +26,10 @@
         messages = [];
         log.debug("StatusMessage RC cam: ", $raceConfig);
         //This message is used to coerce the empty list to repaint.
-        $statusMessage = {
+        pushMessage( {
             text: `New race selected.`,
             type: "success",
-        };
+        });
     }
 
     onMount(async () => {
@@ -37,21 +38,28 @@
     });
 
     $: {
-        log.debug(`triggered by statusMessage change: `, $statusMessage);
-        if ($statusMessage && $statusMessage.text) {
-            if (!$statusMessage.type) {
-                $statusMessage.type = "error";
+        $statusMessageList.forEach((msg, index) => {
+            loadNewMsg(msg)
+        });
+        $statusMessageList.length=0;  // truncate array to empty
+    }
+    function loadNewMsg(msg){
+
+        log.debug(`triggered by statusMessage change: `, msg);
+        if (msg && msg.text) {
+            if (!msg.type) {
+                msg.type = "error";
             }
             const newMsg = {
-                text: $statusMessage.text,
-                type: $statusMessage.type,
-                TTL: getTtl($statusMessage),
-                key: $statusMessage.key,
+                text: msg.text,
+                type: msg.type,
+                TTL: getTtl(msg),
+                key: msg.key,
                 orgId: $raceConfig.orgId,
             };
             let prior;
             messages.forEach((msg, index) => {
-                if (msg.key && msg.key === $statusMessage.key) {
+                if (msg.key && msg.key === msg.key) {
                     prior = index;
                 }
             });
@@ -63,8 +71,7 @@
             }
             messages = messages;
             clearNow(); //in case anything deleted by short TTL
-            clearLater(getDurationMs($statusMessage));
-            $statusMessage = {};
+            clearLater(getDurationMs(msg));
         }
     }
 

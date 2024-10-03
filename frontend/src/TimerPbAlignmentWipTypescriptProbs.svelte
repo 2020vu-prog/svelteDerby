@@ -17,7 +17,7 @@
         //
         mqttMapData,
         raceConfig,
-        statusMessage,
+        pushMessage,
         doRefreshBlocks,
     } from "./stores.js";
     import { end, toSeconds ,parse} from "iso8601-duration";
@@ -319,25 +319,25 @@
         try{
 
             historySecondsDuration=toSeconds(parse(historyAgeDuration.toUpperCase()));
-            $statusMessage = {
+            pushMessage( {
                 text: `Duration: ${historySecondsDuration}.`,
                 type: "success",
-            };
+            });
             await tick()
-            $statusMessage = {
+            pushMessage( {
                 text: `duration.`,
                 type: "error",
                 TTL: 1,
                 key: invalidIsoKey,
-            };
+            });
             await tick()
         }
         catch(e){
-            $statusMessage = {
+            pushMessage( {
                 text: `Invalid duration. ${e}`,
                 type: "error",
                 key: invalidIsoKey,
-            };
+            });
             console.error("invalid duration",e)
             return
         }
@@ -371,11 +371,11 @@
 
         try {
             const histLoadingKey = uuidv4();
-            $statusMessage = {
+            pushMessage( {
                 text: `loading History.`,
                 type: "success",
                 key: histLoadingKey,
-            };
+            });
             //    const response = await $axios.get($raceConfig.baseUrl + url);
             const response = await $axios.get($raceConfig.baseUrl + endPoint, {
                 params: req,
@@ -383,16 +383,16 @@
             if (response.error) {
                 log.debug("getTimerHistoryFromApi:", response);
                 //TODO: not working!?
-                $statusMessage = {
+                pushMessage( {
                     text: `getTimerHistoryFromApi Failed: ${response.error}.`,
                     type: "error",
-                };
+                });
             } else {
-                $statusMessage = {
+                pushMessage( {
                     text: `Loaded`,
                     TTL: 1, //delete msg!
                     key: histLoadingKey,
-                };
+                });
                 historyList = response.data;
                 log.debug("getTimerHistoryFromApi: ", historyList);
                 if (historyList && historyList.length > 0) {
@@ -420,10 +420,10 @@
             }
         } catch (err) {
             log.error("getTimerHistoryFromApi error: ", err);
-            $statusMessage = {
+            pushMessage( {
                 text: "getTimerHistoryFromApi error: " + err,
                 type: "error",
-            };
+            });
         }
     }
     let showAge = false;
