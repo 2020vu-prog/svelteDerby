@@ -22,9 +22,9 @@
 
     //Get rid of archive warning (and other messages) when the user picks a new race.
     function clearAllMessages() {
+        log.debug("StatusMessage RC cam: ", $raceConfig);
         $clearOldStatusMessages = false;
         messages = [];
-        log.debug("StatusMessage RC cam: ", $raceConfig);
         //This message is used to coerce the empty list to repaint.
         pushMessage( {
             text: `New race selected.`,
@@ -36,16 +36,18 @@
         log.debug("StatusMessage.svelte mounting");
         log.debug("StatusMessage RC: ", $raceConfig);
     });
-
     $: {
         $statusMessageList.forEach((msg, index) => {
             loadNewMsg(msg)
         });
-        $statusMessageList.length=0;  // truncate array to empty
+       //$statusMessageList.length=0;  // truncate array to empty
+       if($statusMessageList.length>0){
+            $statusMessageList=[] // expect to recurse back to self as empty
+       }
     }
     function loadNewMsg(msg){
 
-        log.debug(`triggered by statusMessage change: `, msg);
+        log.debug(`loadNewMsg triggered by statusMessage change: `, msg);
         if (msg && msg.text) {
             if (!msg.type) {
                 msg.type = "error";
@@ -99,6 +101,7 @@
         else return 60000;
     };
     const getTtl = (statusMessage) => {
+        log.debug(`getTTL ${statusMessage.text}`);
         if (statusMessage.TTL) {
             log.debug(`HAS A TTL ${statusMessage.TTL}`);
             return statusMessage.TTL;

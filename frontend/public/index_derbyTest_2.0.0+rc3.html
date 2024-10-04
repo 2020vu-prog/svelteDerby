@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Derby App</title>
+    <!-- hamburger menu icon -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Latest compiled and minified JavaScript -->
+
+    <link rel='icon' type='image/png' href='favicon.png'>
+    <link rel='stylesheet' href='global922b.css'>
+
+<link href="1.1296764e921edadb8870.css" rel="stylesheet"><link href="bundle.1296764e921edadb8870.css" rel="stylesheet"></head>
+
+<body>
+<script type="text/javascript" src="vendors.7a284ef3703b2de6af67.js"></script><script type="text/javascript" src="bundle.4e636540dc9f122ef025.js"></script></body>
+<script>
+
+    console.log("loading sw00 from: ", location.hostname)
+    if (location.hostname === 'sw.derby.rr1.us') {
+
+        if ('serviceWorker' in navigator) {
+            console.log("loading sw01")
+            //navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+            navigator.serviceWorker.register('/sw-generated.js', { scope: '/' });
+        }
+        else {
+            console.log("loading swfailed00")
+
+        }
+    }
+    else {
+        console.log("skipping sw09 for domain: ", location.hostname)
+    }
+</script>
+
+</html>
