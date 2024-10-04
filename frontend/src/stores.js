@@ -55,6 +55,10 @@ export const roleMap = persistable("roleMap", {});
 
 export const theme = persistable("pref:themeBg", "#4CAF50");
 export function pushMessage(msg){
+    if(!msg.key){
+        msg.key=uuidv4();
+    }
+    log.debug("pushMessage :", msg);
     const sml=getStore(statusMessageList)
     sml.push(msg)
 

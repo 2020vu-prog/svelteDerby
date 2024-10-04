@@ -297,10 +297,6 @@
             text: msg,
             type: "success",
         });
-        pushMessage( {
-            text: msg,
-            type: "success",
-        });
 
         isMounted = new Date().getTime();
     });
