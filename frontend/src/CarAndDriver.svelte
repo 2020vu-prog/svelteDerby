@@ -1,7 +1,8 @@
 <script>
     import log from "loglevel";
 
-    import { driverMap } from "./stores.js";
+    import { driverMap, userEmail } from "./stores.js";
+    import { isEmailAllowedRoutePath } from "./utils.js";
     import { push, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
 
@@ -21,6 +22,10 @@
     $: {
         log.debug("lookup modified DN:", number);
         name = getDriverName(number, at);
+    }
+
+    function isManualTimerAllowed() {
+        return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
     }
 
     //log.debug("timerLink",timerLink);
@@ -53,7 +58,7 @@
 {#if isWinner}
     <img alt="flag" src="data/checkered-flag-svgrepo-com.svg" width="25px" />
 {:else if phaseLetter}
-    <button type="button" class="btn {phaseClass}" on:click={() => gotoTimer()}>
+    <button type="button" class="btn {phaseClass}" on:click={() => { if (isManualTimerAllowed()) gotoTimer()}}>
         {phaseLetter}
     </button>
 {:else}
