@@ -101,3 +101,13 @@ button:focus {
 input.big[type="checkbox"] {
     transform: scale(2);
 }
+
+.phase-icon-btn {
+    width: 35px; 
+    height: 35px;
+    line-height: 35px;
+    padding: 0px 0px 0px 0px; 
+    margin: 0px 0px;
+    font-weight: bold;
+    font-size: 30px;
+}

@@ -265,7 +265,7 @@
                             </div>
 
                             <div style="text-align: center;" class="column">
-                                <button type="button" class="btn btn-warning">
+                                <button type="button" class="btn btn-warning phase-icon-btn">
                                     {getPhaseIcon(rp)}
                                 </button>
                                 <br />

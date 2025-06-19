@@ -54,26 +54,10 @@
         }
     };
 </script>
-<style>
-            .large {
-            /*
-        */
-                width: 35px; 
-                height: 35px;
-                line-height: 35px;
-                padding: 0px 0px 0px 0px; 
-                margin: 0px 0px;
-                font-weight: bold;
-
-
-
-            font-size: 30px;
-        }
-    </style>
 {#if isWinner}
     <img alt="flag" src="data/checkered-flag-svgrepo-com.svg" width="25px" />
 {:else if phaseLetter}
-    <button type="button" class="btn {phaseClass} large" on:click={() => { if (isManualTimerAllowed()) gotoTimer()}}>
+    <button type="button" class="btn {phaseClass} phase-icon-btn" on:click={() => { if (isManualTimerAllowed()) gotoTimer()}}>
         {phaseLetter}
     </button>
 {:else}
@@ -84,10 +68,11 @@
         style="visibility:hidden"
     />
 {/if}
-
+<div style="vertical-align: middle; display: inline">
 <b class="bigText">{number}</b>
 {name}
 {#if getSponsor(number)}
     <br />
     <b>{getSponsor(number)}</b>
 {/if}
+</div>
