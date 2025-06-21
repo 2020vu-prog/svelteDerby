@@ -17,10 +17,10 @@
         );
     }
 
-    import { buildVersion, buildDate } from "./utils.js";
+    import { buildVersion, buildDate, isEmailAllowedRoutePath } from "./utils.js";
 
     import { onMount } from "svelte";
-    import { getCacheKey, setCacheKey } from "./stores.js";
+    import { getCacheKey, setCacheKey, userEmail } from "./stores.js";
     import { db, localConfigDb } from "./eventDb.js";
     import BottomNav from "./BottomNav.svelte";
     import OrgName from "./OrgName.svelte";
@@ -57,6 +57,10 @@
                 type: "success",
             });
         }
+    }
+
+    function isManualTimerAllowed() {
+        return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
     }
 </script>
 
@@ -164,6 +168,7 @@
                 <strong>all screens.</strong>
             </h6>
         </div>
+        {#if isManualTimerAllowed()}
         <hr />
         <div class="singularSettingDiv">
             <h4>Allow Fractional MS timing</h4>
@@ -172,6 +177,7 @@
                 This enables partial MS entry on manual timer. NOT recommended.
             </h6>
         </div>
+        {/if}
     {/if}
 
     <BottomNav />
