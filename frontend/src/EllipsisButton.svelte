@@ -13,7 +13,6 @@
     };
 </script>
 
-<span on:click={didClick}>
-    <!-- TODO: don't show info button if no delete permission -->
+<span on:click={didClick} style="display: inline-flex; align-items: center;">
     <Icon icon={faEllipsisV} />
 </span>

@@ -78,11 +78,11 @@
 
 {#if shouldRender(standing, at)}
     <Card class="mt-3 border border-info cjw-border-5">
-        <CardHeader class="bg-info text-white">
-            <CardTitle>
+        <CardHeader class="bg-info text-white" style="padding: 2px">
+            <CardTitle style="align-items: center; padding: 0px 2px">
                 <span on:click={gotoBracket}>{chartPosition}</span>
-                <span class="spanRight">
-                    {hhmmss}
+                <span class="spanRight" style="display: flex; align-items: center; gap: 0.5rem">
+                    <span style="display: inline-flex; align-items: center">{hhmmss}</span>
                     {#if !isHistory()}
                         <EllipsisButton
                             on:message={toggleToolbar}
@@ -93,7 +93,7 @@
                 </span>
             </CardTitle>
         </CardHeader>
-        <CardBody>
+        <CardBody style="padding: 0px">
             <ul class="list-group">
                 <li class="list-group-item">
                     <CarAndDriver

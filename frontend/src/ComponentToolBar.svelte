@@ -222,7 +222,7 @@
       </ModalFooter>
     </Modal>
   </div>
-<div class="navbar" id="myNavbar" style="z-index:20">
+<div class="navbar" id="myNavbar">
     {#if timerLink && isManualTimerAllowed()}
         <span
             class="navbarItem"

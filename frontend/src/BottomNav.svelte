@@ -79,7 +79,7 @@
         display: block;
         color: #f2f2f2;
         text-align: center;
-        padding: 14px 16px;
+        padding: 7px 0px 7px 0px;
         text-decoration: none;
         font-size: 17px;
         width: 25%;
