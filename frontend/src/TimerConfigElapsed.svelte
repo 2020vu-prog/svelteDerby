@@ -390,7 +390,7 @@
             Use GPS time
             <br />
             <!-- workaround for bootstrap broken layout -->
-            <Input type="checkbox" bind:checked={pbForm.useGpsTime} />
+            <Input type="checkbox" class="big" bind:checked={pbForm.useGpsTime} />
             <br />
             <FormText color="muted">
                 Gps time is required for elapsed times to work. It can be
@@ -405,7 +405,7 @@
             Inactive
             <br />
             <!-- workaround for bootstrap broken layout -->
-            <Input type="checkbox" bind:checked={pbForm.deleted} />
+            <Input type="checkbox" class="big" bind:checked={pbForm.deleted} />
             <br />
         </Label>
     </FormGroup>

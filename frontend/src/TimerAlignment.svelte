@@ -67,18 +67,12 @@
     }
 </script>
 
-<style>
-    input[type="checkbox"] {
-        transform: scale(2);
-    }
-</style>
-
 <h3>Timer Alignment</h3>
 {#each Object.entries(laneStatusList) as [lane, ls]}
     <Card class="mt-3 border border-info">
         <CardHeader class="bg-info">
             Lane {lane.replace(/[A-Z]+/i, "")} &nbsp;&nbsp;&nbsp;Audio: &nbsp;&nbsp;
-            <input type="checkbox" bind:checked={ls.checked} />
+            <input type="checkbox" class="big" bind:checked={ls.checked} />
         </CardHeader>
         <CardBody style="background-color:{ls.blocked ? 'red' : 'lightgreen'}">
             <h3>

@@ -68,9 +68,10 @@
         />
     </label>
     <label>
-        LowCarLane1:
+        LowCarLane1:&nbsp;&nbsp;
         <input
             type="checkbox"
+            class="big"
             id="lcl1"
             on:change={syncAddButton()}
             bind:checked={orgForm.lcl1}

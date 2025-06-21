@@ -65,14 +65,6 @@
     }
 </script>
 
-<style>
-    input[type="checkbox"] {
-        transform: scale(2);
-        float: right;
-        margin-right: 10px;
-    }
-</style>
-
 <h4>{mode} Org User</h4>
 <form>
     <label>
@@ -100,8 +92,8 @@
 
     {#if mode == "Update"}
         <label>
-            Delete User
-            <input type="checkbox" bind:checked={userForm.deleteFlag} />
+            Delete User&nbsp;&nbsp;
+            <input type="checkbox" class="big" bind:checked={userForm.deleteFlag} />
         </label>
     {/if}
     <SpinnerButton

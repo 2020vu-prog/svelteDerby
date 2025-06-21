@@ -155,10 +155,6 @@
     div :global(.xLargeEdit) {
         font-size: 28px;
     }
-
-    input[type="checkbox"] {
-        transform: scale(2);
-    }
 </style>
 
 <div id="dlTitle">
@@ -197,6 +193,7 @@
                     <span style="display: inline; float: right">
                         <input
                             type="checkbox"
+                            class="big"
                             bind:checked={wip[index].selected}
                             on:click={(event) => {
                                 updateSelectTotal();

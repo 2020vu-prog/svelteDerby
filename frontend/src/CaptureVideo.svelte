@@ -575,11 +575,11 @@
 
 <video style={videoDisplay} id="gum0" playsinline autoplay muted />
 <label>
-    Hide Preview:
+    Hide Preview:&nbsp;&nbsp;
     <input class="big" type="checkbox" bind:checked={hidePreview} />
 </label>
 <label>
-    Advanced:
+    Advanced:&nbsp;&nbsp;
     <input class="big" type="checkbox" bind:checked={showAdvanced} />
 </label>
 

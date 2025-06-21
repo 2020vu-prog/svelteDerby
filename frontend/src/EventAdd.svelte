@@ -154,18 +154,20 @@
         />
     </label>
     <label>
-        LowCarLane1:
+        LowCarLane1:&nbsp;&nbsp;
         <input
             type="checkbox"
+            class="big"
             id="lcl1"
             on:change={syncAddButton()}
             bind:checked={orgForm.lcl1}
         />
     </label>
     <label>
-        Limit Pending 1 Race At a Time:
+        Limit Pending 1 Race At a Time:&nbsp;&nbsp;
         <input
             type="checkbox"
+            class="big"
             id="pending1Race"
             bind:checked={orgForm.pending1Race}
         />

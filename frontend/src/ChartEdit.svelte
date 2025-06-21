@@ -79,8 +79,8 @@
     </label>
 
     <label>
-        Hidden:
-        <input type="checkbox" bind:checked={chartForm.hidden} />
+        Hidden:&nbsp;&nbsp;
+        <input type="checkbox" class="big" bind:checked={chartForm.hidden} />
     </label>
 
     <SpinnerButton on:click={handleSubmit} spinning={submitSpinning}>

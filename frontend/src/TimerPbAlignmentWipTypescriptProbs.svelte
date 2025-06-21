@@ -473,9 +473,6 @@
 </script>
 
 <style>
-    input[type="checkbox"] {
-        transform: scale(2);
-    }
     * {
         box-sizing: border-box;
     }
@@ -526,7 +523,7 @@
 
                 <CardHeader class="bg-info">
                     Lane {lane.replace(/[A-Z]+/i, "")} &nbsp;&nbsp;&nbsp;Audio: &nbsp;&nbsp;
-                    <input type="checkbox" bind:checked={ls.checked} />
+                    <input type="checkbox" class="big" bind:checked={ls.checked} />
                 </CardHeader>
                 -->
                 <CardBody
