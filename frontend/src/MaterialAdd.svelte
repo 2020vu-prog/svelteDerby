@@ -49,7 +49,7 @@
 </style>
 
 {#if userHasPermission}
-    <div class="fab" style="background-color: {$theme};" on:click={chFunction}>
+    <div class="fab" style="background-color: {$theme}; line-height: 60px" on:click={chFunction}>
         +
     </div>
 {/if}
