@@ -426,12 +426,14 @@
     }
 
     /* Style the hamburger menu */
-    .topnav a.icon {
+    .topnav div.icon {
         background: black;
         display: block;
         position: absolute;
         right: 0;
         top: 0;
+        height: 50px;
+        width: 50px;
     }
 
     /* Style the active link (or home/logo) */
@@ -447,11 +449,13 @@
 
 <!-- Top Navigation Menu -->
 <div id="topnav" class="topnav" style="z-index: 20; ">
-    <a style="background-color: {$theme}" class="active">
-        {getTitle($raceConfig)}&nbsp;
+    <a style="background-color: {$theme}; padding: 4px 16px; display: flex" class="active">
+        <span style="margin-top: 8px; padding-right: 1rem">{getTitle($raceConfig)}</span>
         {#if $raceConfig}
             {#key $reRenderHotLoad}
+            <span style="margin-top: 2px; height: 40px">
             <HotLoad />
+            </span>
             {/key}
         {/if}
     </a>
@@ -465,9 +469,9 @@
         {/each}
     </div>
     <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->
-    <a href="javascript:void(0);" class="icon" on:click={menuClickFunction}>
-        <i class="fa fa-bars" />
-    </a>
+    <div class="icon">
+    <img style="width: 35px; margin-top: 5px; margin-left: 7.5px" src="bars-solid.svg" on:click={menuClickFunction}>
+    </div>
 </div>
 <main>
     <SpinnerPanel/>
