@@ -167,6 +167,9 @@
     .column {
         flex: 1 1 0px;
     }
+    .list-group-item {
+        border-radius: 0;
+    }
 </style>
 {#key at}
     {#if refreshTime && shouldRender(rp, boundVars)}
@@ -175,7 +178,7 @@
                 class="mt-3 border border-info cjw-border-5"
                 style="background: {bgColor}"
             >
-                <CardHeader class="bg-info text-white" style="padding: 2px">
+                <CardHeader class="bg-info text-white" style="padding: 2px; border: 0; border-radius: 0">
                     <CardTitle color="info" style="align-items: center; padding: 0px 2px">
                         <span on:click={gotoBracket}>{chartPosition}</span>
                         <span class="spanRight" style="display: flex; align-items: center; gap: 0.5rem">
