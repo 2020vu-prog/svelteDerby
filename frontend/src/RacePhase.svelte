@@ -15,7 +15,7 @@
     import EllipsisButton from "./EllipsisButton.svelte";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
-    import { racePhaseMap, driverMap, nextOnBlockKey } from "./stores.js";
+    import { racePhaseMap, driverMap, nextOnBlockKey, standingsMap } from "./stores.js";
     import MaterialAdd from "./MaterialAdd.svelte";
     import {
         safeGetAt,
@@ -161,6 +161,24 @@
             log.debug("no bracket link");
         }
     };
+
+    const getAPhaseWinForBlocks = (bPhaseLane) => {
+        if (!(rp.phaseLiteral == "B" && rp.rs && $standingsMap[rp.rs])) return false;
+
+        var phaseWinTime = $standingsMap[rp.rs].phase1DeltaMS;
+
+        if (phaseWinTime == 0) {
+            return "Tied";
+        }
+
+        if (bPhaseLane === 1) {
+            phaseWinTime = phaseWinTime * -1;
+        }
+
+        if (phaseWinTime < 0) return false;
+        
+        return phaseWinTime.toString().padStart(3, "0");
+    };
 </script>
 
 <style>
@@ -207,7 +225,13 @@
                             {#if racePhase.isWinner(1, true)}
                                 <span class="spanRight">
                                     <Badge pill class="bigText">
-                                        {getPhaseLetter(rp)}:{getWinTime(1, rp)}
+                                        {getPhaseLetter(rp)}: {getWinTime(1, rp)}
+                                    </Badge>
+                                </span>
+                            {:else if $nextOnBlockKey == phaseKey && getAPhaseWinForBlocks(1)}
+                                <span class="spanRight">
+                                    <Badge pill class="bigText" style="background: {bgColor}">
+                                        A: {getAPhaseWinForBlocks(1)}
                                     </Badge>
                                 </span>
                             {/if}
@@ -224,7 +248,13 @@
                             {#if racePhase.isWinner(2, true)}
                                 <span class="spanRight">
                                     <Badge pill class="bigText">
-                                        {getPhaseLetter(rp)}:{getWinTime(2, rp)}
+                                        {getPhaseLetter(rp)}: {getWinTime(2, rp)}
+                                    </Badge>
+                                </span>
+                            {:else if $nextOnBlockKey == phaseKey && getAPhaseWinForBlocks(2)}
+                                <span class="spanRight">
+                                    <Badge pill class="bigText" style="background: {bgColor}">
+                                        A: {getAPhaseWinForBlocks(2)}
                                     </Badge>
                                 </span>
                             {/if}
@@ -265,6 +295,12 @@
                                     number={rp.carNumbers[0]}
                                     at={safeGetAt($driverMap, rp.carNumbers[0])}
                                 />
+                                {#if $nextOnBlockKey == phaseKey && getAPhaseWinForBlocks(1)}
+                                    <br>
+                                    <Badge pill class="bigText" style="background: {bgColor}">
+                                        A: {getAPhaseWinForBlocks(1)}
+                                    </Badge>
+                                {/if}
                             </div>
 
                             <div style="text-align: center;" class="column">
@@ -280,6 +316,12 @@
                                     number={rp.carNumbers[1]}
                                     at={safeGetAt($driverMap, rp.carNumbers[1])}
                                 />
+                                {#if $nextOnBlockKey == phaseKey && getAPhaseWinForBlocks(2)}
+                                    <br>
+                                    <Badge pill class="bigText" style="background: {bgColor}">
+                                        A: {getAPhaseWinForBlocks(2)}
+                                    </Badge>
+                                {/if}
                             </div>
                         </li>
                     </ul>
