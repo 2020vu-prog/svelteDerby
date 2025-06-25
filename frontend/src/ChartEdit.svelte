@@ -79,7 +79,7 @@
     </label>
 
     <label>
-        Hidden:&nbsp;&nbsp;
+        Hidden:
         <input type="checkbox" class="big" bind:checked={chartForm.hidden} />
     </label>
 

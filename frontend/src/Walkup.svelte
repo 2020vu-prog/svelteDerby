@@ -72,7 +72,7 @@
 <br />
 
 <label>
-    Play Walkup:&nbsp;&nbsp;
+    Play Walkup:
     <input class="big" type="checkbox" bind:checked={$playWalkup} />
 </label>
 {#if playSpotify}

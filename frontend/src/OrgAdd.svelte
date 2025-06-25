@@ -68,7 +68,7 @@
         />
     </label>
     <label>
-        LowCarLane1:&nbsp;&nbsp;
+        LowCarLane1:
         <input
             type="checkbox"
             class="big"

@@ -92,7 +92,7 @@
 
     {#if mode == "Update"}
         <label>
-            Delete User&nbsp;&nbsp;
+            Delete User
             <input type="checkbox" class="big" bind:checked={userForm.deleteFlag} />
         </label>
     {/if}

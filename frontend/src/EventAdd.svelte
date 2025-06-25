@@ -154,7 +154,7 @@
         />
     </label>
     <label>
-        LowCarLane1:&nbsp;&nbsp;
+        LowCarLane1:
         <input
             type="checkbox"
             class="big"
@@ -164,7 +164,7 @@
         />
     </label>
     <label>
-        Limit Pending 1 Race At a Time:&nbsp;&nbsp;
+        Limit Pending 1 Race At a Time:
         <input
             type="checkbox"
             class="big"
