@@ -195,7 +195,7 @@
     {#if $developerMode}
         <h6>{getUrl()}</h6>
     {/if}
-    <button on:click={()=> navigator.share({title: "Live Soap Box Derby race results!", text: "Click the link or scan the code to watch live.", url: getUrl(),files:[new File([qrsvg], "qrcode.svg", {type:"image/svg+xml"})]})}>Share <img style="width: 20px" src="share-solid.svg"></button>
+    <button on:click={()=> navigator.share({text: "Soap Box Derby race results! Click the link to watch live.", url: getUrl()})}>Share <img style="width: 20px" src="share-solid.svg"></button>
     </div>
     <hr />
 
