@@ -25,6 +25,10 @@
     import BottomNav from "./BottomNav.svelte";
     import OrgName from "./OrgName.svelte";
 
+    import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
+    import Icon from "fa-svelte";
+    import { push } from "svelte-spa-router";
+
     let mounted = false;
 
     var ecFromDexie;
@@ -62,6 +66,10 @@
     function isManualTimerAllowed() {
         return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
     }
+
+    function isEventEditAllowed() {
+        return isEmailAllowedRoutePath($userEmail, "/eventAdd/db/Update");
+    }
 </script>
 
 <style>
@@ -96,6 +104,12 @@
         float: right;
         margin-right: 10px;
     }
+
+    div :global(.xLargeEdit) {
+        font-size: 28px;
+        float: right;
+        margin-right: 10px;
+    }
 </style>
 
 <div class="settings">
@@ -109,6 +123,16 @@
 
         <div class="singularSettingDiv">
             <h4>Event Name / Org Name</h4>
+            {#if isEventEditAllowed($userEmail)}
+            <span
+                on:click={(event) => {
+                    push(`/eventAdd/db/Update`);
+                    event.stopPropagation();
+                }}
+            >
+            <Icon class="xLargeEdit" icon={faEdit} />
+            </span>
+            {/if}
             <h6>
                 <span>{ecFromDexie[0].name}</span>
                 /
@@ -168,7 +192,7 @@
                 <strong>all screens.</strong>
             </h6>
         </div>
-        {#if isManualTimerAllowed()}
+        {#if isManualTimerAllowed($userEmail)}
         <hr />
         <div class="singularSettingDiv">
             <h4>Allow Fractional MS timing</h4>

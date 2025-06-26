@@ -274,12 +274,6 @@
                 text: "Capture Video",
                 menuRoute: "/captureVideo",
             },
-            //TODO: populate orgIz from db?
-            // (not really needed, b/c we can pull it from dexie...)
-            {
-                text: "Update Event Settings",
-                menuRoute: "/eventAdd/db/Update",
-            }
         ];
     }
     const reloadEvent = async (raceConfigParam) => {
