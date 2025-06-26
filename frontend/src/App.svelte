@@ -233,7 +233,7 @@
                 menuRoute: "/chartList",
             },
             {
-                text: "Watch different event",
+                text: "Watch Different Event",
                 menuRoute: "/orgSelection",
                 alwaysShow: true,
             },
@@ -250,29 +250,29 @@
         ]
         adminMenuMap = [
             {
-                text: "Manual Announcement",
-                menuRoute: "/ManualAnnouncement",
+                text: "Timer Config",
+                menuRoute: "/timerConfigList",
             },
             {
                 text: "List All Media",
                 menuRoute: "/spMediaList/*/*",
             },
             {
-                text: "Timer Config (Elapsed)",
-                menuRoute: "/timerConfigList",
+                text: "Org Users",
+                menuRoute: "/orgUserList",
+            },
+            {
+                text: "Manual Announcement",
+                menuRoute: "/ManualAnnouncement",
+            },
+            {
+                text: "Capture Video",
+                menuRoute: "/captureVideo",
             },
             {
                 text: "Raw Timer List",
                 menuRoute: "/rawTimerList",
                 neverShow: true,
-            },
-            {
-                text: "Org Users",
-                menuRoute: "/orgUserList",
-            },
-            {
-                text: "Capture Video",
-                menuRoute: "/captureVideo",
             },
         ];
     }
