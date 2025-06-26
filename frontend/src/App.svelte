@@ -132,7 +132,7 @@
     // empty generalMenuMap here seems to cause CSS issues!
     let generalMenuMap = [
         {
-            text: "Watch different event",
+            text: "Watch Different Event",
             menuRoute: "/orgSelection",
 
             alwaysShow: true,
@@ -150,7 +150,7 @@
 
     $: {
         if (isMounted) {
-            // rebuild generalMenuMap when roleMap changes
+            // rebuild menu maps when roleMap changes
             log.debug("bmm:", $userId, $userEmail, $roleMap);
             buildMenuMaps($userId, $userEmail, $roleMap);
         }
