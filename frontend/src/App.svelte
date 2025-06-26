@@ -381,12 +381,12 @@
         else return "";
     };
 
-    /* Toggle between showing and hiding the navigation menus when the user clicks on the navbar icons */
-    const menuDisplayChange = (menuType) => {
-        if (menuType == visibleMenu) {
+    /* Toggle between showing and hiding the navigation menus when the user clicks on the navbar icons or a menu link */
+    const menuDisplayChange = (menuTypeSource) => {
+        if (menuTypeSource == visibleMenu) {
             visibleMenu = MenuType.NONE;
         } else {
-            visibleMenu = menuType;
+            visibleMenu = menuTypeSource;
         }
     };
 
