@@ -129,8 +129,8 @@
     };
 
     var isMounted = false;
-    // empty menumap here seems to cause CSS issues!
-    let menuMap = [
+    // empty generalMenuMap here seems to cause CSS issues!
+    let generalMenuMap = [
         {
             text: "Watch different event",
             menuRoute: "/orgSelection",
@@ -138,11 +138,21 @@
             alwaysShow: true,
         },
     ];
+    let adminMenuMap = [];
+
+    const MenuType = {
+        GENERAL: 'GENERAL',
+        ADMIN: 'ADMIN',
+        NONE: 'NONE'
+    }
+
+    var visibleMenu = MenuType.NONE;
+
     $: {
         if (isMounted) {
-            // rebuild menuMap when roleMap changes
+            // rebuild generalMenuMap when roleMap changes
             log.debug("bmm:", $userId, $userEmail, $roleMap);
-            buildMenuMap($userId, $userEmail, $roleMap);
+            buildMenuMaps($userId, $userEmail, $roleMap);
         }
     }
     $: {
@@ -192,7 +202,7 @@
         }
         return -1; // shouldn't happen
     }
-    async function buildMenuMap() {
+    async function buildMenuMaps() {
         log.debug("bmm: userEmailStored:", $userEmail);
 
         if ($userId) {
@@ -201,7 +211,7 @@
 
         const loginLabel = $userId ? `Logout [${$userId}]` : "Login";
 
-        menuMap = [
+        generalMenuMap = [
             {
                 text: "Drivers",
                 menuRoute: "/drivers",
@@ -223,14 +233,25 @@
                 menuRoute: "/chartList",
             },
             {
-                text: "Manual Announcement",
-                menuRoute: "/ManualAnnouncement",
-            },
-
-            {
                 text: "Watch different event",
                 menuRoute: "/orgSelection",
                 alwaysShow: true,
+            },
+            {
+                text: "Preferences",
+                menuRoute: "/preferences",
+                alwaysShow: true,
+            },
+            {
+                text: loginLabel,
+                menuRoute: "/loginH",
+                alwaysShow: true,
+            },
+        ]
+        adminMenuMap = [
+            {
+                text: "Manual Announcement",
+                menuRoute: "/ManualAnnouncement",
             },
             {
                 text: "List All Media",
@@ -250,12 +271,6 @@
                 menuRoute: "/orgUserList",
             },
             {
-                text: "Preferences",
-                menuRoute: "/preferences",
-                alwaysShow: true,
-            },
-
-            {
                 text: "Capture Video",
                 menuRoute: "/captureVideo",
             },
@@ -264,12 +279,7 @@
             {
                 text: "Update Event Settings",
                 menuRoute: "/eventAdd/db/Update",
-            },
-            {
-                text: loginLabel,
-                menuRoute: "/loginH",
-                alwaysShow: true,
-            },
+            }
         ];
     }
     const reloadEvent = async (raceConfigParam) => {
@@ -376,20 +386,20 @@
         if (cfg && cfg.name) return `${orgIz}${cfg.name}`;
         else return "";
     };
-    /* Toggle between showing and hiding the navigation menu links when the user clicks on the hamburger menu / bar icon */
-    const menuClickFunction = () => {
-        var x = document.getElementById("myLinks");
-        if (x.style.display === "block") {
-            x.style.display = "none";
+
+    /* Toggle between showing and hiding the navigation menus when the user clicks on the navbar icons */
+    const menuDisplayChange = (menuType) => {
+        if (menuType == visibleMenu) {
+            visibleMenu = MenuType.NONE;
         } else {
-            x.style.display = "block";
+            visibleMenu = menuType;
         }
     };
 
-    const navTo = (route) => {
-        log.debug("routing:" + route);
-        menuClickFunction();
-        replace(route);
+    const navTo = (menuOption) => {
+        log.debug("routing:" + menuOption.menuRoute);
+        menuDisplayChange(MenuType.NONE);
+        replace(menuOption.menuRoute);
     };
     function onPageShow() {
         /*
@@ -400,7 +410,12 @@
         */
     }
 
-
+    function shouldDisplayAdminNavIcon() {
+        for (const adminMenuOption of adminMenuMap) {
+            if (shouldDisplay($userEmail, adminMenuOption, $raceConfig)) return true;
+        }
+        return false;
+    }
 </script>
 
 <style>
@@ -409,11 +424,6 @@
         overflow: hidden;
         background-color: #333;
         position: relative;
-    }
-
-    /* Hide the links inside the navigation menu (except for logo/home) */
-    .topnav #myLinks {
-        display: none;
     }
 
     /* Style navigation menu links */
@@ -427,10 +437,8 @@
 
     /* Style the hamburger menu */
     .topnav div.icon {
-        background: black;
         display: block;
         position: absolute;
-        right: 0;
         top: 0;
         height: 50px;
         width: 50px;
@@ -459,23 +467,40 @@
             {/key}
         {/if}
     </a>
-    <div id="myLinks">
-        {#each menuMap as menuOption}
-            {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
-                <a on:click={() => navTo(menuOption.menuRoute)}>
-                    {menuOption.text}
+    <div style="display: {visibleMenu == MenuType.GENERAL ? "block" : "none"}">
+        {#each generalMenuMap as menuOption}
+            <a on:click={() => navTo(menuOption)}>
+                {menuOption.text}
+            </a>
+        {/each}
+    </div>
+    <div style="display: {visibleMenu == MenuType.ADMIN ? "block" : "none"}">
+        {#each adminMenuMap as adminMenuOption}   
+            {#if shouldDisplay($userEmail, adminMenuOption, $raceConfig)}
+                <a on:click={() => navTo(adminMenuOption)}>
+                    {adminMenuOption.text}
                 </a>
             {/if}
         {/each}
     </div>
-    <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->
-    <div class="icon">
-    <img style="width: 35px; margin-top: 5px; margin-left: 7.5px" src="bars-solid.svg" on:click={menuClickFunction}>
+
+    <!-- "Wrench/Screwdriver icon" to toggle the admin menu -->
+    {#if shouldDisplayAdminNavIcon(adminMenuMap, $userEmail)}
+    <div class="icon" style="right: 50px">
+    <img style="width: 35px; margin-top: 7.5px; margin-left: 7.5px" src="screwdriver-wrench-solid.svg" on:click={()=>menuDisplayChange(MenuType.ADMIN)}>
+    </div>
+    {/if}
+
+    <!-- "Hamburger menu" / "Bar icon" to toggle the general menu -->
+    <div class="icon" style="right: 0">
+    <img style="width: 35px; margin-top: 5px; margin-left: 7.5px" src="bars-solid.svg" on:click={()=>menuDisplayChange(MenuType.GENERAL)}>
     </div>
 </div>
+{#if visibleMenu == MenuType.NONE}
 <main>
     <SpinnerPanel/>
     <Splash />
     <Router {routes} />
 </main>
 <BottomNav />
+{/if}
