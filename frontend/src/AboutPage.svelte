@@ -53,6 +53,13 @@
 
     var devClickCount = 0;
     function devClick() {
+        if ($developerMode && devClickCount < 8) {
+            pushMessage( {
+                text: `You are already a developer.`,
+                type: "success",
+            });
+            return;
+        }
         if (devClickCount++ > 8) {
             log.warn("devmodeA");
             $developerMode = true;
