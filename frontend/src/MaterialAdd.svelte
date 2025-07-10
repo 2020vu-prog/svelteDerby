@@ -40,6 +40,16 @@
         bottom: 80px;
 
         z-index: 99;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fab img {
+        width: 0.9em;
+        height: 0.9em;
+        display: block;
     }
 
     .fab:hover {
@@ -49,7 +59,7 @@
 </style>
 
 {#if userHasPermission}
-    <div class="fab" style="background-color: {$theme}; line-height: 60px" on:click={chFunction}>
-        +
+    <div class="fab" style="background-color: {$theme}" on:click={chFunction}>
+        <img src="plus-solid.svg">
     </div>
 {/if}
