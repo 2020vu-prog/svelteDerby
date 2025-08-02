@@ -1408,6 +1408,15 @@ const routeMap = {
             return buildResponse({ requested: qsp.timerName });
         },
     },
+    "/requestServerEpochMS": {
+        h: async (event) => {
+            //var json = JSON.parse(event.body);
+            const epochMs = new Date().getTime();
+
+            log.debug("requestServerEpochMS:  gave: ", epochMs);
+            return buildResponse({ epochMS: epochMs });
+        },
+    },
     "/requestS3PutObjectUrl": {
         h: async (event) => {
             const qsp = event.queryStringParameters;
@@ -1486,7 +1495,7 @@ async function snsApplyPbLogMessage(snsMessageJson, snsPublishedTimestamp) {
 }
 async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug(
-        "snsApplyPbTimerHandler Message received from SNS2:",
+        "snsApplyPbTimerHandler Message received from SNS2 pb:",
         snsPublishedTimestamp,
         snsMessageJson
     );
@@ -1507,6 +1516,18 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         throw ("missing finishLineBlock", finishLineBlock);
     }
     const finishLineBlock = finishLineBlockList[0]; //change array to filtered object
+    
+    var l1Micros = parseInt(finishLineBlock.rpiNoseMicros[0]);
+    var l2Micros = parseInt(finishLineBlock.rpiNoseMicros[1]);
+    var byLine = "rpi.local";
+    // don't publish fractional ms for gps.  it will inevitably conflict with elapsed times!
+    if (finishLineBlock.gpsAvailable) {
+        l1Micros = finishLineBlock.gpsNoseMs[0] * 1000;
+        l2Micros = finishLineBlock.gpsNoseMs[1] * 1000;
+        byLine = "rpi.gps";
+        snsPublishedTimestamp=finishLineBlock.gpsNoseMs[0];  // mqtt qos 1 re-xmit can obscure snsPubTime!
+        // need workaround for no gps, but this should help for gps
+    }
 
     const rp = await getApplyableNextOnBlocks(
         parseInt(snsMessageJson.newXmitMs),
@@ -1518,16 +1539,7 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug("snsApplyPbTimerHandler rp:", rp);
     //throw "snsApplyPbTimerHandler unfinished.";
 
-    var l1Micros = parseInt(finishLineBlock.rpiNoseMicros[0]);
-    var l2Micros = parseInt(finishLineBlock.rpiNoseMicros[1]);
-    var byLine = "rpi.local";
 
-    // don't publish fractional ms for gps.  it will inevitably conflict with elapsed times!
-    if (finishLineBlock.gpsAvailable) {
-        l1Micros = finishLineBlock.gpsNoseMs[0] * 1000;
-        l2Micros = finishLineBlock.gpsNoseMs[1] * 1000;
-        byLine = "rpi.gps";
-    }
     if (rp.cn[0] && !validNumericTime(l1Micros)) {
         throw `missing time [${l1Micros}] for car [${rp.cn}] in lane 1`;
     }
@@ -1578,7 +1590,7 @@ function validNumericTime(rpiTime) {
 }
 async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug(
-        "applyTimerHandler Message received from SNS2:",
+        "applyTimerHandler Message received from SNS2 default:",
         snsPublishedTimestamp,
         snsMessageJson
     );

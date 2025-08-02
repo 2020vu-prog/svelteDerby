@@ -60,8 +60,8 @@
                 orgId: $raceConfig.orgId,
             };
             let prior;
-            messages.forEach((msg, index) => {
-                if (msg.key && msg.key === msg.key) {
+            messages.forEach((imsg, index) => {
+                if (imsg.key && imsg.key === newMsg.key) {
                     prior = index;
                 }
             });

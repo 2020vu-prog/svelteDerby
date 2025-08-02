@@ -11,7 +11,8 @@
         isIos,
         videoPerspective,
         videoCaptureCodec,
-        videoClientTimeAdjustmentMs
+        videoClientTimeAdjustmentMs,
+        videoClientTimeAdjustmentMarginMs
     } from "./stores.js";
 
     import {
@@ -49,6 +50,7 @@
     var captureSpinning = false;
     var captureDisabled = true;
     var remoteeSpinning = false;
+    var calcSpinning = false;
     var remoteeDisabled = false;
     var resolution = "640x480";
     var frameRate = "15";
@@ -100,6 +102,7 @@
         log.debug(`${tag}: invoked: ${JSON.stringify(json)}`);
 
         auditClientTime(json.issuedMs,tag)
+        await calcClientTimeAdjustmentMs();
 
         if(!json.tgtTimeMs){
             log.error(`${tag}: INVALID`);
@@ -547,6 +550,46 @@
         mediaRecorder[snum].start();
         log.debug("recordStream done", snum);
     }
+    async function calcClientTimeAdjustmentMs(){
+        
+        calcSpinning = true;
+        var beginMS=new Date().getTime();
+        try {
+            const endPoint = "/requestServerEpochMS";
+            const req = {
+                orgId: $raceConfig.orgId,
+                orgIz: $raceConfig.orgIz,
+            };
+            const response = await $axios.get($raceConfig.baseUrl + endPoint, {
+                params: req,
+            });
+            log.debug("calcClientTimeAdjustmentMs response", response);
+            var doneMS=new Date().getTime();
+            var elapsedMS=(doneMS-beginMS);
+            var middleMS=Math.round((elapsedMS/2)+beginMS);
+            if(response.data.epochMS && elapsedMS<1000){
+                var offsetMS=middleMS-response.data.epochMS;
+                $videoClientTimeAdjustmentMs=offsetMS;
+                $videoClientTimeAdjustmentMarginMs= Math.round(elapsedMS/2);
+                pushMessage( {
+                    text: `Completed time compensation. ${offsetMS}`,
+                    type: "success",
+                });
+            }
+            else{
+
+            }
+        } catch (err) {
+                log.debug("calcClientTimeAdjustmentMs caught:", err);
+            pushMessage( {
+                text: err,
+                type: "error",
+            });
+        } finally {
+            calcSpinning = false;
+        }
+
+    }
     function handleTimerSelect(event) {
         log.debug("handleTimerSelect got event:", event.detail);
         if (event.detail.decoded) {
@@ -627,11 +670,16 @@
         bind:value={snipLengthSeconds}
         type="number" />
 </label>
-<label>Client time adjustment (milliseconds)
+<label>Time adjustment (ms)
     <input 
         bind:value={$videoClientTimeAdjustmentMs}
-        type="number" />
+        type="number" disabled/>
+    ± {$videoClientTimeAdjustmentMarginMs}ms
+
 </label>
+<SpinnerButton on:click={calcClientTimeAdjustmentMs} spinning={calcSpinning}>
+    Calculate time offset
+</SpinnerButton>
 {/if}
 <label>Perspective
 <input bind:value={$videoPerspective}
