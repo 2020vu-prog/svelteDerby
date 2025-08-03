@@ -49,6 +49,7 @@ export const userEmail = derived(userJwtStore, ($bearer) => {
     return dtoken($bearer, "email");
 });
 export const userExp = derived(userJwtStore, ($bearer) => {
+    log.info("userExp: begin");
     return dtoken($bearer, "exp");
 });
 export const roleMap = persistable("roleMap", {});

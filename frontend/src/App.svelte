@@ -70,6 +70,9 @@
         initialReloadRoute,
         getOrgName,
         reRenderHotLoad,
+        userExpCountDownSecs,
+        userJwtStore,
+
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
@@ -147,6 +150,12 @@
     }
 
     var visibleMenu = MenuType.NONE;
+    $: {
+        if($userJwtStore && $userExpCountDownSecs == 0){
+            log.warn("app: cleared expired jwt");
+            $userJwtStore="";
+        }
+    }
 
     $: {
         if (isMounted) {
