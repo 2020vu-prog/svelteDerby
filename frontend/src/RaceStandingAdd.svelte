@@ -223,7 +223,7 @@
 <h3>{title}</h3>
 
 <form>
-    {#if mode==modeRacePhase}
+    {#if mode==modeRacePhase && !submitSpinning}
         <h4>
             Blocks are 
             <strong style="background-color: {blocksOccupied ? '#FF0000' : 'lightgreen'}">
