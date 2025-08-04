@@ -11,6 +11,7 @@
         isIos,
         videoPerspective,
         videoCaptureCodec,
+        videoClientTimeFixedMs,
         videoClientTimeAdjustmentMs,
         videoClientTimeAdjustmentMarginMs
     } from "./stores.js";
@@ -112,7 +113,7 @@
             log.error(`${tag}: INVALID`);
             return
         }
-        const tgtAdjMs=json.tgtTimeMs+$videoClientTimeAdjustmentMs
+        const tgtAdjMs=json.tgtTimeMs+$videoClientTimeAdjustmentMs+$videoClientTimeFixedMs;
         const lo=tgtAdjMs-500
         const hi=tgtAdjMs+500
         const futureHi=(hi - Date.now())+5000
@@ -130,7 +131,7 @@
         else{
             log.debug(`${tag}: noWait ${futureHi}`);
             pushMessage( {
-                    text: `Video upload processing.`,
+                    text: `Video upload searching...`,
                     key: mqttMsgKey,
                     type: "success",
             });
@@ -566,7 +567,7 @@
             log.debug("calcClientTimeAdjustmentMs response", response);
             var doneMS=new Date().getTime();
             var elapsedMS=(doneMS-beginMS);
-            var middleMS=Math.round((elapsedMS/2)+beginMS);
+            var middleMS=Math.round(elapsedMS/2)+beginMS;
             if(response.data.epochMS && elapsedMS<1000){
                 var offsetMS=middleMS-response.data.epochMS;
                 $videoClientTimeAdjustmentMs=offsetMS;
@@ -670,12 +671,16 @@
         bind:value={snipLengthSeconds}
         type="number" />
 </label>
-<label>Time adjustment (ms)
+<label>Time adjustment [d](ms)
     <input 
         bind:value={$videoClientTimeAdjustmentMs}
         type="number" disabled/>
     ± {$videoClientTimeAdjustmentMarginMs}ms
-
+</label>
+<label>Time adjustment [f](ms)
+    <input 
+        bind:value={$videoClientTimeFixedMs}
+        type="number" />
 </label>
 <SpinnerButton on:click={calcClientTimeAdjustmentMs} spinning={calcSpinning}>
     Calculate time offset

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import Dexie from 'dexie';
 	import aws_exports from "./aws-exports";
     import { onMount } from 'svelte';
     import SpinnerButton from "./SpinnerButton.svelte";
