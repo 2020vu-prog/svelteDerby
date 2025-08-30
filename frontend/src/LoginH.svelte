@@ -2,8 +2,10 @@
 	import aws_exports from "./aws-exports";
     import { onMount } from 'svelte';
     import SpinnerButton from "./SpinnerButton.svelte";
+    import LoginSpotify from "./LoginSpotify.svelte";
     import {logout, sleep} from './utils.js'
     import {
+        developerMode,
         pushMessage,
         userExpCountDownSecs,
         userEmail,
@@ -64,6 +66,7 @@ const regex = /\/+/gi;
         await sleep(300)
         window.location.href=loginUrl
     }
+
 </script>
 {#if redirecting}
 <SpinnerButton
@@ -100,4 +103,9 @@ June 21, 2024
 </strong> 
 <br />
 If you had a user/password that was created before then, you will need to SIGN UP again using the SAME email address.
+{/if}
+
+{#if         $developerMode}
+<br>
+<LoginSpotify/>
 {/if}

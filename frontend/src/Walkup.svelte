@@ -9,6 +9,8 @@
     import { db } from "./eventDb.js";
     import { sleep } from "./utils.js";
     import Spotify from "./Spotify.svelte";
+    import SpotifyApi from "./SpotifyApi.svelte";
+    import {spotifyPlay as spotifyPlayApi,isLoggedInSpotify} from './utils/spotify.js'
     //let href='https://open.spotify.com/track/2DnJjbjNTV9Nd5NOa1KGba?si=07ae100fdc0e4f49'
     let requestedHref=''
     let playingHref=''
@@ -22,21 +24,22 @@
         mayToggleSpotify($mp3Playing,requestedHref)
     }
    function mayToggleSpotify(mp3Playing,requestedHref) {
-            log.debug(`walkup: mayToggleSpotify [${requestedHref}] [${playingHref}]`)
+            log.debug(`walkup: mayToggleSpotify hrefs [${requestedHref}] [${playingHref}]`)
         if(requestedHref!==playingHref && !mp3Playing){
             playingHref=requestedHref
         }
+            log.debug(`walkup: mayToggleSpotify hreff [${requestedHref}] [${playingHref}]`)
         if(playSpotify){
 
-            log.debug(`walkup: mayToggleSpotify ${mp3Playing}`)
-            if(mp3Playing) {
+            log.debug(`walkup: mayToggleSpotify 3p: ${mp3Playing}`)
+            if(mp3Playing || playingHref.length==0) {
                 pauseSpotify()
             }else{
                 playSpotify()
             }
         }
         else{
-            log.debug(`walkup: mayToggleSpotify NOT`)
+            log.debug(`walkup: mayToggleSpotify NOT playing s`)
         }
         /*
         setTimeout(()=>{
@@ -47,12 +50,14 @@
     async function potentialPlay(unused){
         log.debug(`walkup: potentialPlay`)
         if( ! $nextOnBlockKey.length>0){
+            log.debug(`walkup: empty blocks`)
             requestedHref=''
             return
         }
         const nob=$racePhaseMap[$nextOnBlockKey]
         if(nob && nob.carNumbers){}
         else{
+            log.debug(`walkup: empty numbers`)
             return
         }
 
@@ -64,6 +69,10 @@
         );
         if(ptcpFromDexie && ptcpFromDexie.wLink){
             requestedHref=ptcpFromDexie.wLink
+            log.debug(`walkup: hitme: ${requestedHref}`)
+        }
+        else{
+            log.debug(`walkup: no link ${lane1Car}`)
         }
         
 
@@ -81,11 +90,19 @@
 {/if}
 {#if playingHref && $playWalkup}
     {#key playingHref}
+    {#if isLoggedInSpotify}
+        <SpotifyApi 
+            href={playingHref}
+            bind:pplay={playSpotify}
+            bind:ppause={pauseSpotify}
+        />
+    {:else}
         <Spotify 
             autoPlay=false 
             href={playingHref}
             bind:pplay={playSpotify}
             bind:ppause={pauseSpotify}
         />
+    {/if}
     {/key}
 {/if}

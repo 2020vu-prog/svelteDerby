@@ -82,6 +82,7 @@
          refreshOrgRoles,
         } from "./utils.js";
     import { setIdTokenFromCognitoCallback } from "./utilHosted.js";
+    import { urlParseSpotify } from "./utils/spotify";
     const routes = {
         // Exact path
         "/": RaceStandingList,
@@ -301,6 +302,7 @@
         setEnvTitle()
         const orgIz=$raceConfig.orgIz
         await setIdTokenFromCognitoCallback();
+        await urlParseSpotify();
         await refreshOrgRoles(orgIz);
         let msg='Using public access'
         if ($userEmail){
