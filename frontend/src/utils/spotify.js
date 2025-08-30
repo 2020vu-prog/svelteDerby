@@ -179,6 +179,9 @@ export async function spotifyPlay(track,doPlay,recurse) {
     url = new URL("https://api.spotify.com/v1/me/player/pause");
 
   }
+  if (!doPlay){
+    return;  //Rolls DU30b Mic-Preamp/Audio Ducker
+  }
   const accessToken=  localStorage.getItem('spotify:access_token');
   const payload = {
     method: 'PUT',
