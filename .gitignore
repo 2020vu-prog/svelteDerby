@@ -18,6 +18,7 @@ node_modules/
 /frontend/public/vendors.*.js
 /frontend/public/vendors.css
 /frontend/public/index.html
+/frontend/public/index_*.html
 /frontend/public/sw-generated.js
 /frontend/src/aws-exports.js
 /frontend/generatedTargets-*.sh
