@@ -33,8 +33,10 @@
 
             log.debug(`walkup: mayToggleSpotify 3p: ${mp3Playing}`)
             if(mp3Playing || playingHref.length==0) {
+                log.debug(`walkup: mayToggleSpotify pause`)
                 pauseSpotify()
             }else{
+                log.debug(`walkup: mayToggleSpotify play`)
                 playSpotify()
             }
         }

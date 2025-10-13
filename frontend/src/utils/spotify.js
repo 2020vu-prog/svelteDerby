@@ -35,7 +35,7 @@ export async function  getSpotifyPKCE(){
     localStorage.setItem('spotify:redirect', redirectUri);
 
   //const scope = 'user-read-private user-read-email';
-  const scope = 'user-read-private user-read-email user-modify-playback-state';
+  const scope = 'user-read-private user-read-email user-read-playback-state user-modify-playback-state';
   const authUrl = new URL("https://accounts.spotify.com/authorize")
 
   // generated in the previous step
@@ -101,6 +101,7 @@ export async function getSpotifyAccessToken (code ) {
   }
 }
 export function isLoggedInSpotify(){
+  
     const rt=localStorage.getItem('spotify:refresh_token');
     if(rt && rt.length>0){
         console.log(`isLoggedInSpotify true:`, )
@@ -110,11 +111,10 @@ export function isLoggedInSpotify(){
     return false
 }
 export function logoutSpotify(){
-    localStorage.removeItem('spotify:access_token' );
-    localStorage.removeItem('spotify:refresh_token');
+  localStorage.removeItem('spotify:access_token' );
+  localStorage.removeItem('spotify:refresh_token');
   localStorage.removeItem('spotify:code_verifier');
   localStorage.removeItem('spotify:redirect');
-
 }
     export async function urlParseSpotify() {
         const u = new URL(document.URL)
@@ -134,26 +134,58 @@ export function logoutSpotify(){
         }
     }
 
+export async function spotifyListDevices() {
+
+  const url = new URL("https://api.spotify.com/v1/me/player/devices");
+  const payload = {
+    method: 'GET',
+    headers: {
+        'Authorization': `Bearer DEFER`,
+    },
+  }
+
+  const response = await fetch401retry(url, payload);
+  console.log(`swiddle spotifyListDevices response:`, response)
+  const body = await response.json();
+  return body;
+      
+}
+export async function spotifyMe(volume) {
+  spotifyListDevices();
+  const url = new URL("https://api.spotify.com/v1/me");
+  const payload = {
+    method: 'GET',
+    headers: {
+        'Authorization': `Bearer DEFER`,
+    },
+  }
+  const params= new URLSearchParams({
+    //volume_percent:50,
+  });
+  url.search = new URLSearchParams(params).toString();
+
+  const response = await fetch401retry(url, payload);
+  console.log(`swiddle spotifyMe response:`, response)
+  const body = await response.json();
+  return body;
+      
+}
 export async function spotifyVolume(volume) {
-
   const url = new URL("https://api.spotify.com/v1/me/player/volume");
-
-  const accessToken=  localStorage.getItem('spotify:access_token');
   const payload = {
     method: 'PUT',
     headers: {
-        'Authorization': `Bearer ${accessToken}`,
-
+        'Authorization': `Bearer DEFER`,
     },
   }
-    const params= new URLSearchParams({
-      volume_percent:50,
-    });
-    url.search = new URLSearchParams(params).toString();
+  const params= new URLSearchParams({
+    volume_percent:50,
+  });
+  url.search = new URLSearchParams(params).toString();
 
-  const body = await fetch(url, payload);
-  const response = await body.json();
-    console.log(`swiddle spotifyVolume response:`, response)
+  const response = await fetch401retry(url, payload);
+  console.log(`swiddle spotifyVolume response:`, response)
+  const body = await response.json();
       
 }
 
@@ -166,6 +198,7 @@ function sanitizeTrack(track){
 }
 export async function spotifyPlay(track,doPlay,recurse) {
   const myLife='4ZoBC5MhSEzuknIgAkBaoT'
+  const webd='6bf47225e2365b3e5987565ef0cbc88bd8491a0c'
   log.debug(`spotifyPlay ${track}`)
   track=sanitizeTrack(track);
   log.debug(`spotifyPlay [sani] ${track}`)
@@ -182,14 +215,19 @@ export async function spotifyPlay(track,doPlay,recurse) {
   if (!doPlay){
     return;  //Rolls DU30b Mic-Preamp/Audio Ducker
   }
-  const accessToken=  localStorage.getItem('spotify:access_token');
   const payload = {
     method: 'PUT',
     headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer DEFER`,
           'Content-Type': 'application/json',
 
     },
+  }
+  if(webd){
+      const params= new URLSearchParams({
+        device_id:webd,
+    });
+    url.search = new URLSearchParams(params).toString();
   }
           //uris:["spotify:track:4ZoBC5MhSEzuknIgAkBaoT"],
   if(doPlay){
@@ -202,16 +240,32 @@ export async function spotifyPlay(track,doPlay,recurse) {
 
   }
 
-  const response = await fetch(url, payload);
+  const response = await fetch401retry(url, payload);
  // const response = await body.json();
-  console.log(`swiddle spotifyPlay response:`, response)
-  console.log(`swiddle spotifyPlay response:`, response.status)
-  if(response.status==401&& !recurse){
-    await getRefreshToken();;
-    await spotifyPlay(track,doPlay,1);
-  }
       
 }
+
+const insertToken=(payload) =>{
+  const accessToken=  localStorage.getItem('spotify:access_token');
+  payload.headers.Authorization= `Bearer ${accessToken}`;
+};
+const fetch401retry=async (url,payload) =>{
+
+  insertToken(payload);
+  const response = await fetch(url, payload);
+ // const response = await body.json();
+  log.debug(`fetch401retry spotifyPlay response:`, response)
+  log.debug(`fetch401retry spotifyPlay response:`, response.status)
+  if(response.status==401){
+    await getRefreshToken();;
+    insertToken(payload);
+    const response2 = await fetch(url, payload);
+    log.debug(`fetch401retry spotifyPlay response2:`, response2)
+    log.debug(`fetch401retry spotifyPlay response2:`, response2.status)
+    return response2
+  }
+  return response
+};
 
 
 const getRefreshToken = async () => {
