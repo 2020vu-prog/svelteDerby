@@ -47,6 +47,9 @@ resource "aws_sns_topic" "ZelloPushSns" {
 resource "aws_sns_topic" "PollyCompleteSns" {
   name = "PollyCompleteSns"
 }
+resource "aws_sns_topic" "AddEventSns" {
+  name = "AddEventSns"
+}
 resource "aws_ssm_parameter" "sns_pass_to_serverless" {
   name = "/sns/TimerWinDeltaSns/arn"
 

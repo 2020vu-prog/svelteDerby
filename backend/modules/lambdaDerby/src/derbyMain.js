@@ -894,6 +894,35 @@ const addTimerPbConfig = async (json) => {
 
     return rc[0];
 };
+const addNewEventPushSns = async (orgId,json) => {
+        const AddEventSnsArn = process.env.AddEventSnsArn;
+        const environ=process.env.DeployEnvironment;
+        var params = {
+            Message: `new event for org: ${json.orgIz}\nName: ${json.name}`,
+            TopicArn: AddEventSnsArn,
+            Subject: `RR1 [${environ}] new event`,
+
+            MessageAttributes: {
+                orgId: {
+                    DataType: "String",
+                    StringValue: orgId,
+                },
+            },
+        };
+
+        try {
+            const snsModule = new AWS.SNS({ apiVersion: "2010-03-31" });
+
+            console.log("SNS json    AddEventSnsArn:", json);
+            console.log("SNS sending AddEventSnsArn:", params);
+            //console.log("SNS module1 AddEventSnsArn:", snsModule);
+            const sent = await snsModule.publish(params).promise();
+            console.log("AddEventSnsArn send Success", sent);
+        } catch (err) {
+            console.log("AddEventSnsArn send Error", err);
+        }
+    };
+ 
 const addTimerConfig = async (json, initialLoad) => {
     if (!json.orgIz) {
         return { error: "Missing orgIz" };
@@ -1015,6 +1044,7 @@ const addEventConfig = async (event) => {
     ddbUtils.setEntityFactory(entityFactory);
     const eventRC = await ddbUtils.addSingle(json);
 
+    await addNewEventPushSns(json.orgId,json); 
     await addTimerConfig(json, true); // TODO: revisit default TimerConfig?
     return eventRC;
 };

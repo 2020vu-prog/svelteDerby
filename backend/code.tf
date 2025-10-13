@@ -32,6 +32,7 @@ module "derbyMainLambda" {
   ElapsedTempDbArn        = aws_dynamodb_table.elapsed-temp-table.arn
   DeployEnvironment       = var.DeployEnvironment
   AwsRegion               = var.AwsRegion
+  AddEventSnsArn          = aws_sns_topic.AddEventSns.arn
   ApplyTimerSnsArn        = aws_sns_topic.TimerWinDeltaSns.arn
   PollyCompleteSnsArn     = aws_sns_topic.PollyCompleteSns.arn
   ZelloPushSnsArn         = aws_sns_topic.ZelloPushSns.arn
