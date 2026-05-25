@@ -17,6 +17,7 @@ import {
     getChartCacheKey,
     mqttMapSubscribe as mqttMapSubscribeStore,
     nowDate,
+    timeFormat,
 } from "./stores.js";
 import { get } from "svelte/store";
 import { localConfigDb } from "./eventDb.js";
@@ -395,6 +396,26 @@ export function fmtPinTime(timerPin) {
         second: "2-digit",
         fractionalSecondDigits: 3,
     });
+}
+
+export function formatWinTime(ms) {
+    if (ms === 0) return "Tied";
+
+    var timeFormatSelected = get(timeFormat);
+    if (timeFormatSelected === "ms-padded-unit") {
+        return ms.toString().padStart(3, "0") + " ms";
+    } else if (timeFormatSelected === "ms-unpadded-nounit") {
+        return ms.toString();
+    } else if (timeFormatSelected === "ms-unpadded-unit") {
+        return ms.toString() + " ms";
+    } else if (timeFormatSelected === "s-nounit") {
+        return (ms / 1000).toFixed(3);
+    } else if (timeFormatSelected === "s-unit") {
+        return (ms / 1000).toFixed(3) + " s";
+    } else {
+        // ms-padded-nounit is also the default
+        return ms.toString().padStart(3, "0");
+    }
 }
 
 import { onDestroy } from "svelte";

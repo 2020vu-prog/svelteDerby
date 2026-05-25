@@ -18,6 +18,7 @@
         fmtChartPosition,
         getBracketLink,
         hhmmssFmt,
+        formatWinTime,
     } from "./utils.js";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
@@ -62,7 +63,7 @@
     };
 
     const getWinTime = (lane, phase, at) => {
-        return standing.getWinTime(lane, phase).toString().padStart(3, "0");
+        return formatWinTime(standing.getWinTime(lane, phase));
     };
     const shouldRender = (raceStanding) => {
         return !raceStanding.del;

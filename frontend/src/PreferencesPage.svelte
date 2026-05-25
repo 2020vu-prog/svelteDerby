@@ -15,6 +15,7 @@
         raceConfig,
         mqttPsUrlMap,
         developerMode,
+        timeFormat,
     } from "./stores.js";
 
     $: {
@@ -23,6 +24,9 @@
             `${$theme}`
         );
     }
+
+    import { formatWinTime } from "./utils.js";
+    import { Badge } from "sveltestrap";
 
     import { onMount } from "svelte";
     import { getCacheKey, setCacheKey } from "./stores.js";
@@ -34,6 +38,7 @@
     let mounted = false;
     var lclCacheKey = 0;
     let themeSelected;
+    let timeFormatSelected;
     var selectedPageSize = undefined;
 
     var qrCodeUrl=''
@@ -85,6 +90,7 @@
 
         mounted = true;
         updateColorSelector();
+        timeFormatSelected = $timeFormat;
         if ($uiPageSize) {
             selectedPageSize = $uiPageSize.toString();
         } else {
@@ -143,6 +149,10 @@
                 return;
             }
         });
+    };
+
+    const updateTimeFormat = async () => {
+        $timeFormat = timeFormatSelected;
     };
 </script>
 
@@ -286,6 +296,38 @@
     <hr />
 
     <div class="singularSettingDiv">
+        <div
+            style="display: inline-flex; align-items: center; gap: 1rem; width: fit-content;"
+        >
+            <h4 style="margin: 0;">Time Format</h4>
+
+            <Badge pill class="bigText">
+                A: {formatWinTime(15, $timeFormat)}
+            </Badge>
+        </div>
+
+        <select
+            id="timeFormatSelector"
+            bind:value={timeFormatSelected}
+            on:change={() => updateTimeFormat()}
+        >
+            <option value="ms-padded-nounit">015</option>
+            <option value="ms-padded-unit">015 ms</option>
+            <option value="ms-unpadded-nounit">15</option>
+            <option value="ms-unpadded-unit">15 ms</option>
+            <option value="s-nounit">0.015</option>
+            <option value="s-unit">0.015 s</option>
+        </select>
+
+        <h6>
+            This controls the way that time differentials are displayed. The
+            badge above demonstates your selected format with a win time of 15
+            milliseconds.
+        </h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
         <h4 class="">Sort Pending Races By</h4>
         <select bind:value={$pendingSortAlgorithm}>
             <option class="sortOption">Age</option>
@@ -366,7 +408,6 @@
         </div>
         <hr />
     </div>
-
 
     <BottomNav />
 </div>

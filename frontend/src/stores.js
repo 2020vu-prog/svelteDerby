@@ -55,6 +55,7 @@ export const userExp = derived(userJwtStore, ($bearer) => {
 export const roleMap = persistable("roleMap", {});
 
 export const theme = persistable("pref:themeBg", "#4CAF50");
+export const timeFormat = persistable("pref:timeFormat", "ms-padded-nounit");
 export function pushMessage(msg){
     if(!msg.key){
         msg.key=uuidv4();

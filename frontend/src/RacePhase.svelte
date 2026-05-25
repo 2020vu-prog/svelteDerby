@@ -25,6 +25,7 @@
         getHistoryEntity,
         isPendingNeeded,
         getRaceTypeEmoji,
+        formatWinTime,
     } from "./utils.js";
     export let compressedLayout;
     export let refreshTime;
@@ -96,10 +97,7 @@
         if (lane === 2) {
             phaseWinTime = phaseWinTime * -1;
         }
-        if (phaseWinTime == 0) {
-            return "Tied";
-        }
-        return phaseWinTime.toString().padStart(3, "0");
+        return formatWinTime(phaseWinTime);
     };
     const getPhaseClass = (racePhase) => {};
 
@@ -176,8 +174,8 @@
         }
 
         if (phaseWinTime < 0) return false;
-        
-        return phaseWinTime.toString().padStart(3, "0");
+
+        return formatWinTime(phaseWinTime);
     };
 </script>
 
