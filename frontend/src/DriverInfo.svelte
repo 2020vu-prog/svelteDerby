@@ -31,6 +31,7 @@
         var rs = standingsList.filter((b) => {
             return b.Bp === a.Bp;
         })[0];
+        if (!rs) return false;
         return (
             (rs.ph1 && arraysEqual(rs.ph1, a.phr)) ||
             (rs.ph2 && arraysEqual(rs.ph2, a.phr.slice().reverse()))
