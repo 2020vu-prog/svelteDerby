@@ -5,7 +5,13 @@
     import { raceConfig, axios } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { getCacheKey, getChartCacheKey, theme } from "./stores.js";
+    import { db } from "./eventDb.js";
+    import {
+        getCacheKey,
+        getChartCacheKey,
+        theme,
+        doRefreshBlocks,
+    } from "./stores.js";
 
     $: {
         document.documentElement.style.setProperty(
@@ -14,27 +20,61 @@
         );
     }
     $: {
-        if (mounted && day && time && division) {
-            loginForm.chartName = `${day} ${time} ${division}`;
+        if (mounted && day && time && division && namingToolEnabled) {
+            chartAddForm.chartName = `${day} ${time} ${division}`;
         }
     }
+
+    // Keep an updated copy of all currently existing bracket names to enable duplication warning
+    var bmdFromDexie = [{ bracketName: "Initializing..." }];
+
+    $: {
+        refreshDataFromDb($doRefreshBlocks);
+    }
+
+    const refreshDataFromDb = async (trigger) => {
+        log.debug("refreshDataFromDb data:", trigger);
+
+        bmdFromDexie = await db.BracketMetaData.toArray();
+    };
 
     var jsReady = false;
     var treeReady = false;
     var mounted = false;
     var s3ChartTypes = false;
-    var loginForm = {};
+    var chartAddForm = {};
 
     var submitDisabled = true;
     var submitSpinning = false;
 
     var chartSelected = "Chart Selected: ";
+    var namingToolEnabled = true;
     var day;
     var time;
     var division;
+    var duplicateChartNameWarning = false;
 
     $: {
-        syncAddButton(loginForm.chartName);
+        if (
+            !Array.isArray(bmdFromDexie) ||
+            !chartAddForm ||
+            !chartAddForm.chartName
+        ) {
+            duplicateChartNameWarning = false;
+        } else {
+            duplicateChartNameWarning = bmdFromDexie.some(function (b) {
+                return (
+                    b &&
+                    !b.del &&
+                    b.bracketName.toLowerCase() ===
+                        chartAddForm.chartName.toLowerCase()
+                );
+            });
+        }
+    }
+
+    $: {
+        syncAddButton(chartAddForm.chartName);
     }
     const jqLoaded = () => {
         log.debug("jqloaded");
@@ -99,25 +139,26 @@
                         data.selected[0] &&
                         data.selected[0].includes(".")
                     ) {
-                        loginForm.bracketSelected = data.selected[0];
+                        chartAddForm.bracketSelected = data.selected[0];
                     } else {
-                        loginForm.bracketSelected = "";
+                        chartAddForm.bracketSelected = "";
                     }
                     syncAddButton();
                 });
         }
     };
     async function handleSubmit() {
-        log.debug("Adding:" + JSON.stringify(loginForm));
+        log.debug("Adding:" + JSON.stringify(chartAddForm));
 
         const combinedJson =
-            loginForm.bracketSelected.replace(/\.png$/i, "") + ".combined.json";
+            chartAddForm.bracketSelected.replace(/\.png$/i, "") +
+            ".combined.json";
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
-            imgPath: loginForm.bracketSelected,
+            imgPath: chartAddForm.bracketSelected,
             jsonPath: combinedJson,
-            bracketName: loginForm.chartName,
+            bracketName: chartAddForm.chartName,
         };
 
         submitSpinning = true;
@@ -132,14 +173,16 @@
                 submitSpinning = false;
                 log.debug("addChart failed: " + err);
             });
-        loginForm.chartName = "";
-        loginForm.bracketSelected = "";
+        chartAddForm.chartName = "";
+        chartAddForm.bracketSelected = "";
     }
     function syncAddButton() {
         if (!mounted) {
             return;
         }
-        submitDisabled = !(loginForm.bracketSelected && loginForm.chartName);
+        submitDisabled = !(
+            chartAddForm.bracketSelected && chartAddForm.chartName
+        );
     }
     // embedded script link: https://www.nielsvandermolen.com/external-javascript-sveltejs/
     const getChartDataFromServer = async () => {
@@ -233,6 +276,8 @@
     .switch-toggle {
         float: left;
         background: #242729;
+        border-radius: 20px;
+        overflow: hidden;
     }
 
     .switch-toggle input {
@@ -245,6 +290,8 @@
         float: left;
         color: #fff;
         cursor: pointer;
+        background-color: #242729;
+        transition: background-color 0.4s ease;
     }
 
     .switch-toggle input:checked + label {
@@ -265,114 +312,189 @@
 />
 
 <h3>Add Chart</h3>
-
 <form>
+    <h4>Chart File</h4>
+
     <label>
-        Chart Type:
+        Select a Chart:
         <div id="jstree_demo_div" />
     </label>
     <p>{chartSelected}</p>
 
-    <p style="float:left">Day:</p>
-    <div class="switch-toggle" style="max-height: 38px;">
-        <input id="sat" name="day" type="radio" bind:group={day} value="Sat" />
-        <label for="sat" onclick="">Sat</label>
+    <hr />
 
-        <input id="sun" name="day" type="radio" bind:group={day} value="Sun" />
-        <label for="sun" onclick="">Sun</label>
+    <h4>Chart Name</h4>
+    <br />
+
+    <p
+        style="float:left; display: flex; align-items: center; height: 38px; margin: 0; margin-right: 7.5px;"
+    >
+        Naming Style:
+    </p>
+    <div class="switch-toggle" style="max-height: 38px;">
+        <input
+            id="automated"
+            name="namingToolEnabled"
+            type="radio"
+            bind:group={namingToolEnabled}
+            value={true}
+        />
+        <label for="automated" onclick="">Automated</label>
+
+        <input
+            id="manual"
+            name="namingToolEnabled"
+            type="radio"
+            bind:group={namingToolEnabled}
+            value={false}
+        />
+        <label for="manual" onclick="">Manual</label>
     </div>
     <br />
     <br />
 
-    <p style="float:left">Time:</p>
-    <div class="switch-toggle" style="max-height: 38px;">
-        <input id="am" name="time" type="radio" bind:group={time} value="AM" />
-        <label for="am" onclick="">AM</label>
+    {#if namingToolEnabled}
+        <p
+            style="float:left; display: flex; align-items: center; height: 38px; margin: 0; margin-right: 7.5px;"
+        >
+            Day:
+        </p>
+        <div class="switch-toggle" style="max-height: 38px;">
+            <input
+                id="sat"
+                name="day"
+                type="radio"
+                bind:group={day}
+                value="Sat"
+            />
+            <label for="sat" onclick="">Sat</label>
 
-        <input id="pm" name="time" type="radio" bind:group={time} value="PM" />
-        <label for="pm" onclick="">PM</label>
+            <input
+                id="sun"
+                name="day"
+                type="radio"
+                bind:group={day}
+                value="Sun"
+            />
+            <label for="sun" onclick="">Sun</label>
+        </div>
+        <br />
+        <br />
 
-        <input
-            id="double"
-            name="time"
-            type="radio"
-            bind:group={time}
-            value="Double"
-        />
-        <label for="double" onclick="">Double</label>
+        <p
+            style="float:left; display: flex; align-items: center; height: 38px; margin: 0; margin-right: 7.5px;"
+        >
+            Time:
+        </p>
+        <div class="switch-toggle" style="max-height: 38px;">
+            <input
+                id="am"
+                name="time"
+                type="radio"
+                bind:group={time}
+                value="AM"
+            />
+            <label for="am" onclick="">AM</label>
 
-        <input
-            id="single"
-            name="time"
-            type="radio"
-            bind:group={time}
-            value="Single"
-        />
-        <label for="single" onclick="">Single</label>
-    </div>
-    <br />
-    <br />
-    <p style="float:left">Division:</p>
-    <div class="switch-toggle" style="max-height: 38px;">
-        <input
-            id="stock"
-            name="class"
-            type="radio"
-            bind:group={division}
-            value="Stock"
-        />
-        <label for="stock" onclick="">Stock</label>
+            <input
+                id="pm"
+                name="time"
+                type="radio"
+                bind:group={time}
+                value="PM"
+            />
+            <label for="pm" onclick="">PM</label>
 
-        <input
-            id="ss"
-            name="class"
-            type="radio"
-            bind:group={division}
-            value="SS"
-        />
-        <label for="ss" onclick="">SS</label>
+            <input
+                id="double"
+                name="time"
+                type="radio"
+                bind:group={time}
+                value="Double"
+            />
+            <label for="double" onclick="">Double</label>
 
-        <input
-            id="masters"
-            name="class"
-            type="radio"
-            bind:group={division}
-            value="Masters"
-        />
-        <label for="masters" onclick="">Masters</label>
+            <input
+                id="single"
+                name="time"
+                type="radio"
+                bind:group={time}
+                value="Single"
+            />
+            <label for="single" onclick="">Single</label>
+        </div>
+        <br />
+        <br />
+        <p
+            style="float:left; display: flex; align-items: center; height: 38px; margin: 0; margin-right: 7.5px;"
+        >
+            Division:
+        </p>
+        <div class="switch-toggle" style="max-height: 38px;">
+            <input
+                id="stock"
+                name="class"
+                type="radio"
+                bind:group={division}
+                value="Stock"
+            />
+            <label for="stock" onclick="">Stock</label>
 
-        <input
-            id="legacy"
-            name="class"
-            type="radio"
-            bind:group={division}
-            value="Legacy"
-        />
-        <label for="legacy" onclick="">Legacy</label>
+            <input
+                id="ss"
+                name="class"
+                type="radio"
+                bind:group={division}
+                value="SS"
+            />
+            <label for="ss" onclick="">SS</label>
 
-        <input
-            id="wrap"
-            name="class"
-            type="radio"
-            bind:group={division}
-            value="Wrap"
-        />
-        <label for="wrap" onclick="">Wrap</label>
-    </div>
-    <br />
-    <br />
-    <br />
+            <input
+                id="masters"
+                name="class"
+                type="radio"
+                bind:group={division}
+                value="Masters"
+            />
+            <label for="masters" onclick="">Masters</label>
+
+            <input
+                id="legacy"
+                name="class"
+                type="radio"
+                bind:group={division}
+                value="Legacy"
+            />
+            <label for="legacy" onclick="">Legacy</label>
+
+            <input
+                id="wrap"
+                name="class"
+                type="radio"
+                bind:group={division}
+                value="Wrap"
+            />
+            <label for="wrap" onclick="">Wrap</label>
+        </div>
+        <br />
+    {/if}
     <br />
     <label>
         Chart Name:
         <input
             type="text"
-            bind:value={loginForm.chartName}
+            bind:value={chartAddForm.chartName}
             placeholder="Chart Name"
         />
     </label>
 
-    <br />
+    {#if duplicateChartNameWarning}
+        <div class="alert alert-warning" role="alert">
+            Warning &#9888;: A non-hidden chart with this name already exists.
+            This will confuse users.
+        </div>
+    {/if}
+
     <br />
     <SpinnerButton
         disabled={submitDisabled}

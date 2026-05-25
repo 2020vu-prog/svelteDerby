@@ -24,7 +24,7 @@
     $: {
         refreshDataFromDb($doRefreshBlocks);
     }
-    var bmdFromDexie = [{ brackName: "Initializing..." }];
+    var bmdFromDexie = [{ bracketName: "Initializing..." }];
 
     var currentShowingStat = "Phases";
 
@@ -86,9 +86,8 @@
                 });
 
                 if (runoffs.length > 0) {
-                    var secondaryRunoffHeatNum = runoffs[0].WinnerDest.split(
-                        ":"
-                    )[1].split(/[A-Z]/)[0];
+                    var secondaryRunoffHeatNum =
+                        runoffs[0].WinnerDest.split(":")[1].split(/[A-Z]/)[0];
 
                     var secondaryRunoffbpFromDexie = bpListFromDexie.filter(
                         (a) => {

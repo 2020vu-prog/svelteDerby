@@ -23,7 +23,7 @@
     $: {
         refreshDataFromDb($doRefreshBlocks);
     }
-    var bmdFromDexie = [{ brackName: "Initializing..." }];
+    var bmdFromDexie = [{ bracketName: "Initializing..." }];
 
     onMount(async () => {
         refreshDataFromDb();
@@ -41,7 +41,7 @@
     const getBmdAsList = (driverMap) => {
         const rc = [];
         db.BracketMetaData.each((bmd) => {
-            log.debug("bmd from dexie: ", bmd), rc.push(bmd);
+            (log.debug("bmd from dexie: ", bmd), rc.push(bmd));
         });
 
         log.debug("bmd rc:", rc);
