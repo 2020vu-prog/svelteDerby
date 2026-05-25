@@ -1,16 +1,22 @@
 <script>
     import log from "loglevel";
 
-    import { 
-        Button, 
+    import {
+        Button,
         Modal,
         ModalBody,
         ModalFooter,
-        ModalHeader ,
-    } from 'sveltestrap';
+        ModalHeader,
+    } from "sveltestrap";
 
     import { theme, driverMap } from "./stores.js";
-    import { axios, raceConfig, pushMessage, userEmail } from "./stores.js";
+    import {
+        axios,
+        raceConfig,
+        pushMessage,
+        userEmail,
+        nextOnBlockKey,
+    } from "./stores.js";
 
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
@@ -21,7 +27,8 @@
 
     export let dbName;
     export let dbKey;
-    let modalDeleteTgtName='none'
+    let modalDeleteTgtName = "none";
+    let modalType = "deleteConfirmation";
     export let timerLink;
     export let bracketLink;
     export let cn;
@@ -29,11 +36,11 @@
     const mediaLink = `/spMediaList/${dbName}/${dbKey}`;
     const elapsedLink = `/RpElapsed/${dbKey}`;
     let modalOpen = false;
-  const modalToggle = () => (modalOpen = !modalOpen);
-  function deleteConfimed(){
-    modalToggle()
-    doDelete(dbName, dbKey, modalDeleteTgtName);
-  }
+    const modalToggle = () => (modalOpen = !modalOpen);
+    function deleteConfimed() {
+        modalToggle();
+        doDelete(dbName, dbKey, modalDeleteTgtName);
+    }
     onMount(async () => {
         log.debug("timerLink: ", timerLink);
         log.debug("bracketLink: ", bracketLink);
@@ -47,8 +54,13 @@
         log.debug("toolbar maybeDelete key", dbName, dbKey);
         const tgt = await db[dbName].get(dbKey);
         log.debug("toolbar maybeDelete tgt", tgt);
+        modalType = "deleteConfirmation";
         if (dbName === "RacePhase") {
             modalDeleteTgtName = "Blocks";
+
+            if ($nextOnBlockKey !== dbKey) {
+                modalType = "cannotDeletePhase";
+            }
         } else if (dbName === "RaceStanding" && tgt.ph2) {
             modalDeleteTgtName = "B-Phase";
         } else if (dbName === "RaceStanding" && tgt.ph1) {
@@ -58,7 +70,7 @@
         }
         //tgtName = `${tgtName}X`
         if (modalDeleteTgtName) {
-            modalOpen=true
+            modalOpen = true;
         }
     }
 
@@ -81,18 +93,18 @@
                 req
             );
             if (response.data.status === "error") {
-                pushMessage( {
+                pushMessage({
                     text: response.data.error,
                     type: response.data.status,
                 });
             } else {
-                pushMessage( {
+                pushMessage({
                     text: `[${dbName}] Deleted.`,
                     type: "success",
                 });
             }
         } catch (e) {
-            log.debug('caught err:',e)
+            log.debug("caught err:", e);
             /*
             our axios looks to be doing this...
             pushMessage( {
@@ -120,18 +132,18 @@
                 req
             );
             if (response.data.status === "error") {
-                pushMessage( {
+                pushMessage({
                     text: response.data.error,
                     type: response.data.status,
                 });
             } else {
-                pushMessage( {
+                pushMessage({
                     text: `Cars called.`,
                     type: "success",
                 });
             }
         } catch (e) {
-            pushMessage( {
+            pushMessage({
                 text: e,
                 type: "error",
             });
@@ -209,19 +221,30 @@
 </style>
 
 <div style="color:black">
-
-
-<Modal isOpen={modalOpen} toggle={modalToggle} fullscreen>
-    <ModalHeader toggle={modalToggle}>Confirm delete?</ModalHeader>
-      <ModalBody>
-        Proceed with [{modalDeleteTgtName}] delete? 
-      </ModalBody>
-      <ModalFooter>
-        <Button color="primary" on:click={deleteConfimed}>Delete</Button>
-        <Button color="secondary" on:click={modalToggle}>Cancel</Button>
-      </ModalFooter>
+    <Modal isOpen={modalOpen} toggle={modalToggle} fullscreen>
+        {#if modalType === "deleteConfirmation"}
+            <ModalHeader toggle={modalToggle}>Confirm delete?</ModalHeader>
+            <ModalBody>
+                Proceed with [{modalDeleteTgtName}] delete?
+            </ModalBody>
+            <ModalFooter>
+                <Button color="primary" on:click={deleteConfimed}>Delete</Button
+                >
+                <Button color="secondary" on:click={modalToggle}>Cancel</Button>
+            </ModalFooter>
+        {:else if modalType === "cannotDeletePhase"}
+            <ModalHeader toggle={modalToggle}>Cannot Delete</ModalHeader>
+            <ModalBody>
+                You cannot delete from the Phases screen. To unlink this phase
+                from its associated heat, press delete from the corresponding
+                item on the Races screen.
+            </ModalBody>
+            <ModalFooter>
+                <Button color="secondary" on:click={modalToggle}>Close</Button>
+            </ModalFooter>
+        {/if}
     </Modal>
-  </div>
+</div>
 <div class="navbar" id="myNavbar">
     {#if timerLink && isManualTimerAllowed()}
         <span
@@ -253,7 +276,10 @@
     {#if isDeleteAllowed()}
         <span
             class="navbarItem"
-            style="background-color: {$theme}"
+            style="background-color: {dbName === 'RacePhase' &&
+            $nextOnBlockKey !== dbKey
+                ? '#6c757d'
+                : $theme}"
             on:click|preventDefault={maybeDelete}
         >
             Delete
