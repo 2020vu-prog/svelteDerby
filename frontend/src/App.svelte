@@ -248,7 +248,7 @@
                 alwaysShow: true,
             },
             {
-                text: "Preferences",
+                text: "Preferences & Sharing",
                 menuRoute: "/preferences",
                 alwaysShow: true,
             },
