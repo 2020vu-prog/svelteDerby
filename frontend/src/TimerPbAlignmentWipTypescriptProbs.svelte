@@ -27,6 +27,7 @@
         getTimerPbConfig,
         fmtPinTime,
         MqttMapSubscription,
+        MqttGetTopic,
     } from "./utils.js";
     import {
         Button,
@@ -46,7 +47,7 @@
     const timerName = searchParams.get("timerName");
     const timerId = searchParams.get("timerId");
     if (timerName && timerId) {
-        timerTopic = `rr1Timer/${timerId}`;
+        timerTopic = MqttGetTopic(timerId);
         MqttMapSubscription(timerTopic);
     }
     var historyAgeDuration = "PT20M";
@@ -89,7 +90,7 @@
         log.debug("TimerPbAlignment dexie:", timerPbConfig);
         if (timerPbConfig && timerPbConfig.timerMqttClientId) {
             //await getTimerHistory();
-            timerTopic = `rr1Timer/${timerPbConfig.timerMqttClientId}`;
+            timerTopic = MqttGetTopic(timerPbConfig.timerMqttClientId);
             log.debug(`TimerPbAligment topic:  ${timerTopic}`);
             //$mqttTimerTopic = timerTopic;
             //$mqttTimerSubscribe = true;

@@ -7,14 +7,14 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { createEventDispatcher } from "svelte";
-    import { getTimerPbConfig, MqttMapSubscription } from "./utils.js";
+    import { getTimerPbConfig, MqttMapSubscription, MqttGetTopic } from "./utils.js";
     import { mqttMapData } from "./stores.js";
     export let timerId = "";
     export let verbose = "truthyString";
     let timerTopic = "";
     const dispatch = createEventDispatcher();
     if (timerId) {
-        timerTopic = `rr1Timer/${timerId}`;
+        timerTopic = MqttGetTopic(timerId);
         log.debug("handleTimerSelect MqttMapSubscription:", timerId);
         MqttMapSubscription(timerTopic);
     }

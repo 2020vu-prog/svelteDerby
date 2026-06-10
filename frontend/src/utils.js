@@ -25,8 +25,8 @@ import { location as spaLocation } from "svelte-spa-router";
 
 const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
-export function getSpaLocation(){
-    return get(spaLocation)
+export function getSpaLocation() {
+    return get(spaLocation);
 }
 export async function getHistoryEntity(PK, SK, at) {
     const key = { PK: PK, SK: SK, at: at };
@@ -64,7 +64,7 @@ export async function fmtChartPosition(RpRs) {
     }
     return ["Heat: Adhoc", pendingNeeded];
 }
-export function getRaceTypeEmoji(i){
+export function getRaceTypeEmoji(i) {
     const trialRunEmoji = "⚗️";
     const hotRunEmoji = "🔥";
     const funRunEmoji = "😊";
@@ -81,24 +81,32 @@ export function getRaceTypeEmoji(i){
     if (i === "Y") {
         return byeRunEmoji;
     }
-    return ""
+    return "";
 }
 export function isPendingNeededForType(pt) {
     //log.debug(`isPendingNeededForType ${pt}`)
-    if (!pt){
-        return true
+    if (!pt) {
+        return true;
     }
-    if ( pt.startsWith("H") ){ return false;} //hot run
-    if ( pt.startsWith("T") ){ return false;} //trial run
-    if ( pt.startsWith("F") ){ return false;} //fun run
-    if ( pt.startsWith("Y") ){ return false;} //bye run
-    
+    if (pt.startsWith("H")) {
+        return false;
+    } //hot run
+    if (pt.startsWith("T")) {
+        return false;
+    } //trial run
+    if (pt.startsWith("F")) {
+        return false;
+    } //fun run
+    if (pt.startsWith("Y")) {
+        return false;
+    } //bye run
+
     //return false
-    return true
+    return true;
 }
 export function isPendingNeeded(RpRs) {
-    if (RpRs.pt){
-        return isPendingNeededForType(RpRs.pt)
+    if (RpRs.pt) {
+        return isPendingNeededForType(RpRs.pt);
     }
 
     return true;
@@ -112,16 +120,14 @@ export function getBracketLink(RpRs) {
         return undefined; // No bracketLink for adhoc.
     }
 }
-function getRoleListByOrgUser(userEmail,orgIz){
-
+function getRoleListByOrgUser(userEmail, orgIz) {
     const roleMap = get(roleMapStore);
     //log.debug("isAllowedRoutePath map:", userEmail,orgIz);
     //log.debug("isAllowedRoutePath map:", roleMap);
     if (userEmail && orgIz && roleMap[userEmail] && roleMap[userEmail][orgIz]) {
         return roleMap[userEmail][orgIz];
-    }
-    else{
-        return [] //no roles
+    } else {
+        return []; //no roles
     }
 }
 export function isAllowedRoutePath(routePath, orgIz = null) {
@@ -134,8 +140,8 @@ export function isAllowedRoutePath(routePath, orgIz = null) {
         orgIz = raceConfig.orgIz;
     }
     log.debug("isAllowedRoutePath effective org:", userEmail, orgIz);
-    const roleList = getRoleListByOrgUser(userEmail,orgIz);
-    log.debug("isAllowedRoutePath roles:",roleList)
+    const roleList = getRoleListByOrgUser(userEmail, orgIz);
+    log.debug("isAllowedRoutePath roles:", roleList);
     return hasSvelteRoutePath(null, roleList, routePath);
 }
 // deprecated
@@ -176,7 +182,6 @@ async function requstPermissionHack(cognitoIdentityId) {
         });
 }
 
-
 export function logout() {
     //cognitoLogout();
     userJwtStore.set("");
@@ -201,7 +206,7 @@ export function parseHeatPos(cp) {
 }
 export function mmddyyFmt(at) {
     var time = new Date(at);
-    const month1=time.getMonth()+1
+    const month1 = time.getMonth() + 1;
     return (
         ("0" + month1).slice(-2) +
         "/" +
@@ -294,31 +299,28 @@ export async function refreshOrgRoles(orgIz) {
 }
 
 export async function getChartJson(bmdFromDexie) {
-
-    const bmdJson= await db.BmdJson.get(bmdFromDexie.SK);
+    const bmdJson = await db.BmdJson.get(bmdFromDexie.SK);
     log.debug("utils getChartJson cache:", bmdJson);
-    if(bmdJson){
-        return bmdJson
+    if (bmdJson) {
+        return bmdJson;
     }
-    const cacheItem=await getChartJsonAxios(bmdFromDexie)
-    const bmdJsonCache={
-        SK:bmdFromDexie.SK,
-        ...cacheItem
-    }
+    const cacheItem = await getChartJsonAxios(bmdFromDexie);
+    const bmdJsonCache = {
+        SK: bmdFromDexie.SK,
+        ...cacheItem,
+    };
     log.debug("utils getChartJson gave", bmdFromDexie);
     try {
-        await db.BmdJson.put(bmdJsonCache)
+        await db.BmdJson.put(bmdJsonCache);
         log.debug("utils getChartJson cache saved:", bmdFromDexie);
     } catch (err) {
         log.debug("utils getChartJson cache write failed: " + err);
     }
-    return cacheItem
-
-
+    return cacheItem;
 }
 async function getChartJsonAxios(bmdFromDexie) {
     log.debug("utils getChartJsonAxios begin", bmdFromDexie);
-    const jsonPath=bmdFromDexie.jsonPath
+    const jsonPath = bmdFromDexie.jsonPath;
     const chartCacheKey = getChartCacheKey();
     try {
         const response = await axios.get(
@@ -344,32 +346,30 @@ export async function getTimerPbConfig(timerName) {
     }
     return [];
 }
-export function getTimerPinGpsMS(timerPin){
+export function getTimerPinGpsMS(timerPin) {
     const m1 = 1000 * 1000;
     const ms =
         timerPin.stamp.gpsTime.seconds * 1000 +
         Math.round(timerPin.stamp.gpsTime.nanos / m1);
-        return ms
+    return ms;
 }
-export function getTimerPinTickMS(timerPin){
+export function getTimerPinTickMS(timerPin) {
     const us = timerPin.stamp.tick64;
     //log.debug("fmtPinTime us", us);
     //log.debug("fmtPinTime us", typeof us);
     const ms = us / 1000;
-    return ms
+    return ms;
 }
 export function getTimerPinActiveMS(timerPin) {
     if (!timerPin.stamp.gpsTime) {
-        return [getTimerPinTickMS(timerPin),'tick64']
-    }else{
-        return [getTimerPinGpsMS(timerPin),'gps']
-
+        return [getTimerPinTickMS(timerPin), "tick64"];
+    } else {
+        return [getTimerPinGpsMS(timerPin), "gps"];
     }
-
 }
 export function fmtPinTime(timerPin) {
     if (!timerPin.stamp.gpsTime) {
-        const ms=getTimerPinTickMS(timerPin)
+        const ms = getTimerPinTickMS(timerPin);
         //log.debug("fmtPinTime from ", timerPin, " gave:", ms);
         let rpiDate = new Date(ms);
         return (
@@ -388,7 +388,7 @@ export function fmtPinTime(timerPin) {
     }
 
     //log.debug("fmtPinTime from ", timerPin, " gave:", ms);
-        const ms=getTimerPinGpsMS(timerPin)
+    const ms = getTimerPinGpsMS(timerPin);
     let gpsDate = new Date(ms);
     return gpsDate.toLocaleTimeString([], {
         hour: "2-digit",
@@ -419,6 +419,16 @@ export function formatWinTime(ms) {
 }
 
 import { onDestroy } from "svelte";
+
+export function MqttGetTopic(clientId) {
+    if (clientId.match(/^rr1/i)) {
+        //esp32 client
+        return `rr2Timer/${clientId}`;
+    } else {
+        // rpi client
+        return `rr1Timer/${clientId}`;
+    }
+}
 
 export function MqttMapSubscription(topic) {
     const tag = "syncMap:";
@@ -459,7 +469,7 @@ export function secondsToHHMMSS(seconds) {
     return answer;
 }
 
-export function downloadFile(filename,text){
+export function downloadFile(filename, text) {
     var element = document.createElement("a");
     element.setAttribute(
         "href",
@@ -479,24 +489,31 @@ export const filterMatches = (carNumber, lclFilter) => {
     let re = new RegExp("^" + lclFilter);
     return String(carNumber).match(re);
 };
-export async function augmentChartState (chartjson,chartId,heatPos,heatLetter)  {
-    let posHtml=""
-    let bracketClass=""
-    const isSeed= chartjson.seeds.indexOf(
-            `${heatPos}${heatLetter}`
-        ) > -1
-            ? true
-            : false;
+export async function augmentChartState(
+    chartjson,
+    chartId,
+    heatPos,
+    heatLetter
+) {
+    let posHtml = "";
+    let bracketClass = "";
+    const isSeed =
+        chartjson.seeds.indexOf(`${heatPos}${heatLetter}`) > -1 ? true : false;
     const bracketPosKey = `${chartId}:${heatPos}`;
     log.debug("augmentChartState bracketPosKey: ", bracketPosKey);
     const bpFromDexie = await db.BracketPos.get(bracketPosKey);
     log.debug("augmentChartState gave:", bpFromDexie);
     if (isSeed) {
         bracketClass = "pendingSeed";
-        posHtml='- SEED'
+        posHtml = "- SEED";
     }
 
-    if (heatLetter &&bpFromDexie && bpFromDexie.pos && bpFromDexie.pos[heatLetter]) {
+    if (
+        heatLetter &&
+        bpFromDexie &&
+        bpFromDexie.pos &&
+        bpFromDexie.pos[heatLetter]
+    ) {
         if (bpFromDexie.pos[heatLetter].status == "ptcp") {
             posHtml = ` - ${
                 bpFromDexie.pos[heatLetter].ptcp
@@ -512,17 +529,21 @@ export async function augmentChartState (chartjson,chartId,heatPos,heatLetter)  
                 bpFromDexie.pos[heatLetter].ptcp
             } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}(F)`;
             bracketClass = "haveForfeit";
-        } 
-    }
-        else {
-            const waiting=getChartAdvancementOrigin(chartjson,chartId,heatPos,heatLetter)  
-            if(waiting){
-                posHtml = ` - ${waiting}`
-            }
         }
+    } else {
+        const waiting = getChartAdvancementOrigin(
+            chartjson,
+            chartId,
+            heatPos,
+            heatLetter
+        );
+        if (waiting) {
+            posHtml = ` - ${waiting}`;
+        }
+    }
 
     let rsFromDexie = await db.RaceStanding.get(bracketPosKey);
-    log.debug("isSeed: ", isSeed,rsFromDexie);
+    log.debug("isSeed: ", isSeed, rsFromDexie);
     if (rsFromDexie) {
         if (rsFromDexie.del) {
             rsFromDexie = null;
@@ -540,7 +561,7 @@ export async function augmentChartState (chartjson,chartId,heatPos,heatLetter)  
         } else if (rs.isComplete()) {
             bracketClass = "complete";
         }
-        log.debug("isSeed2: ", isSeed,bracketClass);
+        log.debug("isSeed2: ", isSeed, bracketClass);
     }
 
     //await getChartImage(bmdFromDexie.imgPath);
@@ -550,8 +571,8 @@ export async function augmentChartState (chartjson,chartId,heatPos,heatLetter)  
         posHtml,
         isSeed,
         rsFromDexie,
-    }
-};
+    };
+}
 const getDriverName = (number) => {
     const driverMap = get(driverMapStore);
     if (number && driverMap[number]) {
@@ -560,50 +581,52 @@ const getDriverName = (number) => {
         return " ";
     }
 };
-function getChartAdvancementOrigin(chartjson,chartId,heatPos,heatLetter)  {
-    const needle=`${heatPos}${heatLetter}`
-    
-    const cjp=chartjson.progress
+function getChartAdvancementOrigin(chartjson, chartId, heatPos, heatLetter) {
+    const needle = `${heatPos}${heatLetter}`;
+
+    const cjp = chartjson.progress;
     for (const originHeat of Object.keys(cjp)) {
-        if(cjp[originHeat].WinnerDest===needle){
-            return `W ${fmtChartOrigin(cjp,originHeat)}`
+        if (cjp[originHeat].WinnerDest === needle) {
+            return `W ${fmtChartOrigin(cjp, originHeat)}`;
         }
-        if(cjp[originHeat].LoserDest===needle){
-            return `L ${fmtChartOrigin(cjp,originHeat)}`
+        if (cjp[originHeat].LoserDest === needle) {
+            return `L ${fmtChartOrigin(cjp, originHeat)}`;
         }
     }
-    return ''
+    return "";
 }
-function fmtChartOrigin(cjp,originHeat){
-    const r=cjp[originHeat]['#Round']
-    return `[${r}]Heat[${originHeat}]`
-
+function fmtChartOrigin(cjp, originHeat) {
+    const r = cjp[originHeat]["#Round"];
+    return `[${r}]Heat[${originHeat}]`;
 }
 export function extractS3VideoMeta(key) {
-    const m=/__(_7B.*_7D)__/.exec(key);
-    if (m&&m.length>1){
-        log.debug(`found meta: ${m[1]}`)
-        const metaJson=decodeURIComponent(m[1].replaceAll(/_/ig,'%'))
+    const m = /__(_7B.*_7D)__/.exec(key);
+    if (m && m.length > 1) {
+        log.debug(`found meta: ${m[1]}`);
+        const metaJson = decodeURIComponent(m[1].replaceAll(/_/gi, "%"));
 
-        log.debug(`found metaJson: ${metaJson}`)
-        if (metaJson){
-            const meta=JSON.parse(metaJson)
-            meta.perspective=meta.p
-            meta.timerName=meta.n
-            meta.snipStart=meta.ss
-            if(meta.lMs) meta.snipEnd=meta.lMs+meta.snipStart
-            if(meta.tt) meta.tgtTimeMs=meta.tt //deprecated
-            if(meta.toMs)meta.tgtTimeMs=meta.toMs +meta.snipStart
+        log.debug(`found metaJson: ${metaJson}`);
+        if (metaJson) {
+            const meta = JSON.parse(metaJson);
+            meta.perspective = meta.p;
+            meta.timerName = meta.n;
+            meta.snipStart = meta.ss;
+            if (meta.lMs) meta.snipEnd = meta.lMs + meta.snipStart;
+            if (meta.tt) meta.tgtTimeMs = meta.tt; //deprecated
+            if (meta.toMs) meta.tgtTimeMs = meta.toMs + meta.snipStart;
 
-            if(!meta.perspective){meta.perspective=''}
-            if(!meta.timerName){meta.timerName=''}
-            return meta
+            if (!meta.perspective) {
+                meta.perspective = "";
+            }
+            if (!meta.timerName) {
+                meta.timerName = "";
+            }
+            return meta;
         }
     }
-    return undefined
+    return undefined;
 }
-export function getEntityFactory(){
+export function getEntityFactory() {
     const entityFactory = new EntityFactory({});
-    return entityFactory
-
+    return entityFactory;
 }
