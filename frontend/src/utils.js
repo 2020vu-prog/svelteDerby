@@ -215,6 +215,19 @@ export function mmddyyFmt(at) {
         ("0" + time.getFullYear()).slice(-2)
     );
 }
+export function dateChangeLabel(date, priorDate) {
+    if (!date) {
+        return "";
+    }
+    const label = new Date(date).toLocaleDateString();
+    if (label === new Date().toLocaleDateString()) {
+        return "";
+    }
+    if (priorDate && new Date(priorDate).toLocaleDateString() === label) {
+        return "";
+    }
+    return label;
+}
 export function hhmmssFmt(at) {
     // var time = new Date(racePhase.lastUpdate);
     var time = new Date(at);

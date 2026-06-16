@@ -10,10 +10,11 @@
         initialReloadRoute,
     } from "./stores.js";
     import RacePhase from "./RacePhase.svelte";
+    import Annotate from "./Annotate.svelte";
     import CarFilter from "./CarFilter.svelte";
     import MaterialAdd from "./MaterialAdd.svelte";
     import { onMount } from "svelte";
-    import { getMainFull } from "./utils.js";
+    import { dateChangeLabel, getMainFull } from "./utils.js";
     import { location } from "svelte-spa-router";
     var mainFullPx = 300;
     var phaseList = [];
@@ -55,13 +56,13 @@
             .filter((rp) => filterMatchesX(rp, lclFilter, nobKey))
             .slice(0, $uiPageSize);
     }
-    function getKey (at,i,nobKey){
-        if(i==0){
+    function getKey(at, i, nobKey) {
+        if (i == 0) {
             //re-render first entry when nob changes.
             // (should fix intermmittent gray nob color)
-            return (at+':'+nobKey)
-        }else{
-            return at+''
+            return at + ":" + nobKey;
+        } else {
+            return at + "";
         }
     }
 </script>
@@ -77,8 +78,9 @@
     </h4>
 </div>
 
-{#each phaseList as item ,i (item.at)}
-    {#key getKey(item.at,i,$nextOnBlockKey)}
+{#each phaseList as item, i (item.at)}
+    {#key getKey(item.at, i, $nextOnBlockKey)}
+        <Annotate text={dateChangeLabel(item.at, phaseList[i - 1]?.at)} />
         <RacePhase
             refreshTime={$doRefreshBlocks}
             phaseKey={item.classKey}
