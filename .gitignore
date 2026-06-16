@@ -16,6 +16,7 @@ node_modules/
 /frontend/public/bundle.*
 /frontend/public/*.*.css
 /frontend/public/vendors.*.js
+/frontend/public/*.LICENSE.txt
 /frontend/public/vendors.css
 /frontend/public/index.html
 /frontend/public/index_*.html

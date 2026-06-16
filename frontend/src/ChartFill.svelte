@@ -18,7 +18,6 @@
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import PieProgress from "./PieProgress.svelte";
-    const crypto = require("crypto");
     export let params = {};
     var chartId = undefined;
     var mounted = false;

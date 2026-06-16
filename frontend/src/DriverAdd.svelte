@@ -11,8 +11,8 @@
     import { participantValid, participantFocusCompletion } from "./utils.js";
     import { isAllowedRoutePath , downloadFile} from "./utils.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
-    import { stringify as csvStringify} from 'csv-stringify/lib/sync';
-    import { parse as csvParse } from 'csv-parse/lib/sync';
+    import { stringify as csvStringify} from 'csv-stringify/sync';
+    import { parse as csvParse } from 'csv-parse/sync';
     import Spotify from "./Spotify.svelte";
 
 
@@ -468,4 +468,3 @@
         </div>
     {/if}
 </form>
-
