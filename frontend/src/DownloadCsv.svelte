@@ -6,7 +6,7 @@
     import { tick } from "svelte";
     import { racePhaseMap ,raceConfig} from "./stores";
     import { isAllowedRoutePath, downloadFile } from "./utils.js";
-    import { stringify as csvStringify } from "csv-stringify/lib/sync";
+    import { stringify as csvStringify } from "csv-stringify/sync";
 
     const onFileSelected = (e) => {
         //postDrivers(e.target.files[0])
