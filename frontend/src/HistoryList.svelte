@@ -4,9 +4,11 @@
     import Dexie from "dexie";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
+    import Annotate from "./Annotate.svelte";
     import RacePhase from "./RacePhase.svelte";
     import RaceStanding from "./RaceStanding.svelte";
     import HistoryBracketPos from "./HistoryBracketPos.svelte"
+    import { dateChangeLabel } from "./utils.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let params = {};
@@ -39,6 +41,7 @@
 <div>
     <h4>History</h4>
     {#each history as entity,i (entity.at)}
+        <Annotate text={dateChangeLabel(entity.at, history[i - 1]?.at)} />
         {#if entity.PK.endsWith(":RP")}
             <RacePhase
                 source="EventHistory"
