@@ -60,7 +60,7 @@
     {#each getOrgsAsList($orgMap) as orgIz}
         <Card class="mt-3 border border-info">
             <CardBody>
-                <div on:click={() => replace("/eventSelection/" + orgIz)}>
+                <div on:click={() => push("/eventSelection/" + orgIz)}>
                     <a href="javascript:void(0);">
                         <OrgName {orgIz} />
                     </a>

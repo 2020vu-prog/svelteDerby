@@ -62,6 +62,32 @@ class BuildVersionPlugin {
 module.exports = (cloudfrontTarget) => {
     const mode = process.env.NODE_ENV || "development";
     const prod = mode === "production";
+    const plugins = [
+        new BuildVersionPlugin(),
+        new webpack.ProvidePlugin({
+            Buffer: ["buffer", "Buffer"],
+            process: "process/browser",
+        }),
+        new MiniCssExtractPlugin({
+            filename: "[name].[contenthash].css",
+            chunkFilename: "[id].[contenthash].css",
+        }),
+        new HtmlWebpackPlugin({
+            hash: false,
+            template: "./src/index.ejs",
+            filename: "./index.html",
+        }),
+    ];
+
+    if (prod) {
+        plugins.push(
+            new WorkboxWebpackPlugin.InjectManifest({
+                swSrc: "./src/src-sw.js",
+                swDest: "sw-generated.js",
+                maximumFileSizeToCacheInBytes: 10000000,
+            })
+        );
+    }
 
     return {
         entry: {
@@ -148,27 +174,7 @@ module.exports = (cloudfrontTarget) => {
             ignored: /node_modules/,
         },
         mode,
-        plugins: [
-            new BuildVersionPlugin(),
-            new webpack.ProvidePlugin({
-                Buffer: ["buffer", "Buffer"],
-                process: "process/browser",
-            }),
-            new MiniCssExtractPlugin({
-                filename: "[name].[contenthash].css",
-                chunkFilename: "[id].[contenthash].css",
-            }),
-            new HtmlWebpackPlugin({
-                hash: false,
-                template: "./src/index.ejs",
-                filename: "./index.html",
-            }),
-            new WorkboxWebpackPlugin.InjectManifest({
-                swSrc: "./src/src-sw.js",
-                swDest: "sw-generated.js",
-                maximumFileSizeToCacheInBytes: 10000000,
-            }),
-        ],
+        plugins,
         devtool: prod ? false : "source-map",
     };
 };
