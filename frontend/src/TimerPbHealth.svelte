@@ -12,7 +12,7 @@
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
     import { pushMessage, raceConfig, axios } from "./stores";
-    import { getTimerPbConfig ,secondsToHHMMSS} from "./utils.js";
+    import { getTimerPbConfig ,secondsToHHMMSS, protobufLongToNumber} from "./utils.js";
     import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
     import LogList from "./LogList.svelte";
 
@@ -70,6 +70,7 @@
             }
 
             recentHealth = recentHealth;
+            buildMsgs(recentHealth);
         }
     }
     async function onMountAsync() {
@@ -145,14 +146,14 @@
         for (let td of tdl.timerData) {
             if (td.timerHealth) {
                 console.log(`thealth:`, td.timerHealth, "xmitMs", tdl.xmitMs);
-                if (tdl.xmitMs && tdl.xmitMs > healthMs) {
-                    healthMs = tdl.xmitMs;
-                    rerenderStatusAge();
+                const xmitMs = protobufLongToNumber(tdl.xmitMs);
+                if (xmitMs && xmitMs > healthMs) {
+                    healthMs = xmitMs;
                     recentHealth = td.timerHealth;
-                    recentHealth.cpuIncrementingUptime = recentHealth.cpuUptime;
                     recentHealth.tempFmt = `${R10(
                         recentHealth.cpuTempC
                     )}°C ${cToF(recentHealth.cpuTempC)}`;
+                    rerenderStatusAge();
                 }
             }
         }
@@ -182,7 +183,7 @@
     }
     function fmtVersionStamp() {
         if (recentHealth.buildEpoch) {
-            return new Date(recentHealth.buildEpoch * 1000).toLocaleString();
+            return new Date(protobufLongToNumber(recentHealth.buildEpoch) * 1000).toLocaleString();
         } else {
             return "";
         }

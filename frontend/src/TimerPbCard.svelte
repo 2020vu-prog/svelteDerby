@@ -4,6 +4,7 @@
        import {
         fmtPinTime,
         getTimerPinActiveMS,
+        protobufLongToNumber,
     } from "./utils.js";
 export let timerPbConfig={}
 export let cdBlock=[]
@@ -121,7 +122,7 @@ function isPinBlocked(timerPin) {
     function getCdbHeader(cdBlock){
         if(cdBlock.length && cdBlock[0].xmitMs){
             //const [hdrMs]=getTimerPinActiveMS(cdBlock[0])
-            const xmitDate = new Date(cdBlock[0].xmitMs).toLocaleString();
+            const xmitDate = new Date(protobufLongToNumber(cdBlock[0].xmitMs)).toLocaleString();
             log.debug('card:',cdBlock[0])
             //return(JSON.stringify(cdBlock))
             return `--- Candidate: ${xmitDate}`;

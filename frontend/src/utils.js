@@ -28,6 +28,17 @@ const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/Enti
 export function getSpaLocation() {
     return get(spaLocation);
 }
+
+export function protobufLongToNumber(value) {
+    if (value == null || typeof value === "number") {
+        return value;
+    }
+    if (typeof value.toNumber === "function") {
+        return value.toNumber();
+    }
+    return Number(value);
+}
+
 export async function getHistoryEntity(PK, SK, at) {
     const key = { PK: PK, SK: SK, at: at };
     log.debug("getHistoryEntity", key);
@@ -362,12 +373,12 @@ export async function getTimerPbConfig(timerName) {
 export function getTimerPinGpsMS(timerPin) {
     const m1 = 1000 * 1000;
     const ms =
-        timerPin.stamp.gpsTime.seconds * 1000 +
+        protobufLongToNumber(timerPin.stamp.gpsTime.seconds) * 1000 +
         Math.round(timerPin.stamp.gpsTime.nanos / m1);
     return ms;
 }
 export function getTimerPinTickMS(timerPin) {
-    const us = timerPin.stamp.tick64;
+    const us = protobufLongToNumber(timerPin.stamp.tick64);
     //log.debug("fmtPinTime us", us);
     //log.debug("fmtPinTime us", typeof us);
     const ms = us / 1000;

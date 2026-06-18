@@ -31,6 +31,7 @@
         MqttMapSubscription,
         getTimerPinActiveMS,
         MqttGetTopic,
+        protobufLongToNumber,
     } from "./utils.js";
     import {
         Button,
@@ -275,7 +276,7 @@
             }
             if (td.timerPin) {
                 log.debug(`syncPbState. td:`, td);
-                potentialPinRefresh(tdl.xmitMs, td.timerPin);
+                potentialPinRefresh(protobufLongToNumber(tdl.xmitMs), td.timerPin);
             }
         }
     }
