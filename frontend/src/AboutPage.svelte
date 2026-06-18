@@ -40,6 +40,7 @@
 
     var ecFromDexie;
     var histCountFromDexie = "";
+    const gitDirty = buildGitDirty();
 
     const refreshDataFromDb = async (trigger) => {
         log.warn("refreshDataFromDb data:", trigger);
@@ -207,11 +208,13 @@
     </div>
     <hr />
 
-    <div class="singularSettingDiv">
-        <h4>Git Dirty</h4>
-        <h6>{buildGitDirty()}</h6>
-    </div>
-    <hr />
+    {#if gitDirty === "dirty"}
+        <div class="singularSettingDiv">
+            <h4>Git Dirty</h4>
+            <h6>{gitDirty}</h6>
+        </div>
+        <hr />
+    {/if}
 
     <br />
     {#if $developerMode}
