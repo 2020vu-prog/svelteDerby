@@ -445,7 +445,7 @@ export function formatWinTime(ms) {
 import { onDestroy } from "svelte";
 
 export function MqttGetTopic(clientId) {
-    if (clientId.match(/^rr1/i)) {
+    if (MqttIsClientEsp32(clientId)) {
         //esp32 client
         return `rr2Timer/${clientId}`;
     } else {
@@ -453,7 +453,15 @@ export function MqttGetTopic(clientId) {
         return `rr1Timer/${clientId}`;
     }
 }
-
+export function MqttIsClientEsp32(clientId) {
+    if (clientId.match(/^rr1/i)) {
+        //esp32 client
+        return true;
+    } else {
+        // rpi client
+        return false;
+    }
+}
 export function MqttMapSubscription(topic) {
     const tag = "syncMap:";
     const frequencyMs = 29000;

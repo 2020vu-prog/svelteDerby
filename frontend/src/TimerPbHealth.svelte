@@ -12,7 +12,12 @@
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
     import { pushMessage, raceConfig, axios } from "./stores";
-    import { getTimerPbConfig ,secondsToHHMMSS, protobufLongToNumber} from "./utils.js";
+    import {
+        getTimerPbConfig,
+        MqttIsClientEsp32,
+        secondsToHHMMSS,
+        protobufLongToNumber,
+    } from "./utils.js";
     import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
     import LogList from "./LogList.svelte";
 
@@ -212,12 +217,18 @@
         msgs.push({msg: `CPU Temp: ${recentHealth.tempFmt}`,level: ll})
     }
     function msgFsOverlay(msgs,recentHealth){
+        if (MqttIsClientEsp32(timerId)) {
+            return;
+        }
         const ll=recentHealth.overlayFsEnabled?log.levels.INFO:log.levels.WARN
         msgs.push({msg: `OverlayFS: ${recentHealth.overlayFsEnabled}`,level: ll})
 
     }
 
     function msgChronyPPS(msgs,recentHealth){
+        if (MqttIsClientEsp32(timerId)) {
+            return;
+        }
 
         const ll=recentHealth.chronyUsingPps?log.levels.DEBUG:log.levels.ERROR
         msgs.push({msg: `Chrony PPS: ${recentHealth.chronyUsingPps}`,level: ll})
