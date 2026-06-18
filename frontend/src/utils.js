@@ -210,6 +210,15 @@ export function buildDate() {
 export function buildVersion() {
     return "[AIV]{version}[/AIV]";
 }
+export function buildGitBranch() {
+    return "[AIV]{gitBranch}[/AIV]";
+}
+export function buildGitHash() {
+    return "[AIV]{gitHash}[/AIV]";
+}
+export function buildGitDirty() {
+    return "[AIV]{gitDirty}[/AIV]";
+}
 export function parseHeatPos(cp) {
     const heatNumber = cp.replace(/[a-zA-Z]$/, "");
     const heatLetter = cp.replace(/^[0-9]*/, "");

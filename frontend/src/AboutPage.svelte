@@ -17,7 +17,14 @@
         );
     }
 
-    import { buildVersion, buildDate, isEmailAllowedRoutePath } from "./utils.js";
+    import {
+        buildVersion,
+        buildDate,
+        buildGitBranch,
+        buildGitHash,
+        buildGitDirty,
+        isEmailAllowedRoutePath,
+    } from "./utils.js";
 
     import { onMount } from "svelte";
     import { getCacheKey, setCacheKey, userEmail } from "./stores.js";
@@ -187,6 +194,25 @@
         <h6>{buildDate()}</h6>
     </div>
     <hr />
+
+    <div class="singularSettingDiv">
+        <h4>Git Branch</h4>
+        <h6>{buildGitBranch()}</h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4>Git Hash</h4>
+        <h6>{buildGitHash()}</h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4>Git Dirty</h4>
+        <h6>{buildGitDirty()}</h6>
+    </div>
+    <hr />
+
     <br />
     {#if $developerMode}
         <h2>Developer Info</h2>

@@ -5,6 +5,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WorkboxWebpackPlugin = require("workbox-webpack-plugin");
 const packageJson = require("./package.json");
+const { execSync } = require("child_process");
 
 const PROXY_PATHS = ["/app", "/archive", "/media", "/data"];
 
@@ -14,6 +15,26 @@ const createProxyConfig = (target) =>
         target,
         changeOrigin: true,
     }));
+
+const getGitValue = (command, fallback = "unknown") => {
+    try {
+        return execSync(command, {
+            cwd: __dirname,
+            encoding: "utf8",
+            stdio: ["ignore", "pipe", "ignore"],
+        }).trim();
+    } catch (err) {
+        return fallback;
+    }
+};
+
+const getGitInfo = () => ({
+    branch: getGitValue("git branch --show-current"),
+    hash: getGitValue("git rev-parse --short HEAD"),
+    dirty: getGitValue("git status --porcelain --untracked-files=no", "")
+        ? "dirty"
+        : "clean",
+});
 
 class BuildVersionPlugin {
     apply(compiler) {
@@ -30,6 +51,7 @@ class BuildVersionPlugin {
                 (assets) => {
                     const buildDate = new Date().toString();
                     const version = packageJson.version;
+                    const gitInfo = getGitInfo();
                     const banner = `Build version: ${version} - ${buildDate}`;
 
                     Object.keys(assets).forEach((assetName) => {
@@ -46,7 +68,10 @@ class BuildVersionPlugin {
                             commentPrefix +
                             source
                                 .replaceAll("[AIV]{version}[/AIV]", version)
-                                .replaceAll("[AIV]{date}[/AIV]", buildDate);
+                                .replaceAll("[AIV]{date}[/AIV]", buildDate)
+                                .replaceAll("[AIV]{gitBranch}[/AIV]", gitInfo.branch)
+                                .replaceAll("[AIV]{gitHash}[/AIV]", gitInfo.hash)
+                                .replaceAll("[AIV]{gitDirty}[/AIV]", gitInfo.dirty);
 
                         compilation.updateAsset(
                             assetName,
