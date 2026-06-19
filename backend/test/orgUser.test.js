@@ -25,5 +25,5 @@ cobj.preWrite();
 console.log(cobj);
 
 test("OrgPerm Factory", () => {
-    expect(cobj.email==="xyz.com");
+    expect(cobj.email).toBe("xyz.com");
 });

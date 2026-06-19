@@ -1,7 +1,3 @@
-
-const { CfBase, getData, postData, getHHMMSS } = require("./common.js");
-const { v4: uuidv4 } = require("uuid");
-
 // from: https://github.com/d3/d3-interpolate/blob/main/src/round.js
 const d3InterpolateNumber=function(a, b) {
   return a = +a, b = +b, function(t) {
@@ -26,8 +22,6 @@ test("i0: ", () => {
 
 
 
-    console.log("piPct: ", piPct);
-    console.log("gps: ", gps(piPct));
-    //expect((data.uuid).length).toBeGreaterThan(0);
-    //expect((data.uuid).length).toEqual(36);
+    expect(piPct).toBeCloseTo(1.204);
+    expect(gps(piPct)).toBe(6084);
 });

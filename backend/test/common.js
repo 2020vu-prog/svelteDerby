@@ -18,21 +18,26 @@ module.exports.getHHMMSS = (inDate) => {
         s = checkTime(inDate.getSeconds());
     return (`${h}:${m}:${s}`);
 }
-function logRequestError(error) {
+function buildRequestError(error) {
     if (error.response) {
-        console.log("Request failed:", {
+        const detail = {
             method: error.config && error.config.method,
             url: error.config && error.config.url,
             status: error.response.status,
             statusText: error.response.statusText,
             data: error.response.data,
-        });
-        return;
+        };
+        const requestError = new Error(`Request failed: ${JSON.stringify(detail)}`);
+        requestError.detail = detail;
+        return requestError;
     }
-    console.log("Request failed:", {
+    const detail = {
         code: error.code,
         message: error.message,
-    });
+    };
+    const requestError = new Error(`Request failed: ${JSON.stringify(detail)}`);
+    requestError.detail = detail;
+    return requestError;
 }
 module.exports.getData = async url => {
     try {
@@ -43,7 +48,7 @@ module.exports.getData = async url => {
         const data = response.data;
         return data;
     } catch (error) {
-        logRequestError(error);
+        throw buildRequestError(error);
     }
 };
 module.exports.postData = async (url, req) => {
@@ -55,6 +60,6 @@ module.exports.postData = async (url, req) => {
         //console.log(response);
         return response;
     } catch (error) {
-        logRequestError(error);
+        throw buildRequestError(error);
     }
 };

@@ -294,10 +294,7 @@ test("postAddChartPosition should work ", () => {
     });
 });
 
-test("startDiscordBot: ", async () => {
-    const data=await getData(`${CF}/manageDiscord?orgId=${orgId}&orgIz=${orgIz}`)
-
-    console.log("manageDiscord: ", data);
-	// TODO: currently fails with permission issue.
-    //expect(Object.keys(data).length).toBeGreaterThan(0);
+test.skip("startDiscordBot: skipped until manageDiscord is stable in integration", async () => {
+    const data = await getData(`${CF}/manageDiscord?orgId=${orgId}&orgIz=${orgIz}`)
+    expect(Object.keys(data).length).toBeGreaterThan(0);
 });

@@ -17,4 +17,4 @@ fi
 
 export NODE_PATH="${PWD}/node_modules${NODE_PATH:+:${NODE_PATH}}"
 
-npm test
+npm run test:integration
