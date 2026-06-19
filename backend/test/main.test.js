@@ -104,6 +104,7 @@ test("postAddBlocksBackwards: should fail b/c cars in wrong lanes. ", () => {
     return postData(`${CF}/addBlocks`, {
         orgIz: orgIz,
         orgId: orgId,
+        pt: "R",
         cn: ["334", "333"],
     }).then((received) => {
         expect(received.data.status).toMatch(/error/i);
@@ -115,6 +116,7 @@ test("postAddBlocks: ", () => {
     return postData(`${CF}/addBlocks`, {
         orgIz: orgIz,
         orgId: orgId,
+        pt: "R",
         cn: ["333", "334"],
     }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
@@ -124,6 +126,7 @@ test("postDuplicateAddBlocks: ", () => {
     return postData(`${CF}/addBlocks`, {
         orgIz: orgIz,
         orgId: orgId,
+        pt: "R",
         cn: ["333", "334"],
     }).then((received) => {
         expect(received.data.status).toMatch(/error/i);
@@ -207,6 +210,7 @@ test("postAddBlocksPhase2: should work. ", () => {
     return postData(`${CF}/addBlocks`, {
         orgIz: orgIz,
         orgId: orgId,
+        pt: "R",
         cn: ["334", "333"],
     }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
