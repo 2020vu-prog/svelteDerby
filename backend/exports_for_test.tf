@@ -1,4 +1,6 @@
 resource "local_file" "testCognitoSettings" {
+  count = var.DnsDomain == "test.rr1.us" ? 1 : 0
+
   filename = "${path.module}/test/aws-exports-${var.DeployEnvironment}.json"
 
   content = <<-EOT
