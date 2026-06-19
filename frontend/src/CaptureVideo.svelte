@@ -53,12 +53,14 @@
     var remoteeSpinning = false;
     var calcSpinning = false;
     var remoteeDisabled = false;
+    var isDestroying = false;
     var resolution = "640x480";
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
     const tag = "CaptureVideo";
     var snipAgeSeconds = 300
     var snipLengthSeconds=6
+    var recordTimeOverlay = false
     var timerSelectMode="normal"
     $:{ if(recordSpinning){
             timerSelectMode="disabled"
@@ -77,15 +79,28 @@
         }
     });
     onDestroy(() => {
+        isDestroying = true;
         if (timerHandle) {
             clearInterval(timerHandle);
             timerHandle = undefined;
+        }
+        if (canvasAnimationFrame) {
+            cancelAnimationFrame(canvasAnimationFrame);
+            canvasAnimationFrame = undefined;
+        }
+        if (canvasStream) {
+            stopBothVideoAndAudio(canvasStream);
+            canvasStream = undefined;
         }
         if (mainStream) {
             stopBothVideoAndAudio(mainStream);
             mainStream = undefined;
         }
-        mediaRecorder.forEach((mr) => mr.stop());
+        mediaRecorder.forEach((mr) => {
+            if (mr && mr.state !== "inactive") {
+                mr.stop();
+            }
+        });
         log.debug(`${tag} onDestroy done`);
     });
     // stop both mic and camera
@@ -419,18 +434,76 @@
         }
     }
     var mainStream;
+    var canvasStream;
+    var canvasAnimationFrame;
     function handleGotMedia(stream, snum) {
         log.debug("getUserMedia() got stream:", stream);
         //window.stream = stream; // why expose globally? chrome isn't closing stream...
 
-        const gumVideo = document.querySelector(`video#gum${snum}`);
-        gumVideo.srcObject = stream;
-        recordStream(stream, 0);
-        recordStream(stream, 1);
         mainStream = stream;
+        const rawVideo = document.querySelector(`video#rawGum${snum}`);
+        const canvas = document.querySelector(`canvas#gum${snum}`);
+        const width = parseInt(getVideoWidth(), 10);
+        const height = parseInt(getVideoHeight(), 10);
+
+        canvas.width = width;
+        canvas.height = height;
+        rawVideo.srcObject = stream;
+        rawVideo.play();
+
+        if (!canvas.captureStream) {
+            pushMessage( {
+                text: `Canvas video capture is not supported by this browser.`,
+                type: "error",
+            });
+            return;
+        }
+        drawTimestampedPreview(rawVideo, canvas, width, height);
+        canvasStream = canvas.captureStream(parseInt(frameRate, 10));
+        recordStream(canvasStream, 0);
+        recordStream(canvasStream, 1);
 
         // 2 concurrent recording sessions.  end each at half desired length
         timerHandle = setInterval(myTimer, Math.floor((snipLengthSeconds*1000)/2));
+    }
+    function formatOverlayTime(now) {
+        const d = new Date(now);
+        const localTime = d.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            fractionalSecondDigits: 3,
+            hour12: false,
+        });
+        return `${localTime} | ${now}`;
+    }
+    function drawTimestampedPreview(rawVideo, canvas, width, height) {
+        const ctx = canvas.getContext("2d");
+        const draw = () => {
+            if (rawVideo.readyState >= 2) {
+                ctx.drawImage(rawVideo, 0, 0, width, height);
+            } else {
+                ctx.fillStyle = "black";
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            if (recordTimeOverlay) {
+                const now = Date.now();
+                const label = formatOverlayTime(now);
+                const fontSize = Math.max(14, Math.round(width / 36));
+                ctx.font = `${fontSize}px monospace`;
+                ctx.textBaseline = "top";
+                const metrics = ctx.measureText(label);
+                const pad = Math.round(fontSize * 0.4);
+                ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+                ctx.fillRect(8, 8, metrics.width + pad * 2, fontSize + pad * 2);
+                ctx.fillStyle = "white";
+                ctx.fillText(label, 8 + pad, 8 + pad);
+            }
+
+            canvasAnimationFrame = requestAnimationFrame(draw);
+        };
+        draw();
     }
     var videoRefreshCount = 0;
 
@@ -544,8 +617,10 @@
                 uploadPending = undefined;
             }
 
-
-            recordStream(mainStream, snum);
+            if (isDestroying) {
+                return;
+            }
+            recordStream(stream, snum);
         };
         //mediaRecorder[snum].start(1000);
         mediaRecorder[snum].start();
@@ -617,7 +692,8 @@
 
 <h1>Capture Video</h1>
 
-<video style={videoDisplay} id="gum0" playsinline autoplay muted />
+<video id="rawGum0" playsinline autoplay muted style="display:none" />
+<canvas style={videoDisplay} id="gum0" />
 <label>
     Hide Preview:
     <input class="big" type="checkbox" bind:checked={hidePreview} />
@@ -660,6 +736,10 @@
     <option>2000000</option>
     <option>8000000</option>
 </select>
+</label>
+<label>
+    Record time overlay:
+    <input class="big" type="checkbox" bind:checked={recordTimeOverlay} />
 </label>
 <label>Age of oldest snippet (seconds)
 <input 
