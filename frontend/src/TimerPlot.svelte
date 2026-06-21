@@ -65,6 +65,7 @@
     $: yMin = getMin(numericPoints, "y");
     $: yMax = getMax(numericPoints, "y");
     $: pathData = buildPath(numericPoints);
+    $: rebootPoints = getRebootPoints(points);
     $: title = timerName
         ? `${selectedMetric.title} [${timerName}]`
         : label === "Timer Plot"
@@ -150,6 +151,27 @@
             .sort((a, b) => a.x - b.x);
     }
 
+    function getRebootPoints(list) {
+        const sortedPoints = list
+            .filter(
+                (point) =>
+                    !Number.isNaN(Number(point[xKey])) &&
+                    !Number.isNaN(Number(point.cpuUptime))
+            )
+            .sort((a, b) => Number(a[xKey]) - Number(b[xKey]));
+
+        return sortedPoints.filter((point, index) => {
+            if (index === 0) return false;
+            const priorUptime = Number(sortedPoints[index - 1].cpuUptime);
+            const uptime = Number(point.cpuUptime);
+            return (
+                uptime < priorUptime &&
+                Number(point[xKey]) >= xMin &&
+                Number(point[xKey]) <= xMax
+            );
+        });
+    }
+
     function getMin(list, key) {
         if (!list.length) return 0;
         return Math.min(...list.map((point) => point[key]));
@@ -211,6 +233,11 @@
         stroke: #1f77b4;
         stroke-linecap: round;
         stroke-linejoin: round;
+        stroke-width: 2;
+    }
+
+    .rebootMarker {
+        stroke: #d62728;
         stroke-width: 2;
     }
 
@@ -283,6 +310,15 @@
             Loading timer data
         </text>
     {:else if numericPoints.length > 1}
+        {#each rebootPoints as rebootPoint}
+            <line
+                class="rebootMarker"
+                x1={plotX(rebootPoint)}
+                y1={padding.top}
+                x2={plotX(rebootPoint)}
+                y2={padding.top + plotHeight}
+            />
+        {/each}
         <path class="series" d={pathData} />
         <text class="rangeText" x={padding.left} y={height - 8}>
             {fmtAxis(xMin)} - {fmtAxis(xMax)}
