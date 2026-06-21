@@ -44,7 +44,7 @@
         Label,
         Input,
     } from "sveltestrap";
-    import { querystring } from "svelte-spa-router";
+    import { push, querystring } from "svelte-spa-router";
     const { v4: uuidv4 } = require("uuid");
 
     const searchParams = new URLSearchParams($querystring);
@@ -111,6 +111,13 @@
     const lanePbTimerPinRecentMap = {};
     var lanePbTimerPinHistoryMap = {};
     var sortedPbTimerPinHistory = [];
+    function showTimerPlot() {
+        push(
+            `/timerPlot?timerName=${encodeURIComponent(
+                timerName
+            )}&timerId=${encodeURIComponent(timerId)}`
+        );
+    }
     function getSortedHistory(hmap) {
         log.debug("getSortedHistory0", lanePbTimerPinHistoryMap);
         const rc = Object.values(hmap).sort((a, b) => {
@@ -520,6 +527,11 @@
 </style>
 
 <h3>Timer Alignment [{timerName}]</h3>
+{#if timerName && timerId}
+    <Button color="secondary" size="sm" on:click={showTimerPlot}>
+        Timer Plot
+    </Button>
+{/if}
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
 <div class="row">
     {#if timerName && timerId}

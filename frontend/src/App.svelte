@@ -47,6 +47,7 @@
     import TimerConfigElapsed from "./TimerConfigElapsed.svelte";
     import TimerAlignment from "./TimerAlignment.svelte";
     import TimerPbAlignment from "./TimerPbAlignment.svelte";
+    import TimerPlot from "./TimerPlot.svelte";
     import RouteSelection from "./RouteSelection.svelte";
     import ForceLoad from "./ForceLoad.svelte";
     import MediaList from "./MediaList.svelte";
@@ -124,6 +125,7 @@
         "/timerConfigElapsed": TimerConfigElapsed,
         "/timerAlignment": TimerAlignment,
         "/timerPbAlignment": TimerPbAlignment,
+        "/timerPlot": TimerPlot,
         "/rawTimerList": RawTimerList,
         "/spMediaList/:dbName/:dbKey": MediaList,
         "/mediaDemo":MediaViewer,
