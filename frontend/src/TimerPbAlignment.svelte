@@ -21,8 +21,8 @@
         doRefreshBlocks,
     } from "./stores.js";
     import { end, toSeconds ,parse} from "iso8601-duration";
-    import SpinnerButton from "./SpinnerButton.svelte";
     import TimerPbCard from "./TimerPbCard.svelte";
+    import TimerHistoryAge from "./TimerHistoryAge.svelte";
 
     import { onMount, onDestroy, tick } from "svelte";
     import {
@@ -435,7 +435,6 @@
         }
             historySpinning=false
     }
-    let showAge = false;
     let xmitHH = 0;
     function xmitHourChanged(timerPin, i) {
         if (i == 0) {
@@ -539,31 +538,12 @@
             <TimerPbHealth {timerName} {timerId} />
         </div>
         <div class="column">
-            <span
-                on:click={() => {
-                    showAge = !showAge;
-                }}>⚙️</span
-            >
-            {#if showAge}
-                <br/>
-                End Age:
-                <input
-                    type="text"
-                    bind:value={historyEndAgeDuration}
-                    placeholder="HistoryEndAge"
-                />
-                <br/>
-                Begin Age:
-                <input
-                    type="text"
-                    bind:value={historyBeginAgeDuration}
-                    placeholder="HistoryAge"
-                />
-                <br/>
-                <SpinnerButton on:click={getTimerHistoryFromApi} spinning={historySpinning}>
-                    Get History
-                </SpinnerButton>
-            {/if}
+            <TimerHistoryAge
+                bind:beginAgeDuration={historyBeginAgeDuration}
+                bind:endAgeDuration={historyEndAgeDuration}
+                spinning={historySpinning}
+                on:refresh={getTimerHistoryFromApi}
+            />
         </div>
     {/if}
 </div>

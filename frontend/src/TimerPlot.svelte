@@ -2,9 +2,11 @@
     import log from "loglevel";
     import { onMount } from "svelte";
     import { querystring } from "svelte-spa-router";
+    import { parse, toSeconds } from "iso8601-duration";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { axios, raceConfig, pushMessage } from "./stores.js";
     import { getTimerPbConfig, protobufLongToNumber } from "./utils.js";
+    import TimerHistoryAge from "./TimerHistoryAge.svelte";
 
     export let points = [];
     export let width = 640;
@@ -24,6 +26,8 @@
         left: 42,
     };
     let loading = false;
+    let historyBeginAgeDuration = "PT20M";
+    let historyEndAgeDuration = "PT0S";
     const metrics = [
         {
             value: "cpuTempC",
@@ -79,15 +83,26 @@
             const [timerPbConfig] = await getTimerPbConfig(timerName);
             const timerMqttClientId =
                 timerPbConfig.timerMqttClientId || timerId || timerName;
-            const lowMS = 1000 * 60 * 20;
-            const loIso = new Date(Date.now() - lowMS).toISOString();
-            const url =
-                `${$raceConfig.baseUrl}/getTimerPbHistory` +
-                `?orgIz=${$raceConfig.orgIz}` +
-                `&orgId=${$raceConfig.orgId}` +
-                `&timerName=${encodeURIComponent(timerMqttClientId)}` +
-                `&loIso=${encodeURIComponent(loIso)}`;
-            const response = await $axios.get(url);
+            const beginSeconds = toSeconds(
+                parse(historyBeginAgeDuration.toUpperCase())
+            );
+            const endSeconds = toSeconds(
+                parse(historyEndAgeDuration.toUpperCase())
+            );
+            const loIso = new Date(Date.now() - beginSeconds * 1000).toISOString();
+            const hiIso = new Date(Date.now() - endSeconds * 1000).toISOString();
+            const response = await $axios.get(
+                `${$raceConfig.baseUrl}/getTimerPbHistory`,
+                {
+                    params: {
+                        orgIz: $raceConfig.orgIz,
+                        orgId: $raceConfig.orgId,
+                        timerName: timerMqttClientId,
+                        loIso,
+                        hiIso,
+                    },
+                }
+            );
 
             points = buildCpuTempPoints(response.data);
         } catch (err) {
@@ -231,6 +246,12 @@
             <option value={option.value}>{option.label}</option>
         {/each}
     </select>
+    <TimerHistoryAge
+        bind:beginAgeDuration={historyBeginAgeDuration}
+        bind:endAgeDuration={historyEndAgeDuration}
+        spinning={loading}
+        on:refresh={loadCpuTempHistory}
+    />
 </div>
 
 <svg
