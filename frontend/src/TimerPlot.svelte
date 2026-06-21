@@ -1,6 +1,19 @@
+<script context="module">
+    let chartJsPromise;
+
+    function loadChartJs() {
+        if (!chartJsPromise) {
+            chartJsPromise = import(
+                /* webpackIgnore: true */ "https://cdn.jsdelivr.net/npm/chart.js@4.4.9/auto/+esm"
+            ).then((module) => module.default || module.Chart);
+        }
+        return chartJsPromise;
+    }
+</script>
+
 <script>
     import log from "loglevel";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { querystring } from "svelte-spa-router";
     import { parse, toSeconds } from "iso8601-duration";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
@@ -9,8 +22,7 @@
     import TimerHistoryAge from "./TimerHistoryAge.svelte";
 
     export let points = [];
-    export let width = 640;
-    export let height = 220;
+    export let height = 320;
     export let xKey = "x";
     export let yKey = "y";
     export let label = "Timer Plot";
@@ -19,38 +31,64 @@
     const searchParams = new URLSearchParams($querystring);
     const timerName = searchParams.get("timerName");
     const timerId = searchParams.get("timerId");
-    const padding = {
-        top: 18,
-        right: 18,
-        bottom: 28,
-        left: 42,
-    };
     let loading = false;
+    let chartLoading = true;
+    let chartError = "";
+    let chartCanvas;
+    let chart;
+    let ChartLib;
     let historyBeginAgeDuration = "PT20M";
     let historyEndAgeDuration = "PT0S";
+
     const metrics = [
         {
             value: "cpuTempC",
             label: "CPU Temp",
             yKey: "cpuTempC",
-            title: "CPU Temp C",
+            title: "CPU Temp",
+            unit: "C",
         },
         {
             value: "cpuUptime",
             label: "CPU Uptime",
             yKey: "cpuUptime",
-            title: "CPU Uptime Seconds",
+            title: "CPU Uptime",
+            unit: "sec",
         },
         {
             value: "wifiRss",
             label: "RSS",
             yKey: "wifiRss",
             title: "RSS",
+            unit: "dBm",
         },
     ];
 
-    $: plotWidth = Math.max(width - padding.left - padding.right, 1);
-    $: plotHeight = Math.max(height - padding.top - padding.bottom, 1);
+    const rebootMarkerPlugin = {
+        id: "rebootMarkers",
+        afterDatasetsDraw(chart, args, pluginOptions) {
+            const markers = pluginOptions.markers || [];
+            const xScale = chart.scales.x;
+            const chartArea = chart.chartArea;
+            const ctx = chart.ctx;
+
+            ctx.save();
+            ctx.strokeStyle = "#d62728";
+            ctx.lineWidth = 2;
+            markers.forEach((marker) => {
+                const x = xScale.getPixelForValue(marker[xKey]);
+                if (x < chartArea.left || x > chartArea.right) {
+                    return;
+                }
+                ctx.beginPath();
+                ctx.moveTo(x, chartArea.top);
+                ctx.lineTo(x, chartArea.bottom);
+                ctx.stroke();
+            });
+            ctx.restore();
+        },
+    };
+
     $: selectedMetric =
         metrics.find((candidate) => candidate.value === metric) || metrics[0];
     $: activeYKey = yKey === "y" ? selectedMetric.yKey : yKey;
@@ -60,21 +98,40 @@
             y: Number(point[activeYKey]),
         }))
         .filter((point) => !Number.isNaN(point.x) && !Number.isNaN(point.y));
-    $: xMin = getMin(numericPoints, "x");
-    $: xMax = getMax(numericPoints, "x");
-    $: yMin = getMin(numericPoints, "y");
-    $: yMax = getMax(numericPoints, "y");
-    $: pathData = buildPath(numericPoints);
     $: rebootPoints = getRebootPoints(points);
     $: title = timerName
-        ? `${selectedMetric.title} [${timerName}]`
+        ? `${selectedMetric.title} (${selectedMetric.unit}) [${timerName}]`
         : label === "Timer Plot"
-        ? selectedMetric.title
+        ? `${selectedMetric.title} (${selectedMetric.unit})`
         : label;
+    $: if (ChartLib && chartCanvas) {
+        renderChart(numericPoints, rebootPoints, title, selectedMetric);
+    }
 
     onMount(async () => {
-        if (!points.length && timerName) {
-            await loadCpuTempHistory();
+        try {
+            ChartLib = await loadChartJs();
+            ChartLib.register(rebootMarkerPlugin);
+            chartLoading = false;
+            if (!points.length && timerName) {
+                await loadCpuTempHistory();
+            } else {
+                renderChart(numericPoints, rebootPoints, title, selectedMetric);
+            }
+        } catch (err) {
+            chartLoading = false;
+            chartError = "Unable to load Chart.js.";
+            log.error("timerPlot Chart.js load error:", err);
+            pushMessage({
+                text: chartError,
+                type: "error",
+            });
+        }
+    });
+
+    onDestroy(() => {
+        if (chart) {
+            chart.destroy();
         }
     });
 
@@ -117,6 +174,93 @@
         }
     }
 
+    function renderChart(chartPoints, chartRebootPoints, chartTitle, chartMetric) {
+        if (!ChartLib || !chartCanvas) {
+            return;
+        }
+
+        const config = {
+            type: "line",
+            data: {
+                datasets: [
+                    {
+                        label: `${chartMetric.label} (${chartMetric.unit})`,
+                        data: chartPoints,
+                        borderColor: "#1f77b4",
+                        backgroundColor: "rgba(31, 119, 180, 0.12)",
+                        borderWidth: 2,
+                        pointRadius: chartPoints.length > 80 ? 0 : 2,
+                        tension: 0.15,
+                    },
+                ],
+            },
+            options: {
+                animation: false,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                    },
+                    rebootMarkers: {
+                        markers: chartRebootPoints,
+                    },
+                    title: {
+                        display: true,
+                        text: chartTitle,
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title(items) {
+                                if (!items.length) return "";
+                                return fmtAxis(items[0].parsed.x);
+                            },
+                            label(item) {
+                                return `${chartMetric.label}: ${fmtMetric(
+                                    item.parsed.y,
+                                    chartMetric
+                                )}`;
+                            },
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        type: "linear",
+                        title: {
+                            display: true,
+                            text: "Time",
+                        },
+                        ticks: {
+                            maxTicksLimit: 6,
+                            callback(value) {
+                                return fmtAxis(value);
+                            },
+                        },
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: `${chartMetric.title} (${chartMetric.unit})`,
+                        },
+                        ticks: {
+                            callback(value) {
+                                return fmtMetric(value, chartMetric);
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        if (chart) {
+            chart.data = config.data;
+            chart.options = config.options;
+            chart.update();
+        } else {
+            chart = new ChartLib(chartCanvas, config);
+        }
+    }
+
     function buildCpuTempPoints(historyList) {
         const cpuPoints = [];
         if (!historyList) return cpuPoints;
@@ -147,7 +291,14 @@
         }
 
         return cpuPoints
-            .filter((point) => point.x && !Number.isNaN(point.y))
+            .filter(
+                (point) =>
+                    point.x &&
+                    metrics.some(
+                        (candidate) =>
+                            !Number.isNaN(Number(point[candidate.yKey]))
+                    )
+            )
             .sort((a, b) => a.x - b.x);
     }
 
@@ -164,106 +315,80 @@
             if (index === 0) return false;
             const priorUptime = Number(sortedPoints[index - 1].cpuUptime);
             const uptime = Number(point.cpuUptime);
-            return (
-                uptime < priorUptime &&
-                Number(point[xKey]) >= xMin &&
-                Number(point[xKey]) <= xMax
-            );
+            return uptime < priorUptime;
         });
-    }
-
-    function getMin(list, key) {
-        if (!list.length) return 0;
-        return Math.min(...list.map((point) => point[key]));
-    }
-
-    function getMax(list, key) {
-        if (!list.length) return 1;
-        return Math.max(...list.map((point) => point[key]));
-    }
-
-    function scale(value, min, max, size) {
-        if (max === min) return size / 2;
-        return ((value - min) / (max - min)) * size;
-    }
-
-    function plotX(point) {
-        return padding.left + scale(point.x, xMin, xMax, plotWidth);
-    }
-
-    function plotY(point) {
-        return padding.top + plotHeight - scale(point.y, yMin, yMax, plotHeight);
-    }
-
-    function buildPath(list) {
-        return list
-            .map((point, index) => {
-                const command = index === 0 ? "M" : "L";
-                return `${command} ${plotX(point)} ${plotY(point)}`;
-            })
-            .join(" ");
     }
 
     function fmtAxis(value) {
         if (value > 1000000000000) {
-            return new Date(value).toLocaleTimeString();
+            return new Date(value).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+                second: "2-digit",
+            });
         }
         return value;
+    }
+
+    function fmtValue(value) {
+        if (Math.abs(value) >= 100) {
+            return Math.round(value);
+        }
+        return Math.round(value * 10) / 10;
+    }
+
+    function fmtMetric(value, chartMetric = selectedMetric) {
+        return `${fmtValue(value)} ${chartMetric.unit}`;
     }
 </script>
 
 <style>
-    .timerPlot {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .plotFrame {
-        fill: #f8f9fa;
-        stroke: #bbb;
-    }
-
-    .axis {
-        stroke: #555;
-        stroke-width: 1;
-    }
-
-    .series {
-        fill: none;
-        stroke: #1f77b4;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        stroke-width: 2;
-    }
-
-    .rebootMarker {
-        stroke: #d62728;
-        stroke-width: 2;
-    }
-
-    .emptyText,
-    .labelText,
-    .rangeText {
-        fill: #333;
-        font-family: sans-serif;
-    }
-
-    .labelText {
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .rangeText,
-    .emptyText {
-        font-size: 12px;
-    }
-
     .plotControls {
         margin-bottom: 0.5rem;
     }
 
     .metricSelect {
         max-width: 14rem;
+    }
+
+    .chartShell {
+        height: 320px;
+        min-height: 220px;
+        position: relative;
+        width: 100%;
+    }
+
+    .chartMessage {
+        color: #333;
+        padding: 1rem 0;
+    }
+
+    .chartLegend {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .legendItem {
+        align-items: center;
+        display: inline-flex;
+        gap: 0.35rem;
+    }
+
+    .lineSample {
+        background: #1f77b4;
+        display: inline-block;
+        height: 2px;
+        width: 1.5rem;
+    }
+
+    .rebootSample {
+        background: #d62728;
+        display: inline-block;
+        height: 1.25rem;
+        width: 2px;
     }
 </style>
 
@@ -276,58 +401,30 @@
     <TimerHistoryAge
         bind:beginAgeDuration={historyBeginAgeDuration}
         bind:endAgeDuration={historyEndAgeDuration}
-        spinning={loading}
+        spinning={loading || chartLoading}
         on:refresh={loadCpuTempHistory}
     />
 </div>
 
-<svg
-    class="timerPlot"
-    viewBox={`0 0 ${width} ${height}`}
-    role="img"
-    aria-label={title}
->
-    <rect class="plotFrame" x="0" y="0" width={width} height={height} />
-    <text class="labelText" x={padding.left} y="16">{title}</text>
+{#if chartError}
+    <div class="chartMessage">{chartError}</div>
+{:else if chartLoading}
+    <div class="chartMessage">Loading Chart.js</div>
+{:else if loading}
+    <div class="chartMessage">Loading timer data</div>
+{/if}
 
-    <line
-        class="axis"
-        x1={padding.left}
-        y1={padding.top + plotHeight}
-        x2={padding.left + plotWidth}
-        y2={padding.top + plotHeight}
-    />
-    <line
-        class="axis"
-        x1={padding.left}
-        y1={padding.top}
-        x2={padding.left}
-        y2={padding.top + plotHeight}
-    />
-
-    {#if loading}
-        <text class="emptyText" x={padding.left} y={padding.top + 32}>
-            Loading timer data
-        </text>
-    {:else if numericPoints.length > 1}
-        {#each rebootPoints as rebootPoint}
-            <line
-                class="rebootMarker"
-                x1={plotX(rebootPoint)}
-                y1={padding.top}
-                x2={plotX(rebootPoint)}
-                y2={padding.top + plotHeight}
-            />
-        {/each}
-        <path class="series" d={pathData} />
-        <text class="rangeText" x={padding.left} y={height - 8}>
-            {fmtAxis(xMin)} - {fmtAxis(xMax)}
-        </text>
-        <text class="rangeText" x="6" y={padding.top + 12}>{yMax}</text>
-        <text class="rangeText" x="6" y={padding.top + plotHeight}>{yMin}</text>
-    {:else}
-        <text class="emptyText" x={padding.left} y={padding.top + 32}>
-            No timer data
-        </text>
-    {/if}
-</svg>
+<div class="chartShell" style={`height: ${height}px;`}>
+    <canvas bind:this={chartCanvas} aria-label={title}></canvas>
+</div>
+<div class="chartLegend">
+    <span class="legendItem">
+        <span class="lineSample"></span>
+        {selectedMetric.label} ({selectedMetric.unit})
+    </span>
+    <span class="legendItem">
+        <span class="rebootSample"></span>
+        Reboot
+    </span>
+    <span>Samples: {numericPoints.length}</span>
+</div>
