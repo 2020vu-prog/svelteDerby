@@ -43,10 +43,17 @@
     const metrics = [
         {
             value: "cpuTempC",
-            label: "CPU Temp",
+            label: "CPU Temp (C)",
             yKey: "cpuTempC",
             title: "CPU Temp",
             unit: "C",
+        },
+        {
+            value: "cpuTempF",
+            label: "CPU Temp (F)",
+            yKey: "cpuTempF",
+            title: "CPU Temp",
+            unit: "F",
         },
         {
             value: "cpuUptime",
@@ -61,6 +68,13 @@
             yKey: "wifiRss",
             title: "RSS",
             unit: "dBm",
+        },
+        {
+            value: "mqttConnections",
+            label: "MQTT Conn",
+            yKey: "mqttConnections",
+            title: "MQTT Connections",
+            unit: "count",
         },
     ];
 
@@ -147,8 +161,12 @@
             const endSeconds = toSeconds(
                 parse(historyEndAgeDuration.toUpperCase())
             );
-            const loIso = new Date(Date.now() - beginSeconds * 1000).toISOString();
-            const hiIso = new Date(Date.now() - endSeconds * 1000).toISOString();
+            const loIso = new Date(
+                Date.now() - beginSeconds * 1000
+            ).toISOString();
+            const hiIso = new Date(
+                Date.now() - endSeconds * 1000
+            ).toISOString();
             const response = await $axios.get(
                 `${$raceConfig.baseUrl}/getTimerPbHistory`,
                 {
@@ -174,7 +192,12 @@
         }
     }
 
-    function renderChart(chartPoints, chartRebootPoints, chartTitle, chartMetric) {
+    function renderChart(
+        chartPoints,
+        chartRebootPoints,
+        chartTitle,
+        chartMetric
+    ) {
         if (!ChartLib || !chartCanvas) {
             return;
         }
@@ -278,13 +301,16 @@
                     td.timerHealth &&
                     (undefined !== td.timerHealth.cpuTempC ||
                         undefined !== td.timerHealth.cpuUptime ||
-                        undefined !== td.timerHealth.wifiRss)
+                        undefined !== td.timerHealth.wifiRss ||
+                        undefined !== td.timerHealth.mqttConnections)
                 ) {
                     cpuPoints.push({
                         x: xmitMs,
                         cpuTempC: td.timerHealth.cpuTempC,
+                        cpuTempF: celsiusToFahrenheit(td.timerHealth.cpuTempC),
                         cpuUptime: td.timerHealth.cpuUptime,
                         wifiRss: td.timerHealth.wifiRss,
+                        mqttConnections: td.timerHealth.mqttConnections,
                     });
                 }
             }
@@ -340,11 +366,36 @@
     function fmtMetric(value, chartMetric = selectedMetric) {
         return `${fmtValue(value)} ${chartMetric.unit}`;
     }
+
+    function celsiusToFahrenheit(value) {
+        if (undefined === value || null === value) {
+            return undefined;
+        }
+        return (9 / 5) * value + 32;
+    }
 </script>
 
 <style>
     .plotControls {
         margin-bottom: 0.5rem;
+    }
+
+    .timerHeader {
+        align-items: baseline;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .timerName {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .timerId {
+        color: #555;
+        font-size: 0.95rem;
     }
 
     .metricSelect {
@@ -392,6 +443,17 @@
     }
 </style>
 
+{#if timerName || timerId}
+    <div class="timerHeader">
+        {#if timerName}
+            <span class="timerName">{timerName}</span>
+        {/if}
+        {#if timerId}
+            <span class="timerId">{timerId}</span>
+        {/if}
+    </div>
+{/if}
+
 <div class="plotControls">
     <select class="form-control metricSelect" bind:value={metric}>
         {#each metrics as option}
@@ -415,15 +477,15 @@
 {/if}
 
 <div class="chartShell" style={`height: ${height}px;`}>
-    <canvas bind:this={chartCanvas} aria-label={title}></canvas>
+    <canvas bind:this={chartCanvas} aria-label={title} />
 </div>
 <div class="chartLegend">
     <span class="legendItem">
-        <span class="lineSample"></span>
+        <span class="lineSample" />
         {selectedMetric.label} ({selectedMetric.unit})
     </span>
     <span class="legendItem">
-        <span class="rebootSample"></span>
+        <span class="rebootSample" />
         Reboot
     </span>
     <span>Samples: {numericPoints.length}</span>

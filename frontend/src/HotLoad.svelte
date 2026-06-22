@@ -316,9 +316,9 @@
     async function onMsgGeneric(topic, message) {
         // message is Buffer
         log.debug("onMsgGeneric", topic, message.toString());
-        if (!activeIotWatch.topic[topic]){
-        log.debug("onMsgGeneric skipping, no handler:", topic );
-
+        if (!isTopicHandler(activeIotWatch.topic[topic])) {
+            log.debug("onMsgGeneric skipping, no handler:", topic);
+            return;
         }
         msgQ.push({
             topic: topic,
@@ -341,12 +341,21 @@
             while (msgQ.length>0){
                 log.debug("draining ONE")
                 const m=msgQ.pop()
+                const topicHandler = activeIotWatch.topic[m.topic];
+                if (!isTopicHandler(topicHandler)) {
+                    log.debug("draining skipping, no handler:", m.topic);
+                    continue;
+                }
                 const jsonMsg = JSON.parse(m.message.toString());
-                activeIotWatch.topic[m.topic](jsonMsg,m.topic)
+                topicHandler(jsonMsg,m.topic)
             }
         log.debug("draining done")
             drainingQ=false
         }
+
+    function isTopicHandler(topicHandler) {
+        return "function" === typeof topicHandler;
+    }
         
     async function syncAutoAnnounceSubscription() {
         const shouldSub = $autoAnnounceResults && $mqttEnabled && !isArchived();

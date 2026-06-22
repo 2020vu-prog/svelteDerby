@@ -20,9 +20,10 @@
         pushMessage,
         doRefreshBlocks,
     } from "./stores.js";
-    import { end, toSeconds ,parse} from "iso8601-duration";
+    import { end, toSeconds, parse } from "iso8601-duration";
     import TimerPbCard from "./TimerPbCard.svelte";
     import TimerHistoryAge from "./TimerHistoryAge.svelte";
+    import SpinnerButton from "./SpinnerButton.svelte";
 
     import { onMount, onDestroy, tick } from "svelte";
     import {
@@ -34,7 +35,6 @@
         protobufLongToNumber,
     } from "./utils.js";
     import {
-        Button,
         Collapse,
         Modal,
         ModalBody,
@@ -54,7 +54,7 @@
         timerTopic = MqttGetTopic(timerId);
         MqttMapSubscription(timerTopic);
     }
-    let historySpinning=false
+    let historySpinning = false;
     var historyBeginAgeDuration = "PT20M";
     var historyEndAgeDuration = "PT0S";
     var historyStartTime;
@@ -91,9 +91,7 @@
             `TimerPbAlignment TimerNamedt: ${timerName} [${historyStartDate}]`
         );
         [timerPbConfig] = await getTimerPbConfig(timerName);
-        log.debug(
-            `TimerPbAlignment ${timerName} [${timerPbConfig}]`
-        );
+        log.debug(`TimerPbAlignment ${timerName} [${timerPbConfig}]`);
 
         calcFinish = new CalcFinish(timerPbConfig);
 
@@ -142,8 +140,7 @@
         */
 
         for (var i = sortedPbTimerPinHistory.length - 1; i >= 0; i--) {
-
-            const timerPin  =sortedPbTimerPinHistory[i]
+            const timerPin = sortedPbTimerPinHistory[i];
             if (timerPin.pinName == Timer.PinName.lane1) {
                 laneStatusList.lane1.blocked = isPinBlocked(timerPin);
                 laneStatusList.lane1.timerPin = timerPin;
@@ -207,13 +204,13 @@
         return timerPin.pinState == Timer.PinState.BLOCKED;
     }
     function potentialPinRefresh(xmitMs, timerPin) {
-        if(
+        if (
             timerPin.pinName == Timer.PinName.lane1 ||
             timerPin.pinName == Timer.PinName.lane2
-        ){}
-           else{
-            return
-           }
+        ) {
+        } else {
+            return;
+        }
         log.debug(`ppr:`, timerPin);
         if (!lanePbTimerPinRecentMap[timerPin.pinName]) {
             //first time init
@@ -283,7 +280,10 @@
             }
             if (td.timerPin) {
                 log.debug(`syncPbState. td:`, td);
-                potentialPinRefresh(protobufLongToNumber(tdl.xmitMs), td.timerPin);
+                potentialPinRefresh(
+                    protobufLongToNumber(tdl.xmitMs),
+                    td.timerPin
+                );
             }
         }
     }
@@ -321,7 +321,7 @@
         }
     }
 
-    const invalidIsoKey="iik"
+    const invalidIsoKey = "iik";
     async function getTimerHistoryFromApi() {
         log.debug(
             "xgetTimerHistoryFromApi:x, ",
@@ -333,35 +333,37 @@
         const orgId = $raceConfig.orgId;
         //const lowMS = 1000 * 3600 * 720;
         //const lowMS = 1000 * 3600 * 0.3;
-       let historyBeginSecondsDuration=0 
-       let historyEndSecondsDuration=0 
-        try{
-
-            historyBeginSecondsDuration=toSeconds(parse(historyBeginAgeDuration.toUpperCase()));
-            historyEndSecondsDuration=toSeconds(parse(historyEndAgeDuration.toUpperCase()));
-            pushMessage( {
+        let historyBeginSecondsDuration = 0;
+        let historyEndSecondsDuration = 0;
+        try {
+            historyBeginSecondsDuration = toSeconds(
+                parse(historyBeginAgeDuration.toUpperCase())
+            );
+            historyEndSecondsDuration = toSeconds(
+                parse(historyEndAgeDuration.toUpperCase())
+            );
+            pushMessage({
                 text: `Duration: ${historyBeginSecondsDuration}:${historyEndSecondsDuration}`,
                 type: "success",
             });
-            await tick()
-            pushMessage( {
+            await tick();
+            pushMessage({
                 text: `duration.`,
                 type: "error",
                 TTL: 1,
                 key: invalidIsoKey,
             });
-            await tick()
-        }
-        catch(e){
-            pushMessage( {
+            await tick();
+        } catch (e) {
+            pushMessage({
                 text: `Invalid duration. ${e}`,
                 type: "error",
                 key: invalidIsoKey,
             });
-            console.error("invalid duration",e)
-            return
+            console.error("invalid duration", e);
+            return;
         }
-        log.debug(`historyMsDuration ${historyBeginSecondsDuration}`)
+        log.debug(`historyMsDuration ${historyBeginSecondsDuration}`);
         const lowMS = historyBeginSecondsDuration * 1000;
         const hiMS = historyEndSecondsDuration * 1000;
 
@@ -377,9 +379,9 @@
         const endPoint = `/getTimerPbHistory`;
 
         try {
-            historySpinning=true
+            historySpinning = true;
             const histLoadingKey = uuidv4();
-            pushMessage( {
+            pushMessage({
                 text: `loading History.`,
                 type: "success",
                 key: histLoadingKey,
@@ -391,12 +393,12 @@
             if (response.error) {
                 log.debug("getTimerHistoryFromApi:", response);
                 //TODO: not working!?
-                pushMessage( {
+                pushMessage({
                     text: `getTimerHistoryFromApi Failed: ${response.error}.`,
                     type: "error",
                 });
             } else {
-                pushMessage( {
+                pushMessage({
                     text: `Loaded`,
                     TTL: 1, //delete msg!
                     key: histLoadingKey,
@@ -412,7 +414,7 @@
                         //const buf = h.data;
                         //log.debug("getTimerHistory h: ", h.SK," buf:",buf);
                         //const buf8 = buf.data;
-                        const buf8=Buffer.from(h.data64, 'base64')
+                        const buf8 = Buffer.from(h.data64, "base64");
 
                         //log.debug("getTimerHistory h: ", h.SK," buf8:",buf8);
                         if (h.SK.startsWith("9999:")) {
@@ -428,12 +430,12 @@
             }
         } catch (err) {
             log.error("getTimerHistoryFromApi error: ", err);
-            pushMessage( {
+            pushMessage({
                 text: "getTimerHistoryFromApi error: " + err,
                 type: "error",
             });
         }
-            historySpinning=false
+        historySpinning = false;
     }
     let xmitHH = 0;
     function xmitHourChanged(timerPin, i) {
@@ -455,67 +457,84 @@
         return `--- Xmit: ${xmitDate}`;
     }
     function getLaneStatusColor(ls) {
-        switch(getLaneStatusText(ls)){
+        switch (getLaneStatusText(ls)) {
             case "STALE":
-                return 'yellow'
+                return "yellow";
             case "BLOCKED":
-                return 'red'
+                return "red";
             case "CLEAR":
-                return 'lightgreen'
+                return "lightgreen";
         }
-        }
-    function getLaneStatusText(ls) {
-        if (ls.blocked=== undefined) {
-            return 'STALE'
-        }
-        return ls.blocked ? "BLOCKED" : "CLEAR"
     }
-    function markupPins(sortedPbTimerPinHistory){
-        let clearMS=10000
-        if(timerPbConfig &&
+    function getLaneStatusText(ls) {
+        if (ls.blocked === undefined) {
+            return "STALE";
+        }
+        return ls.blocked ? "BLOCKED" : "CLEAR";
+    }
+    function markupPins(sortedPbTimerPinHistory) {
+        let clearMS = 10000;
+        if (
+            timerPbConfig &&
             timerPbConfig.timerConfigLanePhotoEye &&
-            timerPbConfig.timerConfigLanePhotoEye.clearMS){
-            clearMS=timerPbConfig.timerConfigLanePhotoEye.clearMS
+            timerPbConfig.timerConfigLanePhotoEye.clearMS
+        ) {
+            clearMS = timerPbConfig.timerConfigLanePhotoEye.clearMS;
         }
-            log.debug(`TimerPbAlignment clearMS: ${timerPbConfig}`)
-            log.debug(`TimerPbAlignment clearMS: ${clearMS}`)
-        const markupPinList=[]
-        let wip=[]
-        const cb=function(tp){
-            if(wip.length>0){
-                    markupPinList.push(wip)
-                    wip=[]
+        log.debug(`TimerPbAlignment clearMS: ${timerPbConfig}`);
+        log.debug(`TimerPbAlignment clearMS: ${clearMS}`);
+        const markupPinList = [];
+        let wip = [];
+        const cb = function (tp) {
+            if (wip.length > 0) {
+                markupPinList.push(wip);
+                wip = [];
             }
-        }
-        sortedPbTimerPinHistory.forEach((tp)=>{
-            tp.ui='timerPin'
-            if(wip.length>0){
-                const [wipMs,wipOrigin]=getTimerPinActiveMS(wip[0])
-                const [tpMs,tpOrigin]=getTimerPinActiveMS(tp)
-                const delta=wipMs-tpMs
-                log.debug(`cb: ${wipMs} ${tpMs} :${delta}`,tp)
-                if(delta > clearMS|| tpOrigin !==wipOrigin){
-                    cb()
+        };
+        sortedPbTimerPinHistory.forEach((tp) => {
+            tp.ui = "timerPin";
+            if (wip.length > 0) {
+                const [wipMs, wipOrigin] = getTimerPinActiveMS(wip[0]);
+                const [tpMs, tpOrigin] = getTimerPinActiveMS(tp);
+                const delta = wipMs - tpMs;
+                log.debug(`cb: ${wipMs} ${tpMs} :${delta}`, tp);
+                if (delta > clearMS || tpOrigin !== wipOrigin) {
+                    cb();
                 }
             }
-            if(tp){
-                wip.push(tp)
+            if (tp) {
+                wip.push(tp);
             }
-
-        })
-        cb() //final brk
-        return markupPinList
+        });
+        cb(); //final brk
+        return markupPinList;
     }
 </script>
 
 <style>
-
     * {
         box-sizing: border-box;
     }
 
     .row {
         display: flex;
+    }
+
+    .alignmentControls {
+        align-items: flex-start;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .alignmentControl {
+        flex: 1 1 14rem;
+    }
+
+    .plotControl {
+        flex: 0 0 auto;
+        padding-top: 0.15rem;
     }
 
     /* Create two equal columns that sits next to each other */
@@ -526,24 +545,24 @@
 </style>
 
 <h3>Timer Alignment [{timerName}]</h3>
-{#if timerName && timerId}
-    <Button color="secondary" size="sm" on:click={showTimerPlot}>
-        Timer Plot
-    </Button>
-{/if}
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
-<div class="row">
+<div class="alignmentControls">
     {#if timerName && timerId}
-        <div class="column">
+        <div class="alignmentControl">
             <TimerPbHealth {timerName} {timerId} />
         </div>
-        <div class="column">
+        <div class="alignmentControl">
             <TimerHistoryAge
                 bind:beginAgeDuration={historyBeginAgeDuration}
                 bind:endAgeDuration={historyEndAgeDuration}
                 spinning={historySpinning}
                 on:refresh={getTimerHistoryFromApi}
             />
+        </div>
+        <div class="alignmentControl plotControl">
+            <SpinnerButton on:click={showTimerPlot}>
+                Plot
+            </SpinnerButton>
         </div>
     {/if}
 </div>
@@ -558,15 +577,12 @@
                     <input type="checkbox" bind:checked={ls.checked} />
                 </CardHeader>
                 -->
-                <CardBody
-                    style="background-color: {getLaneStatusColor(ls)}"
-                >
+                <CardBody style="background-color: {getLaneStatusColor(ls)}">
                     <h5>
                         Lane {lane.replace(/[A-Z]+/i, "")}
                         <strong>
-                        {getLaneStatusText(ls)}
+                            {getLaneStatusText(ls)}
                         </strong>
-
                     </h5>
                     {#if paddlePosition}
                         <h6>{paddlePosition}</h6>
@@ -578,6 +594,5 @@
 </div>
 
 {#each markupPins(sortedPbTimerPinHistory) as cdBlock}
-
-    <TimerPbCard cdBlock={cdBlock} timerPbConfig={timerPbConfig}/>
+    <TimerPbCard {cdBlock} {timerPbConfig} />
 {/each}
