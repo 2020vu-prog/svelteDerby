@@ -1,11 +1,12 @@
 <script>
     import log from "loglevel";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
-       import {
+    import {
         fmtPinTime,
         getTimerPinActiveMS,
         protobufLongToNumber,
     } from "./utils.js";
+    import Annotate from "./Annotate.svelte";
 export let timerPbConfig={}
 export let cdBlock=[]
 function getWinMessage(cdBlock){
@@ -130,11 +131,8 @@ function isPinBlocked(timerPin) {
         return('Candidate')
     }
 </script>
-<div>
-    <code style="background-color:#bbb;">
-        {getCdbHeader(cdBlock)}
-    </code>
-</div>
+
+<Annotate text={getCdbHeader(cdBlock)} />
 
 {#each getWinMessage(cdBlock) as msg, i}
     {msg}<br/>
