@@ -23,6 +23,7 @@
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
     export let params = {};
+    const driverRowHeight = 82;
     var mainFullPx = 300;
 
     var editable = false;
@@ -119,6 +120,7 @@
 
 <VirtualList
     height="{mainFullPx}px"
+    itemHeight={driverRowHeight}
     items={carNumberList}
     bind:start
     bind:end
