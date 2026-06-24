@@ -3,8 +3,8 @@
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import MaterialAdd from "./MaterialAdd.svelte";
     import OrgName from "./OrgName.svelte";
+    import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig } from "./stores.js";
-    import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
     import {
         getCacheKey,
@@ -15,8 +15,15 @@
         refreshOrgMap,
     } from "./stores.js";
 
-    //Populate org list if user is logged in automatically as anonymous
-    $: refreshOrgMap($userEmail);
+    let loadingOrgs = true;
+    let orgLoadRequest = 0;
+    let loadedForEmail;
+
+    // Populate org list if user is logged in automatically as anonymous.
+    $: if ($userEmail !== loadedForEmail) {
+        loadedForEmail = $userEmail;
+        loadOrgMap();
+    }
 
     $: {
         log.debug("bound orgMap: ", orgMap);
@@ -32,9 +39,17 @@
         }
     };
 
-    onMount(async () => {
-        refreshOrgMap();
-    });
+    async function loadOrgMap() {
+        const requestId = ++orgLoadRequest;
+        loadingOrgs = true;
+        try {
+            await refreshOrgMap();
+        } finally {
+            if (requestId === orgLoadRequest) {
+                loadingOrgs = false;
+            }
+        }
+    }
 
     function sortByOrgName(a, b) {
         const nameA = getOrgName(a).toUpperCase(); // ignore upper and lowercase
@@ -56,6 +71,12 @@
 
     <h4>Organization List</h4>
     <p />
+
+    {#if loadingOrgs}
+        <SpinnerButton disabled={true} spinning={true}>
+            Loading Organizations
+        </SpinnerButton>
+    {/if}
 
     {#each getOrgsAsList($orgMap) as orgIz}
         <Card class="mt-3 border border-info">

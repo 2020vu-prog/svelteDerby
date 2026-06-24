@@ -297,6 +297,8 @@
             View {getInactiveMode(currentViewMode)} Races
         </SpinnerButton>
     {:else}
-        <p>Loading Events...</p>
+        <SpinnerButton disabled={true} spinning={true}>
+            Loading Events
+        </SpinnerButton>
     {/if}
 </div>
