@@ -143,6 +143,14 @@
 
     async function getCarNumbersFromRP() {
         rpFromDexie = await db.RacePhase.get(params.rpKey);
+        if (!rpFromDexie || !rpFromDexie.cn) {
+            pushMessage( {
+                text: "No race is currently on blocks.",
+                type: "error",
+            });
+            pop();
+            return;
+        }
         carNumber1 = rpFromDexie.cn[0];
         carNumber2 = rpFromDexie.cn[1];
     }
