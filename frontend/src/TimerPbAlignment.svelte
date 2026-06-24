@@ -55,6 +55,7 @@
         MqttMapSubscription(timerTopic);
     }
     let historySpinning = false;
+    let loadingAlignment = true;
     var historyBeginAgeDuration = "PT20M";
     var historyEndAgeDuration = "PT0S";
     var historyStartTime;
@@ -87,22 +88,27 @@
     $: repaintFromCache(sortedPbTimerPinHistory);
 
     onMount(async () => {
-        log.debug(
-            `TimerPbAlignment TimerNamedt: ${timerName} [${historyStartDate}]`
-        );
-        [timerPbConfig] = await getTimerPbConfig(timerName);
-        log.debug(`TimerPbAlignment ${timerName} [${timerPbConfig}]`);
+        try {
+            loadingAlignment = true;
+            log.debug(
+                `TimerPbAlignment TimerNamedt: ${timerName} [${historyStartDate}]`
+            );
+            [timerPbConfig] = await getTimerPbConfig(timerName);
+            log.debug(`TimerPbAlignment ${timerName} [${timerPbConfig}]`);
 
-        calcFinish = new CalcFinish(timerPbConfig);
+            calcFinish = new CalcFinish(timerPbConfig);
 
-        log.debug("TimerPbAlignment dexie:", timerPbConfig);
-        if (timerPbConfig && timerPbConfig.timerMqttClientId) {
-            //await getTimerHistory();
-            timerTopic = MqttGetTopic(timerPbConfig.timerMqttClientId);
-            log.debug(`TimerPbAligment topic:  ${timerTopic}`);
-            //$mqttTimerTopic = timerTopic;
-            //$mqttTimerSubscribe = true;
-            await getTimerHistoryFromApi();
+            log.debug("TimerPbAlignment dexie:", timerPbConfig);
+            if (timerPbConfig && timerPbConfig.timerMqttClientId) {
+                //await getTimerHistory();
+                timerTopic = MqttGetTopic(timerPbConfig.timerMqttClientId);
+                log.debug(`TimerPbAligment topic:  ${timerTopic}`);
+                //$mqttTimerTopic = timerTopic;
+                //$mqttTimerSubscribe = true;
+                await getTimerHistoryFromApi();
+            }
+        } finally {
+            loadingAlignment = false;
         }
     });
 
@@ -546,53 +552,59 @@
 
 <h3>Timer Alignment [{timerName}]</h3>
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
-<div class="alignmentControls">
-    {#if timerName && timerId}
-        <div class="alignmentControl">
-            <TimerPbHealth {timerName} {timerId} />
-        </div>
-        <div class="alignmentControl">
-            <TimerHistoryAge
-                bind:beginAgeDuration={historyBeginAgeDuration}
-                bind:endAgeDuration={historyEndAgeDuration}
-                spinning={historySpinning}
-                on:refresh={getTimerHistoryFromApi}
-            />
-        </div>
-        <div class="alignmentControl plotControl">
-            <SpinnerButton on:click={showTimerPlot}>
-                Plot
-            </SpinnerButton>
-        </div>
-    {/if}
-</div>
-<div class="row">
-    {#each Object.entries(laneStatusList) as [lane, ls]}
-        <div class="column" style="background-color:#bbb;">
-            <Card class="mt-3 border border-info">
-                <!--
+{#if loadingAlignment}
+    <SpinnerButton disabled={true} spinning={true}>
+        Loading Timer Alignment
+    </SpinnerButton>
+{:else}
+    <div class="alignmentControls">
+        {#if timerName && timerId}
+            <div class="alignmentControl">
+                <TimerPbHealth {timerName} {timerId} />
+            </div>
+            <div class="alignmentControl">
+                <TimerHistoryAge
+                    bind:beginAgeDuration={historyBeginAgeDuration}
+                    bind:endAgeDuration={historyEndAgeDuration}
+                    spinning={historySpinning}
+                    on:refresh={getTimerHistoryFromApi}
+                />
+            </div>
+            <div class="alignmentControl plotControl">
+                <SpinnerButton on:click={showTimerPlot}>
+                    Plot
+                </SpinnerButton>
+            </div>
+        {/if}
+    </div>
+    <div class="row">
+        {#each Object.entries(laneStatusList) as [lane, ls]}
+            <div class="column" style="background-color:#bbb;">
+                <Card class="mt-3 border border-info">
+                    <!--
 
                 <CardHeader class="bg-info">
                     Lane {lane.replace(/[A-Z]+/i, "")} &nbsp;&nbsp;&nbsp;Audio: &nbsp;&nbsp;
                     <input type="checkbox" bind:checked={ls.checked} />
                 </CardHeader>
                 -->
-                <CardBody style="background-color: {getLaneStatusColor(ls)}">
-                    <h5>
-                        Lane {lane.replace(/[A-Z]+/i, "")}
-                        <strong>
-                            {getLaneStatusText(ls)}
-                        </strong>
-                    </h5>
-                    {#if paddlePosition}
-                        <h6>{paddlePosition}</h6>
-                    {/if}
-                </CardBody>
-            </Card>
-        </div>
-    {/each}
-</div>
+                    <CardBody style="background-color: {getLaneStatusColor(ls)}">
+                        <h5>
+                            Lane {lane.replace(/[A-Z]+/i, "")}
+                            <strong>
+                                {getLaneStatusText(ls)}
+                            </strong>
+                        </h5>
+                        {#if paddlePosition}
+                            <h6>{paddlePosition}</h6>
+                        {/if}
+                    </CardBody>
+                </Card>
+            </div>
+        {/each}
+    </div>
 
-{#each markupPins(sortedPbTimerPinHistory) as cdBlock}
-    <TimerPbCard {cdBlock} {timerPbConfig} />
-{/each}
+    {#each markupPins(sortedPbTimerPinHistory) as cdBlock}
+        <TimerPbCard {cdBlock} {timerPbConfig} />
+    {/each}
+{/if}
