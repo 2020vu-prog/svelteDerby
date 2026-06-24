@@ -338,19 +338,26 @@
             if(drainingQ)return
             drainingQ=true
         log.debug("draining begin")
-            while (msgQ.length>0){
-                log.debug("draining ONE")
-                const m=msgQ.pop()
-                const topicHandler = activeIotWatch.topic[m.topic];
-                if (!isTopicHandler(topicHandler)) {
-                    log.debug("draining skipping, no handler:", m.topic);
-                    continue;
+            try {
+                while (msgQ.length>0){
+                    log.debug("draining ONE")
+                    const m=msgQ.pop()
+                    try {
+                        const topicHandler = activeIotWatch.topic[m.topic];
+                        if (!isTopicHandler(topicHandler)) {
+                            log.debug("draining skipping, no handler:", m.topic);
+                            continue;
+                        }
+                        const jsonMsg = JSON.parse(m.message.toString());
+                        topicHandler(jsonMsg,m.topic)
+                    } catch (err) {
+                        log.error("draining message failed:", m.topic, err);
+                    }
                 }
-                const jsonMsg = JSON.parse(m.message.toString());
-                topicHandler(jsonMsg,m.topic)
+            } finally {
+                log.debug("draining done")
+                drainingQ=false
             }
-        log.debug("draining done")
-            drainingQ=false
         }
 
     function isTopicHandler(topicHandler) {
