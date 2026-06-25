@@ -2,24 +2,34 @@
     import log from "loglevel";
 
     import { push, pop, replace } from "svelte-spa-router";
-    import { theme } from "./stores.js";
+    import { raceConfig, roleMap, theme, userEmail } from "./stores.js";
     import { isAllowedRoutePath } from "./utils.js";
-    import { onMount } from "svelte";
 
     export let clickHandleRoute;
     export let overrideOrgIz; //allow null.  this is an override
 
     var userHasPermission = false;
+    let permissionRequest = 0;
 
     const chFunction = () => {
         push(clickHandleRoute);
     };
-    onMount(async () => {
-        userHasPermission = await isAllowedRoutePath(
-            clickHandleRoute,
-            overrideOrgIz
-        );
-    });
+
+    $: refreshPermission(
+        clickHandleRoute,
+        overrideOrgIz,
+        $userEmail,
+        $roleMap,
+        $raceConfig.orgIz
+    );
+
+    async function refreshPermission() {
+        const requestId = ++permissionRequest;
+        const allowed = await isAllowedRoutePath(clickHandleRoute, overrideOrgIz);
+        if (requestId === permissionRequest) {
+            userHasPermission = allowed;
+        }
+    }
 </script>
 
 <style>
