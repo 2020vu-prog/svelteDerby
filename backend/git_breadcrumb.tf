@@ -1,11 +1,3 @@
-terraform {
-  required_providers {
-    external = {
-      source  = "hashicorp/external"
-      version = "~> 2.3"
-    }
-  }
-}
 
 data "external" "git_breadcrumb" {
   program = ["bash", "${path.module}/scripts/gitBreadcrumb.sh"]
