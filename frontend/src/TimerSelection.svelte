@@ -171,11 +171,18 @@
         return isCurrentViewActive() ? "Offline" : "Active";
     }
     function shouldDisplay(currentViewMode, activeTimer) {
+        if (
+            new Date() -
+                Date.parse(activeTimer.disconnectAt || activeTimer.connectAt) <
+            6 * 60 * 60 * 1000
+        ) {
+            return true;
+        }
         if (activeTimer.disconnectAt) {
             return !isCurrentViewActive();
         }
         if (activeTimer.connectAt) {
-            return isCurrentViewActive();
+            return true;
         }
         return false;
     }
