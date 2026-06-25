@@ -55,6 +55,8 @@
         submitSpinning = true;
         try {
             const response = await $axios.post(url, req);
+            // If the current user edited their own roles, refresh the local
+            // role map so permission-gated UI updates without a page reload.
             if (
                 $userEmail &&
                 userForm.email &&
