@@ -23,7 +23,6 @@ const log = require("loglevel");
 const EntityFactory = require("./shared/EntityFactory.js");
 const {
     hasServerRoutePath,
-    getLegacyRoles,
 } = require("./shared/PermissionLookup.js");
 const AWS = require("aws-sdk");
 const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
@@ -1881,24 +1880,26 @@ async function addOrgUser(json) {
     }
 }
 async function getUserRoles(orgIz, email) {
-    var roleList = getLegacyRoles(orgIz, email);
+    const roleList = [];
+    const orgPerms = await getUserRolesForOrgIz(orgIz, email);
+    const globalPerms = await getUserRolesForOrgIz("", email);
+    roleList.push(...orgPerms, ...globalPerms);
+    return [...new Set(roleList)];
+}
+async function getUserRolesForOrgIz(orgIz, email) {
     var rolesByUser = await ddbUtils.ddbQueryOrgPerms({ orgIz: orgIz });
-    log.debug(`rolesByUser event [${email}]`, rolesByUser);
+    log.debug(`rolesByUser event [${orgIz}:${email}]`, rolesByUser);
 
-    /*
-    if (rolesByUser && rolesByUser[email] && rolesByUser[email].roleList) {
-        roleList = [...roleList, ...rolesByUser[email].roleList];
+    if (!email || !rolesByUser || !rolesByUser.length) {
+        return [];
     }
-    */
-    if (email && rolesByUser && rolesByUser.length > 0) {
-        rolesByUser = rolesByUser.filter(
-            (ouser) => ouser.SK.toLowerCase() === email.toLowerCase()
-        );
-        if (rolesByUser && rolesByUser.length > 0 && rolesByUser[0].roleList) {
-            roleList = [...roleList, ...rolesByUser[0].roleList];
-        }
+    rolesByUser = rolesByUser.filter(
+        (ouser) => ouser.SK.toLowerCase() === email.toLowerCase()
+    );
+    if (rolesByUser && rolesByUser.length > 0 && rolesByUser[0].roleList) {
+        return rolesByUser[0].roleList;
     }
-    return roleList;
+    return [];
 }
 function lowercaseHeaders(event) {
     var headerKeys= Object.keys(event.headers);

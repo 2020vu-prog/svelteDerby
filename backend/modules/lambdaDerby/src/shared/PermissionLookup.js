@@ -26,33 +26,6 @@ const permsByRoleMap = {
     registration: registrationPerms,
     video: videoPerms,
 };
-const orgUserRoleMap = {
-    "test:REDACTED_PERMISSION_EMAIL": ["power"], // john harmon, Akron Local org
-    "test:REDACTED_PERMISSION_EMAIL": ["power"], // scott, Akron Local org
-
-    "test:REDACTED_PERMISSION_EMAIL": ["power"], // jest tests
-    "test60:REDACTED_PERMISSION_EMAIL": ["power"], // jest tests
-    ":REDACTED_PERMISSION_EMAIL": ["power"],
-    ":REDACTED_PERMISSION_EMAIL": ["power"],
-    ":REDACTED_PERMISSION_EMAIL": ["power"],
-    ":REDACTED_PERMISSION_EMAIL": ["starterLimited"],
-    ":REDACTED_PERMISSION_EMAIL": ["starter"],
-
-    "ndr:REDACTED_PERMISSION_EMAIL": ["starter"], //Savanah Fitzgerald
-    "ndr:REDACTED_PERMISSION_EMAIL": ["registration"],
-    "ndr:REDACTED_PERMISSION_EMAIL": ["registration"],
-
-    "test:REDACTED_PERMISSION_EMAIL": ["power"], // Matt M
-    "test:REDACTED_PERMISSION_EMAIL": ["starter"], // Matt M
-    "test:REDACTED_PERMISSION_EMAIL": ["registration"], // Matt M
-
-    "test:REDACTED_PERMISSION_EMAIL": ["registration"],
-    "chi:REDACTED_PERMISSION_EMAIL": ["registration"],
-    "test:REDACTED_PERMISSION_EMAIL": ["registration"],
-    "chi:REDACTED_PERMISSION_EMAIL": ["registration"],
-    "test:REDACTED_PERMISSION_EMAIL": ["registration"],
-    "chi:REDACTED_PERMISSION_EMAIL": ["registration"],
-};
 function roleHasRoutePath(routeType, orgIz, roleList, routePath) {
     log.debug("TODO: routepath:");
     const permKeys = getRolePermissions(roleList);
@@ -73,20 +46,6 @@ function isRoutePathInPermissionList(routeType, permList, routePath) {
 }
 function getNamedRoles() {
     return Object.keys(permsByRoleMap).sort();
-}
-function getLegacyRoles(orgIz, userMail) {
-    //log.debug("pmap2:", Object.keys(permissionMap2));
-    var grantedRoles = [];
-
-    const k1 = `${orgIz}:${userMail}`.toLowerCase();
-    const k2 = `:${userMail}`.toLowerCase(); // sysadmin?
-    [k1, k2].forEach((k) => {
-        log.debug(`getLegacychecking permissions for ${k} -- `, grantedRoles);
-        if (orgUserRoleMap[k]) {
-            grantedRoles = [...grantedRoles, ...orgUserRoleMap[k]];
-        }
-    });
-    return grantedRoles;
 }
 function getRolePermissions(roleList) {
     //expand list of roles to actual perms.
@@ -112,5 +71,4 @@ module.exports.hasSvelteRoutePath = (orgIz, roleList, svelteRoutePath) => {
 module.exports.hasServerRoutePath = (orgIz, roleList, serverRoutePath) => {
     return roleHasRoutePath("server", orgIz, roleList, serverRoutePath);
 };
-module.exports.getLegacyRoles = getLegacyRoles;
 module.exports.getNamedRoles = getNamedRoles;

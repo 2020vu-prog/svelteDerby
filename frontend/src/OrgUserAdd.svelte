@@ -2,7 +2,8 @@
     import log from "loglevel";
     import { onMount } from "svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
-    import { axios, raceConfig, pushMessage } from "./stores.js";
+    import { axios, raceConfig, pushMessage, userEmail } from "./stores.js";
+    import { refreshOrgRoles } from "./utils.js";
     import { push, pop, replace } from "svelte-spa-router";
 
     const {
@@ -54,6 +55,13 @@
         submitSpinning = true;
         try {
             const response = await $axios.post(url, req);
+            if (
+                $userEmail &&
+                userForm.email &&
+                $userEmail.toLowerCase() === userForm.email.toLowerCase()
+            ) {
+                await refreshOrgRoles($raceConfig.orgIz);
+            }
             pushMessage( {
                 text: `User [${userForm.email}] processed.`,
                 type: "success",

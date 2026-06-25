@@ -23,6 +23,7 @@ node_modules/
 /frontend/public/sw-generated.js
 /frontend/src/aws-exports.js
 /frontend/generatedTargets-*.sh
+/backend/scripts/seedDerbyOrgUsers.sh
 build/
 .terraform/
 
