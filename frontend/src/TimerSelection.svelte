@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
-    import { sleep ,secondsToHHMMSS} from "./utils.js";
+    import { sleep, secondsToHHMMSS } from "./utils.js";
     import SpinnerButton from "./SpinnerButton.svelte";
     import { axios, raceConfig, pushMessage } from "./stores.js";
     import { onMount } from "svelte";
@@ -38,7 +38,7 @@
         //const response = await axios.get($raceConfig.baseUrl + endPoint, {
         try {
             const tsLoadingKey = uuidv4();
-            pushMessage( {
+            pushMessage({
                 text: `loading ActiveTimers.`,
                 type: "success",
                 key: tsLoadingKey,
@@ -49,12 +49,12 @@
             if (response.error) {
                 log.debug("getActiveTimers:", response);
                 //TODO: not working!?
-                pushMessage( {
+                pushMessage({
                     text: `getActiveTimers Failed: ${response.error}.`,
                     type: "error",
                 });
             } else {
-                pushMessage( {
+                pushMessage({
                     text: `Loaded`,
                     TTL: 1, //delete msg!
                     type: "success",
@@ -79,7 +79,7 @@
             }
             loading = false;
         } catch (err) {
-            pushMessage( {
+            pushMessage({
                 text: "getActiveTimers error: " + err,
                 type: "error",
             });
@@ -143,19 +143,18 @@
     }
     function getTimerUptime(activeTimer) {
         if (!isProtobuf) {
-            return ""
+            return "";
         }
         if (!activeTimer.connectAt) {
-            return ""
+            return "";
         }
-        let endTime=new Date().getTime()
+        let endTime = new Date().getTime();
         if (activeTimer.disconnectAt) {
-            endTime=Date.parse(activeTimer.disconnectAt)
+            endTime = Date.parse(activeTimer.disconnectAt);
         }
-        const beginTime=Date.parse(activeTimer.connectAt)
-        let upSeconds=Math.floor((endTime - beginTime)/1000)
-        return `[${secondsToHHMMSS(upSeconds)}]`
-
+        const beginTime = Date.parse(activeTimer.connectAt);
+        let upSeconds = Math.floor((endTime - beginTime) / 1000);
+        return `[${secondsToHHMMSS(upSeconds)}]`;
     }
     function getTimerName(activeTimer) {
         if (isProtobuf) {
@@ -164,22 +163,21 @@
             return activeTimer.hostname;
         }
     }
-    let currentViewMode='Active'
-    function isCurrentViewActive(){
-        return currentViewMode === "Active"
+    let currentViewMode = "Active";
+    function isCurrentViewActive() {
+        return currentViewMode === "Active";
     }
     function getInactiveMode(ignoredParamater) {
         return isCurrentViewActive() ? "Offline" : "Active";
     }
-    function shouldDisplay(currentViewMode,activeTimer){
+    function shouldDisplay(currentViewMode, activeTimer) {
         if (activeTimer.disconnectAt) {
-            return !isCurrentViewActive()
+            return !isCurrentViewActive();
         }
         if (activeTimer.connectAt) {
-            return isCurrentViewActive()
+            return isCurrentViewActive();
         }
-        return false
-        
+        return false;
     }
 </script>
 
@@ -191,31 +189,34 @@
     <br />
 {:else}
     {#each activeTimerList as activeTimer}
-        {#if shouldDisplay(currentViewMode,activeTimer) }
-        <Card class="mt-3 border border-info">
-            <CardBody style="background-color:{getBgColor(activeTimer)}">
-                <input
-                    type="radio"
-                    checked={timerMatchCheck(activeTimer)}
-                    id={getTimerId(activeTimer)}
-                    name="activeTimerOption"
-                    on:click={() => clickActivateHost(activeTimer)}
-                />
-                <label style="display: inline" for={getTimerId(activeTimer)}>
-                    {getTimerName(activeTimer)}
-                    {activeTimer.ipAddress}
-                    {getTimerUptime(activeTimer)}
-                </label>
-                <br />
-                <br />
-            </CardBody>
-        </Card>
+        {#if shouldDisplay(currentViewMode, activeTimer)}
+            <Card class="mt-3 border border-info">
+                <CardBody style="background-color:{getBgColor(activeTimer)}">
+                    <input
+                        type="radio"
+                        checked={timerMatchCheck(activeTimer)}
+                        id={getTimerId(activeTimer)}
+                        name="activeTimerOption"
+                        on:click={() => clickActivateHost(activeTimer)}
+                    />
+                    <label
+                        style="display: inline"
+                        for={getTimerId(activeTimer)}
+                    >
+                        {getTimerName(activeTimer)}
+                        {activeTimer.ipAddress}
+                        {getTimerUptime(activeTimer)}
+                    </label>
+                    <br />
+                    <br />
+                </CardBody>
+            </Card>
         {/if}
     {/each}
     <SpinnerButton on:click={() => (currentViewMode = getInactiveMode())}>
         View {getInactiveMode(currentViewMode)} Timers
     </SpinnerButton>
-    
+
     {#if activeTimerList.length == 0}
         <br />
         No Timers Found
