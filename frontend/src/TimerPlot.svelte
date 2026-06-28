@@ -242,7 +242,7 @@
                         callbacks: {
                             title(items) {
                                 if (!items.length) return "";
-                                return fmtAxis(items[0].parsed.x);
+                                return fmtAxisTooltip(items[0].parsed.x);
                             },
                             label(item) {
                                 return `${chartMetric.label}: ${fmtMetric(
@@ -258,7 +258,7 @@
                         type: "linear",
                         title: {
                             display: true,
-                            text: "Time",
+                            text: "Local Time",
                         },
                         ticks: {
                             maxTicksLimit: 6,
@@ -363,6 +363,21 @@
                 hour: "numeric",
                 minute: "2-digit",
                 second: "2-digit",
+            });
+        }
+        return value;
+    }
+
+    function fmtAxisTooltip(value) {
+        if (value > 1000000000000) {
+            return new Date(value).toLocaleString([], {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                second: "2-digit",
+                timeZoneName: "short",
             });
         }
         return value;
