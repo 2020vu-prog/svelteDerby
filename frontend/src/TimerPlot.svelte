@@ -76,6 +76,13 @@
             title: "MQTT Connections",
             unit: "count",
         },
+        {
+            value: "mqttLatency",
+            label: "MQTT Latency",
+            yKey: "mqttLatency",
+            title: "MQTT Latency",
+            unit: "ms",
+        },
     ];
 
     const rebootMarkerPlugin = {
@@ -296,13 +303,17 @@
             const buf8 = Buffer.from(h.data64, "base64");
             const timerDataList = Timer.TimerDataList.decode(buf8);
             const xmitMs = protobufLongToNumber(timerDataList.xmitMs);
+            const prevPubAckMs = protobufLongToNumber(
+                timerDataList.prevPubAckMs
+            );
             for (let td of timerDataList.timerData) {
                 if (
                     td.timerHealth &&
                     (undefined !== td.timerHealth.cpuTempC ||
                         undefined !== td.timerHealth.cpuUptime ||
                         undefined !== td.timerHealth.wifiRss ||
-                        undefined !== td.timerHealth.mqttConnections)
+                        undefined !== td.timerHealth.mqttConnections ||
+                        undefined !== prevPubAckMs)
                 ) {
                     cpuPoints.push({
                         x: xmitMs,
@@ -311,6 +322,7 @@
                         cpuUptime: td.timerHealth.cpuUptime,
                         wifiRss: td.timerHealth.wifiRss,
                         mqttConnections: td.timerHealth.mqttConnections,
+                        mqttLatency: prevPubAckMs,
                     });
                 }
             }
