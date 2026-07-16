@@ -727,7 +727,8 @@ const addOrgConfig = async (json) => {
     json.PK = "OrgConfig"; // force
     json.SK = json.orgIz; // force
     const by = entityFactory.propOverrides.by;
-    entityFactory = new EntityFactory({ orgIz: json.orgIz, by: by });
+    const byEmail = entityFactory.propOverrides.byEmail;
+    entityFactory = new EntityFactory({ orgIz: json.orgIz, by: by, byEmail });
 
     return await ddbUtils.addSingle(json);
 };
@@ -1034,9 +1035,11 @@ const addEventConfig = async (event) => {
     json.TTL = newTtl;
 
     const by = entityFactory.propOverrides.by;
+    const byEmail = entityFactory.propOverrides.byEmail;
     entityFactory = new EntityFactory({
         orgId: json.orgId,
         by: by,
+        byEmail,
         TTL: json.TTL,
     });
 
@@ -1233,8 +1236,10 @@ const routeMap = {
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
-        h: async (event) => {
-            return buildResponse(await addOrgUser(JSON.parse(event.body)));
+        h: async (event, apiProps) => {
+            return buildResponse(
+                await addOrgUser(JSON.parse(event.body), apiProps)
+            );
         },
     },
     "/addParticipant": {
@@ -1787,15 +1792,15 @@ async function apiGatewayHandler(event) {
     const by = decodedJwt["cognito:username"]
         ? decodedJwt["cognito:username"]
         : decodedJwt.email;
+    const email = decodedJwt.email;
     entityFactory = new EntityFactory({
         orgId: orgId,
         by: by,
+        byEmail: email,
         TTL: defaultTTL,
     });
     ddbUtils.setEntityFactory(entityFactory);
     log.debug("Begin event", event, " with config: ", config);
-
-    const email = decodedJwt.email;
 
     const roleList = await getUserRoles(orgIz, email);
     if (email && hasServerRoutePath(orgIz, roleList, routePath)) {
@@ -1856,25 +1861,42 @@ async function listOrgUser(event, apiProps) {
     });
     return rolesByOrg;
 }
-async function addOrgUser(json) {
+async function addOrgUser(json, apiProps) {
     log.debug("addOrgUser: " + JSON.stringify(json));
 
     if (json.email) {
         json.email = json.email.trim();
     }
-    if (json.email && json.orgIz && json.roleList) {
+    const orgId = json.orgId || apiProps.orgId;
+    const displayName = json.displayName || json.dn;
+    if (json.email && json.orgIz && json.roleList && orgId && displayName) {
+        const userDisplayNameResult = await ddbUtils.addSingle({
+            PK: "UserDisplayName",
+            orgId,
+            SK: entityFactory.getHashFromEmail(json.email),
+            displayName,
+        });
+
         json.PK = json.orgIz + ":OrgPerm"; // force OrgPerm
         json.SK = json.email;
         const by = entityFactory.propOverrides.by;
-        const nowEpochSeconds = Math.round(new Date().getTime() / 1000);
-
         const tmpEntityFactory = new EntityFactory({
             orgIz: json.orgIz,
             by: by,
         });
 
         ddbUtils.setEntityFactory(tmpEntityFactory);
-        return await ddbUtils.addSingle(json);
+        const orgPermResult = await ddbUtils.addSingle(json);
+
+        return {
+            status:
+                orgPermResult.status === "ok" &&
+                userDisplayNameResult.status === "ok"
+                    ? "ok"
+                    : "error",
+            orgPermResult,
+            userDisplayNameResult,
+        };
     } else {
         return { error: "missing field(s)" };
     }

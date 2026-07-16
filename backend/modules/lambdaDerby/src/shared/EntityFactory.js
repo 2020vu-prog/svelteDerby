@@ -1,6 +1,8 @@
+const crypto = require("crypto");
 const log = require("loglevel");
 const entityFactories = {};
 const OrgPermEid = ":OrgPerm";
+const UserDisplayNameEid = ":UserDisplayName";
 const RacePhaseEid = ":RP";
 const RaceStandingEid = ":RS";
 const ParticipantEid = ":PTCP";
@@ -24,8 +26,19 @@ const cHelper = (pthis, props, optionalMembers) => {
     }
 };
 
+const ByEmailHashProp = "_byEmailHash";
+
 class EntityBase {
-    static EntityBaseMembers = ["PK", "SK", "at", "by", "orgId", "TTL", "del"];
+    static EntityBaseMembers = [
+        "PK",
+        "SK",
+        "at",
+        "by",
+        "byH",
+        "orgId",
+        "TTL",
+        "del",
+    ];
 
     constructor(props) {
         cHelper(this, props, this.constructor.EntityBaseMembers);
@@ -33,6 +46,9 @@ class EntityBase {
 
     preWrite() {
         this.at = new Date().getTime();
+        if (this[ByEmailHashProp]) {
+            this.byH = this[ByEmailHashProp];
+        }
     }
 
     get partitionKey() {
@@ -105,6 +121,8 @@ const OrgPermLit = "OrgPerm";
 entityFactories[OrgPermLit] = class OrgPerm extends EntityBase {
     static members = [
         "roleList", // e.g. zello:channelName
+        "dn",
+        "displayName",
     ];
     static canBuild(json) {
         return json.PK && json.PK.endsWith(OrgPermEid) && json.SK;
@@ -122,6 +140,12 @@ entityFactories[OrgPermLit] = class OrgPerm extends EntityBase {
     }
     get email() {
         return this.SK;
+    }
+    get displayName() {
+        return this.dn;
+    }
+    set displayName(displayName) {
+        this.dn = displayName;
     }
     get classType() {
         return OrgPermLit;
@@ -157,6 +181,38 @@ entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
     }
     get classKey() {
         return this.orgIz;
+    }
+};
+
+const UserDisplayNameLit = "UserDisplayName";
+entityFactories[UserDisplayNameLit] = class UserDisplayName extends EntityBase {
+    static members = ["byEmailHash", "displayName"];
+    static canBuild(json) {
+        return (
+            json.PK &&
+            json.PK === UserDisplayNameLit &&
+            (json.SK || json.byEmailHash)
+        );
+    }
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK = this.orgId + UserDisplayNameEid;
+    }
+    get byEmailHash() {
+        return this.SK;
+    }
+    set byEmailHash(byEmailHash) {
+        this.SK = byEmailHash;
+    }
+    get classType() {
+        return UserDisplayNameLit;
+    }
+    get classKey() {
+        return this.SK;
     }
 };
 
@@ -722,6 +778,9 @@ class EntityFactory {
     }
     build(json) {
         for (const [overrideKey, value] of Object.entries(this.propOverrides)) {
+            if (overrideKey === "byEmail") {
+                continue;
+            }
             json[overrideKey] = value;
         }
         const candidates = Object.values(entityFactories)
@@ -732,10 +791,31 @@ class EntityFactory {
                 return new factory(json);
             });
 
-        return candidates.length > 0 ? candidates[0] : null;
+        const entity = candidates.length > 0 ? candidates[0] : null;
+        if (
+            entity &&
+            this.propOverrides.byEmail &&
+            this.propOverrides.byEmail.toLowerCase() !== "anonymous"
+        ) {
+            Object.defineProperty(entity, ByEmailHashProp, {
+                value: this.getHashFromEmail(this.propOverrides.byEmail),
+                enumerable: false,
+            });
+        }
+        return entity;
     }
     get entityTypes() {
         return Object.keys(entityFactories);
+    }
+    getHashFromEmail(email) {
+        if (!email) {
+            return "";
+        }
+        return crypto
+            .createHash("sha512")
+            .update(email.trim().toLowerCase())
+            .digest("base64")
+            .substring(0, 8);
     }
 }
 
