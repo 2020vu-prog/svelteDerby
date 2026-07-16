@@ -1807,7 +1807,6 @@ async function apiGatewayHandler(event) {
     const email = decodedJwt.email;
     entityFactory = new EntityFactory({
         orgId: orgId,
-        by: by,
         byEmail: email,
         TTL: defaultTTL,
     });

@@ -17,6 +17,7 @@ function getTokenClaims() {
 
 const orgIz = "Test";
 const orgId = `${orgIz}.${uuidv4().substring(0, 5)}`;
+let addEventConfigResult;
 
 beforeAll(async () => {
     const now = new Date().toISOString();
@@ -28,6 +29,7 @@ beforeAll(async () => {
     });
 
     expect(received.data.status).toMatch(/ok/i);
+    addEventConfigResult = received.data;
 });
 
 test("getAwsConfig returns the hosted Cognito client config", async () => {
@@ -45,6 +47,12 @@ test("listOrgEvents returns event config for an org index", async () => {
 
     expect(data).toBeTruthy();
     expect(Array.isArray(data) || typeof data === "object").toBe(true);
+});
+
+test("addEventConfig refreshes user display names", async () => {
+    expect(addEventConfigResult.userDisplayNameResult.status).toMatch(/ok/i);
+    expect(addEventConfigResult.userDisplayNameResult.total).toBeGreaterThanOrEqual(0);
+    expect(addEventConfigResult.userDisplayNameResult.created).toBeGreaterThanOrEqual(0);
 });
 
 test("getOrgRoles returns roles for the authenticated user", async () => {
@@ -69,6 +77,9 @@ test("updateEventConfig updates the throwaway event config", async () => {
     });
 
     expect(received.data.status).toMatch(/ok/i);
+    expect(received.data.userDisplayNameResult.status).toMatch(/ok/i);
+    expect(received.data.userDisplayNameResult.created).toBeGreaterThanOrEqual(1);
+    expect(received.data.userDisplayNameResult.total).toBeGreaterThanOrEqual(1);
 });
 
 test("timer routes return active timer lists", async () => {
