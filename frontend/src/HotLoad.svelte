@@ -573,6 +573,7 @@
             EventConfig: {},
             TimerConfig: {},
             TimerPbConfig: {},
+            UserDisplayName: {},
         };
     };
 

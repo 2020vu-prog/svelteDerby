@@ -94,3 +94,16 @@ test("UserDisplayName Factory", () => {
     expect(displayNameEntity.classType).toBe("UserDisplayName");
     expect(displayNameEntity.classKey).toBe("OvMXT6EO");
 });
+
+test("UserDisplayName Factory builds persisted records", () => {
+    const displayNameEntity = entityFactory.build({
+        PK: "myorgtest:UserDisplayName",
+        SK: "OvMXT6EO",
+        orgId: "myorgtest",
+        displayName: "Example User",
+    });
+
+    expect(displayNameEntity.byEmailHash).toBe("OvMXT6EO");
+    expect(displayNameEntity.classType).toBe("UserDisplayName");
+    expect(displayNameEntity.classKey).toBe("OvMXT6EO");
+});

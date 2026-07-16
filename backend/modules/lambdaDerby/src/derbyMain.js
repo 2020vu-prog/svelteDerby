@@ -1001,7 +1001,15 @@ const updateEventConfig = async (json) => {
     eventConfig.name = json.name;
 
     ddbUtils.flushEventCache(); //TODO: flush event cache in other instances of lambda...
-    return await ddbUtils.addSingle(eventConfig);
+    const eventConfigResult = await ddbUtils.addSingle(eventConfig);
+    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
+        {
+            orgIz: eventConfig.orgIz || json.orgIz,
+            orgId: eventConfig.orgId || json.orgId,
+        }
+    );
+    eventConfigResult.userDisplayNameResult = userDisplayNameResult;
+    return eventConfigResult;
 };
 const addEventConfig = async (event) => {
     const json = JSON.parse(event.body);
@@ -1045,6 +1053,10 @@ const addEventConfig = async (event) => {
 
     ddbUtils.setEntityFactory(entityFactory);
     const eventRC = await ddbUtils.addSingle(json);
+    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
+        { orgIz: json.orgIz, orgId: json.orgId }
+    );
+    eventRC.userDisplayNameResult = userDisplayNameResult;
 
     await addNewEventPushSns(json.orgId,json); 
     await addTimerConfig(json, true); // TODO: revisit default TimerConfig?
@@ -1870,13 +1882,6 @@ async function addOrgUser(json, apiProps) {
     const orgId = json.orgId || apiProps.orgId;
     const displayName = json.displayName || json.dn;
     if (json.email && json.orgIz && json.roleList && orgId && displayName) {
-        const userDisplayNameResult = await ddbUtils.addSingle({
-            PK: "UserDisplayName",
-            orgId,
-            SK: entityFactory.getHashFromEmail(json.email),
-            displayName,
-        });
-
         json.PK = json.orgIz + ":OrgPerm"; // force OrgPerm
         json.SK = json.email;
         const by = entityFactory.propOverrides.by;
@@ -1887,6 +1892,9 @@ async function addOrgUser(json, apiProps) {
 
         ddbUtils.setEntityFactory(tmpEntityFactory);
         const orgPermResult = await ddbUtils.addSingle(json);
+        const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
+            { orgIz: json.orgIz, orgId }
+        );
 
         return {
             status:
@@ -1900,6 +1908,56 @@ async function addOrgUser(json, apiProps) {
     } else {
         return { error: "missing field(s)" };
     }
+}
+async function refreshUserDisplayNamesFromOrgPerm(json) {
+    log.debug("refreshUserDisplayNamesFromOrgPerm: " + JSON.stringify(json));
+
+    const orgIz = json.orgIz;
+    const orgId = json.orgId;
+    if (!orgIz || !orgId) {
+        return { error: "missing field(s)" };
+    }
+
+    const orgIzList = orgIz === "" ? [""] : ["", orgIz];
+    const orgPermGroups = await Promise.all(
+        orgIzList.map((orgIzForQuery) =>
+            ddbUtils.ddbQueryOrgPerms({ orgIz: orgIzForQuery })
+        )
+    );
+    for (const orgPermGroup of orgPermGroups) {
+        if (!Array.isArray(orgPermGroup)) {
+            return orgPermGroup;
+        }
+    }
+    const orgPerms = orgPermGroups.flat();
+
+    const bulk = [];
+    let skipped = 0;
+    for (const orgPerm of orgPerms) {
+        const displayName = orgPerm.displayName || orgPerm.dn;
+        if (!orgPerm.SK || !displayName) {
+            skipped += 1;
+            continue;
+        }
+
+        bulk.push({
+            PK: "UserDisplayName",
+            orgId,
+            SK: entityFactory.getHashFromEmail(orgPerm.SK),
+            displayName,
+        });
+    }
+    const bulkResult = bulk.length
+        ? await ddbUtils.addBulk({ bulk })
+        : { status: "ok", count: 0 };
+
+    return {
+        status: bulkResult.status,
+        created: bulkResult.count,
+        skipped,
+        total: orgPerms.length,
+        bulkResult,
+    };
 }
 async function getUserRoles(orgIz, email) {
     const roleList = [];

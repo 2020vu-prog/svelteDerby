@@ -190,7 +190,8 @@ entityFactories[UserDisplayNameLit] = class UserDisplayName extends EntityBase {
     static canBuild(json) {
         return (
             json.PK &&
-            json.PK === UserDisplayNameLit &&
+            (json.PK === UserDisplayNameLit ||
+                json.PK.endsWith(UserDisplayNameEid)) &&
             (json.SK || json.byEmailHash)
         );
     }

@@ -2,6 +2,7 @@
 import log from "loglevel";
 import { onMount } from "svelte";
 import         {hhmmssFmt,} from './utils.js'
+import ByLine from "./ByLine.svelte";
 import {
         Card,
         CardBody,
@@ -50,7 +51,7 @@ function xlateStatus(status){
         </CardTitle>
     </CardHeader>
     <CardBody>
-        By: {bp.by}
+        <ByLine entity={bp} />
         <ul class="list-group">
 
         {#each Object.keys(bp.pos) as pos }
