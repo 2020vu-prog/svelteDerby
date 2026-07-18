@@ -778,6 +778,19 @@ class EntityFactory {
     constructor(propOverrides) {
         this.propOverrides = propOverrides;
     }
+    copyWith(propOverrides = {}) {
+        const copyOverrides = {
+            ...this.propOverrides,
+        };
+        for (const [overrideKey, value] of Object.entries(propOverrides)) {
+            if (value === undefined) {
+                delete copyOverrides[overrideKey];
+            } else {
+                copyOverrides[overrideKey] = value;
+            }
+        }
+        return new EntityFactory(copyOverrides);
+    }
     build(json) {
         for (const [overrideKey, value] of Object.entries(this.propOverrides)) {
             if (overrideKey === "byEmail") {

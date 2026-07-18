@@ -91,21 +91,38 @@ records without injecting request context.
 `AnnounceResults` creates `new EntityFactory({})` while formatting records that
 already exist. It should not add write context.
 
-## Notes For Refactoring
+## Copy Helper
 
-A future copy helper can reduce repeated manual preservation of context:
+`copyWith` creates a new factory by preserving current overrides and replacing
+only the supplied fields:
 
 ```js
 copyWith(propOverrides = {}) {
-    return new EntityFactory({
-        ...this.propOverrides,
-        ...propOverrides,
-    });
+    const copyOverrides = { ...this.propOverrides };
+    for (const [overrideKey, value] of Object.entries(propOverrides)) {
+        if (value === undefined) {
+            delete copyOverrides[overrideKey];
+        } else {
+            copyOverrides[overrideKey] = value;
+        }
+    }
+    return new EntityFactory(copyOverrides);
 }
 ```
 
-Use that carefully. Some temporary factories intentionally do not inherit every
-field. For example, the `addOrgUser` OrgPerm factory should not accidentally
-inherit event `orgId` or `TTL` unless that behavior is explicitly desired.
+This is appropriate when a call site needs the same request context with a small
+scope change, such as changing `orgIz` for `addOrgConfig` or changing `orgId`
+and `TTL` for `addEventConfig`.
+
+Passing `undefined` deletes an inherited override:
+
+```js
+entityFactory.copyWith({ TTL: undefined, byEmail: undefined });
+```
+
+Use it carefully. Some temporary factories intentionally do not inherit every
+field. For example, the `addOrgUser` OrgPerm factory uses `copyWith` while
+explicitly deleting inherited event `orgId` and `TTL`, but preserving `byEmail`
+so OrgPerm records still get `byH`.
 
 Current class-key expectations are covered by `backend/test/entityFactory.test.js`.

@@ -726,9 +726,7 @@ const addOrgConfig = async (json) => {
     log.debug("addOrgConfig: " + JSON.stringify(json));
     json.PK = "OrgConfig"; // force
     json.SK = json.orgIz; // force
-    const by = entityFactory.propOverrides.by;
-    const byEmail = entityFactory.propOverrides.byEmail;
-    entityFactory = new EntityFactory({ orgIz: json.orgIz, by: by, byEmail });
+    entityFactory = entityFactory.copyWith({ orgIz: json.orgIz });
 
     return await ddbUtils.addSingle(json);
 };
@@ -1042,12 +1040,8 @@ const addEventConfig = async (event) => {
 
     json.TTL = newTtl;
 
-    const by = entityFactory.propOverrides.by;
-    const byEmail = entityFactory.propOverrides.byEmail;
-    entityFactory = new EntityFactory({
+    entityFactory = entityFactory.copyWith({
         orgId: json.orgId,
-        by: by,
-        byEmail,
         TTL: json.TTL,
     });
 
@@ -1883,10 +1877,10 @@ async function addOrgUser(json, apiProps) {
     if (json.email && json.orgIz && json.roleList && orgId && displayName) {
         json.PK = json.orgIz + ":OrgPerm"; // force OrgPerm
         json.SK = json.email;
-        const by = entityFactory.propOverrides.by;
-        const tmpEntityFactory = new EntityFactory({
+        const tmpEntityFactory = entityFactory.copyWith({
             orgIz: json.orgIz,
-            by: by,
+            orgId: undefined,
+            TTL: undefined,
         });
 
         ddbUtils.setEntityFactory(tmpEntityFactory);

@@ -1,5 +1,88 @@
 const EntityFactory = require("../modules/lambdaDerby/src/shared/EntityFactory.js");
 
+describe("EntityFactory copyWith", () => {
+    test("copies existing overrides and applies replacements", () => {
+        const entityFactory = new EntityFactory({
+            orgId: "event1",
+            orgIz: "org1",
+            by: "tester",
+            byEmail: " Test@Example.com ",
+            TTL: 123,
+        });
+
+        const copy = entityFactory.copyWith({
+            orgId: "event2",
+            TTL: 456,
+        });
+
+        expect(copy).not.toBe(entityFactory);
+        expect(copy.propOverrides).toEqual({
+            orgId: "event2",
+            orgIz: "org1",
+            by: "tester",
+            byEmail: " Test@Example.com ",
+            TTL: 456,
+        });
+        expect(entityFactory.propOverrides).toEqual({
+            orgId: "event1",
+            orgIz: "org1",
+            by: "tester",
+            byEmail: " Test@Example.com ",
+            TTL: 123,
+        });
+    });
+
+    test("copied byEmail context still derives byH", () => {
+        const entityFactory = new EntityFactory({
+            orgId: "event1",
+            by: "tester",
+            byEmail: " Test@Example.com ",
+        });
+
+        const copy = entityFactory.copyWith({
+            orgId: "event2",
+        });
+        const entity = copy.build({
+            PK: "event2:RS",
+            SK: "standing1",
+            cn: ["101", "102"],
+        });
+        entity.preWrite();
+
+        expect(entity.orgId).toBe("event2");
+        expect(entity.by).toBe("tester");
+        expect(entity.byH).toBe("OvMXT6EO");
+    });
+
+    test("undefined override deletes copied property", () => {
+        const entityFactory = new EntityFactory({
+            orgId: "event1",
+            by: "tester",
+            byEmail: " Test@Example.com ",
+            TTL: 123,
+        });
+
+        const copy = entityFactory.copyWith({
+            byEmail: undefined,
+            TTL: undefined,
+        });
+        const entity = copy.build({
+            PK: "event1:RS",
+            SK: "standing1",
+            cn: ["101", "102"],
+        });
+        entity.preWrite();
+
+        expect(copy.propOverrides).toEqual({
+            orgId: "event1",
+            by: "tester",
+        });
+        expect(entity.by).toBe("tester");
+        expect(entity.byH).toBeUndefined();
+        expect(entity.TTL).toBeUndefined();
+    });
+});
+
 describe("EntityFactory classKey contracts", () => {
     const entityFactory = new EntityFactory({
         orgId: "myorgtestevent",
