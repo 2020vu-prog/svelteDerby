@@ -11,7 +11,7 @@ const EntityFactory = require("../modules/lambdaDerby/src/shared/EntityFactory.j
 
 const cut={
 
-    "PK": "myorgtest:OrgPerm",
+    "PK": "myorgtestevent:OrgPerm",
 
     "SK": "xyz.com",
     "orgIz": "xyz",
@@ -32,7 +32,7 @@ test("OrgPerm Factory", () => {
 
 test("OrgPerm Factory maps displayName to dn", () => {
     const displayNameEntity = entityFactory.build({
-        PK: "myorgtest:OrgPerm",
+        PK: "myorgtestevent:OrgPerm",
         SK: "xyz.com",
         orgIz: "xyz",
         displayName: "Display Name User",
@@ -57,7 +57,7 @@ test("EntityFactory adds byH without raw email", () => {
         byEmail: " Test@Example.com ",
     });
     const json = {
-        PK: "myorgtest:OrgPerm",
+        PK: "myorgtestevent:OrgPerm",
         SK: "xyz.com",
         dn: "Example User",
         roleList: ["xyyyrole"],
@@ -81,13 +81,13 @@ test("EntityFactory adds byH without raw email", () => {
 test("UserDisplayName Factory", () => {
     const displayNameEntity = entityFactory.build({
         PK: "UserDisplayName",
-        orgId: "myorgtest",
+        orgId: "myorgtestevent",
         byEmailHash: "OvMXT6EO",
         displayName: "Example User",
     });
     displayNameEntity.preWrite();
 
-    expect(displayNameEntity.PK).toBe("myorgtest:UserDisplayName");
+    expect(displayNameEntity.PK).toBe("myorgtestevent:UserDisplayName");
     expect(displayNameEntity.SK).toBe("OvMXT6EO");
     expect(displayNameEntity.byEmailHash).toBe("OvMXT6EO");
     expect(displayNameEntity.displayName).toBe("Example User");
@@ -97,9 +97,9 @@ test("UserDisplayName Factory", () => {
 
 test("UserDisplayName Factory builds persisted records", () => {
     const displayNameEntity = entityFactory.build({
-        PK: "myorgtest:UserDisplayName",
+        PK: "myorgtestevent:UserDisplayName",
         SK: "OvMXT6EO",
-        orgId: "myorgtest",
+        orgId: "myorgtestevent",
         displayName: "Example User",
     });
 

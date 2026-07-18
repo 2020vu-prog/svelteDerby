@@ -158,6 +158,7 @@ entityFactories[OrgPermLit] = class OrgPerm extends EntityBase {
 const OrgConfigLit = "OrgConfig";
 entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
     static members = [
+        "orgIz",
         "lcl1", // lowCarlane1
         "pendingRule", // "1Race", "1Pair"
         "defaultTTL",
