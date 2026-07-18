@@ -10,7 +10,7 @@ Examples:
   publishTapThreshold.sh RR1-E21BFC 1
   publishTapThreshold.sh rr2Timer/RR1-E21BFC/cli 32 us-east-2
 
-Publishes this CLI command to AWS IoT MQTT:
+Publishes this retained CLI command to AWS IoT MQTT:
   {"cmd":"tap_threshold","value":<threshold>}
 USAGE
 }
@@ -55,5 +55,6 @@ aws iot-data publish \
   --region "$region" \
   --topic "$topic" \
   --qos 1 \
+  --retain \
   --cli-binary-format raw-in-base64-out \
   --payload "$payload"
