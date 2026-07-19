@@ -781,8 +781,8 @@ class DdbUtils {
         return 99;
     }
 
-    fmtBulkPut(json1) {
-        const myP = this.entityFactory.build(json1);
+    fmtBulkPut(json1, entityFactory = this.entityFactory) {
+        const myP = entityFactory.build(json1);
 
         if (myP) {
             myP.preWrite();
@@ -841,8 +841,8 @@ class DdbUtils {
         return { status: "ok", detail: "BulkProcessed", count: totalProcessed };
     }
 
-    async addSingle(json) {
-        const [uk, putRequest, entity] = this.fmtBulkPut(json);
+    async addSingle(json, entityFactory = this.entityFactory) {
+        const [uk, putRequest, entity] = this.fmtBulkPut(json, entityFactory);
         if (putRequest && uk) {
             await this.flushBulkRequests([putRequest]);
             return { status: "ok", entity: entity };

@@ -44,7 +44,27 @@ const discordUtils = new DiscordUtils(AWS, ddbUtils);
 const announceResults = new AnnounceResults(AWS, ddbUtils);
 const apiRaceStanding = new ApiRaceStanding(AWS, ddbUtils, announceResults);
 
-let globalErrorList = [];
+const requestContext = {
+    entityFactory: null,
+    errorList: [],
+};
+
+function resetRequestContext() {
+    requestContext.errorList = [];
+    setEntityFactoryContext(null);
+}
+
+function setEntityFactoryContext(newEntityFactory) {
+    requestContext.entityFactory = newEntityFactory;
+    ddbUtils.setEntityFactory(newEntityFactory);
+}
+
+function getEntityFactory() {
+    if (!requestContext.entityFactory) {
+        throw new Error("EntityFactory is not initialized for this request.");
+    }
+    return requestContext.entityFactory;
+}
 
 log.setLevel(log.levels.TRACE);
 
@@ -139,10 +159,9 @@ function frozenOrArchived(config) {
     if (!config) {
         return false;
     }
-    const configEntity = entityFactory.build(config);
+    const configEntity = getEntityFactory().build(config);
     return configEntity.checkIfFrozenOrArchived()["status"];
 }
-var entityFactory;
 
 const addPending2 = async (event) => {
     const eventKey = getEventKey(event);
@@ -448,7 +467,7 @@ const addPendingFromChartPos = async (rs, bracketPos) => {
             }),
         });
         if (pendingRC && pendingRC.error) {
-            globalErrorList.push(pendingRC);
+            requestContext.errorList.push(pendingRC);
         }
     }
 };
@@ -726,9 +745,11 @@ const addOrgConfig = async (json) => {
     log.debug("addOrgConfig: " + JSON.stringify(json));
     json.PK = "OrgConfig"; // force
     json.SK = json.orgIz; // force
-    entityFactory = entityFactory.copyWith({ orgIz: json.orgIz });
+    const orgConfigEntityFactory = getEntityFactory().copyWith({
+        orgIz: json.orgIz,
+    });
 
-    return await ddbUtils.addSingle(json);
+    return await ddbUtils.addSingle(json, orgConfigEntityFactory);
 };
 const getSanitizedTimers = async () => {
     const timers = await getActiveTimers();
@@ -1040,13 +1061,12 @@ const addEventConfig = async (event) => {
 
     json.TTL = newTtl;
 
-    entityFactory = entityFactory.copyWith({
+    const eventConfigEntityFactory = getEntityFactory().copyWith({
         orgId: json.orgId,
         TTL: json.TTL,
     });
-
-    ddbUtils.setEntityFactory(entityFactory);
-    const eventRC = await ddbUtils.addSingle(json);
+    setEntityFactoryContext(eventConfigEntityFactory);
+    const eventRC = await ddbUtils.addSingle(json, eventConfigEntityFactory);
     const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
         { orgIz: json.orgIz, orgId: json.orgId }
     );
@@ -1299,12 +1319,12 @@ const routeMap = {
     },
     "/addChartPosition": {
         h: async (event) => {
-            globalErrorList = []; // TODO: re-visit multiple low level error messages from advanceChartPos
+            requestContext.errorList = []; // TODO: re-visit multiple low level error messages from advanceChartPos
             const localMsg = await addOrUpdateChartPosition(
                 JSON.parse(event.body)
             );
-            if (globalErrorList && globalErrorList.length > 0) {
-                return buildResponse(globalErrorList[0]);
+            if (requestContext.errorList && requestContext.errorList.length > 0) {
+                return buildResponse(requestContext.errorList[0]);
             } else {
                 return buildResponse(localMsg);
             }
@@ -1586,12 +1606,11 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     if (rp.cn[1] && !validNumericTime(l2Micros)) {
         throw `missing time [${l2Micros}] for car [${rp.cn}] in lane 2`;
     }
-    entityFactory = new EntityFactory({
+    setEntityFactoryContext(new EntityFactory({
         orgId: finishLineBlock.timerConfig.orgId,
         by: byLine,
         TTL: rp.TTL,
-    });
-    ddbUtils.setEntityFactory(entityFactory);
+    }));
 
     const req = {
         orgId: finishLineBlock.timerConfig.orgId,
@@ -1640,12 +1659,11 @@ async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         // sns gave us a timer config.  use that instead of
         //   waiting for another dynamo read
         const timerConfig = json.timerConfig;
-        entityFactory = new EntityFactory({
+        setEntityFactoryContext(new EntityFactory({
             orgId: timerConfig.orgId,
             by: "rpi.local",
             TTL: timerConfig.TTL,
-        });
-        ddbUtils.setEntityFactory(entityFactory);
+        }));
 
         const deltaLanes = json.deltas[0].lanes;
         const candidateBlock = json.deltas[0].cBlock;
@@ -1799,12 +1817,11 @@ async function apiGatewayHandler(event) {
         ? decodedJwt["cognito:username"]
         : decodedJwt.email;
     const email = decodedJwt.email;
-    entityFactory = new EntityFactory({
+    setEntityFactoryContext(new EntityFactory({
         orgId: orgId,
         byEmail: email,
         TTL: defaultTTL,
-    });
-    ddbUtils.setEntityFactory(entityFactory);
+    }));
     log.debug("Begin event", event, " with config: ", config);
 
     const roleList = await getUserRoles(orgIz, email);
@@ -1877,14 +1894,13 @@ async function addOrgUser(json, apiProps) {
     if (json.email && json.orgIz && json.roleList && orgId && displayName) {
         json.PK = json.orgIz + ":OrgPerm"; // force OrgPerm
         json.SK = json.email;
-        const tmpEntityFactory = entityFactory.copyWith({
+        const tmpEntityFactory = getEntityFactory().copyWith({
             orgIz: json.orgIz,
             orgId: undefined,
             TTL: undefined,
         });
 
-        ddbUtils.setEntityFactory(tmpEntityFactory);
-        const orgPermResult = await ddbUtils.addSingle(json);
+        const orgPermResult = await ddbUtils.addSingle(json, tmpEntityFactory);
         const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
             { orgIz: json.orgIz, orgId }
         );
@@ -1936,7 +1952,7 @@ async function refreshUserDisplayNamesFromOrgPerm(json) {
         bulk.push({
             PK: "UserDisplayName",
             orgId,
-            SK: entityFactory.getHashFromEmail(orgPerm.SK),
+            SK: getEntityFactory().getHashFromEmail(orgPerm.SK),
             displayName,
         });
     }
@@ -1983,7 +1999,7 @@ function lowercaseHeaders(event) {
         }
     });
 }
-exports.handler = async function (event) {
+async function lambdaHandler(event) {
     log.debug("Received event:", JSON.stringify(event, null, 4));
     if (event && event.path) { // api gateway format v1
         lowercaseHeaders(event)
@@ -2079,6 +2095,15 @@ exports.handler = async function (event) {
 
     log.debug("unknown event: ", event);
     return "Error";
+}
+
+exports.handler = async function (event) {
+    resetRequestContext();
+    try {
+        return await lambdaHandler(event);
+    } finally {
+        resetRequestContext();
+    }
 };
 
 // changed.
