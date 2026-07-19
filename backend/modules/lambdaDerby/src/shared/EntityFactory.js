@@ -46,6 +46,7 @@ class EntityBase {
 
     preWrite() {
         this.at = new Date().getTime();
+        // Rewrites may start from a prior DDB record, so clear the stale audit field.
         if (this[ByEmailHashProp]) {
             this.byH = this[ByEmailHashProp];
             delete this.by;
