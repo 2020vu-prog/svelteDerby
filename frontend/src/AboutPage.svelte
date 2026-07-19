@@ -23,6 +23,7 @@
         buildGitBranch,
         buildGitHash,
         buildGitDirty,
+        formatBuildEpoch,
         isEmailAllowedRoutePath,
     } from "./utils.js";
 
@@ -47,14 +48,25 @@
     var ecFromDexie;
     var histCountFromDexie = "";
     var derbyMainVersionInfo = {};
+    const formatGitInfo = (branch, hash, dirty) =>
+        [branch, hash, dirty === "dirty" ? dirty : ""]
+            .filter((part) => part)
+            .join(" / ");
     const gitDirty = buildGitDirty();
-    const gitInfo = [
-        buildGitBranch(),
-        buildGitHash(),
-        gitDirty === "dirty" ? gitDirty : "",
-    ]
-        .filter((part) => part)
-        .join(" / ");
+    const gitInfo = formatGitInfo(buildGitBranch(), buildGitHash(), gitDirty);
+    const getGitBreadcrumb = (breadcrumb) => {
+        if (!breadcrumb) {
+            return {};
+        }
+        try {
+            return JSON.parse(breadcrumb);
+        } catch (err) {
+            return {};
+        }
+    };
+    $: backendGitBreadcrumb = getGitBreadcrumb(
+        derbyMainVersionInfo.gitBreadcrumb
+    );
 
     const refreshDataFromDb = async (trigger) => {
         log.warn("refreshDataFromDb data:", trigger);
@@ -227,7 +239,15 @@
         <h4>Backend DerbyMain</h4>
         <h6>
             Version: {derbyMainVersionInfo.version || "unknown"}<br />
-            Git: {derbyMainVersionInfo.gitBreadcrumb || "unknown"}
+            Build Date: {formatBuildEpoch(
+                backendGitBreadcrumb.buildTime,
+                "unknown"
+            )}<br />
+            Git: {formatGitInfo(
+                backendGitBreadcrumb.branch,
+                backendGitBreadcrumb.hash,
+                backendGitBreadcrumb.dirty
+            ) || "unknown"}
         </h6>
     </div>
     <hr />

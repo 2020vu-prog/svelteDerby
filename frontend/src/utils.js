@@ -204,12 +204,12 @@ export function safeGetAt(map, key) {
         return 0;
     }
 }
-export function buildDate() {
-    const buildEpoch = parseInt("[AIV]{date}[/AIV]", 10);
-    if (!buildEpoch) {
-        return "[AIV]{date}[/AIV]";
+export function formatBuildEpoch(buildEpoch, fallback = "[AIV]{date}[/AIV]") {
+    const buildEpochMs = parseInt(buildEpoch, 10);
+    if (!buildEpochMs) {
+        return fallback;
     }
-    return new Date(buildEpoch).toLocaleString(undefined, {
+    return new Date(buildEpochMs).toLocaleString(undefined, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -218,6 +218,9 @@ export function buildDate() {
         second: "2-digit",
         timeZoneName: "short",
     });
+}
+export function buildDate() {
+    return formatBuildEpoch("[AIV]{date}[/AIV]");
 }
 export function buildVersion() {
     return "[AIV]{version}[/AIV]";
