@@ -186,26 +186,18 @@
     {/if}
 
     <br />
-    <h2>Frontend Version Info</h2>
+    <h2>Version Info</h2>
     <hr />
 
     <div class="singularSettingDiv">
-        <h4>Build Version</h4>
+        <h4>Frontend</h4>
         <h6>
-            <span class="noselect" on:click={devClick}>{buildVersion()}</span>
+            <span class="noselect" on:click={devClick}>
+                Build Version: {buildVersion()}<br />
+                Build Date: {buildDate()}<br />
+                Git: {gitInfo}
+            </span>
         </h6>
-    </div>
-    <hr />
-
-    <div class="singularSettingDiv">
-        <h4>Build Date</h4>
-        <h6>{buildDate()}</h6>
-    </div>
-    <hr />
-
-    <div class="singularSettingDiv">
-        <h4>Git</h4>
-        <h6>{gitInfo}</h6>
     </div>
     <hr />
 

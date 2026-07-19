@@ -205,7 +205,19 @@ export function safeGetAt(map, key) {
     }
 }
 export function buildDate() {
-    return "[AIV]{date}[/AIV]";
+    const buildEpoch = parseInt("[AIV]{date}[/AIV]", 10);
+    if (!buildEpoch) {
+        return "[AIV]{date}[/AIV]";
+    }
+    return new Date(buildEpoch).toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZoneName: "short",
+    });
 }
 export function buildVersion() {
     return "[AIV]{version}[/AIV]";
