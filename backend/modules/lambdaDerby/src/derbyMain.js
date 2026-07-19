@@ -41,8 +41,13 @@ const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
 const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
 const discordUtils = new DiscordUtils(AWS, ddbUtils);
 
-const announceResults = new AnnounceResults(AWS, ddbUtils);
-const apiRaceStanding = new ApiRaceStanding(AWS, ddbUtils, announceResults);
+function newAnnounceResults() {
+    return new AnnounceResults(AWS, ddbUtils);
+}
+
+function newApiRaceStanding() {
+    return new ApiRaceStanding(AWS, ddbUtils, newAnnounceResults());
+}
 
 const requestContext = {
     entityFactory: null,
@@ -249,7 +254,7 @@ const applyFinishTime = async (json) => {
 
         var finishPromises = [];
         finishPromises.push(
-            announceResults.formatAndSubmitResults(tgtRs, tgtRp)
+            newAnnounceResults().formatAndSubmitResults(tgtRs, tgtRp)
         );
 
         // TODO: cloneRS messes with announcement on tie when there is a bracket
@@ -654,7 +659,7 @@ async function addBlocks(json) {
     const rpResult = await ddbUtils.addSingle(json);
     log.debug("addBlocks tgtRp:", rpResult);
 
-    await announceResults.formatAndSubmitNextOnBlocks(
+    await newAnnounceResults().formatAndSubmitNextOnBlocks(
         pendingNeeded ? rsFound[0] : null,
         rpResult.entity
     );
@@ -1080,7 +1085,7 @@ const addEventConfig = async (event) => {
 async function addParticipant2(json) {
     log.debug("addParticipant2: " + JSON.stringify(json));
     json.PK = ":PTCP"; // force Participant
-    const paTask = await announceResults.submitToPolly(
+    const paTask = await newAnnounceResults().submitToPolly(
         "added driver: " + json.name,
         json.orgId
     );
@@ -1291,7 +1296,7 @@ const routeMap = {
     "/deleteRaceStanding": {
         h: async (event) => {
             return buildResponse(
-                await apiRaceStanding.deleteRaceStanding(JSON.parse(event.body))
+                await newApiRaceStanding().deleteRaceStanding(JSON.parse(event.body))
             );
         },
     },
@@ -1306,7 +1311,7 @@ const routeMap = {
     "/RaceStanding/addTag": {
         h: async (event) => {
             return buildResponse(
-                await apiRaceStanding.addTag(JSON.parse(event.body))
+                await newApiRaceStanding().addTag(JSON.parse(event.body))
             );
         },
     },
@@ -1408,10 +1413,11 @@ const routeMap = {
             var orgId = json.orgId;
             /*
             if (json.messageTag === "called") {
-                await apiRaceStanding.snsFanoutRaceStatus(json.carNumbers);
+                await newApiRaceStanding().snsFanoutRaceStatus(json.carNumbers);
             }
             */
 
+            const announceResults = newAnnounceResults();
             const mp3ObjectPath = await announceResults.submitToPolly(
                 paMessage,
                 orgId
@@ -1427,7 +1433,7 @@ const routeMap = {
             var json = JSON.parse(event.body);
             var ssml = json.ssml;
             var orgId = json.orgId;
-            const speechMp3 = await announceResults.submitToPolly(ssml, orgId);
+            const speechMp3 = await newAnnounceResults().submitToPolly(ssml, orgId);
             log.debug("requestTts: " + ssml + " gave: ", speechMp3);
             return buildResponse({ speechMp3: speechMp3 });
         },
@@ -1547,6 +1553,7 @@ async function snsApplyPbLogMessage(snsMessageJson, snsPublishedTimestamp) {
     // add ssml markup.  (svelte does this for manual announcements.)
     const paMessage = `<speak>${snsMessageJson.logMessage.message}</speak>`;
     const orgId = snsMessageJson.timerConfig.orgId;
+    const announceResults = newAnnounceResults();
     const mp3ObjectPath = await announceResults.submitToPolly(paMessage, orgId);
 
     log.debug("snsApplyPbLogMessage: " + paMessage + " gave: ", mp3ObjectPath);
@@ -2044,7 +2051,7 @@ async function lambdaHandler(event) {
         log.debug("sns polly arn: : ", process.env.PollyCompleteSnsArn);
         if (snsMessageJson.snsTopicArn === process.env.PollyCompleteSnsArn) {
             log.debug("polly finished: ", snsMessageJson);
-            await announceResults.propagateIotFromSns(snsMessageJson);
+            await newAnnounceResults().propagateIotFromSns(snsMessageJson);
             return "Polly Success";
         }
         const snsTimestamp = event.Records[0].Sns.Timestamp;

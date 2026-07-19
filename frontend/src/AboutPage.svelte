@@ -186,7 +186,7 @@
     {/if}
 
     <br />
-    <h2>Version Info</h2>
+    <h2>Frontend Version Info</h2>
     <hr />
 
     <div class="singularSettingDiv">
