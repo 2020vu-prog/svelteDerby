@@ -50,7 +50,7 @@ describe("EntityFactory copyWith", () => {
         entity.preWrite();
 
         expect(entity.orgId).toBe("event2");
-        expect(entity.by).toBe("tester");
+        expect(entity.by).toBeUndefined();
         expect(entity.byH).toBe("OvMXT6EO");
     });
 
@@ -80,6 +80,42 @@ describe("EntityFactory copyWith", () => {
         expect(entity.by).toBe("tester");
         expect(entity.byH).toBeUndefined();
         expect(entity.TTL).toBeUndefined();
+    });
+});
+
+describe("EntityFactory audit fields", () => {
+    test("email hash audit clears stale by field", () => {
+        const entityFactory = new EntityFactory({
+            orgId: "event1",
+            byEmail: " Test@Example.com ",
+        });
+        const entity = entityFactory.build({
+            PK: "event1:RS",
+            SK: "standing1",
+            by: "rpi.local",
+            cn: ["101", "102"],
+        });
+        entity.preWrite();
+
+        expect(entity.byH).toBe("OvMXT6EO");
+        expect(entity.by).toBeUndefined();
+    });
+
+    test("plain audit clears stale byH field", () => {
+        const entityFactory = new EntityFactory({
+            orgId: "event1",
+            by: "rpi.gps",
+        });
+        const entity = entityFactory.build({
+            PK: "event1:RS",
+            SK: "standing1",
+            byH: "oldHash",
+            cn: ["101", "102"],
+        });
+        entity.preWrite();
+
+        expect(entity.by).toBe("rpi.gps");
+        expect(entity.byH).toBeUndefined();
     });
 });
 

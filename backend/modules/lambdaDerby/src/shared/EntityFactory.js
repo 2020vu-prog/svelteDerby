@@ -48,6 +48,9 @@ class EntityBase {
         this.at = new Date().getTime();
         if (this[ByEmailHashProp]) {
             this.byH = this[ByEmailHashProp];
+            delete this.by;
+        } else if (this.by) {
+            delete this.byH;
         }
     }
 
