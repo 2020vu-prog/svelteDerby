@@ -42,6 +42,6 @@ module "derbyMainLambda" {
   s3VideoWatch            = module.vodTranscode.WatchFolderBucket
   s3VideoDone             = module.vodTranscode.MediaBucket
   AwsCognitoSettingsJson  = local.awsCognitoSettingsJson
+  GitBreadcrumb           = aws_ssm_parameter.git_breadcrumb.value
 
 }
-

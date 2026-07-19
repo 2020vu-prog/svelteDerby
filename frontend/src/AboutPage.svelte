@@ -27,7 +27,13 @@
     } from "./utils.js";
 
     import { onMount } from "svelte";
-    import { getCacheKey, setCacheKey, userEmail } from "./stores.js";
+    import {
+        getCacheKey,
+        setCacheKey,
+        userEmail,
+        axios,
+        raceConfig,
+    } from "./stores.js";
     import { db, localConfigDb } from "./eventDb.js";
     import BottomNav from "./BottomNav.svelte";
     import OrgName from "./OrgName.svelte";
@@ -40,6 +46,7 @@
 
     var ecFromDexie;
     var histCountFromDexie = "";
+    var derbyMainVersionInfo = {};
     const gitDirty = buildGitDirty();
     const gitInfo = [
         buildGitBranch(),
@@ -55,6 +62,20 @@
         ecFromDexie = await db.EventConfig.toArray();
         histCountFromDexie = (await db.EventHistory.count()).toString();
     };
+
+    const refreshDerbyMainVersionInfo = async () => {
+        try {
+            const cacheKey = getCacheKey();
+            const response = await $axios.get(
+                `${$raceConfig.baseUrl}/getDerbyMainVersion`,
+                { params: { cache: cacheKey } }
+            );
+            derbyMainVersionInfo = response.data || {};
+        } catch (err) {
+            log.warn("refreshDerbyMainVersionInfo failed:", err);
+            derbyMainVersionInfo = {};
+        }
+    };
     $: {
         refreshDataFromDb($doRefreshBlocks);
     }
@@ -64,6 +85,7 @@
 
         mounted = true;
         refreshDataFromDb();
+        refreshDerbyMainVersionInfo();
     });
 
     var devClickCount = 0;
@@ -197,6 +219,15 @@
                 Build Date: {buildDate()}<br />
                 Git: {gitInfo}
             </span>
+        </h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4>Backend DerbyMain</h4>
+        <h6>
+            Version: {derbyMainVersionInfo.version || "unknown"}<br />
+            Git: {derbyMainVersionInfo.gitBreadcrumb || "unknown"}
         </h6>
     </div>
     <hr />

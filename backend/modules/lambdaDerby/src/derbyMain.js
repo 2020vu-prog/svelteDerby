@@ -1549,6 +1549,13 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
     };
 }
 
+function getDerbyMainVersionInfo() {
+    return {
+        version: derbyMainVersion,
+        gitBreadcrumb: process.env.GitBreadcrumb || "",
+    };
+}
+
 async function snsApplyPbLogMessage(snsMessageJson, snsPublishedTimestamp) {
     // add ssml markup.  (svelte does this for manual announcements.)
     const paMessage = `<speak>${snsMessageJson.logMessage.message}</speak>`;
@@ -1795,6 +1802,9 @@ async function apiGatewayHandler(event) {
             JSON.parse(process.env.AwsCognitoSettingsJson),
             `max-age=${aYear}`
         );
+    }
+    if (routePath === "/getDerbyMainVersion") {
+        return buildResponse(getDerbyMainVersionInfo(), "max-age=3600");
     }
 
     var decodedJwt={
