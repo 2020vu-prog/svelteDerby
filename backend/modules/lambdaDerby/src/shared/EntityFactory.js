@@ -10,6 +10,7 @@ const BracketMetaDataEid = ":Bmd";
 const BracketPosEid = ":Bp";
 const TimerConfigEid = ":TimerConfig";
 const TimerPbConfigEid = ":TimerPbConfig";
+const LogMessageEid = ":LogMessage";
 const cHelper = (pthis, props, optionalMembers) => {
     //console.log (pthis.constructor.members) ;
 
@@ -27,6 +28,20 @@ const cHelper = (pthis, props, optionalMembers) => {
 };
 
 const ByEmailHashProp = "_byEmailHash";
+
+/**
+ * Base record fields shared by DynamoDB entities built by EntityFactory.
+ *
+ * @typedef {Object} EntityProps
+ * @property {string} [PK]
+ * @property {string} [SK]
+ * @property {number} [at]
+ * @property {string} [by]
+ * @property {string} [byH]
+ * @property {string} [orgId]
+ * @property {number} [TTL]
+ * @property {*} [del]
+ */
 
 class EntityBase {
     static EntityBaseMembers = [
@@ -122,6 +137,10 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
 };
 
 const OrgPermLit = "OrgPerm";
+/**
+ * Organization permission record. SK is the user's email address and `dn` is
+ * exposed through `displayName` for friendlier UI handling.
+ */
 entityFactories[OrgPermLit] = class OrgPerm extends EntityBase {
     static members = [
         "roleList", // e.g. zello:channelName
@@ -190,6 +209,16 @@ entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
 };
 
 const UserDisplayNameLit = "UserDisplayName";
+/**
+ * Event-scoped lookup from hashed by-email value to a display name.
+ *
+ * @typedef {EntityProps} UserDisplayNameProps
+ * @property {string} orgId event scope for the lookup record
+ * @property {string} byEmailHash short hash derived from the user's email
+ * @property {string} displayName user-facing display name
+ *
+ * PK is rewritten to `${orgId}:UserDisplayName`; SK stores byEmailHash.
+ */
 entityFactories[UserDisplayNameLit] = class UserDisplayName extends EntityBase {
     static members = ["byEmailHash", "displayName"];
     static canBuild(json) {
@@ -777,11 +806,50 @@ entityFactories["TimerPbConfig"] = class TimerPbConfig extends EntityBase {
         return this.SK;
     }
 };
+/**
+ * Event-scoped application log record. SK defaults to an undecorated ISO8601
+ * timestamp so log records sort chronologically within the event partition.
+ */
+entityFactories["LogMessage"] = class LogMessage extends EntityBase {
+    static members = ["message", "level", "source", "detail"];
+    static eid = LogMessageEid;
+    static canBuild(json) {
+        return json.PK && json.PK.endsWith(LogMessageEid);
+    }
+
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK = this.orgId + LogMessageEid;
+        if (!this.SK) {
+            this.SK = new Date().toISOString();
+        }
+    }
+    get classType() {
+        return "LogMessage";
+    }
+    get classKey() {
+        return this.SK;
+    }
+};
 class EntityFactory {
     propOverrides = {};
+    /**
+     * @param {EntityProps & {byEmail?: string}} propOverrides properties applied to each built entity
+     */
     constructor(propOverrides) {
         this.propOverrides = propOverrides;
     }
+    /**
+     * Create a factory with merged property overrides.
+     * Passing an override value of `undefined` removes that key from the copy.
+     *
+     * @param {EntityProps & {byEmail?: string}} [propOverrides]
+     * @returns {EntityFactory}
+     */
     copyWith(propOverrides = {}) {
         const copyOverrides = {
             ...this.propOverrides,
@@ -795,6 +863,15 @@ class EntityFactory {
         }
         return new EntityFactory(copyOverrides);
     }
+    /**
+     * Apply this factory's request context and build the matching entity type.
+     * `byEmail` is converted to a non-enumerable hash source so preWrite can
+     * replace stale `by` values with `byH` instead of allowing both audit
+     * fields to coexist after DynamoDB merge-style updates.
+     *
+     * @param {Object} json DynamoDB-shaped entity payload.
+     * @returns {EntityBase|null}
+     */
     build(json) {
         for (const [overrideKey, value] of Object.entries(this.propOverrides)) {
             if (overrideKey === "byEmail") {
@@ -826,6 +903,12 @@ class EntityFactory {
     get entityTypes() {
         return Object.keys(entityFactories);
     }
+    /**
+     * Produce the short audit hash used for by-email attribution.
+     *
+     * @param {string} email
+     * @returns {string}
+     */
     getHashFromEmail(email) {
         if (!email) {
             return "";

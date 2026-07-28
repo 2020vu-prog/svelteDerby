@@ -11,7 +11,7 @@
     "integration": "./runIntegration.sh",
     "test": "npm run test:unit && npm run integration",
     "test:integration": "node cognito/getToken.js && NODE_PATH=./node_modules jest auth.test.js bulk.test.js derbyMain.integration.test.js timerInit.test.js main.test.js --runInBand --bail",
-    "test:unit": "NODE_PATH=./node_modules jest announce.test.js ddbUtils.test.js entityFactory.test.js orgUser.test.js overallTie.test.js phaseType.test.js shouldDefineRequiredEnv.test.js timerInterpolate.test.js --runInBand --bail"
+    "test:unit": "NODE_PATH=./node_modules jest announce.test.js ddbUtils.test.js entityFactory.test.js logUtils.test.js orgUser.test.js overallTie.test.js phaseType.test.js shouldDefineRequiredEnv.test.js timerInterpolate.test.js utils.test.js --runInBand --bail"
   },
   "jest": {
     "testEnvironment": "node",

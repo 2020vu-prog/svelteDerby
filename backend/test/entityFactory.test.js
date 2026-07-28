@@ -208,6 +208,16 @@ describe("EntityFactory classKey contracts", () => {
             },
             "Finish",
         ],
+        [
+            "LogMessage",
+            {
+                PK: "myorgtestevent:LogMessage",
+                SK: "log1",
+                message: "Example log message",
+                level: "info",
+            },
+            "log1",
+        ],
     ])("%s uses SK as classKey", (expectedClassType, json, expectedClassKey) => {
         const entity = entityFactory.build(json);
         entity.preWrite();
@@ -217,6 +227,37 @@ describe("EntityFactory classKey contracts", () => {
         expect(entity.classKey).toBe(entity.SK);
         expect(entity.partitionKey).toBeTruthy();
         expect(entity.sortKey).toBeTruthy();
+    });
+
+    test("LogMessage default SK is an ISO8601 date with milliseconds", () => {
+        const realDate = Date;
+        const fixedMs = 1785183303556;
+        global.Date = class extends realDate {
+            constructor(...args) {
+                return args.length
+                    ? new realDate(...args)
+                    : new realDate(fixedMs);
+            }
+            static getTime() {
+                return fixedMs;
+            }
+            static now() {
+                return fixedMs;
+            }
+        };
+        try {
+            const entity = entityFactory.build({
+                PK: "myorgtestevent:LogMessage",
+                message: "Example log message",
+                level: "debug",
+            });
+            entity.preWrite();
+
+            expect(entity.SK).toBe("2026-07-27T20:15:03.556Z");
+            expect(entity.classKey).toBe(entity.SK);
+        } finally {
+            global.Date = realDate;
+        }
     });
 
     test.each([

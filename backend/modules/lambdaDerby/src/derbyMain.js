@@ -36,10 +36,13 @@ const ArchiveUtils = require("./ArchiveUtils");
 const DiscordUtils = require("./DiscordUtils");
 const AnnounceResults = require("./AnnounceResults");
 const ApiRaceStanding = require("./ApiRaceStanding");
+const LogUtils = require("./LogUtils");
+const { getSourceName } = require("./utils");
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
 const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
 const discordUtils = new DiscordUtils(AWS, ddbUtils);
+const logUtils = new LogUtils(ddbUtils);
 
 function newAnnounceResults() {
     return new AnnounceResults(AWS, ddbUtils);
@@ -473,6 +476,27 @@ const addPendingFromChartPos = async (rs, bracketPos) => {
         });
         if (pendingRC && pendingRC.error) {
             requestContext.errorList.push(pendingRC);
+            const heatNumber = bracketPos.heatNumber || bracketPos.SK;
+            const carNumbers = [
+                bracketPos.getPtcpNumber("A"),
+                bracketPos.getPtcpNumber("B"),
+            ].filter((carNumber) => carNumber);
+            await logUtils.persistLogMessage(
+                {
+                    orgId: bracketPos.orgId,
+                    message: `Unable to add pending race for heat ${heatNumber} with cars ${carNumbers.join(
+                        " and "
+                    )}: ${pendingRC.error}`,
+                    level: "warn",
+                    source: getSourceName(),
+                    detail: {
+                        bracketPosKey: bracketPos.SK,
+                        heatNumber,
+                        carNumbers,
+                        addPendingResult: pendingRC,
+                    },
+                }
+            );
         }
     }
 };
@@ -1072,6 +1096,20 @@ const addEventConfig = async (event) => {
     });
     setEntityFactoryContext(eventConfigEntityFactory);
     const eventRC = await ddbUtils.addSingle(json, eventConfigEntityFactory);
+    await logUtils.persistLogMessage(
+        {
+            orgId: json.orgId,
+            message: `Added event: ${json.name || json.orgId}`,
+            level: "debug",
+            source: getSourceName(),
+            detail: {
+                orgIz: json.orgIz,
+                orgId: json.orgId,
+                name: json.name,
+            },
+        },
+        eventConfigEntityFactory
+    );
     const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
         { orgIz: json.orgIz, orgId: json.orgId }
     );
