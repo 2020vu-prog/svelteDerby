@@ -1,93 +1,93 @@
-*Psst — looking for a shareable component template? Go here --> [sveltejs/component-template](https://github.com/sveltejs/component-template)*
+# svelteDerby
 
----
+Race management software for soapbox derby events. The repo includes a Svelte
+frontend, AWS-backed event services, timer ingestion, media/video support, and
+Discord/Zello-related helper services.
 
-# svelte app
+## Repository Layout
 
-This is a project template for [Svelte](https://svelte.dev) apps. It lives at https://github.com/sveltejs/template.
+- `frontend/` - Svelte single-page app built with webpack.
+- `backend/` - Terraform, Lambda code, DynamoDB helpers, Cognito config, and
+  backend test harnesses.
+- `backend/modules/lambdaDerby/src/` - Main derby API Lambda code.
+- `backend/test/` - Backend unit and integration tests.
+- `discord/` - Discord notification/support infrastructure and Go Lambdas.
+- `raceArchive/` - Archived race/event data.
+- `rr1.us/` - Static/site support files.
 
-To create a new project based on this template using [degit](https://github.com/Rich-Harris/degit):
+## Frontend
+
+Install and run the local development server:
 
 ```bash
-npx degit sveltejs/template svelte-app
-cd svelte-app
-```
-
-*Note that you will need to have [Node.js](https://nodejs.org) installed.*
-
-
-## Get started
-
-Install the dependencies...
-
-```bash
-cd svelte-app
+cd frontend
 npm install
-```
-
-...then start [Rollup](https://rollupjs.org):
-
-```bash
 npm run dev
 ```
 
-Navigate to [localhost:5000](http://localhost:5000). You should see your app running. Edit a component file in `src`, save it, and reload the page to see your changes.
+The app is normally tested locally at:
 
-By default, the server will only respond to requests from localhost. To allow connections from other computers, edit the `sirv` commands in package.json to include the option `--host 0.0.0.0`.
+```text
+https://0.0.0.0:8080/
+```
 
+That URL matters for Cognito callback configuration. Local development uses
+self-signed certificates, so browsers may require a manual certificate warning
+bypass.
 
-## Building and running in production mode
-
-To create an optimised version of the app:
+Build production frontend assets:
 
 ```bash
+cd frontend
 npm run build
 ```
 
-You can run the newly built app with `npm run start`. This uses [sirv](https://github.com/lukeed/sirv), which is included in your package.json's `dependencies` so that the app will work when you deploy to platforms like [Heroku](https://heroku.com).
+## Backend
 
-
-## Single-page app mode
-
-By default, sirv will only respond to requests that match files in `public`. This is to maximise compatibility with static fileservers, allowing you to deploy your app anywhere.
-
-If you're building a single-page app (SPA) with multiple routes, sirv needs to be able to respond to requests for *any* path. You can make it so by editing the `"start"` command in package.json:
-
-```js
-"start": "sirv public --single"
-```
-
-
-## Deploying to the web
-
-### With [now](https://zeit.co/now)
-
-Install `now` if you haven't already:
+Backend infrastructure is managed with Terraform under `backend/`. Copy
+`backend/awsVarTemplate.sh` to a private location outside the repository, fill
+in environment-specific values, source it, then run Terraform from `backend/`:
 
 ```bash
-npm install -g now
+cd backend
+terraform init
+terraform apply
 ```
 
-Then, from within your project folder:
+Do not commit generated AWS exports, credentials, OAuth secrets, test env files,
+or local Terraform state.
+
+## Tests
+
+Run backend unit tests:
 
 ```bash
-cd public
-now deploy --name my-project
+cd backend/test
+npm install
+npm run test:unit
 ```
 
-As an alternative, use the [Now desktop client](https://zeit.co/download) and simply drag the unzipped project folder to the taskbar icon.
-
-### With [surge](https://surge.sh/)
-
-Install `surge` if you haven't already:
+Run backend integration tests:
 
 ```bash
-npm install -g surge
+cd backend/test
+npm run integration
 ```
 
-Then, from within your project folder:
+Integration tests require local, uncommitted configuration and credentials for a
+dedicated low-privilege test user.
 
-```bash
-npm run build
-surge public my-project.surge.sh
-```
+## Secrets
+
+This repository is intended to be safe for public hosting. Keep secrets in local
+files, environment variables, AWS SSM/Secrets Manager, or private Terraform var
+files. In particular, never commit:
+
+- Cognito/OAuth client secrets.
+- Discord bot tokens.
+- AWS credentials or generated AWS config.
+- Local integration-test credentials.
+- Personal email/permission seed files.
+
+Known local-only files are covered by `.gitignore`; add new sensitive local
+files there before using them.
