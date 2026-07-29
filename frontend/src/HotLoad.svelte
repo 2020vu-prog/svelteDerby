@@ -531,8 +531,14 @@
         refreshInProgressMq = true;
         const hist = getHistFromStore();
         const entityFactory = new EntityFactory({});
+        ensureHistEntityTypes(hist, entityFactory);
         const e = entityFactory.build(json);
         log.debug("Entity from mq:", e);
+        if (!e) {
+            log.debug("applyFromMqMsg skipping unknown entity:", json);
+            refreshInProgressMq = false;
+            return;
+        }
         const pendingBulk = {};
         await applyEntityToHist(e, hist, pendingBulk);
         await flushPendingBulk(pendingBulk);
@@ -577,6 +583,15 @@
         };
     };
 
+    function ensureHistEntityTypes(hist, entityFactory) {
+        entityFactory.entityTypes.forEach((et) => {
+            log.debug("et:", et);
+            if (!hist[et]) {
+                hist[et] = {};
+            }
+        });
+    }
+
     /*
      **
      */
@@ -589,12 +604,7 @@
 
         //TODO:   shouldn't clear hist on refresh (we just loaded it!)
 
-        entityFactory.entityTypes.forEach((et) => {
-            log.debug("et:", et);
-            if (!hist[et]) {
-                hist[et] = {};
-            }
-        });
+        ensureHistEntityTypes(hist, entityFactory);
 
         for (var i = 0; i < response.data.length; i++) {
             const json = response.data[i];

@@ -39,6 +39,9 @@ db.version(16).stores({
 db.version(17).stores({
     UserDisplayName: "SK",
 });
+db.version(18).stores({
+    LogMessage: "SK",
+});
 
 //export dbTools ;
 export async function dbReset() {

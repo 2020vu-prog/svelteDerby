@@ -445,6 +445,40 @@ const loadRaceStandingFromBracketPos = async (bracketPos) => {
     //TODO: override RS add to use bracketPos SK for RS SK
     return await ddbUtils.ddbQueryPkSk(`${bracketPos.orgId}:RS`, bracketPos.SK);
 };
+
+const logPendingFromChartPosError = async (bracketPos, pendingRC) => {
+    requestContext.errorList.push(pendingRC);
+    const heatNumber = bracketPos.heatNumber || bracketPos.SK;
+    const chartId = bracketPos.SK.replace(/:.*/, "");
+    const chartMetaData = await ddbUtils.ddbQueryPkSk(
+        `${bracketPos.orgId}:Bmd`,
+        chartId
+    );
+    const chartName = chartMetaData?.bracketName || chartId;
+    const carNumbers = [
+        bracketPos.getPtcpNumber("A"),
+        bracketPos.getPtcpNumber("B"),
+    ].filter((carNumber) => carNumber);
+    await logUtils.persistLogMessage(
+        {
+            orgId: bracketPos.orgId,
+            message: `Unable to add pending race for [${chartName}] heat [${heatNumber}] with cars [${carNumbers.join(
+                " and "
+            )}: ${pendingRC.error}`,
+            level: "warn",
+            source: getSourceName(),
+            detail: {
+                chartId,
+                chartName,
+                bracketPosKey: bracketPos.SK,
+                heatNumber,
+                carNumbers,
+                addPendingResult: pendingRC,
+            },
+        }
+    );
+};
+
 const loadBracketPosFromRaceStanding = async (rs) => {
     return await ddbUtils.ddbQueryPkSk(`${rs.orgId}:Bp`, rs.Bp);
 };
@@ -475,28 +509,7 @@ const addPendingFromChartPos = async (rs, bracketPos) => {
             }),
         });
         if (pendingRC && pendingRC.error) {
-            requestContext.errorList.push(pendingRC);
-            const heatNumber = bracketPos.heatNumber || bracketPos.SK;
-            const carNumbers = [
-                bracketPos.getPtcpNumber("A"),
-                bracketPos.getPtcpNumber("B"),
-            ].filter((carNumber) => carNumber);
-            await logUtils.persistLogMessage(
-                {
-                    orgId: bracketPos.orgId,
-                    message: `Unable to add pending race for heat ${heatNumber} with cars ${carNumbers.join(
-                        " and "
-                    )}: ${pendingRC.error}`,
-                    level: "warn",
-                    source: getSourceName(),
-                    detail: {
-                        bracketPosKey: bracketPos.SK,
-                        heatNumber,
-                        carNumbers,
-                        addPendingResult: pendingRC,
-                    },
-                }
-            );
+            await logPendingFromChartPosError(bracketPos, pendingRC);
         }
     }
 };
