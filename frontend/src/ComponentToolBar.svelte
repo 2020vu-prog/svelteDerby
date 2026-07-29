@@ -32,14 +32,18 @@
     export let timerLink;
     export let bracketLink;
     export let cn;
+    let deleteReason = "";
 
     const mediaLink = `/spMediaList/${dbName}/${dbKey}`;
     const elapsedLink = `/RpElapsed/${dbKey}`;
     let modalOpen = false;
     const modalToggle = () => (modalOpen = !modalOpen);
+    function allowsDeleteReason() {
+        return ["Pending", "A-Phase", "B-Phase"].includes(modalDeleteTgtName);
+    }
     function deleteConfimed() {
         modalToggle();
-        doDelete(dbName, dbKey, modalDeleteTgtName);
+        doDelete(dbName, dbKey, modalDeleteTgtName, deleteReason.trim());
     }
     onMount(async () => {
         log.debug("timerLink: ", timerLink);
@@ -55,6 +59,7 @@
         const tgt = await db[dbName].get(dbKey);
         log.debug("toolbar maybeDelete tgt", tgt);
         modalType = "deleteConfirmation";
+        deleteReason = "";
         if (dbName === "RacePhase") {
             modalDeleteTgtName = "Blocks";
 
@@ -74,7 +79,7 @@
         }
     }
 
-    async function doDelete(dbName, dbKey, tgtName) {
+    async function doDelete(dbName, dbKey, tgtName, reason) {
         log.debug(`doDelete: ${dbName} ${dbKey}`);
 
         const req = {
@@ -82,6 +87,7 @@
             orgIz: $raceConfig.orgIz,
             SK: dbKey,
             tgtName: tgtName,
+            reason: reason,
         };
 
         const endpoint =
@@ -226,10 +232,25 @@
             <ModalHeader toggle={modalToggle}>Confirm delete?</ModalHeader>
             <ModalBody>
                 Proceed with [{modalDeleteTgtName}] delete?
+                {#if allowsDeleteReason()}
+                    <br />
+                    <label for="deleteReason">Reason for delete</label>
+                    <input
+                        id="deleteReason"
+                        class="form-control"
+                        type="text"
+                        bind:value={deleteReason}
+                        placeholder="Reason for delete"
+                    />
+                {/if}
             </ModalBody>
             <ModalFooter>
-                <Button color="primary" on:click={deleteConfimed}>Delete</Button
+                <Button
+                    color="primary"
+                    on:click={deleteConfimed}
                 >
+                    Delete
+                </Button>
                 <Button color="secondary" on:click={modalToggle}>Cancel</Button>
             </ModalFooter>
         {:else if modalType === "cannotDeletePhase"}

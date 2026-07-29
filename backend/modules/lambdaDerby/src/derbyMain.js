@@ -49,7 +49,7 @@ function newAnnounceResults() {
 }
 
 function newApiRaceStanding() {
-    return new ApiRaceStanding(AWS, ddbUtils, newAnnounceResults());
+    return new ApiRaceStanding(AWS, ddbUtils, newAnnounceResults(), logUtils);
 }
 
 const requestContext = {
@@ -464,7 +464,7 @@ const logPendingFromChartPosError = async (bracketPos, pendingRC) => {
             orgId: bracketPos.orgId,
             message: `Unable to add pending race for [${chartName}] heat [${heatNumber}] with cars [${carNumbers.join(
                 " and "
-            )}: ${pendingRC.error}`,
+            )}]: ${pendingRC.error}`,
             level: "warn",
             source: getSourceName(),
             detail: {

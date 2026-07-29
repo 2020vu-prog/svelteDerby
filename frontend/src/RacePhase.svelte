@@ -12,7 +12,7 @@
     import CarAndDriver from "./CarAndDriver.svelte";
     import CarAndDriverVertical from "./CarAndDriverVertical.svelte";
     import ByLine from "./ByLine.svelte";
-    import ComponentToolbar from "./ComponentToolbar.svelte";
+    import ComponentToolbar from "./ComponentToolBar.svelte";
     import EllipsisButton from "./EllipsisButton.svelte";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
