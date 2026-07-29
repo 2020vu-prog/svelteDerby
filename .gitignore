@@ -24,6 +24,7 @@ node_modules/
 /frontend/src/aws-exports.js
 /frontend/generatedTargets-*.sh
 /backend/scripts/seedDerbyOrgUsers.sh
+discord/test.env
 build/
 .terraform/
 
