@@ -419,10 +419,18 @@ resource "aws_route53_record" "base_cf" {
   }
 }
 
-resource "local_file" "publish_bash_targets" {
-  filename = "${path.module}/../frontend/generatedTargets-${var.DeployEnvironment}.sh"
-  content  = <<-EOT
-export DERBY_SPA_S3_BUCKET="${aws_s3_bucket.svelteBucket.id}"
-export DERBY_CLOUDFRONT="https://${aws_cloudfront_distribution.derbyApp.domain_name}"
-  EOT
+resource "aws_ssm_parameter" "frontend_s3_bucket" {
+  name = "/deploy/${var.DeployEnvironment}/frontend/s3-bucket"
+
+  description = "S3 bucket used by frontend deployment"
+  type        = "String"
+  value       = aws_s3_bucket.svelteBucket.id
+}
+
+resource "aws_ssm_parameter" "frontend_cloudfront_url" {
+  name = "/deploy/${var.DeployEnvironment}/frontend/cloudfront-url"
+
+  description = "CloudFront URL for frontend deployment"
+  type        = "String"
+  value       = "https://${aws_cloudfront_distribution.derbyApp.domain_name}"
 }
