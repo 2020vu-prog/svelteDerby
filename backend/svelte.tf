@@ -9,7 +9,8 @@ resource "null_resource" "sync_s3_svelte" {
   }
 
   depends_on = [aws_s3_bucket.svelteBucket,
-    local_file.publish_bash_targets,
+    aws_ssm_parameter.frontend_s3_bucket,
+    aws_ssm_parameter.frontend_cloudfront_url,
     local_file.counterfeitAmplifySettings
   ]
 }
