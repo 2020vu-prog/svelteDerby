@@ -27,6 +27,12 @@ if [[ -z "${bucket}" || -z "${cloudfront}" ]]; then
 	exit 9
 fi
 
+if [[ "$1" == "--check-config" ]]; then
+	echo "frontend deploy config ok: s3://$bucket"
+	echo "cloudfront endpoint: $cloudfront"
+	exit 0
+fi
+
 echo "###"
 echo "### push no-cache"
 echo "###"
