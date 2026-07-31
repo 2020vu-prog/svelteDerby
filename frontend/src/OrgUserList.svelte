@@ -60,6 +60,8 @@
             <div>
                 {item.SK}
                 <br />
+                {item.dn || item.displayName || ""}
+                <br />
                 {JSON.stringify(item.roleList)}
             </div>
         </CardBody>

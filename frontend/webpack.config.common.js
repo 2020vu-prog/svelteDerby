@@ -49,10 +49,10 @@ class BuildVersionPlugin {
                     stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
                 },
                 (assets) => {
-                    const buildDate = new Date().toString();
+                    const buildEpoch = Date.now();
                     const version = packageJson.version;
                     const gitInfo = getGitInfo();
-                    const banner = `Build version: ${version} - ${buildDate}`;
+                    const banner = `Build version: ${version} - ${buildEpoch}`;
 
                     Object.keys(assets).forEach((assetName) => {
                         if (!/\.(js|css)$/.test(assetName)) {
@@ -68,7 +68,7 @@ class BuildVersionPlugin {
                             commentPrefix +
                             source
                                 .replaceAll("[AIV]{version}[/AIV]", version)
-                                .replaceAll("[AIV]{date}[/AIV]", buildDate)
+                                .replaceAll("[AIV]{date}[/AIV]", buildEpoch)
                                 .replaceAll("[AIV]{gitBranch}[/AIV]", gitInfo.branch)
                                 .replaceAll("[AIV]{gitHash}[/AIV]", gitInfo.hash)
                                 .replaceAll("[AIV]{gitDirty}[/AIV]", gitInfo.dirty);

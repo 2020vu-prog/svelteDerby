@@ -1,6 +1,8 @@
+const crypto = require("crypto");
 const log = require("loglevel");
 const entityFactories = {};
 const OrgPermEid = ":OrgPerm";
+const UserDisplayNameEid = ":UserDisplayName";
 const RacePhaseEid = ":RP";
 const RaceStandingEid = ":RS";
 const ParticipantEid = ":PTCP";
@@ -8,6 +10,7 @@ const BracketMetaDataEid = ":Bmd";
 const BracketPosEid = ":Bp";
 const TimerConfigEid = ":TimerConfig";
 const TimerPbConfigEid = ":TimerPbConfig";
+const LogMessageEid = ":LogMessage";
 const cHelper = (pthis, props, optionalMembers) => {
     //console.log (pthis.constructor.members) ;
 
@@ -24,8 +27,33 @@ const cHelper = (pthis, props, optionalMembers) => {
     }
 };
 
+const ByEmailHashProp = "_byEmailHash";
+
+/**
+ * Base record fields shared by DynamoDB entities built by EntityFactory.
+ *
+ * @typedef {Object} EntityProps
+ * @property {string} [PK]
+ * @property {string} [SK]
+ * @property {number} [at]
+ * @property {string} [by]
+ * @property {string} [byH]
+ * @property {string} [orgId]
+ * @property {number} [TTL]
+ * @property {*} [del]
+ */
+
 class EntityBase {
-    static EntityBaseMembers = ["PK", "SK", "at", "by", "orgId", "TTL", "del"];
+    static EntityBaseMembers = [
+        "PK",
+        "SK",
+        "at",
+        "by",
+        "byH",
+        "orgId",
+        "TTL",
+        "del",
+    ];
 
     constructor(props) {
         cHelper(this, props, this.constructor.EntityBaseMembers);
@@ -33,6 +61,13 @@ class EntityBase {
 
     preWrite() {
         this.at = new Date().getTime();
+        // Rewrites may start from a prior DDB record, so clear the stale audit field.
+        if (this[ByEmailHashProp]) {
+            this.byH = this[ByEmailHashProp];
+            delete this.by;
+        } else if (this.by) {
+            delete this.byH;
+        }
     }
 
     get partitionKey() {
@@ -102,9 +137,15 @@ entityFactories[EventConfigLit] = class EventConfig extends EntityBase {
 };
 
 const OrgPermLit = "OrgPerm";
+/**
+ * Organization permission record. SK is the user's email address and `dn` is
+ * exposed through `displayName` for friendlier UI handling.
+ */
 entityFactories[OrgPermLit] = class OrgPerm extends EntityBase {
     static members = [
         "roleList", // e.g. zello:channelName
+        "dn",
+        "displayName",
     ];
     static canBuild(json) {
         return json.PK && json.PK.endsWith(OrgPermEid) && json.SK;
@@ -123,6 +164,12 @@ entityFactories[OrgPermLit] = class OrgPerm extends EntityBase {
     get email() {
         return this.SK;
     }
+    get displayName() {
+        return this.dn;
+    }
+    set displayName(displayName) {
+        this.dn = displayName;
+    }
     get classType() {
         return OrgPermLit;
     }
@@ -134,6 +181,7 @@ entityFactories[OrgPermLit] = class OrgPerm extends EntityBase {
 const OrgConfigLit = "OrgConfig";
 entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
     static members = [
+        "orgIz",
         "lcl1", // lowCarlane1
         "pendingRule", // "1Race", "1Pair"
         "defaultTTL",
@@ -157,6 +205,49 @@ entityFactories[OrgConfigLit] = class OrgConfig extends EntityBase {
     }
     get classKey() {
         return this.orgIz;
+    }
+};
+
+const UserDisplayNameLit = "UserDisplayName";
+/**
+ * Event-scoped lookup from hashed by-email value to a display name.
+ *
+ * @typedef {EntityProps} UserDisplayNameProps
+ * @property {string} orgId event scope for the lookup record
+ * @property {string} byEmailHash short hash derived from the user's email
+ * @property {string} displayName user-facing display name
+ *
+ * PK is rewritten to `${orgId}:UserDisplayName`; SK stores byEmailHash.
+ */
+entityFactories[UserDisplayNameLit] = class UserDisplayName extends EntityBase {
+    static members = ["byEmailHash", "displayName"];
+    static canBuild(json) {
+        return (
+            json.PK &&
+            (json.PK === UserDisplayNameLit ||
+                json.PK.endsWith(UserDisplayNameEid)) &&
+            (json.SK || json.byEmailHash)
+        );
+    }
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK = this.orgId + UserDisplayNameEid;
+    }
+    get byEmailHash() {
+        return this.SK;
+    }
+    set byEmailHash(byEmailHash) {
+        this.SK = byEmailHash;
+    }
+    get classType() {
+        return UserDisplayNameLit;
+    }
+    get classKey() {
+        return this.SK;
     }
 };
 
@@ -715,13 +806,77 @@ entityFactories["TimerPbConfig"] = class TimerPbConfig extends EntityBase {
         return this.SK;
     }
 };
+/**
+ * Event-scoped application log record. SK defaults to an undecorated ISO8601
+ * timestamp so log records sort chronologically within the event partition.
+ */
+entityFactories["LogMessage"] = class LogMessage extends EntityBase {
+    static members = ["message", "level", "source", "detail"];
+    static eid = LogMessageEid;
+    static canBuild(json) {
+        return json.PK && json.PK.endsWith(LogMessageEid);
+    }
+
+    constructor(props) {
+        super(props);
+        cHelper(this, props);
+    }
+    preWrite() {
+        super.preWrite();
+        this.PK = this.orgId + LogMessageEid;
+        if (!this.SK) {
+            this.SK = new Date().toISOString();
+        }
+    }
+    get classType() {
+        return "LogMessage";
+    }
+    get classKey() {
+        return this.SK;
+    }
+};
 class EntityFactory {
     propOverrides = {};
+    /**
+     * @param {EntityProps & {byEmail?: string}} propOverrides properties applied to each built entity
+     */
     constructor(propOverrides) {
         this.propOverrides = propOverrides;
     }
+    /**
+     * Create a factory with merged property overrides.
+     * Passing an override value of `undefined` removes that key from the copy.
+     *
+     * @param {EntityProps & {byEmail?: string}} [propOverrides]
+     * @returns {EntityFactory}
+     */
+    copyWith(propOverrides = {}) {
+        const copyOverrides = {
+            ...this.propOverrides,
+        };
+        for (const [overrideKey, value] of Object.entries(propOverrides)) {
+            if (value === undefined) {
+                delete copyOverrides[overrideKey];
+            } else {
+                copyOverrides[overrideKey] = value;
+            }
+        }
+        return new EntityFactory(copyOverrides);
+    }
+    /**
+     * Apply this factory's request context and build the matching entity type.
+     * `byEmail` is converted to a non-enumerable hash source so preWrite can
+     * replace stale `by` values with `byH` instead of allowing both audit
+     * fields to coexist after DynamoDB merge-style updates.
+     *
+     * @param {Object} json DynamoDB-shaped entity payload.
+     * @returns {EntityBase|null}
+     */
     build(json) {
         for (const [overrideKey, value] of Object.entries(this.propOverrides)) {
+            if (overrideKey === "byEmail") {
+                continue;
+            }
             json[overrideKey] = value;
         }
         const candidates = Object.values(entityFactories)
@@ -732,10 +887,37 @@ class EntityFactory {
                 return new factory(json);
             });
 
-        return candidates.length > 0 ? candidates[0] : null;
+        const entity = candidates.length > 0 ? candidates[0] : null;
+        if (
+            entity &&
+            this.propOverrides.byEmail &&
+            this.propOverrides.byEmail.toLowerCase() !== "anonymous"
+        ) {
+            Object.defineProperty(entity, ByEmailHashProp, {
+                value: this.getHashFromEmail(this.propOverrides.byEmail),
+                enumerable: false,
+            });
+        }
+        return entity;
     }
     get entityTypes() {
         return Object.keys(entityFactories);
+    }
+    /**
+     * Produce the short audit hash used for by-email attribution.
+     *
+     * @param {string} email
+     * @returns {string}
+     */
+    getHashFromEmail(email) {
+        if (!email) {
+            return "";
+        }
+        return crypto
+            .createHash("sha512")
+            .update(email.trim().toLowerCase())
+            .digest("base64")
+            .substring(0, 8);
     }
 }
 

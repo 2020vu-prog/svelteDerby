@@ -36,6 +36,12 @@ db.version(15).stores({
 db.version(16).stores({
     BmdJson: "SK",
 });
+db.version(17).stores({
+    UserDisplayName: "SK",
+});
+db.version(18).stores({
+    LogMessage: "SK",
+});
 
 //export dbTools ;
 export async function dbReset() {

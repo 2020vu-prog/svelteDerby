@@ -17,6 +17,7 @@ variable RacerStatusFanoutSnsArn {}
 variable s3VideoWatch {}
 variable s3VideoDone {}
 variable AwsCognitoSettingsJson {}
+variable GitBreadcrumb {}
 
 variable S3DistBucket {}
 variable S3DistBucketArn {}
@@ -204,6 +205,7 @@ resource "aws_lambda_function" "lambda" {
       RacerStatusFanoutSnsArn=var.RacerStatusFanoutSnsArn
       IotEndpoint=data.aws_iot_endpoint.mqtt.endpoint_address
 	AwsCognitoSettingsJson=var.AwsCognitoSettingsJson
+	GitBreadcrumb=var.GitBreadcrumb
 
 	s3VideoWatch=local.s3VideoWatch
 	s3VideoDone=local.s3VideoDone

@@ -44,10 +44,10 @@
     }
     $: {
         if (editable) {
-            posForm.A.input.disabled = false;
-            posForm.B.input.disabled = false;
-            posForm.A.select.disabled = false;
-            posForm.B.select.disabled = false;
+            if (posForm.A.input) posForm.A.input.disabled = false;
+            if (posForm.B.input) posForm.B.input.disabled = false;
+            if (posForm.A.select) posForm.A.select.disabled = false;
+            if (posForm.B.select) posForm.B.select.disabled = false;
         }
     }
     const refreshChartFromDb = async (trigger) => {
@@ -197,7 +197,9 @@
 
     function updateInputUI(ab, value) {
         const displayStyle = value === "bye" ? "none" : "block";
-        posForm[ab].input.style.display = displayStyle;
+        if (posForm[ab].input) {
+            posForm[ab].input.style.display = displayStyle;
+        }
     }
 
     const changeFocus = (carNumber, seedIdentifier) => {

@@ -9,9 +9,10 @@
         CardFooter,
         Badge,
     } from "sveltestrap";
+    import ByLine from "./ByLine.svelte";
     import CarAndDriver from "./CarAndDriver.svelte";
     import EllipsisButton from "./EllipsisButton.svelte";
-    import ComponentToolbar from "./ComponentToolbar.svelte";
+    import ComponentToolbar from "./ComponentToolBar.svelte";
     import { standingsMap, driverMap } from "./stores.js";
     import {
         safeGetAt,
@@ -158,7 +159,7 @@
                     </span>
                 </li>
             </ul>
-            {#if isHistory()}User: {standing.by}{/if}
+            {#if isHistory()}<ByLine entity={standing} />{/if}
         </CardBody>
         {#if showToolbar}
             <CardFooter

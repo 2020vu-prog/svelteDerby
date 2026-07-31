@@ -76,6 +76,11 @@
         for (var bmd of bmdFromDexie) {
             if (bmd && bmd.jsonPath) {
                 var chartJson = await getChartJson(bmd);
+                if (!chartJson) {
+                    log.debug("ChartList2 updateBmds missing chart json:", bmd);
+                    updatedBmds.push(bmd);
+                    continue;
+                }
 
                 //Fetch # of heats that need to be run from chartJson
                 var totalHeats = Object.keys(chartJson.progress).length;

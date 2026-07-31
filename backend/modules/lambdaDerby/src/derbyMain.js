@@ -36,15 +36,43 @@ const ArchiveUtils = require("./ArchiveUtils");
 const DiscordUtils = require("./DiscordUtils");
 const AnnounceResults = require("./AnnounceResults");
 const ApiRaceStanding = require("./ApiRaceStanding");
+const LogUtils = require("./LogUtils");
+const { getSourceName } = require("./utils");
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
 const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
 const discordUtils = new DiscordUtils(AWS, ddbUtils);
+const logUtils = new LogUtils(ddbUtils);
 
-const announceResults = new AnnounceResults(AWS, ddbUtils);
-const apiRaceStanding = new ApiRaceStanding(AWS, ddbUtils, announceResults);
+function newAnnounceResults() {
+    return new AnnounceResults(AWS, ddbUtils);
+}
 
-let globalErrorList = [];
+function newApiRaceStanding() {
+    return new ApiRaceStanding(AWS, ddbUtils, newAnnounceResults(), logUtils);
+}
+
+const requestContext = {
+    entityFactory: null,
+    errorList: [],
+};
+
+function resetRequestContext() {
+    requestContext.errorList = [];
+    setEntityFactoryContext(null);
+}
+
+function setEntityFactoryContext(newEntityFactory) {
+    requestContext.entityFactory = newEntityFactory;
+    ddbUtils.setEntityFactory(newEntityFactory);
+}
+
+function getEntityFactory() {
+    if (!requestContext.entityFactory) {
+        throw new Error("EntityFactory is not initialized for this request.");
+    }
+    return requestContext.entityFactory;
+}
 
 log.setLevel(log.levels.TRACE);
 
@@ -139,10 +167,9 @@ function frozenOrArchived(config) {
     if (!config) {
         return false;
     }
-    const configEntity = entityFactory.build(config);
+    const configEntity = getEntityFactory().build(config);
     return configEntity.checkIfFrozenOrArchived()["status"];
 }
-var entityFactory;
 
 const addPending2 = async (event) => {
     const eventKey = getEventKey(event);
@@ -230,7 +257,7 @@ const applyFinishTime = async (json) => {
 
         var finishPromises = [];
         finishPromises.push(
-            announceResults.formatAndSubmitResults(tgtRs, tgtRp)
+            newAnnounceResults().formatAndSubmitResults(tgtRs, tgtRp)
         );
 
         // TODO: cloneRS messes with announcement on tie when there is a bracket
@@ -418,6 +445,40 @@ const loadRaceStandingFromBracketPos = async (bracketPos) => {
     //TODO: override RS add to use bracketPos SK for RS SK
     return await ddbUtils.ddbQueryPkSk(`${bracketPos.orgId}:RS`, bracketPos.SK);
 };
+
+const logPendingFromChartPosError = async (bracketPos, pendingRC) => {
+    requestContext.errorList.push(pendingRC);
+    const heatNumber = bracketPos.heatNumber || bracketPos.SK;
+    const chartId = bracketPos.SK.replace(/:.*/, "");
+    const chartMetaData = await ddbUtils.ddbQueryPkSk(
+        `${bracketPos.orgId}:Bmd`,
+        chartId
+    );
+    const chartName = chartMetaData?.bracketName || chartId;
+    const carNumbers = [
+        bracketPos.getPtcpNumber("A"),
+        bracketPos.getPtcpNumber("B"),
+    ].filter((carNumber) => carNumber);
+    await logUtils.persistLogMessage(
+        {
+            orgId: bracketPos.orgId,
+            message: `Unable to add pending race for [${chartName}] heat [${heatNumber}] with cars [${carNumbers.join(
+                " and "
+            )}]: ${pendingRC.error}`,
+            level: "warn",
+            source: getSourceName(),
+            detail: {
+                chartId,
+                chartName,
+                bracketPosKey: bracketPos.SK,
+                heatNumber,
+                carNumbers,
+                addPendingResult: pendingRC,
+            },
+        }
+    );
+};
+
 const loadBracketPosFromRaceStanding = async (rs) => {
     return await ddbUtils.ddbQueryPkSk(`${rs.orgId}:Bp`, rs.Bp);
 };
@@ -448,7 +509,7 @@ const addPendingFromChartPos = async (rs, bracketPos) => {
             }),
         });
         if (pendingRC && pendingRC.error) {
-            globalErrorList.push(pendingRC);
+            await logPendingFromChartPosError(bracketPos, pendingRC);
         }
     }
 };
@@ -635,7 +696,7 @@ async function addBlocks(json) {
     const rpResult = await ddbUtils.addSingle(json);
     log.debug("addBlocks tgtRp:", rpResult);
 
-    await announceResults.formatAndSubmitNextOnBlocks(
+    await newAnnounceResults().formatAndSubmitNextOnBlocks(
         pendingNeeded ? rsFound[0] : null,
         rpResult.entity
     );
@@ -726,10 +787,11 @@ const addOrgConfig = async (json) => {
     log.debug("addOrgConfig: " + JSON.stringify(json));
     json.PK = "OrgConfig"; // force
     json.SK = json.orgIz; // force
-    const by = entityFactory.propOverrides.by;
-    entityFactory = new EntityFactory({ orgIz: json.orgIz, by: by });
+    const orgConfigEntityFactory = getEntityFactory().copyWith({
+        orgIz: json.orgIz,
+    });
 
-    return await ddbUtils.addSingle(json);
+    return await ddbUtils.addSingle(json, orgConfigEntityFactory);
 };
 const getSanitizedTimers = async () => {
     const timers = await getActiveTimers();
@@ -1000,7 +1062,15 @@ const updateEventConfig = async (json) => {
     eventConfig.name = json.name;
 
     ddbUtils.flushEventCache(); //TODO: flush event cache in other instances of lambda...
-    return await ddbUtils.addSingle(eventConfig);
+    const eventConfigResult = await ddbUtils.addSingle(eventConfig);
+    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
+        {
+            orgIz: eventConfig.orgIz || json.orgIz,
+            orgId: eventConfig.orgId || json.orgId,
+        }
+    );
+    eventConfigResult.userDisplayNameResult = userDisplayNameResult;
+    return eventConfigResult;
 };
 const addEventConfig = async (event) => {
     const json = JSON.parse(event.body);
@@ -1033,15 +1103,30 @@ const addEventConfig = async (event) => {
 
     json.TTL = newTtl;
 
-    const by = entityFactory.propOverrides.by;
-    entityFactory = new EntityFactory({
+    const eventConfigEntityFactory = getEntityFactory().copyWith({
         orgId: json.orgId,
-        by: by,
         TTL: json.TTL,
     });
-
-    ddbUtils.setEntityFactory(entityFactory);
-    const eventRC = await ddbUtils.addSingle(json);
+    setEntityFactoryContext(eventConfigEntityFactory);
+    const eventRC = await ddbUtils.addSingle(json, eventConfigEntityFactory);
+    await logUtils.persistLogMessage(
+        {
+            orgId: json.orgId,
+            message: `Added event: ${json.name || json.orgId}`,
+            level: "debug",
+            source: getSourceName(),
+            detail: {
+                orgIz: json.orgIz,
+                orgId: json.orgId,
+                name: json.name,
+            },
+        },
+        eventConfigEntityFactory
+    );
+    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
+        { orgIz: json.orgIz, orgId: json.orgId }
+    );
+    eventRC.userDisplayNameResult = userDisplayNameResult;
 
     await addNewEventPushSns(json.orgId,json); 
     await addTimerConfig(json, true); // TODO: revisit default TimerConfig?
@@ -1051,7 +1136,7 @@ const addEventConfig = async (event) => {
 async function addParticipant2(json) {
     log.debug("addParticipant2: " + JSON.stringify(json));
     json.PK = ":PTCP"; // force Participant
-    const paTask = await announceResults.submitToPolly(
+    const paTask = await newAnnounceResults().submitToPolly(
         "added driver: " + json.name,
         json.orgId
     );
@@ -1233,8 +1318,10 @@ const routeMap = {
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
-        h: async (event) => {
-            return buildResponse(await addOrgUser(JSON.parse(event.body)));
+        h: async (event, apiProps) => {
+            return buildResponse(
+                await addOrgUser(JSON.parse(event.body), apiProps)
+            );
         },
     },
     "/addParticipant": {
@@ -1260,7 +1347,7 @@ const routeMap = {
     "/deleteRaceStanding": {
         h: async (event) => {
             return buildResponse(
-                await apiRaceStanding.deleteRaceStanding(JSON.parse(event.body))
+                await newApiRaceStanding().deleteRaceStanding(JSON.parse(event.body))
             );
         },
     },
@@ -1275,7 +1362,7 @@ const routeMap = {
     "/RaceStanding/addTag": {
         h: async (event) => {
             return buildResponse(
-                await apiRaceStanding.addTag(JSON.parse(event.body))
+                await newApiRaceStanding().addTag(JSON.parse(event.body))
             );
         },
     },
@@ -1288,12 +1375,12 @@ const routeMap = {
     },
     "/addChartPosition": {
         h: async (event) => {
-            globalErrorList = []; // TODO: re-visit multiple low level error messages from advanceChartPos
+            requestContext.errorList = []; // TODO: re-visit multiple low level error messages from advanceChartPos
             const localMsg = await addOrUpdateChartPosition(
                 JSON.parse(event.body)
             );
-            if (globalErrorList && globalErrorList.length > 0) {
-                return buildResponse(globalErrorList[0]);
+            if (requestContext.errorList && requestContext.errorList.length > 0) {
+                return buildResponse(requestContext.errorList[0]);
             } else {
                 return buildResponse(localMsg);
             }
@@ -1377,10 +1464,11 @@ const routeMap = {
             var orgId = json.orgId;
             /*
             if (json.messageTag === "called") {
-                await apiRaceStanding.snsFanoutRaceStatus(json.carNumbers);
+                await newApiRaceStanding().snsFanoutRaceStatus(json.carNumbers);
             }
             */
 
+            const announceResults = newAnnounceResults();
             const mp3ObjectPath = await announceResults.submitToPolly(
                 paMessage,
                 orgId
@@ -1396,7 +1484,7 @@ const routeMap = {
             var json = JSON.parse(event.body);
             var ssml = json.ssml;
             var orgId = json.orgId;
-            const speechMp3 = await announceResults.submitToPolly(ssml, orgId);
+            const speechMp3 = await newAnnounceResults().submitToPolly(ssml, orgId);
             log.debug("requestTts: " + ssml + " gave: ", speechMp3);
             return buildResponse({ speechMp3: speechMp3 });
         },
@@ -1512,10 +1600,18 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
     };
 }
 
+function getDerbyMainVersionInfo() {
+    return {
+        version: derbyMainVersion,
+        gitBreadcrumb: process.env.GitBreadcrumb || "",
+    };
+}
+
 async function snsApplyPbLogMessage(snsMessageJson, snsPublishedTimestamp) {
     // add ssml markup.  (svelte does this for manual announcements.)
     const paMessage = `<speak>${snsMessageJson.logMessage.message}</speak>`;
     const orgId = snsMessageJson.timerConfig.orgId;
+    const announceResults = newAnnounceResults();
     const mp3ObjectPath = await announceResults.submitToPolly(paMessage, orgId);
 
     log.debug("snsApplyPbLogMessage: " + paMessage + " gave: ", mp3ObjectPath);
@@ -1575,12 +1671,11 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     if (rp.cn[1] && !validNumericTime(l2Micros)) {
         throw `missing time [${l2Micros}] for car [${rp.cn}] in lane 2`;
     }
-    entityFactory = new EntityFactory({
+    setEntityFactoryContext(new EntityFactory({
         orgId: finishLineBlock.timerConfig.orgId,
         by: byLine,
         TTL: rp.TTL,
-    });
-    ddbUtils.setEntityFactory(entityFactory);
+    }));
 
     const req = {
         orgId: finishLineBlock.timerConfig.orgId,
@@ -1629,12 +1724,11 @@ async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         // sns gave us a timer config.  use that instead of
         //   waiting for another dynamo read
         const timerConfig = json.timerConfig;
-        entityFactory = new EntityFactory({
+        setEntityFactoryContext(new EntityFactory({
             orgId: timerConfig.orgId,
             by: "rpi.local",
             TTL: timerConfig.TTL,
-        });
-        ddbUtils.setEntityFactory(entityFactory);
+        }));
 
         const deltaLanes = json.deltas[0].lanes;
         const candidateBlock = json.deltas[0].cBlock;
@@ -1760,6 +1854,9 @@ async function apiGatewayHandler(event) {
             `max-age=${aYear}`
         );
     }
+    if (routePath === "/getDerbyMainVersion") {
+        return buildResponse(getDerbyMainVersionInfo(), "max-age=3600");
+    }
 
     var decodedJwt={
             email: "Anonymous"
@@ -1787,15 +1884,13 @@ async function apiGatewayHandler(event) {
     const by = decodedJwt["cognito:username"]
         ? decodedJwt["cognito:username"]
         : decodedJwt.email;
-    entityFactory = new EntityFactory({
-        orgId: orgId,
-        by: by,
-        TTL: defaultTTL,
-    });
-    ddbUtils.setEntityFactory(entityFactory);
-    log.debug("Begin event", event, " with config: ", config);
-
     const email = decodedJwt.email;
+    setEntityFactoryContext(new EntityFactory({
+        orgId: orgId,
+        byEmail: email,
+        TTL: defaultTTL,
+    }));
+    log.debug("Begin event", event, " with config: ", config);
 
     const roleList = await getUserRoles(orgIz, email);
     if (email && hasServerRoutePath(orgIz, roleList, routePath)) {
@@ -1856,28 +1951,90 @@ async function listOrgUser(event, apiProps) {
     });
     return rolesByOrg;
 }
-async function addOrgUser(json) {
+async function addOrgUser(json, apiProps) {
     log.debug("addOrgUser: " + JSON.stringify(json));
 
     if (json.email) {
         json.email = json.email.trim();
     }
-    if (json.email && json.orgIz && json.roleList) {
+    const orgId = json.orgId || apiProps.orgId;
+    const displayName = json.displayName || json.dn;
+    if (json.email && json.orgIz && json.roleList && orgId && displayName) {
         json.PK = json.orgIz + ":OrgPerm"; // force OrgPerm
         json.SK = json.email;
-        const by = entityFactory.propOverrides.by;
-        const nowEpochSeconds = Math.round(new Date().getTime() / 1000);
-
-        const tmpEntityFactory = new EntityFactory({
+        const tmpEntityFactory = getEntityFactory().copyWith({
             orgIz: json.orgIz,
-            by: by,
+            orgId: undefined,
+            TTL: undefined,
         });
 
-        ddbUtils.setEntityFactory(tmpEntityFactory);
-        return await ddbUtils.addSingle(json);
+        const orgPermResult = await ddbUtils.addSingle(json, tmpEntityFactory);
+        const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
+            { orgIz: json.orgIz, orgId }
+        );
+
+        return {
+            status:
+                orgPermResult.status === "ok" &&
+                userDisplayNameResult.status === "ok"
+                    ? "ok"
+                    : "error",
+            orgPermResult,
+            userDisplayNameResult,
+        };
     } else {
         return { error: "missing field(s)" };
     }
+}
+async function refreshUserDisplayNamesFromOrgPerm(json) {
+    log.debug("refreshUserDisplayNamesFromOrgPerm: " + JSON.stringify(json));
+
+    const orgIz = json.orgIz;
+    const orgId = json.orgId;
+    if (!orgIz || !orgId) {
+        return { error: "missing field(s)" };
+    }
+
+    const orgIzList = orgIz === "" ? [""] : ["", orgIz];
+    const orgPermGroups = await Promise.all(
+        orgIzList.map((orgIzForQuery) =>
+            ddbUtils.ddbQueryOrgPerms({ orgIz: orgIzForQuery })
+        )
+    );
+    for (const orgPermGroup of orgPermGroups) {
+        if (!Array.isArray(orgPermGroup)) {
+            return orgPermGroup;
+        }
+    }
+    const orgPerms = orgPermGroups.flat();
+
+    const bulk = [];
+    let skipped = 0;
+    for (const orgPerm of orgPerms) {
+        const displayName = orgPerm.displayName || orgPerm.dn;
+        if (!orgPerm.SK || !displayName) {
+            skipped += 1;
+            continue;
+        }
+
+        bulk.push({
+            PK: "UserDisplayName",
+            orgId,
+            SK: getEntityFactory().getHashFromEmail(orgPerm.SK),
+            displayName,
+        });
+    }
+    const bulkResult = bulk.length
+        ? await ddbUtils.addBulk({ bulk })
+        : { status: "ok", count: 0 };
+
+    return {
+        status: bulkResult.status,
+        created: bulkResult.count,
+        skipped,
+        total: orgPerms.length,
+        bulkResult,
+    };
 }
 async function getUserRoles(orgIz, email) {
     const roleList = [];
@@ -1910,7 +2067,7 @@ function lowercaseHeaders(event) {
         }
     });
 }
-exports.handler = async function (event) {
+async function lambdaHandler(event) {
     log.debug("Received event:", JSON.stringify(event, null, 4));
     if (event && event.path) { // api gateway format v1
         lowercaseHeaders(event)
@@ -1955,7 +2112,7 @@ exports.handler = async function (event) {
         log.debug("sns polly arn: : ", process.env.PollyCompleteSnsArn);
         if (snsMessageJson.snsTopicArn === process.env.PollyCompleteSnsArn) {
             log.debug("polly finished: ", snsMessageJson);
-            await announceResults.propagateIotFromSns(snsMessageJson);
+            await newAnnounceResults().propagateIotFromSns(snsMessageJson);
             return "Polly Success";
         }
         const snsTimestamp = event.Records[0].Sns.Timestamp;
@@ -2006,6 +2163,15 @@ exports.handler = async function (event) {
 
     log.debug("unknown event: ", event);
     return "Error";
+}
+
+exports.handler = async function (event) {
+    resetRequestContext();
+    try {
+        return await lambdaHandler(event);
+    } finally {
+        resetRequestContext();
+    }
 };
 
 // changed.

@@ -1,5 +1,7 @@
-source "./generatedTargets-${TF_VAR_DeployEnvironment}.sh"
-bucket=$DERBY_SPA_S3_BUCKET
+#!/bin/bash
+
+source ./loadDeployTargets.sh
+
 echo "###"
 echo "### push no-cache"
 echo "###"
@@ -12,7 +14,7 @@ aws s3 sync $QUIET  \
 	--exclude *.svg \
 	--exclude *.mp3 \
 	--exclude favicon.png \
-	./public/ s3://$bucket
+	./public/ s3://$DERBY_SPA_S3_BUCKET
 
 echo now sync remaining...
 echo "###"
@@ -20,6 +22,5 @@ echo "### push cache 604800"
 echo "###"
 aws s3 sync $QUIET   \
 	--cache-control 'max-age=604800' \
-	./public/ s3://$bucket
+	./public/ s3://$DERBY_SPA_S3_BUCKET
 echo cloudfront endpoint: $DERBY_CLOUDFRONT
-

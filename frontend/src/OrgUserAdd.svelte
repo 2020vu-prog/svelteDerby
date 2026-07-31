@@ -20,6 +20,7 @@
 
     const userForm = {
         email: "",
+        displayName: "",
         roles: "",
         deleteFlag: false,
     };
@@ -36,15 +37,25 @@
             log.debug(`OrgUserAdd tgtObject: ${jsonUser}`);
             mode = "Update";
             userForm.email = jsonUser.SK;
+            userForm.displayName = jsonUser.dn || "";
             selectedRoles = jsonUser.roleList;
         }
     });
     async function handleSubmit() {
         log.debug(`handleSubmit: ${mode}` + JSON.stringify(userForm));
+        if (!userForm.displayName.trim()) {
+            pushMessage({
+                text: "Display Name is required.",
+                type: "error",
+            });
+            return;
+        }
 
         const req = {
             orgIz: $raceConfig.orgIz,
+            orgId: $raceConfig.orgId,
             email: userForm.email,
+            displayName: userForm.displayName.trim(),
             roleList: selectedRoles,
         };
         if (userForm.deleteFlag) {
@@ -83,6 +94,14 @@
             type="text"
             bind:value={userForm.email}
             placeholder="user@example.com"
+        />
+    </label>
+    <label>
+        Display Name:
+        <input
+            type="text"
+            bind:value={userForm.displayName}
+            placeholder="Display Name"
         />
     </label>
     <!--

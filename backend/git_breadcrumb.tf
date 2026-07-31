@@ -8,5 +8,10 @@ resource "aws_ssm_parameter" "git_breadcrumb" {
 
   description = "Git branch/hash/dirty breadcrumb for the Terraform deployment"
   type        = "String"
-  value       = data.external.git_breadcrumb.result.breadcrumb
+  value = jsonencode({
+    branch    = data.external.git_breadcrumb.result.branch
+    hash      = data.external.git_breadcrumb.result.hash
+    buildTime = data.external.git_breadcrumb.result.buildTime
+    dirty     = data.external.git_breadcrumb.result.dirty
+  })
 }

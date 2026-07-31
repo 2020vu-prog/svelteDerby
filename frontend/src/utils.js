@@ -204,8 +204,23 @@ export function safeGetAt(map, key) {
         return 0;
     }
 }
+export function formatBuildEpoch(buildEpoch, fallback = "[AIV]{date}[/AIV]") {
+    const buildEpochMs = parseInt(buildEpoch, 10);
+    if (!buildEpochMs) {
+        return fallback;
+    }
+    return new Date(buildEpochMs).toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZoneName: "short",
+    });
+}
 export function buildDate() {
-    return "[AIV]{date}[/AIV]";
+    return formatBuildEpoch("[AIV]{date}[/AIV]");
 }
 export function buildVersion() {
     return "[AIV]{version}[/AIV]";
@@ -335,9 +350,18 @@ export async function getChartJson(bmdFromDexie) {
     const bmdJson = await db.BmdJson.get(bmdFromDexie.SK);
     log.debug("utils getChartJson cache:", bmdJson);
     if (bmdJson) {
-        return bmdJson;
+        if (!isValidChartJson(bmdJson)) {
+            log.debug("utils getChartJson invalid cache:", bmdJson);
+            await db.BmdJson.delete(bmdFromDexie.SK);
+        } else {
+            return bmdJson;
+        }
     }
     const cacheItem = await getChartJsonAxios(bmdFromDexie);
+    if (!isValidChartJson(cacheItem)) {
+        log.debug("utils getChartJson invalid fetch:", bmdFromDexie, cacheItem);
+        return undefined;
+    }
     const bmdJsonCache = {
         SK: bmdFromDexie.SK,
         ...cacheItem,
@@ -350,6 +374,9 @@ export async function getChartJson(bmdFromDexie) {
         log.debug("utils getChartJson cache write failed: " + err);
     }
     return cacheItem;
+}
+function isValidChartJson(chartJson) {
+    return !!(chartJson && chartJson.progress && chartJson.imgPositions);
 }
 async function getChartJsonAxios(bmdFromDexie) {
     log.debug("utils getChartJsonAxios begin", bmdFromDexie);

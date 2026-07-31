@@ -36,6 +36,7 @@
     import ManualAnnouncement from "./ManualAnnouncement.svelte";
     import RaceStandingAdd from "./RaceStandingAdd.svelte";
     import RawTimerList from "./RawTimerList.svelte";
+    import LogMessageViewer from "./LogMessageViewer.svelte";
     import AboutPage from "./AboutPage.svelte";
     import PreferencesPage from "./PreferencesPage.svelte";
     import ProvisionWifi from "./ProvisionWifi.svelte";
@@ -127,6 +128,7 @@
         "/timerPbAlignment": TimerPbAlignment,
         "/timerPlot": TimerPlot,
         "/rawTimerList": RawTimerList,
+        "/logMessageViewer": LogMessageViewer,
         "/spMediaList/:dbName/:dbKey": MediaList,
         "/mediaDemo":MediaViewer,
         "/forceReloadPage": ForceReloadPage,
@@ -285,6 +287,10 @@
                 text: "Raw Timer List",
                 menuRoute: "/rawTimerList",
                 neverShow: true,
+            },
+            {
+                text: "Log Messages",
+                menuRoute: "/logMessageViewer",
             },
         ];
     }

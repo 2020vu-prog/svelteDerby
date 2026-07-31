@@ -1,13 +1,16 @@
 const log = require("loglevel");
+const { getSourceName } = require("./utils");
 class ApiRaceStanding {
     AWS = null;
     ddbUtils = null;
     announceResults = null;
+    logUtils = null;
 
-    constructor(AWS, ddbUtils, announceResults) {
+    constructor(AWS, ddbUtils, announceResults, logUtils) {
         this.AWS = AWS;
         this.ddbUtils = ddbUtils;
         this.announceResults = announceResults;
+        this.logUtils = logUtils;
     }
     async deleteRaceStanding(json) {
         log.debug(
@@ -46,8 +49,30 @@ class ApiRaceStanding {
         const rc = await this.ddbUtils.addSingle(rsFound);
         if (rc.status === "ok") {
             rc.text = msg;
+            await this.logDeleteRaceStanding(json, rc);
         }
         return rc;
+    }
+    async logDeleteRaceStanding(deleteRequest, deleteResult) {
+        const raceStanding = deleteResult.entity || {};
+        const reason =
+            String(deleteRequest.reason || "").trim() || "No reason provided";
+        const carNumbers = Array.isArray(raceStanding.cn)
+            ? raceStanding.cn.join(" and ")
+            : "unknown cars";
+        await this.logUtils.persistLogMessage({
+            orgId: deleteRequest.orgId,
+            message: `Deleted ${deleteRequest.tgtName} from race [${deleteRequest.SK}] with cars [${carNumbers}]: ${reason}`,
+            level: "info",
+            source: getSourceName(),
+            detail: {
+                reason,
+                targetName: deleteRequest.tgtName,
+                raceStandingKey: deleteRequest.SK,
+                carNumbers: raceStanding.cn,
+                deleteResultText: deleteResult.text,
+            },
+        });
     }
     async addTag(json) {
         log.debug("addTag: " + JSON.stringify(json));

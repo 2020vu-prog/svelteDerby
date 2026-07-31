@@ -23,11 +23,18 @@
         buildGitBranch,
         buildGitHash,
         buildGitDirty,
+        formatBuildEpoch,
         isEmailAllowedRoutePath,
     } from "./utils.js";
 
     import { onMount } from "svelte";
-    import { getCacheKey, setCacheKey, userEmail } from "./stores.js";
+    import {
+        getCacheKey,
+        setCacheKey,
+        userEmail,
+        axios,
+        raceConfig,
+    } from "./stores.js";
     import { db, localConfigDb } from "./eventDb.js";
     import BottomNav from "./BottomNav.svelte";
     import OrgName from "./OrgName.svelte";
@@ -40,20 +47,46 @@
 
     var ecFromDexie;
     var histCountFromDexie = "";
+    var derbyMainVersionInfo = {};
+    const formatGitInfo = (branch, hash, dirty) =>
+        [branch, hash, dirty === "dirty" ? dirty : ""]
+            .filter((part) => part)
+            .join(" / ");
     const gitDirty = buildGitDirty();
-    const gitInfo = [
-        buildGitBranch(),
-        buildGitHash(),
-        gitDirty === "dirty" ? gitDirty : "",
-    ]
-        .filter((part) => part)
-        .join(" / ");
+    const gitInfo = formatGitInfo(buildGitBranch(), buildGitHash(), gitDirty);
+    const getGitBreadcrumb = (breadcrumb) => {
+        if (!breadcrumb) {
+            return {};
+        }
+        try {
+            return JSON.parse(breadcrumb);
+        } catch (err) {
+            return {};
+        }
+    };
+    $: backendGitBreadcrumb = getGitBreadcrumb(
+        derbyMainVersionInfo.gitBreadcrumb
+    );
 
     const refreshDataFromDb = async (trigger) => {
         log.warn("refreshDataFromDb data:", trigger);
 
         ecFromDexie = await db.EventConfig.toArray();
         histCountFromDexie = (await db.EventHistory.count()).toString();
+    };
+
+    const refreshDerbyMainVersionInfo = async () => {
+        try {
+            const cacheKey = getCacheKey();
+            const response = await $axios.get(
+                `${$raceConfig.baseUrl}/getDerbyMainVersion`,
+                { params: { cache: cacheKey } }
+            );
+            derbyMainVersionInfo = response.data || {};
+        } catch (err) {
+            log.warn("refreshDerbyMainVersionInfo failed:", err);
+            derbyMainVersionInfo = {};
+        }
     };
     $: {
         refreshDataFromDb($doRefreshBlocks);
@@ -64,6 +97,7 @@
 
         mounted = true;
         refreshDataFromDb();
+        refreshDerbyMainVersionInfo();
     });
 
     var devClickCount = 0;
@@ -190,22 +224,31 @@
     <hr />
 
     <div class="singularSettingDiv">
-        <h4>Build Version</h4>
+        <h4>Frontend</h4>
         <h6>
-            <span class="noselect" on:click={devClick}>{buildVersion()}</span>
+            <span class="noselect" on:click={devClick}>
+                Build Version: {buildVersion()}<br />
+                Build Date: {buildDate()}<br />
+                Git: {gitInfo}
+            </span>
         </h6>
     </div>
     <hr />
 
     <div class="singularSettingDiv">
-        <h4>Build Date</h4>
-        <h6>{buildDate()}</h6>
-    </div>
-    <hr />
-
-    <div class="singularSettingDiv">
-        <h4>Git</h4>
-        <h6>{gitInfo}</h6>
+        <h4>Backend DerbyMain</h4>
+        <h6>
+            Version: {derbyMainVersionInfo.version || "unknown"}<br />
+            Build Date: {formatBuildEpoch(
+                backendGitBreadcrumb.buildTime,
+                "unknown"
+            )}<br />
+            Git: {formatGitInfo(
+                backendGitBreadcrumb.branch,
+                backendGitBreadcrumb.hash,
+                backendGitBreadcrumb.dirty
+            ) || "unknown"}
+        </h6>
     </div>
     <hr />
 

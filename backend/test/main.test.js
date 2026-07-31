@@ -262,8 +262,8 @@ test("postAddChart should work ", () => {
         orgIz: orgIz,
         orgId: orgId,
         bracketName: "npmTest",
-        imgPath: "imgPathTODO",
-        jsonPath: "jsonPathTodo",
+        imgPath: "AASBD/Single/06single.png",
+        jsonPath: "AASBD/Single/06single.combined.json",
     }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
         testChartId = received.data.chartId;

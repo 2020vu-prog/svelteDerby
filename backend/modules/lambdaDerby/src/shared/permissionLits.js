@@ -39,7 +39,7 @@ addPermission(
         "/timerPbConfig",
         "/getTimerPbHistory",
     ],
-    ["/timerConfig", "/rawTimerList", "/timerConfigList"]
+    ["/timerConfig", "/rawTimerList", "/timerConfigList", "/logMessageViewer"]
 );
 addPermission(
     "CanAddPending",

@@ -11,7 +11,8 @@
 
     import CarAndDriver from "./CarAndDriver.svelte";
     import CarAndDriverVertical from "./CarAndDriverVertical.svelte";
-    import ComponentToolbar from "./ComponentToolbar.svelte";
+    import ByLine from "./ByLine.svelte";
+    import ComponentToolbar from "./ComponentToolBar.svelte";
     import EllipsisButton from "./EllipsisButton.svelte";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
@@ -259,7 +260,7 @@
                         </li>
                     </ul>
                     {#if isHistory()}
-                        <span style="color: white">User: {rp.by}</span>
+                        <span style="color: white"><ByLine entity={rp} /></span>
                     {/if}
                 </CardBody>
                 {#if showToolbar}

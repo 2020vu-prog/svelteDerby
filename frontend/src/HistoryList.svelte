@@ -13,6 +13,7 @@
 
     export let params = {};
     let history = [];
+    let historyLoaded = false;
     onMount(async () => {
         const historyFromDb = await db.EventHistory.where("[PK+SK+at]")
             .between(
@@ -32,6 +33,7 @@
         log.debug("where:", where);
         const got = db.EventHistory.where(where);
         log.debug("got:", got);
+        historyLoaded = true;
     });
     function sortByAt(a, b) {
         return b.at - a.at;
@@ -40,6 +42,9 @@
 
 <div>
     <h4>History</h4>
+    {#if historyLoaded && history.length === 0}
+        <p>No history items found.</p>
+    {/if}
     {#each history as entity,i (entity.at)}
         <Annotate text={dateChangeLabel(entity.at, history[i - 1]?.at)} />
         {#if entity.PK.endsWith(":RP")}
