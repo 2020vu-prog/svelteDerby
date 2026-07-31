@@ -1,5 +1,6 @@
 const EntityFactory = require("./shared/EntityFactory.js");
 const log = require("loglevel");
+const requestContext = require("./RequestContext");
 const skipDeleteFilter = "attribute_not_exists(del) ";
 var configMap = {};
 
@@ -7,7 +8,6 @@ class DdbUtils {
     ddbClient = null;
     AWS = null;
     ddocClient = null;
-    entityFactory = null;
     sqs = null;
 
     constructor(AWS, ddbClient, sqs) {
@@ -16,8 +16,8 @@ class DdbUtils {
         this.sqs = sqs;
         this.ddocClient = new this.AWS.DynamoDB.DocumentClient();
     }
-    setEntityFactory(entityFactory) {
-        this.entityFactory = entityFactory;
+    getEntityFactory() {
+        return requestContext.getEntityFactory();
     }
     /*
      ** sometimes we'll get just event id without org id.
@@ -781,8 +781,8 @@ class DdbUtils {
         return 99;
     }
 
-    fmtBulkPut(json1, entityFactory = this.entityFactory) {
-        const myP = entityFactory.build(json1);
+    fmtBulkPut(json1) {
+        const myP = this.getEntityFactory().build(json1);
 
         if (myP) {
             myP.preWrite();
@@ -841,8 +841,8 @@ class DdbUtils {
         return { status: "ok", detail: "BulkProcessed", count: totalProcessed };
     }
 
-    async addSingle(json, entityFactory = this.entityFactory) {
-        const [uk, putRequest, entity] = this.fmtBulkPut(json, entityFactory);
+    async addSingle(json) {
+        const [uk, putRequest, entity] = this.fmtBulkPut(json);
         if (putRequest && uk) {
             await this.flushBulkRequests([putRequest]);
             return { status: "ok", entity: entity };

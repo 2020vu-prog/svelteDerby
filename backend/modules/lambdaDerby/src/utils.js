@@ -1,4 +1,5 @@
 const path = require("path");
+const crypto = require("crypto");
 
 function getSourceName() {
     const stackLine =
@@ -16,6 +17,21 @@ function getSourceName() {
     return `${path.basename(filename)}:${fnName}`;
 }
 
+function getShaCars(seed, carList) {
+    const shaMap = {};
+
+    carList.forEach((carNumber) => {
+        const seededCar = `${carNumber}:${seed}`;
+        const sha = crypto.createHash("sha256").update(seededCar).digest("hex");
+        shaMap[sha] = carNumber;
+    });
+
+    return Object.keys(shaMap)
+        .sort()
+        .map((shaKey) => shaMap[shaKey]);
+}
+
 module.exports = {
     getSourceName,
+    getShaCars,
 };

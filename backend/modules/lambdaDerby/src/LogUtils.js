@@ -1,4 +1,5 @@
 // @ts-check
+const requestContext = require("./RequestContext");
 
 /**
  * @typedef {Object} LogMessagePayload
@@ -32,7 +33,8 @@ class LogUtils {
             typeof logMessage === "string"
                 ? { message: logMessage }
                 : { ...logMessage };
-        const entityFactoryContext = entityFactory || this.ddbUtils.entityFactory;
+        const entityFactoryContext =
+            entityFactory || requestContext.getEntityFactoryOrNull();
         const orgId =
             logMessagePayload.orgId || entityFactoryContext?.propOverrides.orgId;
 
@@ -43,14 +45,19 @@ class LogUtils {
             return { error: "missing message" };
         }
 
-        return this.ddbUtils.addSingle(
-            {
-                ...logMessagePayload,
-                PK: ":LogMessage",
-                orgId,
-            },
-            entityFactory
-        );
+        const payload = {
+            ...logMessagePayload,
+            PK: ":LogMessage",
+            orgId,
+        };
+
+        if (entityFactory) {
+            return requestContext.withEntityFactory(entityFactory, () =>
+                this.ddbUtils.addSingle(payload)
+            );
+        }
+
+        return this.ddbUtils.addSingle(payload);
     }
 }
 

@@ -1,5 +1,6 @@
 const EntityFactory = require("./shared/EntityFactory.js");
 const log = require("loglevel");
+const requestContext = require("./RequestContext");
 class ArchiveUtils {
     AWS = null;
     ddbUtils = null;
@@ -44,8 +45,9 @@ class ArchiveUtils {
             const entityFactory = new EntityFactory({});
             var eventEntity = entityFactory.build(evt);
 
-            this.ddbUtils.setEntityFactory(entityFactory);
-            await this.ddbUtils.addSingle(eventEntity);
+            await requestContext.withEntityFactory(entityFactory, () =>
+                this.ddbUtils.addSingle(eventEntity)
+            );
 
             log.debug("sleeping begin:-(");
             await this.sleep(3000); //   :-( Need archive flag update to propagate to DerbyDst BEFORE sending CCF
