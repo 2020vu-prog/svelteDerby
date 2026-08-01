@@ -8,6 +8,7 @@ function buildDdbUtils() {
             DocumentClient: class {},
             Converter: {
                 marshall: (entity) => ({ ...entity }),
+                unmarshall: (entity) => ({ ...entity }),
             },
         },
     };
@@ -101,5 +102,29 @@ describe("DdbUtils addSingle", () => {
         expect(resultA.entity.by).toBe("userA");
         expect(resultB.entity.PK).toBe("eventB:RS");
         expect(resultB.entity.by).toBe("userB");
+    });
+});
+
+describe("DdbUtils unmarshalling", () => {
+    test("uses shared unmarshalling for array and keyed object results", () => {
+        const ddbUtils = buildDdbUtils();
+        const data = {
+            Items: [
+                { PK: "event1:RS", SK: "standing1", cn: ["101", "102"] },
+                { PK: "event1:RS", SK: "standing2", cn: ["103", "104"] },
+            ],
+        };
+
+        const arrayResult = ddbUtils.unmarshallResultsToArray(data);
+        const objectResult = ddbUtils.unmarshallResultsToObject(data, "SK");
+
+        expect(arrayResult).toEqual([
+            { PK: "event1:RS", SK: "standing1", cn: ["101", "102"] },
+            { PK: "event1:RS", SK: "standing2", cn: ["103", "104"] },
+        ]);
+        expect(objectResult).toEqual({
+            standing1: { PK: "event1:RS", SK: "standing1", cn: ["101", "102"] },
+            standing2: { PK: "event1:RS", SK: "standing2", cn: ["103", "104"] },
+        });
     });
 });

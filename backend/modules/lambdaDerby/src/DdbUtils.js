@@ -181,33 +181,28 @@ class DdbUtils {
             return unmarshalled;
         }
     }
-    unmarshallResultsToArray(data, factory) {
-        const rc = [];
+    unmarshallResults(data, factory) {
+        const results = [];
         for (var i = 0; i < data.Items.length; i++) {
             var unmarshalled = this.AWS.DynamoDB.Converter.unmarshall(
                 data.Items[i]
             );
-            if (factory) {
-                // don't use factory for timerDB
-                unmarshalled = this.promoteToObject(unmarshalled, factory);
-            }
+            // Callers pass no factory for timerDB rows; those should remain plain objects.
+            unmarshalled = this.promoteToObject(unmarshalled, factory);
             if (unmarshalled) {
-                rc.push(unmarshalled);
+                results.push(unmarshalled);
             }
         }
-        return rc;
+        return results;
+    }
+    unmarshallResultsToArray(data, factory) {
+        return this.unmarshallResults(data, factory);
     }
     unmarshallResultsToObject(data, key, factory) {
         const rc = {};
 
-        for (var i = 0; i < data.Items.length; i++) {
-            var unmarshalled = this.AWS.DynamoDB.Converter.unmarshall(
-                data.Items[i]
-            );
-            unmarshalled = this.promoteToObject(unmarshalled, factory);
-            if (unmarshalled) {
-                rc[unmarshalled[key]] = unmarshalled;
-            }
+        for (const unmarshalled of this.unmarshallResults(data, factory)) {
+            rc[unmarshalled[key]] = unmarshalled;
         }
         return rc;
     }
