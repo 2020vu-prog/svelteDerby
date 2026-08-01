@@ -35,17 +35,14 @@
         if (item.disabled) {
             return;
         }
-
         if ("function" === typeof item.onClick) {
             item.onClick(item);
             return;
         }
-
         if ("function" === typeof item.click) {
             item.click(item);
             return;
         }
-
         if ("function" === typeof item.action) {
             item.action(item);
             return;
