@@ -14,6 +14,7 @@
 
     export let text = "";
     export let menu = [];
+    export let style = "";
 
     const dispatch = createEventDispatcher();
     let menuOpen = false;
@@ -126,7 +127,7 @@
 </style>
 
 {#if text}
-    <div class="annotationWrap">
+    <div class="annotationWrap" style={style}>
         <div class="annotation">
             <span class="annotationText">{text}</span>
             {#if hasMenu}
