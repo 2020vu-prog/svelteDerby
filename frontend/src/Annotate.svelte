@@ -32,28 +32,28 @@
         menuOpen = false;
         dispatch("menu", item);
 
-        if (item.disabled) return;
+        if (item.disabled) {
+            return;
+        }
 
-        if (typeof item.onClick === "function") {
+        if ("function" === typeof item.onClick) {
             item.onClick(item);
             return;
         }
 
-        if (typeof item.click === "function") {
+        if ("function" === typeof item.click) {
             item.click(item);
             return;
         }
 
-        if (typeof item.action === "function") {
+        if ("function" === typeof item.action) {
             item.action(item);
             return;
         }
-
         if (item.menuRoute) {
             push(item.menuRoute);
             return;
         }
-
         if (item.href) {
             window.location.href = item.href;
         }
@@ -109,7 +109,7 @@
         min-width: 12rem;
         background: white;
         border: 1px solid var(--themeFromJS);
-        box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 20%);
+        box-shadow: 0 0.25rem 0.75rem rgb(0, 0, 0, 0.2);
     }
 
     .menuItem {
@@ -121,12 +121,10 @@
         background: white;
         color: #222;
         text-align: left;
-        cursor: pointer;
     }
 
     .menuItem:disabled {
         color: #777;
-        cursor: default;
     }
 </style>
 
