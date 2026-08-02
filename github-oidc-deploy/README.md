@@ -35,7 +35,8 @@ refer to resources in that environment's AWS account.
 
 The workflow also expects these GitHub environment values:
 
-- `TF_BACKEND_CONFIG_FILE` secret, containing the Terraform backend config file.
+- `TF_BACKEND_CONFIG_FILE_CONTENTS` secret, containing the Terraform backend
+  config file contents.
 - `GOOGLE_CLIENT_ID` secret.
 - `GOOGLE_CLIENT_SECRET` secret.
 

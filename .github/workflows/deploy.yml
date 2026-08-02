@@ -108,17 +108,17 @@ jobs:
 
       - name: Configure Terraform backend
         env:
-          TF_BACKEND_CONFIG_FILE: ${{ secrets.TF_BACKEND_CONFIG_FILE }}
+          TF_BACKEND_CONFIG_FILE_CONTENTS: ${{ secrets.TF_BACKEND_CONFIG_FILE_CONTENTS }}
           TF_BACKEND_CONFIG: ${{ vars.TF_BACKEND_CONFIG }}
         run: |
           set -euo pipefail
-          if [[ -n "${TF_BACKEND_CONFIG_FILE}" ]]; then
-            printf '%s\n' "${TF_BACKEND_CONFIG_FILE}" > "${RUNNER_TEMP}/backend.hcl"
+          if [[ -n "${TF_BACKEND_CONFIG_FILE_CONTENTS}" ]]; then
+            printf '%s\n' "${TF_BACKEND_CONFIG_FILE_CONTENTS}" > "${RUNNER_TEMP}/backend.hcl"
             echo "TF_BACKEND_CONFIG=${RUNNER_TEMP}/backend.hcl" >> "${GITHUB_ENV}"
           elif [[ -n "${TF_BACKEND_CONFIG}" ]]; then
             echo "TF_BACKEND_CONFIG=${TF_BACKEND_CONFIG}" >> "${GITHUB_ENV}"
           else
-            echo "Missing Terraform backend config. Set TF_BACKEND_CONFIG_FILE secret or TF_BACKEND_CONFIG environment variable." >&2
+            echo "Missing Terraform backend config. Set TF_BACKEND_CONFIG_FILE_CONTENTS secret or TF_BACKEND_CONFIG environment variable." >&2
             exit 1
           fi
 

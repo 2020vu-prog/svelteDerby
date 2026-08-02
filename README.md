@@ -70,7 +70,7 @@ Each GitHub Environment needs:
 - `AWS_REGION` environment variable.
 - `TF_VAR_MANAGED_ROLE_PERMISSIONS_BOUNDARY_ARN` environment variable: the IAM
   permissions-boundary ARN emitted by `github-oidc-deploy`.
-- `TF_BACKEND_CONFIG_FILE` secret: Terraform backend config file contents.
+- `TF_BACKEND_CONFIG_FILE_CONTENTS` secret: Terraform backend config file contents.
 - `GOOGLE_CLIENT_ID` secret.
 - `GOOGLE_CLIENT_SECRET` secret.
 
