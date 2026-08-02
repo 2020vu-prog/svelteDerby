@@ -246,10 +246,10 @@
     <hr />
 
     <div class="singularSettingDiv">
-        <h4>Bottom NavBar Visibility</h4>
+        <h4>Toolbar Visibility</h4>
         <input type="checkbox" bind:checked={$showBottomNav} />
         <h6>
-            This toggles whether the bottom navigation bar is shown or hidden on
+            This toggles whether the bottom toolbar is shown or hidden on
             <strong>all screens</strong>.
         </h6>
     </div>
@@ -259,12 +259,12 @@
         class="singularSettingDiv"
         on:click={() => push("/routeSelection/nav")}
     >
-        <h4>Bottom NavBar Options</h4>
+        <h4>Toolbar Options</h4>
         <button style="float: right; margin-right: 10px;">
             Customize
         </button>
         <h6>
-            This allows you to customize the buttons that appear in the bottom navigation bar.
+            This allows you to customize the buttons that appear in the bottom toolbar.
         </h6>
     </div>
     <hr />
