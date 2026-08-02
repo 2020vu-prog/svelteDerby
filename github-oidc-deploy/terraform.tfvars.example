@@ -1,20 +1,21 @@
 aws_region         = "us-east-2"
 github_owner       = "2020vu-prog"
 github_repo        = "svelteDerby"
-# The test.rr1.us branch uses these values. Give stage and production their
-# own role_name, github_environment, and deploy_environment values.
+# Apply this root separately in each environment's AWS account, using separate
+# Terraform state and credentials for that account. These values are for test;
+# use the matching GitHub environment and deploy environment in the other accounts.
 github_environment = "test.rr1.us"
 deploy_environment = "derbyTest"
 role_name          = "svelte-derby-github-deploy"
 managed_role_permissions_boundary_name = "svelte-derby-managed-role-boundary"
 
-# Set these for the stage and production role roots after creating the boundary
-# from the first root.
+# Create the boundary in every environment account. Only use an existing boundary
+# when it belongs to the same AWS account as this deployment role.
 # create_managed_role_permissions_boundary       = false
 # existing_managed_role_permissions_boundary_arn = "arn:aws:iam::123456789012:policy/svelte-derby-managed-role-boundary"
 
-# If the account already has a GitHub Actions OIDC provider, use it instead
-# of creating another one.
+# Every environment account needs an OIDC provider. If this account already has
+# a GitHub Actions OIDC provider, use it instead of creating another one.
 # create_oidc_provider     = false
 # existing_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
 

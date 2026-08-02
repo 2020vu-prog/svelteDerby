@@ -4,8 +4,9 @@ This Terraform root creates the AWS IAM role used by the `Deploy` GitHub Actions
 workflow. It uses GitHub OIDC, so the workflow does not need long-lived AWS
 access keys.
 
-Each role trust policy is intentionally narrow. Configure one root per deployment
-branch, with its GitHub Environment as the allowed subject:
+Each role trust policy is intentionally narrow. Each deployment environment uses
+a separate AWS account. Apply this root independently in each account, with the
+matching GitHub Environment as the allowed subject:
 
 ```text
 test.rr1.us  -> repo:2020vu-prog/svelteDerby:environment:test.rr1.us
@@ -15,7 +16,9 @@ go.rr1.us    -> repo:2020vu-prog/svelteDerby:environment:go.rr1.us
 
 ## Bootstrap
 
-Apply this directory with local AWS credentials that are allowed to manage IAM:
+For each environment, select local AWS credentials for that environment's AWS
+account and use separate Terraform state. Then apply this directory with
+credentials that are allowed to manage IAM:
 
 ```bash
 cd github-oidc-deploy
@@ -27,7 +30,8 @@ terraform apply
 Then copy the `deploy_role_arn` output into the GitHub environment variable
 named `AWS_DEPLOY_ROLE_ARN`.
 Copy `managed_role_permissions_boundary_arn` into the matching GitHub Environment
-variable named `TF_VAR_MANAGED_ROLE_PERMISSIONS_BOUNDARY_ARN`.
+variable named `TF_VAR_MANAGED_ROLE_PERMISSIONS_BOUNDARY_ARN`. Both ARNs must
+refer to resources in that environment's AWS account.
 
 The workflow also expects these GitHub environment values:
 
@@ -44,14 +48,18 @@ stage.rr1.us -> stage.rr1.us -> derbyStage
 go.rr1.us    -> go.rr1.us    -> go-derby-prod
 ```
 
-Create the permissions boundary with the first role root. For the stage and
-production roots, set `create_managed_role_permissions_boundary = false` and
-provide that first output as `existing_managed_role_permissions_boundary_arn`.
+Create a permissions boundary independently in every environment account. A
+permissions boundary from one AWS account cannot be attached to a role in
+another account. Leave `create_managed_role_permissions_boundary = true` for
+each account unless that same account already contains the intended boundary;
+in that case, set it to `false` and provide the account-local boundary ARN as
+`existing_managed_role_permissions_boundary_arn`.
 
 ## Existing OIDC Provider
 
-An AWS account can only have one OIDC provider for
-`token.actions.githubusercontent.com`. If one already exists, set:
+Every environment account needs a GitHub Actions OIDC provider. An AWS account
+can only have one provider for `token.actions.githubusercontent.com`, so if the
+current environment's account already has one, set:
 
 ```hcl
 create_oidc_provider       = false

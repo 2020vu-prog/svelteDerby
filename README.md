@@ -59,6 +59,11 @@ stage.rr1.us -> stage.rr1.us -> derbyStage
 go.rr1.us    -> go.rr1.us    -> go-derby-prod
 ```
 
+Each deployment environment uses a separate AWS account. Run the
+`github-oidc-deploy` Terraform root independently in each account with separate
+Terraform state. Each account needs its own deploy role and permissions boundary,
+plus a GitHub Actions OIDC provider unless that account already has one.
+
 Each GitHub Environment needs:
 
 - `AWS_DEPLOY_ROLE_ARN` environment variable: IAM role ARN trusted by GitHub OIDC.
