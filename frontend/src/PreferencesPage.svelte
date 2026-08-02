@@ -354,7 +354,7 @@
     <hr />
 
     <br />
-    <h2>Other Settings</h2>
+    <h2>Other</h2>
     <hr />
 
     <div class="singularSettingDiv">
