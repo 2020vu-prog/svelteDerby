@@ -264,7 +264,7 @@
                 <strong>all screens</strong>.
             </h6>
         </div>
-        {#if true}
+        {#if isManualTimerAllowed($userEmail)}
         <hr />
         <div class="singularSettingDiv">
             <h4>Allow Fractional MS timing</h4>
