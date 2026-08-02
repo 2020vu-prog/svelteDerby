@@ -247,19 +247,26 @@
     <hr />
 
     <div class="singularSettingDiv">
-        <h4>Bottom NavBar</h4>
+        <h4>Bottom NavBar Visibility</h4>
         <input type="checkbox" bind:checked={$showBottomNav} />
         <h6>
-            This toggles whether the bottom nav is shown or hidden on
+            This toggles whether the bottom navigation bar is shown or hidden on
             <strong>all screens.</strong>
         </h6>
     </div>
     <hr />
+
     <div
         class="singularSettingDiv"
         on:click={() => push("/routeSelection/nav")}
     >
-        <h4>Custom NavBar</h4>
+        <h4>Bottom NavBar Options</h4>
+        <button style="float: right; margin-right: 10px;">
+            Customize Options
+        </button>
+        <h6>
+            This allows you to customize the buttons that appear in the bottom navigation bar.
+        </h6>
     </div>
     <hr />
     <div
@@ -267,6 +274,12 @@
         on:click={() => push("/routeSelection/carousel")}
     >
         <h4>Carousel</h4>
+        <button style="float: right; margin-right: 10px;">
+            Set up Carousel
+        </button>
+        <h6>
+            This feature allows you to have the app automatically cycle through pages of your choosing with customizable timing.
+        </h6>
     </div>
     <hr />
 
@@ -326,13 +339,13 @@
     <hr />
 
     <div class="singularSettingDiv">
-        <h4 class="">Sort Pending Races By</h4>
+        <h4 class="">Pending Race Sort Order</h4>
         <select bind:value={$pendingSortAlgorithm}>
             <option class="sortOption">Age</option>
             <option class="sortOption">Heat</option>
         </select>
         <h6>
-            This controls how your pending race screen is sorted. It defaults to
+            This controls how your pending races screen is sorted. It defaults to
             <strong>age</strong>
             (newest to oldest) but it can also be set to
             <strong>heat,</strong>
@@ -364,14 +377,14 @@
     <hr />
 
     <div class="singularSettingDiv">
-        <h4 class="">Media file format</h4>
+        <h4 class="">Media File Format</h4>
         <select bind:value={$mediaFileType}>
             <option>Webm</option>
             <option>Mp4</option>
             <option value="">*</option>
         </select>
         <h6>
-            This adjusts which files appear when you view a race phase's media.
+            This adjusts which file format appears when you view a race phase's media.
             It should automatically be set to whatever is most compatible for
             your device.
         </h6>
