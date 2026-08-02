@@ -14,7 +14,7 @@
     import RaceStandingList from "./RaceStandingList.svelte";
     import RacePhaseList from "./RacePhaseList.svelte";
     import RacePhaseElapsed from "./RacePhaseElapsed.svelte";
-    import ChartList from "./ChartList.svelte";
+    import ChartList from "./ChartList2.svelte";
     import ChartEdit from "./ChartEdit.svelte";
     import ChartFill from "./ChartFill.svelte";
     import ChartAdd from "./ChartAdd.svelte";
