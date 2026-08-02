@@ -580,7 +580,8 @@ export async function augmentChartState(
         heatLetter &&
         bpFromDexie &&
         bpFromDexie.pos &&
-        bpFromDexie.pos[heatLetter]
+        bpFromDexie.pos[heatLetter] &&
+        (bpFromDexie.pos[heatLetter].status == "bye" || bpFromDexie.pos[heatLetter].ptcp)
     ) {
         if (bpFromDexie.pos[heatLetter].status == "ptcp") {
             posHtml = ` - ${
