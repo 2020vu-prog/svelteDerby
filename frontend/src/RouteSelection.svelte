@@ -145,7 +145,7 @@
             return "Carousel";
         }
         if (isNavMode()) {
-            return "Customize Toolbar";
+            return "Customize Bottom NavBar";
         }
         return "Unknown";
     }
