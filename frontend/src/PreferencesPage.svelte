@@ -411,7 +411,7 @@
                 About Page
             </button>
             <h6>
-                Visit the about page where to find
+                Visit the about page to access
                 event and version information.
             </h6>
         </div>
