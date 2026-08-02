@@ -153,6 +153,14 @@
     const updateTimeFormat = async () => {
         $timeFormat = timeFormatSelected;
     };
+
+    async function nativeShare() {
+        try {
+            await navigator.share({text: "Soap Box Derby race results! Click the link to watch live.", url: getUrl()})
+        } catch (err) {
+            log.debug("sharing err/abort:", err);
+        }
+    }
 </script>
 
 <style>
@@ -204,7 +212,7 @@
     {#if $developerMode}
         <h6>{getUrl()}</h6>
     {/if}
-    <button on:click={()=> navigator.share({text: "Soap Box Derby race results! Click the link to watch live.", url: getUrl()})}>Share <img style="width: 20px" src="share-solid.svg"></button>
+    <button on:click={()=> nativeShare()}>Share <img style="width: 20px" src="share-solid.svg"></button>
     </div>
     <hr />
 
