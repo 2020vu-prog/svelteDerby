@@ -42,6 +42,27 @@ cd frontend
 npm run build
 ```
 
+## GitHub Deploy
+
+The `Deploy` GitHub Actions workflow deploys the backend first, then builds and
+pushes the frontend using the same local scripts used from this repository.
+It uses GitHub OIDC to assume an AWS role; do not add long-lived AWS access keys
+to GitHub secrets.
+
+Configure a GitHub environment, for example `derbyTest`, with:
+
+- `AWS_DEPLOY_ROLE_ARN` environment variable: IAM role ARN trusted by GitHub OIDC.
+- `TF_BACKEND_CONFIG_FILE` secret: Terraform backend config file contents.
+- `GOOGLE_CLIENT_ID` secret.
+- `GOOGLE_CLIENT_SECRET` secret.
+
+Optional GitHub environment variables:
+
+- `TF_VAR_ACM_ARN`
+- `TF_VAR_DNS_DOMAIN`
+- `TF_VAR_DNS_CLOUDFRONT_HOST_ALIAS`
+- `TF_VAR_TIMER_API_GATEWAY_DOMAIN`
+
 ## Backend
 
 Backend infrastructure is managed with Terraform under `backend/`. Copy
