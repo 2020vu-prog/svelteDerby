@@ -148,7 +148,7 @@
         </h4>
     {:else}
         <!-- this will be rendered for each currently visible item -->
-        <Annotate text={dateChangeLabel(item.at, getPriorStanding(i)?.at)} />
+        <Annotate text={dateChangeLabel(item.at, getPriorStanding(i)?.at)} style="margin-top: 1rem" />
         <RaceStanding standing={item} refresh={doRefreshBlocks} />
     {/if}
 {/each}

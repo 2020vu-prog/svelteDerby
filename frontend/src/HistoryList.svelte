@@ -46,7 +46,7 @@
         <p>No history items found.</p>
     {/if}
     {#each history as entity,i (entity.at)}
-        <Annotate text={dateChangeLabel(entity.at, history[i - 1]?.at)} />
+        <Annotate text={dateChangeLabel(entity.at, history[i - 1]?.at)} style="margin-top: 1rem" />
         {#if entity.PK.endsWith(":RP")}
             <RacePhase
                 source="EventHistory"
