@@ -236,7 +236,7 @@
     </div>
     <h6>
         This toggles whether or not your device will automatically receive new
-        data. Turning this off will improve device battery lifebut will require pressing the refresh button in order to receive
+        data. Turning this off will improve device battery life but will require pressing the refresh button in order to receive
         updates.
     </h6>
     <hr />
