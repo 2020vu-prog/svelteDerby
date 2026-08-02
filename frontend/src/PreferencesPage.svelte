@@ -5,7 +5,6 @@
 
     import {
         theme,
-        showChart1,
         showBottomNav,
         autoAnnounceResults,
         pendingSortAlgorithm,
@@ -260,15 +259,6 @@
         on:click={() => push("/routeSelection/carousel")}
     >
         <h4>Carousel</h4>
-    </div>
-    <hr />
-
-    <div class="singularSettingDiv">
-        <h4>Simple Chart List</h4>
-        <input type="checkbox" bind:checked={$showChart1} />
-        <h6>
-            This toggles whether the chart list is displayed with progress bars
-        </h6>
     </div>
     <hr />
 
