@@ -261,16 +261,16 @@
             <input type="checkbox" bind:checked={$developerLogging} />
             <h6>
                 This toggles whether the developer logs are emitted on
-                <strong>all screens.</strong>
+                <strong>all screens</strong>.
             </h6>
         </div>
-        {#if isManualTimerAllowed($userEmail)}
+        {#if true}
         <hr />
         <div class="singularSettingDiv">
             <h4>Allow Fractional MS timing</h4>
             <input type="checkbox" bind:checked={$enableFractionalMs} />
             <h6>
-                This enables partial MS entry on manual timer. NOT recommended.
+                This enables partial MS entry on manual timer. <strong>NOT recommended</strong>.
             </h6>
         </div>
         {/if}

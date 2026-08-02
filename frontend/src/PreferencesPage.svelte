@@ -236,9 +236,8 @@
     </div>
     <h6>
         This toggles whether or not your device will automatically receive new
-        data. Turning this off will improve device battery life. If you do turn
-        this off, you will have to press the refresh button in order to receive
-        new data.
+        data. Turning this off will improve device battery lifebut will require pressing the refresh button in order to receive
+        updates.
     </h6>
     <hr />
 
@@ -251,7 +250,7 @@
         <input type="checkbox" bind:checked={$showBottomNav} />
         <h6>
             This toggles whether the bottom navigation bar is shown or hidden on
-            <strong>all screens.</strong>
+            <strong>all screens</strong>.
         </h6>
     </div>
     <hr />
@@ -262,7 +261,7 @@
     >
         <h4>Bottom NavBar Options</h4>
         <button style="float: right; margin-right: 10px;">
-            Customize Options
+            Customize
         </button>
         <h6>
             This allows you to customize the buttons that appear in the bottom navigation bar.
@@ -275,7 +274,7 @@
     >
         <h4>Carousel</h4>
         <button style="float: right; margin-right: 10px;">
-            Set up Carousel
+            Set Up
         </button>
         <h6>
             This feature allows you to have the app automatically cycle through pages of your choosing with customizable timing.
@@ -348,8 +347,8 @@
             This controls how your pending races screen is sorted. It defaults to
             <strong>age</strong>
             (newest to oldest) but it can also be set to
-            <strong>heat,</strong>
-            which will group like-numbered heats of different brackets together.
+            <strong>heat</strong>,
+            which will group like-numbered heats of different charts together.
         </h6>
     </div>
     <hr />
@@ -369,7 +368,7 @@
             <option>5</option>
         </select>
         <h6>
-            This limits the number of elements(phases, heats, or drivers) that
+            This limits the number of elements (phases, heats, or drivers) that
             are displayed on your screen and should only be necessary when
             dealing with an extremely large race.
         </h6>
@@ -412,9 +411,8 @@
                 About Page
             </button>
             <h6>
-                Click here to be redirected to the about page where you can find
-                information about the race you are viewing and the version of
-                this software that you are running.
+                Visit the about page where to find
+                event and version information.
             </h6>
         </div>
         <hr />
