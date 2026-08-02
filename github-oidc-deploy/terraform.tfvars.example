@@ -1,0 +1,26 @@
+aws_region         = "us-east-2"
+github_owner       = "2020vu-prog"
+github_repo        = "svelteDerby"
+# The test.rr1.us branch uses these values. Give stage and production their
+# own role_name, github_environment, and deploy_environment values.
+github_environment = "test.rr1.us"
+deploy_environment = "derbyTest"
+role_name          = "svelte-derby-github-deploy"
+managed_role_permissions_boundary_name = "svelte-derby-managed-role-boundary"
+
+# Set these for the stage and production role roots after creating the boundary
+# from the first root.
+# create_managed_role_permissions_boundary       = false
+# existing_managed_role_permissions_boundary_arn = "arn:aws:iam::123456789012:policy/svelte-derby-managed-role-boundary"
+
+# If the account already has a GitHub Actions OIDC provider, use it instead
+# of creating another one.
+# create_oidc_provider     = false
+# existing_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+
+# Optional but recommended: scope Terraform state/lock access.
+# terraform_state_bucket_name = "my-terraform-state-bucket"
+# terraform_lock_table_name   = "my-terraform-lock-table"
+
+# Optional: scope Route53 changes to known hosted zones.
+# hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z1234567890ABC"]

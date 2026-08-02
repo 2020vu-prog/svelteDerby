@@ -1,0 +1,638 @@
+provider "aws" {
+  region = var.aws_region
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+locals {
+  account_id                            = data.aws_caller_identity.current.account_id
+  partition                             = data.aws_partition.current.partition
+  github_oidc_url                       = "https://token.actions.githubusercontent.com"
+  github_oidc_host                      = "token.actions.githubusercontent.com"
+  github_subject                        = "repo:${var.github_owner}/${var.github_repo}:environment:${var.github_environment}"
+  oidc_provider_arn                     = var.create_oidc_provider ? aws_iam_openid_connect_provider.github_actions[0].arn : var.existing_oidc_provider_arn
+  managed_role_permissions_boundary_arn = var.create_managed_role_permissions_boundary ? aws_iam_policy.managed_role_boundary[0].arn : var.existing_managed_role_permissions_boundary_arn
+
+  app_bucket_arns = [
+    "arn:${local.partition}:s3:::svelte-static-*",
+    "arn:${local.partition}:s3:::svelte-cdn-logs*",
+    "arn:${local.partition}:s3:::derby-dst-bucket*",
+    "arn:${local.partition}:s3:::vod-lambda-src-*",
+  ]
+
+  state_bucket_arns = var.terraform_state_bucket_name == "" ? [] : [
+    "arn:${local.partition}:s3:::${var.terraform_state_bucket_name}",
+  ]
+
+  s3_bucket_arns = concat(local.app_bucket_arns, local.state_bucket_arns)
+  s3_object_arns = [for arn in local.s3_bucket_arns : "${arn}/*"]
+
+  terraform_lock_table_arns = var.terraform_lock_table_name == "" ? [] : [
+    "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/${var.terraform_lock_table_name}",
+  ]
+}
+
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  count = var.create_oidc_provider ? 1 : 0
+
+  url             = local.github_oidc_url
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = var.github_oidc_thumbprints
+}
+
+# This boundary prevents the deploy role from turning a managed Lambda or Cognito
+# role into an IAM principal with broader authority than the application needs.
+data "aws_iam_policy_document" "managed_role_boundary" {
+  statement {
+    sid    = "AllowApplicationRuntimeActions"
+    effect = "Allow"
+    actions = [
+      "cognito-identity:*",
+      "cognito-sync:*",
+      "dynamodb:BatchGetItem",
+      "dynamodb:BatchWriteItem",
+      "dynamodb:DescribeStream",
+      "dynamodb:GetItem",
+      "dynamodb:GetRecords",
+      "dynamodb:GetShardIterator",
+      "dynamodb:ListStreams",
+      "dynamodb:PutItem",
+      "dynamodb:Query",
+      "dynamodb:UpdateItem",
+      "ec2:RunInstances",
+      "iot:AttachPrincipalPolicy",
+      "iot:Connect",
+      "iot:Publish",
+      "iot:Receive",
+      "iot:Subscribe",
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "mobileanalytics:PutEvents",
+      "polly:StartSpeechSynthesisTask",
+      "polly:SynthesizeSpeech",
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:ListObjects",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+      "sns:Publish",
+      "sqs:DeleteMessage",
+      "sqs:GetQueueAttributes",
+      "sqs:ReceiveMessage",
+      "sqs:SendMessage",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "managed_role_boundary" {
+  count = var.create_managed_role_permissions_boundary ? 1 : 0
+
+  name        = var.managed_role_permissions_boundary_name
+  description = "Maximum permissions for IAM roles created by svelteDerby Terraform."
+  policy      = data.aws_iam_policy_document.managed_role_boundary.json
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    effect  = "Allow"
+
+    principals {
+      type        = "Federated"
+      identifiers = [local.oidc_provider_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:sub"
+      values   = [local.github_subject]
+    }
+  }
+}
+
+resource "aws_iam_role" "github_deploy" {
+  name               = var.role_name
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+
+  lifecycle {
+    precondition {
+      condition     = local.managed_role_permissions_boundary_arn != ""
+      error_message = "Set existing_managed_role_permissions_boundary_arn when not creating the boundary."
+    }
+  }
+
+  tags = {
+    Application       = "svelteDerby"
+    DeployEnvironment = var.deploy_environment
+    ManagedBy         = "terraform"
+    Purpose           = "github-actions-deploy"
+  }
+}
+
+data "aws_iam_policy_document" "deploy" {
+  statement {
+    sid       = "ReadAccountMetadata"
+    effect    = "Allow"
+    actions   = ["sts:GetCallerIdentity"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "TerraformStateBucket"
+    effect = "Allow"
+    actions = [
+      "s3:GetBucketLocation",
+      "s3:ListBucket",
+    ]
+    resources = local.s3_bucket_arns
+  }
+
+  statement {
+    sid    = "TerraformStateAndFrontendArtifacts"
+    effect = "Allow"
+    actions = [
+      "s3:AbortMultipartUpload",
+      "s3:DeleteObject",
+      "s3:GetObject",
+      "s3:ListMultipartUploadParts",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+    ]
+    resources = local.s3_object_arns
+  }
+
+  statement {
+    sid    = "ManageAppBuckets"
+    effect = "Allow"
+    actions = [
+      "s3:CreateBucket",
+      "s3:DeleteBucket",
+      "s3:DeleteBucketCors",
+      "s3:DeleteBucketPolicy",
+      "s3:GetAccelerateConfiguration",
+      "s3:GetBucketAcl",
+      "s3:GetBucketCors",
+      "s3:GetBucketLogging",
+      "s3:GetLifecycleConfiguration",
+      "s3:GetBucketNotification",
+      "s3:GetBucketObjectLockConfiguration",
+      "s3:GetBucketOwnershipControls",
+      "s3:GetBucketPolicy",
+      "s3:GetBucketPublicAccessBlock",
+      "s3:GetBucketRequestPayment",
+      "s3:GetBucketTagging",
+      "s3:GetBucketVersioning",
+      "s3:GetBucketWebsite",
+      "s3:ListBucket",
+      "s3:PutBucketAcl",
+      "s3:PutBucketCors",
+      "s3:PutBucketLogging",
+      "s3:PutLifecycleConfiguration",
+      "s3:PutBucketNotification",
+      "s3:PutBucketOwnershipControls",
+      "s3:PutBucketPolicy",
+      "s3:PutBucketPublicAccessBlock",
+      "s3:PutBucketTagging",
+      "s3:PutBucketVersioning",
+    ]
+    resources = local.app_bucket_arns
+  }
+
+  statement {
+    sid       = "ListBucketsForTerraform"
+    effect    = "Allow"
+    actions   = ["s3:ListAllMyBuckets"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "TerraformLockTable"
+    effect = "Allow"
+    actions = [
+      "dynamodb:DeleteItem",
+      "dynamodb:DescribeTable",
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+    ]
+    resources = local.terraform_lock_table_arns
+  }
+
+  statement {
+    sid    = "ManageAppDynamoTables"
+    effect = "Allow"
+    actions = [
+      "dynamodb:CreateTable",
+      "dynamodb:DeleteTable",
+      "dynamodb:DescribeContinuousBackups",
+      "dynamodb:DescribeTable",
+      "dynamodb:DescribeTimeToLive",
+      "dynamodb:ListTagsOfResource",
+      "dynamodb:PutItem",
+      "dynamodb:TagResource",
+      "dynamodb:UntagResource",
+      "dynamodb:UpdateContinuousBackups",
+      "dynamodb:UpdateTable",
+      "dynamodb:UpdateTimeToLive",
+    ]
+    resources = concat([
+      "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/DerbyMain",
+      "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/DerbyDist",
+      "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/DerbyTimer",
+      "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/ElapsedTemp",
+      "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/timer-protobuf",
+    ], local.terraform_lock_table_arns)
+  }
+
+  statement {
+    sid       = "ListDynamoTables"
+    effect    = "Allow"
+    actions   = ["dynamodb:ListTables"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ManageAppLambdas"
+    effect = "Allow"
+    actions = [
+      "lambda:AddPermission",
+      "lambda:CreateEventSourceMapping",
+      "lambda:CreateFunction",
+      "lambda:CreateFunctionUrlConfig",
+      "lambda:DeleteEventSourceMapping",
+      "lambda:DeleteFunction",
+      "lambda:DeleteFunctionUrlConfig",
+      "lambda:DeletePermission",
+      "lambda:GetEventSourceMapping",
+      "lambda:GetFunction",
+      "lambda:GetFunctionCodeSigningConfig",
+      "lambda:GetFunctionUrlConfig",
+      "lambda:GetPolicy",
+      "lambda:ListVersionsByFunction",
+      "lambda:PublishVersion",
+      "lambda:RemovePermission",
+      "lambda:TagResource",
+      "lambda:UntagResource",
+      "lambda:UpdateEventSourceMapping",
+      "lambda:UpdateFunctionCode",
+      "lambda:UpdateFunctionConfiguration",
+      "lambda:UpdateFunctionUrlConfig",
+    ]
+    resources = [
+      "arn:${local.partition}:lambda:${var.aws_region}:${local.account_id}:function:derbyMain",
+      "arn:${local.partition}:lambda:${var.aws_region}:${local.account_id}:function:dynamoMain",
+      "arn:${local.partition}:lambda:${var.aws_region}:${local.account_id}:function:sqsCcaMain",
+      "arn:${local.partition}:lambda:${var.aws_region}:${local.account_id}:event-source-mapping:*",
+    ]
+  }
+
+  statement {
+    sid    = "ManageLambdaLogGroups"
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:DeleteLogGroup",
+      "logs:DescribeLogGroups",
+      "logs:ListTagsLogGroup",
+      "logs:PutRetentionPolicy",
+      "logs:TagLogGroup",
+      "logs:UntagLogGroup",
+    ]
+    resources = [
+      "arn:${local.partition}:logs:${var.aws_region}:${local.account_id}:log-group:/aws/lambda/derbyMain*",
+      "arn:${local.partition}:logs:${var.aws_region}:${local.account_id}:log-group:/aws/lambda/dynamoMain*",
+      "arn:${local.partition}:logs:${var.aws_region}:${local.account_id}:log-group:/aws/lambda/sqsCcaMain*",
+    ]
+  }
+
+  statement {
+    sid    = "ManageLambdaIam"
+    effect = "Allow"
+    actions = [
+      "iam:CreatePolicy",
+      "iam:DeletePolicy",
+      "iam:DeleteRole",
+      "iam:DeleteRolePolicy",
+      "iam:DetachRolePolicy",
+      "iam:GetPolicy",
+      "iam:GetPolicyVersion",
+      "iam:GetRole",
+      "iam:GetRolePolicy",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListInstanceProfilesForRole",
+      "iam:ListPolicyVersions",
+      "iam:ListRolePolicies",
+      "iam:PutRolePolicy",
+      "iam:TagPolicy",
+      "iam:TagRole",
+      "iam:UntagPolicy",
+      "iam:UntagRole",
+      "iam:UpdateAssumeRolePolicy",
+    ]
+    resources = [
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_dynamo_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_cca_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/cognito_authenticated_*",
+      "arn:${local.partition}:iam::${local.account_id}:policy/cloudwatch_allow_*",
+      "arn:${local.partition}:iam::${local.account_id}:policy/dynamo_allow_*",
+      "arn:${local.partition}:iam::${local.account_id}:policy/ccaMain_allow_*",
+    ]
+  }
+
+  statement {
+    sid     = "CreateManagedRolesWithBoundary"
+    effect  = "Allow"
+    actions = ["iam:CreateRole"]
+    resources = [
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_dynamo_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_cca_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/cognito_authenticated_*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PermissionsBoundary"
+      values   = [local.managed_role_permissions_boundary_arn]
+    }
+  }
+
+  statement {
+    sid     = "ApplyManagedRoleBoundary"
+    effect  = "Allow"
+    actions = ["iam:PutRolePermissionsBoundary"]
+    resources = [
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_dynamo_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_cca_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/cognito_authenticated_*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PermissionsBoundary"
+      values   = [local.managed_role_permissions_boundary_arn]
+    }
+  }
+
+  statement {
+    sid     = "AttachOnlyApplicationPolicies"
+    effect  = "Allow"
+    actions = ["iam:AttachRolePolicy"]
+    resources = [
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_dynamo_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_cca_*",
+    ]
+
+    condition {
+      test     = "ArnLike"
+      variable = "iam:PolicyARN"
+      values = [
+        "arn:${local.partition}:iam::${local.account_id}:policy/cloudwatch_allow_*",
+        "arn:${local.partition}:iam::${local.account_id}:policy/dynamo_allow_*",
+        "arn:${local.partition}:iam::${local.account_id}:policy/ccaMain_allow_*",
+      ]
+    }
+  }
+
+  statement {
+    sid     = "PassRolesOnlyToTheirServices"
+    effect  = "Allow"
+    actions = ["iam:PassRole"]
+    resources = [
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_dynamo_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_cca_*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["lambda.amazonaws.com"]
+    }
+  }
+
+  statement {
+    sid       = "ReadLegacyAndroidUserState"
+    effect    = "Allow"
+    actions   = ["iam:GetUser", "iam:GetUserPolicy", "iam:ListAccessKeys"]
+    resources = ["arn:${local.partition}:iam::${local.account_id}:user/system/android-MqGrafika-Baked-In-User"]
+  }
+
+  statement {
+    sid    = "ManageCloudfront"
+    effect = "Allow"
+    actions = [
+      "cloudfront:CreateCloudFrontOriginAccessIdentity",
+      "cloudfront:CreateDistribution",
+      "cloudfront:DeleteCloudFrontOriginAccessIdentity",
+      "cloudfront:DeleteDistribution",
+      "cloudfront:GetCloudFrontOriginAccessIdentity",
+      "cloudfront:GetCloudFrontOriginAccessIdentityConfig",
+      "cloudfront:GetDistribution",
+      "cloudfront:GetDistributionConfig",
+      "cloudfront:ListTagsForResource",
+      "cloudfront:TagResource",
+      "cloudfront:UntagResource",
+      "cloudfront:UpdateCloudFrontOriginAccessIdentity",
+      "cloudfront:UpdateDistribution",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ManageCognito"
+    effect = "Allow"
+    actions = [
+      "cognito-identity:CreateIdentityPool",
+      "cognito-identity:DeleteIdentityPool",
+      "cognito-identity:DescribeIdentityPool",
+      "cognito-identity:GetIdentityPoolRoles",
+      "cognito-identity:SetIdentityPoolRoles",
+      "cognito-identity:TagResource",
+      "cognito-identity:UntagResource",
+      "cognito-identity:UpdateIdentityPool",
+      "cognito-idp:CreateIdentityProvider",
+      "cognito-idp:CreateUserPool",
+      "cognito-idp:CreateUserPoolClient",
+      "cognito-idp:CreateUserPoolDomain",
+      "cognito-idp:DeleteIdentityProvider",
+      "cognito-idp:DeleteUserPool",
+      "cognito-idp:DeleteUserPoolClient",
+      "cognito-idp:DeleteUserPoolDomain",
+      "cognito-idp:DescribeIdentityProvider",
+      "cognito-idp:DescribeUserPool",
+      "cognito-idp:DescribeUserPoolClient",
+      "cognito-idp:DescribeUserPoolDomain",
+      "cognito-idp:ListTagsForResource",
+      "cognito-idp:TagResource",
+      "cognito-idp:UntagResource",
+      "cognito-idp:UpdateIdentityProvider",
+      "cognito-idp:UpdateUserPool",
+      "cognito-idp:UpdateUserPoolClient",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ManageMessaging"
+    effect = "Allow"
+    actions = [
+      "sns:CreateTopic",
+      "sns:DeleteTopic",
+      "sns:GetTopicAttributes",
+      "sns:ListTagsForResource",
+      "sns:SetTopicAttributes",
+      "sns:Subscribe",
+      "sns:TagResource",
+      "sns:Unsubscribe",
+      "sqs:CreateQueue",
+      "sqs:DeleteQueue",
+      "sqs:GetQueueAttributes",
+      "sqs:GetQueueUrl",
+      "sqs:ListQueueTags",
+      "sqs:SetQueueAttributes",
+      "sqs:TagQueue",
+      "sqs:UntagQueue",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ManageEvents"
+    effect = "Allow"
+    actions = [
+      "events:DeleteRule",
+      "events:DescribeRule",
+      "events:ListTagsForResource",
+      "events:ListTargetsByRule",
+      "events:PutRule",
+      "events:PutTargets",
+      "events:RemoveTargets",
+      "events:TagResource",
+      "events:UntagResource",
+    ]
+    resources = ["arn:${local.partition}:events:${var.aws_region}:${local.account_id}:rule/derbyMain-1h"]
+  }
+
+  statement {
+    sid    = "ManageSsmParameters"
+    effect = "Allow"
+    actions = [
+      "ssm:AddTagsToResource",
+      "ssm:DeleteParameter",
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:ListTagsForResource",
+      "ssm:PutParameter",
+      "ssm:RemoveTagsFromResource",
+    ]
+    resources = [
+      "arn:${local.partition}:ssm:${var.aws_region}:${local.account_id}:parameter/deploy/${var.deploy_environment}/*",
+      "arn:${local.partition}:ssm:${var.aws_region}:${local.account_id}:parameter/sns/*",
+      "arn:${local.partition}:ssm:${var.aws_region}:${local.account_id}:parameter/iot/*",
+    ]
+  }
+
+  statement {
+    sid    = "ManageRoute53"
+    effect = "Allow"
+    actions = [
+      "route53:ChangeResourceRecordSets",
+      "route53:GetChange",
+      "route53:GetHostedZone",
+      "route53:ListResourceRecordSets",
+      "route53:ListTagsForResource",
+    ]
+    resources = concat(var.hosted_zone_arns, ["arn:${local.partition}:route53:::change/*"])
+  }
+
+  statement {
+    sid    = "FindRoute53Zones"
+    effect = "Allow"
+    actions = [
+      "route53:ListHostedZones",
+      "route53:ListHostedZonesByName",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ManageSesDomain"
+    effect = "Allow"
+    actions = [
+      "ses:DeleteIdentity",
+      "ses:GetIdentityDkimAttributes",
+      "ses:GetIdentityMailFromDomainAttributes",
+      "ses:GetIdentityVerificationAttributes",
+      "ses:SetIdentityMailFromDomain",
+      "ses:VerifyDomainDkim",
+      "ses:VerifyDomainIdentity",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ReadCertificates"
+    effect = "Allow"
+    actions = [
+      "acm:DescribeCertificate",
+      "acm:ListCertificates",
+      "acm:ListTagsForCertificate",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ManageIot"
+    effect = "Allow"
+    actions = [
+      "iot:AttachPolicy",
+      "iot:CreateKeysAndCertificate",
+      "iot:CreatePolicy",
+      "iot:DeleteCertificate",
+      "iot:DeletePolicy",
+      "iot:DescribeEndpoint",
+      "iot:DescribePolicy",
+      "iot:DetachPolicy",
+      "iot:GetPolicy",
+      "iot:ListPolicyVersions",
+      "iot:UpdateCertificate",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ReadVodCloudFormationStack"
+    effect = "Allow"
+    actions = [
+      "cloudformation:DescribeStacks",
+      "cloudformation:GetTemplate",
+      "cloudformation:ListStackResources",
+    ]
+    resources = ["arn:${local.partition}:cloudformation:${var.aws_region}:${local.account_id}:stack/vod-transcode-stack/*"]
+  }
+}
+
+resource "aws_iam_policy" "deploy" {
+  name        = "${var.role_name}-policy"
+  description = "Deploy permissions for ${var.github_owner}/${var.github_repo} GitHub Actions."
+  policy      = data.aws_iam_policy_document.deploy.json
+}
+
+resource "aws_iam_role_policy_attachment" "deploy" {
+  role       = aws_iam_role.github_deploy.name
+  policy_arn = aws_iam_policy.deploy.arn
+}
