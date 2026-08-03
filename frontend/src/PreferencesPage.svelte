@@ -5,7 +5,6 @@
 
     import {
         theme,
-        showChart1,
         showBottomNav,
         autoAnnounceResults,
         pendingSortAlgorithm,
@@ -154,6 +153,14 @@
     const updateTimeFormat = async () => {
         $timeFormat = timeFormatSelected;
     };
+
+    async function nativeShare() {
+        try {
+            await navigator.share({text: "Soap Box Derby race results! Click the link to watch live.", url: getUrl()})
+        } catch (err) {
+            log.debug("sharing err/abort:", err);
+        }
+    }
 </script>
 
 <style>
@@ -205,7 +212,7 @@
     {#if $developerMode}
         <h6>{getUrl()}</h6>
     {/if}
-    <button on:click={()=> navigator.share({text: "Soap Box Derby race results! Click the link to watch live.", url: getUrl()})}>Share <img style="width: 20px" src="share-solid.svg"></button>
+    <button on:click={()=> nativeShare()}>Share <img style="width: 20px" src="share-solid.svg"></button>
     </div>
     <hr />
 
@@ -229,9 +236,8 @@
     </div>
     <h6>
         This toggles whether or not your device will automatically receive new
-        data. Turning this off will improve device battery life. If you do turn
-        this off, you will have to press the refresh button in order to receive
-        new data.
+        data. Turning this off will improve device battery life but will require pressing the refresh button in order to receive
+        updates.
     </h6>
     <hr />
 
@@ -240,19 +246,26 @@
     <hr />
 
     <div class="singularSettingDiv">
-        <h4>Bottom NavBar</h4>
+        <h4>Toolbar Visibility</h4>
         <input type="checkbox" bind:checked={$showBottomNav} />
         <h6>
-            This toggles whether the bottom nav is shown or hidden on
-            <strong>all screens.</strong>
+            This toggles whether the bottom toolbar is shown or hidden on
+            <strong>all screens</strong>.
         </h6>
     </div>
     <hr />
+
     <div
         class="singularSettingDiv"
         on:click={() => push("/routeSelection/nav")}
     >
-        <h4>Custom NavBar</h4>
+        <h4>Toolbar Options</h4>
+        <button style="float: right; margin-right: 10px;">
+            Customize
+        </button>
+        <h6>
+            This allows you to customize the buttons that appear in the bottom toolbar.
+        </h6>
     </div>
     <hr />
     <div
@@ -260,14 +273,11 @@
         on:click={() => push("/routeSelection/carousel")}
     >
         <h4>Carousel</h4>
-    </div>
-    <hr />
-
-    <div class="singularSettingDiv">
-        <h4>Simple Chart List</h4>
-        <input type="checkbox" bind:checked={$showChart1} />
+        <button style="float: right; margin-right: 10px;">
+            Set Up
+        </button>
         <h6>
-            This toggles whether the chart list is displayed with progress bars
+            This feature allows you to have the app automatically cycle through pages of your choosing with customizable timing.
         </h6>
     </div>
     <hr />
@@ -328,23 +338,23 @@
     <hr />
 
     <div class="singularSettingDiv">
-        <h4 class="">Sort Pending Races By</h4>
+        <h4 class="">Pending Race Sort Order</h4>
         <select bind:value={$pendingSortAlgorithm}>
             <option class="sortOption">Age</option>
             <option class="sortOption">Heat</option>
         </select>
         <h6>
-            This controls how your pending race screen is sorted. It defaults to
+            This controls how your pending races screen is sorted. It defaults to
             <strong>age</strong>
             (newest to oldest) but it can also be set to
-            <strong>heat,</strong>
-            which will group like-numbered heats of different brackets together.
+            <strong>heat</strong>,
+            which will group like-numbered heats of different charts together.
         </h6>
     </div>
     <hr />
 
     <br />
-    <h2>Other Settings</h2>
+    <h2>Other</h2>
     <hr />
 
     <div class="singularSettingDiv">
@@ -358,7 +368,7 @@
             <option>5</option>
         </select>
         <h6>
-            This limits the number of elements(phases, heats, or drivers) that
+            This limits the number of elements (phases, heats, or drivers) that
             are displayed on your screen and should only be necessary when
             dealing with an extremely large race.
         </h6>
@@ -366,14 +376,14 @@
     <hr />
 
     <div class="singularSettingDiv">
-        <h4 class="">Media file format</h4>
+        <h4 class="">Media File Format</h4>
         <select bind:value={$mediaFileType}>
             <option>Webm</option>
             <option>Mp4</option>
             <option value="">*</option>
         </select>
         <h6>
-            This adjusts which files appear when you view a race phase's media.
+            This adjusts which file format appears when you view a race phase's media.
             It should automatically be set to whatever is most compatible for
             your device.
         </h6>
@@ -401,9 +411,8 @@
                 About Page
             </button>
             <h6>
-                Click here to be redirected to the about page where you can find
-                information about the race you are viewing and the version of
-                this software that you are running.
+                Visit the about page to access
+                event and version information.
             </h6>
         </div>
         <hr />
