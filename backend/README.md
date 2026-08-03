@@ -1,6 +1,6 @@
 ##NOTE:
-* node 6 required for build as of May 2022
-* tested: 6.14.15
+* Node 16.4.0 or newer is required for backend code that uses AsyncLocalStorage.
+* Node 18 or newer is recommended for local development and current Lambda runtimes.
 
 # Stand up AWS infrastructure
 * copy awsVarTemplate.sh to a private file (probably outside of the git tree)

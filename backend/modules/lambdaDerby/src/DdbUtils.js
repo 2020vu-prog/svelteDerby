@@ -1,5 +1,6 @@
 const EntityFactory = require("./shared/EntityFactory.js");
 const log = require("loglevel");
+const requestContext = require("./RequestContext");
 const skipDeleteFilter = "attribute_not_exists(del) ";
 var configMap = {};
 
@@ -7,7 +8,6 @@ class DdbUtils {
     ddbClient = null;
     AWS = null;
     ddocClient = null;
-    entityFactory = null;
     sqs = null;
 
     constructor(AWS, ddbClient, sqs) {
@@ -16,8 +16,8 @@ class DdbUtils {
         this.sqs = sqs;
         this.ddocClient = new this.AWS.DynamoDB.DocumentClient();
     }
-    setEntityFactory(entityFactory) {
-        this.entityFactory = entityFactory;
+    getEntityFactory() {
+        return requestContext.getEntityFactory();
     }
     /*
      ** sometimes we'll get just event id without org id.
@@ -181,33 +181,28 @@ class DdbUtils {
             return unmarshalled;
         }
     }
-    unmarshallResultsToArray(data, factory) {
-        const rc = [];
+    unmarshallResults(data, factory) {
+        const results = [];
         for (var i = 0; i < data.Items.length; i++) {
             var unmarshalled = this.AWS.DynamoDB.Converter.unmarshall(
                 data.Items[i]
             );
-            if (factory) {
-                // don't use factory for timerDB
-                unmarshalled = this.promoteToObject(unmarshalled, factory);
-            }
+            // Callers pass no factory for timerDB rows; those should remain plain objects.
+            unmarshalled = this.promoteToObject(unmarshalled, factory);
             if (unmarshalled) {
-                rc.push(unmarshalled);
+                results.push(unmarshalled);
             }
         }
-        return rc;
+        return results;
+    }
+    unmarshallResultsToArray(data, factory) {
+        return this.unmarshallResults(data, factory);
     }
     unmarshallResultsToObject(data, key, factory) {
         const rc = {};
 
-        for (var i = 0; i < data.Items.length; i++) {
-            var unmarshalled = this.AWS.DynamoDB.Converter.unmarshall(
-                data.Items[i]
-            );
-            unmarshalled = this.promoteToObject(unmarshalled, factory);
-            if (unmarshalled) {
-                rc[unmarshalled[key]] = unmarshalled;
-            }
+        for (const unmarshalled of this.unmarshallResults(data, factory)) {
+            rc[unmarshalled[key]] = unmarshalled;
         }
         return rc;
     }
@@ -781,8 +776,8 @@ class DdbUtils {
         return 99;
     }
 
-    fmtBulkPut(json1, entityFactory = this.entityFactory) {
-        const myP = entityFactory.build(json1);
+    fmtBulkPut(json1) {
+        const myP = this.getEntityFactory().build(json1);
 
         if (myP) {
             myP.preWrite();
@@ -841,8 +836,8 @@ class DdbUtils {
         return { status: "ok", detail: "BulkProcessed", count: totalProcessed };
     }
 
-    async addSingle(json, entityFactory = this.entityFactory) {
-        const [uk, putRequest, entity] = this.fmtBulkPut(json, entityFactory);
+    async addSingle(json) {
+        const [uk, putRequest, entity] = this.fmtBulkPut(json);
         if (putRequest && uk) {
             await this.flushBulkRequests([putRequest]);
             return { status: "ok", entity: entity };

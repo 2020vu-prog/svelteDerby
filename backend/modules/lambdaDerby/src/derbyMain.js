@@ -37,7 +37,8 @@ const DiscordUtils = require("./DiscordUtils");
 const AnnounceResults = require("./AnnounceResults");
 const ApiRaceStanding = require("./ApiRaceStanding");
 const LogUtils = require("./LogUtils");
-const { getSourceName } = require("./utils");
+const { getShaCars, getSourceName } = require("./utils");
+const requestContext = require("./RequestContext");
 
 const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
 const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
@@ -52,56 +53,7 @@ function newApiRaceStanding() {
     return new ApiRaceStanding(AWS, ddbUtils, newAnnounceResults(), logUtils);
 }
 
-const requestContext = {
-    entityFactory: null,
-    errorList: [],
-};
-
-function resetRequestContext() {
-    requestContext.errorList = [];
-    setEntityFactoryContext(null);
-}
-
-function setEntityFactoryContext(newEntityFactory) {
-    requestContext.entityFactory = newEntityFactory;
-    ddbUtils.setEntityFactory(newEntityFactory);
-}
-
-function getEntityFactory() {
-    if (!requestContext.entityFactory) {
-        throw new Error("EntityFactory is not initialized for this request.");
-    }
-    return requestContext.entityFactory;
-}
-
 log.setLevel(log.levels.TRACE);
-
-//log.info("ENV:",process.env);
-function testSeededCars() {
-    const testCars = [
-        101,
-        102,
-        103,
-        104,
-        105,
-        106,
-        107,
-        108,
-        109,
-        110,
-        111,
-        112,
-        113,
-        114,
-        115,
-        116,
-    ];
-    //const testSeed = new Date().getTime();
-    const testSeed = new Date().toISOString();
-
-    getShaCars(testSeed, testCars);
-    getShaCars(testSeed, testCars);
-}
 
 const s3QueryChartTypes = async () => {
     var params = {
@@ -167,7 +119,7 @@ function frozenOrArchived(config) {
     if (!config) {
         return false;
     }
-    const configEntity = getEntityFactory().build(config);
+    const configEntity = requestContext.getEntityFactory().build(config);
     return configEntity.checkIfFrozenOrArchived()["status"];
 }
 
@@ -447,7 +399,7 @@ const loadRaceStandingFromBracketPos = async (bracketPos) => {
 };
 
 const logPendingFromChartPosError = async (bracketPos, pendingRC) => {
-    requestContext.errorList.push(pendingRC);
+    requestContext.pushError(pendingRC);
     const heatNumber = bracketPos.heatNumber || bracketPos.SK;
     const chartId = bracketPos.SK.replace(/:.*/, "");
     const chartMetaData = await ddbUtils.ddbQueryPkSk(
@@ -787,11 +739,13 @@ const addOrgConfig = async (json) => {
     log.debug("addOrgConfig: " + JSON.stringify(json));
     json.PK = "OrgConfig"; // force
     json.SK = json.orgIz; // force
-    const orgConfigEntityFactory = getEntityFactory().copyWith({
+    const orgConfigEntityFactory = requestContext.getEntityFactory().copyWith({
         orgIz: json.orgIz,
     });
 
-    return await ddbUtils.addSingle(json, orgConfigEntityFactory);
+    return await requestContext.withEntityFactory(orgConfigEntityFactory, () =>
+        ddbUtils.addSingle(json)
+    );
 };
 const getSanitizedTimers = async () => {
     const timers = await getActiveTimers();
@@ -855,27 +809,6 @@ async function getActivePbTimers() {
     );
 
     return timers;
-}
-
-function getShaCars(seed, carList) {
-    var rc = [];
-    var shaMap = {};
-    log.debug("getShaCars: Begin:", seed);
-
-    carList.forEach((carNumber) => {
-        const seededCar = "" + carNumber + ":" + seed;
-        const sha = crypto.createHash("sha256").update(seededCar).digest("hex");
-        shaMap[sha] = carNumber;
-    });
-    var shaKeys = Object.keys(shaMap);
-    shaKeys.sort();
-
-    shaKeys.forEach((shaKey) => {
-        const nextCar = shaMap[shaKey];
-        log.debug("getShaCars: ", nextCar, " shaKey:", shaKey);
-        rc.push(nextCar);
-    });
-    return rc;
 }
 
 const registeredTimerSha = (timer) => {
@@ -1103,12 +1036,12 @@ const addEventConfig = async (event) => {
 
     json.TTL = newTtl;
 
-    const eventConfigEntityFactory = getEntityFactory().copyWith({
+    const eventConfigEntityFactory = requestContext.getEntityFactory().copyWith({
         orgId: json.orgId,
         TTL: json.TTL,
     });
-    setEntityFactoryContext(eventConfigEntityFactory);
-    const eventRC = await ddbUtils.addSingle(json, eventConfigEntityFactory);
+    requestContext.setEntityFactory(eventConfigEntityFactory);
+    const eventRC = await ddbUtils.addSingle(json);
     await logUtils.persistLogMessage(
         {
             orgId: json.orgId,
@@ -1120,8 +1053,7 @@ const addEventConfig = async (event) => {
                 orgId: json.orgId,
                 name: json.name,
             },
-        },
-        eventConfigEntityFactory
+        }
     );
     const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
         { orgIz: json.orgIz, orgId: json.orgId }
@@ -1375,12 +1307,13 @@ const routeMap = {
     },
     "/addChartPosition": {
         h: async (event) => {
-            requestContext.errorList = []; // TODO: re-visit multiple low level error messages from advanceChartPos
+            requestContext.resetErrorList(); // TODO: re-visit multiple low level error messages from advanceChartPos
             const localMsg = await addOrUpdateChartPosition(
                 JSON.parse(event.body)
             );
-            if (requestContext.errorList && requestContext.errorList.length > 0) {
-                return buildResponse(requestContext.errorList[0]);
+            const errorList = requestContext.getErrorList();
+            if (errorList && errorList.length > 0) {
+                return buildResponse(errorList[0]);
             } else {
                 return buildResponse(localMsg);
             }
@@ -1671,7 +1604,7 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     if (rp.cn[1] && !validNumericTime(l2Micros)) {
         throw `missing time [${l2Micros}] for car [${rp.cn}] in lane 2`;
     }
-    setEntityFactoryContext(new EntityFactory({
+    requestContext.setEntityFactory(new EntityFactory({
         orgId: finishLineBlock.timerConfig.orgId,
         by: byLine,
         TTL: rp.TTL,
@@ -1724,7 +1657,7 @@ async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         // sns gave us a timer config.  use that instead of
         //   waiting for another dynamo read
         const timerConfig = json.timerConfig;
-        setEntityFactoryContext(new EntityFactory({
+        requestContext.setEntityFactory(new EntityFactory({
             orgId: timerConfig.orgId,
             by: "rpi.local",
             TTL: timerConfig.TTL,
@@ -1885,7 +1818,7 @@ async function apiGatewayHandler(event) {
         ? decodedJwt["cognito:username"]
         : decodedJwt.email;
     const email = decodedJwt.email;
-    setEntityFactoryContext(new EntityFactory({
+    requestContext.setEntityFactory(new EntityFactory({
         orgId: orgId,
         byEmail: email,
         TTL: defaultTTL,
@@ -1962,13 +1895,14 @@ async function addOrgUser(json, apiProps) {
     if (json.email && json.orgIz && json.roleList && orgId && displayName) {
         json.PK = json.orgIz + ":OrgPerm"; // force OrgPerm
         json.SK = json.email;
-        const tmpEntityFactory = getEntityFactory().copyWith({
+        const tmpEntityFactory = requestContext.getEntityFactory().copyWith({
             orgIz: json.orgIz,
             orgId: undefined,
             TTL: undefined,
         });
+        requestContext.setEntityFactory(tmpEntityFactory);
 
-        const orgPermResult = await ddbUtils.addSingle(json, tmpEntityFactory);
+        const orgPermResult = await ddbUtils.addSingle(json);
         const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
             { orgIz: json.orgIz, orgId }
         );
@@ -2020,7 +1954,7 @@ async function refreshUserDisplayNamesFromOrgPerm(json) {
         bulk.push({
             PK: "UserDisplayName",
             orgId,
-            SK: getEntityFactory().getHashFromEmail(orgPerm.SK),
+            SK: requestContext.getEntityFactory().getHashFromEmail(orgPerm.SK),
             displayName,
         });
     }
@@ -2166,12 +2100,14 @@ async function lambdaHandler(event) {
 }
 
 exports.handler = async function (event) {
-    resetRequestContext();
-    try {
-        return await lambdaHandler(event);
-    } finally {
-        resetRequestContext();
-    }
+    return requestContext.run(async () => {
+        requestContext.reset();
+        try {
+            return await lambdaHandler(event);
+        } finally {
+            requestContext.reset();
+        }
+    });
 };
 
 // changed.

@@ -1,17 +1,11 @@
 const EntityFactory = require("../modules/lambdaDerby/src/shared/EntityFactory.js");
 const LogUtils = require("../modules/lambdaDerby/src/LogUtils.js");
+const requestContext = require("../modules/lambdaDerby/src/RequestContext.js");
 
-const defaultRetainedFactory = () =>
-    new EntityFactory({
-        orgId: "retainedEvent",
-        by: "retainedUser",
-    });
-
-function buildLogUtils(retainedFactory = defaultRetainedFactory()) {
+function buildLogUtils() {
     const ddbUtils = {
-        entityFactory: retainedFactory,
-        addSingle: jest.fn(async (payload, entityFactory) => {
-            const activeFactory = entityFactory || ddbUtils.entityFactory;
+        addSingle: jest.fn(async (payload) => {
+            const activeFactory = requestContext.getEntityFactory();
             const entity = activeFactory.build(payload);
             entity.preWrite();
             return { status: "ok", entity };
@@ -25,6 +19,10 @@ function buildLogUtils(retainedFactory = defaultRetainedFactory()) {
 }
 
 describe("LogUtils", () => {
+    afterEach(() => {
+        requestContext.reset();
+    });
+
     test("persists string log messages with EntityFactory context", async () => {
         const { ddbUtils, logUtils } = buildLogUtils();
         const entityFactory = new EntityFactory({
@@ -51,13 +49,18 @@ describe("LogUtils", () => {
                 message: "Example log message",
                 by: "tester",
                 TTL: 123,
-            }),
-            entityFactory
+            })
         );
     });
 
-    test("persists object log messages with DdbUtils EntityFactory context", async () => {
+    test("persists object log messages with request EntityFactory context", async () => {
         const { ddbUtils, logUtils } = buildLogUtils();
+        requestContext.setEntityFactory(
+            new EntityFactory({
+                orgId: "requestEvent",
+                by: "requestUser",
+            })
+        );
 
         const result = await logUtils.persistLogMessage({
             orgId: "event2",
@@ -68,8 +71,8 @@ describe("LogUtils", () => {
         });
 
         expect(result.status).toBe("ok");
-        expect(result.entity.PK).toBe("retainedEvent:LogMessage");
-        expect(result.entity.by).toBe("retainedUser");
+        expect(result.entity.PK).toBe("requestEvent:LogMessage");
+        expect(result.entity.by).toBe("requestUser");
         expect(result.entity.message).toBe("Something happened");
         expect(result.entity.level).toBe("warn");
         expect(result.entity.source).toBe("test");
@@ -77,16 +80,15 @@ describe("LogUtils", () => {
         expect(ddbUtils.addSingle).toHaveBeenCalledWith(
             expect.objectContaining({
                 PK: ":LogMessage",
-                orgId: "retainedEvent",
+                orgId: "requestEvent",
                 message: "Something happened",
-                by: "retainedUser",
-            }),
-            undefined
+                by: "requestUser",
+            })
         );
     });
 
     test("requires orgId and message", async () => {
-        const { ddbUtils, logUtils } = buildLogUtils(null);
+        const { ddbUtils, logUtils } = buildLogUtils();
 
         await expect(logUtils.persistLogMessage("missing org")).resolves.toEqual(
             { error: "missing orgId" }
