@@ -74,17 +74,21 @@ data "aws_iam_policy_document" "deploy_storage" {
     resources = ["*"]
   }
 
-  statement {
-    sid    = "TerraformLockTable"
-    effect = "Allow"
-    actions = [
-      "dynamodb:DeleteItem",
-      "dynamodb:DescribeTable",
-      "dynamodb:GetItem",
-      "dynamodb:PutItem",
-      "dynamodb:UpdateItem",
-    ]
-    resources = local.terraform_lock_table_arns
+  dynamic "statement" {
+    for_each = local.terraform_lock_table_arns
+
+    content {
+      sid    = "TerraformLockTable"
+      effect = "Allow"
+      actions = [
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+      ]
+      resources = [statement.value]
+    }
   }
 
   statement {

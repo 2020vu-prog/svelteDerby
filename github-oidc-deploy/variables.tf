@@ -53,9 +53,9 @@ variable "deploy_environment" {
 }
 
 variable "create_oidc_provider" {
-  description = "Create the GitHub Actions OIDC provider. Set false if the AWS account already has one."
+  description = "Create the GitHub Actions OIDC provider. Set true only if the AWS account does not already have one."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "github_oidc_thumbprints" {

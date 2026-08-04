@@ -59,16 +59,17 @@ in that case, set it to `false` and provide the account-local boundary ARN as
 ## Existing OIDC Provider
 
 Every environment account needs a GitHub Actions OIDC provider. An AWS account
-can only have one provider for `token.actions.githubusercontent.com`, so if the
-current environment's account already has one, set:
+can only have one provider for `token.actions.githubusercontent.com`, so this
+root reuses an existing provider by default. If the current environment's
+account does not have one, set:
 
 ```hcl
-create_oidc_provider = false
+create_oidc_provider = true
 ```
 
-Terraform derives the existing provider ARN from the current AWS account ID and
-partition. The existing provider remains separate from the deployment role that
-this root creates.
+When reusing a provider, Terraform derives its ARN from the current AWS account
+ID and partition. The existing provider remains separate from the deployment
+role that this root creates.
 
 ## Permission Scope
 
