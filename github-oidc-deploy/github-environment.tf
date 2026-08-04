@@ -1,5 +1,5 @@
 locals {
-  github_environment_script_path = "${path.module}/.tmp/configure-github-${var.dns_domain}.sh"
+  github_environment_script_path = "${path.module}/.tmp/configure-github-${var.DnsDomain}.sh"
 }
 
 resource "local_file" "github_environment_script" {
@@ -50,13 +50,13 @@ resource "local_file" "github_environment_script" {
     chmod 600 "$${variables_file}"
     cat >"$${variables_file}" <<'VARIABLES'
     AWS_DEPLOY_ROLE_ARN=${aws_iam_role.github_deploy.arn}
-    AWS_REGION=${var.aws_region}
-    TF_VAR_DeployEnvironment=${var.deploy_environment}
+    AWS_REGION=${var.AwsRegion}
+    TF_VAR_DeployEnvironment=${var.DeployEnvironment}
     TF_VAR_ManagedRolePermissionsBoundaryArn=${local.managed_role_permissions_boundary_arn}
-    TF_VAR_AcmArn=${var.acm_arn}
-    TF_VAR_DnsDomain=${var.dns_domain}
-    TF_VAR_DnsCloudfrontHostAlias=${var.dns_cloudfront_host_alias}
-    TF_VAR_TimerApiGatewayDomain=${var.timer_api_gateway_domain}
+    TF_VAR_AcmArn=${var.AcmArn}
+    TF_VAR_DnsDomain=${var.DnsDomain}
+    TF_VAR_DnsCloudfrontHostAlias=${var.DnsCloudfrontHostAlias}
+    TF_VAR_TimerApiGatewayDomain=${var.TimerApiGatewayDomain}
     VARIABLES
 
     gh variable set --repo "$${github_repo}" --env "$${github_environment}" --env-file "$${variables_file}"

@@ -27,7 +27,7 @@ terraform init
 terraform apply
 ```
 
-The apply generates a temporary executable whose filename includes `dns_domain`,
+The apply generates a temporary executable whose filename includes `DnsDomain`,
 for example `.tmp/configure-github-test.rr1.us.sh`. Run it with the matching
 application Terraform backend configuration file:
 

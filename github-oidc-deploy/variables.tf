@@ -1,4 +1,4 @@
-variable "aws_region" {
+variable "AwsRegion" {
   description = "AWS region where the deploy role is managed."
   type        = string
   default     = "us-east-2"
@@ -61,51 +61,51 @@ variable "existing_managed_role_permissions_boundary_arn" {
   default     = ""
 }
 
-variable "deploy_environment" {
+variable "DeployEnvironment" {
   description = "Application deployment environment used in SSM paths."
   type        = string
   default     = "derbyTest"
 }
 
-variable "dns_domain" {
+variable "DnsDomain" {
   description = "Deployment DNS domain; also used in the generated GitHub setup script filename."
   type        = string
 
   validation {
-    condition     = can(regex("^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$", var.dns_domain))
-    error_message = "dns_domain must be a DNS name containing only letters, digits, dots, and hyphens."
+    condition     = can(regex("^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$", var.DnsDomain))
+    error_message = "DnsDomain must be a DNS name containing only letters, digits, dots, and hyphens."
   }
 }
 
-variable "acm_arn" {
+variable "AcmArn" {
   description = "ACM certificate ARN passed to the application Terraform."
   type        = string
 
   validation {
-    condition     = can(regex("^[A-Za-z0-9:/_-]+$", var.acm_arn))
-    error_message = "acm_arn must be a non-empty ACM ARN."
+    condition     = can(regex("^[A-Za-z0-9:/_-]+$", var.AcmArn))
+    error_message = "AcmArn must be a non-empty ACM ARN."
   }
 }
 
-variable "dns_cloudfront_host_alias" {
+variable "DnsCloudfrontHostAlias" {
   description = "CloudFront hostname prefix passed to the application Terraform."
   type        = string
   default     = "cf"
 
   validation {
-    condition     = can(regex("^[A-Za-z0-9-]+$", var.dns_cloudfront_host_alias))
-    error_message = "dns_cloudfront_host_alias must be a DNS label."
+    condition     = can(regex("^[A-Za-z0-9-]+$", var.DnsCloudfrontHostAlias))
+    error_message = "DnsCloudfrontHostAlias must be a DNS label."
   }
 }
 
-variable "timer_api_gateway_domain" {
+variable "TimerApiGatewayDomain" {
   description = "Legacy timer API Gateway hostname passed to the application Terraform."
   type        = string
   default     = "cfxgbxl7d9.execute-api.us-east-2.amazonaws.com"
 
   validation {
-    condition     = can(regex("^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$", var.timer_api_gateway_domain))
-    error_message = "timer_api_gateway_domain must be a DNS hostname."
+    condition     = can(regex("^[A-Za-z0-9][A-Za-z0-9.-]*[A-Za-z0-9]$", var.TimerApiGatewayDomain))
+    error_message = "TimerApiGatewayDomain must be a DNS hostname."
   }
 }
 

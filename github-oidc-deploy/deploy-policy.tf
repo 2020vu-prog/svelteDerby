@@ -109,11 +109,11 @@ data "aws_iam_policy_document" "deploy_storage" {
       "dynamodb:UpdateTimeToLive",
     ]
     resources = concat([
-      "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/DerbyMain",
-      "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/DerbyDist",
-      "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/DerbyTimer",
-      "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/ElapsedTemp",
-      "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/timer-protobuf",
+      "arn:${local.partition}:dynamodb:${var.AwsRegion}:${local.account_id}:table/DerbyMain",
+      "arn:${local.partition}:dynamodb:${var.AwsRegion}:${local.account_id}:table/DerbyDist",
+      "arn:${local.partition}:dynamodb:${var.AwsRegion}:${local.account_id}:table/DerbyTimer",
+      "arn:${local.partition}:dynamodb:${var.AwsRegion}:${local.account_id}:table/ElapsedTemp",
+      "arn:${local.partition}:dynamodb:${var.AwsRegion}:${local.account_id}:table/timer-protobuf",
     ], local.terraform_lock_table_arns)
   }
 
@@ -154,10 +154,10 @@ data "aws_iam_policy_document" "deploy_compute" {
       "lambda:UpdateFunctionUrlConfig",
     ]
     resources = [
-      "arn:${local.partition}:lambda:${var.aws_region}:${local.account_id}:function:derbyMain",
-      "arn:${local.partition}:lambda:${var.aws_region}:${local.account_id}:function:dynamoMain",
-      "arn:${local.partition}:lambda:${var.aws_region}:${local.account_id}:function:sqsCcaMain",
-      "arn:${local.partition}:lambda:${var.aws_region}:${local.account_id}:event-source-mapping:*",
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:derbyMain",
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:dynamoMain",
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:sqsCcaMain",
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:event-source-mapping:*",
     ]
   }
 
@@ -174,9 +174,9 @@ data "aws_iam_policy_document" "deploy_compute" {
       "logs:UntagLogGroup",
     ]
     resources = [
-      "arn:${local.partition}:logs:${var.aws_region}:${local.account_id}:log-group:/aws/lambda/derbyMain*",
-      "arn:${local.partition}:logs:${var.aws_region}:${local.account_id}:log-group:/aws/lambda/dynamoMain*",
-      "arn:${local.partition}:logs:${var.aws_region}:${local.account_id}:log-group:/aws/lambda/sqsCcaMain*",
+      "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/derbyMain*",
+      "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/dynamoMain*",
+      "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/sqsCcaMain*",
     ]
   }
 }
@@ -395,7 +395,7 @@ data "aws_iam_policy_document" "deploy_integration" {
       "events:TagResource",
       "events:UntagResource",
     ]
-    resources = ["arn:${local.partition}:events:${var.aws_region}:${local.account_id}:rule/derbyMain-1h"]
+    resources = ["arn:${local.partition}:events:${var.AwsRegion}:${local.account_id}:rule/derbyMain-1h"]
   }
 
   statement {
@@ -411,9 +411,9 @@ data "aws_iam_policy_document" "deploy_integration" {
       "ssm:RemoveTagsFromResource",
     ]
     resources = [
-      "arn:${local.partition}:ssm:${var.aws_region}:${local.account_id}:parameter/deploy/${var.deploy_environment}/*",
-      "arn:${local.partition}:ssm:${var.aws_region}:${local.account_id}:parameter/sns/*",
-      "arn:${local.partition}:ssm:${var.aws_region}:${local.account_id}:parameter/iot/*",
+      "arn:${local.partition}:ssm:${var.AwsRegion}:${local.account_id}:parameter/deploy/${var.DeployEnvironment}/*",
+      "arn:${local.partition}:ssm:${var.AwsRegion}:${local.account_id}:parameter/sns/*",
+      "arn:${local.partition}:ssm:${var.AwsRegion}:${local.account_id}:parameter/iot/*",
     ]
   }
 }
@@ -497,7 +497,7 @@ data "aws_iam_policy_document" "deploy_iot" {
       "cloudformation:GetTemplate",
       "cloudformation:ListStackResources",
     ]
-    resources = ["arn:${local.partition}:cloudformation:${var.aws_region}:${local.account_id}:stack/vod-transcode-stack/*"]
+    resources = ["arn:${local.partition}:cloudformation:${var.AwsRegion}:${local.account_id}:stack/vod-transcode-stack/*"]
   }
 }
 

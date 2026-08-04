@@ -1,5 +1,5 @@
 provider "aws" {
-  region = var.aws_region
+  region = var.AwsRegion
 }
 
 data "aws_caller_identity" "current" {}
@@ -31,6 +31,6 @@ locals {
   s3_object_arns = [for arn in local.s3_bucket_arns : "${arn}/*"]
 
   terraform_lock_table_arns = var.terraform_lock_table_name == "" ? [] : [
-    "arn:${local.partition}:dynamodb:${var.aws_region}:${local.account_id}:table/${var.terraform_lock_table_name}",
+    "arn:${local.partition}:dynamodb:${var.AwsRegion}:${local.account_id}:table/${var.terraform_lock_table_name}",
   ]
 }

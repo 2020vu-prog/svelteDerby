@@ -43,7 +43,7 @@ resource "aws_iam_role" "github_deploy" {
 
   tags = {
     Application       = "svelteDerby"
-    DeployEnvironment = var.deploy_environment
+    DeployEnvironment = var.DeployEnvironment
     ManagedBy         = "terraform"
     Purpose           = "github-actions-deploy"
   }
