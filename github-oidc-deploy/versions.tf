@@ -1,4 +1,8 @@
 terraform {
+  backend "s3" {
+    key = "github-oidc-deploy/terraform.tfstate"
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -6,4 +10,3 @@ terraform {
     }
   }
 }
-
