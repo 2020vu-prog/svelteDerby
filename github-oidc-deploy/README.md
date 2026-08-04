@@ -63,9 +63,12 @@ can only have one provider for `token.actions.githubusercontent.com`, so if the
 current environment's account already has one, set:
 
 ```hcl
-create_oidc_provider       = false
-existing_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+create_oidc_provider = false
 ```
+
+Terraform derives the existing provider ARN from the current AWS account ID and
+partition. The existing provider remains separate from the deployment role that
+this root creates.
 
 ## Permission Scope
 

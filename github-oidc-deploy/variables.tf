@@ -58,12 +58,6 @@ variable "create_oidc_provider" {
   default     = true
 }
 
-variable "existing_oidc_provider_arn" {
-  description = "Existing GitHub Actions OIDC provider ARN, required when create_oidc_provider is false."
-  type        = string
-  default     = ""
-}
-
 variable "github_oidc_thumbprints" {
   description = "Thumbprints for token.actions.githubusercontent.com."
   type        = list(string)

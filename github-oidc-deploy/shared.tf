@@ -11,8 +11,9 @@ locals {
   partition                             = data.aws_partition.current.partition
   github_oidc_url                       = "https://token.actions.githubusercontent.com"
   github_oidc_host                      = "token.actions.githubusercontent.com"
+  existing_oidc_provider_arn            = "arn:${local.partition}:iam::${local.account_id}:oidc-provider/${local.github_oidc_host}"
   github_subject                        = "repo:${var.github_owner}/${var.github_repo}:environment:${var.github_environment}"
-  oidc_provider_arn                     = var.create_oidc_provider ? aws_iam_openid_connect_provider.github_actions[0].arn : var.existing_oidc_provider_arn
+  oidc_provider_arn                     = var.create_oidc_provider ? aws_iam_openid_connect_provider.github_actions[0].arn : local.existing_oidc_provider_arn
   managed_role_permissions_boundary_arn = var.create_managed_role_permissions_boundary ? aws_iam_policy.managed_role_boundary[0].arn : var.existing_managed_role_permissions_boundary_arn
 
   app_bucket_arns = [

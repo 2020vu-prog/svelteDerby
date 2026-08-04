@@ -15,9 +15,9 @@ managed_role_permissions_boundary_name = "svelte-derby-managed-role-boundary"
 # existing_managed_role_permissions_boundary_arn = "arn:aws:iam::123456789012:policy/svelte-derby-managed-role-boundary"
 
 # Every environment account needs an OIDC provider. If this account already has
-# a GitHub Actions OIDC provider, use it instead of creating another one.
-# create_oidc_provider     = false
-# existing_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+# a GitHub Actions OIDC provider, use it instead of creating another one. Its ARN
+# is derived from the current AWS account automatically.
+# create_oidc_provider = false
 
 # Optional but recommended: scope Terraform state/lock access.
 # terraform_state_bucket_name = "my-terraform-state-bucket"

@@ -1,4 +1,4 @@
-data "aws_iam_policy_document" "deploy" {
+data "aws_iam_policy_document" "deploy_storage" {
   statement {
     sid       = "ReadAccountMetadata"
     effect    = "Allow"
@@ -119,7 +119,9 @@ data "aws_iam_policy_document" "deploy" {
     actions   = ["dynamodb:ListTables"]
     resources = ["*"]
   }
+}
 
+data "aws_iam_policy_document" "deploy_compute" {
   statement {
     sid    = "ManageAppLambdas"
     effect = "Allow"
@@ -173,7 +175,9 @@ data "aws_iam_policy_document" "deploy" {
       "arn:${local.partition}:logs:${var.aws_region}:${local.account_id}:log-group:/aws/lambda/sqsCcaMain*",
     ]
   }
+}
 
+data "aws_iam_policy_document" "deploy_iam" {
   statement {
     sid    = "ManageLambdaIam"
     effect = "Allow"
@@ -289,7 +293,9 @@ data "aws_iam_policy_document" "deploy" {
     actions   = ["iam:GetUser", "iam:GetUserPolicy", "iam:ListAccessKeys"]
     resources = ["arn:${local.partition}:iam::${local.account_id}:user/system/android-MqGrafika-Baked-In-User"]
   }
+}
 
+data "aws_iam_policy_document" "deploy_identity_edge" {
   statement {
     sid    = "ManageCloudfront"
     effect = "Allow"
@@ -344,7 +350,9 @@ data "aws_iam_policy_document" "deploy" {
     ]
     resources = ["*"]
   }
+}
 
+data "aws_iam_policy_document" "deploy_integration" {
   statement {
     sid    = "ManageMessaging"
     effect = "Allow"
@@ -404,7 +412,9 @@ data "aws_iam_policy_document" "deploy" {
       "arn:${local.partition}:ssm:${var.aws_region}:${local.account_id}:parameter/iot/*",
     ]
   }
+}
 
+data "aws_iam_policy_document" "deploy_dns" {
   statement {
     sid    = "ManageRoute53"
     effect = "Allow"
@@ -453,7 +463,9 @@ data "aws_iam_policy_document" "deploy" {
     ]
     resources = ["*"]
   }
+}
 
+data "aws_iam_policy_document" "deploy_iot" {
   statement {
     sid    = "ManageIot"
     effect = "Allow"
@@ -485,13 +497,29 @@ data "aws_iam_policy_document" "deploy" {
   }
 }
 
+locals {
+  deploy_policy_documents = {
+    storage       = data.aws_iam_policy_document.deploy_storage.json
+    compute       = data.aws_iam_policy_document.deploy_compute.json
+    iam           = data.aws_iam_policy_document.deploy_iam.json
+    identity-edge = data.aws_iam_policy_document.deploy_identity_edge.json
+    integration   = data.aws_iam_policy_document.deploy_integration.json
+    dns           = data.aws_iam_policy_document.deploy_dns.json
+    iot           = data.aws_iam_policy_document.deploy_iot.json
+  }
+}
+
 resource "aws_iam_policy" "deploy" {
-  name        = "${var.role_name}-policy"
+  for_each = local.deploy_policy_documents
+
+  name        = "${var.role_name}-${each.key}"
   description = "Deploy permissions for ${var.github_owner}/${var.github_repo} GitHub Actions."
-  policy      = data.aws_iam_policy_document.deploy.json
+  policy      = each.value
 }
 
 resource "aws_iam_role_policy_attachment" "deploy" {
+  for_each = aws_iam_policy.deploy
+
   role       = aws_iam_role.github_deploy.name
-  policy_arn = aws_iam_policy.deploy.arn
+  policy_arn = each.value.arn
 }
