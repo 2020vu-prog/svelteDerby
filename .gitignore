@@ -8,6 +8,7 @@
 *.tfstate.lock.info
 *.terraform.lock.hcl
 !github-oidc-deploy/.terraform.lock.hcl
+/github-oidc-deploy/.tmp/
 
 
 /frontend/generatedTargets.sh

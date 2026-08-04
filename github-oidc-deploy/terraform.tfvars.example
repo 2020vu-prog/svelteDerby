@@ -6,8 +6,14 @@ github_repo        = "svelteDerby"
 # use the matching GitHub environment and deploy environment in the other accounts.
 github_environment = "test.rr1.us"
 deploy_environment = "derbyTest"
+dns_domain         = "test.rr1.us"
+acm_arn            = "arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"
 role_name          = "svelte-derby-github-deploy"
 managed_role_permissions_boundary_name = "svelte-derby-managed-role-boundary"
+
+# Values passed to the application Terraform through GitHub Environment variables.
+dns_cloudfront_host_alias = "cf"
+timer_api_gateway_domain  = "cfxgbxl7d9.execute-api.us-east-2.amazonaws.com"
 
 # Create the boundary in every environment account. Only use an existing boundary
 # when it belongs to the same AWS account as this deployment role.

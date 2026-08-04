@@ -63,23 +63,26 @@ Each deployment environment uses a separate AWS account. Run the
 `github-oidc-deploy` Terraform root independently in each account with separate
 Terraform state. Each account needs its own deploy role and permissions boundary,
 plus a GitHub Actions OIDC provider unless that account already has one.
+That Terraform root generates a temporary, DNS-domain-named shell script that
+uses GitHub CLI to configure the following values for the matching Environment.
 
 Each GitHub Environment needs:
 
 - `AWS_DEPLOY_ROLE_ARN` environment variable: IAM role ARN trusted by GitHub OIDC.
 - `AWS_REGION` environment variable.
-- `TF_VAR_MANAGED_ROLE_PERMISSIONS_BOUNDARY_ARN` environment variable: the IAM
+- `TF_VAR_DeployEnvironment` environment variable.
+- `TF_VAR_ManagedRolePermissionsBoundaryArn` environment variable: the IAM
   permissions-boundary ARN emitted by `github-oidc-deploy`.
 - `TF_BACKEND_CONFIG_FILE_CONTENTS` secret: Terraform backend config file contents.
-- `GOOGLE_CLIENT_ID` secret.
-- `GOOGLE_CLIENT_SECRET` secret.
+- `TF_VAR_GoogleClientId` secret.
+- `TF_VAR_GoogleClientSecret` secret.
 
 Required GitHub environment variables:
 
-- `TF_VAR_ACM_ARN`
-- `TF_VAR_DNS_DOMAIN`
-- `TF_VAR_DNS_CLOUDFRONT_HOST_ALIAS`
-- `TF_VAR_TIMER_API_GATEWAY_DOMAIN`
+- `TF_VAR_AcmArn`
+- `TF_VAR_DnsDomain`
+- `TF_VAR_DnsCloudfrontHostAlias`
+- `TF_VAR_TimerApiGatewayDomain`
 
 Protect each GitHub Environment with required reviewers and an exact deployment
 branch rule. The workflow checks out and deploys the selected workflow revision,

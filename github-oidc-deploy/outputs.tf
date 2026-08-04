@@ -4,7 +4,7 @@ output "deploy_role_arn" {
 }
 
 output "managed_role_permissions_boundary_arn" {
-  description = "Set this as the TF_VAR_MANAGED_ROLE_PERMISSIONS_BOUNDARY_ARN GitHub environment variable."
+  description = "Set this as the TF_VAR_ManagedRolePermissionsBoundaryArn GitHub environment variable."
   value       = local.managed_role_permissions_boundary_arn
 }
 
@@ -16,4 +16,9 @@ output "github_oidc_subject" {
 output "oidc_provider_arn" {
   description = "GitHub Actions OIDC provider ARN used by the role trust policy."
   value       = local.oidc_provider_arn
+}
+
+output "github_environment_setup_script" {
+  description = "Temporary executable that uploads this deployment's GitHub Environment variables and secrets."
+  value       = local_file.github_environment_script.filename
 }

@@ -27,18 +27,37 @@ terraform init
 terraform apply
 ```
 
-Then copy the `deploy_role_arn` output into the GitHub environment variable
-named `AWS_DEPLOY_ROLE_ARN`.
-Copy `managed_role_permissions_boundary_arn` into the matching GitHub Environment
-variable named `TF_VAR_MANAGED_ROLE_PERMISSIONS_BOUNDARY_ARN`. Both ARNs must
-refer to resources in that environment's AWS account.
+The apply generates a temporary executable whose filename includes `dns_domain`,
+for example `.tmp/configure-github-test.rr1.us.sh`. Run it with the matching
+application Terraform backend configuration file:
 
-The workflow also expects these GitHub environment values:
+```bash
+github_setup_script="$(terraform output -raw github_environment_setup_script)"
+"${github_setup_script}" /private/path/test.backend.hcl
+```
 
+The script creates the GitHub Environment if needed and uploads all required
+variables. It prompts for the Google client ID and secret, uploads the backend
+configuration file as a multiline secret, removes its temporary dotenv file,
+and deletes itself after a successful run. You can provide the Google values
+non-interactively through local `TF_VAR_GoogleClientId` and
+`TF_VAR_GoogleClientSecret` environment variables. Their values are never
+passed through Terraform or stored in Terraform state.
+
+The generated script configures:
+
+- `AWS_DEPLOY_ROLE_ARN` variable.
+- `AWS_REGION` variable.
+- `TF_VAR_DeployEnvironment` variable.
+- `TF_VAR_ManagedRolePermissionsBoundaryArn` variable.
+- `TF_VAR_AcmArn` variable.
+- `TF_VAR_DnsDomain` variable.
+- `TF_VAR_DnsCloudfrontHostAlias` variable.
+- `TF_VAR_TimerApiGatewayDomain` variable.
 - `TF_BACKEND_CONFIG_FILE_CONTENTS` secret, containing the Terraform backend
   config file contents.
-- `GOOGLE_CLIENT_ID` secret.
-- `GOOGLE_CLIENT_SECRET` secret.
+- `TF_VAR_GoogleClientId` secret.
+- `TF_VAR_GoogleClientSecret` secret.
 
 Protect each GitHub Environment with required reviewers and deployment branch rules.
 The workflow accepts only these checked-in branch mappings:
