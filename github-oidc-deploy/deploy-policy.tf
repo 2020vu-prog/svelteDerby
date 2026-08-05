@@ -52,6 +52,7 @@ data "aws_iam_policy_document" "deploy_storage" {
       "s3:GetBucketTagging",
       "s3:GetBucketVersioning",
       "s3:GetBucketWebsite",
+      "s3:GetEncryptionConfiguration",
       "s3:GetReplicationConfiguration",
       "s3:ListBucket",
       "s3:PutBucketAcl",
@@ -500,6 +501,7 @@ data "aws_iam_policy_document" "deploy_iot" {
       "iot:DescribePolicy",
       "iot:DetachPolicy",
       "iot:GetPolicy",
+      "iot:ListAttachedPolicies",
       "iot:ListPolicyVersions",
       "iot:UpdateCertificate",
     ]
