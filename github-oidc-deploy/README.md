@@ -27,6 +27,12 @@ terraform init
 terraform apply
 ```
 
+The GitHub Environment name is derived automatically from `DnsDomain`. For
+example, `DnsDomain = "test.rr1.us"` makes the IAM OIDC subject and generated
+GitHub CLI setup script both target the `test.rr1.us` GitHub Environment.
+`DeployEnvironment` remains the separate application environment name, such as
+`derbyTest`.
+
 The apply generates a temporary executable whose filename includes `DnsDomain`,
 for example `.tmp/configure-github-test.rr1.us.sh`. Run it with the matching
 application Terraform backend configuration file:
