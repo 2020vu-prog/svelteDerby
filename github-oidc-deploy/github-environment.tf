@@ -13,6 +13,7 @@ resource "local_file" "github_environment_script" {
     readonly github_repo='${var.github_owner}/${var.github_repo}'
     readonly github_environment='${local.github_environment}'
     readonly terraform_root='${abspath(path.module)}'
+    readonly backend_variables_file="$${terraform_root}/backend.auto.tfvars.json"
     backend_config_file="$${1:-$${TF_BACKEND_CONFIG_FILE:-}}"
     variables_file=""
     completed=false
@@ -42,16 +43,32 @@ resource "local_file" "github_environment_script" {
       exit 1
     }
 
-    terraform_apply_args=(
-      -auto-approve
-      -var="terraform_state_bucket_name=$${terraform_state_bucket_name}"
-    )
-    if [[ -n "$${terraform_lock_table_name}" ]]; then
-      terraform_apply_args+=(
-        -var="terraform_lock_table_name=$${terraform_lock_table_name}"
-      )
-    fi
-    terraform -chdir="$${terraform_root}" apply "$${terraform_apply_args[@]}"
+    export TERRAFORM_STATE_BUCKET_NAME="$${terraform_state_bucket_name}"
+    export TERRAFORM_LOCK_TABLE_NAME="$${terraform_lock_table_name}"
+    export TERRAFORM_DNS_DOMAIN="$${github_environment}"
+    python3 - "$${backend_variables_file}" <<'PYTHON'
+    import json
+    import os
+    import sys
+
+    try:
+        with open(sys.argv[1], encoding="utf-8") as source:
+            values = json.load(source)
+    except FileNotFoundError:
+        values = {}
+
+    configs = values.setdefault("terraform_backend_configs", {})
+    configs[os.environ["TERRAFORM_DNS_DOMAIN"]] = {
+        "terraform_state_bucket_name": os.environ["TERRAFORM_STATE_BUCKET_NAME"],
+        "terraform_lock_table_name": os.environ["TERRAFORM_LOCK_TABLE_NAME"],
+    }
+    with open(sys.argv[1], "w", encoding="utf-8") as output:
+        json.dump(values, output, indent=2)
+        output.write("\n")
+    PYTHON
+    chmod 600 "$${backend_variables_file}"
+
+    terraform -chdir="$${terraform_root}" apply -auto-approve
 
     if [[ -z "$${TF_VAR_GoogleClientId:-}" ]]; then
       read -r -p "Google client ID: " TF_VAR_GoogleClientId

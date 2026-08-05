@@ -144,6 +144,15 @@ variable "terraform_lock_table_name" {
   default     = ""
 }
 
+variable "terraform_backend_configs" {
+  description = "Backend resource names keyed by DnsDomain. Normally maintained by the generated GitHub setup script."
+  type = map(object({
+    terraform_state_bucket_name = string
+    terraform_lock_table_name   = string
+  }))
+  default = {}
+}
+
 variable "hosted_zone_arns" {
   description = "Optional Route53 hosted zone ARNs Terraform may update."
   type        = list(string)
