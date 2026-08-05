@@ -41,6 +41,8 @@ data "aws_iam_policy_document" "deploy_storage" {
       "s3:DeleteBucket",
       "s3:DeleteBucketCors",
       "s3:DeleteBucketPolicy",
+      "s3:DeleteReplicationConfiguration",
+      "s3:DeleteBucketWebsite",
       "s3:GetAccelerateConfiguration",
       "s3:GetBucketAcl",
       "s3:GetBucketCors",
@@ -60,6 +62,8 @@ data "aws_iam_policy_document" "deploy_storage" {
       "s3:ListBucket",
       "s3:PutBucketAcl",
       "s3:PutBucketCors",
+      "s3:PutBucketObjectLockConfiguration",
+      "s3:PutBucketRequestPayment",
       "s3:PutBucketLogging",
       "s3:PutLifecycleConfiguration",
       "s3:PutBucketNotification",
@@ -68,8 +72,22 @@ data "aws_iam_policy_document" "deploy_storage" {
       "s3:PutBucketPublicAccessBlock",
       "s3:PutBucketTagging",
       "s3:PutBucketVersioning",
+      "s3:PutBucketWebsite",
+      "s3:PutEncryptionConfiguration",
+      "s3:PutReplicationConfiguration",
+      "s3:PutAccelerateConfiguration",
     ]
     resources = local.app_bucket_arns
+  }
+
+  statement {
+    sid    = "ManageExternalMediaBucketNotification"
+    effect = "Allow"
+    actions = [
+      "s3:GetBucketNotification",
+      "s3:PutBucketNotification",
+    ]
+    resources = local.external_notification_bucket_arns
   }
 
   statement {
@@ -148,6 +166,7 @@ data "aws_iam_policy_document" "deploy_compute" {
       "lambda:GetFunctionCodeSigningConfig",
       "lambda:GetFunctionUrlConfig",
       "lambda:GetPolicy",
+      "lambda:ListTags",
       "lambda:ListVersionsByFunction",
       "lambda:PublishVersion",
       "lambda:RemovePermission",
@@ -172,6 +191,7 @@ data "aws_iam_policy_document" "deploy_compute" {
     actions = [
       "logs:CreateLogGroup",
       "logs:DeleteLogGroup",
+      "logs:DeleteRetentionPolicy",
       "logs:ListTagsLogGroup",
       "logs:PutRetentionPolicy",
       "logs:TagLogGroup",
@@ -198,8 +218,11 @@ data "aws_iam_policy_document" "deploy_iam" {
     effect = "Allow"
     actions = [
       "iam:CreatePolicy",
+      "iam:CreatePolicyVersion",
       "iam:DeletePolicy",
+      "iam:DeletePolicyVersion",
       "iam:DeleteRole",
+      "iam:DeleteRolePermissionsBoundary",
       "iam:DeleteRolePolicy",
       "iam:DetachRolePolicy",
       "iam:GetPolicy",
@@ -209,13 +232,17 @@ data "aws_iam_policy_document" "deploy_iam" {
       "iam:ListAttachedRolePolicies",
       "iam:ListInstanceProfilesForRole",
       "iam:ListPolicyVersions",
+      "iam:ListPolicyTags",
       "iam:ListRolePolicies",
+      "iam:ListRoleTags",
       "iam:PutRolePolicy",
+      "iam:SetDefaultPolicyVersion",
       "iam:TagPolicy",
       "iam:TagRole",
       "iam:UntagPolicy",
       "iam:UntagRole",
       "iam:UpdateAssumeRolePolicy",
+      "iam:UpdateRole",
     ]
     resources = [
       "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_*",
@@ -303,9 +330,15 @@ data "aws_iam_policy_document" "deploy_iam" {
   }
 
   statement {
-    sid       = "ReadLegacyAndroidUserState"
-    effect    = "Allow"
-    actions   = ["iam:GetUser", "iam:GetUserPolicy", "iam:ListAccessKeys"]
+    sid    = "ReadLegacyAndroidUserState"
+    effect = "Allow"
+    actions = [
+      "iam:GetAccessKeyLastUsed",
+      "iam:GetUser",
+      "iam:GetUserPolicy",
+      "iam:ListAccessKeys",
+      "iam:ListUserTags",
+    ]
     resources = ["arn:${local.partition}:iam::${local.account_id}:user/system/android-MqGrafika-Baked-In-User"]
   }
 }
@@ -358,6 +391,9 @@ data "aws_iam_policy_document" "deploy_identity_edge" {
       "cognito-idp:DescribeUserPoolDomain",
       "cognito-idp:GetUserPoolMfaConfig",
       "cognito-idp:ListTagsForResource",
+      "cognito-idp:ListIdentityProviders",
+      "cognito-idp:ListUserPoolClients",
+      "cognito-idp:SetUserPoolMfaConfig",
       "cognito-idp:TagResource",
       "cognito-idp:UntagResource",
       "cognito-idp:UpdateIdentityProvider",
@@ -377,6 +413,7 @@ data "aws_iam_policy_document" "deploy_integration" {
       "sns:DeleteTopic",
       "sns:GetSubscriptionAttributes",
       "sns:GetTopicAttributes",
+      "sns:ListSubscriptionsByTopic",
       "sns:ListTagsForResource",
       "sns:SetTopicAttributes",
       "sns:Subscribe",
@@ -506,6 +543,10 @@ data "aws_iam_policy_document" "deploy_iot" {
       "iot:GetPolicy",
       "iot:ListAttachedPolicies",
       "iot:ListPolicyVersions",
+      "iot:ListTagsForResource",
+      "iot:ListTargetsForPolicy",
+      "iot:TagResource",
+      "iot:UntagResource",
       "iot:UpdateCertificate",
     ]
     resources = ["*"]

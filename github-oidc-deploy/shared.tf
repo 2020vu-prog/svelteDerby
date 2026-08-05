@@ -24,6 +24,10 @@ locals {
     "arn:${local.partition}:s3:::vod-lambda-src-*",
   ]
 
+  external_notification_bucket_arns = [
+    "arn:${local.partition}:s3:::vod-transcode-stack-*",
+  ]
+
   state_bucket_arns = var.terraform_state_bucket_name == "" ? [] : [
     "arn:${local.partition}:s3:::${var.terraform_state_bucket_name}",
   ]
