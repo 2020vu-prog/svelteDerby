@@ -12,6 +12,7 @@ resource "local_file" "github_environment_script" {
 
     readonly github_repo='${var.github_owner}/${var.github_repo}'
     readonly github_environment='${local.github_environment}'
+    readonly terraform_root='${abspath(path.module)}'
     backend_config_file="$${1:-$${TF_BACKEND_CONFIG_FILE:-}}"
     variables_file=""
     completed=false
@@ -33,6 +34,24 @@ resource "local_file" "github_environment_script" {
       read -r -p "Terraform backend config file: " backend_config_file
     fi
     [[ -f "$${backend_config_file}" ]] || { echo "Backend config file not found: $${backend_config_file}" >&2; exit 1; }
+
+    terraform_state_bucket_name="$(sed -nE 's/^[[:space:]]*bucket[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$${backend_config_file}" | tail -n 1)"
+    terraform_lock_table_name="$(sed -nE 's/^[[:space:]]*dynamodb_table[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$${backend_config_file}" | tail -n 1)"
+    [[ -n "$${terraform_state_bucket_name}" ]] || {
+      echo "Terraform backend config does not contain a quoted bucket value." >&2
+      exit 1
+    }
+
+    terraform_apply_args=(
+      -auto-approve
+      -var="terraform_state_bucket_name=$${terraform_state_bucket_name}"
+    )
+    if [[ -n "$${terraform_lock_table_name}" ]]; then
+      terraform_apply_args+=(
+        -var="terraform_lock_table_name=$${terraform_lock_table_name}"
+      )
+    fi
+    terraform -chdir="$${terraform_root}" apply "$${terraform_apply_args[@]}"
 
     if [[ -z "$${TF_VAR_GoogleClientId:-}" ]]; then
       read -r -p "Google client ID: " TF_VAR_GoogleClientId

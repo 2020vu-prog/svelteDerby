@@ -82,6 +82,11 @@ The repository's customized GitHub OIDC subject also includes its immutable
 owner ID (`265285298`) and repository ID (`1316526362`). These are configured by
 `github_owner_id` and `github_repo_id` in `github-oidc-deploy`.
 
+When run with the private application backend HCL file, the generated setup
+script extracts its S3 state bucket and optional DynamoDB lock table and reapplies
+`github-oidc-deploy` with those values. This keeps the deploy role's state access
+aligned with the backend secret without duplicating private configuration.
+
 Each GitHub Environment needs:
 
 - `AWS_DEPLOY_ROLE_ARN` environment variable: IAM role ARN trusted by GitHub OIDC.

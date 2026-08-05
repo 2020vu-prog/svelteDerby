@@ -52,10 +52,13 @@ github_setup_script="$(terraform output -raw github_environment_setup_script)"
 ```
 
 The script creates the GitHub Environment if needed and uploads all required
-variables. It prompts for the Google client ID and secret, uploads the backend
-configuration file as a multiline secret, removes its temporary dotenv file,
-and deletes itself after a successful run. You can provide the Google values
-non-interactively through local `TF_VAR_GoogleClientId` and
+variables. It reads the state bucket and optional `dynamodb_table` lock-table
+names from the private backend configuration file, reapplies this Terraform root
+to grant the deploy role access to those resources, and then uploads the backend
+configuration as a multiline secret. It prompts for the Google client ID and
+secret, removes its temporary dotenv file, and deletes itself after a successful
+run. You can provide the Google values non-interactively through local
+`TF_VAR_GoogleClientId` and
 `TF_VAR_GoogleClientSecret` environment variables. Their values are never
 passed through Terraform or stored in Terraform state.
 
@@ -120,8 +123,8 @@ The VOD CloudFormation stack is also read-only to the workflow because its
 template creates IAM roles. Change that stack through a separately reviewed,
 more narrowly scoped maintenance role.
 
-Tighten these values when known:
-
-- `terraform_state_bucket_name`
-- `terraform_lock_table_name`
+The generated setup script normally supplies `terraform_state_bucket_name` and
+`terraform_lock_table_name` automatically from the private backend HCL file.
+They remain available as direct Terraform inputs for callers that do not use the
+script.
 - `hosted_zone_arns`
