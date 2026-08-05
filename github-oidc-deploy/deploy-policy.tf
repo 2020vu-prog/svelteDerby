@@ -22,10 +22,13 @@ data "aws_iam_policy_document" "deploy_storage" {
     actions = [
       "s3:AbortMultipartUpload",
       "s3:DeleteObject",
+      "s3:DeleteObjectTagging",
       "s3:GetObject",
+      "s3:GetObjectTagging",
       "s3:ListMultipartUploadParts",
       "s3:PutObject",
       "s3:PutObjectAcl",
+      "s3:PutObjectTagging",
     ]
     resources = local.s3_object_arns
   }
