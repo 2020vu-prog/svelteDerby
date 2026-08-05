@@ -108,6 +108,10 @@ export const autoAnnounceResults = persistable(
 );
 export const mp3Playing = writable(0); 
 export const spotifyApiReady = writable(false); //only loads once globally
+export const spotifyLoggedIn = writable(
+    typeof localStorage !== "undefined" &&
+        Boolean(localStorage.getItem("spotify:refresh_token"))
+);
 export const mqttMapSubscribe = writable({}); //requests to subscribe.  keyed by topic
 export const mqttMapData = writable({}); //subscription data.  keyed by topic.
 export const mqttTimerSubscribe = writable(false);

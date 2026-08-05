@@ -13,7 +13,7 @@
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import { stringify as csvStringify} from 'csv-stringify/sync';
     import { parse as csvParse } from 'csv-parse/sync';
-    import Spotify from "./Spotify.svelte";
+    import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
 
 
     import Icon from "fa-svelte";
@@ -439,7 +439,7 @@
     {/if}
     {#if doPlay&& driverForm.walkupLink}
         {#key driverForm.walkupLink}
-            <Spotify autoPlay=false href={driverForm.walkupLink}/>
+            <SpotifyEmbedded autoPlay=false href={driverForm.walkupLink}/>
         {/key}
     {/if}
     {#if allowDriverJson}

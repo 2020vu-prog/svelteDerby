@@ -3,7 +3,7 @@
     import { onMount } from "svelte";
     import { onDestroy } from "svelte";
     import log from "loglevel";
-    import {spotifyPlay,isLoggedInSpotify} from './utils/spotify.js'
+    import {spotifyPlay} from './utils/spotify.js'
         export let href;
     //export let autoPlay=false;
     export const ppause = () => {

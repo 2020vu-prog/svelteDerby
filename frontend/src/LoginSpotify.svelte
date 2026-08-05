@@ -3,7 +3,8 @@
     import { onMount } from 'svelte';
     import SpinnerButton from "./SpinnerButton.svelte";
     import {logout, sleep} from './utils.js'
-    import {spotifyMe, getSpotifyPKCE, spotifyPlay,logoutSpotify,isLoggedInSpotify} from './utils/spotify.js'
+    import {spotifyMe, getSpotifyPKCE, spotifyPlay,logoutSpotify} from './utils/spotify.js'
+    import { spotifyLoggedIn } from './stores.js'
     export let spinning = false;
     async function loginPKCE() {
         spinning=true
@@ -27,7 +28,7 @@
 </script>
 <br/>
 <h4>Spotify</h4>
-{#if isLoggedInSpotify()}
+{#if $spotifyLoggedIn}
 <SpinnerButton on:click={logoutSpotify} >
 Logout spotify 
     

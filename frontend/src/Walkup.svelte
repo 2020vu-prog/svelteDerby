@@ -3,14 +3,13 @@
 
     import { tick } from 'svelte';
 
-    import { racePhaseMap, nextOnBlockKey, mp3Playing } from "./stores.js";
+    import { racePhaseMap, nextOnBlockKey, mp3Playing, spotifyLoggedIn } from "./stores.js";
     import { persistable } from "./storedb.js";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { sleep } from "./utils.js";
-    import Spotify from "./Spotify.svelte";
+    import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
     import SpotifyApi from "./SpotifyApi.svelte";
-    import {spotifyPlay as spotifyPlayApi,isLoggedInSpotify} from './utils/spotify.js'
     //let href='https://open.spotify.com/track/2DnJjbjNTV9Nd5NOa1KGba?si=07ae100fdc0e4f49'
     let requestedHref=''
     let playingHref=''
@@ -92,14 +91,14 @@
 {/if}
 {#if playingHref && $playWalkup}
     {#key playingHref}
-    {#if isLoggedInSpotify}
+    {#if $spotifyLoggedIn}
         <SpotifyApi 
             href={playingHref}
             bind:pplay={playSpotify}
             bind:ppause={pauseSpotify}
         />
     {:else}
-        <Spotify 
+        <SpotifyEmbedded
             autoPlay=false 
             href={playingHref}
             bind:pplay={playSpotify}
