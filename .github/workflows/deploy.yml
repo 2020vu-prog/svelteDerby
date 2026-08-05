@@ -45,6 +45,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: resolve_environment
     environment: ${{ needs.resolve_environment.outputs.github_environment }}
+    permissions:
+      contents: read
+      id-token: write
 
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
@@ -90,6 +93,27 @@ jobs:
         env:
           AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           AWS_REGION: ${{ vars.AWS_REGION }}
+
+      - name: Show GitHub OIDC claims
+        run: |
+          set -euo pipefail
+          token_response="$(curl --fail --silent --show-error \
+            --header "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")"
+          OIDC_TOKEN="$(jq --raw-output '.value' <<< "${token_response}")" node <<'NODE'
+          const claims = JSON.parse(
+            Buffer.from(process.env.OIDC_TOKEN.split('.')[1], 'base64url').toString()
+          );
+          const visibleClaims = {
+            aud: claims.aud,
+            sub: claims.sub,
+            repository: claims.repository,
+            ref: claims.ref,
+            environment: claims.environment,
+            workflow_ref: claims.workflow_ref,
+          };
+          console.log(JSON.stringify(visibleClaims, null, 2));
+          NODE
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # v4.2.1

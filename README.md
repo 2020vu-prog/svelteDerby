@@ -66,6 +66,18 @@ plus a GitHub Actions OIDC provider unless that account already has one.
 That Terraform root generates a temporary, DNS-domain-named shell script that
 uses GitHub CLI to configure the following values for the matching Environment.
 
+The `github-oidc-deploy` root derives the GitHub Environment automatically from
+`DnsDomain`. For test, these values are:
+
+```hcl
+DnsDomain         = "test.rr1.us"
+DeployEnvironment = "derbyTest"
+```
+
+The derived name is used in both the AWS OIDC trust policy and the generated
+script's `gh variable set --env`/`gh secret set --env` commands, keeping the role
+trust and uploaded GitHub configuration aligned.
+
 Each GitHub Environment needs:
 
 - `AWS_DEPLOY_ROLE_ARN` environment variable: IAM role ARN trusted by GitHub OIDC.

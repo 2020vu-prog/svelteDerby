@@ -4,7 +4,6 @@ github_repo        = "svelteDerby"
 # Apply this root separately in each environment's AWS account, using separate
 # Terraform state and credentials for that account. These values are for test;
 # use the matching GitHub environment and deploy environment in the other accounts.
-github_environment = "test.rr1.us"
 DeployEnvironment  = "derbyTest"
 DnsDomain          = "test.rr1.us"
 AcmArn             = "arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"

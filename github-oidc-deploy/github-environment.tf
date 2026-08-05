@@ -11,7 +11,7 @@ resource "local_file" "github_environment_script" {
     set -euo pipefail
 
     readonly github_repo='${var.github_owner}/${var.github_repo}'
-    readonly github_environment='${var.github_environment}'
+    readonly github_environment='${local.github_environment}'
     backend_config_file="$${1:-$${TF_BACKEND_CONFIG_FILE:-}}"
     variables_file=""
     completed=false

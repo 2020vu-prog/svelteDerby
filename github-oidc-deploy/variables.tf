@@ -26,17 +26,6 @@ variable "github_repo" {
   }
 }
 
-variable "github_environment" {
-  description = "GitHub Environment name allowed to assume this role."
-  type        = string
-  default     = "derbyTest"
-
-  validation {
-    condition     = can(regex("^[A-Za-z0-9_.-]+$", var.github_environment))
-    error_message = "github_environment may contain only letters, digits, underscores, dots, and hyphens."
-  }
-}
-
 variable "role_name" {
   description = "Name for the GitHub Actions deploy role."
   type        = string
