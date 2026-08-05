@@ -1,5 +1,6 @@
 variable "AwsRegion" {}
 variable "DeployEnvironment" {}
+variable "ManagedRolePermissionsBoundaryArn" {}
 terraform {
   required_providers {
     aws = {
@@ -43,5 +44,6 @@ module "derbyMainLambda" {
   s3VideoDone             = module.vodTranscode.MediaBucket
   AwsCognitoSettingsJson  = local.awsCognitoSettingsJson
   GitBreadcrumb           = aws_ssm_parameter.git_breadcrumb.value
+  ManagedRolePermissionsBoundaryArn = var.ManagedRolePermissionsBoundaryArn
 
 }

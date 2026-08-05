@@ -45,23 +45,48 @@ npm run build
 ## GitHub Deploy
 
 The `Deploy` GitHub Actions workflow deploys the backend first, then builds and
-pushes the frontend using the same local scripts used from this repository.
+pushes the frontend using the same local scripts used from this repository. It
+selects its deployment configuration from the current branch and refuses every
+branch that is not explicitly mapped in the workflow.
 It uses GitHub OIDC to assume an AWS role; do not add long-lived AWS access keys
 to GitHub secrets.
 
-Configure a GitHub environment, for example `derbyTest`, with:
+Configure a GitHub Environment for each mapped deployment branch:
+
+```text
+test.rr1.us  -> test.rr1.us  -> derbyTest
+stage.rr1.us -> stage.rr1.us -> derbyStage
+go.rr1.us    -> go.rr1.us    -> go-derby-prod
+```
+
+Each deployment environment uses a separate AWS account. Run the
+`github-oidc-deploy` Terraform root independently in each account with separate
+Terraform state. Each account needs its own deploy role and permissions boundary,
+plus a GitHub Actions OIDC provider unless that account already has one.
+That Terraform root generates a temporary, DNS-domain-named shell script that
+uses GitHub CLI to configure the following values for the matching Environment.
+
+Each GitHub Environment needs:
 
 - `AWS_DEPLOY_ROLE_ARN` environment variable: IAM role ARN trusted by GitHub OIDC.
-- `TF_BACKEND_CONFIG_FILE` secret: Terraform backend config file contents.
-- `GOOGLE_CLIENT_ID` secret.
-- `GOOGLE_CLIENT_SECRET` secret.
+- `AWS_REGION` environment variable.
+- `TF_VAR_DeployEnvironment` environment variable.
+- `TF_VAR_ManagedRolePermissionsBoundaryArn` environment variable: the IAM
+  permissions-boundary ARN emitted by `github-oidc-deploy`.
+- `TF_BACKEND_CONFIG_FILE_CONTENTS` secret: Terraform backend config file contents.
+- `TF_VAR_GoogleClientId` secret.
+- `TF_VAR_GoogleClientSecret` secret.
 
-Optional GitHub environment variables:
+Required GitHub environment variables:
 
-- `TF_VAR_ACM_ARN`
-- `TF_VAR_DNS_DOMAIN`
-- `TF_VAR_DNS_CLOUDFRONT_HOST_ALIAS`
-- `TF_VAR_TIMER_API_GATEWAY_DOMAIN`
+- `TF_VAR_AcmArn`
+- `TF_VAR_DnsDomain`
+- `TF_VAR_DnsCloudfrontHostAlias`
+- `TF_VAR_TimerApiGatewayDomain`
+
+Protect each GitHub Environment with required reviewers and an exact deployment
+branch rule. The workflow checks out and deploys the selected workflow revision,
+so the environment protection is the approval boundary for AWS access.
 
 ## Backend
 

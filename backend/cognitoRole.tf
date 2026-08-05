@@ -8,6 +8,7 @@ locals {
 // Condition added to placate inane error.  this resource s/b obsolete. Apr 2024
 resource "aws_iam_role" "authenticated" {
   name_prefix = "cognito_authenticated_"
+  permissions_boundary = var.ManagedRolePermissionsBoundaryArn
 
   assume_role_policy = <<EOF
 {
