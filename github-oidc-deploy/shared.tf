@@ -34,4 +34,8 @@ locals {
   terraform_lock_table_arns = var.terraform_lock_table_name == "" ? [] : [
     "arn:${local.partition}:dynamodb:${var.AwsRegion}:${local.account_id}:table/${var.terraform_lock_table_name}",
   ]
+
+  hosted_zone_arns = length(var.hosted_zone_arns) > 0 ? var.hosted_zone_arns : [
+    "arn:${local.partition}:route53:::hostedzone/*",
+  ]
 }

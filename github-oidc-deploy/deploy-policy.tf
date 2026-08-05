@@ -52,6 +52,7 @@ data "aws_iam_policy_document" "deploy_storage" {
       "s3:GetBucketTagging",
       "s3:GetBucketVersioning",
       "s3:GetBucketWebsite",
+      "s3:GetReplicationConfiguration",
       "s3:ListBucket",
       "s3:PutBucketAcl",
       "s3:PutBucketCors",
@@ -167,7 +168,6 @@ data "aws_iam_policy_document" "deploy_compute" {
     actions = [
       "logs:CreateLogGroup",
       "logs:DeleteLogGroup",
-      "logs:DescribeLogGroups",
       "logs:ListTagsLogGroup",
       "logs:PutRetentionPolicy",
       "logs:TagLogGroup",
@@ -178,6 +178,13 @@ data "aws_iam_policy_document" "deploy_compute" {
       "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/dynamoMain*",
       "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/sqsCcaMain*",
     ]
+  }
+
+  statement {
+    sid       = "FindLambdaLogGroups"
+    effect    = "Allow"
+    actions   = ["logs:DescribeLogGroups"]
+    resources = ["*"]
   }
 }
 
@@ -345,6 +352,7 @@ data "aws_iam_policy_document" "deploy_identity_edge" {
       "cognito-idp:DescribeUserPool",
       "cognito-idp:DescribeUserPoolClient",
       "cognito-idp:DescribeUserPoolDomain",
+      "cognito-idp:GetUserPoolMfaConfig",
       "cognito-idp:ListTagsForResource",
       "cognito-idp:TagResource",
       "cognito-idp:UntagResource",
@@ -363,6 +371,7 @@ data "aws_iam_policy_document" "deploy_integration" {
     actions = [
       "sns:CreateTopic",
       "sns:DeleteTopic",
+      "sns:GetSubscriptionAttributes",
       "sns:GetTopicAttributes",
       "sns:ListTagsForResource",
       "sns:SetTopicAttributes",
@@ -416,6 +425,13 @@ data "aws_iam_policy_document" "deploy_integration" {
       "arn:${local.partition}:ssm:${var.AwsRegion}:${local.account_id}:parameter/iot/*",
     ]
   }
+
+  statement {
+    sid       = "FindSsmParameters"
+    effect    = "Allow"
+    actions   = ["ssm:DescribeParameters"]
+    resources = ["*"]
+  }
 }
 
 data "aws_iam_policy_document" "deploy_dns" {
@@ -429,7 +445,7 @@ data "aws_iam_policy_document" "deploy_dns" {
       "route53:ListResourceRecordSets",
       "route53:ListTagsForResource",
     ]
-    resources = concat(var.hosted_zone_arns, ["arn:${local.partition}:route53:::change/*"])
+    resources = concat(local.hosted_zone_arns, ["arn:${local.partition}:route53:::change/*"])
   }
 
   statement {
@@ -479,6 +495,7 @@ data "aws_iam_policy_document" "deploy_iot" {
       "iot:CreatePolicy",
       "iot:DeleteCertificate",
       "iot:DeletePolicy",
+      "iot:DescribeCertificate",
       "iot:DescribeEndpoint",
       "iot:DescribePolicy",
       "iot:DetachPolicy",
