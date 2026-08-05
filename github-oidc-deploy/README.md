@@ -33,6 +33,15 @@ GitHub CLI setup script both target the `test.rr1.us` GitHub Environment.
 `DeployEnvironment` remains the separate application environment name, such as
 `derbyTest`.
 
+This repository customizes its GitHub OIDC subject with immutable owner and
+repository IDs. Keep `github_owner_id` and `github_repo_id` aligned with the
+values in the decoded GitHub token. For this repository, the resulting test
+subject is:
+
+```text
+repo:2020vu-prog@265285298/svelteDerby@1316526362:environment:test.rr1.us
+```
+
 The apply generates a temporary executable whose filename includes `DnsDomain`,
 for example `.tmp/configure-github-test.rr1.us.sh`. Run it with the matching
 application Terraform backend configuration file:

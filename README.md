@@ -78,6 +78,10 @@ The derived name is used in both the AWS OIDC trust policy and the generated
 script's `gh variable set --env`/`gh secret set --env` commands, keeping the role
 trust and uploaded GitHub configuration aligned.
 
+The repository's customized GitHub OIDC subject also includes its immutable
+owner ID (`265285298`) and repository ID (`1316526362`). These are configured by
+`github_owner_id` and `github_repo_id` in `github-oidc-deploy`.
+
 Each GitHub Environment needs:
 
 - `AWS_DEPLOY_ROLE_ARN` environment variable: IAM role ARN trusted by GitHub OIDC.

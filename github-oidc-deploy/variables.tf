@@ -15,6 +15,17 @@ variable "github_owner" {
   }
 }
 
+variable "github_owner_id" {
+  description = "Immutable GitHub organization or user ID included in this repository's customized OIDC subject."
+  type        = string
+  default     = "265285298"
+
+  validation {
+    condition     = can(regex("^[0-9]+$", var.github_owner_id))
+    error_message = "github_owner_id must contain only digits."
+  }
+}
+
 variable "github_repo" {
   description = "GitHub repository name."
   type        = string
@@ -23,6 +34,17 @@ variable "github_repo" {
   validation {
     condition     = can(regex("^[A-Za-z0-9_.-]+$", var.github_repo))
     error_message = "github_repo may contain only letters, digits, underscores, dots, and hyphens."
+  }
+}
+
+variable "github_repo_id" {
+  description = "Immutable GitHub repository ID included in this repository's customized OIDC subject."
+  type        = string
+  default     = "1316526362"
+
+  validation {
+    condition     = can(regex("^[0-9]+$", var.github_repo_id))
+    error_message = "github_repo_id must contain only digits."
   }
 }
 

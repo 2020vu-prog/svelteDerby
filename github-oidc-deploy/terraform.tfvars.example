@@ -1,6 +1,8 @@
 AwsRegion          = "us-east-2"
 github_owner       = "2020vu-prog"
+github_owner_id    = "265285298"
 github_repo        = "svelteDerby"
+github_repo_id     = "1316526362"
 # Apply this root separately in each environment's AWS account, using separate
 # Terraform state and credentials for that account. These values are for test;
 # use the matching GitHub environment and deploy environment in the other accounts.
