@@ -58,6 +58,7 @@ export async function  getSpotifyPKCE(){
     code_challenge_method: 'S256',
     code_challenge: codeVerifierB64,
     redirect_uri: redirectUri,
+    show_dialog: true,
   }
 
   authUrl.search = new URLSearchParams(params).toString();
@@ -193,7 +194,13 @@ export async function spotifyMe(volume) {
   url.search = new URLSearchParams(params).toString();
 
   const response = await fetch401retry(url, payload);
-  console.log(`swiddle spotifyMe response:`, response)
+  if (response.status === 403) {
+    spotifyPremiumRequired.set(true);
+    return {};
+  }
+  if (!response.ok) {
+    throw new Error(`Spotify profile lookup failed: ${response.status}`);
+  }
   const body = await response.json();
   return body;
       
