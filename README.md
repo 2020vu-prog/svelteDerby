@@ -48,6 +48,9 @@ The `Deploy` GitHub Actions workflow deploys the backend first, then builds and
 pushes the frontend using the same local scripts used from this repository. It
 selects its deployment configuration from the current branch and refuses every
 branch that is not explicitly mapped in the workflow.
+Manual runs default to `dry-run`, which tests and plans the backend and builds
+the frontend without changing AWS. Select `live` in the workflow dispatch form
+to apply the saved Terraform plan and upload the built frontend.
 It uses GitHub OIDC to assume an AWS role; do not add long-lived AWS access keys
 to GitHub secrets.
 

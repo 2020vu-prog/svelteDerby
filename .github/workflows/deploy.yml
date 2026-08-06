@@ -1,14 +1,23 @@
-name: Deployment dry run
+name: Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      deployment_mode:
+        description: Plan only, or apply the plan and deploy the frontend
+        required: true
+        default: dry-run
+        type: choice
+        options:
+          - dry-run
+          - live
 
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: deployment-dry-run-${{ github.ref_name }}
+  group: deploy-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -41,7 +50,7 @@ jobs:
           esac
 
   deploy:
-    name: Plan backend and build frontend
+    name: ${{ inputs.deployment_mode == 'live' && 'Deploy backend and frontend' || 'Plan backend and build frontend' }}
     runs-on: ubuntu-latest
     needs: resolve_environment
     environment: ${{ needs.resolve_environment.outputs.github_environment }}
@@ -133,8 +142,18 @@ jobs:
           terraform init -reconfigure -backend-config="${TF_BACKEND_CONFIG}"
           terraform plan -out="${RUNNER_TEMP}/backend.tfplan"
 
+      - name: Apply planned backend
+        if: ${{ inputs.deployment_mode == 'live' }}
+        working-directory: backend
+        run: terraform apply -auto-approve "${RUNNER_TEMP}/backend.tfplan"
+
       - name: Build frontend
         working-directory: frontend
         run: |
           npm ci
           npm run build
+
+      - name: Deploy frontend
+        if: ${{ inputs.deployment_mode == 'live' }}
+        working-directory: frontend
+        run: ./s3Push.sh
