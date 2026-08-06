@@ -86,12 +86,16 @@ export async function getSpotifyAccessToken (code ) {
   const body = await fetch(url, payload);
   const response = await body.json();
 
-  if (response&&response.access_token){
+  if (!body.ok || !response?.access_token) {
+    throw new Error(
+      `Spotify token exchange failed: ${response?.error_description || response?.error || body.status}`
+    );
+  }
+
     localStorage.setItem('spotify:access_token', response.access_token);
     localStorage.setItem('spotify:refresh_token', response.refresh_token);
     spotifyLoggedIn.set(Boolean(response.refresh_token));
     window.location.replace("/"); // clear Spotify callback parameters without retaining them in history
-  }
 }
 export function logoutSpotify(){
   localStorage.removeItem('spotify:access_token' );
@@ -102,19 +106,14 @@ export function logoutSpotify(){
 }
     export async function urlParseSpotify() {
         const u = new URL(document.URL)
-        console.log(`swiddle qu:`, u)
-        for (const p of u.searchParams) {
-            console.log(`swiddle sp:`, p)
-        }
 
         if(u.searchParams.get("state") === "spotify_auth_callback"){
             const rtoken=u.searchParams.get("code") ;
+            // Spotify authorization codes are single-use. Remove callback
+            // parameters synchronously so remounts and BFCache restoration
+            // cannot submit the same code again while this request is active.
+            window.history.replaceState({}, document.title, `${u.pathname}${u.hash}`);
             await getSpotifyAccessToken(rtoken);
-
-        }
-        else{
-            console.log(`swiddle bypass:`)
-
         }
     }
 
