@@ -8,6 +8,18 @@ import {
 const SS="cc79096dfc214db2bf5f51556ba6ef31"
 const SID="36410c1155b640479eb8fb1c386ada8d"
 const clientId = SID;
+export const spotifyPremiumRequiredMessage =
+  "Spotify Premium required: walk-up playback cannot control Spotify for this logged-in account. Confirm that the account has Spotify Premium and is authorized for this Spotify developer app.";
+
+function showSpotifyPremiumRequired() {
+  spotifyPremiumRequired.set(true);
+  pushMessage({
+    key: "spotify-premium-required",
+    text: spotifyPremiumRequiredMessage,
+    type: "error",
+  });
+}
+
 const generateRandomString = (length) => {
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const values = crypto.getRandomValues(new Uint8Array(length));
@@ -101,7 +113,7 @@ export async function getSpotifyAccessToken (code ) {
     localStorage.setItem('spotify:refresh_token', response.refresh_token);
     spotifyPremiumRequired.set(false);
     spotifyLoggedIn.set(Boolean(response.refresh_token));
-    window.location.replace("/"); // clear Spotify callback parameters without retaining them in history
+    await spotifyMe();
 }
 export function logoutSpotify(){
   localStorage.removeItem('spotify:access_token' );
@@ -155,7 +167,7 @@ export async function spotifyActiveDeviceId() {
     body = await spotifyListDevices();
   } catch (error) {
     if (error.status === 403) {
-      spotifyPremiumRequired.set(true);
+      showSpotifyPremiumRequired();
     } else {
       pushMessage({
         key: "spotify-device-lookup-error",
@@ -195,7 +207,7 @@ export async function spotifyMe(volume) {
 
   const response = await fetch401retry(url, payload);
   if (response.status === 403) {
-    spotifyPremiumRequired.set(true);
+    showSpotifyPremiumRequired();
     return {};
   }
   if (!response.ok) {
