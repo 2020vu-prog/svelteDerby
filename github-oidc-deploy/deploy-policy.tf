@@ -182,8 +182,11 @@ data "aws_iam_policy_document" "deploy_compute" {
     ]
     resources = [
       "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:derbyMain",
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:derbyMain:*",
       "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:dynamoMain",
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:dynamoMain:*",
       "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:sqsCcaMain",
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:sqsCcaMain:*",
       "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:event-source-mapping:*",
     ]
   }
