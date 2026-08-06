@@ -112,6 +112,7 @@ export const spotifyLoggedIn = writable(
     typeof localStorage !== "undefined" &&
         Boolean(localStorage.getItem("spotify:refresh_token"))
 );
+export const spotifyPremiumRequired = writable(false);
 export const mqttMapSubscribe = writable({}); //requests to subscribe.  keyed by topic
 export const mqttMapData = writable({}); //subscription data.  keyed by topic.
 export const mqttTimerSubscribe = writable(false);

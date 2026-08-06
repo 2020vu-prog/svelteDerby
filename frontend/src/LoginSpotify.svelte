@@ -4,7 +4,7 @@
     import SpinnerButton from "./SpinnerButton.svelte";
     import {logout, sleep} from './utils.js'
     import {spotifyMe, getSpotifyPKCE,logoutSpotify} from './utils/spotify.js'
-    import { spotifyLoggedIn } from './stores.js'
+    import { spotifyLoggedIn, spotifyPremiumRequired } from './stores.js'
     export let spinning = false;
     async function loginPKCE() {
         spinning=true
@@ -20,9 +20,26 @@
         }
     }
 </script>
+<style>
+    .premiumRequired {
+        background: #fff0f0;
+        border: 4px solid #d00000;
+        color: #9b0000;
+        font-size: 1.25rem;
+        font-weight: bold;
+        padding: 1.25rem;
+    }
+</style>
 <br/>
 <h4>Spotify</h4>
 {#if $spotifyLoggedIn}
+{#if $spotifyPremiumRequired}
+<p class="premiumRequired">
+    Spotify Premium required: walk-up playback cannot control Spotify for this
+    logged-in account. Confirm that the account has Spotify Premium and is
+    authorized for this Spotify developer app.
+</p>
+{/if}
 <SpinnerButton on:click={logoutSpotify} >
 Logout spotify 
     

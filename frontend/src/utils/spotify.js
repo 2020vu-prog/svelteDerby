@@ -1,5 +1,9 @@
 import log from "loglevel";
-import { pushMessage, spotifyLoggedIn } from "../stores.js";
+import {
+  pushMessage,
+  spotifyLoggedIn,
+  spotifyPremiumRequired,
+} from "../stores.js";
 
 const SS="cc79096dfc214db2bf5f51556ba6ef31"
 const SID="36410c1155b640479eb8fb1c386ada8d"
@@ -94,6 +98,7 @@ export async function getSpotifyAccessToken (code ) {
 
     localStorage.setItem('spotify:access_token', response.access_token);
     localStorage.setItem('spotify:refresh_token', response.refresh_token);
+    spotifyPremiumRequired.set(false);
     spotifyLoggedIn.set(Boolean(response.refresh_token));
     window.location.replace("/"); // clear Spotify callback parameters without retaining them in history
 }
@@ -102,6 +107,7 @@ export function logoutSpotify(){
   localStorage.removeItem('spotify:refresh_token');
   localStorage.removeItem('spotify:code_verifier');
   localStorage.removeItem('spotify:redirect');
+  spotifyPremiumRequired.set(false);
   spotifyLoggedIn.set(false);
 }
     export async function urlParseSpotify() {
@@ -129,8 +135,14 @@ export async function spotifyListDevices() {
 
   const response = await fetch401retry(url, payload);
   if (!response.ok) {
-    throw new Error(`Spotify device lookup failed: ${response.status}`);
+    const body = await response.json().catch(() => ({}));
+    const error = new Error(
+      body?.error?.message || `Spotify device lookup failed: ${response.status}`
+    );
+    error.status = response.status;
+    throw error;
   }
+  spotifyPremiumRequired.set(false);
   const body = await response.json();
   return body;
       
@@ -141,11 +153,15 @@ export async function spotifyActiveDeviceId() {
   try {
     body = await spotifyListDevices();
   } catch (error) {
-    pushMessage({
-      key: "spotify-device-lookup-error",
-      text: error.message || "Spotify device lookup failed.",
-      type: "error",
-    });
+    if (error.status === 403) {
+      spotifyPremiumRequired.set(true);
+    } else {
+      pushMessage({
+        key: "spotify-device-lookup-error",
+        text: error.message || "Spotify device lookup failed.",
+        type: "error",
+      });
+    }
     return null;
   }
   const activeDevice = body?.devices?.find(
