@@ -180,7 +180,6 @@ export async function spotifyActiveDeviceId() {
   return activeDevice.id;
 }
 export async function spotifyMe(volume) {
-  spotifyListDevices();
   const url = new URL("https://api.spotify.com/v1/me");
   const payload = {
     method: 'GET',
