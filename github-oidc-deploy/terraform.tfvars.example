@@ -1,0 +1,34 @@
+AwsRegion          = "us-east-2"
+github_owner       = "2020vu-prog"
+github_owner_id    = "265285298"
+github_repo        = "svelteDerby"
+github_repo_id     = "1316526362"
+# Apply this root separately in each environment's AWS account, using separate
+# Terraform state and credentials for that account. These values are for test;
+# use the matching GitHub environment and deploy environment in the other accounts.
+DeployEnvironment  = "derbyTest"
+DnsDomain          = "test.rr1.us"
+AcmArn             = "arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"
+role_name          = "svelte-derby-github-deploy"
+managed_role_permissions_boundary_name = "svelte-derby-managed-role-boundary"
+
+# Values passed to the application Terraform through GitHub Environment variables.
+DnsCloudfrontHostAlias = "cf"
+TimerApiGatewayDomain  = "cfxgbxl7d9.execute-api.us-east-2.amazonaws.com"
+
+# Create the boundary in every environment account. Only use an existing boundary
+# when it belongs to the same AWS account as this deployment role.
+# create_managed_role_permissions_boundary       = false
+# existing_managed_role_permissions_boundary_arn = "arn:aws:iam::123456789012:policy/svelte-derby-managed-role-boundary"
+
+# Every environment account needs an OIDC provider. If this account already has
+# a GitHub Actions OIDC provider, the default reuses it and derives its ARN from
+# the current AWS account automatically. Otherwise, opt in to creating it.
+# create_oidc_provider = true
+
+# Optional but recommended: scope Terraform state/lock access.
+# terraform_state_bucket_name = "my-terraform-state-bucket"
+# terraform_lock_table_name   = "my-terraform-lock-table"
+
+# Optional: scope Route53 changes to known hosted zones.
+# hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z1234567890ABC"]

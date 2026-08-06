@@ -6,6 +6,7 @@ variable TimerDbArn {}
 variable TimerProtobufDbArn {}
 variable ElapsedTempDbArn {}
 variable AwsRegion {}
+variable ManagedRolePermissionsBoundaryArn {}
 variable   CcaQueueId  {}
 variable   CcaQueueArn  {}
 variable     ChartS3BucketName  {}
@@ -138,6 +139,7 @@ data "aws_iam_policy_document" "policy" {
 
 resource "aws_iam_role" "iam_for_lambda" {
   name_prefix               = "iam_for_lambda_"
+  permissions_boundary      = var.ManagedRolePermissionsBoundaryArn
   assume_role_policy = data.aws_iam_policy_document.policy.json
   tags=local.tags
 }

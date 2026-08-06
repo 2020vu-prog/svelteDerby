@@ -10,7 +10,7 @@
     import RawTimerLane from "./RawTimerLane.svelte";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
-    import CalcFinish from "./CalcFinish.js";
+    import CalcFinish from "./calcFinish.js";
 
     export let params = {};
     const entityFactory = new EntityFactory({});

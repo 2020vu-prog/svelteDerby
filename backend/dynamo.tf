@@ -163,6 +163,7 @@ module "derbyDynamoLambda" {
   AwsRegion         = var.AwsRegion
   S3DistBucket      = aws_s3_bucket.dstBucket.id
   S3DistBucketArn   = aws_s3_bucket.dstBucket.arn
+  ManagedRolePermissionsBoundaryArn = var.ManagedRolePermissionsBoundaryArn
 
 }
 resource "aws_lambda_event_source_mapping" "dynamo_stream_link" {

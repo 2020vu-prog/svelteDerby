@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 TF_VAR_AppShortName?=Test.RR1
 TF_VAR_DeployEnvironment?=derbyTest
 .PHONY: install env environment shared

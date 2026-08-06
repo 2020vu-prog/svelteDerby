@@ -6,6 +6,7 @@ variable S3DistBucket {}
 variable S3DistBucketArn {}
 variable AwsRegion {}
 variable CcaQueueArn {}
+variable ManagedRolePermissionsBoundaryArn {}
 
 locals {
   tags = {
@@ -55,6 +56,7 @@ data "aws_iam_policy_document" "policy" {
 
 resource "aws_iam_role" "iam_for_lambda_cca" {
   name_prefix        = "iam_for_lambda_cca_"
+  permissions_boundary = var.ManagedRolePermissionsBoundaryArn
   assume_role_policy = data.aws_iam_policy_document.policy.json
   tags               = local.tags
 }

@@ -8,6 +8,7 @@ module "sqsLambda" {
   S3DistBucket      = aws_s3_bucket.dstBucket.id
   S3DistBucketArn   = aws_s3_bucket.dstBucket.arn
   CcaQueueArn       = aws_sqs_queue.cacheAlignmentQueue.arn
+  ManagedRolePermissionsBoundaryArn = var.ManagedRolePermissionsBoundaryArn
 
 }
 resource "aws_lambda_event_source_mapping" "sqs_lambda_link" {
@@ -95,4 +96,3 @@ resource "aws_sqs_queue_policy" "results_updates_queue_policy" {
 }
 POLICY
 }
-
