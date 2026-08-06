@@ -306,7 +306,11 @@
         setEnvTitle()
         const orgIz=$raceConfig.orgIz
         await setIdTokenFromCognitoCallback();
-        await urlParseSpotify();
+        try {
+            await urlParseSpotify();
+        } catch (error) {
+            log.error("Spotify callback failed", error);
+        }
         await refreshOrgRoles(orgIz);
         let msg='Using public access'
         if ($userEmail){

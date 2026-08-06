@@ -42,11 +42,8 @@ export async function  getSpotifyPKCE(){
   // generated in the previous step
   const codeVerifierRaw  = generateRandomString(64);
 
-  console.log('spotify codeVerifierRaw:',codeVerifierRaw)
   const codeVerifierSha256 = await ssha256(codeVerifierRaw);
   const codeVerifierB64 = base64encode(codeVerifierSha256);
-  console.log('spotify codeVerifierSha256:',codeVerifierSha256)
-  console.log('spotify codeVerifierB64:',codeVerifierB64)
   window.localStorage.setItem('spotify:code_verifier', codeVerifierRaw);
 
   const params =  {
@@ -66,8 +63,6 @@ export async function  getSpotifyPKCE(){
 export async function getSpotifyAccessToken (code ) {
 
   
-    console.log(`swiddle getSpotifyAccessToken:`, code)
-    
   // stored in the previous step
   const codeVerifier = localStorage.getItem('spotify:code_verifier');
   const redirectUri = localStorage.getItem('spotify:redirect');
@@ -91,15 +86,11 @@ export async function getSpotifyAccessToken (code ) {
   const body = await fetch(url, payload);
   const response = await body.json();
 
-    console.log(`swiddle getSpotifyAccessToken response:`, response)
   if (response&&response.access_token){
     localStorage.setItem('spotify:access_token', response.access_token);
     localStorage.setItem('spotify:refresh_token', response.refresh_token);
     spotifyLoggedIn.set(Boolean(response.refresh_token));
-    console.log(`swiddle getSpotifyAccessToken rediect to root!`)
-
-    await spotifyVolume(10);
-    window.location.href = "/"; // clear search param noise from spotify callback!
+    window.location.replace("/"); // clear Spotify callback parameters without retaining them in history
   }
 }
 export function logoutSpotify(){
