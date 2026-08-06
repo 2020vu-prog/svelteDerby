@@ -3,7 +3,7 @@
     import { onMount } from 'svelte';
     import SpinnerButton from "./SpinnerButton.svelte";
     import {logout, sleep} from './utils.js'
-    import {spotifyMe, getSpotifyPKCE, spotifyPlay,logoutSpotify} from './utils/spotify.js'
+    import {spotifyMe, getSpotifyPKCE,logoutSpotify} from './utils/spotify.js'
     import { spotifyLoggedIn } from './stores.js'
     export let spinning = false;
     async function loginPKCE() {
@@ -11,12 +11,6 @@
         await sleep(300)
         await getSpotifyPKCE();
 
-    }
-    async function clickedPlay() {
-        await spotifyPlay('',true,false);
-    }
-    async function clickedPause() {
-        await spotifyPlay('',false,false);
     }
     async function whoami() {
         const response=await spotifyMe();

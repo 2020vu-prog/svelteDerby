@@ -3,16 +3,28 @@
     import { onMount } from "svelte";
     import { onDestroy } from "svelte";
     import log from "loglevel";
-    import {spotifyPlay} from './utils/spotify.js'
-        export let href;
+    import {spotifyActiveDeviceId, spotifyPlay} from './utils/spotify.js'
+    export let href;
+    let deviceId;
+    let deviceLookup;
+
+    const getWalkupDevice = async () => {
+        if (deviceId) return deviceId;
+        if (!deviceLookup) deviceLookup = spotifyActiveDeviceId();
+        deviceId = await deviceLookup;
+        return deviceId;
+    };
+
     //export let autoPlay=false;
-    export const ppause = () => {
-        spotifyPlay(href,false,false)
+    export const ppause = async () => {
+        const targetDeviceId = await getWalkupDevice();
+        if (targetDeviceId) await spotifyPlay(href,false,false,targetDeviceId)
         console.log("SpotifyAPI pause child");
     }
 
-    export const pplay = () => {
-        spotifyPlay(href,true,false)
+    export const pplay = async () => {
+        const targetDeviceId = await getWalkupDevice();
+        if (targetDeviceId) await spotifyPlay(href,true,false,targetDeviceId)
         console.log("SpotifyAPI play child");
     }
     $:{
@@ -21,13 +33,23 @@
 
 	onMount(() => {
         			console.log('SpotifyAPI mount');
-        spotifyPlay(href,true,false)
-		const interval = setTimeout(() => {
-            spotifyPlay(href,false,false)
-			console.log('SpotifyAPI beep');
-		}, 10000);
+		let interval;
+		let destroyed = false;
 
-		return () => clearTimeout(interval);
+		(async () => {
+			const targetDeviceId = await getWalkupDevice();
+			if (!targetDeviceId || destroyed) return;
+			await spotifyPlay(href,true,false,targetDeviceId);
+			interval = setTimeout(async () => {
+                await spotifyPlay(href,false,false,targetDeviceId)
+				console.log('SpotifyAPI beep');
+			}, 10000);
+		})();
+
+		return () => {
+			destroyed = true;
+			if (interval) clearTimeout(interval);
+		};
 	});
 </script>
 SPOTIFY API

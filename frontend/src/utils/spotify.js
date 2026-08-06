@@ -128,10 +128,40 @@ export async function spotifyListDevices() {
   }
 
   const response = await fetch401retry(url, payload);
-  console.log(`swiddle spotifyListDevices response:`, response)
+  if (!response.ok) {
+    throw new Error(`Spotify device lookup failed: ${response.status}`);
+  }
   const body = await response.json();
   return body;
       
+}
+
+export async function spotifyActiveDeviceId() {
+  let body;
+  try {
+    body = await spotifyListDevices();
+  } catch (error) {
+    pushMessage({
+      key: "spotify-device-lookup-error",
+      text: error.message || "Spotify device lookup failed.",
+      type: "error",
+    });
+    return null;
+  }
+  const activeDevice = body?.devices?.find(
+    (device) => device.is_active && !device.is_restricted
+  );
+
+  if (!activeDevice) {
+    pushMessage({
+      key: "spotify-no-active-device",
+      text: "Spotify has no active playback device. Start playback on the intended device, then try the walk-up again.",
+      type: "error",
+    });
+    return null;
+  }
+
+  return activeDevice.id;
 }
 export async function spotifyMe(volume) {
   spotifyListDevices();
@@ -181,8 +211,7 @@ function sanitizeTrack(track){
   }
   return track;
 }
-export async function spotifyPlay(track,doPlay,recurse) {
-  const myLife='4ZoBC5MhSEzuknIgAkBaoT'
+export async function spotifyPlay(track,doPlay,recurse,deviceId) {
   log.debug(`spotifyPlay ${track}`)
   track=sanitizeTrack(track);
   log.debug(`spotifyPlay [sani] ${track}`)
@@ -191,14 +220,20 @@ export async function spotifyPlay(track,doPlay,recurse) {
     doPlay=false;
   }
 
+  if (!deviceId) {
+    pushMessage({
+      key: "spotify-no-active-device",
+      text: "Spotify has no active playback device. Start playback on the intended device, then try the walk-up again.",
+      type: "error",
+    });
+    return;
+  }
+
   var url = new URL("https://api.spotify.com/v1/me/player/play");
   if (!doPlay){
     url = new URL("https://api.spotify.com/v1/me/player/pause");
-
   }
-  if (!doPlay){
-    return;  //Rolls DU30b Mic-Preamp/Audio Ducker
-  }
+  url.searchParams.set("device_id", deviceId);
   const payload = {
     method: 'PUT',
     headers: {
