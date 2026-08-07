@@ -1,2 +1,2 @@
 lambda.zip: *.py *.json
-	zip -r lambda.zip convert.py job.json
+	../../../scripts/createDeterministicZip.sh lambda.zip . convert.py job.json

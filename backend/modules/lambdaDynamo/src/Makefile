@@ -1,6 +1,5 @@
-package.zip: *.js package.json node_modules
-	npm pack
+package.zip: *.js package.json package-lock.json node_modules
+	../../../scripts/buildNodeLambdaZip.sh .
 
-node_modules: package.json
-	npm i
-
+node_modules: package.json package-lock.json
+	npm ci
