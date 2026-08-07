@@ -17,7 +17,7 @@ trap 'rm -rf "${work_directory}"' EXIT
 rm -f "${source_directory}/package.zip"
 (
   cd "${source_directory}"
-  npm pack \
+  npm_config_ignore_scripts=true npm pack \
     --ignore-scripts \
     --loglevel error \
     --cache "${work_directory}/npm-cache" \

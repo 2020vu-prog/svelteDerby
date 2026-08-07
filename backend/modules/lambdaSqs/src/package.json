@@ -4,8 +4,7 @@
   "description": "",
   "main": "ccaMain.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postpack": "tarball=$(npm list --depth 0 | sed 's/@/-/g; s/ .*/.tgz/g; 1q;'); tar -tf $tarball | sed 's/^package\\///' | zip -@r package; rm $tarball"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
