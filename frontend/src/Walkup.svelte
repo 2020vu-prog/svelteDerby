@@ -16,19 +16,21 @@
     let playingHref=''
     let playSpotify
     let pauseSpotify
-    let testTrackHref = "";
+    let testTrackValue = "";
     let potentialPlayRequest = 0;
     const testTracks = [
-        { label: "Back In Black", href: "https://open.spotify.com/track/08mG3Y1vljYA6bvDt4Wqkj?si=a2f3f0d6d08b4a35" },
-        { label: "You're So Vain", href: "https://open.spotify.com/track/2DnJjbjNTV9Nd5NOa1KGba?si=07ae100fdc0e4f49" },
-        { label: "Piano Man", href: "https://open.spotify.com/track/70C4NyhjD5OZUMzvWZ3njJ?si=cf36bf7d9f48402c" },
-        { label: "John Deere Green", href: "https://open.spotify.com/track/2ZXsvL9DO2MPv43Ay1IxgR?si=f3142885f0294713" },
-        { label: "The Chain - 2004 Remaster", href: "https://open.spotify.com/track/7Dm3dV3WPNdTgxoNY7YFnc?si=2f9231fdf0c54aa3" },
-        { label: "Tom Sawyer", href: "https://open.spotify.com/track/3QZ7uX97s82HFYSmQUAN1D?si=5924eb6266154ba6" },
-        { label: "(Don't Fear) The Reaper", href: "https://open.spotify.com/track/5QTxFnGygVM4jFQiBovmRo?si=dd490c9d287a428c" },
-        { label: "Happytown (All Right With Me)", href: "https://open.spotify.com/track/5gXcmlzh6XGn5YNcabrs5x?si=d3ecbcbc0dc548a0" },
-        { label: "How Do You Like Me Now?!", href: "https://open.spotify.com/track/7rDcULv8vV16vetBjPJhuE?si=6c3c0882ae1a401d" },
-        { label: "Carlene", href: "https://open.spotify.com/track/339hc1FygD8oJl4kg24IjG?si=91ea35a5553f4cd6" },
+        { label: "Back In Black", trackId: "08mG3Y1vljYA6bvDt4Wqkj" },
+        { label: "You're So Vain", trackId: "2DnJjbjNTV9Nd5NOa1KGba" },
+        { label: "Piano Man", trackId: "70C4NyhjD5OZUMzvWZ3njJ" },
+        { label: "John Deere Green", trackId: "2ZXsvL9DO2MPv43Ay1IxgR" },
+        { label: "The Chain - 2004 Remaster", trackId: "7Dm3dV3WPNdTgxoNY7YFnc" },
+        { label: "Tom Sawyer", trackId: "3QZ7uX97s82HFYSmQUAN1D" },
+        { label: "(Don't Fear) The Reaper", trackId: "5QTxFnGygVM4jFQiBovmRo" },
+        { label: "Happytown (All Right With Me)", trackId: "5gXcmlzh6XGn5YNcabrs5x" },
+        { label: "How Do You Like Me Now?!", trackId: "7rDcULv8vV16vetBjPJhuE" },
+        { label: "Carlene", trackId: "339hc1FygD8oJl4kg24IjG" },
+        { label: "Bitch, Don’t Kill My Vibe - International Remix / Explicit Version", trackId: "6WfA83OCEsiZ2IOTbUF4UQ" },
+        { label: "Lake Shore Drive", trackId: "46MX86XQqYCZRvwPpeq4Gi" },
     ];
     $: raceDriverTracks = Object.values($driverMap || {})
         .filter((driver) => driver.wLink)
@@ -37,7 +39,7 @@
         );
     let playWalkup=persistable("pref:playWalkup", false)
     $:{
-        potentialPlay($nextOnBlockKey, $playWalkup, testTrackHref)
+        potentialPlay($nextOnBlockKey, $playWalkup, testTrackValue)
     }
     $:{
         mayToggleSpotify($mp3Playing,requestedHref)
@@ -125,7 +127,7 @@
 </label>
 <label>
     Test track:
-    <select bind:value={testTrackHref}>
+    <select bind:value={testTrackValue}>
         <option value="">Next participant’s track</option>
         <optgroup label="Current race drivers">
             {#each raceDriverTracks as driver}
@@ -136,7 +138,7 @@
         </optgroup>
         <optgroup label="Test tracks">
             {#each testTracks as track}
-                <option value={track.href}>{track.label}</option>
+                <option value={track.trackId}>{track.label}</option>
             {/each}
         </optgroup>
     </select>
