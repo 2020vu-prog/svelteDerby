@@ -3,10 +3,11 @@ import {
   pushMessage,
   spotifyLoggedIn,
   spotifyPremiumRequired,
+  spotifySelectedDeviceId,
 } from "../stores.js";
 
 const SS="cc79096dfc214db2bf5f51556ba6ef31"
-const SID="36410c1155b640479eb8fb1c386ada8d"
+const SID="6c096d4f69414adab02c33e9ebefab0e"
 const clientId = SID;
 export const spotifyPremiumRequiredMessage =
   "Spotify Premium required: walk-up playback cannot control Spotify for this logged-in account. Confirm that the account has Spotify Premium and is authorized for this Spotify developer app.";
@@ -111,6 +112,7 @@ export async function getSpotifyAccessToken (code ) {
 
     localStorage.setItem('spotify:access_token', response.access_token);
     localStorage.setItem('spotify:refresh_token', response.refresh_token);
+    spotifySelectedDeviceId.set("");
     spotifyPremiumRequired.set(false);
     spotifyLoggedIn.set(Boolean(response.refresh_token));
     await spotifyMe();
@@ -120,6 +122,7 @@ export function logoutSpotify(){
   localStorage.removeItem('spotify:refresh_token');
   localStorage.removeItem('spotify:code_verifier');
   localStorage.removeItem('spotify:redirect');
+  spotifySelectedDeviceId.set("");
   spotifyPremiumRequired.set(false);
   spotifyLoggedIn.set(false);
 }
@@ -192,6 +195,24 @@ export async function spotifyActiveDeviceId() {
 
   return activeDevice.id;
 }
+
+export async function spotifySelectableDevices() {
+  try {
+    const body = await spotifyListDevices();
+    return (body?.devices || []).filter((device) => !device.is_restricted);
+  } catch (error) {
+    if (error.status === 403) {
+      showSpotifyPremiumRequired();
+    } else {
+      pushMessage({
+        key: "spotify-device-lookup-error",
+        text: error.message || "Spotify device lookup failed.",
+        type: "error",
+      });
+    }
+    return [];
+  }
+}
 export async function spotifyMe(volume) {
   const url = new URL("https://api.spotify.com/v1/me");
   const payload = {
@@ -240,11 +261,49 @@ export async function spotifyVolume(volume) {
 
 function sanitizeTrack(track){
   if(track &&track.length >0){
+    track=track.replace(/^spotify:track:/,"");
     track=track.replace(/.*\//,"");
     track=track.replace(/\?.*/,"");
   }
   return track;
 }
+
+const spotifyTrackCache = new Map();
+
+export function spotifyLookupTrack(track) {
+  const trackId = sanitizeTrack(track);
+  if (!trackId) {
+    return Promise.reject(
+      new Error("Spotify track lookup requires a track ID or URL.")
+    );
+  }
+
+  if (!spotifyTrackCache.has(trackId)) {
+    const lookup = (async () => {
+      const url = new URL(`https://api.spotify.com/v1/tracks/${encodeURIComponent(trackId)}`);
+      const payload = {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer DEFER",
+        },
+      };
+      const response = await fetch401retry(url, payload);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const error = new Error(
+          body?.error?.message || `Spotify track lookup failed: ${response.status}`
+        );
+        error.status = response.status;
+        throw error;
+      }
+      return response.json();
+    })();
+    spotifyTrackCache.set(trackId, lookup);
+    lookup.catch(() => spotifyTrackCache.delete(trackId));
+  }
+  return spotifyTrackCache.get(trackId);
+}
+
 export async function spotifyPlay(track,doPlay,recurse,deviceId) {
   log.debug(`spotifyPlay ${track}`)
   track=sanitizeTrack(track);
@@ -254,13 +313,34 @@ export async function spotifyPlay(track,doPlay,recurse,deviceId) {
     doPlay=false;
   }
 
+  if (!doPlay) {
+    return { ok: true, skipped: true };
+  }
+
+  let trackMetadata;
+  try {
+    trackMetadata = await spotifyLookupTrack(track);
+  } catch (error) {
+    return {
+      ok: false,
+      reason: `Spotify could not verify that this walk-up track is clean: ${error.message}`,
+    };
+  }
+
+  if (trackMetadata.explicit) {
+    return {
+      ok: false,
+      reason: `Spotify marks “${trackMetadata.name || "this track"}” as explicit. Explicit walk-up tracks will not play.`,
+    };
+  }
+
   if (!deviceId) {
     pushMessage({
       key: "spotify-no-active-device",
       text: "Spotify has no active playback device. Start playback on the intended device, then try the walk-up again.",
       type: "error",
     });
-    return;
+    return { ok: false, reason: "Spotify has no active playback device." };
   }
 
   var url = new URL("https://api.spotify.com/v1/me/player/play");
@@ -299,8 +379,14 @@ export async function spotifyPlay(track,doPlay,recurse,deviceId) {
         : `Spotify playback failed: ${detail}`,
       type: "error",
     });
+    return {
+      ok: false,
+      reason: noActiveDevice
+        ? "Spotify has no active playback device."
+        : `Spotify playback failed: ${detail}`,
+    };
   }
-  return response;
+  return { ok: true, response, track: trackMetadata };
       
 }
 

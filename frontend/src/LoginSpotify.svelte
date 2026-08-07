@@ -2,6 +2,7 @@
 	import aws_exports from "./aws-exports";
     import { onMount } from 'svelte';
     import SpinnerButton from "./SpinnerButton.svelte";
+    import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
     import {logout, sleep} from './utils.js'
     import {
         spotifyMe,
@@ -53,6 +54,8 @@ Logout spotify
     {/await}
 
 </SpinnerButton>
+
+<SpotifyDeviceSelection />
 
 {:else}
 <SpinnerButton on:click={loginPKCE} >

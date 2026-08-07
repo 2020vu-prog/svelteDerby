@@ -113,6 +113,10 @@ export const spotifyLoggedIn = writable(
         Boolean(localStorage.getItem("spotify:refresh_token"))
 );
 export const spotifyPremiumRequired = writable(false);
+export const spotifySelectedDeviceId = persistable(
+    "spotify:selectedDeviceId",
+    ""
+);
 export const mqttMapSubscribe = writable({}); //requests to subscribe.  keyed by topic
 export const mqttMapData = writable({}); //subscription data.  keyed by topic.
 export const mqttTimerSubscribe = writable(false);
