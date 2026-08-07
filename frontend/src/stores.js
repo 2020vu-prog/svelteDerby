@@ -108,6 +108,17 @@ export const autoAnnounceResults = persistable(
 );
 export const mp3Playing = writable(0); 
 export const spotifyApiReady = writable(false); //only loads once globally
+export const spotifyAccessToken = persistable("spotify:access_token", "");
+export const spotifyRefreshToken = persistable("spotify:refresh_token", "");
+export const spotifyExpiresAt = persistable("spotify:expires_at", 0);
+export const spotifyLoggedIn = writable(
+    Boolean(getStore(spotifyRefreshToken))
+);
+export const spotifyPremiumRequired = writable(false);
+export const spotifySelectedDeviceId = persistable(
+    "spotify:selectedDeviceId",
+    ""
+);
 export const mqttMapSubscribe = writable({}); //requests to subscribe.  keyed by topic
 export const mqttMapData = writable({}); //subscription data.  keyed by topic.
 export const mqttTimerSubscribe = writable(false);

@@ -1,8 +1,53 @@
 import log from "loglevel";
+import { get as getStore } from "svelte/store";
+import {
+  pushMessage,
+  spotifyAccessToken,
+  spotifyExpiresAt,
+  spotifyLoggedIn,
+  spotifyPremiumRequired,
+  spotifyRefreshToken,
+  spotifySelectedDeviceId,
+} from "../stores.js";
 
 const SS="cc79096dfc214db2bf5f51556ba6ef31"
-const SID="36410c1155b640479eb8fb1c386ada8d"
+const SID="6c096d4f69414adab02c33e9ebefab0e"
 const clientId = SID;
+const spotifyRefreshEarlyMs = 60 * 1000;
+let spotifyRefreshPromise;
+export const spotifyPremiumRequiredMessage =
+  "Spotify Premium required: walk-up playback cannot control Spotify for this logged-in account. Confirm that the account has Spotify Premium and is authorized for this Spotify developer app.";
+
+function showSpotifyPremiumRequired() {
+  spotifyPremiumRequired.set(true);
+  pushMessage({
+    key: "spotify-premium-required",
+    text: spotifyPremiumRequiredMessage,
+    type: "error",
+  });
+}
+
+function storeSpotifyTokenResponse(response) {
+  spotifyAccessToken.set(response.access_token);
+  if (response.refresh_token) {
+    spotifyRefreshToken.set(response.refresh_token);
+  }
+  if (response.expires_in) {
+    spotifyExpiresAt.set(Date.now() + Number(response.expires_in) * 1000);
+  } else {
+    spotifyExpiresAt.set(0);
+  }
+}
+
+function showSpotifyLoginExpired() {
+  logoutSpotify();
+  pushMessage({
+    key: "spotify-login-expired",
+    text: "Spotify login expired; sign in again.",
+    type: "error",
+  });
+}
+
 const generateRandomString = (length) => {
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const values = crypto.getRandomValues(new Uint8Array(length));
@@ -41,11 +86,8 @@ export async function  getSpotifyPKCE(){
   // generated in the previous step
   const codeVerifierRaw  = generateRandomString(64);
 
-  console.log('spotify codeVerifierRaw:',codeVerifierRaw)
   const codeVerifierSha256 = await ssha256(codeVerifierRaw);
   const codeVerifierB64 = base64encode(codeVerifierSha256);
-  console.log('spotify codeVerifierSha256:',codeVerifierSha256)
-  console.log('spotify codeVerifierB64:',codeVerifierB64)
   window.localStorage.setItem('spotify:code_verifier', codeVerifierRaw);
 
   const params =  {
@@ -56,6 +98,7 @@ export async function  getSpotifyPKCE(){
     code_challenge_method: 'S256',
     code_challenge: codeVerifierB64,
     redirect_uri: redirectUri,
+    show_dialog: true,
   }
 
   authUrl.search = new URLSearchParams(params).toString();
@@ -65,8 +108,6 @@ export async function  getSpotifyPKCE(){
 export async function getSpotifyAccessToken (code ) {
 
   
-    console.log(`swiddle getSpotifyAccessToken:`, code)
-    
   // stored in the previous step
   const codeVerifier = localStorage.getItem('spotify:code_verifier');
   const redirectUri = localStorage.getItem('spotify:redirect');
@@ -90,47 +131,38 @@ export async function getSpotifyAccessToken (code ) {
   const body = await fetch(url, payload);
   const response = await body.json();
 
-    console.log(`swiddle getSpotifyAccessToken response:`, response)
-  if (response&&response.access_token){
-    localStorage.setItem('spotify:access_token', response.access_token);
-    localStorage.setItem('spotify:refresh_token', response.refresh_token);
-    console.log(`swiddle getSpotifyAccessToken rediect to root!`)
-
-    await spotifyVolume(10);
-    window.location.href = "/"; // clear search param noise from spotify callback!
+  if (!body.ok || !response?.access_token) {
+    throw new Error(
+      `Spotify token exchange failed: ${response?.error_description || response?.error || body.status}`
+    );
   }
-}
-export function isLoggedInSpotify(){
-  
-    const rt=localStorage.getItem('spotify:refresh_token');
-    if(rt && rt.length>0){
-        console.log(`isLoggedInSpotify true:`, )
-      return true
-    }
-        console.log(`isLoggedInSpotify false:`, )
-    return false
+
+    storeSpotifyTokenResponse(response);
+    spotifySelectedDeviceId.set("");
+    spotifyPremiumRequired.set(false);
+    spotifyLoggedIn.set(Boolean(getStore(spotifyRefreshToken)));
+    await spotifyMe();
 }
 export function logoutSpotify(){
-  localStorage.removeItem('spotify:access_token' );
-  localStorage.removeItem('spotify:refresh_token');
+  spotifyAccessToken.set("");
+  spotifyRefreshToken.set("");
+  spotifyExpiresAt.set(0);
   localStorage.removeItem('spotify:code_verifier');
   localStorage.removeItem('spotify:redirect');
+  spotifySelectedDeviceId.set("");
+  spotifyPremiumRequired.set(false);
+  spotifyLoggedIn.set(false);
 }
     export async function urlParseSpotify() {
         const u = new URL(document.URL)
-        console.log(`swiddle qu:`, u)
-        for (const p of u.searchParams) {
-            console.log(`swiddle sp:`, p)
-        }
 
         if(u.searchParams.get("state") === "spotify_auth_callback"){
             const rtoken=u.searchParams.get("code") ;
+            // Spotify authorization codes are single-use. Remove callback
+            // parameters synchronously so remounts and BFCache restoration
+            // cannot submit the same code again while this request is active.
+            window.history.replaceState({}, document.title, `${u.pathname}${u.hash}`);
             await getSpotifyAccessToken(rtoken);
-
-        }
-        else{
-            console.log(`swiddle bypass:`)
-
         }
     }
 
@@ -145,13 +177,70 @@ export async function spotifyListDevices() {
   }
 
   const response = await fetch401retry(url, payload);
-  console.log(`swiddle spotifyListDevices response:`, response)
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const error = new Error(
+      body?.error?.message || `Spotify device lookup failed: ${response.status}`
+    );
+    error.status = response.status;
+    throw error;
+  }
+  spotifyPremiumRequired.set(false);
   const body = await response.json();
   return body;
       
 }
+
+export async function spotifyActiveDeviceId() {
+  let body;
+  try {
+    body = await spotifyListDevices();
+  } catch (error) {
+    if (error.status === 403) {
+      showSpotifyPremiumRequired();
+    } else {
+      pushMessage({
+        key: "spotify-device-lookup-error",
+        text: error.message || "Spotify device lookup failed.",
+        type: "error",
+      });
+    }
+    return null;
+  }
+  const activeDevice = body?.devices?.find(
+    (device) => device.is_active && !device.is_restricted
+  );
+
+  if (!activeDevice) {
+    pushMessage({
+      key: "spotify-no-active-device",
+      text: "Spotify has no active playback device. Start playback on the intended device, then try the walk-up again.",
+      type: "error",
+    });
+    return null;
+  }
+
+  return activeDevice.id;
+}
+
+export async function spotifySelectableDevices() {
+  try {
+    const body = await spotifyListDevices();
+    return (body?.devices || []).filter((device) => !device.is_restricted);
+  } catch (error) {
+    if (error.status === 403) {
+      showSpotifyPremiumRequired();
+    } else {
+      pushMessage({
+        key: "spotify-device-lookup-error",
+        text: error.message || "Spotify device lookup failed.",
+        type: "error",
+      });
+    }
+    return [];
+  }
+}
 export async function spotifyMe(volume) {
-  spotifyListDevices();
   const url = new URL("https://api.spotify.com/v1/me");
   const payload = {
     method: 'GET',
@@ -165,7 +254,13 @@ export async function spotifyMe(volume) {
   url.search = new URLSearchParams(params).toString();
 
   const response = await fetch401retry(url, payload);
-  console.log(`swiddle spotifyMe response:`, response)
+  if (response.status === 403) {
+    showSpotifyPremiumRequired();
+    return {};
+  }
+  if (!response.ok) {
+    throw new Error(`Spotify profile lookup failed: ${response.status}`);
+  }
   const body = await response.json();
   return body;
       
@@ -179,26 +274,64 @@ export async function spotifyVolume(volume) {
     },
   }
   const params= new URLSearchParams({
-    volume_percent:50,
+    volume_percent:volume,
   });
   url.search = new URLSearchParams(params).toString();
 
   const response = await fetch401retry(url, payload);
   console.log(`swiddle spotifyVolume response:`, response)
-  const body = await response.json();
+  if (!response.ok) {
+    throw new Error(`Spotify volume failed: ${response.status}`);
+  }
       
 }
 
 function sanitizeTrack(track){
   if(track &&track.length >0){
+    track=track.replace(/^spotify:track:/,"");
     track=track.replace(/.*\//,"");
     track=track.replace(/\?.*/,"");
   }
   return track;
 }
-export async function spotifyPlay(track,doPlay,recurse) {
-  const myLife='4ZoBC5MhSEzuknIgAkBaoT'
-  const webd='6bf47225e2365b3e5987565ef0cbc88bd8491a0c'
+
+const spotifyTrackCache = new Map();
+
+export function spotifyLookupTrack(track) {
+  const trackId = sanitizeTrack(track);
+  if (!trackId) {
+    return Promise.reject(
+      new Error("Spotify track lookup requires a track ID or URL.")
+    );
+  }
+
+  if (!spotifyTrackCache.has(trackId)) {
+    const lookup = (async () => {
+      const url = new URL(`https://api.spotify.com/v1/tracks/${encodeURIComponent(trackId)}`);
+      const payload = {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer DEFER",
+        },
+      };
+      const response = await fetch401retry(url, payload);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const error = new Error(
+          body?.error?.message || `Spotify track lookup failed: ${response.status}`
+        );
+        error.status = response.status;
+        throw error;
+      }
+      return response.json();
+    })();
+    spotifyTrackCache.set(trackId, lookup);
+    lookup.catch(() => spotifyTrackCache.delete(trackId));
+  }
+  return spotifyTrackCache.get(trackId);
+}
+
+export async function spotifyPlay(track,doPlay,recurse,deviceId) {
   log.debug(`spotifyPlay ${track}`)
   track=sanitizeTrack(track);
   log.debug(`spotifyPlay [sani] ${track}`)
@@ -207,14 +340,41 @@ export async function spotifyPlay(track,doPlay,recurse) {
     doPlay=false;
   }
 
+  if (!doPlay) {
+    return { ok: true, skipped: true };
+  }
+
+  let trackMetadata;
+  try {
+    trackMetadata = await spotifyLookupTrack(track);
+  } catch (error) {
+    return {
+      ok: false,
+      reason: `Spotify could not verify that this walk-up track is clean: ${error.message}`,
+    };
+  }
+
+  if (trackMetadata.explicit) {
+    return {
+      ok: false,
+      reason: `Spotify marks “${trackMetadata.name || "this track"}” as explicit. Explicit walk-up tracks will not play.`,
+    };
+  }
+
+  if (!deviceId) {
+    pushMessage({
+      key: "spotify-no-active-device",
+      text: "Spotify has no active playback device. Start playback on the intended device, then try the walk-up again.",
+      type: "error",
+    });
+    return { ok: false, reason: "Spotify has no active playback device." };
+  }
+
   var url = new URL("https://api.spotify.com/v1/me/player/play");
   if (!doPlay){
     url = new URL("https://api.spotify.com/v1/me/player/pause");
-
   }
-  if (!doPlay){
-    return;  //Rolls DU30b Mic-Preamp/Audio Ducker
-  }
+  url.searchParams.set("device_id", deviceId);
   const payload = {
     method: 'PUT',
     headers: {
@@ -222,12 +382,6 @@ export async function spotifyPlay(track,doPlay,recurse) {
           'Content-Type': 'application/json',
 
     },
-  }
-  if(webd){
-      const params= new URLSearchParams({
-        device_id:webd,
-    });
-    url.search = new URLSearchParams(params).toString();
   }
           //uris:["spotify:track:4ZoBC5MhSEzuknIgAkBaoT"],
   if(doPlay){
@@ -241,15 +395,43 @@ export async function spotifyPlay(track,doPlay,recurse) {
   }
 
   const response = await fetch401retry(url, payload);
- // const response = await body.json();
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const detail = body?.error?.message || `HTTP ${response.status}`;
+    const noActiveDevice = /no active device/i.test(detail);
+    pushMessage({
+      key: "spotify-playback-error",
+      text: noActiveDevice
+        ? "Spotify has no active device. Open Spotify on the intended playback device, start playback, and try again."
+        : `Spotify playback failed: ${detail}`,
+      type: "error",
+    });
+    return {
+      ok: false,
+      reason: noActiveDevice
+        ? "Spotify has no active playback device."
+        : `Spotify playback failed: ${detail}`,
+    };
+  }
+  return { ok: true, response, track: trackMetadata };
       
 }
 
 const insertToken=(payload) =>{
-  const accessToken=  localStorage.getItem('spotify:access_token');
+  const accessToken = getStore(spotifyAccessToken);
   payload.headers.Authorization= `Bearer ${accessToken}`;
 };
 const fetch401retry=async (url,payload) =>{
+
+  const accessToken = getStore(spotifyAccessToken);
+  const refreshToken = getStore(spotifyRefreshToken);
+  const expiresAt = Number(getStore(spotifyExpiresAt));
+  if (
+    refreshToken &&
+    (!accessToken || (expiresAt && Date.now() >= expiresAt - spotifyRefreshEarlyMs))
+  ) {
+    await refreshSpotifyToken();
+  }
 
   insertToken(payload);
   const response = await fetch(url, payload);
@@ -257,7 +439,7 @@ const fetch401retry=async (url,payload) =>{
   log.debug(`fetch401retry spotifyPlay response:`, response)
   log.debug(`fetch401retry spotifyPlay response:`, response.status)
   if(response.status==401){
-    await getRefreshToken();;
+    await refreshSpotifyToken();
     insertToken(payload);
     const response2 = await fetch(url, payload);
     log.debug(`fetch401retry spotifyPlay response2:`, response2)
@@ -268,13 +450,17 @@ const fetch401retry=async (url,payload) =>{
 };
 
 
-const getRefreshToken = async () => {
-    console.log(`swiddle spotify getRefreshToken`)
+export async function refreshSpotifyToken() {
+  if (spotifyRefreshPromise) return spotifyRefreshPromise;
 
-   // refresh token that has been previously stored
-   const refreshToken = localStorage.getItem('spotify:refresh_token');
-   const url = "https://accounts.spotify.com/api/token";
+  spotifyRefreshPromise = (async () => {
+    const refreshToken = getStore(spotifyRefreshToken);
+    if (!refreshToken) {
+      showSpotifyLoginExpired();
+      throw new Error("Spotify refresh token is unavailable.");
+    }
 
+    const url = "https://accounts.spotify.com/api/token";
     const payload = {
       method: 'POST',
       headers: {
@@ -285,16 +471,30 @@ const getRefreshToken = async () => {
         refresh_token: refreshToken,
         client_id: clientId
       }),
-    }
-    const body = await fetch(url, payload);
-    const response = await body.json();
+    };
+    const result = await fetch(url, payload);
+    const response = await result.json().catch(() => ({}));
 
-  if (body.ok) {
-        console.log(`swiddle spotify getRefreshToken access: ${response.access_token}`)
-    localStorage.setItem( 'spotify:access_token', response.access_token);
-    if (response.refresh_token) {
-        console.log(`swiddle spotify getRefreshToken refresh: ${response.refresh_token}`)
-      localStorage.setItem('spotify:refresh_token', response.refresh_token);
+    if (!result.ok) {
+      if (response.error === "invalid_grant") {
+        showSpotifyLoginExpired();
+      }
+      throw new Error(
+        `Spotify token refresh failed: ${response.error_description || response.error || result.status}`
+      );
     }
+    if (!response.access_token) {
+      throw new Error("Spotify token refresh failed: no access token returned.");
+    }
+
+    storeSpotifyTokenResponse(response);
+    spotifyLoggedIn.set(true);
+    return response.access_token;
+  })();
+
+  try {
+    return await spotifyRefreshPromise;
+  } finally {
+    spotifyRefreshPromise = undefined;
   }
 }

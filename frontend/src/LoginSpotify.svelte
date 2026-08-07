@@ -2,20 +2,21 @@
 	import aws_exports from "./aws-exports";
     import { onMount } from 'svelte';
     import SpinnerButton from "./SpinnerButton.svelte";
+    import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
     import {logout, sleep} from './utils.js'
-    import {spotifyMe, getSpotifyPKCE, spotifyPlay,logoutSpotify,isLoggedInSpotify} from './utils/spotify.js'
+    import {
+        spotifyMe,
+        getSpotifyPKCE,
+        logoutSpotify,
+        spotifyPremiumRequiredMessage,
+    } from './utils/spotify.js'
+    import { spotifyLoggedIn, spotifyPremiumRequired } from './stores.js'
     export let spinning = false;
     async function loginPKCE() {
         spinning=true
         await sleep(300)
         await getSpotifyPKCE();
 
-    }
-    async function clickedPlay() {
-        await spotifyPlay('',true,false);
-    }
-    async function clickedPause() {
-        await spotifyPlay('',false,false);
     }
     async function whoami() {
         const response=await spotifyMe();
@@ -25,9 +26,24 @@
         }
     }
 </script>
+<style>
+    .premiumRequired {
+        background: #fff0f0;
+        border: 4px solid #d00000;
+        color: #9b0000;
+        font-size: 1.25rem;
+        font-weight: bold;
+        padding: 1.25rem;
+    }
+</style>
 <br/>
 <h4>Spotify</h4>
-{#if isLoggedInSpotify()}
+{#if $spotifyLoggedIn}
+{#if $spotifyPremiumRequired}
+<p class="premiumRequired">
+    {spotifyPremiumRequiredMessage}
+</p>
+{/if}
 <SpinnerButton on:click={logoutSpotify} >
 Logout spotify 
     
@@ -38,6 +54,8 @@ Logout spotify
     {/await}
 
 </SpinnerButton>
+
+<SpotifyDeviceSelection />
 
 {:else}
 <SpinnerButton on:click={loginPKCE} >
