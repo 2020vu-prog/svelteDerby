@@ -1,14 +1,20 @@
 import log from "loglevel";
+import { get as getStore } from "svelte/store";
 import {
   pushMessage,
+  spotifyAccessToken,
+  spotifyExpiresAt,
   spotifyLoggedIn,
   spotifyPremiumRequired,
+  spotifyRefreshToken,
   spotifySelectedDeviceId,
 } from "../stores.js";
 
 const SS="cc79096dfc214db2bf5f51556ba6ef31"
 const SID="6c096d4f69414adab02c33e9ebefab0e"
 const clientId = SID;
+const spotifyRefreshEarlyMs = 60 * 1000;
+let spotifyRefreshPromise;
 export const spotifyPremiumRequiredMessage =
   "Spotify Premium required: walk-up playback cannot control Spotify for this logged-in account. Confirm that the account has Spotify Premium and is authorized for this Spotify developer app.";
 
@@ -17,6 +23,27 @@ function showSpotifyPremiumRequired() {
   pushMessage({
     key: "spotify-premium-required",
     text: spotifyPremiumRequiredMessage,
+    type: "error",
+  });
+}
+
+function storeSpotifyTokenResponse(response) {
+  spotifyAccessToken.set(response.access_token);
+  if (response.refresh_token) {
+    spotifyRefreshToken.set(response.refresh_token);
+  }
+  if (response.expires_in) {
+    spotifyExpiresAt.set(Date.now() + Number(response.expires_in) * 1000);
+  } else {
+    spotifyExpiresAt.set(0);
+  }
+}
+
+function showSpotifyLoginExpired() {
+  logoutSpotify();
+  pushMessage({
+    key: "spotify-login-expired",
+    text: "Spotify login expired; sign in again.",
     type: "error",
   });
 }
@@ -110,16 +137,16 @@ export async function getSpotifyAccessToken (code ) {
     );
   }
 
-    localStorage.setItem('spotify:access_token', response.access_token);
-    localStorage.setItem('spotify:refresh_token', response.refresh_token);
+    storeSpotifyTokenResponse(response);
     spotifySelectedDeviceId.set("");
     spotifyPremiumRequired.set(false);
-    spotifyLoggedIn.set(Boolean(response.refresh_token));
+    spotifyLoggedIn.set(Boolean(getStore(spotifyRefreshToken)));
     await spotifyMe();
 }
 export function logoutSpotify(){
-  localStorage.removeItem('spotify:access_token' );
-  localStorage.removeItem('spotify:refresh_token');
+  spotifyAccessToken.set("");
+  spotifyRefreshToken.set("");
+  spotifyExpiresAt.set(0);
   localStorage.removeItem('spotify:code_verifier');
   localStorage.removeItem('spotify:redirect');
   spotifySelectedDeviceId.set("");
@@ -391,10 +418,20 @@ export async function spotifyPlay(track,doPlay,recurse,deviceId) {
 }
 
 const insertToken=(payload) =>{
-  const accessToken=  localStorage.getItem('spotify:access_token');
+  const accessToken = getStore(spotifyAccessToken);
   payload.headers.Authorization= `Bearer ${accessToken}`;
 };
 const fetch401retry=async (url,payload) =>{
+
+  const accessToken = getStore(spotifyAccessToken);
+  const refreshToken = getStore(spotifyRefreshToken);
+  const expiresAt = Number(getStore(spotifyExpiresAt));
+  if (
+    refreshToken &&
+    (!accessToken || (expiresAt && Date.now() >= expiresAt - spotifyRefreshEarlyMs))
+  ) {
+    await refreshSpotifyToken();
+  }
 
   insertToken(payload);
   const response = await fetch(url, payload);
@@ -402,7 +439,7 @@ const fetch401retry=async (url,payload) =>{
   log.debug(`fetch401retry spotifyPlay response:`, response)
   log.debug(`fetch401retry spotifyPlay response:`, response.status)
   if(response.status==401){
-    await getRefreshToken();;
+    await refreshSpotifyToken();
     insertToken(payload);
     const response2 = await fetch(url, payload);
     log.debug(`fetch401retry spotifyPlay response2:`, response2)
@@ -413,13 +450,17 @@ const fetch401retry=async (url,payload) =>{
 };
 
 
-const getRefreshToken = async () => {
-    console.log(`swiddle spotify getRefreshToken`)
+export async function refreshSpotifyToken() {
+  if (spotifyRefreshPromise) return spotifyRefreshPromise;
 
-   // refresh token that has been previously stored
-   const refreshToken = localStorage.getItem('spotify:refresh_token');
-   const url = "https://accounts.spotify.com/api/token";
+  spotifyRefreshPromise = (async () => {
+    const refreshToken = getStore(spotifyRefreshToken);
+    if (!refreshToken) {
+      showSpotifyLoginExpired();
+      throw new Error("Spotify refresh token is unavailable.");
+    }
 
+    const url = "https://accounts.spotify.com/api/token";
     const payload = {
       method: 'POST',
       headers: {
@@ -430,17 +471,30 @@ const getRefreshToken = async () => {
         refresh_token: refreshToken,
         client_id: clientId
       }),
-    }
-    const body = await fetch(url, payload);
-    const response = await body.json();
+    };
+    const result = await fetch(url, payload);
+    const response = await result.json().catch(() => ({}));
 
-  if (body.ok) {
-        console.log(`swiddle spotify getRefreshToken access: ${response.access_token}`)
-    localStorage.setItem( 'spotify:access_token', response.access_token);
-    spotifyLoggedIn.set(true);
-    if (response.refresh_token) {
-        console.log(`swiddle spotify getRefreshToken refresh: ${response.refresh_token}`)
-      localStorage.setItem('spotify:refresh_token', response.refresh_token);
+    if (!result.ok) {
+      if (response.error === "invalid_grant") {
+        showSpotifyLoginExpired();
+      }
+      throw new Error(
+        `Spotify token refresh failed: ${response.error_description || response.error || result.status}`
+      );
     }
+    if (!response.access_token) {
+      throw new Error("Spotify token refresh failed: no access token returned.");
+    }
+
+    storeSpotifyTokenResponse(response);
+    spotifyLoggedIn.set(true);
+    return response.access_token;
+  })();
+
+  try {
+    return await spotifyRefreshPromise;
+  } finally {
+    spotifyRefreshPromise = undefined;
   }
 }

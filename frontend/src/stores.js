@@ -108,9 +108,11 @@ export const autoAnnounceResults = persistable(
 );
 export const mp3Playing = writable(0); 
 export const spotifyApiReady = writable(false); //only loads once globally
+export const spotifyAccessToken = persistable("spotify:access_token", "");
+export const spotifyRefreshToken = persistable("spotify:refresh_token", "");
+export const spotifyExpiresAt = persistable("spotify:expires_at", 0);
 export const spotifyLoggedIn = writable(
-    typeof localStorage !== "undefined" &&
-        Boolean(localStorage.getItem("spotify:refresh_token"))
+    Boolean(getStore(spotifyRefreshToken))
 );
 export const spotifyPremiumRequired = writable(false);
 export const spotifySelectedDeviceId = persistable(
