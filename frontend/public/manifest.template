@@ -8,28 +8,28 @@
     "background_color": "#fff",
     "icons": [
         {
-            "src": "/RR1cm144-v4.png",
-            "sizes": "144x144",
+            "src": "/RR1cm-v5-192.png",
+            "sizes": "192x192",
             "purpose": "any",
             "type": "image/png"
         },
         {
-            "src": "/data/checkered-flag-svgrepo-com.svg",
+            "src": "/RR1cm-v5-512.png",
+            "sizes": "512x512",
+            "purpose": "any",
+            "type": "image/png"
+        },
+        {
+            "src": "/RR1cm-v5-maskable-192.png",
             "sizes": "192x192",
             "purpose": "maskable",
-            "type": "image/svg"
+            "type": "image/png"
         },
         {
-            "src": "/data/checkered-flag-svgrepo-com.svg",
+            "src": "/RR1cm-v5-maskable-512.png",
             "sizes": "512x512",
             "purpose": "maskable",
-            "type": "image/svg"
-        },
-        {
-            "src": "/data/checkered-flag-svgrepo-com.svg",
-            "sizes": "478x478",
-            "purpose": "maskable",
-            "type": "image/svg"
+            "type": "image/png"
         }
     ]
 }
