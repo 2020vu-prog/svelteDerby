@@ -1793,7 +1793,7 @@ async function apiGatewayHandler(event) {
         );
     }
     if (routePath === "/getDerbyMainVersion") {
-        return buildResponse(await getDerbyMainVersionInfo(), "max-age=3600");
+        return buildResponse(await getDerbyMainVersionInfo(), "max-age=120");
     }
 
     var decodedJwt={
