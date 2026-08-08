@@ -30,6 +30,7 @@ const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
 const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
 const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
 const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
+const ssm = new AWS.SSM({ apiVersion: "2014-11-06" });
 const TmpCache = require("./tmpCache.js");
 const DdbUtils = require("./DdbUtils");
 const ArchiveUtils = require("./ArchiveUtils");
@@ -1533,10 +1534,14 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
     };
 }
 
-function getDerbyMainVersionInfo() {
+async function getDerbyMainVersionInfo() {
+    const parameterName = `/deploy/${process.env.DeployEnvironment}/git-breadcrumb`;
+    const gitBreadcrumbParameterResponse = await ssm
+        .getParameter({ Name: parameterName })
+        .promise();
     return {
         version: derbyMainVersion,
-        gitBreadcrumb: process.env.GitBreadcrumb || "",
+        gitBreadcrumb: gitBreadcrumbParameterResponse.Parameter.Value,
     };
 }
 
@@ -1788,7 +1793,7 @@ async function apiGatewayHandler(event) {
         );
     }
     if (routePath === "/getDerbyMainVersion") {
-        return buildResponse(getDerbyMainVersionInfo(), "max-age=3600");
+        return buildResponse(await getDerbyMainVersionInfo(), "max-age=120");
     }
 
     var decodedJwt={
