@@ -78,11 +78,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Check tracked files after checkout
-        run: |
-          echo "Tracked changes after checkout:"
-          git status --short --untracked-files=no
-
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -139,21 +134,14 @@ jobs:
         run: |
           npm ci
           npm run test:unit -- --silent
-          echo "Tracked changes after backend tests:"
-          git status --short --untracked-files=no
+          git diff --exit-code
 
       - name: Plan backend
         working-directory: backend
         run: |
           make lambdaPkgs
-          echo "Tracked changes after Lambda packaging:"
-          git status --short --untracked-files=no
           terraform init -reconfigure -backend-config="${TF_BACKEND_CONFIG}"
-          echo "Tracked changes after Terraform initialization:"
-          git status --short --untracked-files=no
           terraform plan -out="${RUNNER_TEMP}/backend.tfplan"
-          echo "Tracked changes after Terraform plan:"
-          git status --short --untracked-files=no
 
       - name: Apply planned backend
         if: ${{ inputs.deployment_mode == 'live' }}
@@ -164,11 +152,7 @@ jobs:
         working-directory: frontend
         run: |
           npm ci
-          echo "Tracked changes after frontend install:"
-          git status --short --untracked-files=no
           npm run build
-          echo "Tracked changes after frontend build:"
-          git status --short --untracked-files=no
 
       - name: Deploy frontend
         if: ${{ inputs.deployment_mode == 'live' }}
