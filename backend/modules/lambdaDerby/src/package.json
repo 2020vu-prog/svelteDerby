@@ -12,11 +12,12 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb-v2-node": "0.1.0-preview.2",
     "aws-jwt-verify": "^4.0.1",
+    "bn.js": "4.12.3",
     "csv-parse": "^5.4.0",
     "handlebars": "^4.7.8",
     "js-base64": "^3.7.5",
-    "jsonwebtoken": "^9.0.1",
-    "jwk-to-pem": "^2.0.5",
+    "jsonwebtoken": "9.0.3",
+    "jwk-to-pem": "2.0.7",
     "loglevel": "^1.8.1",
     "minimist": "^1.2.8",
     "timer_protobuf": "file:../../../scratch509/modules/timer_protobuf"
@@ -40,8 +41,5 @@
     "handlebars",
     "js-base64",
     "loglevel"
-  ],
-  "devDependencies": {
-    "npm-check-updates": "^16.12.2"
-  }
+  ]
 }

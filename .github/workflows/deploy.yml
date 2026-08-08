@@ -3,6 +3,15 @@ name: Deploy
 on:
   workflow_dispatch:
     inputs:
+      target_environment:
+        description: GitHub environment to plan or deploy
+        required: true
+        default: test.rr1.us
+        type: choice
+        options:
+          - test.rr1.us
+          - stage.rr1.us
+          - go.rr1.us
       deployment_mode:
         description: Plan only, or apply the plan and deploy the frontend
         required: true
@@ -17,7 +26,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: deploy-${{ github.ref_name }}
+  group: deploy-${{ inputs.target_environment }}
   cancel-in-progress: false
 
 jobs:
@@ -30,24 +39,10 @@ jobs:
     steps:
       - id: resolve
         env:
-          DEPLOY_BRANCH: ${{ github.ref_name }}
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
         run: |
           set -euo pipefail
-          case "${DEPLOY_BRANCH}" in
-            test.rr1.us)
-              echo "github_environment=test.rr1.us" >> "${GITHUB_OUTPUT}"
-              ;;
-            go.rr1.us)
-              echo "github_environment=go.rr1.us" >> "${GITHUB_OUTPUT}"
-              ;;
-            stage.rr1.us)
-              echo "github_environment=stage.rr1.us" >> "${GITHUB_OUTPUT}"
-              ;;
-            *)
-              echo "No deployment configuration is defined for branch ${DEPLOY_BRANCH}" >&2
-              exit 1
-              ;;
-          esac
+          echo "github_environment=${TARGET_ENVIRONMENT}" >> "${GITHUB_OUTPUT}"
 
   deploy:
     name: ${{ inputs.deployment_mode == 'live' && 'Deploy backend and frontend' || 'Plan backend and build frontend' }}
