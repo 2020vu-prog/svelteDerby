@@ -145,7 +145,7 @@ variable "terraform_lock_table_name" {
 }
 
 variable "terraform_backend_configs" {
-  description = "Backend resource names keyed by DnsDomain. Normally maintained by the generated GitHub setup script."
+  description = "Optional backend resource names keyed by DnsDomain. TF_BACKEND_CONFIG is used when no explicit values are configured."
   type = map(object({
     terraform_state_bucket_name = string
     terraform_lock_table_name   = string

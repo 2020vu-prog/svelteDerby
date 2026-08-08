@@ -24,6 +24,7 @@ credentials that are allowed to manage IAM:
 cd github-oidc-deploy
 cp terraform.tfvars.example terraform.tfvars
 terraform init
+export TF_BACKEND_CONFIG=/private/path/test.backend.hcl
 terraform apply
 ```
 
@@ -42,29 +43,41 @@ subject is:
 repo:2020vu-prog@265285298/svelteDerby@1316526362:environment:test.rr1.us
 ```
 
-The apply generates a temporary executable whose filename includes `DnsDomain`,
-for example `.tmp/configure-github-test.rr1.us.sh`. Run it with the matching
-application Terraform backend configuration file:
+The apply reads the application Terraform backend configuration from the file
+named by the required `TF_BACKEND_CONFIG` environment variable. It uses the state bucket and optional
+`dynamodb_table` names while building the deploy policy. After the AWS resources
+are ready, Terraform generates and automatically invokes an executable whose
+filename includes `DnsDomain`, for example
+`.tmp/configure-github-test.rr1.us.sh`.
+
+Authenticate the GitHub CLI and provide the Google credentials before applying
+for a fully non-interactive run:
 
 ```bash
-github_setup_script="$(terraform output -raw github_environment_setup_script)"
-"${github_setup_script}" /private/path/test.backend.hcl
+gh auth status
+export TF_BACKEND_CONFIG=/private/path/test.backend.hcl
+export TF_VAR_GoogleClientId=...
+export TF_VAR_GoogleClientSecret=...
+terraform apply
 ```
 
 The script creates the GitHub Environment if needed and uploads all required
-variables. It reads the state bucket and optional `dynamodb_table` lock-table
-names from the private backend configuration file, reapplies this Terraform root
-to grant the deploy role access to those resources, and saves the derived names
-under the environment's `DnsDomain` key in the gitignored
-`backend.auto.tfvars.json` registry. Terraform loads one file and selects only
-the current environment, so multiple environments can safely share the same
-working directory. It then uploads the backend configuration as a multiline
-secret. It prompts for the Google client ID and
-secret, removes its temporary dotenv file, and deletes itself after a successful
-run. You can provide the Google values non-interactively through local
+variables and uploads the backend configuration as a multiline secret. It
+prompts for the Google client ID and secret when they are not already present in
+the environment, and removes its temporary dotenv file after a successful run.
+You can provide the Google values non-interactively through local
 `TF_VAR_GoogleClientId` and
 `TF_VAR_GoogleClientSecret` environment variables. Their values are never
 passed through Terraform or stored in Terraform state.
+
+The generated executable remains in the gitignored `.tmp` directory so
+Terraform can track it without introducing filesystem drift. It can still be
+run manually when GitHub values need to be refreshed without changing AWS
+resources:
+
+```bash
+"$(terraform output -raw github_environment_setup_script)"
+```
 
 The generated script configures:
 
@@ -127,8 +140,8 @@ The VOD CloudFormation stack is also read-only to the workflow because its
 template creates IAM roles. Change that stack through a separately reviewed,
 more narrowly scoped maintenance role.
 
-The generated setup script normally maintains `terraform_backend_configs`
-automatically from each environment's private backend HCL file. Direct
-`terraform_state_bucket_name` and `terraform_lock_table_name` inputs remain
-available as higher-precedence overrides for callers that do not use the script.
+Terraform reads backend resource names from `TF_BACKEND_CONFIG`. Direct
+`terraform_state_bucket_name`, `terraform_lock_table_name`, and
+`terraform_backend_configs` inputs remain available as higher-precedence
+overrides.
 - `hosted_zone_arns`
