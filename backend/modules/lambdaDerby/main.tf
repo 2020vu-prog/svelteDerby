@@ -1,63 +1,63 @@
 
-variable "DeployEnvironment" {}
-variable "DynamoDbArn" {}
-variable "DistDbArn" {}
-variable "TimerDbArn" {}
-variable "TimerProtobufDbArn" {}
-variable "ElapsedTempDbArn" {}
-variable "AwsRegion" {}
-variable "ManagedRolePermissionsBoundaryArn" {}
-variable "CcaQueueId" {}
-variable "CcaQueueArn" {}
-variable "ChartS3BucketName" {}
-variable "ZelloPushSnsArn" {}
-variable "ApplyTimerSnsArn" {}
-variable "AddEventSnsArn" {}
-variable "PollyCompleteSnsArn" {}
-variable "RacerStatusFanoutSnsArn" {}
-variable "s3VideoWatch" {}
-variable "s3VideoDone" {}
-variable "AwsCognitoSettingsJson" {}
-variable "GitBreadcrumbParameterArn" {}
+variable DeployEnvironment {}
+variable DynamoDbArn {}
+variable DistDbArn {}
+variable TimerDbArn {}
+variable TimerProtobufDbArn {}
+variable ElapsedTempDbArn {}
+variable AwsRegion {}
+variable ManagedRolePermissionsBoundaryArn {}
+variable   CcaQueueId  {}
+variable   CcaQueueArn  {}
+variable     ChartS3BucketName  {}
+variable ZelloPushSnsArn{}
+variable ApplyTimerSnsArn{}
+variable AddEventSnsArn{}
+variable PollyCompleteSnsArn {}
+variable RacerStatusFanoutSnsArn {}
+variable s3VideoWatch {}
+variable s3VideoDone {}
+variable AwsCognitoSettingsJson {}
+variable GitBreadcrumbParameterArn {}
 
-variable "S3DistBucket" {}
-variable "S3DistBucketArn" {}
-locals {
+variable S3DistBucket {}
+variable S3DistBucketArn {}
+locals{
   tags = {
     Environment = var.DeployEnvironment
-    CreatedBy   = "terraform ${basename(path.cwd)}"
+    CreatedBy = "terraform ${basename(path.cwd)}"
   }
-  ddbList       = split("/", var.DynamoDbArn)
-  DynamoDbTable = element(local.ddbList, length(local.ddbList) - 1)
+      ddbList= split("/",var.DynamoDbArn)
+      DynamoDbTable= element(local.ddbList,length(local.ddbList)-1)
 
-  mainLambdaName = "derbyMain"
+      mainLambdaName="derbyMain"
 
-  distDbList  = split("/", var.DistDbArn)
-  DistDbTable = element(local.distDbList, length(local.distDbList) - 1)
-
-  timerDbList  = split("/", var.TimerDbArn)
-  TimerDbTable = element(local.timerDbList, length(local.timerDbList) - 1)
-
-  etList             = split("/", var.ElapsedTempDbArn)
-  ElapsedTempDbTable = element(local.etList, length(local.etList) - 1)
-
-
-  timerProtobufDbList  = split("/", var.TimerProtobufDbArn)
-  TimerProtobufDbTable = element(local.timerProtobufDbList, length(local.timerProtobufDbList) - 1)
-
-  zipFile = "${path.module}/src/package.zip"
-
-  s3VideoWatch = var.s3VideoWatch
-  s3VideoDone  = var.s3VideoDone
+      distDbList= split("/",var.DistDbArn)
+      DistDbTable= element(local.distDbList,length(local.distDbList)-1)
+      
+      timerDbList= split("/",var.TimerDbArn)
+      TimerDbTable= element(local.timerDbList,length(local.timerDbList)-1)
+      
+      etList= split("/",var.ElapsedTempDbArn)
+      ElapsedTempDbTable= element(local.etList,length(local.etList)-1)
 
 
+      timerProtobufDbList= split("/",var.TimerProtobufDbArn)
+      TimerProtobufDbTable= element(local.timerProtobufDbList,length(local.timerProtobufDbList)-1)
 
+      zipFile         = "${path.module}/src/package.zip"
+ 
+	s3VideoWatch=var.s3VideoWatch
+	s3VideoDone=var.s3VideoDone
+
+
+      
 }
 data "aws_iot_endpoint" "mqtt" {
-  endpoint_type = "iot:Data-ATS"
+  endpoint_type="iot:Data-ATS"
 }
 data "aws_ssm_parameter" "iot_pi_access_url" {
-  name = "/iot/IotPiAccessUrl"
+  name           = "/iot/IotPiAccessUrl"
 }
 
 resource "aws_lambda_permission" "with_sns" {
@@ -113,7 +113,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 resource "null_resource" "install_npm_deps" {
   provisioner "local-exec" {
-    command     = "npm install"
+    command = "npm install"
     working_dir = "${path.module}/src/"
   }
 }
@@ -125,23 +125,23 @@ data "aws_iam_policy_document" "policy" {
 
     principals {
       identifiers = [
-        "lambda.amazonaws.com",
-        "edgelambda.amazonaws.com",
+         "lambda.amazonaws.com",
+         "edgelambda.amazonaws.com",
       ]
-      type = "Service"
+      type        = "Service"
     }
 
-    actions = ["sts:AssumeRole"]
+    actions = ["sts:AssumeRole" ]
   }
 }
 
 
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name_prefix          = "iam_for_lambda_"
-  permissions_boundary = var.ManagedRolePermissionsBoundaryArn
-  assume_role_policy   = data.aws_iam_policy_document.policy.json
-  tags                 = local.tags
+  name_prefix               = "iam_for_lambda_"
+  permissions_boundary      = var.ManagedRolePermissionsBoundaryArn
+  assume_role_policy = data.aws_iam_policy_document.policy.json
+  tags=local.tags
 }
 
 resource "aws_cloudwatch_log_group" "derbyMainLogRetention" {
@@ -151,7 +151,7 @@ resource "aws_cloudwatch_log_group" "derbyMainLogRetention" {
 resource "aws_lambda_function_url" "lambda" {
   function_name      = aws_lambda_function.lambda.function_name
   authorization_type = "NONE"
-  cors {
+  cors  {
     allow_credentials = true
     allow_origins     = ["*"]
     allow_methods     = ["*"]
@@ -167,49 +167,48 @@ resource "aws_lambda_function" "lambda" {
   filename         = local.zipFile
   source_code_hash = filebase64sha256(local.zipFile)
 
-  timeout     = 10 // increased for bulkAdd
-  role        = aws_iam_role.iam_for_lambda.arn
-  handler     = "derbyMain.handler"
-  runtime     = "nodejs16.x"
-  memory_size = 1024
-  publish     = true
-  tags        = local.tags
+  timeout = 10 // increased for bulkAdd
+  role    = aws_iam_role.iam_for_lambda.arn
+  handler = "derbyMain.handler"
+  runtime = "nodejs16.x"
+  memory_size=1024
+  publish = true
+  tags=local.tags
   environment {
     variables = {
-      IotPiAccessUrl    = data.aws_ssm_parameter.iot_pi_access_url.value
-      DeployEnvironment = var.DeployEnvironment
-      DynamoDbTable     = local.DynamoDbTable
-      DynamoDbArn       = var.DynamoDbArn
+      IotPiAccessUrl=data.aws_ssm_parameter.iot_pi_access_url.value
+      DeployEnvironment= var.DeployEnvironment
+      DynamoDbTable= local.DynamoDbTable
+      DynamoDbArn= var.DynamoDbArn
 
-      DistDbTable = local.DistDbTable
-      DistDbArn   = var.DistDbArn
+      DistDbTable= local.DistDbTable
+      DistDbArn= var.DistDbArn
 
-      ElapsedTempDbTable = local.ElapsedTempDbTable
-      ElapsedTempDbArn   = var.ElapsedTempDbArn
+      ElapsedTempDbTable= local.ElapsedTempDbTable
+      ElapsedTempDbArn= var.ElapsedTempDbArn
 
 
       // used to populate mp3
-      DstBucket    = var.S3DistBucket
-      DstBucketArn = var.S3DistBucketArn
+      DstBucket     = var.S3DistBucket
+      DstBucketArn  = var.S3DistBucketArn
 
-      TimerDbTable = local.TimerDbTable
-      TimerDbArn   = var.TimerDbArn
+      TimerDbTable= local.TimerDbTable
+      TimerDbArn= var.TimerDbArn
 
-      TimerProtobufDbTable = local.TimerProtobufDbTable
-      TimerProtobufDbArn   = var.TimerProtobufDbArn
+      TimerProtobufDbTable= local.TimerProtobufDbTable
+      TimerProtobufDbArn= var.TimerProtobufDbArn
 
-      CcaQueueId              = var.CcaQueueId
-      ChartS3BucketName       = var.ChartS3BucketName
-      AwsRegion               = var.AwsRegion
-      PollyCompleteSnsArn     = var.PollyCompleteSnsArn
-      ZelloPushSnsArn         = var.ZelloPushSnsArn
-      AddEventSnsArn          = var.AddEventSnsArn
-      RacerStatusFanoutSnsArn = var.RacerStatusFanoutSnsArn
-      IotEndpoint             = data.aws_iot_endpoint.mqtt.endpoint_address
-      AwsCognitoSettingsJson  = var.AwsCognitoSettingsJson
-
-      s3VideoWatch = local.s3VideoWatch
-      s3VideoDone  = local.s3VideoDone
+      CcaQueueId =var.CcaQueueId 
+      ChartS3BucketName  =  var.ChartS3BucketName  
+      AwsRegion = var.AwsRegion
+      PollyCompleteSnsArn=var.PollyCompleteSnsArn
+      ZelloPushSnsArn=var.ZelloPushSnsArn
+      AddEventSnsArn=var.AddEventSnsArn
+      RacerStatusFanoutSnsArn=var.RacerStatusFanoutSnsArn
+      IotEndpoint=data.aws_iot_endpoint.mqtt.endpoint_address
+	AwsCognitoSettingsJson=var.AwsCognitoSettingsJson
+	s3VideoWatch=local.s3VideoWatch
+	s3VideoDone=local.s3VideoDone
     }
   }
 
@@ -219,126 +218,126 @@ resource "aws_lambda_function" "lambda" {
 *** Begin permissions mods 
 */
 data "aws_iam_policy_document" "cloudwatch_allow_doc" {
-  statement {
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents",
+    statement {
+        actions = [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
 
-      "sqs:SendMessage",
+		"sqs:SendMessage",
 
-      "s3:ListObjects",
-      "s3:ListBucket",
-      "s3:GetObject",
-      "s3:PutObject",
-
-
-      "dynamodb:Query",
-      "dynamodb:BatchWriteItem",
-      "dynamodb:BatchGetItem",
-      "dynamodb:GetItem",
-      "dynamodb:PutItem",
-      "dynamodb:UpdateItem",
-
-    ]
-    resources = [
-      "arn:aws:s3:::${var.ChartS3BucketName}",
-      "arn:aws:s3:::${var.ChartS3BucketName}/*",
-
-      "arn:aws:s3:::${var.S3DistBucket}",
-      "arn:aws:s3:::${var.S3DistBucket}/*",
+		"s3:ListObjects",
+		"s3:ListBucket",
+		"s3:GetObject",
+		"s3:PutObject",
 
 
-      "arn:aws:s3:::${local.s3VideoDone}",
-      "arn:aws:s3:::${local.s3VideoDone}/*",
+		"dynamodb:Query",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
 
-      "arn:aws:s3:::${local.s3VideoWatch}",
-      "arn:aws:s3:::${local.s3VideoWatch}/*",
+        ]   
+        resources = [
+            "arn:aws:s3:::${var.ChartS3BucketName}",
+            "arn:aws:s3:::${var.ChartS3BucketName}/*",
 
-      "arn:aws:logs:*:*:*",
-      var.CcaQueueArn,
-      var.DynamoDbArn,
-      var.DistDbArn,
-      var.TimerDbArn,
-      var.ElapsedTempDbArn,
-      var.TimerProtobufDbArn
-    ]
-  }
-  statement {
-    actions = [
-      "ssm:GetParameter",
-    ]
-    resources = [
-      var.GitBreadcrumbParameterArn,
-    ]
-  }
-  statement {
-    actions = [
-      "iot:AttachPrincipalPolicy",
-      "polly:StartSpeechSynthesisTask",
-      "polly:SynthesizeSpeech",
-    ]
-    resources = [
-      "*"
-    ]
-  }
-  statement {
-    actions = [
-      "SNS:Publish",
-    ]
-    resources = [
-      //PollyCompleteSnsArn
-      var.RacerStatusFanoutSnsArn,
-      var.ZelloPushSnsArn,
-      var.AddEventSnsArn,
-      "*"
-    ]
-  }
-  statement {
-    actions = [
-      "iot:Connect",
-      "iot:Publish",
-    ]
-    resources = [
-      "*"
-    ]
-  }
-  statement {
-    actions = [
-      "ec2:RunInstances",
-    ]
-    resources = [
-      "*"
-    ]
-  }
+            "arn:aws:s3:::${var.S3DistBucket}",
+            "arn:aws:s3:::${var.S3DistBucket}/*",
+
+
+            "arn:aws:s3:::${local.s3VideoDone}",
+            "arn:aws:s3:::${local.s3VideoDone}/*",
+
+            "arn:aws:s3:::${local.s3VideoWatch}",
+            "arn:aws:s3:::${local.s3VideoWatch}/*",
+
+                "arn:aws:logs:*:*:*",
+                var.CcaQueueArn,
+                var.DynamoDbArn,
+                var.DistDbArn,
+                var.TimerDbArn,
+                var.ElapsedTempDbArn,
+                var.TimerProtobufDbArn
+        ]   
+    }   
+    statement {
+        actions = [
+            "ssm:GetParameter",
+        ]
+        resources = [
+            var.GitBreadcrumbParameterArn,
+        ]
+    }
+    statement {
+        actions = [
+		"iot:AttachPrincipalPolicy",
+		"polly:StartSpeechSynthesisTask",
+		"polly:SynthesizeSpeech",
+        ]
+        resources = [
+                "*"
+        ]
+    }
+    statement {
+        actions = [
+              "SNS:Publish",
+        ]
+        resources = [
+	//PollyCompleteSnsArn
+                var.RacerStatusFanoutSnsArn,
+                var.ZelloPushSnsArn,
+                var.AddEventSnsArn,
+                "*"
+        ]
+    }
+    statement {
+        actions = [
+                "iot:Connect",
+                "iot:Publish",
+        ]
+        resources = [
+                "*"
+        ]
+    }
+    statement {
+        actions = [
+            "ec2:RunInstances",
+        ]
+        resources = [
+                "*"
+        ]
+    }
 
 }
 resource "aws_iam_policy" "cloudwatch_allow" {
-  name_prefix = "cloudwatch_allow_"
-  path        = "/"
-  policy      = data.aws_iam_policy_document.cloudwatch_allow_doc.json
+    name_prefix = "cloudwatch_allow_"
+    path = "/"
+    policy = data.aws_iam_policy_document.cloudwatch_allow_doc.json
 }
 resource "aws_iam_role_policy_attachment" "eventwatch_cw_policy_attach" {
-  role       = aws_iam_role.iam_for_lambda.name
-  policy_arn = aws_iam_policy.cloudwatch_allow.arn
+    role       = aws_iam_role.iam_for_lambda.name
+    policy_arn = aws_iam_policy.cloudwatch_allow.arn
 }
-output "ddbTable" {
-  value = local.DynamoDbTable
+output ddbTable {
+	value=local.DynamoDbTable
 }
 output "qualified_arn" {
-  value = aws_lambda_function.lambda.qualified_arn
+  value = "${aws_lambda_function.lambda.qualified_arn}"
 }
 output "arn" {
-  value = aws_lambda_function.lambda.arn
+  value = "${aws_lambda_function.lambda.arn}"
 }
 output "invoke_arn" {
-  value = aws_lambda_function.lambda.invoke_arn
+  value = "${aws_lambda_function.lambda.invoke_arn}"
 }
 output "function_name" {
-  value = aws_lambda_function.lambda.function_name
+  value = "${aws_lambda_function.lambda.function_name}"
 }
 output "version" {
-  value = aws_lambda_function.lambda.version
+  value = "${aws_lambda_function.lambda.version}"
 }
 output "lambda_function_url" {
   value = aws_lambda_function_url.lambda.function_url
