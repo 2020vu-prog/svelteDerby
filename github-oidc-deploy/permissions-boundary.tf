@@ -39,6 +39,7 @@ data "aws_iam_policy_document" "managed_role_boundary" {
       "sqs:GetQueueAttributes",
       "sqs:ReceiveMessage",
       "sqs:SendMessage",
+      "ssm:GetParameter",
     ]
     resources = ["*"]
   }
