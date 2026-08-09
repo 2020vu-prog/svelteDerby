@@ -198,10 +198,13 @@ data "aws_iam_policy_document" "deploy_compute" {
       "logs:CreateLogGroup",
       "logs:DeleteLogGroup",
       "logs:DeleteRetentionPolicy",
+      "logs:ListTagsForResource",
       "logs:ListTagsLogGroup",
       "logs:PutRetentionPolicy",
       "logs:TagLogGroup",
+      "logs:TagResource",
       "logs:UntagLogGroup",
+      "logs:UntagResource",
     ]
     resources = [
       "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/derbyMain*",
