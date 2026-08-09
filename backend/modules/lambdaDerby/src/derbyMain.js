@@ -1535,6 +1535,7 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
 }
 
 async function getDerbyMainVersionInfo() {
+    log.error("ERROR CloudWatch monitor test from getDerbyMainVersionInfo");
     const parameterName = `/deploy/${process.env.DeployEnvironment}/git-breadcrumb`;
     const gitBreadcrumbParameterResponse = await ssm
         .getParameter({ Name: parameterName })
