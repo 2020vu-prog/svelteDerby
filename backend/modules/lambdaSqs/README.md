@@ -72,20 +72,14 @@ policy.
 
 ## Failure behavior
 
-The event-source mapping enables partial batch failure responses. If processing
-fails, the handler stops at the first failed record to preserve FIFO ordering
-and returns that record plus the remaining unprocessed records for SQS to
-retry. DynamoDB batch-write errors and unprocessed requests are treated as
-failures rather than successful writes of zero items.
+The handler catches and logs failures separately for each SQS record but does
+not rethrow them or return partial batch failures. Lambda therefore considers
+the batch successful, and SQS will not retry a record solely because processing
+logged an error. This is existing behavior and should be considered when
+investigating missing or incomplete archives.
 
-A duplicate `CCA` request encountered during the 20-minute lock window remains
-intentionally suppressed and is not retried.
-
-If a `CCA` request acquired its organization lock before failing, the handler
-marks that same lock stale before returning the failure. This lets the SQS retry
-run immediately instead of being blocked by the 20-minute lock window. The
-conditional lock release cannot overwrite a lock subsequently acquired by a
-different invocation.
+Some batch-write failures are also converted to a processed count of zero
+rather than thrown.
 
 ## Build and validation
 
