@@ -1,13 +1,23 @@
 "use strict";
 const log = require("loglevel");
-const AWS = require("aws-sdk");
-const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
-const fs = require("fs");
-const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
-const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
-var StringDecoder = require("string_decoder").StringDecoder;
-const { v4: uuidv4 } = require("uuid");
-const documentClient = new AWS.DynamoDB.DocumentClient();
+const {
+    BatchWriteItemCommand,
+    DynamoDBClient,
+    QueryCommand,
+} = require("@aws-sdk/client-dynamodb");
+const {
+    DynamoDBDocumentClient,
+    GetCommand,
+    PutCommand,
+    UpdateCommand,
+} = require("@aws-sdk/lib-dynamodb");
+const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
+const { GetObjectCommand, PutObjectCommand, S3Client } = require("@aws-sdk/client-s3");
+const { randomUUID } = require("node:crypto");
+const s3 = new S3Client({ region: process.env.AwsRegion });
+const ddbClient = new DynamoDBClient({ region: process.env.AwsRegion });
+const marshallOptions = { removeUndefinedValues: true };
+const documentClient = DynamoDBDocumentClient.from(ddbClient, { marshallOptions });
 
 log.setLevel(log.levels.DEBUG);
 
@@ -20,7 +30,7 @@ const flushBulkRequests = async (requests) => {
             ReturnConsumedCapacity: "TOTAL",
         };
         try {
-            var data = await ddbClient.batchWriteItem(params);
+            var data = await ddbClient.send(new BatchWriteItemCommand(params));
 
             log.debug("flushBulk: " + JSON.stringify(data)); // successful response
             return requests.length; // TODO get from TotalProcessed;
@@ -58,7 +68,7 @@ const addSingle = async (json) => {
 const fmtBulkPut = (json1) => {
     if (json1) {
         log.debug("fmtBulkPut pw:", json1);
-        var marshalled = AWS.DynamoDB.Converter.marshall(json1);
+        var marshalled = marshall(json1, marshallOptions);
         log.debug("fmtBulkPut mar:", marshalled);
         const putRequest = {
             PutRequest: {
@@ -79,7 +89,7 @@ const fmtBulkDelete = (json1) => {
             DP: json1.DP,
             DS: json1.DS,
         };
-        var marshalled = AWS.DynamoDB.Converter.marshall(jsonKey);
+        var marshalled = marshall(jsonKey, marshallOptions);
         log.trace("fmtBulkDelete marsh:", marshalled);
         const putRequest = {
             DeleteRequest: {
@@ -105,7 +115,7 @@ const promoteToObject = (unmarshalled, factory) => {
 const unmarshallResultsToArray = (data, factory) => {
     const rc = [];
     for (var i = 0; i < data.Items.length; i++) {
-        var unmarshalled = AWS.DynamoDB.Converter.unmarshall(data.Items[i]);
+        var unmarshalled = unmarshall(data.Items[i]);
         unmarshalled = promoteToObject(unmarshalled, factory);
         if (unmarshalled) {
             rc.push(unmarshalled);
@@ -139,10 +149,9 @@ async function throwIfRecentCcaRequested (qsp) {
 
 
     // should throw if update fails condition
-    await documentClient.update({
+    await documentClient.send(new UpdateCommand({
         TableName: process.env.DistDbTable,
         Key: key,
-        Item: updateItem,
         UpdateExpression: "set #lockId= :lockIdNew, #updatedAt= :updatedAtNew, #TTL= :TTLNew ",
 
         ConditionExpression: "#lockId = :lockIdOld",
@@ -157,11 +166,11 @@ async function throwIfRecentCcaRequested (qsp) {
           ":TTLNew": updateItem.TTL,
           ":updatedAtNew": updateItem.updatedAt,
         },
-     }).promise();
+     }));
     log.debug("throwIfRecentCcaRequested: updated : " + JSON.stringify(updateItem));
 }
 function getOptimisticCcaStructs(orgId,init=false){
-    const uuid = uuidv4();
+    const uuid = randomUUID();
     const key= { 
         DP: `_LockCCA_:${orgId}`,
         DS: 17,
@@ -185,12 +194,10 @@ async function getOldOptimisticCcaLock(orgId){
 
     const [key,putItem]=getOptimisticCcaStructs(orgId,true)
 
-    const  {Item}  = await documentClient
-        .get({
+    const { Item } = await documentClient.send(new GetCommand({
         TableName: process.env.DistDbTable,
         Key: key,
-        })
-    .promise();
+    }));
     const oldItem=Item;
 
     if(oldItem && oldItem.lockId){
@@ -207,11 +214,11 @@ async function getOldOptimisticCcaLock(orgId){
        
   
         log.debug("getOldOptimisticCcaLock: init: " + JSON.stringify(putItem));
-        const prc=await documentClient.put({
+        const prc = await documentClient.send(new PutCommand({
             TableName: process.env.DistDbTable,
             Item: putItem, 
             ConditionExpression: 'attribute_not_exists(DP)',
-        }).promise();
+        }));
         log.debug("getOldOptimisticCcaLock: did init: " + JSON.stringify(prc));
         return putItem
 }
@@ -227,7 +234,7 @@ async function ddbQueryRaceHistory(qsp) {
     };
     log.debug("history query: " + JSON.stringify(params));
     try {
-        var data = await ddbClient.query(params);
+        var data = await ddbClient.send(new QueryCommand(params));
         const cc = data.ConsumedCapacity.CapacityUnits;
         log.debug("queryRaceHistory cc: ", cc); // successful response
         log.debug("queryRaceHistory: ", data); // successful response
@@ -258,7 +265,7 @@ async function putS3(msg, newItems,oldItems) {
     };
     try {
         log.debug("puts3 to :", putObjectName); // successful response
-        const didPut = await s3.putObject(params).promise();
+        const didPut = await s3.send(new PutObjectCommand(params));
         log.debug("puts3:", didPut); // successful response
 
         const newCCA = {
@@ -291,11 +298,10 @@ const getS3Json = async (key) => {
         Bucket: process.env.DstBucket,
     };
     try {
-        const didGet = await s3.getObject(params).promise();
+        const didGet = await s3.send(new GetObjectCommand(params));
         log.debug("gets3:", didGet);
 
-        const d = new StringDecoder("utf8");
-        const rc = d.write(didGet.Body);
+        const rc = await didGet.Body.transformToString();
         return JSON.parse(rc);
     } catch (err) {
         log.debug("s3get failed:", err); // successful response

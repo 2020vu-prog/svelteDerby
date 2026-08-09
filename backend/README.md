@@ -1,6 +1,6 @@
 ##NOTE:
-* Node 16.4.0 or newer is required for backend code that uses AsyncLocalStorage.
-* Node 18 or newer is recommended for local development and current Lambda runtimes.
+* Backend Lambda runtimes are currently mixed: `derbyMain` and `dynamoMain` use Node 16, while `sqsCcaMain` uses Node 22.
+* Node 22 is recommended for local backend development. See each module's documentation for its deployed runtime.
 
 # Stand up AWS infrastructure
 * copy awsVarTemplate.sh to a private file (probably outside of the git tree)
