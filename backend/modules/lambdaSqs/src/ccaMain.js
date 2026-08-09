@@ -16,10 +16,17 @@ const { GetObjectCommand, PutObjectCommand, S3Client } = require("@aws-sdk/clien
 const { randomUUID } = require("node:crypto");
 const s3 = new S3Client({ region: process.env.AwsRegion });
 const ddbClient = new DynamoDBClient({ region: process.env.AwsRegion });
-const marshallOptions = { removeUndefinedValues: true };
-const documentClient = DynamoDBDocumentClient.from(ddbClient, { marshallOptions });
+const rawMarshallOptions = {
+    removeUndefinedValues: true,
+    convertTopLevelContainer: false,
+};
+const documentClient = DynamoDBDocumentClient.from(ddbClient, {
+    marshallOptions: { removeUndefinedValues: true },
+});
 
 log.setLevel(log.levels.DEBUG);
+
+class RecentCcaRequestError extends Error {}
 
 const flushBulkRequests = async (requests) => {
     if (requests.length > 0) {
@@ -29,15 +36,16 @@ const flushBulkRequests = async (requests) => {
             },
             ReturnConsumedCapacity: "TOTAL",
         };
-        try {
-            var data = await ddbClient.send(new BatchWriteItemCommand(params));
-
-            log.debug("flushBulk: " + JSON.stringify(data)); // successful response
-            return requests.length; // TODO get from TotalProcessed;
-        } catch (err) {
-            log.debug("flushBulk:", err, err.stack); // an error occurred
-            return 0;
+        const data = await ddbClient.send(new BatchWriteItemCommand(params));
+        const unprocessed = data.UnprocessedItems?.[process.env.DistDbTable] || [];
+        if (unprocessed.length > 0) {
+            throw new Error(
+                `flushBulk left ${unprocessed.length} unprocessed request(s)`
+            );
         }
+
+        log.debug("flushBulk: " + JSON.stringify(data)); // successful response
+        return requests.length; // TODO get from TotalProcessed;
     }
 };
 const addBulk = async (json) => {
@@ -68,7 +76,7 @@ const addSingle = async (json) => {
 const fmtBulkPut = (json1) => {
     if (json1) {
         log.debug("fmtBulkPut pw:", json1);
-        var marshalled = marshall(json1, marshallOptions);
+        var marshalled = marshall(json1, rawMarshallOptions);
         log.debug("fmtBulkPut mar:", marshalled);
         const putRequest = {
             PutRequest: {
@@ -89,7 +97,7 @@ const fmtBulkDelete = (json1) => {
             DP: json1.DP,
             DS: json1.DS,
         };
-        var marshalled = marshall(jsonKey, marshallOptions);
+        var marshalled = marshall(jsonKey, rawMarshallOptions);
         log.trace("fmtBulkDelete marsh:", marshalled);
         const putRequest = {
             DeleteRequest: {
@@ -132,7 +140,7 @@ const unmarshallResultsToArray = (data, factory) => {
 async function throwIfRecentCcaRequested (qsp) {
     if(qsp.ccType !== "CCA"){
         log.debug("throwIfRecentCcaRequested: allow type: " + JSON.stringify(qsp));
-        return
+        return null
     }
     const [key,updateItem]=getOptimisticCcaStructs(qsp.orgId,false)
     const oldItem=await getOldOptimisticCcaLock(qsp.orgId)
@@ -142,8 +150,9 @@ async function throwIfRecentCcaRequested (qsp) {
     const ccaAge=Date.now()-oldItem.updatedAt;
     log.debug("throwIfRecentCcaRequested: ccaAge : " + JSON.stringify(ccaAge));
     if(ccaAge<(1200*1000) ){ // 20 minutes
-        //throw Error("oldItem recently updated:"+ccaAge+ " item:"+JSON.stringify(oldItem))
-        throw "oldItem recently updated:"+ccaAge+ " item:"+JSON.stringify(oldItem)
+        throw new RecentCcaRequestError(
+            "oldItem recently updated:" + ccaAge + " item:" + JSON.stringify(oldItem)
+        );
     }
     log.debug("throwIfRecentCcaRequested: updating : " + JSON.stringify(oldItem));
 
@@ -166,8 +175,27 @@ async function throwIfRecentCcaRequested (qsp) {
           ":TTLNew": updateItem.TTL,
           ":updatedAtNew": updateItem.updatedAt,
         },
-     }));
+    }));
     log.debug("throwIfRecentCcaRequested: updated : " + JSON.stringify(updateItem));
+    return updateItem;
+}
+async function releaseCcaLock(lockItem) {
+    if (!lockItem) return;
+
+    await documentClient.send(new UpdateCommand({
+        TableName: process.env.DistDbTable,
+        Key: { DP: lockItem.DP, DS: lockItem.DS },
+        UpdateExpression: "set #updatedAt = :staleUpdatedAt",
+        ConditionExpression: "#lockId = :lockId",
+        ExpressionAttributeNames: {
+            "#updatedAt": "updatedAt",
+            "#lockId": "lockId",
+        },
+        ExpressionAttributeValues: {
+            ":staleUpdatedAt": 3,
+            ":lockId": lockItem.lockId,
+        },
+    }));
 }
 function getOptimisticCcaStructs(orgId,init=false){
     const uuid = randomUUID();
@@ -243,9 +271,9 @@ async function ddbQueryRaceHistory(qsp) {
 
         return rc;
     } catch (err) {
-        log.debug("queryRaceHistory failed: ", err, err.stack); // an error occurred
+        log.error("queryRaceHistory failed: ", err, err.stack); // an error occurred
+        throw err;
     }
-    return [{ error: "Query History Failed" }, cacheMaxSeconds];
 }
 function getPutObjectName(msg, now) {
     if (msg.ccType === "CCF") {
@@ -322,11 +350,6 @@ const doBulkCleanup = async (items) => {
         await flushBulkRequests(requests);
     }
 };
-async function asyncForEach(array, callback) {
-    for (let index = 0; index < array.length; index++) {
-        await callback(array[index], index, array);
-    }
-}
 const getKeyNames = (items) => {
     const rc = [];
     if (!items) return rc;
@@ -340,21 +363,40 @@ const getKeyNames = (items) => {
 
 exports.handler = async function (event, context) {
     log.info("ccaMain handler go:", event);
-    await asyncForEach(event.Records, async (record) => {
+    const batchItemFailures = [];
+    for (let index = 0; index < event.Records.length; index++) {
+        const record = event.Records[index];
         const { body } = record;
+        let acquiredCcaLock;
         log.debug("sqs b4PutAndGet:", body);
         try {
             const parsedQsp = JSON.parse(body);
-            await throwIfRecentCcaRequested(parsedQsp)
+            acquiredCcaLock = await throwIfRecentCcaRequested(parsedQsp)
             const items = await ddbQueryRaceHistory(parsedQsp);
 
             const keys = getKeyNames(items);
             const oldItems = await getS3(keys);
             await putS3(parsedQsp, items, oldItems);
         } catch (err) {
+            if (err instanceof RecentCcaRequestError) {
+                log.info("CCA request suppressed:", err.message);
+                continue;
+            }
             log.error("s3 error:", err);
-        }
-    });
+            try {
+                await releaseCcaLock(acquiredCcaLock);
+            } catch (releaseErr) {
+                log.error("CCA lock release failed:", releaseErr);
+            }
 
-    return {};
+            // This is a FIFO queue. Stop after the first failure and report both
+            // that record and all later, unprocessed records for retry.
+            for (const failedRecord of event.Records.slice(index)) {
+                batchItemFailures.push({ itemIdentifier: failedRecord.messageId });
+            }
+            break;
+        }
+    }
+
+    return { batchItemFailures };
 };
