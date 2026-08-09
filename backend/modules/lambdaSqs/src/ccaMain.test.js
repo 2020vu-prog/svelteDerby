@@ -138,6 +138,30 @@ test("CCA updates a stale organization lock before creating an archive", async (
     assert.match(s3Commands[0].input.Key, /^archive\/org-path\/org-2\/\d+\.json$/);
 });
 
+test("recent CCA request is suppressed without logging an error", async (t) => {
+    const infoMessages = [];
+    let errorCount = 0;
+
+    t.mock.method(DynamoDBDocumentClient.prototype, "send", async (command) => {
+        if (command instanceof GetCommand) {
+            return { Item: { lockId: "active-lock", updatedAt: Date.now() } };
+        }
+        assert.fail(`Unexpected document command: ${command.constructor.name}`);
+    });
+    t.mock.method(log, "info", (...args) => infoMessages.push(args));
+    t.mock.method(log, "error", () => errorCount++);
+
+    const result = await handler(sqsEvent({
+        orgId: "org-locked",
+        orgIz: "org-path",
+        ccType: "CCA",
+    }));
+
+    assert.deepEqual(result, {});
+    assert.equal(errorCount, 0);
+    assert.ok(infoMessages.some((args) => args[0] === "CCA request suppressed:"));
+});
+
 test("existing CCA archive contents are included in the next archive", async (t) => {
     const previousItem = { DP: "org-3", DS: 1, archived: true };
     const pointer = {
