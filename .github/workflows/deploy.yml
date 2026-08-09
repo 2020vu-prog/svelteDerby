@@ -131,10 +131,30 @@ jobs:
           npm run test:unit -- --silent
           git diff --exit-code
 
+      - name: Set up Node 22 for lambdaSqs
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Test and package lambdaSqs
+        working-directory: backend/modules/lambdaSqs/src
+        run: |
+          npm ci
+          npm test
+          make package.zip
+
+      - name: Restore Node 18 for legacy Lambdas and frontend
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 18
+
+      - name: Restore npm for legacy builds
+        run: npm install --global npm@8.19.4
+
       - name: Plan backend
         working-directory: backend
         run: |
-          make lambdaPkgs
+          make lambdaPkgsLegacy
           terraform init -reconfigure -backend-config="${TF_BACKEND_CONFIG}"
           terraform plan -out="${RUNNER_TEMP}/backend.tfplan"
 

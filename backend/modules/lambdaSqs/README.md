@@ -109,5 +109,6 @@ npm test
 ```
 
 The tests use Node's built-in test runner and mock the AWS SDK v3 clients; they
-do not access an AWS account. The repository deployment workflow builds the ZIP
-through `make lambdaPkgs` before running the Terraform plan.
+do not access an AWS account. The deployment workflow tests and packages this
+module in a dedicated Node 22 step. It then restores Node 18 and runs
+`make lambdaPkgsLegacy` for the older Lambda modules before planning Terraform.

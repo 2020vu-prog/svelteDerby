@@ -1,15 +1,18 @@
 SUBDIRS := $(wildcard modules/*/src/.)
+LAMBDA_SQS_DIR := modules/lambdaSqs/src/.
+LEGACY_LAMBDA_DIRS := $(filter-out $(LAMBDA_SQS_DIR),$(SUBDIRS))
 
 all: lambdaPkgs tfplan
 auto: lambdaPkgs tfauto
 
 lambdaPkgs: $(SUBDIRS) 
+lambdaPkgsLegacy: $(LEGACY_LAMBDA_DIRS)
 
 $(SUBDIRS):
 	$(MAKE) -C $@
 	echo $@
 
-.PHONY: all $(SUBDIRS) tfplan lambdaPkgs auto tfauto
+.PHONY: all $(SUBDIRS) tfplan lambdaPkgs lambdaPkgsLegacy auto tfauto
 
 tfplan: $(SUBDIRS) terraEnv
 	terraform apply
