@@ -1,9 +1,5 @@
 const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
 const CognitoUserPool = AmazonCognitoIdentity.CognitoUserPool;
-const AWS = require('aws-sdk');
-const request = require('request');
-const jwkToPem = require('jwk-to-pem');
-const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const devConfig = require(path.resolve(__dirname, '..', process.env.TEST_AWS_EXPORTS_FILE || './aws-exports.json'));
@@ -13,8 +9,6 @@ const poolData = {
 	UserPoolId : devConfig.aws_user_pools_id,
 	ClientId : devConfig.aws_user_pools_hosted_client_id
 }; 
-const pool_region = 'us-east-2';
-
 const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 function Login() {
     return new Promise((resolve, reject) => {
