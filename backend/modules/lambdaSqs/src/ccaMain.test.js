@@ -88,6 +88,7 @@ test("CCF archives queried records and removes them from DynamoDB", async (t) =>
 
 test("CCA updates a stale organization lock before creating an archive", async (t) => {
     const documentCommands = [];
+    const dynamoCommands = [];
     const s3Commands = [];
 
     t.mock.method(DynamoDBDocumentClient.prototype, "send", async (command) => {
@@ -101,6 +102,7 @@ test("CCA updates a stale organization lock before creating an archive", async (
         assert.fail(`Unexpected document command: ${command.constructor.name}`);
     });
     t.mock.method(DynamoDBClient.prototype, "send", async (command) => {
+        dynamoCommands.push(command);
         if (command instanceof QueryCommand) {
             return { Items: [], ConsumedCapacity: { CapacityUnits: 0 } };
         }
@@ -127,6 +129,12 @@ test("CCA updates a stale organization lock before creating an archive", async (
         documentCommands[1].input.ExpressionAttributeValues[":lockIdOld"],
         "old-lock"
     );
+    const pointerWrite = dynamoCommands.find(
+        (command) => command instanceof BatchWriteItemCommand
+    ).input.RequestItems.Distribution[0].PutRequest.Item;
+    assert.ok(pointerWrite.DP);
+    assert.ok(pointerWrite.DS);
+    assert.equal(pointerWrite.M, undefined);
     assert.match(s3Commands[0].input.Key, /^archive\/org-path\/org-2\/\d+\.json$/);
 });
 

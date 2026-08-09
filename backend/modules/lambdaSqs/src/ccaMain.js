@@ -16,8 +16,13 @@ const { GetObjectCommand, PutObjectCommand, S3Client } = require("@aws-sdk/clien
 const { randomUUID } = require("node:crypto");
 const s3 = new S3Client({ region: process.env.AwsRegion });
 const ddbClient = new DynamoDBClient({ region: process.env.AwsRegion });
-const marshallOptions = { removeUndefinedValues: true };
-const documentClient = DynamoDBDocumentClient.from(ddbClient, { marshallOptions });
+const rawMarshallOptions = {
+    removeUndefinedValues: true,
+    convertTopLevelContainer: false,
+};
+const documentClient = DynamoDBDocumentClient.from(ddbClient, {
+    marshallOptions: { removeUndefinedValues: true },
+});
 
 log.setLevel(log.levels.DEBUG);
 
@@ -68,7 +73,7 @@ const addSingle = async (json) => {
 const fmtBulkPut = (json1) => {
     if (json1) {
         log.debug("fmtBulkPut pw:", json1);
-        var marshalled = marshall(json1, marshallOptions);
+        var marshalled = marshall(json1, rawMarshallOptions);
         log.debug("fmtBulkPut mar:", marshalled);
         const putRequest = {
             PutRequest: {
@@ -89,7 +94,7 @@ const fmtBulkDelete = (json1) => {
             DP: json1.DP,
             DS: json1.DS,
         };
-        var marshalled = marshall(jsonKey, marshallOptions);
+        var marshalled = marshall(jsonKey, rawMarshallOptions);
         log.trace("fmtBulkDelete marsh:", marshalled);
         const putRequest = {
             DeleteRequest: {
