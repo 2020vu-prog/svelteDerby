@@ -1542,8 +1542,10 @@ async function getDerbyMainVersionInfo() {
     const gitBreadcrumb = gitBreadcrumbParameterResponse.Parameter.Value;
     try {
         const { buildTime } = JSON.parse(gitBreadcrumb);
-        const buildAgeMs = Date.now() - Number(buildTime);
-        if (buildAgeMs >= 0 && buildAgeMs <= 10 * 60 * 1000) {
+        const buildTimeMs = Number(buildTime);
+        const monitorTestEndTimeMs = buildTimeMs + 10 * 60 * 1000;
+        const nowMs = Date.now();
+        if (nowMs >= buildTimeMs && nowMs <= monitorTestEndTimeMs) {
             log.error("ERROR CloudWatch monitor test from getDerbyMainVersionInfo");
         }
     } catch (err) {
