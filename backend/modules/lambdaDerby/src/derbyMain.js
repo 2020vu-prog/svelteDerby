@@ -1535,14 +1535,25 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
 }
 
 async function getDerbyMainVersionInfo() {
-    log.error("ERROR CloudWatch monitor test from getDerbyMainVersionInfo");
     const parameterName = `/deploy/${process.env.DeployEnvironment}/git-breadcrumb`;
     const gitBreadcrumbParameterResponse = await ssm
         .getParameter({ Name: parameterName })
         .promise();
+    const gitBreadcrumb = gitBreadcrumbParameterResponse.Parameter.Value;
+    try {
+        const { buildTime } = JSON.parse(gitBreadcrumb);
+        const buildTimeMs = Number(buildTime);
+        const monitorTestEndTimeMs = buildTimeMs + 10 * 60 * 1000;
+        const nowMs = Date.now();
+        if (nowMs >= buildTimeMs && nowMs <= monitorTestEndTimeMs) {
+            log.error("ERROR CloudWatch monitor test from getDerbyMainVersionInfo");
+        }
+    } catch (err) {
+        log.warn("Unable to parse git breadcrumb buildTime");
+    }
     return {
         version: derbyMainVersion,
-        gitBreadcrumb: gitBreadcrumbParameterResponse.Parameter.Value,
+        gitBreadcrumb,
     };
 }
 
