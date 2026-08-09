@@ -425,6 +425,7 @@ data "aws_iam_policy_document" "deploy_integration" {
       "sns:Subscribe",
       "sns:TagResource",
       "sns:Unsubscribe",
+      "sns:UntagResource",
       "sqs:CreateQueue",
       "sqs:DeleteQueue",
       "sqs:GetQueueAttributes",
@@ -478,6 +479,39 @@ data "aws_iam_policy_document" "deploy_integration" {
     effect    = "Allow"
     actions   = ["ssm:DescribeParameters"]
     resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "deploy_monitoring" {
+  statement {
+    sid    = "ManageBackendLambdaAlarms"
+    effect = "Allow"
+    actions = [
+      "cloudwatch:DeleteAlarms",
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:ListTagsForResource",
+      "cloudwatch:PutMetricAlarm",
+      "cloudwatch:TagResource",
+      "cloudwatch:UntagResource",
+    ]
+    resources = [
+      "arn:${local.partition}:cloudwatch:${var.AwsRegion}:${local.account_id}:alarm:svelte-derby-${replace(var.DeployEnvironment, ".", "-")}-*",
+    ]
+  }
+
+  statement {
+    sid    = "ManageBackendLambdaLogMetricFilters"
+    effect = "Allow"
+    actions = [
+      "logs:DeleteMetricFilter",
+      "logs:DescribeMetricFilters",
+      "logs:PutMetricFilter",
+    ]
+    resources = [
+      "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/derbyMain:*",
+      "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/dynamoMain:*",
+      "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/sqsCcaMain:*",
+    ]
   }
 }
 
@@ -577,6 +611,7 @@ locals {
     iam           = data.aws_iam_policy_document.deploy_iam.json
     identity-edge = data.aws_iam_policy_document.deploy_identity_edge.json
     integration   = data.aws_iam_policy_document.deploy_integration.json
+    monitoring    = data.aws_iam_policy_document.deploy_monitoring.json
     dns           = data.aws_iam_policy_document.deploy_dns.json
     iot           = data.aws_iam_policy_document.deploy_iot.json
   }
