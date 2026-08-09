@@ -26,6 +26,8 @@ const documentClient = DynamoDBDocumentClient.from(ddbClient, {
 
 log.setLevel(log.levels.DEBUG);
 
+class RecentCcaRequestError extends Error {}
+
 const flushBulkRequests = async (requests) => {
     if (requests.length > 0) {
         var params = {
@@ -147,8 +149,9 @@ async function throwIfRecentCcaRequested (qsp) {
     const ccaAge=Date.now()-oldItem.updatedAt;
     log.debug("throwIfRecentCcaRequested: ccaAge : " + JSON.stringify(ccaAge));
     if(ccaAge<(1200*1000) ){ // 20 minutes
-        //throw Error("oldItem recently updated:"+ccaAge+ " item:"+JSON.stringify(oldItem))
-        throw "oldItem recently updated:"+ccaAge+ " item:"+JSON.stringify(oldItem)
+        throw new RecentCcaRequestError(
+            "oldItem recently updated:" + ccaAge + " item:" + JSON.stringify(oldItem)
+        );
     }
     log.debug("throwIfRecentCcaRequested: updating : " + JSON.stringify(oldItem));
 
@@ -357,6 +360,10 @@ exports.handler = async function (event, context) {
             const oldItems = await getS3(keys);
             await putS3(parsedQsp, items, oldItems);
         } catch (err) {
+            if (err instanceof RecentCcaRequestError) {
+                log.info("CCA request suppressed:", err.message);
+                return;
+            }
             log.error("s3 error:", err);
         }
     });
