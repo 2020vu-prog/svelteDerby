@@ -47,10 +47,21 @@
         let jsonFile = e.target.files[0];
         let reader = new FileReader();
         reader.readAsBinaryString(jsonFile);
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             //avatar = e.target.result
             log.debug("OFS:", e.target.result);
-            fmtAndPostDrivers(e.target.result);
+            try {
+                await fmtAndPostDrivers(e.target.result);
+            } catch (err) {
+                const importType = InputFileContentType === "application/csv"
+                    ? "CSV"
+                    : "JSON";
+                log.error(`Driver ${importType} upload failed:`, err);
+                pushMessage({
+                    text: `Driver ${importType} upload failed: ${err.message || err}`,
+                    type: "error",
+                });
+            }
         };
     };
     async function fmtAndPostDrivers(rawData) {
