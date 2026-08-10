@@ -39,12 +39,12 @@ function buildRequestError(error) {
     requestError.detail = detail;
     return requestError;
 }
-module.exports.getData = async url => {
+module.exports.getData = async (url, config = {}) => {
     try {
         const token = fs.readFileSync(__dirname + '/token.txt', 'utf8');
         axios.defaults.headers.common['Authorization'] = token;
 
-        const response = await axios.get(url);
+        const response = await axios.get(url, config);
         const data = response.data;
         return data;
     } catch (error) {

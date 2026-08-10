@@ -42,6 +42,32 @@ test("getAwsConfig returns the hosted Cognito client config", async () => {
     );
 });
 
+test("getDerbyMainVersion returns deployment metadata", async () => {
+    const data = await getData(`${CF}/getDerbyMainVersion`);
+    const breadcrumb = JSON.parse(data.gitBreadcrumb);
+
+    expect(data.version).toMatch(/^\d+\.\d+\.\d+/);
+    expect(breadcrumb).toEqual(
+        expect.objectContaining({
+            buildTime: expect.anything(),
+            hash: expect.any(String),
+        })
+    );
+    expect(Number(breadcrumb.buildTime)).toBeGreaterThan(0);
+});
+
+test("iot discovery returns the timer backend configuration", async () => {
+    const data = await getData(`${CF}/iot/discover`, {
+        headers: { "x-rr1-timer": `integration-${orgId}` },
+    });
+
+    expect(data.priority).toBeDefined();
+    expect(Array.isArray(data.backends)).toBe(true);
+    expect(data.backends.length).toBeGreaterThan(0);
+    expect(data.authUrl).toMatch(/^https:\/\//);
+    expect(data.bundleUrl).toMatch(/^https:\/\//);
+});
+
 test("listOrgEvents returns event config for an org index", async () => {
     const data = await getData(`${CF}/listOrgEvents?orgIz=${orgIz}`);
 
@@ -64,6 +90,12 @@ test("getOrgRoles returns roles for the authenticated user", async () => {
 
     expect(data.email).toBe(email.toLowerCase());
     expect(Array.isArray(data.roleList)).toBe(true);
+});
+
+test("listOrgUser returns the organization permission records", async () => {
+    const data = await getData(`${CF}/listOrgUser?orgIz=${orgIz}`);
+
+    expect(Array.isArray(data)).toBe(true);
 });
 
 test("updateEventConfig updates the throwaway event config", async () => {
@@ -94,6 +126,38 @@ test("timer routes return active timer lists", async () => {
     activeTimers.forEach((timer) => {
         expect(timer.uuid).toBeUndefined();
     });
+});
+
+test("getTimerHistory reports an event without a timer configuration", async () => {
+    const data = await getData(
+        `${CF}/getTimerHistory?orgIz=${orgIz}&orgId=${orgId}`
+    );
+
+    expect(data.error).toMatch(/missing timerConfig/i);
+});
+
+test("getTimerPbHistory validates its required timer name", async () => {
+    const data = await getData(
+        `${CF}/getTimerPbHistory?orgIz=${orgIz}&orgId=${orgId}`
+    );
+
+    expect(data.error).toMatch(/missing timerName/i);
+});
+
+test("getPhaseElapsed returns no record for an unused phase key", async () => {
+    const data = await getData(
+        `${CF}/getPhaseElapsed?orgIz=${orgIz}&orgId=${orgId}&sk=integration-${uuidv4()}`
+    );
+
+    expect(data == null || Object.keys(data).length === 0).toBe(true);
+});
+
+test("listMediaPrefix returns no objects for an isolated prefix", async () => {
+    const data = await getData(
+        `${CF}/listMediaPrefix?orgIz=${orgIz}&orgId=${orgId}&prefix=integration-${uuidv4()}`
+    );
+
+    expect(data).toEqual([]);
 });
 
 test("requestServerEpochMS returns the current server time", async () => {
