@@ -45,7 +45,7 @@ class RoutePermission {
 
 RoutePermission.PUBLIC = new RoutePermission("Public");
 RoutePermission.ANONYMOUS = new RoutePermission("Anonymous");
-RoutePermission.CAN_WALK_ON_WATER = new RoutePermission("CanWalkOnWater");
+RoutePermission.POWER = new RoutePermission("CanWalkOnWater");
 RoutePermission.CAN_ADD_ORG_USER = new RoutePermission("CanAddOrgUser");
 RoutePermission.CAN_ADD_PARTICIPANT = new RoutePermission("CanAddParticipant");
 RoutePermission.CAN_TIMER_CONFIG = new RoutePermission("CanTimerConfig");
