@@ -1183,7 +1183,9 @@ async function getOrgRoles(event, apiProps) {
     return { statusCode: 403, error: "email not aligned" };
 }
 const routeMap = {
-    "/iot/discover": { permission: RoutePermission.ANONYMOUS, allowFrozen: true,
+    "/iot/discover": {
+        permission: RoutePermission.ANONYMOUS,
+        allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
         allowMissingOrgIz: true,
