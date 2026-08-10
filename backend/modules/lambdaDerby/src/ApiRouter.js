@@ -178,7 +178,9 @@ class ApiRouter {
             });
         }
 
-        this.log.debug(`route handling: ${routePath}`, route);
+        this.log.debug(
+            `route handling: ${routePath} permission: ${route.permission}`
+        );
         return route.handler(event, {
             ...context,
             ...principal,

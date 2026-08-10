@@ -43,6 +43,9 @@ test("registers and dispatches a route with its declared permission", async () =
         expect.objectContaining({ orgId: "Test.123" }),
         expect.objectContaining({ email: "user@example.com" })
     );
+    expect(dependencies.log.debug).toHaveBeenCalledWith(
+        "route handling: /example permission: CanExample"
+    );
 });
 
 test("supports plugins that register routes dynamically", () => {

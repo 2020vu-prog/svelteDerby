@@ -1,6 +1,16 @@
 const { CF, getData, postData, getHHMMSS } = require("./common.js");
+const fs = require("fs");
+const path = require("path");
+const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const testers = new RegExp(process.env.TEST_USER);
+const EntityFactory = require(
+    "../modules/lambdaDerby/src/shared/EntityFactory.js"
+);
+const token = fs.readFileSync(path.resolve(__dirname, "token.txt"), "utf8");
+const testerEmail = jwt.decode(token).email;
+const testerEmailHash = new EntityFactory({}).getHashFromEmail(
+    testerEmail
+);
 
 const slowDrivers = false;
 function sleep(ms) {
@@ -153,10 +163,11 @@ test("postDdbQuery: ", () => {
     });
 });
 
-test("getHistory: the data should by created by a real tester", () => {
+test("getHistory: the data should be attributed to the tester", () => {
     return getData(`${CF}/getRaceHistory?orgId=${orgId}&orgIz=${orgIz}`).then(
         (data) => {
-            expect(data[0].by).toMatch(testers);
+            expect(data[0].byH).toBe(testerEmailHash);
+            expect(data[0].by).toBeUndefined();
         }
     );
 });
@@ -168,9 +179,11 @@ test("getNextOnBlocks: ", () => {
     return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(
         (data) => {
             //console.log("nextOnBlocks:", data);
-            expect(data[0].by).toMatch(testers);
             expect(data.length).toEqual(1);
             timerSkAPhase = data[0].SK;
+            expect(timerSkAPhase).toBeTruthy();
+            expect(data[0].byH).toBe(testerEmailHash);
+            expect(data[0].by).toBeUndefined();
         }
     );
 });

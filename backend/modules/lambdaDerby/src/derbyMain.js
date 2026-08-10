@@ -1345,7 +1345,15 @@ const routeMap = {
     "/doApplyFinishTime": {
         permission: RoutePermission.MANUAL_FINISH_TIME,
         h: async (event) => {
-            return buildResponse(await applyFinishTime(JSON.parse(event.body)));
+            const finishTimeRequest = JSON.parse(event.body);
+            if (!finishTimeRequest.SK) {
+                return buildResponse({
+                    status: "error",
+                    error: "Missing SK",
+                    statusCode: 400,
+                });
+            }
+            return buildResponse(await applyFinishTime(finishTimeRequest));
         },
     },
     "/addBulk": {
