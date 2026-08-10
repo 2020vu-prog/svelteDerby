@@ -1623,10 +1623,13 @@ function registerPublicRoutes(router) {
     router.register("/getAwsConfig", {
         permission: RoutePermission.PUBLIC,
         loadContext: false,
-        handler: async () => buildResponse(
-            JSON.parse(process.env.AwsCognitoSettingsJson),
-            `max-age=${3600 * 24 * 360}`
-        ),
+        handler: async () => {
+            const aYear = 3600 * 24 * 360; // client will change cacheBuster key if environment changes
+            return buildResponse(
+                JSON.parse(process.env.AwsCognitoSettingsJson),
+                `max-age=${aYear}`
+            );
+        },
     });
     router.register("/getDerbyMainVersion", {
         permission: RoutePermission.PUBLIC,
