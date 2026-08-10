@@ -22,8 +22,9 @@ const log = require("loglevel");
 
 const EntityFactory = require("./shared/EntityFactory.js");
 const {
-    hasServerRoutePath,
+    hasPermission,
 } = require("./shared/PermissionLookup.js");
+const ApiRouter = require("./ApiRouter.js");
 const AWS = require("aws-sdk");
 const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
 
@@ -1181,7 +1182,7 @@ async function getOrgRoles(event, apiProps) {
     return { statusCode: 403, error: "email not aligned" };
 }
 const routeMap = {
-    "/iot/discover": { allowFrozen: true,
+    "/iot/discover": { permission: "Anonymous", allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
         allowMissingOrgIz: true,
@@ -1190,6 +1191,7 @@ const routeMap = {
         },
     },
     "/getOrgRoles": {
+        permission: "Anonymous",
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
@@ -1198,6 +1200,7 @@ const routeMap = {
         },
     },
     "/addEventConfig": {
+        permission: "TODO_permissions_power?",
         allowFrozen: true, // not really allowing frozen, but skip edit.  race not yet existent.
         allowMissingTtl: true,
         h: async (event) => {
@@ -1205,6 +1208,7 @@ const routeMap = {
         },
     },
     "/updateEventConfig": {
+        permission: "TODO_permissions_power?",
         h: async (event) => {
             return buildResponse(
                 await updateEventConfig(JSON.parse(event.body))
@@ -1212,18 +1216,21 @@ const routeMap = {
         },
     },
     "/getActiveTimers": {
+        permission: "CanTimerConfig",
         allowFrozen: true,
         h: async (event) => {
             return buildResponse(await getSanitizedTimers());
         },
     },
     "/getActivePbTimers": {
+        permission: "CanTimerConfig",
         allowFrozen: true,
         h: async (event) => {
             return buildResponse(await getActivePbTimers());
         },
     },
     "/timerConfig": {
+        permission: "CanTimerConfig",
         h: async (event) => {
             return buildResponse(
                 await addTimerConfig(JSON.parse(event.body), false)
@@ -1231,6 +1238,7 @@ const routeMap = {
         },
     },
     "/timerPbConfig": {
+        permission: "CanTimerConfig",
         h: async (event) => {
             return buildResponse(
                 await addTimerPbConfig(JSON.parse(event.body), false)
@@ -1238,6 +1246,7 @@ const routeMap = {
         },
     },
     "/listOrgUser": {
+        permission: "CanAddOrgUser",
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
@@ -1248,6 +1257,7 @@ const routeMap = {
         },
     },
     "/addOrgUser": {
+        permission: "CanAddOrgUser",
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
@@ -1258,26 +1268,31 @@ const routeMap = {
         },
     },
     "/addParticipant": {
+        permission: "CanAddParticipant",
         h: async (event) => {
             return buildResponse(await addParticipant2(JSON.parse(event.body)));
         },
     },
     "/addPending": {
+        permission: "CanAddPending",
         h: async (event) => {
             return buildResponse(await addPending2(event));
         },
     },
     "/addBlocks": {
+        permission: "CanAddBlocks",
         h: async (event) => {
             return buildResponse(await addBlocks(JSON.parse(event.body)));
         },
     },
     "/deleteRacePhase": {
+        permission: "CanDeleteBlocks",
         h: async (event) => {
             return buildResponse(await deleteRacePhase(JSON.parse(event.body)));
         },
     },
     "/deleteRaceStanding": {
+        permission: "CanDeleteStanding",
         h: async (event) => {
             return buildResponse(
                 await newApiRaceStanding().deleteRaceStanding(JSON.parse(event.body))
@@ -1285,6 +1300,7 @@ const routeMap = {
         },
     },
     "/getPhaseElapsed": {
+        permission: "Anonymous",
         allowFrozen: true,
         h: async (event) => {
             return buildResponse(
@@ -1293,6 +1309,7 @@ const routeMap = {
         },
     },
     "/RaceStanding/addTag": {
+        permission: "CanInitiateAnnouncement",
         h: async (event) => {
             return buildResponse(
                 await newApiRaceStanding().addTag(JSON.parse(event.body))
@@ -1300,6 +1317,7 @@ const routeMap = {
         },
     },
     "/addChart": {
+        permission: "CanAddChart",
         h: async (event) => {
             return buildResponse(
                 await addChartMetaData(JSON.parse(event.body))
@@ -1307,6 +1325,7 @@ const routeMap = {
         },
     },
     "/addChartPosition": {
+        permission: "ChartPosition",
         h: async (event) => {
             requestContext.resetErrorList(); // TODO: re-visit multiple low level error messages from advanceChartPos
             const localMsg = await addOrUpdateChartPosition(
@@ -1321,11 +1340,13 @@ const routeMap = {
         },
     },
     "/doApplyFinishTime": {
+        permission: "ManualFinishTime",
         h: async (event) => {
             return buildResponse(await applyFinishTime(JSON.parse(event.body)));
         },
     },
     "/addBulk": {
+        permission: "TODO_permissions_power?",
         h: async (event) => {
             return buildResponse(
                 await ddbUtils.addBulk(JSON.parse(event.body))
@@ -1333,6 +1354,7 @@ const routeMap = {
         },
     },
     "/ddbQuery": {
+        permission: "TODO_permissions_power?",
         allowFrozen: true,
         h: async (event) => {
             var qr = await ddbUtils.ddbQueryRsContains(JSON.parse(event.body));
@@ -1341,6 +1363,7 @@ const routeMap = {
         },
     },
     "/getNextOnBlocks": {
+        permission: "TODO_permissions_power?",
         allowFrozen: true,
         h: async (event) => {
             const nob = await ddbUtils.ddbQueryRpNextOnBlocks(
@@ -1350,6 +1373,7 @@ const routeMap = {
         },
     },
     "/getRaceHistory": {
+        permission: "Anonymous",
         allowFrozen: true,
         h: async (event) => {
             var [qr, cacheMaxSeconds] = await ddbUtils.ddbQueryRaceHistory(
@@ -1360,6 +1384,7 @@ const routeMap = {
         },
     },
     "/getTimerHistory": {
+        permission: "CanTimerConfig",
         allowFrozen: true,
         h: async (event) => {
             var qr = await queryTimerHistoryByOrgId(
@@ -1369,6 +1394,7 @@ const routeMap = {
         },
     },
     "/getTimerPbHistory": {
+        permission: "CanTimerConfig",
         allowFrozen: true,
         h: async (event) => {
             var qr = await queryTimerPbHistory(event.queryStringParameters);
@@ -1376,6 +1402,7 @@ const routeMap = {
         },
     },
     "/listMediaPrefix": {
+        permission: "Anonymous",
         allowFrozen: true,
         h: async (event) => {
             var qr = await s3QueryMediaPrefix(event.queryStringParameters);
@@ -1384,6 +1411,7 @@ const routeMap = {
         },
     },
     "/listChartTypes": {
+        permission: "CanAddChart",
         allowFrozen: true,
         h: async (event) => {
             var chartTypes = await s3QueryChartTypes();
@@ -1392,6 +1420,7 @@ const routeMap = {
         },
     },
     "/initiateAnnouncement": {
+        permission: "CanInitiateAnnouncement",
         h: async (event) => {
             var json = JSON.parse(event.body);
             var paMessage = json.paMessage;
@@ -1414,6 +1443,7 @@ const routeMap = {
         },
     },
     "/requestTts": {
+        permission: "CanAddParticipant",
         h: async (event) => {
             var json = JSON.parse(event.body);
             var ssml = json.ssml;
@@ -1424,6 +1454,7 @@ const routeMap = {
         },
     },
     "/requestMqttSubPermission": {
+        permission: "Anonymous",
         h: async (event) => {
             const qsp = event.queryStringParameters;
             if (!qsp) {
@@ -1443,6 +1474,7 @@ const routeMap = {
         },
     },
     "/requestVideoUpload": {
+        permission: "CanCaptureVideo",
         h: async (event) => {
 //            var json = JSON.parse(event.body);
             const qsp = event.queryStringParameters;
@@ -1460,6 +1492,7 @@ const routeMap = {
         },
     },
     "/requestServerEpochMS": {
+        permission: "CanCaptureVideo",
         h: async (event) => {
             //var json = JSON.parse(event.body);
             const epochMs = new Date().getTime();
@@ -1469,6 +1502,7 @@ const routeMap = {
         },
     },
     "/requestS3PutObjectUrl": {
+        permission: "CanCaptureVideo",
         h: async (event) => {
             const qsp = event.queryStringParameters;
             if (!qsp) {
@@ -1507,6 +1541,7 @@ const routeMap = {
         },
     },
     "/manageDiscord": {
+        permission: "CanManageDiscord",
         h: async (event) => {
             const qsp = event.queryStringParameters;
             if (!qsp) {
@@ -1556,6 +1591,103 @@ async function getDerbyMainVersionInfo() {
         gitBreadcrumb,
     };
 }
+
+function registerPublicRoutes(router) {
+    router.register("/testArchive", {
+        permission: ApiRouter.PUBLIC,
+        loadContext: false,
+        handler: async () => {
+            await archiveUtils.processExpiringEventConfig();
+            return buildResponse({ tested: "ok" });
+        },
+    });
+    router.register("/listOrgEvents", {
+        permission: ApiRouter.PUBLIC,
+        loadContext: false,
+        handler: async (event) => {
+            const result = await ddbUtils.ddbListEventConfigByOrg(getOrgIz(event));
+            return buildResponse(result, "max-age=307");
+        },
+    });
+    router.register("/listOrgConfig", {
+        permission: ApiRouter.PUBLIC,
+        loadContext: false,
+        handler: async () => {
+            const result = await ddbUtils.ddbQueryOrgConfig();
+            return buildResponse(result, "max-age=1807");
+        },
+    });
+    router.register("/getAwsConfig", {
+        permission: ApiRouter.PUBLIC,
+        loadContext: false,
+        handler: async () => buildResponse(
+            JSON.parse(process.env.AwsCognitoSettingsJson),
+            `max-age=${3600 * 24 * 360}`
+        ),
+    });
+    router.register("/getDerbyMainVersion", {
+        permission: ApiRouter.PUBLIC,
+        loadContext: false,
+        handler: async () => buildResponse(
+            await getDerbyMainVersionInfo(),
+            "max-age=120"
+        ),
+    });
+}
+
+function registerCoreRoutes(router) {
+    Object.entries(routeMap).forEach(([path, definition]) => {
+        const { h, ...metadata } = definition;
+        router.register(path, { ...metadata, handler: h });
+    });
+}
+
+const apiRouter = new ApiRouter({
+    pathPrefix: "/app",
+    buildResponse,
+    isFrozen: frozenOrArchived,
+    log,
+    authenticate: async (event) => {
+        let decodedJwt = { email: "Anonymous" };
+        try {
+            const payload = await jwtVerifier.verify(event.headers.authorization);
+            if (payload && payload.email) decodedJwt = payload;
+        } catch (err) {
+            log.debug("Token not valid; continuing as Anonymous", err);
+        }
+        return {
+            claims: decodedJwt,
+            email: decodedJwt.email,
+            by: decodedJwt["cognito:username"] || decodedJwt.email,
+        };
+    },
+    loadContext: async (event, principal) => {
+        const eventKey = getEventKey(event);
+        const orgId = getOrgId(event);
+        const orgIz = getOrgIz(event);
+        const config = await ddbUtils.getEventConfig(eventKey, event.headers);
+        const defaultTTL = await getTtl(config);
+        const roleList = await getUserRoles(orgIz, principal.email);
+
+        requestContext.setEntityFactory(new EntityFactory({
+            orgId,
+            byEmail: principal.email,
+            TTL: defaultTTL,
+        }));
+        return { config, defaultTTL, eventKey, orgId, orgIz, roleList };
+    },
+    authorize: async (permission, context, principal) => {
+        const allowed = Boolean(
+            principal.email && hasPermission(context.roleList, permission)
+        );
+        log.debug(
+            `${allowed ? "allowing" : "prohibiting"} access to permission ` +
+            `${permission} for [${principal.email}]`
+        );
+        return allowed;
+    },
+});
+apiRouter.use(registerPublicRoutes).use(registerCoreRoutes);
 
 async function snsApplyPbLogMessage(snsMessageJson, snsPublishedTimestamp) {
     // add ssml markup.  (svelte does this for manual announcements.)
@@ -1777,123 +1909,7 @@ async function getApplyableNextOnBlocks(
     return rp;
 }
 async function apiGatewayHandler(event) {
-    const dbArn = process.env.DynamoDbArn;
-
-    log.debug("event.path: ", event.path);
-
-    const routePath = event.path.replace(/^\/app/, "");
-    if (routePath === "/testArchive") {
-        await archiveUtils.processExpiringEventConfig();
-        return buildResponse({ tested: "ok" });
-    }
-
-    if (routePath === "/listOrgEvents") {
-        const qr = await ddbUtils.ddbListEventConfigByOrg(getOrgIz(event));
-        log.debug("getEventConfig 23232:", qr);
-        return buildResponse(qr, "max-age=307");
-    }
-    if (routePath === "/listOrgConfig") {
-        const qr = await ddbUtils.ddbQueryOrgConfig();
-        log.debug("listOrgConfig :", qr);
-        return buildResponse(qr, "max-age=1807");
-    }
-    if (routePath === "/getAwsConfig") {
-        const aYear = 3600 * 24 * 360; // client will change cacheBuster key if environment changes
-        return buildResponse(
-            JSON.parse(process.env.AwsCognitoSettingsJson),
-            `max-age=${aYear}`
-        );
-    }
-    if (routePath === "/getDerbyMainVersion") {
-        return buildResponse(await getDerbyMainVersionInfo(), "max-age=120");
-    }
-
-    var decodedJwt={
-            email: "Anonymous"
-        }
-    try {
-        const start=new Date().getTime()
-        const payload = await jwtVerifier.verify(
-            event.headers.authorization
-        );
-        const elapsed=new Date().getTime() - start
-        console.log("Token is valid. Payload:", payload," elapsed: ",elapsed);
-        if(payload && payload.email){
-            decodedJwt=payload
-        }
-      } catch(err){
-        console.log("Token not valid!",err); // decodedJwt will remain 'anonymous'
-      }
-
-    const eventKey = getEventKey(event);
-    const orgId = getOrgId(event);
-    const orgIz = getOrgIz(event);
-    const config = await ddbUtils.getEventConfig(eventKey, event.headers);
-    const defaultTTL = await getTtl(config);
-
-    const by = decodedJwt["cognito:username"]
-        ? decodedJwt["cognito:username"]
-        : decodedJwt.email;
-    const email = decodedJwt.email;
-    requestContext.setEntityFactory(new EntityFactory({
-        orgId: orgId,
-        byEmail: email,
-        TTL: defaultTTL,
-    }));
-    log.debug("Begin event", event, " with config: ", config);
-
-    const roleList = await getUserRoles(orgIz, email);
-    if (email && hasServerRoutePath(orgIz, roleList, routePath)) {
-        log.debug(`allowing access to ${routePath} for [${email}]`);
-    } else {
-        log.debug(`prohibiting access to ${routePath} for [${email}]`);
-        return buildResponse({ error: "unauthorized", statusCode: 401 });
-    }
-
-    if (!orgId && !routeMap[routePath].allowMissingOrgId) {
-        const qr = { error: "Unable to determine orgId" };
-        return buildResponse(qr);
-    }
-
-    if (!orgIz && !routeMap[routePath].allowMissingOrgIz) {
-        const qr = { error: "Unable to determine orgIz" };
-        return buildResponse(qr);
-    }
-
-    if (!routeMap[routePath].allowMissingTtl && !defaultTTL) {
-        const qr = { error: "Unable to determine default TTL" };
-        return buildResponse(qr);
-    }
-
-    if (routeMap[routePath] && routeMap[routePath].h) {
-        log.debug(
-            "ph routeMap handling: " + routePath,
-            " object:",
-            routeMap[routePath]
-        );
-
-        if (!routeMap[routePath].allowFrozen && frozenOrArchived(config)) {
-            return buildResponse({
-                error: "Can't edit a frozen/archived race",
-            });
-        }
-
-        const phandler = routeMap[routePath].h;
-        log.debug("routeMap handling: " + phandler);
-
-        return await phandler(event, {
-            orgIz: orgIz,
-            orgId: orgId,
-            email: email,
-            roleList: roleList,
-        });
-    }
-
-    log.debug("Unhandled Path: " + routePath + " ep: " + event.path);
-    return buildResponse({
-        status: "unhandled",
-        error: "Unhandled",
-    });
+    return apiRouter.dispatch(event);
 }
 async function listOrgUser(event, apiProps) {
     const rolesByOrg = await ddbUtils.ddbQueryOrgPerms({
