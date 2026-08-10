@@ -1648,52 +1648,61 @@ function registerCoreRoutes(router) {
     });
 }
 
-const apiRouter = new ApiRouter({
-    pathPrefix: "/app",
-    buildResponse,
-    isFrozen: frozenOrArchived,
-    log,
-    authenticate: async (event) => {
-        let decodedJwt = { email: "Anonymous" };
-        try {
-            const payload = await jwtVerifier.verify(event.headers.authorization);
-            if (payload && payload.email) decodedJwt = payload;
-        } catch (err) {
-            log.debug("Token not valid; continuing as Anonymous", err);
-        }
-        return {
-            claims: decodedJwt,
-            email: decodedJwt.email,
-            by: decodedJwt["cognito:username"] || decodedJwt.email,
-        };
-    },
-    loadContext: async (event, principal) => {
-        const eventKey = getEventKey(event);
-        const orgId = getOrgId(event);
-        const orgIz = getOrgIz(event);
-        const config = await ddbUtils.getEventConfig(eventKey, event.headers);
-        const defaultTTL = await getTtl(config);
-        const roleList = await getUserRoles(orgIz, principal.email);
+async function authenticateApiRequest(event) {
+    let decodedJwt = { email: "Anonymous" };
+    try {
+        const payload = await jwtVerifier.verify(event.headers.authorization);
+        if (payload && payload.email) decodedJwt = payload;
+    } catch (err) {
+        log.debug("Token not valid; continuing as Anonymous", err);
+    }
+    return {
+        claims: decodedJwt,
+        email: decodedJwt.email,
+        by: decodedJwt["cognito:username"] || decodedJwt.email,
+    };
+}
 
-        requestContext.setEntityFactory(new EntityFactory({
-            orgId,
-            byEmail: principal.email,
-            TTL: defaultTTL,
-        }));
-        return { config, defaultTTL, eventKey, orgId, orgIz, roleList };
-    },
-    authorize: async (permission, context, principal) => {
-        const allowed = Boolean(
-            principal.email && hasPermission(context.roleList, permission)
-        );
-        log.debug(
-            `${allowed ? "allowing" : "prohibiting"} access to permission ` +
-            `${permission} for [${principal.email}]`
-        );
-        return allowed;
-    },
-});
-apiRouter.use(registerPublicRoutes).use(registerCoreRoutes);
+async function loadApiRequestContext(event, principal) {
+    const eventKey = getEventKey(event);
+    const orgId = getOrgId(event);
+    const orgIz = getOrgIz(event);
+    const config = await ddbUtils.getEventConfig(eventKey, event.headers);
+    const defaultTTL = await getTtl(config);
+    const roleList = await getUserRoles(orgIz, principal.email);
+
+    requestContext.setEntityFactory(new EntityFactory({
+        orgId,
+        byEmail: principal.email,
+        TTL: defaultTTL,
+    }));
+    return { config, defaultTTL, eventKey, orgId, orgIz, roleList };
+}
+
+function authorizeApiRequest(permission, context, principal) {
+    const allowed = Boolean(
+        principal.email && hasPermission(context.roleList, permission)
+    );
+    log.debug(
+        `${allowed ? "allowing" : "prohibiting"} access to permission ` +
+        `${permission} for [${principal.email}]`
+    );
+    return allowed;
+}
+
+function createApiRouter() {
+    return new ApiRouter({
+        pathPrefix: "/app",
+        authenticate: authenticateApiRequest,
+        authorize: authorizeApiRequest,
+        loadContext: loadApiRequestContext,
+        buildResponse,
+        isFrozen: frozenOrArchived,
+        log,
+    }).use(registerPublicRoutes).use(registerCoreRoutes);
+}
+
+const apiRouter = createApiRouter();
 
 async function snsApplyPbLogMessage(snsMessageJson, snsPublishedTimestamp) {
     // add ssml markup.  (svelte does this for manual announcements.)
