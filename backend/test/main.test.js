@@ -333,6 +333,81 @@ test("chart heat 1 creates pending race for cars 100 and 109", async () => {
     expect(pendingRace.ph2).toBeUndefined();
 });
 
+test("heat 1 winner advances to heat 3 and loser advances to heat 7", async () => {
+    const heat1Key = `${testChartId}:01`;
+
+    const phaseA = await postData(`${CF}/addBlocks`, {
+        orgIz,
+        orgId,
+        pt: "R",
+        cn: ["100", "109"],
+    });
+    expect(phaseA.data.status).toMatch(/ok/i);
+
+    const phaseAOnBlocks = await getData(
+        `${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`
+    );
+    expect(phaseAOnBlocks).toHaveLength(1);
+    expect(phaseAOnBlocks[0].Bp).toBe(heat1Key);
+
+    const phaseAResult = await postData(`${CF}/doApplyFinishTime`, {
+        orgIz,
+        orgId,
+        SK: phaseAOnBlocks[0].SK,
+        phr: [0, 33000],
+    });
+    expect(phaseAResult.data.status).toMatch(/ok/i);
+
+    const phaseB = await postData(`${CF}/addBlocks`, {
+        orgIz,
+        orgId,
+        pt: "R",
+        cn: ["109", "100"],
+    });
+    expect(phaseB.data.status).toMatch(/ok/i);
+
+    const phaseBOnBlocks = await getData(
+        `${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`
+    );
+    expect(phaseBOnBlocks).toHaveLength(1);
+    expect(phaseBOnBlocks[0].Bp).toBe(heat1Key);
+
+    const phaseBResult = await postData(`${CF}/doApplyFinishTime`, {
+        orgIz,
+        orgId,
+        SK: phaseBOnBlocks[0].SK,
+        phr: [44000, 0],
+    });
+    expect(phaseBResult.data.status).toMatch(/ok/i);
+
+    const completedRace = await waitForRaceHistory(
+        (race) => race.SK === heat1Key && race.ph1 && race.ph2
+    );
+    expect(completedRace).toBeDefined();
+
+    const [heat3, heat7] = await Promise.all([
+        postData(`${CF}/addChartPosition`, {
+            orgIz,
+            orgId,
+            chartId: testChartId,
+            heatNumber: "03",
+            pos: {},
+        }),
+        postData(`${CF}/addChartPosition`, {
+            orgIz,
+            orgId,
+            chartId: testChartId,
+            heatNumber: "07",
+            pos: {},
+        }),
+    ]);
+
+    expect(heat3.data.entity.SK).toBe(`${testChartId}:03`);
+    expect(heat3.data.entity.pos.A.ptcp).toBe("100");
+    expect(heat7.data.entity.SK).toBe(`${testChartId}:07`);
+    expect(heat7.data.entity.pos.A.ptcp).toBe("109");
+});
+
 test.skip("startDiscordBot: skipped until manageDiscord is stable in integration", async () => {
     const data = await getData(`${CF}/manageDiscord?orgId=${orgId}&orgIz=${orgIz}`)
     expect(Object.keys(data).length).toBeGreaterThan(0);
