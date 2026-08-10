@@ -123,12 +123,12 @@ test("timer routes return active timer lists", async () => {
     });
 });
 
-test("getTimerHistory reports an event without a timer configuration", async () => {
+test("getTimerHistory reports an event without an active assigned timer", async () => {
     const data = await getData(
         `${CF}/getTimerHistory?orgIz=${orgIz}&orgId=${orgId}`
     );
 
-    expect(data.error).toMatch(/missing timerConfig/i);
+    expect(data.error).toMatch(/missing selectedTimerUuid/i);
 });
 
 test("getTimerPbHistory validates its required timer name", async () => {
