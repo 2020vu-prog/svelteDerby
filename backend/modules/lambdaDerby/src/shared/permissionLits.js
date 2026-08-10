@@ -71,7 +71,7 @@ addPermission(
 );
 addPermission("CanCaptureVideo", ["/requestS3PutObjectUrl","/requestVideoUpload","/requestServerEpochMS"], ["/captureVideo"]);
 addPermission(
-    "TODO_permissions_power?",
+    "CanWalkOnWater",
     [
         "/addBulk",
         "/ddbQuery",

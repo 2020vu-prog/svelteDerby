@@ -1201,7 +1201,7 @@ const routeMap = {
         },
     },
     "/addEventConfig": {
-        permission: RoutePermission.POWER,
+        permission: RoutePermission.CAN_WALK_ON_WATER,
         allowFrozen: true, // not really allowing frozen, but skip edit.  race not yet existent.
         allowMissingTtl: true,
         h: async (event) => {
@@ -1209,7 +1209,7 @@ const routeMap = {
         },
     },
     "/updateEventConfig": {
-        permission: RoutePermission.POWER,
+        permission: RoutePermission.CAN_WALK_ON_WATER,
         h: async (event) => {
             return buildResponse(
                 await updateEventConfig(JSON.parse(event.body))
@@ -1347,7 +1347,7 @@ const routeMap = {
         },
     },
     "/addBulk": {
-        permission: RoutePermission.POWER,
+        permission: RoutePermission.CAN_WALK_ON_WATER,
         h: async (event) => {
             return buildResponse(
                 await ddbUtils.addBulk(JSON.parse(event.body))
@@ -1355,7 +1355,7 @@ const routeMap = {
         },
     },
     "/ddbQuery": {
-        permission: RoutePermission.POWER,
+        permission: RoutePermission.CAN_WALK_ON_WATER,
         allowFrozen: true,
         h: async (event) => {
             var qr = await ddbUtils.ddbQueryRsContains(JSON.parse(event.body));
@@ -1364,7 +1364,7 @@ const routeMap = {
         },
     },
     "/getNextOnBlocks": {
-        permission: RoutePermission.POWER,
+        permission: RoutePermission.CAN_WALK_ON_WATER,
         allowFrozen: true,
         h: async (event) => {
             const nob = await ddbUtils.ddbQueryRpNextOnBlocks(
