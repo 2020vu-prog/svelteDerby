@@ -2,15 +2,14 @@ const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
 const CognitoUserPool = AmazonCognitoIdentity.CognitoUserPool;
 const fs = require('fs');
 const path = require('path');
-const devConfig = require(path.resolve(__dirname, '..', process.env.TEST_AWS_EXPORTS_FILE || './aws-exports.json'));
+const { getAwsConfig } = require('../deploymentConfig.js');
 //global.fetch = require('node-fetch');
 
-const poolData = {    
-	UserPoolId : devConfig.aws_user_pools_id,
-	ClientId : devConfig.aws_user_pools_hosted_client_id
-}; 
-const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
-function Login() {
+function Login(devConfig) {
+    const userPool = new AmazonCognitoIdentity.CognitoUserPool({
+        UserPoolId: devConfig.aws_user_pools_id,
+        ClientId: devConfig.aws_user_pools_hosted_client_id,
+    });
     return new Promise((resolve, reject) => {
     var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
         Username : process.env.TEST_USER,
@@ -36,7 +35,7 @@ function Login() {
     });
     });
 }
-Login().catch((err) => {
+getAwsConfig().then(Login).catch((err) => {
     console.error(err);
     process.exit(1);
 });

@@ -9,8 +9,8 @@ if [[ -f .env.local ]]; then
     set +a
 fi
 
-if [[ -z "${TEST_USER:-}" || -z "${TEST_PASSWORD:-}" ]]; then
-    echo "Missing TEST_USER or TEST_PASSWORD."
+if [[ -z "${TEST_USER:-}" || -z "${TEST_PASSWORD:-}" || -z "${DERBY_CLOUDFRONT:-}" ]]; then
+    echo "Missing TEST_USER, TEST_PASSWORD, or DERBY_CLOUDFRONT."
     echo "Create backend/test/.env.local from .env.local.example, or export them before running."
     exit 1
 fi

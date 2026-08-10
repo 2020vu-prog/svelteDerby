@@ -5,11 +5,6 @@ const { v4: uuidv4 } = require("uuid");
 
 const { CF, getData, postData } = require("./common.js");
 
-const devConfig = require(path.resolve(
-    __dirname,
-    process.env.TEST_AWS_EXPORTS_FILE || "./aws-exports.json"
-));
-
 function getTokenClaims() {
     const token = fs.readFileSync(path.resolve(__dirname, "token.txt"), "utf8");
     return jwt.decode(token);
@@ -34,11 +29,11 @@ beforeAll(async () => {
 
 test("getAwsConfig returns the hosted Cognito client config", async () => {
     const data = await getData(`${CF}/getAwsConfig`);
+    const claims = getTokenClaims();
 
-    expect(data.aws_cognito_region).toBe(devConfig.aws_cognito_region);
-    expect(data.aws_user_pools_id).toBe(devConfig.aws_user_pools_id);
-    expect(data.aws_user_pools_hosted_client_id).toBe(
-        devConfig.aws_user_pools_hosted_client_id
+    expect(claims.aud).toBe(data.aws_user_pools_hosted_client_id);
+    expect(claims.iss).toBe(
+        `https://cognito-idp.${data.aws_cognito_region}.amazonaws.com/${data.aws_user_pools_id}`
     );
 });
 
