@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { execFileSync } = require("child_process");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 
@@ -13,6 +14,11 @@ function getTokenClaims() {
 const orgIz = "Test";
 const orgId = `${orgIz}.${uuidv4().substring(0, 5)}`;
 const integrationTimestamp = new Date().toISOString();
+const integrationGitBreadcrumb = JSON.parse(
+    execFileSync(path.resolve(__dirname, "../scripts/gitBreadcrumb.sh"), {
+        encoding: "utf8",
+    })
+);
 let addEventConfigResult;
 
 beforeAll(async () => {
@@ -74,6 +80,25 @@ test("addEventConfig refreshes user display names", async () => {
     expect(addEventConfigResult.userDisplayNameResult.status).toMatch(/ok/i);
     expect(addEventConfigResult.userDisplayNameResult.total).toBeGreaterThanOrEqual(0);
     expect(addEventConfigResult.userDisplayNameResult.created).toBeGreaterThanOrEqual(0);
+});
+
+test("addLogMessage records the integration test Git breadcrumb", async () => {
+    const received = await postData(`${CF}/addLogMessage`, {
+        orgIz,
+        orgId,
+        level: "info",
+        source: "derbyMain.integration.test.js",
+        message: `Integration test Git breadcrumb ${integrationGitBreadcrumb.hash}`,
+        detail: { gitBreadcrumb: integrationGitBreadcrumb },
+    });
+
+    expect(received.data.status).toMatch(/ok/i);
+    expect(received.data.entity.message).toContain(
+        integrationGitBreadcrumb.hash
+    );
+    expect(received.data.entity.detail.gitBreadcrumb).toEqual(
+        integrationGitBreadcrumb
+    );
 });
 
 test("getOrgRoles returns roles for the authenticated user", async () => {

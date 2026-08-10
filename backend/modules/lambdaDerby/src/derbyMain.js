@@ -1364,6 +1364,14 @@ const routeMap = {
             );
         },
     },
+    "/addLogMessage": {
+        permission: RoutePermission.POWER,
+        h: async (event) => {
+            return buildResponse(
+                await logUtils.persistLogMessage(JSON.parse(event.body))
+            );
+        },
+    },
     "/ddbQuery": {
         permission: RoutePermission.POWER,
         allowFrozen: true,
