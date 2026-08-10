@@ -12,15 +12,15 @@ function getTokenClaims() {
 
 const orgIz = "Test";
 const orgId = `${orgIz}.${uuidv4().substring(0, 5)}`;
+const integrationTimestamp = new Date().toISOString();
 let addEventConfigResult;
 
 beforeAll(async () => {
-    const now = new Date().toISOString();
     const received = await postData(`${CF}/addEventConfig`, {
         orgIz,
         orgId,
         lcl1: "true",
-        name: `derbyMain integration ${now}`,
+        name: `derbyMain integration ${integrationTimestamp}`,
     });
 
     expect(received.data.status).toMatch(/ok/i);
@@ -98,7 +98,7 @@ test("updateEventConfig updates the throwaway event config", async () => {
         orgIz,
         orgId,
         lcl1: "false",
-        name: "derbyMain integration updated",
+        name: `derbyMain integration updated ${integrationTimestamp}`,
         paUri: "",
         pendingRule: "integration",
     });
