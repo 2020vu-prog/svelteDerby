@@ -17,6 +17,20 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function waitForRaceHistory(predicate, attempts = 10) {
+    for (let attempt = 0; attempt < attempts; attempt++) {
+        const data = await getData(
+            `${CF}/getRaceHistory?orgId=${orgId}&orgIz=${orgIz}&cache=${uuidv4()}`
+        );
+        const matchingRace = data.find(predicate);
+        if (matchingRace) {
+            return matchingRace;
+        }
+        await sleep(500);
+    }
+    return undefined;
+}
+
 const dmax = slowDrivers ? 800 : 520;
 
 const dloop = [];
@@ -305,6 +319,18 @@ test("postAddChartPosition should work ", () => {
     }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
+});
+
+test("chart heat 1 creates pending race for cars 100 and 109", async () => {
+    const heatKey = `${testChartId}:01`;
+    const pendingRace = await waitForRaceHistory(
+        (race) => race.SK === heatKey && race.Bp === heatKey
+    );
+
+    expect(pendingRace).toBeDefined();
+    expect(pendingRace.cn).toEqual(["100", "109"]);
+    expect(pendingRace.ph1).toBeUndefined();
+    expect(pendingRace.ph2).toBeUndefined();
 });
 
 test.skip("startDiscordBot: skipped until manageDiscord is stable in integration", async () => {
