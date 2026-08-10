@@ -1,10 +1,34 @@
 const { CF, getData, postData, getHHMMSS } = require("./common.js");
+const fs = require("fs");
+const path = require("path");
+const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const testers = new RegExp(process.env.TEST_USER);
+const EntityFactory = require(
+    "../modules/lambdaDerby/src/shared/EntityFactory.js"
+);
+const token = fs.readFileSync(path.resolve(__dirname, "token.txt"), "utf8");
+const testerEmail = jwt.decode(token).email;
+const testerEmailHash = new EntityFactory({}).getHashFromEmail(
+    testerEmail
+);
 
 const slowDrivers = false;
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForRaceHistory(predicate, attempts = 10) {
+    for (let attempt = 0; attempt < attempts; attempt++) {
+        const data = await getData(
+            `${CF}/getRaceHistory?orgId=${orgId}&orgIz=${orgIz}&cache=${uuidv4()}`
+        );
+        const matchingRace = data.find(predicate);
+        if (matchingRace) {
+            return matchingRace;
+        }
+        await sleep(500);
+    }
+    return undefined;
 }
 
 const dmax = slowDrivers ? 800 : 520;
@@ -153,10 +177,11 @@ test("postDdbQuery: ", () => {
     });
 });
 
-test("getHistory: the data should by created by a real tester", () => {
+test("getHistory: the data should be attributed to the tester", () => {
     return getData(`${CF}/getRaceHistory?orgId=${orgId}&orgIz=${orgIz}`).then(
         (data) => {
-            expect(data[0].by).toMatch(testers);
+            expect(data[0].byH).toBe(testerEmailHash);
+            expect(data[0].by).toBeUndefined();
         }
     );
 });
@@ -168,9 +193,11 @@ test("getNextOnBlocks: ", () => {
     return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(
         (data) => {
             //console.log("nextOnBlocks:", data);
-            expect(data[0].by).toMatch(testers);
             expect(data.length).toEqual(1);
             timerSkAPhase = data[0].SK;
+            expect(timerSkAPhase).toBeTruthy();
+            expect(data[0].byH).toBe(testerEmailHash);
+            expect(data[0].by).toBeUndefined();
         }
     );
 });
@@ -292,6 +319,18 @@ test("postAddChartPosition should work ", () => {
     }).then((received) => {
         expect(received.data.status).toMatch(/ok/i);
     });
+});
+
+test("chart heat 1 creates pending race for cars 100 and 109", async () => {
+    const heatKey = `${testChartId}:01`;
+    const pendingRace = await waitForRaceHistory(
+        (race) => race.SK === heatKey && race.Bp === heatKey
+    );
+
+    expect(pendingRace).toBeDefined();
+    expect(pendingRace.cn).toEqual(["100", "109"]);
+    expect(pendingRace.ph1).toBeUndefined();
+    expect(pendingRace.ph2).toBeUndefined();
 });
 
 test.skip("startDiscordBot: skipped until manageDiscord is stable in integration", async () => {

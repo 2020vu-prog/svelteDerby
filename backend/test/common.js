@@ -1,12 +1,11 @@
 module.exports.FOO = "bar";
 
 const fs = require('fs');
-const path = require('path');
 const axios = require("axios")
-//const devEnv= require("../../frontend/generatedTargets.json")
-const devEnv= require(path.resolve(__dirname, process.env.TEST_AWS_EXPORTS_FILE || "./aws-exports.json"))
-module.exports.CF = `${devEnv.DERBY_CLOUDFRONT}/app`
-module.exports.CfBase = `${devEnv.DERBY_CLOUDFRONT}`
+const { getDeploymentBaseUrl } = require("./deploymentConfig.js");
+
+module.exports.CfBase = getDeploymentBaseUrl();
+module.exports.CF = `${module.exports.CfBase}/app`;
 
 function checkTime(i) {
     return (i < 10) ? "0" + i : i;
@@ -39,12 +38,12 @@ function buildRequestError(error) {
     requestError.detail = detail;
     return requestError;
 }
-module.exports.getData = async url => {
+module.exports.getData = async (url, config = {}) => {
     try {
         const token = fs.readFileSync(__dirname + '/token.txt', 'utf8');
         axios.defaults.headers.common['Authorization'] = token;
 
-        const response = await axios.get(url);
+        const response = await axios.get(url, config);
         const data = response.data;
         return data;
     } catch (error) {
