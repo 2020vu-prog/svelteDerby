@@ -25,6 +25,7 @@ const {
     hasPermission,
 } = require("./shared/PermissionLookup.js");
 const ApiRouter = require("./ApiRouter.js");
+const RoutePermission = require("./RoutePermission.js");
 const AWS = require("aws-sdk");
 const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
 
@@ -1182,7 +1183,7 @@ async function getOrgRoles(event, apiProps) {
     return { statusCode: 403, error: "email not aligned" };
 }
 const routeMap = {
-    "/iot/discover": { permission: "Anonymous", allowFrozen: true,
+    "/iot/discover": { permission: RoutePermission.ANONYMOUS, allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
         allowMissingOrgIz: true,
@@ -1191,7 +1192,7 @@ const routeMap = {
         },
     },
     "/getOrgRoles": {
-        permission: "Anonymous",
+        permission: RoutePermission.ANONYMOUS,
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
@@ -1200,7 +1201,7 @@ const routeMap = {
         },
     },
     "/addEventConfig": {
-        permission: "TODO_permissions_power?",
+        permission: RoutePermission.POWER,
         allowFrozen: true, // not really allowing frozen, but skip edit.  race not yet existent.
         allowMissingTtl: true,
         h: async (event) => {
@@ -1208,7 +1209,7 @@ const routeMap = {
         },
     },
     "/updateEventConfig": {
-        permission: "TODO_permissions_power?",
+        permission: RoutePermission.POWER,
         h: async (event) => {
             return buildResponse(
                 await updateEventConfig(JSON.parse(event.body))
@@ -1216,21 +1217,21 @@ const routeMap = {
         },
     },
     "/getActiveTimers": {
-        permission: "CanTimerConfig",
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
             return buildResponse(await getSanitizedTimers());
         },
     },
     "/getActivePbTimers": {
-        permission: "CanTimerConfig",
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
             return buildResponse(await getActivePbTimers());
         },
     },
     "/timerConfig": {
-        permission: "CanTimerConfig",
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         h: async (event) => {
             return buildResponse(
                 await addTimerConfig(JSON.parse(event.body), false)
@@ -1238,7 +1239,7 @@ const routeMap = {
         },
     },
     "/timerPbConfig": {
-        permission: "CanTimerConfig",
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         h: async (event) => {
             return buildResponse(
                 await addTimerPbConfig(JSON.parse(event.body), false)
@@ -1246,7 +1247,7 @@ const routeMap = {
         },
     },
     "/listOrgUser": {
-        permission: "CanAddOrgUser",
+        permission: RoutePermission.CAN_ADD_ORG_USER,
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
@@ -1257,7 +1258,7 @@ const routeMap = {
         },
     },
     "/addOrgUser": {
-        permission: "CanAddOrgUser",
+        permission: RoutePermission.CAN_ADD_ORG_USER,
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
@@ -1268,31 +1269,31 @@ const routeMap = {
         },
     },
     "/addParticipant": {
-        permission: "CanAddParticipant",
+        permission: RoutePermission.CAN_ADD_PARTICIPANT,
         h: async (event) => {
             return buildResponse(await addParticipant2(JSON.parse(event.body)));
         },
     },
     "/addPending": {
-        permission: "CanAddPending",
+        permission: RoutePermission.CAN_ADD_PENDING,
         h: async (event) => {
             return buildResponse(await addPending2(event));
         },
     },
     "/addBlocks": {
-        permission: "CanAddBlocks",
+        permission: RoutePermission.CAN_ADD_BLOCKS,
         h: async (event) => {
             return buildResponse(await addBlocks(JSON.parse(event.body)));
         },
     },
     "/deleteRacePhase": {
-        permission: "CanDeleteBlocks",
+        permission: RoutePermission.CAN_DELETE_BLOCKS,
         h: async (event) => {
             return buildResponse(await deleteRacePhase(JSON.parse(event.body)));
         },
     },
     "/deleteRaceStanding": {
-        permission: "CanDeleteStanding",
+        permission: RoutePermission.CAN_DELETE_STANDING,
         h: async (event) => {
             return buildResponse(
                 await newApiRaceStanding().deleteRaceStanding(JSON.parse(event.body))
@@ -1300,7 +1301,7 @@ const routeMap = {
         },
     },
     "/getPhaseElapsed": {
-        permission: "Anonymous",
+        permission: RoutePermission.ANONYMOUS,
         allowFrozen: true,
         h: async (event) => {
             return buildResponse(
@@ -1309,7 +1310,7 @@ const routeMap = {
         },
     },
     "/RaceStanding/addTag": {
-        permission: "CanInitiateAnnouncement",
+        permission: RoutePermission.CAN_INITIATE_ANNOUNCEMENT,
         h: async (event) => {
             return buildResponse(
                 await newApiRaceStanding().addTag(JSON.parse(event.body))
@@ -1317,7 +1318,7 @@ const routeMap = {
         },
     },
     "/addChart": {
-        permission: "CanAddChart",
+        permission: RoutePermission.CAN_ADD_CHART,
         h: async (event) => {
             return buildResponse(
                 await addChartMetaData(JSON.parse(event.body))
@@ -1325,7 +1326,7 @@ const routeMap = {
         },
     },
     "/addChartPosition": {
-        permission: "ChartPosition",
+        permission: RoutePermission.CHART_POSITION,
         h: async (event) => {
             requestContext.resetErrorList(); // TODO: re-visit multiple low level error messages from advanceChartPos
             const localMsg = await addOrUpdateChartPosition(
@@ -1340,13 +1341,13 @@ const routeMap = {
         },
     },
     "/doApplyFinishTime": {
-        permission: "ManualFinishTime",
+        permission: RoutePermission.MANUAL_FINISH_TIME,
         h: async (event) => {
             return buildResponse(await applyFinishTime(JSON.parse(event.body)));
         },
     },
     "/addBulk": {
-        permission: "TODO_permissions_power?",
+        permission: RoutePermission.POWER,
         h: async (event) => {
             return buildResponse(
                 await ddbUtils.addBulk(JSON.parse(event.body))
@@ -1354,7 +1355,7 @@ const routeMap = {
         },
     },
     "/ddbQuery": {
-        permission: "TODO_permissions_power?",
+        permission: RoutePermission.POWER,
         allowFrozen: true,
         h: async (event) => {
             var qr = await ddbUtils.ddbQueryRsContains(JSON.parse(event.body));
@@ -1363,7 +1364,7 @@ const routeMap = {
         },
     },
     "/getNextOnBlocks": {
-        permission: "TODO_permissions_power?",
+        permission: RoutePermission.POWER,
         allowFrozen: true,
         h: async (event) => {
             const nob = await ddbUtils.ddbQueryRpNextOnBlocks(
@@ -1373,7 +1374,7 @@ const routeMap = {
         },
     },
     "/getRaceHistory": {
-        permission: "Anonymous",
+        permission: RoutePermission.ANONYMOUS,
         allowFrozen: true,
         h: async (event) => {
             var [qr, cacheMaxSeconds] = await ddbUtils.ddbQueryRaceHistory(
@@ -1384,7 +1385,7 @@ const routeMap = {
         },
     },
     "/getTimerHistory": {
-        permission: "CanTimerConfig",
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
             var qr = await queryTimerHistoryByOrgId(
@@ -1394,7 +1395,7 @@ const routeMap = {
         },
     },
     "/getTimerPbHistory": {
-        permission: "CanTimerConfig",
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
             var qr = await queryTimerPbHistory(event.queryStringParameters);
@@ -1402,7 +1403,7 @@ const routeMap = {
         },
     },
     "/listMediaPrefix": {
-        permission: "Anonymous",
+        permission: RoutePermission.ANONYMOUS,
         allowFrozen: true,
         h: async (event) => {
             var qr = await s3QueryMediaPrefix(event.queryStringParameters);
@@ -1411,7 +1412,7 @@ const routeMap = {
         },
     },
     "/listChartTypes": {
-        permission: "CanAddChart",
+        permission: RoutePermission.CAN_ADD_CHART,
         allowFrozen: true,
         h: async (event) => {
             var chartTypes = await s3QueryChartTypes();
@@ -1420,7 +1421,7 @@ const routeMap = {
         },
     },
     "/initiateAnnouncement": {
-        permission: "CanInitiateAnnouncement",
+        permission: RoutePermission.CAN_INITIATE_ANNOUNCEMENT,
         h: async (event) => {
             var json = JSON.parse(event.body);
             var paMessage = json.paMessage;
@@ -1443,7 +1444,7 @@ const routeMap = {
         },
     },
     "/requestTts": {
-        permission: "CanAddParticipant",
+        permission: RoutePermission.CAN_ADD_PARTICIPANT,
         h: async (event) => {
             var json = JSON.parse(event.body);
             var ssml = json.ssml;
@@ -1454,7 +1455,7 @@ const routeMap = {
         },
     },
     "/requestMqttSubPermission": {
-        permission: "Anonymous",
+        permission: RoutePermission.ANONYMOUS,
         h: async (event) => {
             const qsp = event.queryStringParameters;
             if (!qsp) {
@@ -1474,7 +1475,7 @@ const routeMap = {
         },
     },
     "/requestVideoUpload": {
-        permission: "CanCaptureVideo",
+        permission: RoutePermission.CAN_CAPTURE_VIDEO,
         h: async (event) => {
 //            var json = JSON.parse(event.body);
             const qsp = event.queryStringParameters;
@@ -1492,7 +1493,7 @@ const routeMap = {
         },
     },
     "/requestServerEpochMS": {
-        permission: "CanCaptureVideo",
+        permission: RoutePermission.CAN_CAPTURE_VIDEO,
         h: async (event) => {
             //var json = JSON.parse(event.body);
             const epochMs = new Date().getTime();
@@ -1502,7 +1503,7 @@ const routeMap = {
         },
     },
     "/requestS3PutObjectUrl": {
-        permission: "CanCaptureVideo",
+        permission: RoutePermission.CAN_CAPTURE_VIDEO,
         h: async (event) => {
             const qsp = event.queryStringParameters;
             if (!qsp) {
@@ -1541,7 +1542,7 @@ const routeMap = {
         },
     },
     "/manageDiscord": {
-        permission: "CanManageDiscord",
+        permission: RoutePermission.CAN_MANAGE_DISCORD,
         h: async (event) => {
             const qsp = event.queryStringParameters;
             if (!qsp) {
@@ -1594,7 +1595,7 @@ async function getDerbyMainVersionInfo() {
 
 function registerPublicRoutes(router) {
     router.register("/testArchive", {
-        permission: ApiRouter.PUBLIC,
+        permission: RoutePermission.PUBLIC,
         loadContext: false,
         handler: async () => {
             await archiveUtils.processExpiringEventConfig();
@@ -1602,7 +1603,7 @@ function registerPublicRoutes(router) {
         },
     });
     router.register("/listOrgEvents", {
-        permission: ApiRouter.PUBLIC,
+        permission: RoutePermission.PUBLIC,
         loadContext: false,
         handler: async (event) => {
             const result = await ddbUtils.ddbListEventConfigByOrg(getOrgIz(event));
@@ -1610,7 +1611,7 @@ function registerPublicRoutes(router) {
         },
     });
     router.register("/listOrgConfig", {
-        permission: ApiRouter.PUBLIC,
+        permission: RoutePermission.PUBLIC,
         loadContext: false,
         handler: async () => {
             const result = await ddbUtils.ddbQueryOrgConfig();
@@ -1618,7 +1619,7 @@ function registerPublicRoutes(router) {
         },
     });
     router.register("/getAwsConfig", {
-        permission: ApiRouter.PUBLIC,
+        permission: RoutePermission.PUBLIC,
         loadContext: false,
         handler: async () => buildResponse(
             JSON.parse(process.env.AwsCognitoSettingsJson),
@@ -1626,7 +1627,7 @@ function registerPublicRoutes(router) {
         ),
     });
     router.register("/getDerbyMainVersion", {
-        permission: ApiRouter.PUBLIC,
+        permission: RoutePermission.PUBLIC,
         loadContext: false,
         handler: async () => buildResponse(
             await getDerbyMainVersionInfo(),

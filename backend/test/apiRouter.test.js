@@ -1,4 +1,11 @@
 const ApiRouter = require("../modules/lambdaDerby/src/ApiRouter.js");
+const RoutePermission = require(
+    "../modules/lambdaDerby/src/RoutePermission.js"
+);
+
+const CAN_EXAMPLE = new RoutePermission("CanExample");
+const CAN_PLUGIN = new RoutePermission("CanPlugin");
+const CAN_PROTECTED = new RoutePermission("CanProtected");
 
 function buildRouter(overrides = {}) {
     const dependencies = {
@@ -24,7 +31,7 @@ test("registers and dispatches a route with its declared permission", async () =
     const { dependencies, router } = buildRouter();
     const handler = jest.fn(async (_event, context) => context.permission);
     router.register("/example", {
-        permission: "CanExample",
+        permission: CAN_EXAMPLE,
         handler,
     });
 
@@ -42,7 +49,7 @@ test("supports plugins that register routes dynamically", () => {
     const { router } = buildRouter();
     router.use((pluginRouter) => {
         pluginRouter.register("/plugin", {
-            permission: "CanPlugin",
+            permission: CAN_PLUGIN,
             handler: async () => "ok",
         });
     });
@@ -52,17 +59,27 @@ test("supports plugins that register routes dynamically", () => {
     ]);
 });
 
-test("requires every protected route to declare a permission", () => {
+test("requires every route to declare a permission", () => {
     const { router } = buildRouter();
     expect(() => router.register("/missing", { handler: async () => {} }))
         .toThrow("Route /missing requires a permission");
+});
+
+test("requires enum-like RoutePermission values instead of raw strings", () => {
+    const { router } = buildRouter();
+    expect(() => router.register("/string", {
+        permission: "CanExample",
+        handler: async () => {},
+    })).toThrow("Route permission must be a RoutePermission");
+    expect(String(CAN_EXAMPLE)).toBe("CanExample");
+    expect(JSON.stringify(CAN_EXAMPLE)).toBe('"CanExample"');
 });
 
 test("rejects unauthorized requests before dispatch", async () => {
     const { router } = buildRouter({ authorize: jest.fn(async () => false) });
     const handler = jest.fn();
     router.register("/protected", {
-        permission: "CanProtected",
+        permission: CAN_PROTECTED,
         handler,
     });
 
@@ -76,7 +93,7 @@ test("rejects unauthorized requests before dispatch", async () => {
 test("public context-free routes skip authentication and authorization", async () => {
     const { dependencies, router } = buildRouter();
     router.register("/public", {
-        permission: ApiRouter.PUBLIC,
+        permission: RoutePermission.PUBLIC,
         loadContext: false,
         handler: async () => "public result",
     });
@@ -93,7 +110,7 @@ test("enforces context and frozen-event policies", async () => {
         loadContext: jest.fn(async () => ({ orgIz: "Test", config: {} })),
     });
     router.register("/missing-org", {
-        permission: "CanExample",
+        permission: CAN_EXAMPLE,
         handler: async () => "unexpected",
     });
     await expect(router.dispatch({ path: "/app/missing-org" })).resolves.toEqual({
@@ -102,7 +119,7 @@ test("enforces context and frozen-event policies", async () => {
 
     const frozen = buildRouter({ isFrozen: jest.fn(() => true) }).router;
     frozen.register("/frozen", {
-        permission: "CanExample",
+        permission: CAN_EXAMPLE,
         handler: async () => "unexpected",
     });
     await expect(frozen.dispatch({ path: "/app/frozen" })).resolves.toEqual({
@@ -112,7 +129,7 @@ test("enforces context and frozen-event policies", async () => {
 
 test("rejects duplicate route registrations", () => {
     const { router } = buildRouter();
-    const definition = { permission: "CanExample", handler: async () => {} };
+    const definition = { permission: CAN_EXAMPLE, handler: async () => {} };
     router.register("/duplicate", definition);
     expect(() => router.register("/duplicate", definition))
         .toThrow("Route /duplicate is already registered");

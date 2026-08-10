@@ -1,9 +1,12 @@
 "use strict";
 
+const RoutePermission = require("./RoutePermission.js");
+
 /**
  * @typedef {Object} RouteDefinition
- * @property {string} permission Permission required to invoke the route. Use
- * `ApiRouter.PUBLIC` only for routes that intentionally bypass authentication.
+ * @property {RoutePermission} permission Permission required to invoke the
+ * route. Use `RoutePermission.PUBLIC` only for routes that intentionally bypass
+ * authentication.
  * @property {Function} handler Async function invoked as `(event, context)`.
  * @property {boolean} [allowFrozen=false] Allow access when the event is frozen
  * or archived.
@@ -80,6 +83,7 @@ class ApiRouter {
             throw new Error(`Route ${path} is already registered`);
         }
 
+        const permission = RoutePermission.from(definition.permission);
         const loadContext = definition.loadContext !== false;
         this.routes.set(path, {
             allowFrozen: !loadContext,
@@ -88,7 +92,8 @@ class ApiRouter {
             allowMissingTtl: !loadContext,
             loadContext,
             ...definition,
-            public: definition.permission === ApiRouter.PUBLIC,
+            permission,
+            public: permission === RoutePermission.PUBLIC,
         });
         return this;
     }
@@ -114,7 +119,7 @@ class ApiRouter {
     list() {
         return Array.from(this.routes.entries()).map(([path, definition]) => ({
             path,
-            permission: definition.permission,
+            permission: definition.permission.toString(),
             public: Boolean(definition.public),
         }));
     }
@@ -146,7 +151,11 @@ class ApiRouter {
 
         if (
             !route.public &&
-            !(await this.authorize(route.permission, context, principal))
+            !(await this.authorize(
+                route.permission.toString(),
+                context,
+                principal
+            ))
         ) {
             this.log.debug(
                 `prohibiting access to ${routePath} for [${principal.email}]`
@@ -173,7 +182,7 @@ class ApiRouter {
         return route.handler(event, {
             ...context,
             ...principal,
-            permission: route.permission,
+            permission: route.permission.toString(),
         });
     }
 
@@ -192,8 +201,5 @@ class ApiRouter {
             : eventPath;
     }
 }
-
-/** Permission marker for deliberately unauthenticated routes. */
-ApiRouter.PUBLIC = "Public";
 
 module.exports = ApiRouter;
