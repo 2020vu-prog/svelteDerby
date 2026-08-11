@@ -79,6 +79,7 @@ addPermission(
         "/getRaceHistory",
         "/addEventConfig",
         "/updateEventConfig",
+        "/addLogMessage",
         "/requestMqttSubPermission",
         "/listMediaPrefix",
     ],

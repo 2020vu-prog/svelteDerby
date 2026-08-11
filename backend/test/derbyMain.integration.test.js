@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { execFileSync } = require("child_process");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 
@@ -12,15 +13,20 @@ function getTokenClaims() {
 
 const orgIz = "Test";
 const orgId = `${orgIz}.${uuidv4().substring(0, 5)}`;
+const integrationTimestamp = new Date().toISOString();
+const integrationGitBreadcrumb = JSON.parse(
+    execFileSync(path.resolve(__dirname, "../scripts/gitBreadcrumb.sh"), {
+        encoding: "utf8",
+    })
+);
 let addEventConfigResult;
 
 beforeAll(async () => {
-    const now = new Date().toISOString();
     const received = await postData(`${CF}/addEventConfig`, {
         orgIz,
         orgId,
         lcl1: "true",
-        name: `derbyMain integration ${now}`,
+        name: `derbyMain integration ${integrationTimestamp}`,
     });
 
     expect(received.data.status).toMatch(/ok/i);
@@ -76,6 +82,25 @@ test("addEventConfig refreshes user display names", async () => {
     expect(addEventConfigResult.userDisplayNameResult.created).toBeGreaterThanOrEqual(0);
 });
 
+test("addLogMessage records the integration test Git breadcrumb", async () => {
+    const received = await postData(`${CF}/addLogMessage`, {
+        orgIz,
+        orgId,
+        level: "info",
+        source: "derbyMain.integration.test.js",
+        message: `Integration test Git breadcrumb ${integrationGitBreadcrumb.hash}`,
+        detail: { gitBreadcrumb: integrationGitBreadcrumb },
+    });
+
+    expect(received.data.status).toMatch(/ok/i);
+    expect(received.data.entity.message).toContain(
+        integrationGitBreadcrumb.hash
+    );
+    expect(received.data.entity.detail.gitBreadcrumb).toEqual(
+        integrationGitBreadcrumb
+    );
+});
+
 test("getOrgRoles returns roles for the authenticated user", async () => {
     const claims = getTokenClaims();
     const email = claims.email || claims["cognito:username"];
@@ -98,7 +123,7 @@ test("updateEventConfig updates the throwaway event config", async () => {
         orgIz,
         orgId,
         lcl1: "false",
-        name: "derbyMain integration updated",
+        name: `derbyMain integration updated ${integrationTimestamp}`,
         paUri: "",
         pendingRule: "integration",
     });
