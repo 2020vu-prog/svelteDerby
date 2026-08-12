@@ -1,7 +1,7 @@
-const awsConfig = window.aws_exports;
+const awsConfig = {};
 
-if (!awsConfig) {
-    throw new Error("Missing /aws-exports.js deployment configuration");
+export function initializeAwsConfig(config) {
+    Object.assign(awsConfig, config);
 }
 
 export default awsConfig;

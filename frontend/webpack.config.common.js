@@ -109,6 +109,7 @@ module.exports = (cloudfrontTarget) => {
             new WorkboxWebpackPlugin.InjectManifest({
                 swSrc: "./src/src-sw.js",
                 swDest: "sw-generated.js",
+                exclude: [/aws-exports\.json$/],
                 maximumFileSizeToCacheInBytes: 10000000,
             })
         );
@@ -138,6 +139,7 @@ module.exports = (cloudfrontTarget) => {
         output: {
             path: path.resolve(__dirname, "public"),
             filename: "[name].[contenthash].js",
+            chunkFilename: "bundle.[contenthash].js",
         },
         optimization: {
             splitChunks: {
