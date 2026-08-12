@@ -109,7 +109,6 @@ module.exports = (cloudfrontTarget) => {
             new WorkboxWebpackPlugin.InjectManifest({
                 swSrc: "./src/src-sw.js",
                 swDest: "sw-generated.js",
-                exclude: [/aws-exports\.json$/],
                 maximumFileSizeToCacheInBytes: 10000000,
             })
         );

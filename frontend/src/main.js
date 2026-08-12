@@ -2,7 +2,7 @@ import axios from "axios";
 import { initializeAwsConfig } from "./aws-config";
 
 async function startApp() {
-    const response = await axios.get("/aws-exports.json");
+    const response = await axios.get("/app/getAwsConfig");
     initializeAwsConfig(response.data);
     const { default: App } = await import("./App.svelte");
 
