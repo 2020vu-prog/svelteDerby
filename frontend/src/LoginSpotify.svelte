@@ -1,5 +1,5 @@
 <script lang="ts">
-	import aws_exports from "./aws-exports";
+	import aws_exports from "./aws-config";
     import { onMount } from 'svelte';
     import SpinnerButton from "./SpinnerButton.svelte";
     import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
