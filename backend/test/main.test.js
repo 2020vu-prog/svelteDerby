@@ -8,6 +8,7 @@ const EntityFactory = require(
 );
 const MqttCollector = require("./mqttCollector.js");
 const { getAwsConfig } = require("./deploymentConfig.js");
+const { orgId, orgIz } = require("./integrationRun.js");
 const token = fs.readFileSync(path.resolve(__dirname, "token.txt"), "utf8");
 const testerEmail = jwt.decode(token).email;
 const testerEmailHash = new EntityFactory({}).getHashFromEmail(
@@ -40,9 +41,7 @@ for (var x = 501; x < dmax; x++) {
     dloop.push([x]);
 }
 
-const orgU = uuidv4().substring(0, 5);
-const orgIz = "Test";
-const orgId = `${orgIz}.${orgU}`;
+const orgU = orgId.substring(orgIz.length + 1);
 const mqttTopic = `derby/${orgId}/dist`;
 const expectedMqttMessageCount = 46;
 const mqttCollector = new MqttCollector();

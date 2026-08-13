@@ -5,15 +5,17 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 
 const { CF, getData, postData } = require("./common.js");
+const {
+    integrationTimestamp,
+    orgId,
+    orgIz,
+} = require("./integrationRun.js");
 
 function getTokenClaims() {
     const token = fs.readFileSync(path.resolve(__dirname, "token.txt"), "utf8");
     return jwt.decode(token);
 }
 
-const orgIz = "Test";
-const orgId = `${orgIz}.${uuidv4().substring(0, 5)}`;
-const integrationTimestamp = new Date().toISOString();
 const integrationGitBreadcrumb = JSON.parse(
     execFileSync(path.resolve(__dirname, "../scripts/gitBreadcrumb.sh"), {
         encoding: "utf8",
