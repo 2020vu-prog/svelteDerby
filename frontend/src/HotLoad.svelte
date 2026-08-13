@@ -32,7 +32,7 @@
     import { onDestroy } from "svelte";
     import { tick } from "svelte";
 
-    import aws_exports from "./aws-exports";
+    import aws_exports from "./aws-config";
     import { exclude_internal_props } from "svelte/internal";
     //var mqSem = require("semaphore")(1);
     import { Lock } from "semaphore-async-await";

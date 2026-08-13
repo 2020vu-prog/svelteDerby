@@ -138,6 +138,7 @@ module.exports = (cloudfrontTarget) => {
         output: {
             path: path.resolve(__dirname, "public"),
             filename: "[name].[contenthash].js",
+            chunkFilename: "bundle.[contenthash].js",
         },
         optimization: {
             splitChunks: {

@@ -2,7 +2,7 @@
     import log from "loglevel";
     const { v4: uuidv4 } = require("uuid");
 
-    import aws_exports from "./aws-exports";
+    import aws_exports from "./aws-config";
     import Router from "svelte-spa-router";
     import { location, replace } from "svelte-spa-router";
     import { querystring } from "svelte-spa-router";

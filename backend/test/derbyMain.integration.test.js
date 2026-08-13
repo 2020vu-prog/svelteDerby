@@ -41,6 +41,14 @@ test("getAwsConfig returns the hosted Cognito client config", async () => {
     expect(claims.iss).toBe(
         `https://cognito-idp.${data.aws_cognito_region}.amazonaws.com/${data.aws_user_pools_id}`
     );
+    expect(data).toEqual(
+        expect.objectContaining({
+            DeployEnvironment: expect.any(String),
+            hosted_url: expect.stringMatching(/^https:\/\//),
+            mqtt_ps_key: expect.any(String),
+            mqtt_ps_url: expect.stringMatching(/^https:\/\//),
+        })
+    );
 });
 
 test("getDerbyMainVersion returns deployment metadata", async () => {
