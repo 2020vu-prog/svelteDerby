@@ -44,6 +44,7 @@ const orgU = uuidv4().substring(0, 5);
 const orgIz = "Test";
 const orgId = `${orgIz}.${orgU}`;
 const mqttTopic = `derby/${orgId}/dist`;
+const expectedMqttMessageCount = 46;
 const mqttCollector = new MqttCollector();
 
 beforeAll(async () => {
@@ -53,6 +54,7 @@ beforeAll(async () => {
         topic: mqttTopic,
         clientId: `derby-it-${orgU}-${uuidv4().substring(0, 8)}`,
     });
+    console.log(`MQTT message log: ${mqttCollector.logFilePath}`);
 });
 
 afterAll(async () => {
@@ -104,6 +106,11 @@ afterAll(async () => {
 
         expect(mqttCollector.parseErrors).toEqual([]);
         expect(mqttCollector.messages.length).toBeGreaterThan(0);
+        if (mqttCollector.messages.length !== expectedMqttMessageCount) {
+            console.warn(
+                `Expected ${expectedMqttMessageCount} MQTT messages, received ${mqttCollector.messages.length}. See ${mqttCollector.logFilePath}`
+            );
+        }
         mqttCollector.messages.forEach((message) => {
             expect(message.topic).toBe(mqttTopic);
             expect(message.payload.orgId).toBe(orgId);

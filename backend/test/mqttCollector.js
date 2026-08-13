@@ -1,16 +1,50 @@
 "use strict";
 
 const axios = require("axios");
+const fs = require("fs");
 const mqtt = require("mqtt");
+const path = require("path");
 
 class MqttCollector {
-    constructor() {
+    constructor({ logFilePath } = {}) {
         this.client = null;
+        this.logFilePath =
+            logFilePath ||
+            path.join(
+                "/tmp",
+                `svelte-derby-mqtt-${Date.now()}.jsonl`
+            );
         this.messages = [];
         this.parseErrors = [];
     }
 
+    recordMessage(receivedTopic, payload) {
+        const rawPayload = payload.toString("utf8");
+        let record;
+        try {
+            const message = {
+                index: this.messages.length,
+                payload: JSON.parse(rawPayload),
+                receivedAt: Date.now(),
+                topic: receivedTopic,
+            };
+            this.messages.push(message);
+            record = { type: "message", ...message };
+        } catch (error) {
+            const parseError = {
+                error: error.message,
+                payload: rawPayload,
+                receivedAt: Date.now(),
+                topic: receivedTopic,
+            };
+            this.parseErrors.push(parseError);
+            record = { type: "parseError", ...parseError };
+        }
+        fs.appendFileSync(this.logFilePath, `${JSON.stringify(record)}\n`);
+    }
+
     async connect({ config, topic, clientId }) {
+        fs.writeFileSync(this.logFilePath, "");
         const response = await axios.get(config.mqtt_ps_url, {
             headers: { "x-invoke-key": config.mqtt_ps_key },
         });
@@ -23,22 +57,9 @@ class MqttCollector {
             connectTimeout: 10000,
             reconnectPeriod: 0,
         });
-        this.client.on("message", (receivedTopic, payload) => {
-            try {
-                this.messages.push({
-                    index: this.messages.length,
-                    payload: JSON.parse(payload.toString("utf8")),
-                    receivedAt: Date.now(),
-                    topic: receivedTopic,
-                });
-            } catch (error) {
-                this.parseErrors.push({
-                    error: error.message,
-                    payload: payload.toString("utf8"),
-                    topic: receivedTopic,
-                });
-            }
-        });
+        this.client.on("message", (receivedTopic, payload) =>
+            this.recordMessage(receivedTopic, payload)
+        );
 
         await new Promise((resolve, reject) => {
             this.client.once("connect", resolve);
