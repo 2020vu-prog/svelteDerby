@@ -41,7 +41,6 @@ for (var x = 501; x < dmax; x++) {
     dloop.push([x]);
 }
 
-const orgU = orgId.substring(orgIz.length + 1);
 const mqttTopic = `derby/${orgId}/dist`;
 const expectedMqttMessageCount = 46;
 const mqttCollector = new MqttCollector();
@@ -51,7 +50,7 @@ beforeAll(async () => {
     await mqttCollector.connect({
         config,
         topic: mqttTopic,
-        clientId: `derby-it-${orgU}-${uuidv4().substring(0, 8)}`,
+        clientId: `derby-it-${orgId}-${uuidv4().substring(0, 8)}`,
     });
     console.log(`MQTT message log: ${mqttCollector.logFilePath}`);
 });
@@ -467,27 +466,29 @@ test("heat 1 winner advances to heat 3 and loser advances to heat 7", async () =
     );
     expect(completedRace).toBeDefined();
 
-    const [heat3, heat7] = await Promise.all([
-        postData(`${CF}/addChartPosition`, {
-            orgIz,
-            orgId,
-            chartId: testChartId,
-            heatNumber: "03",
-            pos: {},
-        }),
-        postData(`${CF}/addChartPosition`, {
-            orgIz,
-            orgId,
-            chartId: testChartId,
-            heatNumber: "07",
-            pos: {},
-        }),
-    ]);
+    const advancementExpectations = [
+        {
+            name: "winner 100 in heat 3",
+            predicate: (message) =>
+                message.PK === `${orgId}:Bp` &&
+                message.SK === `${testChartId}:03` &&
+                message.pos?.A?.ptcp === "100",
+        },
+        {
+            name: "loser 109 in heat 7",
+            predicate: (message) =>
+                message.PK === `${orgId}:Bp` &&
+                message.SK === `${testChartId}:07` &&
+                message.pos?.A?.ptcp === "109",
+        },
+    ];
+    const missingAdvancements = await mqttCollector.waitForAll(
+        advancementExpectations
+    );
 
-    expect(heat3.data.entity.SK).toBe(`${testChartId}:03`);
-    expect(heat3.data.entity.pos.A.ptcp).toBe("100");
-    expect(heat7.data.entity.SK).toBe(`${testChartId}:07`);
-    expect(heat7.data.entity.pos.A.ptcp).toBe("109");
+    expect(missingAdvancements.map((expectation) => expectation.name)).toEqual(
+        []
+    );
 });
 
 test.skip("startDiscordBot: skipped until manageDiscord is stable in integration", async () => {
