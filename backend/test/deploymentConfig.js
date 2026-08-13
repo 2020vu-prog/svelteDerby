@@ -10,7 +10,8 @@ function getDeploymentBaseUrl() {
 
 async function getAwsConfig() {
     const response = await axios.get(
-        `${getDeploymentBaseUrl()}/app/getAwsConfig`
+        `${getDeploymentBaseUrl()}/app/getAwsConfig`,
+        { params: { cache: Date.now() } }
     );
     return response.data;
 }

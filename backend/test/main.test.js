@@ -6,6 +6,8 @@ const { v4: uuidv4 } = require("uuid");
 const EntityFactory = require(
     "../modules/lambdaDerby/src/shared/EntityFactory.js"
 );
+const MqttCollector = require("./mqttCollector.js");
+const { getAwsConfig } = require("./deploymentConfig.js");
 const token = fs.readFileSync(path.resolve(__dirname, "token.txt"), "utf8");
 const testerEmail = jwt.decode(token).email;
 const testerEmailHash = new EntityFactory({}).getHashFromEmail(
@@ -41,6 +43,87 @@ for (var x = 501; x < dmax; x++) {
 const orgU = uuidv4().substring(0, 5);
 const orgIz = "Test";
 const orgId = `${orgIz}.${orgU}`;
+const mqttTopic = `derby/${orgId}/dist`;
+const expectedMqttMessageCount = 46;
+const mqttCollector = new MqttCollector();
+
+beforeAll(async () => {
+    const config = await getAwsConfig();
+    await mqttCollector.connect({
+        config,
+        topic: mqttTopic,
+        clientId: `derby-it-${orgU}-${uuidv4().substring(0, 8)}`,
+    });
+    console.log(`MQTT message log: ${mqttCollector.logFilePath}`);
+});
+
+afterAll(async () => {
+    try {
+        const heat1Key = `${testChartId}:01`;
+        const expectations = [
+            {
+                name: "event configuration",
+                predicate: (message) =>
+                    message.PK === "EventConfig" && message.orgId === orgId,
+            },
+            {
+                name: "participant 333",
+                predicate: (message) =>
+                    message.PK === `${orgId}:PTCP` && message.SK === "333",
+            },
+            {
+                name: "pending heat 1",
+                predicate: (message) =>
+                    message.PK === `${orgId}:RS` &&
+                    message.SK === heat1Key &&
+                    !message.ph1 &&
+                    !message.ph2,
+            },
+            {
+                name: "completed heat 1",
+                predicate: (message) =>
+                    message.PK === `${orgId}:RS` &&
+                    message.SK === heat1Key &&
+                    Boolean(message.ph1) &&
+                    Boolean(message.ph2),
+            },
+            {
+                name: "winner 100 in heat 3",
+                predicate: (message) =>
+                    message.PK === `${orgId}:Bp` &&
+                    message.SK === `${testChartId}:03` &&
+                    message.pos?.A?.ptcp === "100",
+            },
+            {
+                name: "loser 109 in heat 7",
+                predicate: (message) =>
+                    message.PK === `${orgId}:Bp` &&
+                    message.SK === `${testChartId}:07` &&
+                    message.pos?.A?.ptcp === "109",
+            },
+        ];
+        const missing = await mqttCollector.waitForAll(expectations);
+
+        expect(mqttCollector.parseErrors).toEqual([]);
+        expect(mqttCollector.messages.length).toBeGreaterThan(0);
+        if (mqttCollector.messages.length !== expectedMqttMessageCount) {
+            console.warn(
+                `Expected ${expectedMqttMessageCount} MQTT messages, received ${mqttCollector.messages.length}. See ${mqttCollector.logFilePath}`
+            );
+        }
+        mqttCollector.messages.forEach((message) => {
+            expect(message.topic).toBe(mqttTopic);
+            expect(message.payload.orgId).toBe(orgId);
+        });
+        expect(missing.map((expectation) => expectation.name)).toEqual([]);
+
+        const pendingHeat = mqttCollector.find(expectations[2].predicate);
+        const completedHeat = mqttCollector.find(expectations[3].predicate);
+        expect(pendingHeat.index).toBeLessThan(completedHeat.index);
+    } finally {
+        await mqttCollector.disconnect();
+    }
+});
 
 test("listOrgConfig: ", () => {
     return getData(`${CF}/listOrgConfig`).then((data) => {
