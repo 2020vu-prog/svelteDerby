@@ -3,7 +3,7 @@ const EntityFactory = require("./shared/EntityFactory.js");
 const log = require("loglevel");
 const {
     IoTDataPlaneClient,
-    PublishCommand,
+    PublishCommand: IotPublishCommand,
 } = require("@aws-sdk/client-iot-data-plane");
 const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
 const { PutObjectCommand, S3Client } = require("@aws-sdk/client-s3");
@@ -119,7 +119,7 @@ class AnnounceResults {
         };
         try {
             log.debug("Iot PA broadcast request:", params);
-            var data = await this.iotdata.send(new PublishCommand(params));
+            var data = await this.iotdata.send(new IotPublishCommand(params));
             log.debug("Iot PA broadcast Success.", params);
             return { status: "ok", detail: "Published" };
         } catch (err) {
