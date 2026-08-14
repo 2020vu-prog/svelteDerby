@@ -73,14 +73,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: 18
-
-      - name: Set up npm
-        run: npm install --global npm@8.19.4
-
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
@@ -162,7 +154,7 @@ jobs:
         with:
           node-version: 18
 
-      - name: Restore npm for legacy builds
+      - name: Set up npm for frontend
         run: npm install --global npm@8.19.4
 
       - name: Plan backend
