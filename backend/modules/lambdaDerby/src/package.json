@@ -56,26 +56,5 @@
     "handlebars",
     "js-base64",
     "loglevel"
-  ],
-  "bundleDependencies": [
-    "@aws-sdk/client-dynamodb",
-    "@aws-sdk/client-ec2",
-    "@aws-sdk/client-iot",
-    "@aws-sdk/client-iot-data-plane",
-    "@aws-sdk/client-polly",
-    "@aws-sdk/client-s3",
-    "@aws-sdk/client-sns",
-    "@aws-sdk/client-sqs",
-    "@aws-sdk/client-ssm",
-    "@aws-sdk/lib-dynamodb",
-    "@aws-sdk/s3-request-presigner",
-    "@aws-sdk/util-dynamodb",
-    "aws-jwt-verify",
-    "csv-parse",
-    "jsonwebtoken",
-    "jwk-to-pem",
-    "handlebars",
-    "js-base64",
-    "loglevel"
   ]
 }
