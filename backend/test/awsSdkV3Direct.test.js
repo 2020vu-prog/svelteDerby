@@ -3,6 +3,7 @@ const TmpCache = require("../modules/lambdaDerby/src/tmpCache.js");
 const AnnounceResults = require("../modules/lambdaDerby/src/AnnounceResults.js");
 const ApiRaceStanding = require("../modules/lambdaDerby/src/ApiRaceStanding.js");
 const DiscordUtils = require("../modules/lambdaDerby/src/DiscordUtils.js");
+const { getAllKeys } = require("../modules/lambdaDerby/src/S3Utils.js");
 
 test("DdbUtils dispatches low-level DynamoDB queries with QueryCommand", async () => {
     const ddbClient = { send: jest.fn().mockResolvedValue({ Items: [] }) };
@@ -35,6 +36,43 @@ test("TmpCache consumes the v3 S3 response body explicitly", async () => {
     await expect(cache.getS3("bucket", "key")).resolves.toEqual({ ok: true });
     expect(s3Client.send.mock.calls[0][0].constructor.name).toBe(
         "GetObjectCommand"
+    );
+});
+
+test("S3 listing treats omitted v3 Contents as an empty list", async () => {
+    const s3Client = { send: jest.fn().mockResolvedValue({}) };
+
+    await expect(
+        getAllKeys(s3Client, { Bucket: "bucket", Prefix: "missing" })
+    ).resolves.toEqual([]);
+    expect(s3Client.send.mock.calls[0][0].constructor.name).toBe(
+        "ListObjectsV2Command"
+    );
+});
+
+test("S3 listing follows v3 continuation tokens", async () => {
+    const firstModified = new Date("2026-01-01T00:00:00Z");
+    const secondModified = new Date("2026-01-02T00:00:00Z");
+    const s3Client = {
+        send: jest
+            .fn()
+            .mockResolvedValueOnce({
+                Contents: [{ Key: "first", LastModified: firstModified }],
+                NextContinuationToken: "next-page",
+            })
+            .mockResolvedValueOnce({
+                Contents: [{ Key: "second", LastModified: secondModified }],
+            }),
+    };
+
+    await expect(
+        getAllKeys(s3Client, { Bucket: "bucket", Prefix: "media/" })
+    ).resolves.toEqual([
+        { Key: "first", LastModified: firstModified },
+        { Key: "second", LastModified: secondModified },
+    ]);
+    expect(s3Client.send.mock.calls[1][0].input.ContinuationToken).toBe(
+        "next-page"
     );
 });
 
