@@ -1,6 +1,9 @@
 const log = require("loglevel");
 const { getSourceName } = require("./utils");
-const { PublishCommand, SNSClient } = require("@aws-sdk/client-sns");
+const {
+    PublishCommand: SnsPublishCommand,
+    SNSClient,
+} = require("@aws-sdk/client-sns");
 class ApiRaceStanding {
     ddbUtils = null;
     announceResults = null;
@@ -163,7 +166,7 @@ class ApiRaceStanding {
 
         try {
             console.log("SNS sending fanout:", params);
-            const sent = await this.sns.send(new PublishCommand(params));
+            const sent = await this.sns.send(new SnsPublishCommand(params));
             console.log("SNS send Success", sent);
         } catch (err) {
             console.log("SNS send Error", err);
