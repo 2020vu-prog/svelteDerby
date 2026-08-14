@@ -59,10 +59,10 @@ test("diagnostic example contains ordered valid JSON Lines", () => {
         .split("\n")
         .map(JSON.parse);
 
-    expect(records).toHaveLength(46);
+    expect(records).toHaveLength(57);
     expect(records.map((record) => record.index)).toEqual(
-        Array.from({ length: 46 }, (_, index) => index)
+        Array.from({ length: 57 }, (_, index) => index)
     );
     expect(records.every((record) => record.type === "message")).toBe(true);
-    expect(records.every((record) => record.topic === "derby/Test.dfee4/dist")).toBe(true);
+    expect(records.every((record) => record.topic === "derby/Test.e5fd0/dist")).toBe(true);
 });
