@@ -63,6 +63,7 @@ const AnnounceResults = require("./AnnounceResults");
 const ApiRaceStanding = require("./ApiRaceStanding");
 const LogUtils = require("./LogUtils");
 const { getShaCars, getSourceName } = require("./utils");
+const { getAllKeys } = require("./S3Utils");
 const requestContext = require("./RequestContext");
 
 const ddbUtils = new DdbUtils(ddbClient, sqsClient);
@@ -106,21 +107,8 @@ async function s3QueryMediaPrefix(queryStringParameters) {
         Bucket: process.env.DstBucket,
         Prefix: `media/${prefix}`,
     };
-    const allKeys = await getAllKeys(params);
+    const allKeys = await getAllKeys(s3Client, params);
     log.debug("s3QueryMediaPrefix: ", params, allKeys);
-    return allKeys;
-}
-async function getAllKeys(params, allKeys = []) {
-    const response = await s3Client.send(new ListObjectsV2Command(params));
-    log.debug("getAllKeys count:", response.Contents.length);
-    response.Contents.forEach((obj) =>
-        allKeys.push({ Key: obj.Key, LastModified: obj.LastModified })
-    );
-
-    if (response.NextContinuationToken) {
-        params.ContinuationToken = response.NextContinuationToken;
-        await getAllKeys(params, allKeys); // RECURSIVE CALL
-    }
     return allKeys;
 }
 const attachPrincipalPolicy = async (policyName, principal) => {
