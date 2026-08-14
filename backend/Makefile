@@ -1,6 +1,6 @@
 SUBDIRS := $(wildcard modules/*/src/.)
-LAMBDA_SQS_DIR := modules/lambdaSqs/src/.
-LEGACY_LAMBDA_DIRS := $(filter-out $(LAMBDA_SQS_DIR),$(SUBDIRS))
+NODE22_LAMBDA_DIRS := modules/lambdaDerby/src/. modules/lambdaSqs/src/.
+LEGACY_LAMBDA_DIRS := $(filter-out $(NODE22_LAMBDA_DIRS),$(SUBDIRS))
 
 all: lambdaPkgs tfplan
 auto: lambdaPkgs tfauto

@@ -170,7 +170,7 @@ resource "aws_lambda_function" "lambda" {
   timeout = 10 // increased for bulkAdd
   role    = aws_iam_role.iam_for_lambda.arn
   handler = "derbyMain.handler"
-  runtime = "nodejs16.x"
+  runtime = "nodejs22.x"
   memory_size=1024
   publish = true
   tags=local.tags
