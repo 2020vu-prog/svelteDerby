@@ -54,6 +54,44 @@ test("AnnounceResults dispatches S3 writes with PutObjectCommand", async () => {
     expect(command.input.Bucket).toBe("media-bucket");
 });
 
+test("AnnounceResults buffers the v3 Polly audio stream before S3 upload", async () => {
+    const transformToByteArray = jest
+        .fn()
+        .mockResolvedValue(Uint8Array.from([97, 117, 100, 105, 111]));
+    const polly = {
+        send: jest.fn().mockResolvedValue({
+            AudioStream: { transformToByteArray },
+        }),
+    };
+    const s3 = { send: jest.fn().mockResolvedValue({}) };
+    const announce = new AnnounceResults({}, {
+        polly,
+        s3,
+        sns: { send: jest.fn() },
+    });
+    process.env.DstBucket = "media-bucket";
+
+    await announce.submitToPolly("<speak>Test</speak>", "event");
+
+    expect(transformToByteArray).toHaveBeenCalledTimes(1);
+    expect(s3.send.mock.calls[0][0].input.Body).toEqual(Buffer.from("audio"));
+});
+
+test("AnnounceResults does not upload when Polly returns no audio stream", async () => {
+    const polly = { send: jest.fn().mockResolvedValue({}) };
+    const s3 = { send: jest.fn() };
+    const announce = new AnnounceResults({}, {
+        polly,
+        s3,
+        sns: { send: jest.fn() },
+    });
+
+    await expect(
+        announce.submitToPolly("<speak>Test</speak>", "event")
+    ).resolves.toBeUndefined();
+    expect(s3.send).not.toHaveBeenCalled();
+});
+
 test("ApiRaceStanding dispatches notifications with SNS PublishCommand", async () => {
     const sns = { send: jest.fn().mockResolvedValue({ MessageId: "1" }) };
     const standings = new ApiRaceStanding({}, {}, {}, sns);
