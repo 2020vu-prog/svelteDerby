@@ -138,7 +138,7 @@ class AnnounceResults {
     async submitToPolly(msg, orgId, mediaPrefix) {
         if (msg.includes("ResetPollyAA466430-D313-488D-A485-22CC00FE84B0")) {
             console.log("Polly resetting zello. ");
-            return this.saveToS3(orgId, ""); // empty file!
+            return await this.saveToS3(orgId, ""); // empty file!
         }
 
         console.log("Polly msg: ", msg);
@@ -160,7 +160,12 @@ class AnnounceResults {
             );
             log.debug(`pollySpeech ok: ${pollySpeech.RequestCharacters}`); // successful response
 
-            return this.saveToS3(orgId, pollySpeech.AudioStream);
+            const audioBytes = pollySpeech.AudioStream?.transformToByteArray
+                ? Buffer.from(
+                      await pollySpeech.AudioStream.transformToByteArray()
+                  )
+                : pollySpeech.AudioStream;
+            return await this.saveToS3(orgId, audioBytes);
         } catch (err) {
             log.debug("pollySpeech err:", err); // successful response
         }
