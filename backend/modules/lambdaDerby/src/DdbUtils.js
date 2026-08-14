@@ -1,20 +1,32 @@
 const EntityFactory = require("./shared/EntityFactory.js");
 const log = require("loglevel");
 const requestContext = require("./RequestContext");
+const {
+    BatchWriteItemCommand,
+    QueryCommand,
+} = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
+const { SendMessageCommand } = require("@aws-sdk/client-sqs");
+const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const skipDeleteFilter = "attribute_not_exists(del) ";
 var configMap = {};
 
 class DdbUtils {
     ddbClient = null;
-    AWS = null;
     ddocClient = null;
     sqs = null;
 
-    constructor(AWS, ddbClient, sqs) {
+    constructor(ddbClient, sqs, documentClient) {
         this.ddbClient = ddbClient;
-        this.AWS = AWS;
         this.sqs = sqs;
-        this.ddocClient = new this.AWS.DynamoDB.DocumentClient();
+        this.ddocClient =
+            documentClient ||
+            DynamoDBDocumentClient.from(ddbClient, {
+                marshallOptions: {
+                    convertClassInstanceToMap: true,
+                    removeUndefinedValues: true,
+                },
+            });
     }
     getEntityFactory() {
         return requestContext.getEntityFactory();
@@ -93,7 +105,7 @@ class DdbUtils {
             Item: item,
         };
         try {
-            await this.ddocClient.put(dbItem).promise();
+            await this.ddocClient.send(new PutCommand(dbItem));
 
             log.debug("Added dbItem: " + JSON.stringify(dbItem));
             rc = "OK";
@@ -118,7 +130,7 @@ class DdbUtils {
         log.debug("ddbQueryPkSk query: " + JSON.stringify(params));
 
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryRawPkSk: ", data); // successful response
 		return data
         } catch (err) {
@@ -164,7 +176,7 @@ class DdbUtils {
                 ? new EntityFactory({})
                 : undefined;
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryPkAll: raw:", data); // successful response
             const udata = this.unmarshallResultsToArray(data, factory);
             log.debug("ddbQueryPkAll: unmar ", udata); // successful response
@@ -184,9 +196,7 @@ class DdbUtils {
     unmarshallResults(data, factory) {
         const results = [];
         for (var i = 0; i < data.Items.length; i++) {
-            var unmarshalled = this.AWS.DynamoDB.Converter.unmarshall(
-                data.Items[i]
-            );
+            var unmarshalled = unmarshall(data.Items[i]);
             // Callers pass no factory for timerDB rows; those should remain plain objects.
             unmarshalled = this.promoteToObject(unmarshalled, factory);
             if (unmarshalled) {
@@ -229,7 +239,7 @@ class DdbUtils {
         };
         log.debug("history query: " + JSON.stringify(params));
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             const cc = data.ConsumedCapacity.CapacityUnits;
             log.debug("ddbQueryTimerPbHistory cc: ", cc); // successful response
             log.debug("ddbQueryTimerPbHistory: ", data); // successful response
@@ -266,7 +276,7 @@ class DdbUtils {
         };
         log.debug("history query: " + JSON.stringify(params));
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             const cc = data.ConsumedCapacity.CapacityUnits;
             log.debug("ddbQueryTimerHistoryByUuid cc: ", cc); // successful response
             log.debug("ddbQueryTimerHistoryByUuid: ", data); // successful response
@@ -316,7 +326,7 @@ class DdbUtils {
         };
         log.debug("history query: " + JSON.stringify(params));
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             const cc = data.ConsumedCapacity.CapacityUnits;
             log.debug("queryRaceHistory cc: ", cc); // successful response
             log.debug("queryRaceHistory: ", data); // successful response
@@ -348,7 +358,7 @@ class DdbUtils {
         };
         log.debug("ddb query: " + JSON.stringify(params));
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryEventConfig: ", data); // successful response
             return this.unmarshallResultsToObject(data, "SK");
         } catch (err) {
@@ -368,7 +378,7 @@ class DdbUtils {
         };
         log.debug("ddb query: " + JSON.stringify(params));
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryEventConfig: ", data); // successful response
             return this.unmarshallResultsToObject(data, "SK");
         } catch (err) {
@@ -391,7 +401,7 @@ class DdbUtils {
         };
         log.debug("ddbQueryOrgPerms query : " + JSON.stringify(params));
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryOrgPerms: ", data); // successful response
             var candidates = this.unmarshallResultsToObject(data, "SK");
             candidates = Object.values(candidates);
@@ -418,7 +428,7 @@ class DdbUtils {
         };
         log.debug("ddbQueryOrgConfig query : " + JSON.stringify(params));
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryOrgConfig: ", data); // successful response
             return this.unmarshallResultsToObject(data, "SK");
         } catch (err) {
@@ -448,7 +458,7 @@ class DdbUtils {
         log.debug("ddbQueryRsByKey query: " + JSON.stringify(params));
 
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryRsByKey: ", data); // successful response
 
             const udata = this.unmarshallResultsToArray(
@@ -485,7 +495,7 @@ class DdbUtils {
         log.debug("ddbQueryRpByKey query: " + JSON.stringify(params));
 
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryRpByKey: ", data); // successful response
 
             const udata = this.unmarshallResultsToArray(
@@ -522,7 +532,7 @@ class DdbUtils {
         log.debug("ddbQueryRpNextOnBlocks query: " + JSON.stringify(params));
 
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryRpNextOnBlocks: ", JSON.stringify(data)); // successful response
 
             const udata = this.unmarshallResultsToArray(
@@ -565,7 +575,7 @@ class DdbUtils {
         log.debug("ddbQueryRpDuplicateCheck query: " + JSON.stringify(params));
 
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryRpDuplicateCheck: ", data); // successful response
 
             const udata = this.unmarshallResultsToArray(
@@ -601,7 +611,7 @@ class DdbUtils {
         );
 
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryBracketMdExistsCheck: ", data); // successful response
             const udata = this.unmarshallResultsToArray(
                 data,
@@ -639,7 +649,7 @@ class DdbUtils {
         );
 
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryRsExistsAndPendingCheck: ", data); // successful response
             const udata = this.unmarshallResultsToArray(
                 data,
@@ -712,7 +722,7 @@ class DdbUtils {
         log.debug("ddb ddbQueryRsAlreadyPending: " + JSON.stringify(params));
 
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryRsAlreadyPending: " + data); // successful response
             log.debug("ddbQueryRsAlreadyPending: " + JSON.stringify(data)); // successful response
             if (data.Count > 0) {
@@ -766,7 +776,7 @@ class DdbUtils {
         log.debug("ddb query: " + JSON.stringify(params));
 
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("queryRsContains: " + data); // successful response
             log.debug("queryRsContains: " + JSON.stringify(data)); // successful response
             return data.Count;
@@ -782,7 +792,11 @@ class DdbUtils {
         if (myP) {
             myP.preWrite();
             log.debug("fmtBulkPut pw:", myP);
-            var marshalled = this.AWS.DynamoDB.Converter.marshall(myP);
+            var marshalled = marshall(myP, {
+                convertClassInstanceToMap: true,
+                convertTopLevelContainer: false,
+                removeUndefinedValues: true,
+            });
             log.debug("fmtBulkPut mar:", marshalled);
             const putRequest = {
                 PutRequest: {
@@ -806,7 +820,9 @@ class DdbUtils {
                 ReturnConsumedCapacity: "TOTAL",
             };
             try {
-                var data = await this.ddbClient.batchWriteItem(params);
+                var data = await this.ddbClient.send(
+                    new BatchWriteItemCommand(params)
+                );
 
                 log.debug("Added Bulk: " + JSON.stringify(data)); // successful response
                 return requests.length; // TODO get from TotalProcessed;
@@ -855,7 +871,7 @@ class DdbUtils {
         };
         try {
             log.debug("SQS sending:", qsp);
-            const sent = await this.sqs.sendMessage(params).promise();
+            const sent = await this.sqs.send(new SendMessageCommand(params));
             log.debug("SQS send Success", sent.MessageId);
         } catch (err) {
             log.debug("SQS send Error", err);

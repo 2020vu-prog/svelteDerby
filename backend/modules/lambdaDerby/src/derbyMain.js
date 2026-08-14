@@ -26,13 +26,35 @@ const {
 } = require("./shared/PermissionLookup.js");
 const ApiRouter = require("./ApiRouter.js");
 const RoutePermission = require("./RoutePermission.js");
-const AWS = require("aws-sdk");
-const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const {
+    AttachPrincipalPolicyCommand,
+    IoTClient,
+} = require("@aws-sdk/client-iot");
+const {
+    IoTDataPlaneClient,
+    PublishCommand: IotPublishCommand,
+} = require("@aws-sdk/client-iot-data-plane");
+const {
+    CopyObjectCommand,
+    ListObjectsV2Command,
+    PutObjectCommand,
+    S3Client,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const {
+    PublishCommand: SnsPublishCommand,
+    SNSClient,
+} = require("@aws-sdk/client-sns");
+const { SQSClient } = require("@aws-sdk/client-sqs");
+const { GetParameterCommand, SSMClient } = require("@aws-sdk/client-ssm");
 
-const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
-const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
-const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
-const ssm = new AWS.SSM({ apiVersion: "2014-11-06" });
+const ddbClient = new DynamoDBClient({ region: process.env.AwsRegion });
+const sqs = new SQSClient({ region: process.env.AwsRegion });
+const s3 = new S3Client({ region: process.env.AwsRegion });
+const ssm = new SSMClient({ region: process.env.AwsRegion });
+const sns = new SNSClient({ region: process.env.AwsRegion });
+const iot = new IoTClient({ region: process.env.AwsRegion });
 const TmpCache = require("./tmpCache.js");
 const DdbUtils = require("./DdbUtils");
 const ArchiveUtils = require("./ArchiveUtils");
@@ -43,17 +65,17 @@ const LogUtils = require("./LogUtils");
 const { getShaCars, getSourceName } = require("./utils");
 const requestContext = require("./RequestContext");
 
-const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
-const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
-const discordUtils = new DiscordUtils(AWS, ddbUtils);
+const ddbUtils = new DdbUtils(ddbClient, sqs);
+const archiveUtils = new ArchiveUtils(ddbUtils);
+const discordUtils = new DiscordUtils(ddbUtils);
 const logUtils = new LogUtils(ddbUtils);
 
 function newAnnounceResults() {
-    return new AnnounceResults(AWS, ddbUtils);
+    return new AnnounceResults(ddbUtils);
 }
 
 function newApiRaceStanding() {
-    return new ApiRaceStanding(AWS, ddbUtils, newAnnounceResults(), logUtils);
+    return new ApiRaceStanding(ddbUtils, newAnnounceResults(), logUtils, sns);
 }
 
 log.setLevel(log.levels.TRACE);
@@ -64,7 +86,7 @@ const s3QueryChartTypes = async () => {
         Prefix: "data/brackets",
     };
     try {
-        const data = await s3.listObjectsV2(params).promise();
+        const data = await s3.send(new ListObjectsV2Command(params));
         return data;
     } catch (err) {
         log.debug("s3 list Error", err);
@@ -84,7 +106,7 @@ async function s3QueryMediaPrefix(queryStringParameters) {
     return allKeys;
 }
 async function getAllKeys(params, allKeys = []) {
-    const response = await s3.listObjectsV2(params).promise();
+    const response = await s3.send(new ListObjectsV2Command(params));
     log.debug("getAllKeys count:", response.Contents.length);
     response.Contents.forEach((obj) =>
         allKeys.push({ Key: obj.Key, LastModified: obj.LastModified })
@@ -98,12 +120,12 @@ async function getAllKeys(params, allKeys = []) {
 }
 const attachPrincipalPolicy = async (policyName, principal) => {
     try {
-        const data = await new AWS.Iot()
-            .attachPrincipalPolicy({
+        const data = await iot.send(
+            new AttachPrincipalPolicyCommand({
                 policyName: policyName,
                 principal: principal,
             })
-            .promise();
+        );
         log.debug("attachPrincipalPolicy Data", data);
     } catch (err) {
         log.debug("attachPrincipalPolicy Error", err);
@@ -278,8 +300,8 @@ async function requestIotVideoUploadRaw(videoRequest){
 
         if (!iotdata) {
             // first time
-            iotdata = new AWS.IotData({
-                endpoint: process.env.IotEndpoint,
+            iotdata = new IoTDataPlaneClient({
+                endpoint: `https://${process.env.IotEndpoint}`,
             });
         }
         const payload = { 
@@ -293,7 +315,7 @@ async function requestIotVideoUploadRaw(videoRequest){
         };
         try {
             log.debug("requestIotVideoUpload request:", params);
-            var data = await iotdata.publish(params).promise();
+            var data = await iotdata.send(new IotPublishCommand(params));
             log.debug("requestIotVideoUpload Success.", params);
             return { status: "ok", detail: "Published" };
         } catch (err) {
@@ -688,7 +710,7 @@ const addChartMetaData = async (json) => {
 };
 
 const getCachedBmd = async (orgId, chartId) => {
-    const tmpCache = new TmpCache(AWS, ddbClient, s3);
+    const tmpCache = new TmpCache(ddbClient, s3);
 
     const bmd = await tmpCache.getObject({
         //PK: `${json.orgId}:Bmd`,
@@ -908,12 +930,10 @@ const addNewEventPushSns = async (orgId,json) => {
         };
 
         try {
-            const snsModule = new AWS.SNS({ apiVersion: "2010-03-31" });
-
             console.log("SNS json    AddEventSnsArn:", json);
             console.log("SNS sending AddEventSnsArn:", params);
             //console.log("SNS module1 AddEventSnsArn:", snsModule);
-            const sent = await snsModule.publish(params).promise();
+            const sent = await sns.send(new SnsPublishCommand(params));
             console.log("AddEventSnsArn send Success", sent);
         } catch (err) {
             console.log("AddEventSnsArn send Error", err);
@@ -1545,12 +1565,15 @@ const routeMap = {
             }
             const mimeType = "video/webm";
             var params = {
-                Expires: 600, // allow for slow video upload
                 Bucket: bucket,
                 Key: key,
                 ContentType: mimeType,
             };
-            var signedUrl = s3.getSignedUrl("putObject", params);
+            var signedUrl = await getSignedUrl(
+                s3,
+                new PutObjectCommand(params),
+                { expiresIn: 600 } // allow for slow video upload
+            );
             log.debug("For params:", params, " The signed URL is", signedUrl);
 
             return buildResponse({ 
@@ -1590,9 +1613,9 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
 
 async function getDerbyMainVersionInfo() {
     const parameterName = `/deploy/${process.env.DeployEnvironment}/git-breadcrumb`;
-    const gitBreadcrumbParameterResponse = await ssm
-        .getParameter({ Name: parameterName })
-        .promise();
+    const gitBreadcrumbParameterResponse = await ssm.send(
+        new GetParameterCommand({ Name: parameterName })
+    );
     const gitBreadcrumb = gitBreadcrumbParameterResponse.Parameter.Value;
     try {
         const { buildTime } = JSON.parse(gitBreadcrumb);
@@ -2143,7 +2166,7 @@ async function lambdaHandler(event) {
             Bucket: process.env.DstBucket,
         };
         log.debug("s3 mp4 copyParams:", s3CopyParams);
-        const s3copyDone = await s3.copyObject(s3CopyParams).promise();
+        const s3copyDone = await s3.send(new CopyObjectCommand(s3CopyParams));
         log.debug("s3 mp4 copyDone:", s3copyDone);
 
         const webmSrcKey = `inputs/${basefile}`.replace(".mp4", ".webm");
@@ -2154,7 +2177,9 @@ async function lambdaHandler(event) {
             Bucket: process.env.DstBucket,
         };
         log.debug("s3 webm copyParams:", s3CopyParamsWebm);
-        const s3copyDoneWebm = await s3.copyObject(s3CopyParamsWebm).promise();
+        const s3copyDoneWebm = await s3.send(
+            new CopyObjectCommand(s3CopyParamsWebm)
+        );
         log.debug("s3 webm copyDone:", s3copyDoneWebm);
         return "s3 success";
     }

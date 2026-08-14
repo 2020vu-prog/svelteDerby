@@ -2,16 +2,17 @@ const fs = require("fs");
 const log = require("loglevel");
 var StringDecoder = require("string_decoder").StringDecoder;
 var path = require("path");
+const { QueryCommand } = require("@aws-sdk/client-dynamodb");
+const { GetObjectCommand } = require("@aws-sdk/client-s3");
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
 
 const fsPromises = fs.promises;
 
 class TmpCache {
     ddbClient = null;
-    AWS = null;
     s3 = null;
-    constructor(AWS, ddbClient, s3Client) {
+    constructor(ddbClient, s3Client) {
         this.ddbClient = ddbClient;
-        this.AWS = AWS;
         this.s3 = s3Client;
     }
     get entityTypes() {
@@ -80,11 +81,12 @@ class TmpCache {
             Key: key,
         };
         try {
-            const data = await this.s3.getObject(params).promise();
+            const data = await this.s3.send(new GetObjectCommand(params));
             log.debug("s3 getObject ok", data);
 
-            const d = new StringDecoder("utf8");
-            const rc = d.write(data.Body);
+            const rc = data.Body.transformToString
+                ? await data.Body.transformToString("utf8")
+                : new StringDecoder("utf8").write(data.Body);
             return JSON.parse(rc);
         } catch (err) {
             log.debug("s3 getBucket Error", err);
@@ -107,12 +109,10 @@ class TmpCache {
         log.debug("ddbCacheQueryPkSk query: " + JSON.stringify(params));
 
         try {
-            var data = await this.ddbClient.query(params);
+            var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbCacheQueryPkSk: ", data); // successful response
             for (var i = 0; i < data.Items.length; i++) {
-                var unmarshalled = this.AWS.DynamoDB.Converter.unmarshall(
-                    data.Items[i]
-                );
+                var unmarshalled = unmarshall(data.Items[i]);
                 return unmarshalled;
                 log.debug("ddbCacheQueryPkSk: returning", unmarshalled); // successful response
             }

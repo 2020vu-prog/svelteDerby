@@ -124,24 +124,25 @@ jobs:
             exit 1
           fi
 
-      - name: Test backend
-        working-directory: backend/test
-        run: |
-          npm ci
-          npm run test:unit -- --silent
-          git diff --exit-code
-
-      - name: Set up Node 22 for lambdaSqs
+      - name: Set up Node 22 Lambdas
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
 
-      - name: Test and package lambdaSqs
-        working-directory: backend/modules/lambdaSqs/src
+      - name: Test and package Node 22 Lambdas
+        working-directory: backend
         run: |
-          npm ci
-          npm test
-          make package.zip
+          (
+            cd modules/lambdaSqs/src
+            npm ci
+            npm test
+            make package.zip
+          )
+          (
+            cd modules/lambdaDerby/src
+            npm ci
+            make package.zip
+          )
 
       - name: Restore Node 18 for legacy Lambdas and frontend
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -150,6 +151,13 @@ jobs:
 
       - name: Restore npm for legacy builds
         run: npm install --global npm@8.19.4
+
+      - name: Test backend
+        working-directory: backend/test
+        run: |
+          npm ci
+          npm run test:unit -- --silent
+          git diff --exit-code
 
       - name: Plan backend
         working-directory: backend
