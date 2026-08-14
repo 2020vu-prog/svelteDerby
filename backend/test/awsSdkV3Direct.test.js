@@ -77,6 +77,21 @@ test("AnnounceResults buffers the v3 Polly audio stream before S3 upload", async
     expect(s3.send.mock.calls[0][0].input.Body).toEqual(Buffer.from("audio"));
 });
 
+test("AnnounceResults does not upload when Polly returns no audio stream", async () => {
+    const polly = { send: jest.fn().mockResolvedValue({}) };
+    const s3 = { send: jest.fn() };
+    const announce = new AnnounceResults({}, {
+        polly,
+        s3,
+        sns: { send: jest.fn() },
+    });
+
+    await expect(
+        announce.submitToPolly("<speak>Test</speak>", "event")
+    ).resolves.toBeUndefined();
+    expect(s3.send).not.toHaveBeenCalled();
+});
+
 test("ApiRaceStanding dispatches notifications with SNS PublishCommand", async () => {
     const sns = { send: jest.fn().mockResolvedValue({ MessageId: "1" }) };
     const standings = new ApiRaceStanding({}, {}, {}, sns);

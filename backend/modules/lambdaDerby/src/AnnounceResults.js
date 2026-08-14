@@ -160,11 +160,12 @@ class AnnounceResults {
             );
             log.debug(`pollySpeech ok: ${pollySpeech.RequestCharacters}`); // successful response
 
-            const audioBytes = pollySpeech.AudioStream?.transformToByteArray
-                ? Buffer.from(
-                      await pollySpeech.AudioStream.transformToByteArray()
-                  )
-                : pollySpeech.AudioStream;
+            if (!pollySpeech.AudioStream) {
+                throw new Error("Polly returned no audio stream");
+            }
+            const audioBytes = Buffer.from(
+                await pollySpeech.AudioStream.transformToByteArray()
+            );
             return await this.saveToS3(orgId, audioBytes);
         } catch (err) {
             log.debug("pollySpeech err:", err); // successful response
