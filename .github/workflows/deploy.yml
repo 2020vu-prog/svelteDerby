@@ -133,6 +133,12 @@ jobs:
         working-directory: backend
         run: |
           (
+            cd modules/lambdaDynamo/src
+            npm ci
+            npm test
+            make package.zip
+          )
+          (
             cd modules/lambdaSqs/src
             npm ci
             npm test

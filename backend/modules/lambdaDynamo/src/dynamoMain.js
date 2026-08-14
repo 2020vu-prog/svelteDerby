@@ -1,11 +1,17 @@
 "use strict";
 const log = require("loglevel");
-const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
-const AWS = require("aws-sdk");
-const s3 = new AWS.S3();
+const {
+    DynamoDBClient,
+    PutItemCommand: DynamoDbPutItemCommand,
+} = require("@aws-sdk/client-dynamodb");
+const {
+    IoTDataPlaneClient,
+    PublishCommand: IotPublishCommand,
+} = require("@aws-sdk/client-iot-data-plane");
+const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 var iotdata;
 log.setLevel(log.levels.TRACE);
-const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
+const ddbClient = new DynamoDBClient({ region: process.env.AwsRegion });
 
 log.debug("Loading function");
 
@@ -31,7 +37,10 @@ const propagateIot = async (json) => {
     log.debug("Iot Begin.");
     if (!iotdata) {
         // first time
-        iotdata = new AWS.IotData({ endpoint: process.env.IotEndpoint });
+        iotdata = new IoTDataPlaneClient({
+            endpoint: `https://${process.env.IotEndpoint}`,
+            region: process.env.AwsRegion,
+        });
     }
     const params = {
         topic: "derby/" + json.orgId + "/dist",
@@ -39,7 +48,7 @@ const propagateIot = async (json) => {
         qos: 0,
     };
     try {
-        var data = await iotdata.publish(params).promise();
+        await iotdata.send(new IotPublishCommand(params));
         log.debug("Iot Success.", params);
         //log.debug(data);
         return { status: "ok", detail: "Published" };
@@ -55,19 +64,18 @@ const propagateRecord = async (json) => {
     if (json && json.orgId) {
     } else {
         return { error: "missing orgId" };
-        ß;
     }
     json.DP = json.orgId;
     json.DS = getMicroEpoch();
     var params = {
-        Item: AWS.DynamoDB.Converter.marshall(json),
+        Item: marshall(json, { removeUndefinedValues: true }),
         ReturnConsumedCapacity: "TOTAL",
         TableName: process.env.DistDbTable,
     };
 
     try {
         log.debug("Adding pr: " + JSON.stringify(params));
-        var data = await ddbClient.putItem(params);
+        const data = await ddbClient.send(new DynamoDbPutItemCommand(params));
         log.debug("Added pr: " + JSON.stringify(data)); // successful response
         return { status: "ok", detail: "Added" };
     } catch (err) {
@@ -89,9 +97,7 @@ exports.handler = async (event) => {
         log.debug(record.eventID);
         log.debug(record.eventName);
         log.debug("DynamoDB Record: %j", record.dynamodb);
-        var unmarshalled = AWS.DynamoDB.Converter.unmarshall(
-            record.dynamodb.NewImage
-        );
+        var unmarshalled = unmarshall(record.dynamodb.NewImage);
         log.debug("DynamoDB Unmarshalled: %j", unmarshalled);
 
         if (unmarshalled && unmarshalled.orgId) {
