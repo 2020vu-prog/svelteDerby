@@ -144,6 +144,13 @@ jobs:
             make package.zip
           )
 
+      - name: Test backend with Node 22
+        working-directory: backend/test
+        run: |
+          npm ci
+          npm run test:unit -- --silent
+          git diff --exit-code
+
       - name: Restore Node 18 for legacy Lambdas and frontend
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -151,13 +158,6 @@ jobs:
 
       - name: Restore npm for legacy builds
         run: npm install --global npm@8.19.4
-
-      - name: Test backend
-        working-directory: backend/test
-        run: |
-          npm ci
-          npm run test:unit -- --silent
-          git diff --exit-code
 
       - name: Plan backend
         working-directory: backend
