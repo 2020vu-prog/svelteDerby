@@ -30,6 +30,16 @@ const streamEvent = (item) => ({
     ],
 });
 
+const removeEvent = {
+    Records: [
+        {
+            eventID: "event-remove-1",
+            eventName: "REMOVE",
+            dynamodb: { Keys: marshall({ PK: "Race", SK: "Race" }) },
+        },
+    ],
+};
+
 test("copies a DynamoDB stream record to the distribution table and IoT", async (t) => {
     const dynamoCommands = [];
     const iotCommands = [];
@@ -72,6 +82,29 @@ test("copies a DynamoDB stream record to the distribution table and IoT", async 
     );
 });
 
+test("assigns increasing epoch-microsecond distribution keys", async (t) => {
+    const dynamoCommands = [];
+    t.mock.method(DynamoDBClient.prototype, "send", async (command) => {
+        dynamoCommands.push(command);
+        return {};
+    });
+    t.mock.method(IoTDataPlaneClient.prototype, "send", async () => ({}));
+    const beforeMicroEpoch = Date.now() * 1000;
+
+    await handler({
+        Records: [
+            ...streamEvent({ orgId: "Test.12345", PK: "First" }).Records,
+            ...streamEvent({ orgId: "Test.12345", PK: "Second" }).Records,
+        ],
+    });
+
+    const firstMicroEpoch = Number(dynamoCommands[0].input.Item.DS.N);
+    const secondMicroEpoch = Number(dynamoCommands[1].input.Item.DS.N);
+    assert.ok(firstMicroEpoch >= beforeMicroEpoch);
+    assert.ok(secondMicroEpoch > firstMicroEpoch);
+    assert.ok(secondMicroEpoch < (Date.now() + 1) * 1000);
+});
+
 test("skips stream records without an organization", async (t) => {
     const dynamoSend = t.mock.method(
         DynamoDBClient.prototype,
@@ -87,4 +120,45 @@ test("skips stream records without an organization", async (t) => {
     await assert.doesNotReject(handler(streamEvent({ PK: "Race" })));
     assert.equal(dynamoSend.mock.callCount(), 0);
     assert.equal(iotSend.mock.callCount(), 0);
+});
+
+test("skips REMOVE records without blocking the stream", async (t) => {
+    const dynamoSend = t.mock.method(
+        DynamoDBClient.prototype,
+        "send",
+        async () => ({})
+    );
+    const iotSend = t.mock.method(
+        IoTDataPlaneClient.prototype,
+        "send",
+        async () => ({})
+    );
+
+    await assert.doesNotReject(handler(removeEvent));
+    assert.equal(dynamoSend.mock.callCount(), 0);
+    assert.equal(iotSend.mock.callCount(), 0);
+});
+
+test("continues best-effort processing when propagation fails", async (t) => {
+    const dynamoSend = t.mock.method(
+        DynamoDBClient.prototype,
+        "send",
+        async () => {
+            throw new Error("DynamoDB unavailable");
+        }
+    );
+    const iotSend = t.mock.method(
+        IoTDataPlaneClient.prototype,
+        "send",
+        async () => {
+            throw new Error("IoT unavailable");
+        }
+    );
+
+    await assert.doesNotReject(handler(streamEvent({
+        orgId: "Test.12345",
+        PK: "Race",
+    })));
+    assert.equal(dynamoSend.mock.callCount(), 1);
+    assert.equal(iotSend.mock.callCount(), 1);
 });

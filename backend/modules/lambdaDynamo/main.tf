@@ -79,6 +79,7 @@ resource "aws_lambda_function" "lambda" {
   handler = "dynamoMain.handler"
   runtime = "nodejs22.x"
   memory_size=1024
+  reserved_concurrent_executions = 1
   publish = true
   tags=local.tags
   environment {

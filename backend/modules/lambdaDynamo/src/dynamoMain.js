@@ -1,4 +1,5 @@
 "use strict";
+const { performance } = require("node:perf_hooks");
 const log = require("loglevel");
 const {
     DynamoDBClient,
@@ -9,125 +10,100 @@ const {
     PublishCommand: IotPublishCommand,
 } = require("@aws-sdk/client-iot-data-plane");
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
-var iotdata;
-log.setLevel(log.levels.TRACE);
-const ddbClient = new DynamoDBClient({ region: process.env.AwsRegion });
+let iotData;
+log.setLevel(process.env.LogLevel || log.levels.INFO);
+const dynamoDbClient = new DynamoDBClient({ region: process.env.AwsRegion });
 
 log.debug("Loading function");
 
-const sleep = (milliseconds) => {
-    return new Promise((resolve) => setTimeout(resolve, milliseconds));
-};
-const asyncForEach = async (array, callback) => {
-    for (let index = 0; index < array.length; index++) {
-        await callback(array[index], index, array);
-    }
-};
-
-// It is very unlikely that there would be a millisecond collision given
-//   limited update volume.
-// Add a 1000 bytes of entropy to the time just as precaution.
+let lastMicroEpoch = 0;
 const getMicroEpoch = () => {
-    const rand999 = Math.floor(Math.random() * 1000);
-    return new Date().getTime() * 1000 + rand999;
+    const measuredMicroEpoch = Math.floor(
+        (performance.timeOrigin + performance.now()) * 1000
+    );
+    lastMicroEpoch = Math.max(measuredMicroEpoch, lastMicroEpoch + 1);
+    return lastMicroEpoch;
 };
 
-//TODO: consolidate and publish entire batch at once!
-const propagateIot = async (json) => {
+const buildDistributionRecord = (sourceRecord) => ({
+    ...sourceRecord,
+    DP: sourceRecord.orgId,
+    DS: getMicroEpoch(),
+});
+
+const publishDistributionRecord = async (distributionRecord) => {
     log.debug("Iot Begin.");
-    if (!iotdata) {
-        // first time
-        iotdata = new IoTDataPlaneClient({
+    if (!iotData) {
+        iotData = new IoTDataPlaneClient({
             endpoint: `https://${process.env.IotEndpoint}`,
             region: process.env.AwsRegion,
         });
     }
     const params = {
-        topic: "derby/" + json.orgId + "/dist",
-        payload: JSON.stringify(json),
+        topic: `derby/${distributionRecord.orgId}/dist`,
+        payload: JSON.stringify(distributionRecord),
         qos: 0,
     };
     try {
-        await iotdata.send(new IotPublishCommand(params));
-        log.debug("Iot Success.", params);
-        //log.debug(data);
-        return { status: "ok", detail: "Published" };
+        await iotData.send(new IotPublishCommand(params));
+        log.debug("Iot Success.");
     } catch (err) {
         log.error("Iot Error.", err);
-        log.error(err, err.stack); // an error occurred
-        return { error: err };
     }
 };
-//TODO: Batch write!
-const propagateRecord = async (json) => {
-    log.debug("propagateRecord: " + JSON.stringify(json));
-    if (json && json.orgId) {
-    } else {
-        return { error: "missing orgId" };
-    }
-    json.DP = json.orgId;
-    json.DS = getMicroEpoch();
-    var params = {
-        Item: marshall(json, { removeUndefinedValues: true }),
+
+const saveDistributionRecord = async (distributionRecord) => {
+    const params = {
+        Item: marshall(distributionRecord, { removeUndefinedValues: true }),
         ReturnConsumedCapacity: "TOTAL",
         TableName: process.env.DistDbTable,
     };
 
     try {
-        log.debug("Adding pr: " + JSON.stringify(params));
-        const data = await ddbClient.send(new DynamoDbPutItemCommand(params));
-        log.debug("Added pr: " + JSON.stringify(data)); // successful response
-        return { status: "ok", detail: "Added" };
+        const data = await dynamoDbClient.send(
+            new DynamoDbPutItemCommand(params)
+        );
+        log.debug("Distribution record added.", data);
     } catch (err) {
-        log.debug(err, err.stack); // an error occurred
-        return { error: err };
+        log.error("Distribution record error.", err);
     }
 };
+
 exports.handler = async (event) => {
-    const dbArn = process.env.DynamoDbArn;
-    var jsonRC = {};
+    for (const record of event.Records || []) {
+        const newImage = record.dynamodb?.NewImage;
+        if (!newImage) {
+            log.info(
+                "Skipping stream record without NewImage:",
+                record.eventName,
+                record.eventID
+            );
+            continue;
+        }
 
-    log.debug(JSON.stringify(event));
+        let sourceRecord;
+        try {
+            sourceRecord = unmarshall(newImage);
+        } catch (err) {
+            log.error("Unable to unmarshall stream record:", record.eventID, err);
+            continue;
+        }
 
-    if (false) {
-        return "bypass";
+        if (!sourceRecord.orgId) {
+            log.info(
+                "Skipping stream record without orgId:",
+                record.eventName,
+                record.eventID
+            );
+            continue;
+        }
+
+        const distributionRecord = buildDistributionRecord(sourceRecord);
+        await Promise.all([
+            saveDistributionRecord(distributionRecord),
+            publishDistributionRecord(distributionRecord),
+        ]);
     }
-    //event.Records.forEach(function(record) {
-    await asyncForEach(event.Records, async function (record) {
-        log.debug(record.eventID);
-        log.debug(record.eventName);
-        log.debug("DynamoDB Record: %j", record.dynamodb);
-        var unmarshalled = unmarshall(record.dynamodb.NewImage);
-        log.debug("DynamoDB Unmarshalled: %j", unmarshalled);
 
-        if (unmarshalled && unmarshalled.orgId) {
-            try {
-                /*
-				log.debug('S3 Putting');
-				const dstKey = unmarshalled.orgId + "/" + new Date().toISOString()
-				const dstBucket = process.env.DstBucket;
-				const contentType = "application/json";
-				*/
-                log.debug("DB Putting : %s", JSON.stringify(unmarshalled));
-                const dbPromise = propagateRecord(unmarshalled);
-                const iotPromise = propagateIot(unmarshalled);
-                //const [dbResult, iotResult] = await Promise.allSettled([dbPromise,iotPromise]);
-                const [dbResult, iotResult] = await Promise.all([
-                    dbPromise,
-                    iotPromise,
-                ]);
-
-                log.debug(
-                    "Promises settled:" + dbResult + " iot: " + iotResult
-                );
-            } catch (err) {
-                log.debug("DB/Iot await failed");
-                log.debug(err);
-            }
-        }
-        else{
-                log.debug("skipped:", record.eventName, record.eventID);
-        }
-    });
     return "message";
 };

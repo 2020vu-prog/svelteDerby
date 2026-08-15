@@ -154,6 +154,29 @@ resource "aws_cloudwatch_metric_alarm" "lambda_logged_errors" {
   ok_actions    = [aws_sns_topic.backend_alarms.arn]
 }
 
+resource "aws_cloudwatch_metric_alarm" "dynamo_main_iterator_age" {
+  depends_on = [aws_sns_topic_policy.backend_alarms]
+
+  alarm_name          = "${local.alert_name_prefix}-dynamoMain-iterator-age"
+  alarm_description   = "dynamoMain stream processing is more than two minutes behind."
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  datapoints_to_alarm = 2
+  metric_name         = "IteratorAge"
+  namespace           = "AWS/Lambda"
+  period              = 60
+  statistic           = "Maximum"
+  threshold           = 120000
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    FunctionName = module.derbyDynamoLambda.function_name
+  }
+
+  alarm_actions = [aws_sns_topic.backend_alarms.arn]
+  ok_actions    = [aws_sns_topic.backend_alarms.arn]
+}
+
 output "BackendAlarmSnsTopicArn" {
   description = "SNS topic that receives backend CloudWatch alarm state changes."
   value       = aws_sns_topic.backend_alarms.arn
