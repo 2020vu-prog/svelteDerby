@@ -2,7 +2,7 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import * as axiosVanilla  from "axios";
+    import axiosVanilla from "axios";
     import {
         driverMap,
         nextOnBlockKey,
