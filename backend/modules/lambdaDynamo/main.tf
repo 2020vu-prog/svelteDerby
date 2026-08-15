@@ -77,7 +77,7 @@ resource "aws_lambda_function" "lambda" {
 
   role    = aws_iam_role.iam_for_lambda_dynamo.arn
   handler = "dynamoMain.handler"
-  runtime = "nodejs16.x"
+  runtime = "nodejs22.x"
   memory_size=1024
   publish = true
   tags=local.tags
