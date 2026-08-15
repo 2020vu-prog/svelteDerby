@@ -12,7 +12,7 @@ const {
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 let iotData;
 log.setLevel(process.env.LogLevel || log.levels.INFO);
-const dynamoDb = new DynamoDBClient({ region: process.env.AwsRegion });
+const dynamoDbClient = new DynamoDBClient({ region: process.env.AwsRegion });
 
 log.debug("Loading function");
 
@@ -60,7 +60,9 @@ const saveDistributionRecord = async (distributionRecord) => {
     };
 
     try {
-        const data = await dynamoDb.send(new DynamoDbPutItemCommand(params));
+        const data = await dynamoDbClient.send(
+            new DynamoDbPutItemCommand(params)
+        );
         log.debug("Distribution record added.", data);
     } catch (err) {
         log.error("Distribution record error.", err);
