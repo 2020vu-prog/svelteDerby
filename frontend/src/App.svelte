@@ -250,10 +250,6 @@
                 menuRoute: "/chartList",
             },
             {
-                text: "PA Info",
-                menuRoute: "/pa_info",
-            },
-            {
                 text: "Watch Different Event",
                 menuRoute: "/orgSelection",
                 alwaysShow: true,
@@ -285,6 +281,10 @@
             {
                 text: "Manual Announcement",
                 menuRoute: "/ManualAnnouncement",
+            },
+            {
+                text: "PA Info",
+                menuRoute: "/pa_info",
             },
             {
                 text: "Capture Video",
