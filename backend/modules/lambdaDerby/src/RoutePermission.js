@@ -58,6 +58,7 @@ RoutePermission.CAN_DELETE_BLOCKS = new RoutePermission("CanDeleteBlocks");
 RoutePermission.CAN_INITIATE_ANNOUNCEMENT = new RoutePermission(
     "CanInitiateAnnouncement"
 );
+RoutePermission.CAN_ANNOUNCE = new RoutePermission("CanAnnounce");
 RoutePermission.CAN_MANAGE_DISCORD = new RoutePermission("CanManageDiscord");
 RoutePermission.CAN_DELETE_STANDING = new RoutePermission("CanDeleteStanding");
 RoutePermission.CAN_CAPTURE_VIDEO = new RoutePermission("CanCaptureVideo");

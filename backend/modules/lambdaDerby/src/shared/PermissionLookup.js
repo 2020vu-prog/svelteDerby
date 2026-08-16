@@ -18,6 +18,9 @@ const registrationPerms = {
 const videoPerms = {
     CanCaptureVideo: true,
 };
+const announcerPerms = {
+    CanAnnounce: true,
+};
 
 const permsByRoleMap = {
     power: powerPerms, // john harmon, Akron Local org
@@ -25,6 +28,7 @@ const permsByRoleMap = {
     starterLimited: starterLimitedPerms,
     registration: registrationPerms,
     video: videoPerms,
+    Announcer: announcerPerms,
 };
 function roleHasRoutePath(routeType, orgIz, roleList, routePath) {
     log.debug("TODO: routepath:");

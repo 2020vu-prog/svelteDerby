@@ -63,6 +63,7 @@ addPermission(
     ["/initiateAnnouncement", "/RaceStanding/addTag"],
     ["/ManualAnnouncement"]
 );
+addPermission("CanAnnounce", [], ["/pa_info"]);
 addPermission("CanManageDiscord", ["/manageDiscord"], ["/manageDiscord"]);
 addPermission(
     "CanDeleteStanding",

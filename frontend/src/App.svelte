@@ -50,6 +50,7 @@
     import RouteSelection from "./RouteSelection.svelte";
     import ForceLoad from "./ForceLoad.svelte";
     import MediaList from "./MediaList.svelte";
+    import PaInfo from "./PaInfo.svelte";
 
     import ForceReloadPage from "./ForceReloadPage.svelte";
     import LoginH from "./LoginH.svelte";
@@ -112,6 +113,7 @@
         "/chartDetailCardList/:chartId": ChartDetailCardList,
         "/chartPosition/:chartId/:chartPosition": ChartPosition,
         "/chartList": ChartList,
+        "/pa_info": PaInfo,
         "/chartEdit/:chartId": ChartEdit,
         "/chartFill/:chartId": ChartFill,
         "/chartAdd": ChartAdd,
@@ -246,6 +248,10 @@
             {
                 text: "Charts",
                 menuRoute: "/chartList",
+            },
+            {
+                text: "PA Info",
+                menuRoute: "/pa_info",
             },
             {
                 text: "Watch Different Event",
