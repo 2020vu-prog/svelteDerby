@@ -11,16 +11,23 @@
         userId,
     } from './stores.js'
 
-    let redirecting=false
-    function hostedLogin() {
+    interface CognitoHostedConfig {
+        aws_user_pools_hosted_client_id: string;
+        hosted_url: string;
+    }
+
+    const cognitoConfig = aws_exports as CognitoHostedConfig;
+    let redirecting: boolean = false
+
+    function hostedLogin(): { loginUrl: string; logoutUrl: string } {
         const u = new URL(document.URL)
         console.log(`Twiddle qul:`, u)
-        const clientId = `client_id=${aws_exports.aws_user_pools_hosted_client_id}`
+        const clientId = `client_id=${cognitoConfig.aws_user_pools_hosted_client_id}`
         const encodedRedir = encodeURIComponent(`${u.origin}/`);
         const redir = `redirect_uri=${encodedRedir}`
         //loginUrl = `https://cf-test-rr1-us.auth.us-east-2.amazoncognito.com/oauth2/authorize?${clientId}&response_type=token&scope=email+openid+phone&${redir}`
-        const loginUrl = `${aws_exports.hosted_url}/oauth2/authorize?${clientId}&response_type=token&scope=email+openid+phone&${redir}`
-        const logoutUrl = `${aws_exports.hosted_url}/logout?${clientId}&logout_uri=${encodedRedir}`
+        const loginUrl = `${cognitoConfig.hosted_url}/oauth2/authorize?${clientId}&response_type=token&scope=email+openid+phone&${redir}`
+        const logoutUrl = `${cognitoConfig.hosted_url}/logout?${clientId}&logout_uri=${encodedRedir}`
 const regex = /\/+/gi;
 
         console.log("login1:", loginUrl)
@@ -31,13 +38,13 @@ const regex = /\/+/gi;
         return { loginUrl, logoutUrl }
     }
     const { loginUrl, logoutUrl } = hostedLogin()
-    function m60(x) {
+    function m60(x: number): [number, number] {
         const modx = x % 60;
         const remx = Math.floor(x / 60);
         return [remx, modx];
     }
 
-    function hhmmss(secs) {
+    function hhmmss(secs: number): string {
         const [fatMM, ss] = m60(secs);
         const [hh, mm] = m60(fatMM);
         //return `[${secs}] ` + hh + ":" + mm + ":" + ss + "__" +
@@ -50,13 +57,13 @@ const regex = /\/+/gi;
             ("0" + ss).slice(-2)
         );
     }
-    async function clickedLogout() {
+    async function clickedLogout(): Promise<void> {
         redirecting=true
         logout()
         await sleep(300)
         window.location.href=logoutUrl
     }
-    async function clickedLogin() {
+    async function clickedLogin(): Promise<void> {
         redirecting=true
         await sleep(300)
         window.location.href=loginUrl

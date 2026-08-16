@@ -4,6 +4,7 @@ const webpack = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WorkboxWebpackPlugin = require("workbox-webpack-plugin");
+const sveltePreprocess = require("svelte-preprocess");
 const packageJson = require("./package.json");
 const { execSync } = require("child_process");
 
@@ -165,6 +166,9 @@ module.exports = (cloudfrontTarget) => {
                     use: {
                         loader: "svelte-loader",
                         options: {
+                            preprocess: sveltePreprocess({
+                                typescript: true,
+                            }),
                             onwarn: (warning, handleWarning) => {
                                 if (!warning.toString().includes("A11y")) {
                                     handleWarning(warning);
