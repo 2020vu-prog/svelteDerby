@@ -1,6 +1,4 @@
 {
-  "plugins": ["prettier-plugin-svelte"],
-
   "arrowParens": "always",
   "trailingComma": "es5",
 
