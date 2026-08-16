@@ -579,9 +579,11 @@
     </div>
     <div style="display: {visibleMenu == MenuType.GENERAL ? "block" : "none"}">
         {#each generalMenuMap as menuOption}
-            <a on:click={() => navTo(menuOption)}>
-                {menuOption.text}
-            </a>
+            {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
+                <a on:click={() => navTo(menuOption)}>
+                    {menuOption.text}
+                </a>
+            {/if}
         {/each}
     </div>
     <div style="display: {visibleMenu == MenuType.ADMIN ? "block" : "none"}">
