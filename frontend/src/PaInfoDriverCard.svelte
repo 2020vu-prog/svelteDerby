@@ -7,6 +7,8 @@
 
     $: displayNumber = carNumber ?? "";
     $: displayName = participant?.name || "";
+    $: displayPhoneticName =
+        participant?.phoneticName || participant?.pName || "";
     $: displaySponsor = participant?.spon || "";
     $: displayNotes = participant?.notes || "";
     $: ariaLabel = displayNumber
@@ -31,6 +33,12 @@
             <span class="driver-name">{displayName}</span>
         {/if}
     </div>
+    {#if displayPhoneticName}
+        <div class="phonetic-name">
+            <span class="field-label">Pronunciation:</span>
+            {displayPhoneticName}
+        </div>
+    {/if}
     {#if displaySponsor}
         <div class="sponsor">{displaySponsor}</div>
     {/if}
@@ -94,6 +102,19 @@
         font-size: 1.1rem;
         font-weight: 700;
         margin-top: 0.75rem;
+    }
+
+    .phonetic-name {
+        color: #444;
+        font-style: italic;
+        margin-top: 0.5rem;
+        overflow-wrap: anywhere;
+    }
+
+    .field-label {
+        font-style: normal;
+        font-weight: 700;
+        margin-right: 0.35rem;
     }
 
     .notes {

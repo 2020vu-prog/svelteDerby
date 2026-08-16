@@ -40,6 +40,7 @@ Display only. Change data on the fly when new data appears in `stores.js`.
 - Derive the most recently completed race from the `standingsMap` entry where `hasResults()` is true and `at` is greatest.
 - Display completed-race status using the same status semantics and presentation as `RaceStanding.svelte`.
 - Update the displayed race and participant details reactively when the relevant stores change.
+- Display `pName` when present with the label `Pronunciation:`.
 - Do not render race or driver data for users without `CanAnnounce`.
 - When the starting blocks are empty, display `Starting blocks are empty.`
 - When there are no standings with results, display `No completed races.`
