@@ -1,6 +1,5 @@
 <script lang="ts">
 	import aws_exports from "./aws-config";
-    import { onMount } from 'svelte';
     import SpinnerButton from "./SpinnerButton.svelte";
     import LoginSpotify from "./LoginSpotify.svelte";
     import {logout, sleep} from './utils.js'
@@ -11,14 +10,8 @@
         userEmail,
         userId,
     } from './stores.js'
-    
-    let loginUrl = "http://www.google.com"
-    let logoutUrl = "http://www.google.com"
+
     let redirecting=false
-    onMount(async () => {
-        hostedLogin()
-    }
-    );
     function hostedLogin() {
         const u = new URL(document.URL)
         console.log(`Twiddle qul:`, u)
@@ -26,8 +19,8 @@
         const encodedRedir = encodeURIComponent(`${u.origin}/`);
         const redir = `redirect_uri=${encodedRedir}`
         //loginUrl = `https://cf-test-rr1-us.auth.us-east-2.amazoncognito.com/oauth2/authorize?${clientId}&response_type=token&scope=email+openid+phone&${redir}`
-        loginUrl = `${aws_exports.hosted_url}/oauth2/authorize?${clientId}&response_type=token&scope=email+openid+phone&${redir}`
-        logoutUrl = `${aws_exports.hosted_url}/logout?${clientId}&logout_uri=${encodedRedir}`
+        const loginUrl = `${aws_exports.hosted_url}/oauth2/authorize?${clientId}&response_type=token&scope=email+openid+phone&${redir}`
+        const logoutUrl = `${aws_exports.hosted_url}/logout?${clientId}&logout_uri=${encodedRedir}`
 const regex = /\/+/gi;
 
         console.log("login1:", loginUrl)
@@ -35,7 +28,9 @@ const regex = /\/+/gi;
         console.log("login2:", loginUrl)
         console.log("login debug:", document.URL)
 
+        return { loginUrl, logoutUrl }
     }
+    const { loginUrl, logoutUrl } = hostedLogin()
     function m60(x) {
         const modx = x % 60;
         const remx = Math.floor(x / 60);
