@@ -151,6 +151,11 @@
     }
 
     var visibleMenu = MenuType.NONE;
+    var eventTitlePopoverVisible = false;
+
+    const closeEventTitlePopoverOnEscape = (event) => {
+        if (event.key === "Escape") eventTitlePopoverVisible = false;
+    };
     $: {
         if($userJwtStore && $userExpCountDownSecs == 0){
             log.warn("app: cleared expired jwt");
@@ -402,6 +407,7 @@
 
     /* Toggle between showing and hiding the navigation menus when the user clicks on the navbar icons or a menu link */
     const menuDisplayChange = (menuTypeSource) => {
+        eventTitlePopoverVisible = false;
         if (menuTypeSource == visibleMenu) {
             visibleMenu = MenuType.NONE;
         } else {
@@ -434,7 +440,7 @@
 <style>
     /* Style the navigation menu */
     .topnav {
-        overflow: hidden;
+        overflow: visible;
         background-color: #333;
         position: relative;
     }
@@ -461,25 +467,110 @@
     .active {
         background-color: #4caf50;
         color: white;
+        display: grid;
+        align-items: center;
+        box-sizing: border-box;
+        grid-template-columns: minmax(0, 1fr) auto 50px;
+        min-height: 50px;
+        padding: 4px 0 4px 16px;
+        position: relative;
+    }
+
+    .active.has-admin-menu {
+        grid-template-columns: minmax(0, 1fr) auto 100px;
+    }
+
+    .event-title-button {
+        background: transparent;
+        border: 0;
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+        min-width: 0;
+        overflow: hidden;
+        padding: 0 1rem 0 0;
+        text-align: left;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .event-title-button:focus-visible {
+        outline: 2px solid white;
+        outline-offset: 2px;
+    }
+
+    .event-title-popover {
+        background-color: #333;
+        border: 0;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+        color: white;
+        cursor: pointer;
+        font: inherit;
+        left: 16px;
+        max-width: calc(100vw - 32px);
+        overflow-wrap: anywhere;
+        padding: 0.5rem 0.75rem;
+        position: absolute;
+        text-align: left;
+        top: calc(100% + 4px);
+        z-index: 30;
+    }
+
+    .refresh-control {
+        height: 40px;
     }
 </style>
 
-<svelte:window on:pageshow={onPageShow} />
+<svelte:window
+    on:pageshow={onPageShow}
+    on:keydown={closeEventTitlePopoverOnEscape}
+/>
 
 <ElectronTimerRelay />
 
 <!-- Top Navigation Menu -->
 <div id="topnav" class="topnav" style="z-index: 20; ">
-    <a style="background-color: {$theme}; padding: 4px 16px; display: flex" class="active">
-        <span style="margin-top: 8px; padding-right: 1rem">{getTitle($raceConfig)}</span>
+    <div
+        style="background-color: {$theme}"
+        class="active {shouldDisplayAdminNavIcon(
+            adminMenuMap,
+            $userEmail,
+            $raceConfig,
+            $roleMap
+        )
+            ? 'has-admin-menu'
+            : ''}"
+    >
+        <button
+            type="button"
+            class="event-title-button"
+            aria-expanded={eventTitlePopoverVisible}
+            aria-controls="event-title-popover"
+            on:click={() =>
+                (eventTitlePopoverVisible = !eventTitlePopoverVisible)}
+        >
+            {getTitle($raceConfig)}
+        </button>
+        {#if eventTitlePopoverVisible}
+            <button
+                id="event-title-popover"
+                class="event-title-popover"
+                type="button"
+                aria-label="Close full event name"
+                on:click={() => (eventTitlePopoverVisible = false)}
+            >
+                {getTitle($raceConfig)}
+            </button>
+        {/if}
         {#if $raceConfig}
             {#key $reRenderHotLoad}
-            <span style="margin-top: 2px; height: 40px">
+            <span class="refresh-control">
             <HotLoad />
             </span>
             {/key}
         {/if}
-    </a>
+    </div>
     <div style="display: {visibleMenu == MenuType.GENERAL ? "block" : "none"}">
         {#each generalMenuMap as menuOption}
             <a on:click={() => navTo(menuOption)}>
