@@ -33,12 +33,6 @@
             <span class="driver-name">{displayName}</span>
         {/if}
     </div>
-    {#if displayPhoneticName}
-        <div class="phonetic-name">
-            <span class="field-label">Pronunciation:</span>
-            {displayPhoneticName}
-        </div>
-    {/if}
     {#if displaySponsor}
         <div class="sponsor">{displaySponsor}</div>
     {/if}
@@ -52,6 +46,12 @@
                     {status.label}
                 </span>
             {/each}
+        </div>
+    {/if}
+    {#if displayPhoneticName}
+        <div class="phonetic-name">
+            <span class="field-label">Pronunciation:</span>
+            {displayPhoneticName}
         </div>
     {/if}
 </article>
