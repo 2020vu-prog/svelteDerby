@@ -1,7 +1,7 @@
 {
-  "svelteSortOrder": "none",
+  "plugins": ["prettier-plugin-svelte"],
 
-  "arrowParens": always,
+  "arrowParens": "always",
   "trailingComma": "es5",
 
   "tabWidth": 4,
