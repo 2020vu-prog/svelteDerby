@@ -152,6 +152,12 @@ module.exports = (cloudfrontTarget) => {
                 },
             },
         },
+        performance: {
+            // The application intentionally ships a shared vendor bundle. Keep a
+            // meaningful ceiling instead of Webpack's generic 244 KiB default.
+            maxAssetSize: 1024 * 1024,
+            maxEntrypointSize: 1024 * 1024,
+        },
         module: {
             rules: [
                 {
