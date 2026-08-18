@@ -2,18 +2,26 @@ const {
     getNamedRoles,
     hasPermission,
 } = require("../modules/lambdaDerby/src/shared/PermissionLookup.js");
+const RoleName = require("../modules/lambdaDerby/src/shared/RoleName.js");
+
+test("role definitions use every shared role name", () => {
+    expect(getNamedRoles()).toEqual(Object.values(RoleName).sort());
+});
 
 test("Announcer grants the existing announcement permission", () => {
-    expect(getNamedRoles()).toContain("Announcer");
-    expect(hasPermission(["Announcer"], "CanInitiateAnnouncement")).toBe(true);
+    expect(hasPermission([RoleName.ANNOUNCER], "CanInitiateAnnouncement")).toBe(
+        true
+    );
 });
 
 test("power inherits the PA Info screen permission", () => {
-    expect(hasPermission(["power"], "CanInitiateAnnouncement")).toBe(true);
+    expect(hasPermission([RoleName.POWER], "CanInitiateAnnouncement")).toBe(
+        true
+    );
 });
 
 test("registration can view PA Info through its announcement permission", () => {
-    expect(hasPermission(["registration"], "CanInitiateAnnouncement")).toBe(
-        true
-    );
+    expect(
+        hasPermission([RoleName.REGISTRATION], "CanInitiateAnnouncement")
+    ).toBe(true);
 });
