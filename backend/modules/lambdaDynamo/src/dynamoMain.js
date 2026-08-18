@@ -85,7 +85,11 @@ exports.handler = async (event) => {
         try {
             sourceRecord = unmarshall(newImage);
         } catch (err) {
-            log.error("Unable to unmarshall stream record:", record.eventID, err);
+            log.error(
+                "Unable to unmarshall stream record:",
+                record.eventID,
+                err
+            );
             continue;
         }
 

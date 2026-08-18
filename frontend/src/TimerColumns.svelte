@@ -389,7 +389,7 @@
 
     {#each selectedTimerIds as timerId (timerId)}
         <TimerSubscribeStub
-            {timerId}
+            timerId={timerId}
             verbose={false}
             on:timerDataList={(event) =>
                 handleLiveTimerData(timerId, event.detail)}

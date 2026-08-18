@@ -1,12 +1,12 @@
 
-variable DeployEnvironment {}
-variable DistDbArn {}
-variable DynamoDbArn {}
-variable S3DistBucket {}
-variable S3DistBucketArn {}
-variable AwsRegion {}
-variable CcaQueueArn {}
-variable ManagedRolePermissionsBoundaryArn {}
+variable "DeployEnvironment" {}
+variable "DistDbArn" {}
+variable "DynamoDbArn" {}
+variable "S3DistBucket" {}
+variable "S3DistBucketArn" {}
+variable "AwsRegion" {}
+variable "CcaQueueArn" {}
+variable "ManagedRolePermissionsBoundaryArn" {}
 
 locals {
   tags = {
@@ -21,7 +21,7 @@ locals {
   accountId   = data.aws_caller_identity.current.account_id
   IotArn      = "arn:aws:iot:${var.AwsRegion}:${local.accountId}"
 
-      zipFile         = "${path.module}/src/package.zip"
+  zipFile = "${path.module}/src/package.zip"
 
 }
 
@@ -31,7 +31,7 @@ data "aws_caller_identity" "current" {}
 
 resource "null_resource" "install_npm_deps" {
   provisioner "local-exec" {
-    command = "npm install"
+    command     = "npm install"
     working_dir = "${path.module}/src/"
   }
 }
@@ -55,10 +55,10 @@ data "aws_iam_policy_document" "policy" {
 
 
 resource "aws_iam_role" "iam_for_lambda_cca" {
-  name_prefix        = "iam_for_lambda_cca_"
+  name_prefix          = "iam_for_lambda_cca_"
   permissions_boundary = var.ManagedRolePermissionsBoundaryArn
-  assume_role_policy = data.aws_iam_policy_document.policy.json
-  tags               = local.tags
+  assume_role_policy   = data.aws_iam_policy_document.policy.json
+  tags                 = local.tags
 }
 
 resource "aws_cloudwatch_log_group" "sqsCcaLogRetention" {
@@ -72,12 +72,12 @@ resource "aws_lambda_function" "lambda" {
   filename         = local.zipFile
   source_code_hash = filebase64sha256(local.zipFile)
 
-  role    = aws_iam_role.iam_for_lambda_cca.arn
-  handler = "ccaMain.handler"
-  runtime = "nodejs22.x"
-  memory_size=1024
-  publish = true
-  tags    = local.tags
+  role        = aws_iam_role.iam_for_lambda_cca.arn
+  handler     = "ccaMain.handler"
+  runtime     = "nodejs22.x"
+  memory_size = 1024
+  publish     = true
+  tags        = local.tags
   environment {
     variables = {
       DistDbTable   = local.DistDbTable
@@ -140,30 +140,30 @@ data "aws_iam_policy_document" "sqs_allow_doc" {
   }
 }
 resource "aws_iam_policy" "ccaMain_allow" {
-  name_prefix   = "ccaMain_allow_"
-  path   = "/"
-  policy = data.aws_iam_policy_document.sqs_allow_doc.json
+  name_prefix = "ccaMain_allow_"
+  path        = "/"
+  policy      = data.aws_iam_policy_document.sqs_allow_doc.json
 }
 resource "aws_iam_role_policy_attachment" "eventwatch_dynamo_policy_attach" {
   role       = aws_iam_role.iam_for_lambda_cca.name
   policy_arn = aws_iam_policy.ccaMain_allow.arn
 }
-output ddbTable {
+output "ddbTable" {
   value = local.DynamoDbTable
 }
 
 output "qualified_arn" {
-  value = "${aws_lambda_function.lambda.qualified_arn}"
+  value = aws_lambda_function.lambda.qualified_arn
 }
 output "arn" {
-  value = "${aws_lambda_function.lambda.arn}"
+  value = aws_lambda_function.lambda.arn
 }
 output "invoke_arn" {
-  value = "${aws_lambda_function.lambda.invoke_arn}"
+  value = aws_lambda_function.lambda.invoke_arn
 }
 output "function_name" {
-  value = "${aws_lambda_function.lambda.function_name}"
+  value = aws_lambda_function.lambda.function_name
 }
 output "version" {
-  value = "${aws_lambda_function.lambda.version}"
+  value = aws_lambda_function.lambda.version
 }

@@ -38,7 +38,7 @@
             on:click={() => {
                 dispatch("refresh");
             }}
-            {spinning}
+            spinning={spinning}
         >
             Get History
         </SpinnerButton>

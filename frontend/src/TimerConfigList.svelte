@@ -12,7 +12,7 @@
     import { doRefreshBlocks } from "./stores.js";
     import TimerPbHealth from "./TimerPbHealth.svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
-    
+
     var tcFromDexie = [{ timerName: "Initializing..." }];
     onMount(async () => {
         refreshDataFromDb();
@@ -49,7 +49,7 @@
         return tcFromDexie;
     }
     function provisionWifi() {
-        push("/provisionWifi")
+        push("/provisionWifi");
         //push("/RpList")
         //showToolbar = !showToolbar;
     }
@@ -68,8 +68,8 @@
 </script>
 
 <h4>Race Timers</h4>
-First Timer added will be finish line timer. Subsequent additions may be used to
-report elapsed time split(s).
+First Timer added will be finish line timer. Subsequent additions may be used to report
+elapsed time split(s).
 <p />
 <MaterialAdd clickHandleRoute="/timerConfigElapsed" />
 
@@ -93,8 +93,6 @@ report elapsed time split(s).
     </Card>
 {/each}
 <p />
-<SpinnerButton
-on:click={provisionWifi}
->
-Setup Timer WiFi Instructions
+<SpinnerButton on:click={provisionWifi}>
+    Setup Timer WiFi Instructions
 </SpinnerButton>

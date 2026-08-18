@@ -137,7 +137,10 @@ class ApiRouter {
         const route = this.routes.get(routePath);
         if (!route) {
             this.log.debug(`Unhandled Path: ${routePath} ep: ${event.path}`);
-            return this.buildResponse({ status: "unhandled", error: "Unhandled" });
+            return this.buildResponse({
+                status: "unhandled",
+                error: "Unhandled",
+            });
         }
 
         let principal = { email: "Anonymous" };
@@ -160,7 +163,10 @@ class ApiRouter {
             this.log.debug(
                 `prohibiting access to ${routePath} for [${principal.email}]`
             );
-            return this.buildResponse({ error: "unauthorized", statusCode: 401 });
+            return this.buildResponse({
+                error: "unauthorized",
+                statusCode: 401,
+            });
         }
 
         if (!route.allowMissingOrgId && !context.orgId) {
@@ -170,7 +176,9 @@ class ApiRouter {
             return this.buildResponse({ error: "Unable to determine orgIz" });
         }
         if (!route.allowMissingTtl && !context.defaultTTL) {
-            return this.buildResponse({ error: "Unable to determine default TTL" });
+            return this.buildResponse({
+                error: "Unable to determine default TTL",
+            });
         }
         if (!route.allowFrozen && this.isFrozen(context.config)) {
             return this.buildResponse({

@@ -42,6 +42,35 @@ cd frontend
 npm run build
 ```
 
+## Formatting and VS Code
+
+VS Code users should install the recommended **Prettier - Code formatter** and
+**HashiCorp Terraform** extensions. VS Code will offer these recommendations
+automatically when opening the repository.
+
+Install the repository-pinned Prettier version and Svelte plugin before
+formatting:
+
+```bash
+cd frontend
+npm ci
+cd ..
+```
+
+Run the repository formatting commands from the repository root:
+
+```bash
+./prettier.sh                   # Format all tracked JS, MJS, and Svelte files
+./prettier.sh --check           # Check formatting without changing files
+terraform fmt -recursive .      # Format all Terraform files
+terraform fmt -check -recursive . # Check Terraform formatting
+```
+
+The pull-request formatting workflow uses these same commands. Use the
+repository scripts instead of a globally installed Prettier so formatting uses
+the pinned Prettier version and the explicitly configured Svelte plugin. The
+repository does not enforce VS Code format-on-save settings.
+
 ## GitHub Deploy
 
 The `Deploy` GitHub Actions workflow deploys the backend first, then builds and

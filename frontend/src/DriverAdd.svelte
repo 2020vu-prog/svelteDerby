@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
 
-    import { tick } from 'svelte';
+    import { tick } from "svelte";
 
     import SpinnerButton from "./SpinnerButton.svelte";
     import { driverMap, axios, raceConfig, pushMessage } from "./stores.js";
@@ -9,12 +9,11 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { participantValid, participantFocusCompletion } from "./utils.js";
-    import { isAllowedRoutePath , downloadFile} from "./utils.js";
+    import { isAllowedRoutePath, downloadFile } from "./utils.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
-    import { stringify as csvStringify} from 'csv-stringify/sync';
-    import { parse as csvParse } from 'csv-parse/sync';
+    import { stringify as csvStringify } from "csv-stringify/sync";
+    import { parse as csvParse } from "csv-parse/sync";
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
-
 
     import Icon from "fa-svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -27,7 +26,7 @@
     var submitSpinning = false;
     var speakSpinning = false;
     var allowDriverJson = false;
-    let doPlay=false
+    let doPlay = false;
 
     onMount(async () => {
         log.debug("mounted focus: ", params);
@@ -53,9 +52,8 @@
             try {
                 await fmtAndPostDrivers(e.target.result);
             } catch (err) {
-                const importType = InputFileContentType === "application/csv"
-                    ? "CSV"
-                    : "JSON";
+                const importType =
+                    InputFileContentType === "application/csv" ? "CSV" : "JSON";
                 log.error(`Driver ${importType} upload failed:`, err);
                 pushMessage({
                     text: `Driver ${importType} upload failed: ${err.message || err}`,
@@ -66,36 +64,36 @@
     };
     async function fmtAndPostDrivers(rawData) {
         log.debug("OFS fmtAndPostDrivers:", rawData);
-        if( InputFileContentType=="application/json"){
-            await fmtAndPostJson(rawData)
+        if (InputFileContentType == "application/json") {
+            await fmtAndPostJson(rawData);
         }
-        if( InputFileContentType=="application/csv"){
-            await fmtAndPostCsv(rawData)
+        if (InputFileContentType == "application/csv") {
+            await fmtAndPostCsv(rawData);
         }
     }
     async function fmtAndPostCsv(rawData) {
         log.debug("fmtAndPostCsv:", rawData);
         const records = csvParse(rawData, {
             columns: true,
-            skip_empty_lines: true
+            skip_empty_lines: true,
         });
-        const xmap=getCsvXrefAsMap()
-        const jrecList=[]
+        const xmap = getCsvXrefAsMap();
+        const jrecList = [];
 
         log.debug("fmtAndPostCsv p:", JSON.stringify(records));
-        records.forEach(crec=>{
-            const drvr={ // placeholders: backend will overwrite
-                "orgId": "Test.4b117",
-                "orgIz": "Test",
-                "PK": "Test.4b117:PTCP",
-            }
+        records.forEach((crec) => {
+            const drvr = {
+                // placeholders: backend will overwrite
+                orgId: "Test.4b117",
+                orgIz: "Test",
+                PK: "Test.4b117:PTCP",
+            };
             for (const [fldName, fldValue] of Object.entries(crec)) {
-                drvr[xmap[fldName]]=fldValue;
+                drvr[xmap[fldName]] = fldValue;
             }
-            if(drvr.name && drvr.number){
-                jrecList.push(drvr)
+            if (drvr.name && drvr.number) {
+                jrecList.push(drvr);
             }
-            
         });
         log.debug("fmtAndPostCsv j:", JSON.stringify(jrecList));
         const req = {
@@ -105,11 +103,8 @@
         };
 
         postDrivers(req);
-
     }
     async function fmtAndPostJson(rawData) {
-
-
         const bulkObject = JSON.parse(rawData);
         const req = {
             orgId: $raceConfig.orgId,
@@ -133,7 +128,7 @@
                     },
                 }
             );
-            pushMessage( {
+            pushMessage({
                 text: `Driver json uploaded.`,
                 type: "success",
             });
@@ -142,50 +137,60 @@
             log.debug("addBulk failed: " + err);
         }
     }
-    let InputFileContentType=""
+    let InputFileContentType = "";
     async function uploadDriverJson() {
-        InputFileContentType="application/json"
-        await tick()
+        InputFileContentType = "application/json";
+        await tick();
         document.getElementById("driverJsonFileTag").click();
     }
     async function uploadDriverCsv() {
-        InputFileContentType="application/csv"
-        await tick()
+        InputFileContentType = "application/csv";
+        await tick();
         document.getElementById("driverJsonFileTag").click();
     }
-    const csvXref=[
-        ['CarNumber','ShortName','Sponsor','Notes','PhoneticType','PhoneticName','WalkupLink'],
-        ['number','name','spon','notes','pType','pName','wLink'],
-
-    ]
-    function getCsvXrefAsMap(){
-        const rc={}
-        csvXref[0].forEach((literal,idx)=>{
-            rc[literal]=csvXref[1][idx]
-        })
-        return rc
+    const csvXref = [
+        [
+            "CarNumber",
+            "ShortName",
+            "Sponsor",
+            "Notes",
+            "PhoneticType",
+            "PhoneticName",
+            "WalkupLink",
+        ],
+        ["number", "name", "spon", "notes", "pType", "pName", "wLink"],
+    ];
+    function getCsvXrefAsMap() {
+        const rc = {};
+        csvXref[0].forEach((literal, idx) => {
+            rc[literal] = csvXref[1][idx];
+        });
+        return rc;
     }
     function downloadDriverCsv() {
         console.log("downloading csv:`:", $raceConfig);
-        console.log("downloading csv xmap:`:", JSON.stringify(getCsvXrefAsMap()));
+        console.log(
+            "downloading csv xmap:`:",
+            JSON.stringify(getCsvXrefAsMap())
+        );
 
         const eventName = $raceConfig.name;
         const filename = `drivers-${eventName}.csv`;
-        const rows=[csvXref[0]]
+        const rows = [csvXref[0]];
         let mapToArray = Array.from(Object.values($driverMap));
-        mapToArray.forEach(drvr => {
-            console.log(JSON.stringify(drvr))
-            const row=[]
-            csvXref[1].forEach(fld=>row.push(drvr[fld]))
+        mapToArray.forEach((drvr) => {
+            console.log(JSON.stringify(drvr));
+            const row = [];
+            csvXref[1].forEach((fld) => row.push(drvr[fld]));
 
             //rows.push([drvr.number,drvr.name,drvr.spon,drvr.notes])
-            rows.push(row)
+            rows.push(row);
         });
-        const output = csvStringify(rows,{
-            quoted: true
-        })
-        const text = output //generate($driverMap);
-        downloadFile(filename,text)
+        const output = csvStringify(rows, {
+            quoted: true,
+        });
+        const text = output; //generate($driverMap);
+        downloadFile(filename, text);
     }
     function downloadDriverJson() {
         console.log("downloading json:", $raceConfig);
@@ -193,7 +198,7 @@
         const eventName = $raceConfig.name;
         const filename = `drivers-${eventName}.json`;
         const text = JSON.stringify($driverMap);
-        downloadFile(filename,text)
+        downloadFile(filename, text);
     }
 
     async function refreshDataFromDb(trigger) {
@@ -239,14 +244,14 @@
         submitSpinning = true;
         try {
             const response = await $axios.post(url, req);
-            pushMessage( {
+            pushMessage({
                 text: `Driver [${newPtcp}] Added.`,
                 type: "success",
             });
             pop();
         } catch (error) {
             submitSpinning = false;
-            pushMessage( {
+            pushMessage({
                 text: "driverAdd failed: " + error,
                 type: "error",
             });
@@ -315,7 +320,7 @@
         try {
             const response = await $axios.post(url, req);
             log.debug("speech: ", response);
-            pushMessage( {
+            pushMessage({
                 text: `Speech Processed.`,
                 type: "success",
             });
@@ -325,7 +330,7 @@
             };
             audio.play();
         } catch (error) {
-            pushMessage( {
+            pushMessage({
                 text: "speak failed: " + error,
                 type: "error",
             });
@@ -347,7 +352,7 @@
             inputmode="numeric"
             bind:value={driverForm.carNumber}
             placeholder="Car Number"
-            disabled={mode==="Update"}
+            disabled={mode === "Update"}
             on:keyup={() => {
                 changeFocus(driverForm.carNumber, "A");
             }}
@@ -419,10 +424,7 @@
         </p>
     {/if}
     <label>
-        <a
-                target="_blank"
-                href="https://open.spotify.com/"
-        >
+        <a target="_blank" href="https://open.spotify.com/">
             Walk up Spotify link
         </a>
 
@@ -444,13 +446,11 @@
         {mode}
     </SpinnerButton>
     {#if driverForm.walkupLink}
-    <SpinnerButton on:click={()=>doPlay=true}>
-        Play
-    </SpinnerButton>
+        <SpinnerButton on:click={() => (doPlay = true)}>Play</SpinnerButton>
     {/if}
-    {#if doPlay&& driverForm.walkupLink}
+    {#if doPlay && driverForm.walkupLink}
         {#key driverForm.walkupLink}
-            <SpotifyEmbedded autoPlay=false href={driverForm.walkupLink}/>
+            <SpotifyEmbedded autoPlay="false" href={driverForm.walkupLink} />
         {/key}
     {/if}
     {#if allowDriverJson}

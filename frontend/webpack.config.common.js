@@ -70,9 +70,18 @@ class BuildVersionPlugin {
                             source
                                 .replaceAll("[AIV]{version}[/AIV]", version)
                                 .replaceAll("[AIV]{date}[/AIV]", buildEpoch)
-                                .replaceAll("[AIV]{gitBranch}[/AIV]", gitInfo.branch)
-                                .replaceAll("[AIV]{gitHash}[/AIV]", gitInfo.hash)
-                                .replaceAll("[AIV]{gitDirty}[/AIV]", gitInfo.dirty);
+                                .replaceAll(
+                                    "[AIV]{gitBranch}[/AIV]",
+                                    gitInfo.branch
+                                )
+                                .replaceAll(
+                                    "[AIV]{gitHash}[/AIV]",
+                                    gitInfo.hash
+                                )
+                                .replaceAll(
+                                    "[AIV]{gitDirty}[/AIV]",
+                                    gitInfo.dirty
+                                );
 
                         compilation.updateAsset(
                             assetName,
@@ -193,7 +202,9 @@ module.exports = (cloudfrontTarget) => {
                         loader: "babel-loader",
                         options: {
                             presets: ["@babel/preset-env"],
-                            plugins: ["@babel/plugin-proposal-class-properties"],
+                            plugins: [
+                                "@babel/plugin-proposal-class-properties",
+                            ],
                         },
                     },
                 },

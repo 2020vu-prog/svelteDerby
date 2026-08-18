@@ -75,7 +75,7 @@
             ) {
                 await refreshOrgRoles($raceConfig.orgIz);
             }
-            pushMessage( {
+            pushMessage({
                 text: `User [${userForm.email}] processed.`,
                 type: "success",
             });
@@ -122,7 +122,11 @@
     {#if mode == "Update"}
         <label>
             Delete User
-            <input type="checkbox" class="big" bind:checked={userForm.deleteFlag} />
+            <input
+                type="checkbox"
+                class="big"
+                bind:checked={userForm.deleteFlag}
+            />
         </label>
     {/if}
     <SpinnerButton

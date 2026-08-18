@@ -14,15 +14,15 @@ fi
 
 cd "$repo_dir"
 
-export jslist=$(echo  \
-    frontend/*.js \
-    frontend/src/*.svelte \
-    frontend/src/*.js \
-    backend/timerIngestion/api/*.js \
-    backend/modules/lambda*/src/*.js \
-    backend/modules/lambda*/src/shared/*.js \
-    backend/sls/zellopa?/src/*.js \
-    backend/scratch509/iotLambda1/src/*.ts \
-)
+mode="${1:---write}"
+if [[ "$mode" != "--write" && "$mode" != "--check" ]]; then
+    echo "Usage: $0 [--write|--check]" >&2
+    exit 2
+fi
 
-"$prettier_bin" --write --plugin="$prettier_svelte_plugin" $jslist
+source_files=()
+while IFS= read -r -d '' file; do
+    source_files+=("$file")
+done < <(git ls-files -z -- '*.js' '*.mjs' '*.svelte')
+
+"$prettier_bin" "$mode" --plugin="$prettier_svelte_plugin" "${source_files[@]}"

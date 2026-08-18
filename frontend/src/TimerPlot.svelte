@@ -123,8 +123,8 @@
     $: title = timerName
         ? `${selectedMetric.title} (${selectedMetric.unit}) [${timerName}]`
         : label === "Timer Plot"
-        ? `${selectedMetric.title} (${selectedMetric.unit})`
-        : label;
+          ? `${selectedMetric.title} (${selectedMetric.unit})`
+          : label;
     $: if (ChartLib && chartCanvas) {
         renderChart(numericPoints, rebootPoints, title, selectedMetric);
     }

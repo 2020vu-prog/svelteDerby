@@ -74,15 +74,14 @@
         reRenderHotLoad,
         userExpCountDownSecs,
         userJwtStore,
-
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
     import {
-         isEmailAllowedRoutePath,
-         sleep ,
-         refreshOrgRoles,
-        } from "./utils.js";
+        isEmailAllowedRoutePath,
+        sleep,
+        refreshOrgRoles,
+    } from "./utils.js";
     import { setIdTokenFromCognitoCallback } from "./utilHosted.js";
     import { urlParseSpotify } from "./utils/spotify";
     const routes = {
@@ -98,7 +97,7 @@
         "/raceStandingAdd/:type": RaceStandingAdd,
         "/driverAdd/:number?": DriverAdd,
         "/driverInfo/:number?": DriverInfo,
-        "/downloadCsv":DownloadCsv ,
+        "/downloadCsv": DownloadCsv,
         "/eventSelection/:orgIz": EventSelection,
         "/as/:orgIz/:orgId": EventSelection, //autoSelect shortcut
         "/eventAdd/:orgIz/:mode": EventAdd,
@@ -130,7 +129,7 @@
         "/rawTimerList": RawTimerList,
         "/logMessageViewer": LogMessageViewer,
         "/spMediaList/:dbName/:dbKey": MediaList,
-        "/mediaDemo":MediaViewer,
+        "/mediaDemo": MediaViewer,
         "/forceReloadPage": ForceReloadPage,
         "/captureVideo": CaptureVideo,
         // '/raceStandingAdd': RaceStandingAdd,
@@ -149,10 +148,10 @@
     let adminMenuMap = [];
 
     const MenuType = {
-        GENERAL: 'GENERAL',
-        ADMIN: 'ADMIN',
-        NONE: 'NONE'
-    }
+        GENERAL: "GENERAL",
+        ADMIN: "ADMIN",
+        NONE: "NONE",
+    };
 
     var visibleMenu = MenuType.NONE;
     var eventTitlePopoverVisible = false;
@@ -161,9 +160,9 @@
         if (event.key === "Escape") eventTitlePopoverVisible = false;
     };
     $: {
-        if($userJwtStore && $userExpCountDownSecs == 0){
+        if ($userJwtStore && $userExpCountDownSecs == 0) {
             log.warn("app: cleared expired jwt");
-            $userJwtStore="";
+            $userJwtStore = "";
         }
     }
 
@@ -266,7 +265,7 @@
                 menuRoute: "/loginH",
                 alwaysShow: true,
             },
-        ]
+        ];
         adminMenuMap = [
             {
                 text: "Timer Config",
@@ -320,8 +319,8 @@
     };
     onMount(async () => {
         log.debug("mounted app");
-        setEnvTitle()
-        const orgIz=$raceConfig.orgIz
+        setEnvTitle();
+        const orgIz = $raceConfig.orgIz;
         await setIdTokenFromCognitoCallback();
         try {
             await urlParseSpotify();
@@ -329,26 +328,24 @@
             log.error("Spotify callback failed", error);
         }
         await refreshOrgRoles(orgIz);
-        let msg='Using public access'
-        if ($userEmail){
-            msg=`Logged in: [${$userEmail}]`
+        let msg = "Using public access";
+        if ($userEmail) {
+            msg = `Logged in: [${$userEmail}]`;
         }
-        pushMessage( {
+        pushMessage({
             text: msg,
             type: "success",
         });
 
         isMounted = new Date().getTime();
     });
-        function setEnvTitle(){
-            if (aws_exports.DeployEnvironment === 'go-derby-prod'){
-                document.title = `Go RR1`
-            }else{
-                document.title = `${aws_exports.DeployEnvironment} Derby App`
-            }
-
-
+    function setEnvTitle() {
+        if (aws_exports.DeployEnvironment === "go-derby-prod") {
+            document.title = `Go RR1`;
+        } else {
+            document.title = `${aws_exports.DeployEnvironment} Derby App`;
         }
+    }
     $: {
         // $userEmail required so bearer token is ready when calling apis
         replaceRouteOnInitialLoad(isMounted, $userEmail);
@@ -407,11 +404,11 @@
         );
     };
     const getTitle = (cfg) => {
-        let orgIz=''
-        if ($developerMode && cfg && cfg.orgIz){
-            orgIz=cfg.orgIz
+        let orgIz = "";
+        if ($developerMode && cfg && cfg.orgIz) {
+            orgIz = cfg.orgIz;
             //orgIz=orgIz.replace(/.*:/,'')
-            orgIz=orgIz+':'
+            orgIz = orgIz + ":";
         }
         if (cfg && cfg.name) return `${orgIz}${cfg.name}`;
         else return "";
@@ -443,7 +440,8 @@
 
     function shouldDisplayAdminNavIcon() {
         for (const adminMenuOption of adminMenuMap) {
-            if (shouldDisplay($userEmail, adminMenuOption, $raceConfig)) return true;
+            if (shouldDisplay($userEmail, adminMenuOption, $raceConfig))
+                return true;
         }
         return false;
     }
@@ -577,13 +575,13 @@
         {/if}
         {#if $raceConfig}
             {#key $reRenderHotLoad}
-            <span class="refresh-control">
-            <HotLoad />
-            </span>
+                <span class="refresh-control">
+                    <HotLoad />
+                </span>
             {/key}
         {/if}
     </div>
-    <div style="display: {visibleMenu == MenuType.GENERAL ? "block" : "none"}">
+    <div style="display: {visibleMenu == MenuType.GENERAL ? 'block' : 'none'}">
         {#each generalMenuMap as menuOption}
             {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
                 <a on:click={() => navTo(menuOption)}>
@@ -592,8 +590,8 @@
             {/if}
         {/each}
     </div>
-    <div style="display: {visibleMenu == MenuType.ADMIN ? "block" : "none"}">
-        {#each adminMenuMap as adminMenuOption}   
+    <div style="display: {visibleMenu == MenuType.ADMIN ? 'block' : 'none'}">
+        {#each adminMenuMap as adminMenuOption}
             {#if shouldDisplay($userEmail, adminMenuOption, $raceConfig)}
                 <a on:click={() => navTo(adminMenuOption)}>
                     {adminMenuOption.text}
@@ -604,21 +602,29 @@
 
     <!-- "Wrench/Screwdriver icon" to toggle the admin menu -->
     {#if shouldDisplayAdminNavIcon(adminMenuMap, $userEmail)}
-    <div class="icon" style="right: 50px">
-    <img style="width: 35px; margin-top: 7.5px; margin-left: 7.5px" src="screwdriver-wrench-solid.svg" on:click={()=>menuDisplayChange(MenuType.ADMIN)}>
-    </div>
+        <div class="icon" style="right: 50px">
+            <img
+                style="width: 35px; margin-top: 7.5px; margin-left: 7.5px"
+                src="screwdriver-wrench-solid.svg"
+                on:click={() => menuDisplayChange(MenuType.ADMIN)}
+            />
+        </div>
     {/if}
 
     <!-- "Hamburger menu" / "Bar icon" to toggle the general menu -->
     <div class="icon" style="right: 0">
-    <img style="width: 35px; margin-top: 5px; margin-left: 7.5px" src="bars-solid.svg" on:click={()=>menuDisplayChange(MenuType.GENERAL)}>
+        <img
+            style="width: 35px; margin-top: 5px; margin-left: 7.5px"
+            src="bars-solid.svg"
+            on:click={() => menuDisplayChange(MenuType.GENERAL)}
+        />
     </div>
 </div>
 {#if visibleMenu == MenuType.NONE}
-<main>
-    <SpinnerPanel/>
-    <Splash />
-    <Router {routes} />
-</main>
-<BottomNav />
+    <main>
+        <SpinnerPanel />
+        <Splash />
+        <Router routes={routes} />
+    </main>
+    <BottomNav />
 {/if}

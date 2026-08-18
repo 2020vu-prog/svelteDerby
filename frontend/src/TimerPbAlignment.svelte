@@ -560,7 +560,7 @@
     <div class="alignmentControls">
         {#if timerName && timerId}
             <div class="alignmentControl">
-                <TimerPbHealth {timerName} {timerId} />
+                <TimerPbHealth timerName={timerName} timerId={timerId} />
             </div>
             <div class="alignmentControl">
                 <TimerHistoryAge
@@ -571,9 +571,7 @@
                 />
             </div>
             <div class="alignmentControl plotControl">
-                <SpinnerButton on:click={showTimerPlot}>
-                    Plot
-                </SpinnerButton>
+                <SpinnerButton on:click={showTimerPlot}>Plot</SpinnerButton>
             </div>
         {/if}
     </div>
@@ -588,7 +586,9 @@
                     <input type="checkbox" bind:checked={ls.checked} />
                 </CardHeader>
                 -->
-                    <CardBody style="background-color: {getLaneStatusColor(ls)}">
+                    <CardBody
+                        style="background-color: {getLaneStatusColor(ls)}"
+                    >
                         <h5>
                             Lane {lane.replace(/[A-Z]+/i, "")}
                             <strong>
@@ -605,6 +605,6 @@
     </div>
 
     {#each markupPins(sortedPbTimerPinHistory) as cdBlock}
-        <TimerPbCard {cdBlock} {timerPbConfig} />
+        <TimerPbCard cdBlock={cdBlock} timerPbConfig={timerPbConfig} />
     {/each}
 {/if}

@@ -59,10 +59,9 @@
         log.debug(`driver virtualList: start: ${start} end: ${end}`);
     }
     $: {
-        carNumberList = getCarNumbersAsList(
-            $driverMap,
-            $carFilter
-        ).filter((cn) => filterMatches(cn, $carFilter));
+        carNumberList = getCarNumbersAsList($driverMap, $carFilter).filter(
+            (cn) => filterMatches(cn, $carFilter)
+        );
     }
 
     function carAndDriverOnClick(number) {
@@ -122,8 +121,8 @@
     height="{mainFullPx}px"
     itemHeight={driverRowHeight}
     items={carNumberList}
-    bind:start
-    bind:end
+    bind:start={start}
+    bind:end={end}
     let:item
 >
     <Card

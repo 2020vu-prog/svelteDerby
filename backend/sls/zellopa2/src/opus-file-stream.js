@@ -397,9 +397,8 @@ class OpusFileStream {
                 this.opusHeadersCount++;
             }
         } else if (this.opusHeadersCount < 3) {
-            [this.framesPerPacket, this.packetDurationMs] = this.parseOpusTOC(
-                data
-            );
+            [this.framesPerPacket, this.packetDurationMs] =
+                this.parseOpusTOC(data);
             this.opusHeadersCount++;
             // Save the first Opus packet as it contains audio data
             this.savedPackets.push(data);

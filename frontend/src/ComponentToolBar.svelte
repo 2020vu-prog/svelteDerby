@@ -245,10 +245,7 @@
                 {/if}
             </ModalBody>
             <ModalFooter>
-                <Button
-                    color="primary"
-                    on:click={deleteConfimed}
-                >
+                <Button color="primary" on:click={deleteConfimed}>
                     Delete
                 </Button>
                 <Button color="secondary" on:click={modalToggle}>Cancel</Button>

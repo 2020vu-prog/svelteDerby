@@ -4,10 +4,9 @@
     import { createEventDispatcher } from "svelte";
     import { theme } from "./stores.js";
     import { onMount } from "svelte";
-    import { longpress } from './utilActions.js';
+    import { longpress } from "./utilActions.js";
 
-
-    import CirclesSvg from './CirclesSvg.svelte'
+    import CirclesSvg from "./CirclesSvg.svelte";
     export let disabled = false;
     export let spinning = false;
     export let focused = false;
@@ -56,8 +55,7 @@
 >
     <slot />
     {#if spinning}
-        
-    <!--
+        <!--
 
     <img alt="spinner" src={CirclesSvg} width="25px" />
     -->

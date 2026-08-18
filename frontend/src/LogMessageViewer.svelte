@@ -103,7 +103,12 @@
 
 <div class="toolbar">
     <h4>Log Messages</h4>
-    <Button color="primary" size="sm" on:click={refreshLogMessages} disabled={loading}>
+    <Button
+        color="primary"
+        size="sm"
+        on:click={refreshLogMessages}
+        disabled={loading}
+    >
         Refresh
     </Button>
 </div>

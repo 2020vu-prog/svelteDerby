@@ -62,17 +62,22 @@ test("CCF archives queried records and removes them from DynamoDB", async (t) =>
         return {};
     });
 
-    const result = await handler(sqsEvent({
-        orgId: "org-1",
-        orgIz: "org-path",
-        ccType: "CCF",
-    }));
+    const result = await handler(
+        sqsEvent({
+            orgId: "org-1",
+            orgIz: "org-path",
+            ccType: "CCF",
+        })
+    );
 
     assert.deepEqual(result, {});
     assert.equal(s3Commands.length, 1);
     assert.ok(s3Commands[0] instanceof PutObjectCommand);
     assert.equal(s3Commands[0].input.Bucket, "archive-bucket");
-    assert.equal(s3Commands[0].input.Key, "archive/org-path/org-1/archive.json");
+    assert.equal(
+        s3Commands[0].input.Key,
+        "archive/org-path/org-1/archive.json"
+    );
     assert.deepEqual(JSON.parse(s3Commands[0].input.Body), [distributionItem]);
 
     const batchWrites = dynamoCommands.filter(
@@ -116,11 +121,13 @@ test("CCA updates a stale organization lock before creating an archive", async (
         return {};
     });
 
-    await handler(sqsEvent({
-        orgId: "org-2",
-        orgIz: "org-path",
-        ccType: "CCA",
-    }));
+    await handler(
+        sqsEvent({
+            orgId: "org-2",
+            orgIz: "org-path",
+            ccType: "CCA",
+        })
+    );
 
     assert.equal(documentCommands.length, 2);
     assert.ok(documentCommands[0] instanceof GetCommand);
@@ -135,7 +142,10 @@ test("CCA updates a stale organization lock before creating an archive", async (
     assert.ok(pointerWrite.DP);
     assert.ok(pointerWrite.DS);
     assert.equal(pointerWrite.M, undefined);
-    assert.match(s3Commands[0].input.Key, /^archive\/org-path\/org-2\/\d+\.json$/);
+    assert.match(
+        s3Commands[0].input.Key,
+        /^archive\/org-path\/org-2\/\d+\.json$/
+    );
 });
 
 test("recent CCA request is suppressed without logging an error", async (t) => {
@@ -151,15 +161,19 @@ test("recent CCA request is suppressed without logging an error", async (t) => {
     t.mock.method(log, "info", (...args) => infoMessages.push(args));
     t.mock.method(log, "error", () => errorCount++);
 
-    const result = await handler(sqsEvent({
-        orgId: "org-locked",
-        orgIz: "org-path",
-        ccType: "CCA",
-    }));
+    const result = await handler(
+        sqsEvent({
+            orgId: "org-locked",
+            orgIz: "org-path",
+            ccType: "CCA",
+        })
+    );
 
     assert.deepEqual(result, {});
     assert.equal(errorCount, 0);
-    assert.ok(infoMessages.some((args) => args[0] === "CCA request suppressed:"));
+    assert.ok(
+        infoMessages.some((args) => args[0] === "CCA request suppressed:")
+    );
 });
 
 test("existing CCA archive contents are included in the next archive", async (t) => {
@@ -189,7 +203,8 @@ test("existing CCA archive contents are included in the next archive", async (t)
         if (command instanceof GetObjectCommand) {
             return {
                 Body: {
-                    transformToString: async () => JSON.stringify([previousItem]),
+                    transformToString: async () =>
+                        JSON.stringify([previousItem]),
                 },
             };
         }
@@ -199,14 +214,19 @@ test("existing CCA archive contents are included in the next archive", async (t)
         assert.fail(`Unexpected S3 command: ${command.constructor.name}`);
     });
 
-    await handler(sqsEvent({
-        orgId: "org-3",
-        orgIz: "org-path",
-        ccType: "CCF",
-    }));
+    await handler(
+        sqsEvent({
+            orgId: "org-3",
+            orgIz: "org-path",
+            ccType: "CCF",
+        })
+    );
 
     assert.equal(s3Commands[0].input.Key, pointer.s3);
-    assert.deepEqual(JSON.parse(s3Commands[1].input.Body), [pointer, previousItem]);
+    assert.deepEqual(JSON.parse(s3Commands[1].input.Body), [
+        pointer,
+        previousItem,
+    ]);
 });
 
 test("record failures are logged and do not reject the SQS batch", async (t) => {
@@ -217,11 +237,13 @@ test("record failures are logged and do not reject the SQS batch", async (t) => 
         assert.fail(`Unexpected DynamoDB command: ${command.constructor.name}`);
     });
 
-    const result = await handler(sqsEvent({
-        orgId: "org-4",
-        orgIz: "org-path",
-        ccType: "CCF",
-    }));
+    const result = await handler(
+        sqsEvent({
+            orgId: "org-4",
+            orgIz: "org-path",
+            ccType: "CCF",
+        })
+    );
 
     assert.deepEqual(result, {});
 });

@@ -5,11 +5,7 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 
 const { CF, getData, postData } = require("./common.js");
-const {
-    integrationTimestamp,
-    orgId,
-    orgIz,
-} = require("./integrationRun.js");
+const { integrationTimestamp, orgId, orgIz } = require("./integrationRun.js");
 
 function getTokenClaims() {
     const token = fs.readFileSync(path.resolve(__dirname, "token.txt"), "utf8");
@@ -88,8 +84,12 @@ test("listOrgEvents returns event config for an org index", async () => {
 
 test("addEventConfig refreshes user display names", async () => {
     expect(addEventConfigResult.userDisplayNameResult.status).toMatch(/ok/i);
-    expect(addEventConfigResult.userDisplayNameResult.total).toBeGreaterThanOrEqual(0);
-    expect(addEventConfigResult.userDisplayNameResult.created).toBeGreaterThanOrEqual(0);
+    expect(
+        addEventConfigResult.userDisplayNameResult.total
+    ).toBeGreaterThanOrEqual(0);
+    expect(
+        addEventConfigResult.userDisplayNameResult.created
+    ).toBeGreaterThanOrEqual(0);
 });
 
 test("addLogMessage records the integration test Git breadcrumb", async () => {
@@ -140,7 +140,9 @@ test("updateEventConfig updates the throwaway event config", async () => {
 
     expect(received.data.status).toMatch(/ok/i);
     expect(received.data.userDisplayNameResult.status).toMatch(/ok/i);
-    expect(received.data.userDisplayNameResult.created).toBeGreaterThanOrEqual(1);
+    expect(received.data.userDisplayNameResult.created).toBeGreaterThanOrEqual(
+        1
+    );
     expect(received.data.userDisplayNameResult.total).toBeGreaterThanOrEqual(1);
 });
 

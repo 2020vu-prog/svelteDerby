@@ -25,7 +25,7 @@
                 $raceConfig.baseUrl + endpoint,
                 req
             );
-            pushMessage( {
+            pushMessage({
                 text: `Announcement Requested.`,
                 type: "success",
             });
@@ -85,4 +85,4 @@
 <button on:click={doTestAnnouncement}>Test Announcement</button>
 <button on:click={doResetPolly}>Reset Polly Bot</button>
 
-<Walkup/>
+<Walkup />

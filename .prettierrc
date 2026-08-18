@@ -1,4 +1,7 @@
 {
+  "svelteSortOrder": "none",
+  "svelteAllowShorthand": false,
+
   "arrowParens": "always",
   "trailingComma": "es5",
 

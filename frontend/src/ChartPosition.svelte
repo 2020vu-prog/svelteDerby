@@ -133,7 +133,7 @@
                     seedObject.ptcp = posForm[ab].carNumber.toString();
                 } else {
                     log.debug("invalid preSeed:", posForm[ab]);
-                    pushMessage( {
+                    pushMessage({
                         text: `Invalid Participant: [${posForm[ab].carNumber}]`,
                         type: "error",
                     });
@@ -165,7 +165,7 @@
             .then((response) => {
                 log.debug("addChartPosition axios success ", response);
                 if (response.data.error) {
-                    pushMessage( {
+                    pushMessage({
                         text: response.data.error,
                         type: "error",
                     });
@@ -210,9 +210,9 @@
             }
         }
     };
-    function pushHistory(){
-        const chartKey=`${params.chartId}:${params.chartPosition}`
-        push(`/historyList/${$raceConfig.orgId}:Bp/${chartKey}`)
+    function pushHistory() {
+        const chartKey = `${params.chartId}:${params.chartPosition}`;
+        push(`/historyList/${$raceConfig.orgId}:Bp/${chartKey}`);
     }
 </script>
 
@@ -305,9 +305,7 @@
     <br />
     <br />
 
-        <SpinnerButton on:click={pushHistory} >
-            History
-        </SpinnerButton>
+    <SpinnerButton on:click={pushHistory}>History</SpinnerButton>
 
     {#if editable}
         <SpinnerButton

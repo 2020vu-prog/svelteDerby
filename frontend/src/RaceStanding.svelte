@@ -78,18 +78,26 @@
     };
 </script>
 <style>
-.list-group-item {
-    border-radius: 0;
-}
+    .list-group-item {
+        border-radius: 0;
+    }
 </style>
 
 {#if shouldRender(standing, at)}
     <Card class="mt-3 border border-info cjw-border-5">
-        <CardHeader class="bg-info text-white" style="padding: 2px; border: 0; border-radius: 0">
+        <CardHeader
+            class="bg-info text-white"
+            style="padding: 2px; border: 0; border-radius: 0"
+        >
             <CardTitle style="align-items: center; padding: 0px 2px">
                 <span on:click={gotoBracket}>{chartPosition}</span>
-                <span class="spanRight" style="display: flex; align-items: center; gap: 0.5rem">
-                    <span style="display: inline-flex; align-items: center">{hhmmss}</span>
+                <span
+                    class="spanRight"
+                    style="display: flex; align-items: center; gap: 0.5rem"
+                >
+                    <span style="display: inline-flex; align-items: center"
+                        >{hhmmss}</span
+                    >
                     {#if !isHistory()}
                         <EllipsisButton
                             on:message={toggleToolbar}

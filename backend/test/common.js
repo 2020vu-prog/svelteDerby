@@ -1,22 +1,22 @@
 module.exports.FOO = "bar";
 
-const fs = require('fs');
-const axios = require("axios")
+const fs = require("fs");
+const axios = require("axios");
 const { getDeploymentBaseUrl } = require("./deploymentConfig.js");
 
 module.exports.CfBase = getDeploymentBaseUrl();
 module.exports.CF = `${module.exports.CfBase}/app`;
 
 function checkTime(i) {
-    return (i < 10) ? "0" + i : i;
+    return i < 10 ? "0" + i : i;
 }
 
 module.exports.getHHMMSS = (inDate) => {
-    h = checkTime(inDate.getHours()),
-        m = checkTime(inDate.getMinutes()),
-        s = checkTime(inDate.getSeconds());
-    return (`${h}:${m}:${s}`);
-}
+    ((h = checkTime(inDate.getHours())),
+        (m = checkTime(inDate.getMinutes())),
+        (s = checkTime(inDate.getSeconds())));
+    return `${h}:${m}:${s}`;
+};
 function buildRequestError(error) {
     if (error.response) {
         const detail = {
@@ -26,7 +26,9 @@ function buildRequestError(error) {
             statusText: error.response.statusText,
             data: error.response.data,
         };
-        const requestError = new Error(`Request failed: ${JSON.stringify(detail)}`);
+        const requestError = new Error(
+            `Request failed: ${JSON.stringify(detail)}`
+        );
         requestError.detail = detail;
         return requestError;
     }
@@ -40,8 +42,8 @@ function buildRequestError(error) {
 }
 module.exports.getData = async (url, config = {}) => {
     try {
-        const token = fs.readFileSync(__dirname + '/token.txt', 'utf8');
-        axios.defaults.headers.common['Authorization'] = token;
+        const token = fs.readFileSync(__dirname + "/token.txt", "utf8");
+        axios.defaults.headers.common["Authorization"] = token;
 
         const response = await axios.get(url, config);
         const data = response.data;
@@ -52,8 +54,8 @@ module.exports.getData = async (url, config = {}) => {
 };
 module.exports.postData = async (url, req) => {
     try {
-        const token = fs.readFileSync(__dirname + '/token.txt', 'utf8');
-        axios.defaults.headers.common['Authorization'] = token;
+        const token = fs.readFileSync(__dirname + "/token.txt", "utf8");
+        axios.defaults.headers.common["Authorization"] = token;
 
         const response = await axios.post(url, req);
         //console.log(response);

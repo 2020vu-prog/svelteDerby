@@ -103,7 +103,7 @@
     var devClickCount = 0;
     function devClick() {
         if ($developerMode && devClickCount < 8) {
-            pushMessage( {
+            pushMessage({
                 text: `You are already a developer.`,
                 type: "success",
             });
@@ -112,7 +112,7 @@
         if (devClickCount++ > 8) {
             log.warn("devmodeA");
             $developerMode = true;
-            pushMessage( {
+            pushMessage({
                 text: `Developer Mode Enabled.`,
                 type: "success",
             });
@@ -180,14 +180,14 @@
         <div class="singularSettingDiv">
             <h4>Event Name / Org Name</h4>
             {#if isEventEditAllowed($userEmail)}
-            <span
-                on:click={(event) => {
-                    push(`/eventAdd/db/Update`);
-                    event.stopPropagation();
-                }}
-            >
-            <Icon class="xLargeEdit" icon={faEdit} />
-            </span>
+                <span
+                    on:click={(event) => {
+                        push(`/eventAdd/db/Update`);
+                        event.stopPropagation();
+                    }}
+                >
+                    <Icon class="xLargeEdit" icon={faEdit} />
+                </span>
             {/if}
             <h6>
                 <span>{ecFromDexie[0].name}</span>
@@ -265,14 +265,16 @@
             </h6>
         </div>
         {#if isManualTimerAllowed($userEmail)}
-        <hr />
-        <div class="singularSettingDiv">
-            <h4>Allow Fractional MS timing</h4>
-            <input type="checkbox" bind:checked={$enableFractionalMs} />
-            <h6>
-                This enables partial MS entry on manual timer. <strong>NOT recommended</strong>.
-            </h6>
-        </div>
+            <hr />
+            <div class="singularSettingDiv">
+                <h4>Allow Fractional MS timing</h4>
+                <input type="checkbox" bind:checked={$enableFractionalMs} />
+                <h6>
+                    This enables partial MS entry on manual timer. <strong
+                        >NOT recommended</strong
+                    >.
+                </h6>
+            </div>
         {/if}
     {/if}
 

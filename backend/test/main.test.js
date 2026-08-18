@@ -3,15 +3,11 @@ const fs = require("fs");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const EntityFactory = require(
-    "../modules/lambdaDerby/src/shared/EntityFactory.js"
-);
+const EntityFactory = require("../modules/lambdaDerby/src/shared/EntityFactory.js");
 const { orgId, orgIz } = require("./integrationRun.js");
 const token = fs.readFileSync(path.resolve(__dirname, "token.txt"), "utf8");
 const testerEmail = jwt.decode(token).email;
-const testerEmailHash = new EntityFactory({}).getHashFromEmail(
-    testerEmail
-);
+const testerEmailHash = new EntityFactory({}).getHashFromEmail(testerEmail);
 
 const slowDrivers = false;
 function sleep(ms) {
@@ -381,10 +377,11 @@ test("completes both phases of chart heat 1", async () => {
         (race) => race.SK === heat1Key && race.ph1 && race.ph2
     );
     expect(completedRace).toBeDefined();
-
 });
 
 test.skip("startDiscordBot: skipped until manageDiscord is stable in integration", async () => {
-    const data = await getData(`${CF}/manageDiscord?orgId=${orgId}&orgIz=${orgIz}`)
+    const data = await getData(
+        `${CF}/manageDiscord?orgId=${orgId}&orgIz=${orgIz}`
+    );
     expect(Object.keys(data).length).toBeGreaterThan(0);
 });

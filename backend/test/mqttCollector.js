@@ -10,10 +10,7 @@ class MqttCollector {
         this.client = null;
         this.logFilePath =
             logFilePath ||
-            path.join(
-                "/tmp",
-                `svelte-derby-mqtt-${Date.now()}.jsonl`
-            );
+            path.join("/tmp", `svelte-derby-mqtt-${Date.now()}.jsonl`);
         this.messages = [];
         this.parseErrors = [];
     }

@@ -20,7 +20,7 @@
         pushMessage,
         doRefreshBlocks,
     } from "./stores.js";
-    import { end, toSeconds ,parse} from "iso8601-duration";
+    import { end, toSeconds, parse } from "iso8601-duration";
     import SpinnerButton from "./SpinnerButton.svelte";
     import { onMount, onDestroy, tick } from "svelte";
     import {
@@ -126,8 +126,7 @@
         */
 
         for (var i = sortedPbTimerPinHistory.length - 1; i >= 0; i--) {
-
-            const timerPin  =sortedPbTimerPinHistory[i]
+            const timerPin = sortedPbTimerPinHistory[i];
             if (timerPin.pinName == Timer.PinName.lane1) {
                 laneStatusList.lane1.blocked = isPinBlocked(timerPin);
                 laneStatusList.lane1.timerPin = timerPin;
@@ -191,13 +190,13 @@
         return timerPin.pinState == Timer.PinState.BLOCKED;
     }
     function potentialPinRefresh(xmitMs, timerPin) {
-        if(
+        if (
             timerPin.pinName == Timer.PinName.lane1 ||
             timerPin.pinName == Timer.PinName.lane2
-        ){}
-           else{
-            return
-           }
+        ) {
+        } else {
+            return;
+        }
         log.debug(`ppr:`, timerPin);
         if (!lanePbTimerPinRecentMap[timerPin.pinName]) {
             //first time init
@@ -267,7 +266,10 @@
             }
             if (td.timerPin) {
                 log.debug(`syncPbState. td:`, td);
-                potentialPinRefresh(protobufLongToNumber(tdl.xmitMs), td.timerPin);
+                potentialPinRefresh(
+                    protobufLongToNumber(tdl.xmitMs),
+                    td.timerPin
+                );
             }
         }
     }
@@ -305,7 +307,7 @@
         }
     }
 
-    const invalidIsoKey="iik"
+    const invalidIsoKey = "iik";
     async function getTimerHistoryFromApi() {
         log.debug(
             "xgetTimerHistoryFromApi:x, ",
@@ -317,33 +319,33 @@
         const orgId = $raceConfig.orgId;
         //const lowMS = 1000 * 3600 * 720;
         //const lowMS = 1000 * 3600 * 0.3;
-       let historySecondsDuration=0 
-        try{
-
-            historySecondsDuration=toSeconds(parse(historyAgeDuration.toUpperCase()));
-            pushMessage( {
+        let historySecondsDuration = 0;
+        try {
+            historySecondsDuration = toSeconds(
+                parse(historyAgeDuration.toUpperCase())
+            );
+            pushMessage({
                 text: `Duration: ${historySecondsDuration}.`,
                 type: "success",
             });
-            await tick()
-            pushMessage( {
+            await tick();
+            pushMessage({
                 text: `duration.`,
                 type: "error",
                 TTL: 1,
                 key: invalidIsoKey,
             });
-            await tick()
-        }
-        catch(e){
-            pushMessage( {
+            await tick();
+        } catch (e) {
+            pushMessage({
                 text: `Invalid duration. ${e}`,
                 type: "error",
                 key: invalidIsoKey,
             });
-            console.error("invalid duration",e)
-            return
+            console.error("invalid duration", e);
+            return;
         }
-        log.debug(`historyMsDuration ${historySecondsDuration}`)
+        log.debug(`historyMsDuration ${historySecondsDuration}`);
         const lowMS = historySecondsDuration * 1000;
 
         const loIso = new Date(new Date().getTime() - lowMS).toISOString();
@@ -373,7 +375,7 @@
 
         try {
             const histLoadingKey = uuidv4();
-            pushMessage( {
+            pushMessage({
                 text: `loading History.`,
                 type: "success",
                 key: histLoadingKey,
@@ -385,12 +387,12 @@
             if (response.error) {
                 log.debug("getTimerHistoryFromApi:", response);
                 //TODO: not working!?
-                pushMessage( {
+                pushMessage({
                     text: `getTimerHistoryFromApi Failed: ${response.error}.`,
                     type: "error",
                 });
             } else {
-                pushMessage( {
+                pushMessage({
                     text: `Loaded`,
                     TTL: 1, //delete msg!
                     key: histLoadingKey,
@@ -406,7 +408,7 @@
                         //const buf = h.data;
                         //log.debug("getTimerHistory h: ", h.SK," buf:",buf);
                         //const buf8 = buf.data;
-                        const buf8=Buffer.from(h.data64, 'base64')
+                        const buf8 = Buffer.from(h.data64, "base64");
 
                         //log.debug("getTimerHistory h: ", h.SK," buf8:",buf8);
                         if (h.SK.startsWith("9999:")) {
@@ -422,7 +424,7 @@
             }
         } catch (err) {
             log.error("getTimerHistoryFromApi error: ", err);
-            pushMessage( {
+            pushMessage({
                 text: "getTimerHistoryFromApi error: " + err,
                 type: "error",
             });
@@ -449,27 +451,27 @@
         return `--- Xmit: ${xmitDate}`;
     }
     function getLaneStatusColor(ls) {
-        switch(getLaneStatusText(ls)){
+        switch (getLaneStatusText(ls)) {
             case "STALE":
-                return 'yellow'
+                return "yellow";
             case "BLOCKED":
-                return 'red'
+                return "red";
             case "CLEAR":
-                return 'lightgreen'
+                return "lightgreen";
         }
-        }
-    function getLaneStatusText(ls) {
-        if (ls.blocked=== undefined) {
-            return 'STALE'
-        }
-        return ls.blocked ? "BLOCKED" : "CLEAR"
     }
-    function doCalcFinish(timerPin){
+    function getLaneStatusText(ls) {
+        if (ls.blocked === undefined) {
+            return "STALE";
+        }
+        return ls.blocked ? "BLOCKED" : "CLEAR";
+    }
+    function doCalcFinish(timerPin) {
         const allE = calcFinish.calcFinishFilteredMain(
             RawFacade.fromTimerPins(sortedPbTimerPinHistory)
-            );
+        );
         for (let pp of allE) {
-            log.debug(pp)
+            log.debug(pp);
         }
     }
 </script>
@@ -495,7 +497,7 @@
 <div class="row">
     {#if timerName && timerId}
         <div class="column">
-            <TimerPbHealth {timerName} {timerId} />
+            <TimerPbHealth timerName={timerName} timerId={timerId} />
         </div>
         <div class="column">
             <span
@@ -528,15 +530,12 @@
                     <input type="checkbox" class="big" bind:checked={ls.checked} />
                 </CardHeader>
                 -->
-                <CardBody
-                    style="background-color: {getLaneStatusColor(ls)}"
-                >
+                <CardBody style="background-color: {getLaneStatusColor(ls)}">
                     <h5>
                         Lane {lane.replace(/[A-Z]+/i, "")}
                         <strong>
-                        {getLaneStatusText(ls)}
+                            {getLaneStatusText(ls)}
                         </strong>
-
                     </h5>
                     {#if paddlePosition}
                         <h6>{paddlePosition}</h6>

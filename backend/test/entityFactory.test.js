@@ -218,16 +218,19 @@ describe("EntityFactory classKey contracts", () => {
             },
             "log1",
         ],
-    ])("%s uses SK as classKey", (expectedClassType, json, expectedClassKey) => {
-        const entity = entityFactory.build(json);
-        entity.preWrite();
+    ])(
+        "%s uses SK as classKey",
+        (expectedClassType, json, expectedClassKey) => {
+            const entity = entityFactory.build(json);
+            entity.preWrite();
 
-        expect(entity.classType).toBe(expectedClassType);
-        expect(entity.classKey).toBe(expectedClassKey);
-        expect(entity.classKey).toBe(entity.SK);
-        expect(entity.partitionKey).toBeTruthy();
-        expect(entity.sortKey).toBeTruthy();
-    });
+            expect(entity.classType).toBe(expectedClassType);
+            expect(entity.classKey).toBe(expectedClassKey);
+            expect(entity.classKey).toBe(entity.SK);
+            expect(entity.partitionKey).toBeTruthy();
+            expect(entity.sortKey).toBeTruthy();
+        }
+    );
 
     test("LogMessage default SK is an ISO8601 date with milliseconds", () => {
         const realDate = Date;

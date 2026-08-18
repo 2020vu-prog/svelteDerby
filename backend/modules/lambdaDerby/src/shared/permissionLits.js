@@ -52,7 +52,11 @@ addPermission(
     ["/addPending"],
     ["/raceStandingAdd/RaceStanding"]
 );
-addPermission("CanAddBlocks", ["/addBlocks"], ["/raceStandingAdd/RacePhase","/spMediaList"]);
+addPermission(
+    "CanAddBlocks",
+    ["/addBlocks"],
+    ["/raceStandingAdd/RacePhase", "/spMediaList"]
+);
 // TODO: qualify with metadata!
 addPermission("CanAddChart", ["/addChart", "/listChartTypes"], ["/chartAdd"]);
 
@@ -75,7 +79,11 @@ addPermission(
     ["/deleteRaceStanding"],
     ["/sveltePermissionCanDeleteStanding"]
 );
-addPermission("CanCaptureVideo", ["/requestS3PutObjectUrl","/requestVideoUpload","/requestServerEpochMS"], ["/captureVideo"]);
+addPermission(
+    "CanCaptureVideo",
+    ["/requestS3PutObjectUrl", "/requestVideoUpload", "/requestServerEpochMS"],
+    ["/captureVideo"]
+);
 addPermission(
     "CanWalkOnWater",
     [

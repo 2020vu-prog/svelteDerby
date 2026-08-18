@@ -2,13 +2,13 @@
 const clientMinimumVersion = "1.1.24";
 const derbyMainVersion = "1.1.15";
 const { CognitoJwtVerifier } = require("aws-jwt-verify");
-const awsCognitoSettings=JSON.parse(process.env.AwsCognitoSettingsJson)
+const awsCognitoSettings = JSON.parse(process.env.AwsCognitoSettingsJson);
 const jwtVerifier = CognitoJwtVerifier.create({
     userPoolId: awsCognitoSettings.aws_user_pools_id,
     tokenUse: "id",
     //tokenUse: "access",
     clientId: awsCognitoSettings.aws_user_pools_hosted_client_id,
-  });
+});
 const crypto = require("crypto");
 const path = require("path");
 //const timer_protobuf_1 = require("timer_protobuf");
@@ -21,9 +21,7 @@ const { Base64 } = require("js-base64");
 const log = require("loglevel");
 
 const EntityFactory = require("./shared/EntityFactory.js");
-const {
-    hasPermission,
-} = require("./shared/PermissionLookup.js");
+const { hasPermission } = require("./shared/PermissionLookup.js");
 const ApiRouter = require("./ApiRouter.js");
 const RoutePermission = require("./RoutePermission.js");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
@@ -200,7 +198,7 @@ const applyFinishTime = async (json) => {
             SK: tgtRp.rs,
         });
     }
-    
+
     const rpUpdatePromise = ddbUtils.addSingle(tgtRp);
     const iotVideoRequestPromise = requestIotVideoUploadByRP(tgtRp);
 
@@ -267,57 +265,54 @@ const applyFinishTime = async (json) => {
         status: "ok",
     };
 };
-function getLowestPhrMillis(rp){
-    const lowest=Math.min(rp.phr)
-    return Math.floor(lowest/1000)// micros->millis
+function getLowestPhrMillis(rp) {
+    const lowest = Math.min(rp.phr);
+    return Math.floor(lowest / 1000); // micros->millis
 }
-let iotdata=""
-async function requestIotVideoUploadByRP(tgtRp){
-    let tgtTimeMs=getLowestPhrMillis(tgtRp)
-    if (!tgtTimeMs){
+let iotdata = "";
+async function requestIotVideoUploadByRP(tgtRp) {
+    let tgtTimeMs = getLowestPhrMillis(tgtRp);
+    if (!tgtTimeMs) {
         // allow capture to proceed.... helpful for testing...
-        tgtTimeMs=Date.now()
+        tgtTimeMs = Date.now();
         //return;
     }
-    const timerName="Finish" //finish timer
-    const vr={
-        orgId:tgtRp.orgId,
-        orgIz:tgtRp.orgIz,
-        tgtTimeMs:tgtTimeMs,
+    const timerName = "Finish"; //finish timer
+    const vr = {
+        orgId: tgtRp.orgId,
+        orgIz: tgtRp.orgIz,
+        tgtTimeMs: tgtTimeMs,
         timerName,
         prefix: `RP-${tgtRp.SK}`,
-    }
-    await requestIotVideoUploadRaw(vr)
+    };
+    await requestIotVideoUploadRaw(vr);
 }
-async function requestIotVideoUploadRaw(videoRequest){
-
-        if (!iotdata) {
-            // first time
-            iotdata = new IoTDataPlaneClient({
-                endpoint: `https://${process.env.IotEndpoint}`,
-            });
-        }
-        const payload = { 
-            ...videoRequest,
-            issuedMs:Date.now(),
-        };
-        const params = {
-            topic: `derby/${videoRequest.orgId}/video/${videoRequest.timerName}`,
-            payload: JSON.stringify(payload),
-            qos: 0,
-        };
-        try {
-            log.debug("requestIotVideoUpload request:", params);
-            var data = await iotdata.send(new IotPublishCommand(params));
-            log.debug("requestIotVideoUpload Success.", params);
-            return { status: "ok", detail: "Published" };
-        } catch (err) {
-            log.debug("requestIotVideoUpload Error.", err);
-            log.debug(err, err.stack); // an error occurred
-            return { error: err };
-        }
-
-
+async function requestIotVideoUploadRaw(videoRequest) {
+    if (!iotdata) {
+        // first time
+        iotdata = new IoTDataPlaneClient({
+            endpoint: `https://${process.env.IotEndpoint}`,
+        });
+    }
+    const payload = {
+        ...videoRequest,
+        issuedMs: Date.now(),
+    };
+    const params = {
+        topic: `derby/${videoRequest.orgId}/video/${videoRequest.timerName}`,
+        payload: JSON.stringify(payload),
+        qos: 0,
+    };
+    try {
+        log.debug("requestIotVideoUpload request:", params);
+        var data = await iotdata.send(new IotPublishCommand(params));
+        log.debug("requestIotVideoUpload Success.", params);
+        return { status: "ok", detail: "Published" };
+    } catch (err) {
+        log.debug("requestIotVideoUpload Error.", err);
+        log.debug(err, err.stack); // an error occurred
+        return { error: err };
+    }
 }
 
 // srcRs / bracketPos can be null.  Not both.
@@ -429,24 +424,22 @@ const logPendingFromChartPosError = async (bracketPos, pendingRC) => {
         bracketPos.getPtcpNumber("A"),
         bracketPos.getPtcpNumber("B"),
     ].filter((carNumber) => carNumber);
-    await logUtils.persistLogMessage(
-        {
-            orgId: bracketPos.orgId,
-            message: `Unable to add pending race for [${chartName}] heat [${heatNumber}] with cars [${carNumbers.join(
-                " and "
-            )}]: ${pendingRC.error}`,
-            level: "warn",
-            source: getSourceName(),
-            detail: {
-                chartId,
-                chartName,
-                bracketPosKey: bracketPos.SK,
-                heatNumber,
-                carNumbers,
-                addPendingResult: pendingRC,
-            },
-        }
-    );
+    await logUtils.persistLogMessage({
+        orgId: bracketPos.orgId,
+        message: `Unable to add pending race for [${chartName}] heat [${heatNumber}] with cars [${carNumbers.join(
+            " and "
+        )}]: ${pendingRC.error}`,
+        level: "warn",
+        source: getSourceName(),
+        detail: {
+            chartId,
+            chartName,
+            bracketPosKey: bracketPos.SK,
+            heatNumber,
+            carNumbers,
+            addPendingResult: pendingRC,
+        },
+    });
 };
 
 const loadBracketPosFromRaceStanding = async (rs) => {
@@ -867,8 +860,7 @@ const addTimerPbConfig = async (json) => {
     if (oldTimerPbMain && oldTimerPbMain.at != json.at) {
         return {
             status: "error",
-            error:
-                "Update request ignored due to stale data.  Refresh your Browser.",
+            error: "Update request ignored due to stale data.  Refresh your Browser.",
         };
     }
     //let decoded = timer_protobuf_1.tutorial.TimerConfig.decode(bdata)
@@ -906,33 +898,33 @@ const addTimerPbConfig = async (json) => {
 
     return rc[0];
 };
-const addNewEventPushSns = async (orgId,json) => {
-        const AddEventSnsArn = process.env.AddEventSnsArn;
-        const environ=process.env.DeployEnvironment;
-        var params = {
-            Message: `new event for org: ${json.orgIz}\nName: ${json.name}`,
-            TopicArn: AddEventSnsArn,
-            Subject: `RR1 [${environ}] new event`,
+const addNewEventPushSns = async (orgId, json) => {
+    const AddEventSnsArn = process.env.AddEventSnsArn;
+    const environ = process.env.DeployEnvironment;
+    var params = {
+        Message: `new event for org: ${json.orgIz}\nName: ${json.name}`,
+        TopicArn: AddEventSnsArn,
+        Subject: `RR1 [${environ}] new event`,
 
-            MessageAttributes: {
-                orgId: {
-                    DataType: "String",
-                    StringValue: orgId,
-                },
+        MessageAttributes: {
+            orgId: {
+                DataType: "String",
+                StringValue: orgId,
             },
-        };
-
-        try {
-            console.log("SNS json    AddEventSnsArn:", json);
-            console.log("SNS sending AddEventSnsArn:", params);
-            //console.log("SNS module1 AddEventSnsArn:", snsModule);
-            const sent = await snsClient.send(new SnsPublishCommand(params));
-            console.log("AddEventSnsArn send Success", sent);
-        } catch (err) {
-            console.log("AddEventSnsArn send Error", err);
-        }
+        },
     };
- 
+
+    try {
+        console.log("SNS json    AddEventSnsArn:", json);
+        console.log("SNS sending AddEventSnsArn:", params);
+        //console.log("SNS module1 AddEventSnsArn:", snsModule);
+        const sent = await snsClient.send(new SnsPublishCommand(params));
+        console.log("AddEventSnsArn send Success", sent);
+    } catch (err) {
+        console.log("AddEventSnsArn send Error", err);
+    }
+};
+
 const addTimerConfig = async (json, initialLoad) => {
     if (!json.orgIz) {
         return { error: "Missing orgIz" };
@@ -1012,12 +1004,10 @@ const updateEventConfig = async (json) => {
 
     ddbUtils.flushEventCache(); //TODO: flush event cache in other instances of lambda...
     const eventConfigResult = await ddbUtils.addSingle(eventConfig);
-    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
-        {
-            orgIz: eventConfig.orgIz || json.orgIz,
-            orgId: eventConfig.orgId || json.orgId,
-        }
-    );
+    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm({
+        orgIz: eventConfig.orgIz || json.orgIz,
+        orgId: eventConfig.orgId || json.orgId,
+    });
     eventConfigResult.userDisplayNameResult = userDisplayNameResult;
     return eventConfigResult;
 };
@@ -1052,31 +1042,32 @@ const addEventConfig = async (event) => {
 
     json.TTL = newTtl;
 
-    const eventConfigEntityFactory = requestContext.getEntityFactory().copyWith({
-        orgId: json.orgId,
-        TTL: json.TTL,
-    });
+    const eventConfigEntityFactory = requestContext
+        .getEntityFactory()
+        .copyWith({
+            orgId: json.orgId,
+            TTL: json.TTL,
+        });
     requestContext.setEntityFactory(eventConfigEntityFactory);
     const eventRC = await ddbUtils.addSingle(json);
-    await logUtils.persistLogMessage(
-        {
+    await logUtils.persistLogMessage({
+        orgId: json.orgId,
+        message: `Added event: ${json.name || json.orgId}`,
+        level: "debug",
+        source: getSourceName(),
+        detail: {
+            orgIz: json.orgIz,
             orgId: json.orgId,
-            message: `Added event: ${json.name || json.orgId}`,
-            level: "debug",
-            source: getSourceName(),
-            detail: {
-                orgIz: json.orgIz,
-                orgId: json.orgId,
-                name: json.name,
-            },
-        }
-    );
-    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
-        { orgIz: json.orgIz, orgId: json.orgId }
-    );
+            name: json.name,
+        },
+    });
+    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm({
+        orgIz: json.orgIz,
+        orgId: json.orgId,
+    });
     eventRC.userDisplayNameResult = userDisplayNameResult;
 
-    await addNewEventPushSns(json.orgId,json); 
+    await addNewEventPushSns(json.orgId, json);
     await addTimerConfig(json, true); // TODO: revisit default TimerConfig?
     return eventRC;
 };
@@ -1118,58 +1109,60 @@ const getEventKey = (event) => {
     return getOrgIz(event) + ":" + getOrgId(event);
 };
 async function iotDefaultPri(event) {
-	let backendPri=5;
+    let backendPri = 5;
 
-	const environ=process.env.DeployEnvironment
-	if(environ.search(/test/i) >=0){
-		backendPri=100;
-	}
-	if(environ.search(/stage/i) >=0){
-		backendPri=200;
-	}
-	if(environ.search(/go-derby-prod/i) >=0){
-		backendPri=500;
-	}
-	return backendPri
-
+    const environ = process.env.DeployEnvironment;
+    if (environ.search(/test/i) >= 0) {
+        backendPri = 100;
+    }
+    if (environ.search(/stage/i) >= 0) {
+        backendPri = 200;
+    }
+    if (environ.search(/go-derby-prod/i) >= 0) {
+        backendPri = 500;
+    }
+    return backendPri;
 }
 async function iotOverridePri(event) {
     const discoverOvrd = await ddbUtils.ddbQueryRawPkSk(
-		`DiscoverTimerOverride`,
-            event.headers["x-rr1-timer"],
+        `DiscoverTimerOverride`,
+        event.headers["x-rr1-timer"],
         process.env.TimerProtobufDbArn
     );
-	    log.debug("iotOverridePri: ddbRC:", discoverOvrd);
+    log.debug("iotOverridePri: ddbRC:", discoverOvrd);
 
-    if (discoverOvrd && discoverOvrd.Items.length &&  discoverOvrd.Items[0].pri){
-	    log.debug("iotOverridePri: using:", discoverOvrd.Items[0].pri);
-		return discoverOvrd.Items[0].pri.N
+    if (
+        discoverOvrd &&
+        discoverOvrd.Items.length &&
+        discoverOvrd.Items[0].pri
+    ) {
+        log.debug("iotOverridePri: using:", discoverOvrd.Items[0].pri);
+        return discoverOvrd.Items[0].pri.N;
     }
-    return 0
+    return 0;
 }
 async function iotDiscover(event, apiProps) {
-	const backendPri= Math.max(
-		await iotDefaultPri(event),
-		await iotOverridePri(event),
-	)
+    const backendPri = Math.max(
+        await iotDefaultPri(event),
+        await iotOverridePri(event)
+    );
 
-            return {
-                priority: backendPri,
-                "backends":[
-                    "go.rr1.us",
-                    "cf.test.rr1.us",
-                    "test.rr1.us",
-                    "stage.rr1.us",
-                    "cf.www.rr1.us",
-                    "c.comicNotARealDomainButKKindOfLongish",
-                ],
-                authUrl: `${process.env.IotPiAccessUrl}iot/auth`,
-                bundleUrl: "https://cf.test.rr1.us/gpsRelay.tar.zst",
-            };
-                //authUrl: "https://xcfoeorhj5s4ubgaawz2rv45re0nxyqh.lambda-url.us-east-2.on.aws/iot/auth",
+    return {
+        priority: backendPri,
+        backends: [
+            "go.rr1.us",
+            "cf.test.rr1.us",
+            "test.rr1.us",
+            "stage.rr1.us",
+            "cf.www.rr1.us",
+            "c.comicNotARealDomainButKKindOfLongish",
+        ],
+        authUrl: `${process.env.IotPiAccessUrl}iot/auth`,
+        bundleUrl: "https://cf.test.rr1.us/gpsRelay.tar.zst",
+    };
+    //authUrl: "https://xcfoeorhj5s4ubgaawz2rv45re0nxyqh.lambda-url.us-east-2.on.aws/iot/auth",
 }
 async function getOrgRoles(event, apiProps) {
-
     log.debug("getOrgRoles: apiEmail:", apiProps);
     log.debug("getOrgRoles: qsEmail:", event.queryStringParameters);
     if (
@@ -1189,10 +1182,11 @@ async function getOrgRoles(event, apiProps) {
             };
         }
     }
-    return { // no roles on error
+    return {
+        // no roles on error
         roleList: [],
         email: apiProps.email.toLowerCase(),
-    }
+    };
     return { statusCode: 403, error: "email not aligned" };
 }
 const routeMap = {
@@ -1267,9 +1261,7 @@ const routeMap = {
         allowMissingTtl: true,
         allowMissingOrgId: true,
         h: async (event, apiProps) => {
-            return buildResponse(
-                await listOrgUser(event, apiProps)
-            );
+            return buildResponse(await listOrgUser(event, apiProps));
         },
     },
     "/addOrgUser": {
@@ -1311,7 +1303,9 @@ const routeMap = {
         permission: RoutePermission.CAN_DELETE_STANDING,
         h: async (event) => {
             return buildResponse(
-                await newApiRaceStanding().deleteRaceStanding(JSON.parse(event.body))
+                await newApiRaceStanding().deleteRaceStanding(
+                    JSON.parse(event.body)
+                )
             );
         },
     },
@@ -1480,7 +1474,10 @@ const routeMap = {
             var json = JSON.parse(event.body);
             var ssml = json.ssml;
             var orgId = json.orgId;
-            const speechMp3 = await newAnnounceResults().submitToPolly(ssml, orgId);
+            const speechMp3 = await newAnnounceResults().submitToPolly(
+                ssml,
+                orgId
+            );
             log.debug("requestTts: " + ssml + " gave: ", speechMp3);
             return buildResponse({ speechMp3: speechMp3 });
         },
@@ -1508,18 +1505,18 @@ const routeMap = {
     "/requestVideoUpload": {
         permission: RoutePermission.CAN_CAPTURE_VIDEO,
         h: async (event) => {
-//            var json = JSON.parse(event.body);
+            //            var json = JSON.parse(event.body);
             const qsp = event.queryStringParameters;
-            const vr={
-                orgId:qsp.orgId,
-                orgIz:qsp.orgIz,
-                timerName:qsp.timerName,
-                tgtTimeMs:parseInt(qsp.tgtTimeMs),
+            const vr = {
+                orgId: qsp.orgId,
+                orgIz: qsp.orgIz,
+                timerName: qsp.timerName,
+                tgtTimeMs: parseInt(qsp.tgtTimeMs),
                 //prefix: `${qsp.orgId}-${qsp.tgtTimeMs}-TestUpload-${qsp.timerName}`,
                 prefix: `${qsp.tgtTimeMs}-TestRemote`,
-            }
+            };
 
-            await requestIotVideoUploadRaw(vr)
+            await requestIotVideoUploadRaw(vr);
             return buildResponse({ requested: qsp.timerName });
         },
     },
@@ -1569,9 +1566,9 @@ const routeMap = {
             );
             log.debug("For params:", params, " The signed URL is", signedUrl);
 
-            return buildResponse({ 
+            return buildResponse({
                 signedUrl: signedUrl,
-                issuedMs:Date.now(),
+                issuedMs: Date.now(),
             });
         },
     },
@@ -1616,7 +1613,9 @@ async function getDerbyMainVersionInfo() {
         const monitorTestEndTimeMs = buildTimeMs + 10 * 60 * 1000;
         const nowMs = Date.now();
         if (nowMs >= buildTimeMs && nowMs <= monitorTestEndTimeMs) {
-            log.error("ERROR CloudWatch monitor test from getDerbyMainVersionInfo");
+            log.error(
+                "ERROR CloudWatch monitor test from getDerbyMainVersionInfo"
+            );
         }
     } catch (err) {
         log.warn("Unable to parse git breadcrumb buildTime");
@@ -1640,7 +1639,9 @@ function registerPublicRoutes(router) {
         permission: RoutePermission.PUBLIC,
         loadContext: false,
         handler: async (event) => {
-            const result = await ddbUtils.ddbListEventConfigByOrg(getOrgIz(event));
+            const result = await ddbUtils.ddbListEventConfigByOrg(
+                getOrgIz(event)
+            );
             return buildResponse(result, "max-age=307");
         },
     });
@@ -1666,10 +1667,8 @@ function registerPublicRoutes(router) {
     router.register("/getDerbyMainVersion", {
         permission: RoutePermission.PUBLIC,
         loadContext: false,
-        handler: async () => buildResponse(
-            await getDerbyMainVersionInfo(),
-            "max-age=120"
-        ),
+        handler: async () =>
+            buildResponse(await getDerbyMainVersionInfo(), "max-age=120"),
     });
 }
 
@@ -1703,11 +1702,13 @@ async function loadApiRequestContext(event, principal) {
     const defaultTTL = await getTtl(config);
     const roleList = await getUserRoles(orgIz, principal.email);
 
-    requestContext.setEntityFactory(new EntityFactory({
-        orgId,
-        byEmail: principal.email,
-        TTL: defaultTTL,
-    }));
+    requestContext.setEntityFactory(
+        new EntityFactory({
+            orgId,
+            byEmail: principal.email,
+            TTL: defaultTTL,
+        })
+    );
     return { config, defaultTTL, eventKey, orgId, orgIz, roleList };
 }
 
@@ -1717,7 +1718,7 @@ function authorizeApiRequest(permission, context, principal) {
     );
     log.debug(
         `${allowed ? "allowing" : "prohibiting"} access to permission ` +
-        `${permission} for [${principal.email}]`
+            `${permission} for [${principal.email}]`
     );
     return allowed;
 }
@@ -1731,7 +1732,9 @@ function createApiRouter() {
         buildResponse,
         isFrozen: frozenOrArchived,
         log,
-    }).use(registerPublicRoutes).use(registerCoreRoutes);
+    })
+        .use(registerPublicRoutes)
+        .use(registerCoreRoutes);
 }
 
 const apiRouter = createApiRouter();
@@ -1770,7 +1773,7 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         throw ("missing finishLineBlock", finishLineBlock);
     }
     const finishLineBlock = finishLineBlockList[0]; //change array to filtered object
-    
+
     var l1Micros = parseInt(finishLineBlock.rpiNoseMicros[0]);
     var l2Micros = parseInt(finishLineBlock.rpiNoseMicros[1]);
     var byLine = "rpi.local";
@@ -1779,7 +1782,7 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         l1Micros = finishLineBlock.gpsNoseMs[0] * 1000;
         l2Micros = finishLineBlock.gpsNoseMs[1] * 1000;
         byLine = "rpi.gps";
-        snsPublishedTimestamp=finishLineBlock.gpsNoseMs[0];  // mqtt qos 1 re-xmit can obscure snsPubTime!
+        snsPublishedTimestamp = finishLineBlock.gpsNoseMs[0]; // mqtt qos 1 re-xmit can obscure snsPubTime!
         // need workaround for no gps, but this should help for gps
     }
 
@@ -1793,18 +1796,19 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug("snsApplyPbTimerHandler rp:", rp);
     //throw "snsApplyPbTimerHandler unfinished.";
 
-
     if (rp.cn[0] && !validNumericTime(l1Micros)) {
         throw `missing time [${l1Micros}] for car [${rp.cn}] in lane 1`;
     }
     if (rp.cn[1] && !validNumericTime(l2Micros)) {
         throw `missing time [${l2Micros}] for car [${rp.cn}] in lane 2`;
     }
-    requestContext.setEntityFactory(new EntityFactory({
-        orgId: finishLineBlock.timerConfig.orgId,
-        by: byLine,
-        TTL: rp.TTL,
-    }));
+    requestContext.setEntityFactory(
+        new EntityFactory({
+            orgId: finishLineBlock.timerConfig.orgId,
+            by: byLine,
+            TTL: rp.TTL,
+        })
+    );
 
     const req = {
         orgId: finishLineBlock.timerConfig.orgId,
@@ -1853,11 +1857,13 @@ async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         // sns gave us a timer config.  use that instead of
         //   waiting for another dynamo read
         const timerConfig = json.timerConfig;
-        requestContext.setEntityFactory(new EntityFactory({
-            orgId: timerConfig.orgId,
-            by: "rpi.local",
-            TTL: timerConfig.TTL,
-        }));
+        requestContext.setEntityFactory(
+            new EntityFactory({
+                orgId: timerConfig.orgId,
+                by: "rpi.local",
+                TTL: timerConfig.TTL,
+            })
+        );
 
         const deltaLanes = json.deltas[0].lanes;
         const candidateBlock = json.deltas[0].cBlock;
@@ -1932,10 +1938,10 @@ async function getApplyableNextOnBlocks(
     // wall time may slip on pi.   if sns time (from AWS datacenter) is older than NOB time. don't apply time.
     if (snsPublishedTimestamp < rp.at) {
         throw (
-            ("getApplyableNextOnBlocks Message : skipping stale SNS finish time : ",
+            "getApplyableNextOnBlocks Message : skipping stale SNS finish time : ",
             snsPubDate,
             " rpDate:",
-            rp.at)
+            rp.at
         );
         return;
     }
@@ -1983,9 +1989,10 @@ async function addOrgUser(json, apiProps) {
         requestContext.setEntityFactory(tmpEntityFactory);
 
         const orgPermResult = await ddbUtils.addSingle(json);
-        const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
-            { orgIz: json.orgIz, orgId }
-        );
+        const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm({
+            orgIz: json.orgIz,
+            orgId,
+        });
 
         return {
             status:
@@ -2073,28 +2080,29 @@ async function getUserRolesForOrgIz(orgIz, email) {
     return [];
 }
 function lowercaseHeaders(event) {
-    var headerKeys= Object.keys(event.headers);
+    var headerKeys = Object.keys(event.headers);
 
     headerKeys.forEach((headerKey) => {
-        if(headerKey!==headerKey.toLowerCase()){
-            event.headers[headerKey.toLowerCase()]=event.headers[headerKey]
+        if (headerKey !== headerKey.toLowerCase()) {
+            event.headers[headerKey.toLowerCase()] = event.headers[headerKey];
         }
     });
 }
 async function lambdaHandler(event) {
     log.debug("Received event:", JSON.stringify(event, null, 4));
-    if (event && event.path) { // api gateway format v1
-        lowercaseHeaders(event)
+    if (event && event.path) {
+        // api gateway format v1
+        lowercaseHeaders(event);
         //log.debug("Modified event:", JSON.stringify(event, null, 4));
         const response = await apiGatewayHandler(event);
         return response;
     }
-    if (event && event.rawPath) { // api gateway format v2 (lambda function url!)
-        event.path=event.rawPath
+    if (event && event.rawPath) {
+        // api gateway format v2 (lambda function url!)
+        event.path = event.rawPath;
         const response = await apiGatewayHandler(event);
         return response;
     }
-
 
     if (event.source == "aws.events") {
         log.debug("handling archive rulefrom cron0");

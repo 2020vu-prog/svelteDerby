@@ -24,11 +24,11 @@
     var imageLoaded = false;
     var jsReady = false;
     onMount(async () => {
-        $spinnerPanelBusy=true
+        $spinnerPanelBusy = true;
         mounted = true;
         tryBuild();
         await refreshDataFromDb();
-        $spinnerPanelBusy=false
+        $spinnerPanelBusy = false;
     });
     const refreshDataFromDb = async (trigger) => {
         log.debug("refreshDataFromDb data:", trigger);
@@ -314,8 +314,8 @@
         }
         return number + ""; // always return a string
     }
-    function gotoChartCardList(){
-        replace(`/ChartDetailCardList/${params.chartId}`)
+    function gotoChartCardList() {
+        replace(`/ChartDetailCardList/${params.chartId}`);
     }
 </script>
 
@@ -338,8 +338,7 @@
         </script>
     {/if}
 </svelte:head>
-<h3 style="text-align:center;z-index: 9;"
-    on:click={gotoChartCardList}>
+<h3 style="text-align:center;z-index: 9;" on:click={gotoChartCardList}>
     Chart Name: {bmdFromDexie.bracketName}
 </h3>
 <div id="top" class="container" style="position: absolute; z-index: 8;">
@@ -348,7 +347,7 @@
             chartJson={brackets2}
             id={pos}
             pos={Object.keys(brackets2.imgPositions)[pos]}
-            {scale}
+            scale={scale}
             left={bracket.left}
             top={bracket.top}
             chartId={params.chartId}
@@ -358,17 +357,16 @@
         />
     {/each}
     {#if bracketImgSrc}
-    <img
-        on:load={imgLoadComplete}
-        style={imgStyle}
-        id="bracketImage"
-        src={bracketImgSrc}
-        alt="bracketImage"
-        bind:this={thisChartImage}
-        on:click={logClickPosition}
-    />
+        <img
+            on:load={imgLoadComplete}
+            style={imgStyle}
+            id="bracketImage"
+            src={bracketImgSrc}
+            alt="bracketImage"
+            bind:this={thisChartImage}
+            on:click={logClickPosition}
+        />
     {/if}
-    
 
     <ChartClickLogger on:copyJson={copyJson} />
 </div>

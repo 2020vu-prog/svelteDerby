@@ -25,7 +25,10 @@
 
     async function refreshPermission() {
         const requestId = ++permissionRequest;
-        const allowed = await isAllowedRoutePath(clickHandleRoute, overrideOrgIz);
+        const allowed = await isAllowedRoutePath(
+            clickHandleRoute,
+            overrideOrgIz
+        );
         if (requestId === permissionRequest) {
             userHasPermission = allowed;
         }
@@ -70,6 +73,6 @@
 
 {#if userHasPermission}
     <div class="fab" style="background-color: {$theme}" on:click={chFunction}>
-        <img src="plus-solid.svg">
+        <img src="plus-solid.svg" />
     </div>
 {/if}

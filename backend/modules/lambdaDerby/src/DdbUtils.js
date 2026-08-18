@@ -132,7 +132,7 @@ class DdbUtils {
         try {
             var data = await this.ddbClient.send(new QueryCommand(params));
             log.debug("ddbQueryRawPkSk: ", data); // successful response
-		return data
+            return data;
         } catch (err) {
             log.debug("ddbQueryRawPkSk failed: ", err, err.stack); // an error occurred
             throw err;
@@ -140,7 +140,7 @@ class DdbUtils {
     }
     async ddbQueryPkSk(pk, sk, tableName = process.env.DynamoDbTable) {
         try {
-	    const data=await this.ddbQueryRawPkSk(pk, sk, tableName )
+            const data = await this.ddbQueryRawPkSk(pk, sk, tableName);
             var factory = new EntityFactory({});
             if (process.env.ElapsedTempDbTable === tableName) {
                 factory = null;
@@ -185,7 +185,7 @@ class DdbUtils {
             log.debug("ddbQueryPkAll failed: ", err, err.stack); // an error occurred
             throw err;
         }
-    } 
+    }
     promoteToObject(unmarshalled, factory) {
         if (factory) {
             return factory.build(unmarshalled);
@@ -245,10 +245,11 @@ class DdbUtils {
             log.debug("ddbQueryTimerPbHistory: ", data); // successful response
             log.debug("ddbQueryTimerPbHistory: " + JSON.stringify(data)); // successful response
             const rc = this.unmarshallResultsToArray(data);
-            for(const item of rc){
-                if(item.data){ //Buffer->JSON Sucks (large/verbose)
-                    item.data64=Buffer.from(item.data).toString("base64");
-                    delete item.data
+            for (const item of rc) {
+                if (item.data) {
+                    //Buffer->JSON Sucks (large/verbose)
+                    item.data64 = Buffer.from(item.data).toString("base64");
+                    delete item.data;
                 }
             }
 
@@ -883,7 +884,7 @@ class DdbUtils {
         var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
             /[xy]/g,
             function (c) {
-                var r = (dt + Math.random() * 16) % 16 | 0;
+                var r = ((dt + Math.random() * 16) % 16) | 0;
                 dt = Math.floor(dt / 16);
                 return (c == "x" ? r : (r & 0x3) | 0x8).toString(16);
             }

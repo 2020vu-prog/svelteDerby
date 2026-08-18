@@ -9,7 +9,7 @@
         Badge,
         Table,
     } from "sveltestrap";
-    import { recalcLaneData} from './utilsElapsed.js'
+    import { recalcLaneData } from "./utilsElapsed.js";
     import { fmtPinTime } from "./utils.js";
     import { onMount } from "svelte";
     import { sleep } from "./utils.js";
@@ -37,24 +37,23 @@
             if (response.error) {
                 log.debug("loadFinishBlocks:", response);
                 //TODO: not working!?
-                pushMessage( {
+                pushMessage({
                     text: `loadFinishBlocks api Failed: ${response.error}.`,
                     type: "error",
                 });
             } else {
-
                 const fbList = response.data.fbList;
                 log.debug("fbList: ", fbList);
                 if (fbList) {
                     const fbJson = JSON.parse(fbList);
                     log.debug("fbJson: ", fbJson);
                     log.debug("fb cn : ", response.data.cn);
-                    [laneData]=recalcLaneData(fbJson, response.data.cn);
+                    [laneData] = recalcLaneData(fbJson, response.data.cn);
                     sampleDemoData = false;
                 }
             }
         } catch (err) {
-            pushMessage( {
+            pushMessage({
                 text: `loadFinishBlocks calc Failed: ${err}.`,
                 type: "error",
             });

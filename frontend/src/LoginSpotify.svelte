@@ -1,28 +1,27 @@
 <script lang="ts">
-	import aws_exports from "./aws-config";
-    import { onMount } from 'svelte';
+    import aws_exports from "./aws-config";
+    import { onMount } from "svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
     import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
-    import {logout, sleep} from './utils.js'
+    import { logout, sleep } from "./utils.js";
     import {
         spotifyMe,
         getSpotifyPKCE,
         logoutSpotify,
         spotifyPremiumRequiredMessage,
-    } from './utils/spotify.js'
-    import { spotifyLoggedIn, spotifyPremiumRequired } from './stores.js'
+    } from "./utils/spotify.js";
+    import { spotifyLoggedIn, spotifyPremiumRequired } from "./stores.js";
     export let spinning = false;
     async function loginPKCE() {
-        spinning=true
-        await sleep(300)
+        spinning = true;
+        await sleep(300);
         await getSpotifyPKCE();
-
     }
     async function whoami() {
-        const response=await spotifyMe();
+        const response = await spotifyMe();
 
-        if(response&&response.display_name){
-            return response.display_name
+        if (response && response.display_name) {
+            return response.display_name;
         }
     }
 </script>
@@ -36,29 +35,25 @@
         padding: 1.25rem;
     }
 </style>
-<br/>
+<br />
 <h4>Spotify</h4>
 {#if $spotifyLoggedIn}
-{#if $spotifyPremiumRequired}
-<p class="premiumRequired">
-    {spotifyPremiumRequiredMessage}
-</p>
-{/if}
-<SpinnerButton on:click={logoutSpotify} >
-Logout spotify 
-    
-    {#await whoami()}
-        spinner
-    {:then value}
-        [{value}]
-    {/await}
+    {#if $spotifyPremiumRequired}
+        <p class="premiumRequired">
+            {spotifyPremiumRequiredMessage}
+        </p>
+    {/if}
+    <SpinnerButton on:click={logoutSpotify}>
+        Logout spotify
 
-</SpinnerButton>
+        {#await whoami()}
+            spinner
+        {:then value}
+            [{value}]
+        {/await}
+    </SpinnerButton>
 
-<SpotifyDeviceSelection />
-
+    <SpotifyDeviceSelection />
 {:else}
-<SpinnerButton on:click={loginPKCE} >
-    Login Spotify
-</SpinnerButton>
+    <SpinnerButton on:click={loginPKCE}>Login Spotify</SpinnerButton>
 {/if}

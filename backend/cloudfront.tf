@@ -20,9 +20,9 @@ locals {
   //invoke_host_temp     = replace(aws_api_gateway_deployment.derbyMain.invoke_url, "https://", "")
   //invoke_host          = replace(local.invoke_host_temp, "/\\/.*/", "")
 
-  derbyMain_host_temp     = replace( module.derbyMainLambda.lambda_function_url, "https://", "")
-  derbyMain_host          = replace(local.derbyMain_host_temp, "/\\/.*/", "")
-  DnsCfAliasFq         = "${var.DnsCloudfrontHostAlias}.${var.DnsDomain}"
+  derbyMain_host_temp = replace(module.derbyMainLambda.lambda_function_url, "https://", "")
+  derbyMain_host      = replace(local.derbyMain_host_temp, "/\\/.*/", "")
+  DnsCfAliasFq        = "${var.DnsCloudfrontHostAlias}.${var.DnsDomain}"
 
 }
 resource "aws_s3_bucket" "svelteBucket" {
@@ -32,8 +32,8 @@ resource "aws_s3_bucket" "svelteBucket" {
 }
 resource "aws_s3_bucket_acl" "svelteBucket" {
   depends_on = [aws_s3_bucket_ownership_controls.svelteBucket]
-  bucket = aws_s3_bucket.svelteBucket.id
-  acl    = "private"
+  bucket     = aws_s3_bucket.svelteBucket.id
+  acl        = "private"
 }
 resource "aws_s3_bucket_ownership_controls" "svelteBucket" {
   bucket = aws_s3_bucket.svelteBucket.id
@@ -210,7 +210,7 @@ resource "aws_cloudfront_distribution" "derbyApp" {
   http_version        = "http2and3"
 
 
-  aliases = local.use_default_cert ? null : [local.DnsCfAliasFq,var.DnsDomain]
+  aliases = local.use_default_cert ? null : [local.DnsCfAliasFq, var.DnsDomain]
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]

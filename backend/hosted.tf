@@ -1,23 +1,23 @@
 resource "aws_cognito_user_pool_client" "hosted_client" {
-  access_token_validity                         = 60
-  allowed_oauth_flows                           = ["implicit"]
-  allowed_oauth_flows_user_pool_client          = true
-  allowed_oauth_scopes                          = ["email", "openid", "phone"]
-  auth_session_validity                         = 3
-  logout_urls                                 = [
-	"https://0.0.0.0:8080/",
-	"https://localhost:5173/",
-	"https://d38fl44wj64v4n.cloudfront.net/",
-        "https://${local.DnsCfAliasFq}/",
-        "https://${var.DnsDomain}/",
-	]
-  callback_urls                                 = [
-	"https://0.0.0.0:8080/",
-	"https://localhost:5173/",
-	"https://d38fl44wj64v4n.cloudfront.net/",
-        "https://${local.DnsCfAliasFq}/",
-        "https://${var.DnsDomain}/",
-	]
+  access_token_validity                = 60
+  allowed_oauth_flows                  = ["implicit"]
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_scopes                 = ["email", "openid", "phone"]
+  auth_session_validity                = 3
+  logout_urls = [
+    "https://0.0.0.0:8080/",
+    "https://localhost:5173/",
+    "https://d38fl44wj64v4n.cloudfront.net/",
+    "https://${local.DnsCfAliasFq}/",
+    "https://${var.DnsDomain}/",
+  ]
+  callback_urls = [
+    "https://0.0.0.0:8080/",
+    "https://localhost:5173/",
+    "https://d38fl44wj64v4n.cloudfront.net/",
+    "https://${local.DnsCfAliasFq}/",
+    "https://${var.DnsDomain}/",
+  ]
   default_redirect_uri                          = null
   enable_propagate_additional_user_context_data = false
   enable_token_revocation                       = true
@@ -29,9 +29,9 @@ resource "aws_cognito_user_pool_client" "hosted_client" {
   read_attributes                               = ["address", "birthdate", "email", "email_verified", "family_name", "gender", "given_name", "locale", "middle_name", "name", "nickname", "phone_number", "phone_number_verified", "picture", "preferred_username", "profile", "updated_at", "website", "zoneinfo"]
   refresh_token_validity                        = 30
   #supported_identity_providers                  = ["COGNITO" ]
-  supported_identity_providers                  = ["COGNITO", "Google"]
-  user_pool_id                                  = aws_cognito_user_pool.derbyUserPool.id
-  write_attributes                              = ["address", "birthdate", "email", "family_name", "gender", "given_name", "locale", "middle_name", "name", "nickname", "phone_number", "picture", "preferred_username", "profile", "updated_at", "website", "zoneinfo"]
+  supported_identity_providers = ["COGNITO", "Google"]
+  user_pool_id                 = aws_cognito_user_pool.derbyUserPool.id
+  write_attributes             = ["address", "birthdate", "email", "family_name", "gender", "given_name", "locale", "middle_name", "name", "nickname", "phone_number", "picture", "preferred_username", "profile", "updated_at", "website", "zoneinfo"]
   token_validity_units {
     access_token  = "minutes"
     id_token      = "days"

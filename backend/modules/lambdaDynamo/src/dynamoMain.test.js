@@ -52,11 +52,13 @@ test("copies a DynamoDB stream record to the distribution table and IoT", async 
         return {};
     });
 
-    const result = await handler(streamEvent({
-        orgId: "Test.12345",
-        PK: "Race",
-        name: "Integration race",
-    }));
+    const result = await handler(
+        streamEvent({
+            orgId: "Test.12345",
+            PK: "Race",
+            name: "Integration race",
+        })
+    );
 
     assert.equal(result, "message");
     assert.equal(dynamoCommands.length, 1);
@@ -76,10 +78,7 @@ test("copies a DynamoDB stream record to the distribution table and IoT", async 
     assert.ok(iotCommands[0] instanceof IotPublishCommand);
     assert.equal(iotCommands[0].input.topic, "derby/Test.12345/dist");
     assert.equal(iotCommands[0].input.qos, 0);
-    assert.deepEqual(
-        JSON.parse(iotCommands[0].input.payload),
-        copiedItem
-    );
+    assert.deepEqual(JSON.parse(iotCommands[0].input.payload), copiedItem);
 });
 
 test("assigns increasing epoch-microsecond distribution keys", async (t) => {
@@ -155,10 +154,14 @@ test("continues best-effort processing when propagation fails", async (t) => {
         }
     );
 
-    await assert.doesNotReject(handler(streamEvent({
-        orgId: "Test.12345",
-        PK: "Race",
-    })));
+    await assert.doesNotReject(
+        handler(
+            streamEvent({
+                orgId: "Test.12345",
+                PK: "Race",
+            })
+        )
+    );
     assert.equal(dynamoSend.mock.callCount(), 1);
     assert.equal(iotSend.mock.callCount(), 1);
 });

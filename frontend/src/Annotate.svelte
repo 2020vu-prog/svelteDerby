@@ -6,10 +6,7 @@
     import { theme } from "./stores.js";
 
     $: {
-        document.documentElement.style.setProperty(
-            "--themeFromJS",
-            $theme
-        );
+        document.documentElement.style.setProperty("--themeFromJS", $theme);
     }
 
     export let text = "";

@@ -9,7 +9,7 @@
         selectedDriverList,
         selectedDriverMap,
     } from "./stores.js";
-    import prand from 'pure-rand';
+    import prand from "pure-rand";
 
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
@@ -34,7 +34,7 @@
         await refreshDataFromDb();
         await getChartIsEmpty();
     });
-    function getPrngCars(seed, carList){
+    function getPrngCars(seed, carList) {
         log.debug(`ChartFill getPrngCars ${seed} input: `, carList);
         const g = prand.xoroshiro128plus(seed);
         const rand = (min, max) => {
@@ -44,16 +44,16 @@
         log.debug(`ChartFill getPrngCars ${seed}  gave: `, carList);
     }
     function fisherYates(data, rand) {
-  // for i from n−1 downto 1 do
-  //j ← random integer such that 0 ≤ j ≤ i
-  //exchange a[j] and a[i]
-  for (let i = data.length - 1; i >= 1; --i) {
-    const j = rand(0, i); // such that 0 ≤ j ≤ i
-    const tmp = data[j];
-    data[j] = data[i];
-    data[i] = tmp;
-  }
-}
+        // for i from n−1 downto 1 do
+        //j ← random integer such that 0 ≤ j ≤ i
+        //exchange a[j] and a[i]
+        for (let i = data.length - 1; i >= 1; --i) {
+            const j = rand(0, i); // such that 0 ≤ j ≤ i
+            const tmp = data[j];
+            data[j] = data[i];
+            data[i] = tmp;
+        }
+    }
     async function fillRandom() {
         const fillMap = {};
         if ($selectedDriverList.length == 0) {
@@ -62,7 +62,7 @@
         }
 
         if ($selectedDriverList.length > seeds.length) {
-            pushMessage( {
+            pushMessage({
                 text: `Selected [${$selectedDriverList.length}] drivers for a chart with only [${seeds.length}] seeds`,
                 type: "error",
             });
@@ -70,17 +70,13 @@
         }
 
         log.debug("ChartFill filling: ", params);
-        const loadMe = [...$selectedDriverList]
+        const loadMe = [...$selectedDriverList];
 
-        const prngSeedList=[
-            42,
-            chartBmdSeed,
-            new Date().getTime(),
-        ]
+        const prngSeedList = [42, chartBmdSeed, new Date().getTime()];
         for (const prngSeed of prngSeedList) {
             getPrngCars(prngSeed, loadMe);
         }
-        
+
         log.debug("ChartFill fill order: ", loadMe);
         seeds.forEach((seed) => {
             const heat = seed.slice(0, -1); //'abcde'
@@ -137,7 +133,7 @@
         log.debug("chartFill: updateBoundVars gave:", chartForm);
         chartForm.name = bmdFromDexie.bracketName;
         chartForm.id = bmdFromDexie.SK;
-        chartBmdSeed=bmdFromDexie.at
+        chartBmdSeed = bmdFromDexie.at;
     };
 
     async function getChartIsEmpty() {
@@ -178,7 +174,7 @@
             );
             log.debug("addChartPosition axios success ", response);
             if (response.data.error) {
-                pushMessage( {
+                pushMessage({
                     text: response.data.error,
                     type: "error",
                 });
@@ -190,7 +186,7 @@
     }
 
     const chartForm = { name: undefined };
-    let chartBmdSeed=42
+    let chartBmdSeed = 42;
 </script>
 
 <h3>Fill Chart [Initial Seeds]</h3>
@@ -220,7 +216,7 @@
                 Fill Chart With [{$selectedDriverList.length}] Drivers
             </SpinnerButton>
             <p />
-            Selected: {$selectedDriverList.join(', ')}
+            Selected: {$selectedDriverList.join(", ")}
         {/if}
     {:else}
         <p />
@@ -228,7 +224,7 @@
     {/if}
 
     {#if pieShowing}
-        <PieProgress pieTitle="AutoFill Progress" {piePercent} />
+        <PieProgress pieTitle="AutoFill Progress" piePercent={piePercent} />
     {:else}
         {#each seeds as seed}
             <Card class="mt-3 border border-info">

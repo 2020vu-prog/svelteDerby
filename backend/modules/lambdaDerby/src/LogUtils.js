@@ -36,7 +36,8 @@ class LogUtils {
         const entityFactoryContext =
             entityFactory || requestContext.getEntityFactoryOrNull();
         const orgId =
-            logMessagePayload.orgId || entityFactoryContext?.propOverrides.orgId;
+            logMessagePayload.orgId ||
+            entityFactoryContext?.propOverrides.orgId;
 
         if (!orgId) {
             return { error: "missing orgId" };

@@ -492,16 +492,20 @@ entityFactories["RacePhase"] = class RacePhase extends EntityBase {
         return (this.pt = pt);
     }
     get pendingNeeded() {
-        if (this.pt && this.pt.startsWith("H")) { //hot run
+        if (this.pt && this.pt.startsWith("H")) {
+            //hot run
             return false;
         }
-        if (this.pt && this.pt.startsWith("T")) { //trial run
+        if (this.pt && this.pt.startsWith("T")) {
+            //trial run
             return false;
         }
-        if (this.pt && this.pt.startsWith("F")) { //fun run
+        if (this.pt && this.pt.startsWith("F")) {
+            //fun run
             return false;
         }
-        if (this.pt && this.pt.startsWith("Y")) { //bye run
+        if (this.pt && this.pt.startsWith("Y")) {
+            //bye run
             return false;
         }
         return true;
@@ -680,7 +684,15 @@ entityFactories["RaceStanding"] = class RaceStanding extends EntityBase {
     }
 };
 entityFactories["Participant"] = class Participant extends EntityBase {
-    static members = ["name", "number", "pName", "pType","spon","notes","wLink"];
+    static members = [
+        "name",
+        "number",
+        "pName",
+        "pType",
+        "spon",
+        "notes",
+        "wLink",
+    ];
     static eid = ":PTCP";
     static canBuild(json) {
         return json.PK && json.PK.endsWith(ParticipantEid);
