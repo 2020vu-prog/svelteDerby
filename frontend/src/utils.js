@@ -2,11 +2,6 @@ import log from "loglevel";
 import axios from "axios";
 import { Base64 } from "js-base64";
 import { tutorial as Timer } from "@rr1.us/timer_protobuf";
-const routeRegistry = require("./routes/routeCatalog.js");
-const {
-    canAccessPath,
-    hasNamedPermission,
-} = require("./routes/routeAccess.js");
 import { db } from "./eventDb.js";
 import {
     userEmail as userEmailStore,
@@ -133,44 +128,6 @@ export function getBracketLink(RpRs) {
         return undefined; // No bracketLink for adhoc.
     }
 }
-export function isAllowedRoutePath(routePath, orgIz = null) {
-    const userEmail = get(userEmailStore);
-    // orgIz usually can default to active RaceConfig.
-    //   eventSelection may try to add an event for a different org.
-    //   (it will pass in an override for orgIz)
-    if (!orgIz) {
-        const raceConfig = get(raceConfigStore);
-        orgIz = raceConfig.orgIz;
-    }
-    log.debug("isAllowedRoutePath effective org:", userEmail, orgIz);
-    return canAccessPath(routeRegistry, routePath, {
-        orgIz,
-        raceConfig: get(raceConfigStore),
-        roleMap: get(roleMapStore),
-        userEmail,
-    });
-}
-
-export function hasFrontendPermission(permission, orgIz = null) {
-    const raceConfig = get(raceConfigStore);
-    return hasNamedPermission(permission, {
-        orgIz,
-        raceConfig,
-        roleMap: get(roleMapStore),
-        userEmail: get(userEmailStore),
-    });
-}
-// deprecated
-export function isEmailAllowedRoutePath(email, routePath) {
-    //const raceConfig = get(raceConfigStore);
-    return isAllowedRoutePath(routePath);
-}
-// deprecated
-export async function isUserAllowedRoutePath(routePath) {
-    return isAllowedRoutePath(routePath);
-    //return isEmailAllowedRoutePath(email, routePath);
-}
-
 async function requstPermissionHack(cognitoIdentityId) {
     if (!cognitoIdentityId) {
         log.debug("mfi.bypass rph. no id");

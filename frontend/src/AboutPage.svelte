@@ -24,17 +24,10 @@
         buildGitHash,
         buildGitDirty,
         formatBuildEpoch,
-        isEmailAllowedRoutePath,
     } from "./utils.js";
 
     import { onMount } from "svelte";
-    import {
-        getCacheKey,
-        setCacheKey,
-        userEmail,
-        axios,
-        raceConfig,
-    } from "./stores.js";
+    import { getCacheKey, setCacheKey, axios, raceConfig } from "./stores.js";
     import { db, localConfigDb } from "./eventDb.js";
     import BottomNav from "./BottomNav.svelte";
     import OrgName from "./OrgName.svelte";
@@ -42,8 +35,14 @@
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
     import { push } from "svelte-spa-router";
+    import { createPermissionStore } from "./routes/permissionStore.js";
+    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
     let mounted = false;
+    const canUseManualTimer = createPermissionStore(
+        RoutePermission.MANUAL_FINISH_TIME
+    );
+    const canEditEvent = createPermissionStore(RoutePermission.POWER);
 
     var ecFromDexie;
     var histCountFromDexie = "";
@@ -118,14 +117,6 @@
             });
         }
     }
-
-    function isManualTimerAllowed() {
-        return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
-    }
-
-    function isEventEditAllowed() {
-        return isEmailAllowedRoutePath($userEmail, "/eventAdd/db/Update");
-    }
 </script>
 
 <style>
@@ -179,7 +170,7 @@
 
         <div class="singularSettingDiv">
             <h4>Event Name / Org Name</h4>
-            {#if isEventEditAllowed($userEmail)}
+            {#if $canEditEvent}
                 <span
                     on:click={(event) => {
                         push(`/eventAdd/db/Update`);
@@ -264,7 +255,7 @@
                 <strong>all screens</strong>.
             </h6>
         </div>
-        {#if isManualTimerAllowed($userEmail)}
+        {#if $canUseManualTimer}
             <hr />
             <div class="singularSettingDiv">
                 <h4>Allow Fractional MS timing</h4>

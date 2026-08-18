@@ -12,11 +12,12 @@
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
-    import { isEmailAllowedRoutePath } from "./utils.js";
-    import { userEmail, standingsMap } from "./stores.js";
+    import { createPermissionStore } from "./routes/permissionStore.js";
+    import { standingsMap } from "./stores.js";
     import SpinnerButton from "./SpinnerButton.svelte";
+    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
-    var userHasPermission = false;
+    const canAddChart = createPermissionStore(RoutePermission.CAN_ADD_CHART);
 
     var currentViewMode = undefined;
 
@@ -29,10 +30,6 @@
 
     onMount(async () => {
         refreshDataFromDb();
-        userHasPermission = await isEmailAllowedRoutePath(
-            $userEmail,
-            "/chartAdd"
-        );
     });
     const refreshDataFromDb = async (trigger) => {
         log.debug("refreshDataFromDb data:", trigger);
@@ -237,7 +234,7 @@
                             />
                         </div>
 
-                        {#if userHasPermission}
+                        {#if $canAddChart}
                             <span style="display: inline; float: right">
                                 <span
                                     on:click={(event) => {
@@ -306,7 +303,7 @@
 <br />
 <br />
 
-{#if userHasPermission}
+{#if $canAddChart}
     <SpinnerButton on:click={() => (currentViewMode = getInactiveMode())}>
         View {getInactiveMode(currentViewMode)} Charts
     </SpinnerButton>
@@ -320,7 +317,7 @@
         round. Therefore, the asterisk indicates that an extra heat (2 phases)
         may be required.
     </p>
-    {#if userHasPermission}
+    {#if $canAddChart}
         <!--Allow enought room for the FAB underneath the asterisk explanation.-->
         <br />
         <br />

@@ -2,17 +2,13 @@
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import VirtualList from "@sveltejs/svelte-virtual-list";
-    import { userEmail, uiPageSize, axios, raceConfig } from "./stores.js";
+    import { uiPageSize, axios, raceConfig } from "./stores.js";
     import { safeGetAt } from "./utils.js";
-    import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
     import { push } from "svelte-spa-router";
 
     var orgUserList = [];
-    var editable = false;
     onMount(async () => {
-        log.debug(`DriverList userEmail: ${$userEmail}`);
-        editable = isEditable($userEmail);
         orgUserList = await getOrgUsersAsList();
     });
     const filterMatches = (driver, lclFilter) => {
@@ -36,15 +32,10 @@
             return [];
         }
     }
-    function isEditable(paramEmail) {
-        return isEmailAllowedRoutePath(paramEmail, "/orgUserAdd");
-    }
     function editOrgUser(item) {
         const orgIz = $raceConfig.orgIz;
-        if (editable) {
-            const b64 = btoa(JSON.stringify(item));
-            push(`/orgUserAdd/${b64}`);
-        }
+        const b64 = btoa(JSON.stringify(item));
+        push(`/orgUserAdd/${b64}`);
     }
 </script>
 

@@ -1,10 +1,11 @@
 <script>
     import log from "loglevel";
 
-    import { driverMap, userEmail } from "./stores.js";
-    import { isEmailAllowedRoutePath } from "./utils.js";
+    import { driverMap } from "./stores.js";
+    import { createPermissionStore } from "./routes/permissionStore.js";
     import { push, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
+    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
     export let isWinner;
     export let phaseLetter;
@@ -13,6 +14,9 @@
     export let phaseClass = "btn-warning";
     let name = "";
     export let at;
+    const canUseManualTimer = createPermissionStore(
+        RoutePermission.MANUAL_FINISH_TIME
+    );
     onMount(async () => {
         log.debug(
             `CarAndDriver onMount: ${number} winner ${isWinner} pl ${phaseLetter} `
@@ -22,10 +26,6 @@
     $: {
         log.debug("lookup modified DN:", number);
         name = getDriverName(number, at);
-    }
-
-    function isManualTimerAllowed() {
-        return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
     }
 
     //log.debug("timerLink",timerLink);
@@ -61,7 +61,7 @@
         type="button"
         class="btn {phaseClass} phase-icon-btn"
         on:click={() => {
-            if (isManualTimerAllowed()) gotoTimer();
+            if ($canUseManualTimer) gotoTimer();
         }}
     >
         {phaseLetter}

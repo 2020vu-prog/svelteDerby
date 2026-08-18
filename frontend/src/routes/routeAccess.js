@@ -56,20 +56,7 @@ function hasNamedPermission(permission, context = {}) {
     );
 }
 
-/**
- * Matches a URL path and checks access to the resulting route.
- *
- * @param {import("./routeRegistry.js").RouteRegistry} registry
- * @param {string} path
- * @param {import("./routeRegistry.js").RouteContext} [context]
- * @returns {boolean}
- */
-function canAccessPath(registry, path, context = {}) {
-    return canAccessRoute(registry.match(path), context);
-}
-
 module.exports = {
-    canAccessPath,
     canAccessRoute,
     getRoleList,
     hasNamedPermission,
