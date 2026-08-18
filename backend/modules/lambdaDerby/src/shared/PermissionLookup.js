@@ -3,6 +3,7 @@
 const log = require("loglevel");
 const { permissionMap2 } = require("./permissionLits.js");
 const RoutePermission = require("./RoutePermission.js");
+const RoleName = require("./RoleName.js");
 const powerPerms = { ...permissionMap2 };
 const starterLimitedPerms = {
     [RoutePermission.CAN_ADD_BLOCKS.toString()]: true,
@@ -29,12 +30,12 @@ const announcerPerms = {
 };
 
 const permsByRoleMap = {
-    power: powerPerms, // john harmon, Akron Local org
-    starter: starterPerms,
-    starterLimited: starterLimitedPerms,
-    registration: registrationPerms,
-    video: videoPerms,
-    Announcer: announcerPerms,
+    [RoleName.POWER]: powerPerms,
+    [RoleName.STARTER]: starterPerms,
+    [RoleName.STARTER_LIMITED]: starterLimitedPerms,
+    [RoleName.REGISTRATION]: registrationPerms,
+    [RoleName.VIDEO]: videoPerms,
+    [RoleName.ANNOUNCER]: announcerPerms,
 };
 function roleHasRoutePath(orgIz, roleList, routePath) {
     log.debug("TODO: routepath:");

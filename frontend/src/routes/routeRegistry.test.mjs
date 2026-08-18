@@ -4,6 +4,7 @@ import test from "node:test";
 
 const require = createRequire(import.meta.url);
 const RoutePermission = require("../../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
+const RoleName = require("../../../backend/modules/lambdaDerby/src/shared/RoleName.js");
 const routeRegistry = require("./routeCatalog.js");
 const { canAccessRoute } = require("./routeAccess.js");
 const {
@@ -127,19 +128,19 @@ test("resolves parameter-specific route permission", () => {
 
 test("route access follows named role permissions", () => {
     const paInfo = routeRegistry.match("/pa_info");
-    assert.equal(canAccessRoute(paInfo, context(["Announcer"])), true);
+    assert.equal(canAccessRoute(paInfo, context([RoleName.ANNOUNCER])), true);
     assert.equal(canAccessRoute(paInfo, context([])), false);
     assert.equal(
         canAccessRoute(
             routeRegistry.match("/driverAdd"),
-            context(["Announcer"])
+            context([RoleName.ANNOUNCER])
         ),
         false
     );
     assert.equal(
         canAccessRoute(
             routeRegistry.match("/driverAdd"),
-            context(["registration"])
+            context([RoleName.REGISTRATION])
         ),
         true
     );
@@ -171,7 +172,7 @@ test("admin menus are derived from route permission", () => {
     const announcerItems = getMenuItems(
         routeRegistry,
         MenuSection.ADMIN,
-        context(["Announcer"]),
+        context([RoleName.ANNOUNCER]),
         canAccessRoute
     );
     assert.deepEqual(
@@ -182,7 +183,7 @@ test("admin menus are derived from route permission", () => {
     const timerItems = getMenuItems(
         routeRegistry,
         MenuSection.ADMIN,
-        context(["power"]),
+        context([RoleName.POWER]),
         canAccessRoute
     );
     assert.deepEqual(
@@ -203,7 +204,7 @@ test("admin menus are derived from route permission", () => {
 test("page actions resolve targets and inherit target permission", () => {
     const driverAction = resolveRouteAction(
         routeRegistry.match("/drivers"),
-        context(["registration"])
+        context([RoleName.REGISTRATION])
     );
     assert.equal(driverAction.target, "/driverAdd");
     assert.equal(
@@ -213,7 +214,7 @@ test("page actions resolve targets and inherit target permission", () => {
     assert.equal(
         canAccessRoute(
             routeRegistry.match(driverAction.target),
-            context(["registration"])
+            context([RoleName.REGISTRATION])
         ),
         true
     );
@@ -225,7 +226,9 @@ test("page actions resolve targets and inherit target permission", () => {
 
 test("event add action checks roles for the selected organization", () => {
     const selectedOrgContext = context([], {
-        roleMap: { "user@example.com": { OtherOrg: ["power"] } },
+        roleMap: {
+            "user@example.com": { OtherOrg: [RoleName.POWER] },
+        },
     });
     const action = resolveRouteAction(
         routeRegistry.match("/eventSelection/OtherOrg"),
@@ -243,10 +246,10 @@ test("event add action checks roles for the selected organization", () => {
 });
 
 test("direct event routes check the organization in the route", () => {
-    const routeContext = context(["power"], {
+    const routeContext = context([RoleName.POWER], {
         roleMap: {
             "user@example.com": {
-                OtherOrg: ["power"],
+                OtherOrg: [RoleName.POWER],
                 TestOrg: [],
             },
         },
