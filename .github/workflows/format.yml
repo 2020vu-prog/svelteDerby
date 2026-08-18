@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   format:
-    name: JavaScript and Terraform
+    name: JavaScript, Svelte, and Terraform
     runs-on: ubuntu-latest
 
     steps:
