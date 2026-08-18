@@ -29,7 +29,8 @@
 
     $: activeOrg = $raceConfig?.orgIz;
     $: activeRoles = $roleMap;
-    $: canAnnounce = Boolean(activeOrg && activeRoles) && isAllowedRoutePath("/pa_info");
+    $: canAnnounce =
+        Boolean(activeOrg && activeRoles) && isAllowedRoutePath("/pa_info");
     $: nextRace =
         ($nextOnBlockKey && $racePhaseMap[$nextOnBlockKey]) || undefined;
     $: completedRace = getLatestCompletedStanding($standingsMap);
@@ -134,7 +135,9 @@
                             {lane}
                             carNumber={getCarNumber(completedRace, lane)}
                             participant={participantFor(completedRace, lane)}
-                            isWinner={Boolean(completedRace.isWinner?.(lane, 0))}
+                            isWinner={Boolean(
+                                completedRace.isWinner?.(lane, 0)
+                            )}
                             statuses={getCompletedRaceStatuses(
                                 completedRace,
                                 lane,

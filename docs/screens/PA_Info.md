@@ -1,6 +1,7 @@
 # Screen Requirements: PA Info
 
 ## Purpose
+
 Summarize driver name, car number, race status, notes, and driver sponsor for the cars on the block.
 Do the same for the most recently completed race at the bottom of the screen
 
@@ -8,9 +9,9 @@ Do the same for the most recently completed race at the bottom of the screen
 
 - Route: `/#/pa_info`
 - Route parameters: none
-- Required permission: CanAnnounce
+- Required permission: CanInitiateAnnouncement
 - Menu location: on main menu after charts
-- Visibility rules: users with the `Announcer` role
+- Visibility rules: users granted `CanInitiateAnnouncement`, including the `Announcer` role
 
 ## Related Screens
 
@@ -27,6 +28,7 @@ Do the same for the most recently completed race at the bottom of the screen
 - IndexedDB tables: none; participant details come from `driverMap`
 
 ### API Requests
+
 - none
 
 ### Data Changes
@@ -41,7 +43,7 @@ Display only. Change data on the fly when new data appears in `stores.js`.
 - Display completed-race status using the same status semantics and presentation as `RaceStanding.svelte`.
 - Update the displayed race and participant details reactively when the relevant stores change.
 - Display `pName` when present with the label `Pronunciation:`.
-- Do not render race or driver data for users without `CanAnnounce`.
+- Do not render race or driver data for users without `CanInitiateAnnouncement`.
 - When the starting blocks are empty, display `Starting blocks are empty.`
 - When there are no standings with results, display `No completed races.`
 - Omit missing lane or participant fields instead of displaying placeholder text.
@@ -51,7 +53,7 @@ Display only. Change data on the fly when new data appears in `stores.js`.
 Describe the screen from top to bottom:
 
 1. Header: default from App.svelte + screen name
-2. Layout is grid based.  All components of the grid are similar.  Top row is next on blocks
+2. Layout is grid based. All components of the grid are similar. Top row is next on blocks
    Second row is the most recently finished race. Left column is lane one driver. Right column is lane two.
 
 ## Responsive and Accessibility Requirements
@@ -63,4 +65,5 @@ Describe the screen from top to bottom:
 ## Open Questions
 
 - None
+
 ## References

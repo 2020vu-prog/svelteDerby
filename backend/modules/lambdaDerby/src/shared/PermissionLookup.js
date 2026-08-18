@@ -19,7 +19,7 @@ const videoPerms = {
     CanCaptureVideo: true,
 };
 const announcerPerms = {
-    CanAnnounce: true,
+    CanInitiateAnnouncement: true,
 };
 
 const permsByRoleMap = {
