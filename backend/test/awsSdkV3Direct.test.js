@@ -78,11 +78,14 @@ test("S3 listing follows v3 continuation tokens", async () => {
 
 test("AnnounceResults dispatches S3 writes with PutObjectCommand", async () => {
     const s3 = { send: jest.fn().mockResolvedValue({}) };
-    const announce = new AnnounceResults({}, {
-        s3,
-        sns: { send: jest.fn() },
-        polly: { send: jest.fn() },
-    });
+    const announce = new AnnounceResults(
+        {},
+        {
+            s3,
+            sns: { send: jest.fn() },
+            polly: { send: jest.fn() },
+        }
+    );
     process.env.DstBucket = "media-bucket";
 
     await announce.saveToS3("event", Buffer.from("audio"));
@@ -102,11 +105,14 @@ test("AnnounceResults buffers the v3 Polly audio stream before S3 upload", async
         }),
     };
     const s3 = { send: jest.fn().mockResolvedValue({}) };
-    const announce = new AnnounceResults({}, {
-        polly,
-        s3,
-        sns: { send: jest.fn() },
-    });
+    const announce = new AnnounceResults(
+        {},
+        {
+            polly,
+            s3,
+            sns: { send: jest.fn() },
+        }
+    );
     process.env.DstBucket = "media-bucket";
 
     await announce.submitToPolly("<speak>Test</speak>", "event");
@@ -118,11 +124,14 @@ test("AnnounceResults buffers the v3 Polly audio stream before S3 upload", async
 test("AnnounceResults does not upload when Polly returns no audio stream", async () => {
     const polly = { send: jest.fn().mockResolvedValue({}) };
     const s3 = { send: jest.fn() };
-    const announce = new AnnounceResults({}, {
-        polly,
-        s3,
-        sns: { send: jest.fn() },
-    });
+    const announce = new AnnounceResults(
+        {},
+        {
+            polly,
+            s3,
+            sns: { send: jest.fn() },
+        }
+    );
 
     await expect(
         announce.submitToPolly("<speak>Test</speak>", "event")

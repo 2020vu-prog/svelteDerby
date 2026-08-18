@@ -120,8 +120,8 @@ resource "aws_s3_bucket" "dstBucket" {
   bucket_prefix = local.S3DistBucketPrefix
 }
 resource "aws_s3_bucket_acl" "dstBucket" {
-  bucket = aws_s3_bucket.dstBucket.id
-  acl    = "private"
+  bucket     = aws_s3_bucket.dstBucket.id
+  acl        = "private"
   depends_on = [aws_s3_bucket_ownership_controls.dstBucket]
 
 }
@@ -156,13 +156,13 @@ resource "aws_s3_bucket_cors_configuration" "dstBucket" {
 module "derbyDynamoLambda" {
   source = "./modules/lambdaDynamo"
 
-  DistDbArn         = aws_dynamodb_table.derby-distribution.arn
-  DynamoDbArn       = aws_dynamodb_table.derby-dynamodb-table.arn
-  DynamoDbStreamArn = aws_dynamodb_table.derby-dynamodb-table.stream_arn
-  DeployEnvironment = var.DeployEnvironment
-  AwsRegion         = var.AwsRegion
-  S3DistBucket      = aws_s3_bucket.dstBucket.id
-  S3DistBucketArn   = aws_s3_bucket.dstBucket.arn
+  DistDbArn                         = aws_dynamodb_table.derby-distribution.arn
+  DynamoDbArn                       = aws_dynamodb_table.derby-dynamodb-table.arn
+  DynamoDbStreamArn                 = aws_dynamodb_table.derby-dynamodb-table.stream_arn
+  DeployEnvironment                 = var.DeployEnvironment
+  AwsRegion                         = var.AwsRegion
+  S3DistBucket                      = aws_s3_bucket.dstBucket.id
+  S3DistBucketArn                   = aws_s3_bucket.dstBucket.arn
   ManagedRolePermissionsBoundaryArn = var.ManagedRolePermissionsBoundaryArn
 
 }

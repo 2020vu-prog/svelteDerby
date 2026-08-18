@@ -1,7 +1,9 @@
 const DdbUtils = require("../modules/lambdaDerby/src/DdbUtils.js");
 const EntityFactory = require("../modules/lambdaDerby/src/shared/EntityFactory.js");
 const requestContext = require("../modules/lambdaDerby/src/RequestContext.js");
-const { marshall } = require("../modules/lambdaDerby/src/node_modules/@aws-sdk/util-dynamodb");
+const {
+    marshall,
+} = require("../modules/lambdaDerby/src/node_modules/@aws-sdk/util-dynamodb");
 
 function buildDdbUtils() {
     const ddbUtils = new DdbUtils(
@@ -54,11 +56,12 @@ describe("DdbUtils addSingle", () => {
 
         const result = await requestContext.withEntityFactory(
             overrideFactory,
-            () => ddbUtils.addSingle({
-                PK: ":RS",
-                SK: "standing1",
-                cn: ["101", "102"],
-            })
+            () =>
+                ddbUtils.addSingle({
+                    PK: ":RS",
+                    SK: "standing1",
+                    cn: ["101", "102"],
+                })
         );
 
         expect(result.status).toBe("ok");
@@ -108,8 +111,16 @@ describe("DdbUtils unmarshalling", () => {
         const ddbUtils = buildDdbUtils();
         const data = {
             Items: [
-                marshall({ PK: "event1:RS", SK: "standing1", cn: ["101", "102"] }),
-                marshall({ PK: "event1:RS", SK: "standing2", cn: ["103", "104"] }),
+                marshall({
+                    PK: "event1:RS",
+                    SK: "standing1",
+                    cn: ["101", "102"],
+                }),
+                marshall({
+                    PK: "event1:RS",
+                    SK: "standing2",
+                    cn: ["103", "104"],
+                }),
             ],
         };
 

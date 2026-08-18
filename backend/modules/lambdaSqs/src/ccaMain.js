@@ -12,7 +12,11 @@ const {
     UpdateCommand,
 } = require("@aws-sdk/lib-dynamodb");
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
-const { GetObjectCommand, PutObjectCommand, S3Client } = require("@aws-sdk/client-s3");
+const {
+    GetObjectCommand,
+    PutObjectCommand,
+    S3Client,
+} = require("@aws-sdk/client-s3");
 const { randomUUID } = require("node:crypto");
 const s3 = new S3Client({ region: process.env.AwsRegion });
 const ddbClient = new DynamoDBClient({ region: process.env.AwsRegion });
@@ -131,104 +135,116 @@ const unmarshallResultsToArray = (data, factory) => {
     return rc;
 };
 /*
-**  CCA gets all jumbled if multiple requests are in flight concurrently.
-**  use a dynamodb optimistic lock (condition expression) to ensure only 1 CCA runs
-**  in any given 20 minute window.
-**
-*/
-async function throwIfRecentCcaRequested (qsp) {
-    if(qsp.ccType !== "CCA"){
-        log.debug("throwIfRecentCcaRequested: allow type: " + JSON.stringify(qsp));
-        return
+ **  CCA gets all jumbled if multiple requests are in flight concurrently.
+ **  use a dynamodb optimistic lock (condition expression) to ensure only 1 CCA runs
+ **  in any given 20 minute window.
+ **
+ */
+async function throwIfRecentCcaRequested(qsp) {
+    if (qsp.ccType !== "CCA") {
+        log.debug(
+            "throwIfRecentCcaRequested: allow type: " + JSON.stringify(qsp)
+        );
+        return;
     }
-    const [key,updateItem]=getOptimisticCcaStructs(qsp.orgId,false)
-    const oldItem=await getOldOptimisticCcaLock(qsp.orgId)
-    if (!oldItem){
-        throw "oldItem not found" +JSON.stringify(key)
+    const [key, updateItem] = getOptimisticCcaStructs(qsp.orgId, false);
+    const oldItem = await getOldOptimisticCcaLock(qsp.orgId);
+    if (!oldItem) {
+        throw "oldItem not found" + JSON.stringify(key);
     }
-    const ccaAge=Date.now()-oldItem.updatedAt;
+    const ccaAge = Date.now() - oldItem.updatedAt;
     log.debug("throwIfRecentCcaRequested: ccaAge : " + JSON.stringify(ccaAge));
-    if(ccaAge<(1200*1000) ){ // 20 minutes
+    if (ccaAge < 1200 * 1000) {
+        // 20 minutes
         throw new RecentCcaRequestError(
-            "oldItem recently updated:" + ccaAge + " item:" + JSON.stringify(oldItem)
+            "oldItem recently updated:" +
+                ccaAge +
+                " item:" +
+                JSON.stringify(oldItem)
         );
     }
-    log.debug("throwIfRecentCcaRequested: updating : " + JSON.stringify(oldItem));
-
+    log.debug(
+        "throwIfRecentCcaRequested: updating : " + JSON.stringify(oldItem)
+    );
 
     // should throw if update fails condition
-    await documentClient.send(new UpdateCommand({
-        TableName: process.env.DistDbTable,
-        Key: key,
-        UpdateExpression: "set #lockId= :lockIdNew, #updatedAt= :updatedAtNew, #TTL= :TTLNew ",
+    await documentClient.send(
+        new UpdateCommand({
+            TableName: process.env.DistDbTable,
+            Key: key,
+            UpdateExpression:
+                "set #lockId= :lockIdNew, #updatedAt= :updatedAtNew, #TTL= :TTLNew ",
 
-        ConditionExpression: "#lockId = :lockIdOld",
-        ExpressionAttributeNames: { 
-            "#lockId": "lockId",
-            "#updatedAt": "updatedAt",
-            "#TTL": "TTL",
-         },
-        ExpressionAttributeValues: {
-          ":lockIdOld": oldItem.lockId,
-          ":lockIdNew": updateItem.lockId,
-          ":TTLNew": updateItem.TTL,
-          ":updatedAtNew": updateItem.updatedAt,
-        },
-     }));
-    log.debug("throwIfRecentCcaRequested: updated : " + JSON.stringify(updateItem));
+            ConditionExpression: "#lockId = :lockIdOld",
+            ExpressionAttributeNames: {
+                "#lockId": "lockId",
+                "#updatedAt": "updatedAt",
+                "#TTL": "TTL",
+            },
+            ExpressionAttributeValues: {
+                ":lockIdOld": oldItem.lockId,
+                ":lockIdNew": updateItem.lockId,
+                ":TTLNew": updateItem.TTL,
+                ":updatedAtNew": updateItem.updatedAt,
+            },
+        })
+    );
+    log.debug(
+        "throwIfRecentCcaRequested: updated : " + JSON.stringify(updateItem)
+    );
 }
-function getOptimisticCcaStructs(orgId,init=false){
+function getOptimisticCcaStructs(orgId, init = false) {
     const uuid = randomUUID();
-    const key= { 
+    const key = {
         DP: `_LockCCA_:${orgId}`,
         DS: 17,
-    }
+    };
     const item = {
         DP: key.DP,
         DS: key.DS,
         orgId,
         lockId: uuid,
         updatedAt: Date.now(),
-        TTL: (Date.now()/1000)+(24*3600), //24 hrs
+        TTL: Date.now() / 1000 + 24 * 3600, //24 hrs
     };
-    if(init){
+    if (init) {
         // priming write only, initialize with stale time
-        item.updatedAt=3 //very old
+        item.updatedAt = 3; //very old
     }
 
-    return [key,item]
+    return [key, item];
 }
-async function getOldOptimisticCcaLock(orgId){
+async function getOldOptimisticCcaLock(orgId) {
+    const [key, putItem] = getOptimisticCcaStructs(orgId, true);
 
-    const [key,putItem]=getOptimisticCcaStructs(orgId,true)
+    const { Item } = await documentClient.send(
+        new GetCommand({
+            TableName: process.env.DistDbTable,
+            Key: key,
+        })
+    );
+    const oldItem = Item;
 
-    const { Item } = await documentClient.send(new GetCommand({
-        TableName: process.env.DistDbTable,
-        Key: key,
-    }));
-    const oldItem=Item;
-
-    if(oldItem && oldItem.lockId){
+    if (oldItem && oldItem.lockId) {
         log.debug("getOldOptimisticCcaLock: found: " + JSON.stringify(oldItem));
         return oldItem;
-    }
-    else{
-        log.debug("getOldOptimisticCcaLock: NOT found: " + JSON.stringify(oldItem));
+    } else {
+        log.debug(
+            "getOldOptimisticCcaLock: NOT found: " + JSON.stringify(oldItem)
+        );
         // fall thru
     }
-       
-       
-       
-       
-  
-        log.debug("getOldOptimisticCcaLock: init: " + JSON.stringify(putItem));
-        const prc = await documentClient.send(new PutCommand({
+
+    log.debug("getOldOptimisticCcaLock: init: " + JSON.stringify(putItem));
+    const prc = await documentClient.send(
+        new PutCommand({
             TableName: process.env.DistDbTable,
-            Item: putItem, 
-            ConditionExpression: 'attribute_not_exists(DP)',
-        }));
-        log.debug("getOldOptimisticCcaLock: did init: " + JSON.stringify(prc));
-        return putItem
+            Item: putItem,
+            ConditionExpression: "attribute_not_exists(DP)",
+        })
+    );
+    log.debug("getOldOptimisticCcaLock: did init: " + JSON.stringify(prc));
+    return putItem;
 }
 async function ddbQueryRaceHistory(qsp) {
     var containsValues = {};
@@ -262,8 +278,8 @@ function getPutObjectName(msg, now) {
         return "archive/" + msg.orgIz + "/" + msg.orgId + "/" + now + ".json";
     }
 }
-async function putS3(msg, newItems,oldItems) {
-    const items=[...newItems,...oldItems]
+async function putS3(msg, newItems, oldItems) {
+    const items = [...newItems, ...oldItems];
     const now = new Date().getTime();
     const putObjectName = getPutObjectName(msg, now);
     var params = {
@@ -289,7 +305,7 @@ async function putS3(msg, newItems,oldItems) {
         await doBulkCleanup(newItems);
     } catch (err) {
         log.error("s3put [block] failed:", err); // successful response
-        throw err
+        throw err;
     }
 }
 const getS3 = async (keys) => {
@@ -353,7 +369,7 @@ exports.handler = async function (event, context) {
         log.debug("sqs b4PutAndGet:", body);
         try {
             const parsedQsp = JSON.parse(body);
-            await throwIfRecentCcaRequested(parsedQsp)
+            await throwIfRecentCcaRequested(parsedQsp);
             const items = await ddbQueryRaceHistory(parsedQsp);
 
             const keys = getKeyNames(items);

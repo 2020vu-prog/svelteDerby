@@ -1,27 +1,22 @@
-console.log("pwd:",process.cwd());
+console.log("pwd:", process.cwd());
 
 const EntityFactory = require("../modules/lambdaDerby/src/shared/EntityFactory.js");
-        const nowEpochSeconds = Math.round(new Date().getTime() / 1000);
-        const entityFactory = new EntityFactory({
-            orgIz: "testme",
-            by: "tjest",
-        });
+const nowEpochSeconds = Math.round(new Date().getTime() / 1000);
+const entityFactory = new EntityFactory({
+    orgIz: "testme",
+    by: "tjest",
+});
 
+const cut = {
+    PK: "myorgtestevent:OrgPerm",
 
+    SK: "xyz.com",
+    orgIz: "xyz",
+    dn: "Example User",
+    roleList: ["xyyyrole"],
+};
 
-const cut={
-
-    "PK": "myorgtestevent:OrgPerm",
-
-    "SK": "xyz.com",
-    "orgIz": "xyz",
-    "dn": "Example User",
-    "roleList": [
-        "xyyyrole"
-    ]
-}
-
-  const cobj = entityFactory.build(cut);
+const cobj = entityFactory.build(cut);
 cobj.preWrite();
 console.log(cobj);
 

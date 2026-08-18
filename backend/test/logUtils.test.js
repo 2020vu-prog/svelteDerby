@@ -90,9 +90,9 @@ describe("LogUtils", () => {
     test("requires orgId and message", async () => {
         const { ddbUtils, logUtils } = buildLogUtils();
 
-        await expect(logUtils.persistLogMessage("missing org")).resolves.toEqual(
-            { error: "missing orgId" }
-        );
+        await expect(
+            logUtils.persistLogMessage("missing org")
+        ).resolves.toEqual({ error: "missing orgId" });
         await expect(
             logUtils.persistLogMessage({ orgId: "event1" })
         ).resolves.toEqual({ error: "missing message" });

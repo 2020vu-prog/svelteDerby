@@ -1,7 +1,5 @@
 const ApiRouter = require("../modules/lambdaDerby/src/ApiRouter.js");
-const RoutePermission = require(
-    "../modules/lambdaDerby/src/RoutePermission.js"
-);
+const RoutePermission = require("../modules/lambdaDerby/src/RoutePermission.js");
 
 const CAN_EXAMPLE = new RoutePermission("CanExample");
 const CAN_PLUGIN = new RoutePermission("CanPlugin");
@@ -64,16 +62,19 @@ test("supports plugins that register routes dynamically", () => {
 
 test("requires every route to declare a permission", () => {
     const { router } = buildRouter();
-    expect(() => router.register("/missing", { handler: async () => {} }))
-        .toThrow("Route /missing requires a permission");
+    expect(() =>
+        router.register("/missing", { handler: async () => {} })
+    ).toThrow("Route /missing requires a permission");
 });
 
 test("requires enum-like RoutePermission values instead of raw strings", () => {
     const { router } = buildRouter();
-    expect(() => router.register("/string", {
-        permission: "CanExample",
-        handler: async () => {},
-    })).toThrow("Route permission must be a RoutePermission");
+    expect(() =>
+        router.register("/string", {
+            permission: "CanExample",
+            handler: async () => {},
+        })
+    ).toThrow("Route permission must be a RoutePermission");
     expect(String(CAN_EXAMPLE)).toBe("CanExample");
     expect(JSON.stringify(CAN_EXAMPLE)).toBe('"CanExample"');
 });
@@ -101,8 +102,9 @@ test("public context-free routes skip authentication and authorization", async (
         handler: async () => "public result",
     });
 
-    await expect(router.dispatch({ path: "/app/public" }))
-        .resolves.toBe("public result");
+    await expect(router.dispatch({ path: "/app/public" })).resolves.toBe(
+        "public result"
+    );
     expect(dependencies.authenticate).not.toHaveBeenCalled();
     expect(dependencies.authorize).not.toHaveBeenCalled();
     expect(dependencies.loadContext).not.toHaveBeenCalled();
@@ -116,7 +118,9 @@ test("enforces context and frozen-event policies", async () => {
         permission: CAN_EXAMPLE,
         handler: async () => "unexpected",
     });
-    await expect(router.dispatch({ path: "/app/missing-org" })).resolves.toEqual({
+    await expect(
+        router.dispatch({ path: "/app/missing-org" })
+    ).resolves.toEqual({
         error: "Unable to determine orgId",
     });
 
@@ -134,6 +138,7 @@ test("rejects duplicate route registrations", () => {
     const { router } = buildRouter();
     const definition = { permission: CAN_EXAMPLE, handler: async () => {} };
     router.register("/duplicate", definition);
-    expect(() => router.register("/duplicate", definition))
-        .toThrow("Route /duplicate is already registered");
+    expect(() => router.register("/duplicate", definition)).toThrow(
+        "Route /duplicate is already registered"
+    );
 });

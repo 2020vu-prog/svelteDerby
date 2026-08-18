@@ -14,22 +14,8 @@ describe("lambdaDerby utils", () => {
 
     test("getShaCars returns deterministic seeded car order", () => {
         const cars = [
-            101,
-            102,
-            103,
-            104,
-            105,
-            106,
-            107,
-            108,
-            109,
-            110,
-            111,
-            112,
-            113,
-            114,
-            115,
-            116,
+            101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113,
+            114, 115, 116,
         ];
 
         const firstOrder = getShaCars("2026-07-30T12:00:00.000Z", cars);

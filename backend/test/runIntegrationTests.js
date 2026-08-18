@@ -34,8 +34,7 @@ function runJest(env) {
 
 async function validateMqttMessages(collector) {
     const chartHeat = (message, heatNumber) =>
-        message.PK === `${orgId}:Bp` &&
-        message.SK.endsWith(`:${heatNumber}`);
+        message.PK === `${orgId}:Bp` && message.SK.endsWith(`:${heatNumber}`);
     const expectations = [
         {
             name: "event configuration",
@@ -76,7 +75,9 @@ async function validateMqttMessages(collector) {
     const missing = await collector.waitForAll(expectations);
 
     if (collector.parseErrors.length > 0) {
-        throw new Error(`MQTT JSON parse errors: ${collector.parseErrors.length}`);
+        throw new Error(
+            `MQTT JSON parse errors: ${collector.parseErrors.length}`
+        );
     }
     if (collector.messages.some((message) => message.topic !== mqttTopic)) {
         throw new Error("MQTT collector received an unexpected topic");

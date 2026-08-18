@@ -42,7 +42,10 @@ test("logs received messages in arrival order as JSON Lines", () => {
             .trim()
             .split("\n")
             .map(JSON.parse);
-        expect(records.map((record) => record.payload.SK)).toEqual(["01", "02"]);
+        expect(records.map((record) => record.payload.SK)).toEqual([
+            "01",
+            "02",
+        ]);
         expect(records.map((record) => record.index)).toEqual([0, 1]);
     } finally {
         fs.rmSync(logFilePath, { force: true });
@@ -64,5 +67,7 @@ test("diagnostic example contains ordered valid JSON Lines", () => {
         Array.from({ length: 57 }, (_, index) => index)
     );
     expect(records.every((record) => record.type === "message")).toBe(true);
-    expect(records.every((record) => record.topic === "derby/Test.e5fd0/dist")).toBe(true);
+    expect(
+        records.every((record) => record.topic === "derby/Test.e5fd0/dist")
+    ).toBe(true);
 });

@@ -20,8 +20,7 @@ const jwk = {
             e: "AQAB",
             kid: "S+Ayud3KpAI5T/Sg5+i6+WoaqqJ16plJBPaVC3bxPS8=",
             kty: "RSA",
-            n:
-                "rqMEesFEekFNO_RDgXEGt1xkK1VtvedhcJWIeNQUq12hWvsU0-TvmVgKdQmu9NVk0DS99SoGlsjFgyKJ4nY_Aknn8Qj2NTucklDIfpa_6psbce6b3IRkSBGqN5Y5lhdF0jgoLINjtL6aC07ykC_nk-ekqXCQFlbsQr9mtIyCsdzATsY0z2q2WXW0YfGJZOHMOokacdovYvU-LHW9DTF2m5JeoRkJ_DB-C6_WFXJYQ8_myVUekO6EjvGsUvbzrhsTI5pRpZw5r284pl-8mrv_JjC_F_LNg_mPNP2bbwqLzdOHXRHMLs2sSk5kAPj-LBAwKXJmtNkKRgzOtsjub0brsw",
+            n: "rqMEesFEekFNO_RDgXEGt1xkK1VtvedhcJWIeNQUq12hWvsU0-TvmVgKdQmu9NVk0DS99SoGlsjFgyKJ4nY_Aknn8Qj2NTucklDIfpa_6psbce6b3IRkSBGqN5Y5lhdF0jgoLINjtL6aC07ykC_nk-ekqXCQFlbsQr9mtIyCsdzATsY0z2q2WXW0YfGJZOHMOokacdovYvU-LHW9DTF2m5JeoRkJ_DB-C6_WFXJYQ8_myVUekO6EjvGsUvbzrhsTI5pRpZw5r284pl-8mrv_JjC_F_LNg_mPNP2bbwqLzdOHXRHMLs2sSk5kAPj-LBAwKXJmtNkKRgzOtsjub0brsw",
             use: "sig",
         },
         {
@@ -29,8 +28,7 @@ const jwk = {
             e: "AQAB",
             kid: "6J+i8nxlzqrjK7XQjnGYKq2GELZKtLlWD6lv8YWEznU=",
             kty: "RSA",
-            n:
-                "pDd3dFVNIlUxtQGk9akJPguhBNB3P2uhoF7NWm-b2t-t9tkJQKj1EwBWn5_t5QIULd8H20uEs5J_akIG_7cD0xkz5Ii2sxRmuxffWWqcj1GsGNlvQHeJMYVzJBist4WF6QXC83R1P2mTePbhkY5KmoePeJpOFiQ6XaWtWdxonUtsQOiXM8lfhCVIgsPPMXsZHy3YrCP72oSEMmBjmPgSdjL8JIqFSPUHvxr9uswBESBppgq71ZW7Vmjdkx6HnaSWVb07HYQhfQRGR8PQCvU-WLYrKcoqJVSAfWY6SrTRsjKJCnGPbTTOmEug_kudpqmw8VtUCVOZKk04mIAxy8A64Q",
+            n: "pDd3dFVNIlUxtQGk9akJPguhBNB3P2uhoF7NWm-b2t-t9tkJQKj1EwBWn5_t5QIULd8H20uEs5J_akIG_7cD0xkz5Ii2sxRmuxffWWqcj1GsGNlvQHeJMYVzJBist4WF6QXC83R1P2mTePbhkY5KmoePeJpOFiQ6XaWtWdxonUtsQOiXM8lfhCVIgsPPMXsZHy3YrCP72oSEMmBjmPgSdjL8JIqFSPUHvxr9uswBESBppgq71ZW7Vmjdkx6HnaSWVb07HYQhfQRGR8PQCvU-WLYrKcoqJVSAfWY6SrTRsjKJCnGPbTTOmEug_kudpqmw8VtUCVOZKk04mIAxy8A64Q",
             use: "sig",
         },
     ],
@@ -47,8 +45,7 @@ const verifyToken = (token) => {
         //const x= jwt.verify(token, pem, { algorithms: ['RS256'] });
         const x = jwt.verify(token, pem, {
             algorithms: ["RS256"],
-            iss:
-                "Xhttps://cognito-idp.us-east-2.amazonaws.com/us-east-2_gHYAogcpy",
+            iss: "Xhttps://cognito-idp.us-east-2.amazonaws.com/us-east-2_gHYAogcpy",
             aud: "XX755hlhpgiomc38j11um13euoae",
         });
         log.debug("verified :", x);

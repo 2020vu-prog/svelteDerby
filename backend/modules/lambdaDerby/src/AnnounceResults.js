@@ -5,7 +5,10 @@ const {
     IoTDataPlaneClient,
     PublishCommand: IotPublishCommand,
 } = require("@aws-sdk/client-iot-data-plane");
-const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
+const {
+    PollyClient,
+    SynthesizeSpeechCommand,
+} = require("@aws-sdk/client-polly");
 const { PutObjectCommand, S3Client } = require("@aws-sdk/client-s3");
 const {
     PublishCommand: SnsPublishCommand,
@@ -268,10 +271,9 @@ class AnnounceResults {
     async formatCallToRaceAnnouncement(orgId, tgtRs) {
         await this.lookupNames(tgtRs.carNumbers, orgId);
         var rc = "";
-        const [
-            spokenCarAndDriver1,
-            spokenCarAndDriver2,
-        ] = tgtRs.carNumbers.map((cn) => this.getSpokenCarAndDriver(cn));
+        const [spokenCarAndDriver1, spokenCarAndDriver2] = tgtRs.carNumbers.map(
+            (cn) => this.getSpokenCarAndDriver(cn)
+        );
 
         rc += `Call to race for ${spokenCarAndDriver1}.<p/>  Call to Race for ${spokenCarAndDriver2}.`;
         const ssml = `<speak>${rc}</speak>`;
