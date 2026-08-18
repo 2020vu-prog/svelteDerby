@@ -15,9 +15,8 @@
         raceConfig,
         timerColumnMappings,
         timerColumnsDuration,
-        userEmail,
     } from "./stores.js";
-    import { getTimerPbConfig, isEmailAllowedRoutePath } from "./utils.js";
+    import { getTimerPbConfig } from "./utils.js";
 
     const {
         buildTimerColumnRaces,
@@ -29,7 +28,6 @@
     const MIN_COLUMNS = 2;
     const MAX_COLUMNS = 4;
     const DEFAULT_DURATION = "PT20M";
-    const PAGE_ROUTE = "/timerColumns";
 
     let mappings = ensureMappingCount($timerColumnMappings);
     let duration = $timerColumnsDuration || DEFAULT_DURATION;
@@ -44,14 +42,13 @@
     let pruneInterval;
     let historyLoadVersion = 0;
 
-    $: authorized = isEmailAllowedRoutePath($userEmail, PAGE_ROUTE);
     $: configuredMappings = getConfiguredMappings(mappings);
     $: mappingConflicts = getMappingConflicts(mappings);
     $: selectedTimerIds = [
         ...new Set(configuredMappings.map((mapping) => mapping.timerId)),
     ];
     $: duplicateMapping = mappingConflicts.length > 0;
-    $: if (mounted && authorized && !initialized) initialize();
+    $: if (mounted && !initialized) initialize();
 
     onMount(() => {
         mounted = true;
@@ -299,140 +296,134 @@
 
 <h3>Timer Columns</h3>
 
-{#if !authorized}
-    <div class="access-denied">CanTimerConfig permission is required.</div>
-{:else}
-    <details
-        class="controls"
-        aria-label="Timer column configuration"
-        bind:open={configurationOpen}
-    >
-        <summary>Configuration</summary>
-        <div class="mapping-grid">
-            {#each mappings as mapping, index (mapping.virtualLane)}
-                <fieldset>
-                    <legend>Virtual Lane {mapping.virtualLane}</legend>
-                    <label>
-                        Timer
-                        <select
-                            bind:value={mapping.timerName}
-                            on:change={() => timerSelectionChanged(index)}
-                        >
-                            <option value="">Select timer</option>
-                            {#each timerOptions as option}
-                                <option value={option.timerName}>
-                                    {option.timerName}
-                                </option>
-                            {/each}
-                        </select>
-                    </label>
-                    {#if mapping.timerId}
-                        <div class="timer-client-id">
-                            Client ID: {mapping.timerId}
-                        </div>
-                    {/if}
-                    <label>
-                        Physical lane
-                        <select
-                            bind:value={mapping.pinName}
-                            on:change={pinSelectionChanged}
-                        >
-                            <option value={Timer.PinName.lane1}>Lane 1</option>
-                            <option value={Timer.PinName.lane2}>Lane 2</option>
-                        </select>
-                    </label>
-                </fieldset>
+<details
+    class="controls"
+    aria-label="Timer column configuration"
+    bind:open={configurationOpen}
+>
+    <summary>Configuration</summary>
+    <div class="mapping-grid">
+        {#each mappings as mapping, index (mapping.virtualLane)}
+            <fieldset>
+                <legend>Virtual Lane {mapping.virtualLane}</legend>
+                <label>
+                    Timer
+                    <select
+                        bind:value={mapping.timerName}
+                        on:change={() => timerSelectionChanged(index)}
+                    >
+                        <option value="">Select timer</option>
+                        {#each timerOptions as option}
+                            <option value={option.timerName}>
+                                {option.timerName}
+                            </option>
+                        {/each}
+                    </select>
+                </label>
+                {#if mapping.timerId}
+                    <div class="timer-client-id">
+                        Client ID: {mapping.timerId}
+                    </div>
+                {/if}
+                <label>
+                    Physical lane
+                    <select
+                        bind:value={mapping.pinName}
+                        on:change={pinSelectionChanged}
+                    >
+                        <option value={Timer.PinName.lane1}>Lane 1</option>
+                        <option value={Timer.PinName.lane2}>Lane 2</option>
+                    </select>
+                </label>
+            </fieldset>
+        {/each}
+    </div>
+
+    <div class="control-row">
+        <button
+            type="button"
+            disabled={mappings.length >= MAX_COLUMNS}
+            on:click={addVirtualLane}
+        >
+            Add virtual lane
+        </button>
+        <button
+            type="button"
+            disabled={mappings.length <= MIN_COLUMNS}
+            on:click={removeVirtualLane}
+        >
+            Remove virtual lane
+        </button>
+        <label class="duration-control">
+            History duration
+            <input bind:value={duration} placeholder="PT20M" />
+        </label>
+        <SpinnerButton on:click={refreshHistory} spinning={loadingHistory}>
+            Load History
+        </SpinnerButton>
+    </div>
+
+    {#if duplicateMapping}
+        <div class="configuration-error">
+            <strong>Duplicate physical timer lane:</strong>
+            {#each mappingConflicts as conflict}
+                <div>
+                    Virtual lanes {conflict.virtualLanes.join(" and ")}
+                    both use client {conflict.timerId}, physical lane
+                    {conflict.pinName}{#if conflict.timerNames.length > 1}
+                        (configured as {conflict.timerNames.join(
+                            " and "
+                        )}){/if}. A physical timer lane can only be used once.
+                </div>
             {/each}
         </div>
-
-        <div class="control-row">
-            <button
-                type="button"
-                disabled={mappings.length >= MAX_COLUMNS}
-                on:click={addVirtualLane}
-            >
-                Add virtual lane
-            </button>
-            <button
-                type="button"
-                disabled={mappings.length <= MIN_COLUMNS}
-                on:click={removeVirtualLane}
-            >
-                Remove virtual lane
-            </button>
-            <label class="duration-control">
-                History duration
-                <input bind:value={duration} placeholder="PT20M" />
-            </label>
-            <SpinnerButton on:click={refreshHistory} spinning={loadingHistory}>
-                Load History
-            </SpinnerButton>
-        </div>
-
-        {#if duplicateMapping}
-            <div class="configuration-error">
-                <strong>Duplicate physical timer lane:</strong>
-                {#each mappingConflicts as conflict}
-                    <div>
-                        Virtual lanes {conflict.virtualLanes.join(" and ")}
-                        both use client {conflict.timerId}, physical lane
-                        {conflict.pinName}{#if conflict.timerNames.length > 1}
-                            (configured as {conflict.timerNames.join(
-                                " and "
-                            )}){/if}. A physical timer lane can only be used
-                        once.
-                    </div>
-                {/each}
-            </div>
-        {/if}
-    </details>
-
-    {#each selectedTimerIds as timerId (timerId)}
-        <TimerSubscribeStub
-            timerId={timerId}
-            verbose={false}
-            on:timerDataList={(event) =>
-                handleLiveTimerData(timerId, event.detail)}
-        />
-    {/each}
-
-    {#if configuredMappings.length < MIN_COLUMNS}
-        <p>Select at least two timer lanes to display timing data.</p>
-    {:else if !races.length && !loadingHistory}
-        <p>No timing data is available within {duration}.</p>
     {/if}
+</details>
 
-    {#each races as race (race.key)}
-        <section class="race">
-            <Annotate text={raceLabel(race)} />
-            <div
-                class="race-grid"
-                style={`--timer-column-count: ${mappings.length}`}
-            >
-                {#each race.lanes as lane (lane.mapping.virtualLane)}
-                    <article class:winner={lane.result?.deltaMicros === 0}>
-                        <h4>Virtual Lane {lane.mapping.virtualLane}</h4>
-                        {#if lane.result}
-                            <strong class="placement">
-                                {lane.result.placeLabel} place
-                            </strong>
-                            <div class="gps-time">
-                                {formatGpsTime(lane.result.gpsMicros)}
-                            </div>
-                            {#if formatWinningMargin(lane.result)}
-                                <div class="delta">
-                                    {formatWinningMargin(lane.result)}
-                                </div>
-                            {/if}
-                        {:else}
-                            <div class="pending">Pending</div>
-                        {/if}
-                    </article>
-                {/each}
-            </div>
-        </section>
-    {/each}
+{#each selectedTimerIds as timerId (timerId)}
+    <TimerSubscribeStub
+        timerId={timerId}
+        verbose={false}
+        on:timerDataList={(event) => handleLiveTimerData(timerId, event.detail)}
+    />
+{/each}
+
+{#if configuredMappings.length < MIN_COLUMNS}
+    <p>Select at least two timer lanes to display timing data.</p>
+{:else if !races.length && !loadingHistory}
+    <p>No timing data is available within {duration}.</p>
 {/if}
+
+{#each races as race (race.key)}
+    <section class="race">
+        <Annotate text={raceLabel(race)} />
+        <div
+            class="race-grid"
+            style={`--timer-column-count: ${mappings.length}`}
+        >
+            {#each race.lanes as lane (lane.mapping.virtualLane)}
+                <article class:winner={lane.result?.deltaMicros === 0}>
+                    <h4>Virtual Lane {lane.mapping.virtualLane}</h4>
+                    {#if lane.result}
+                        <strong class="placement">
+                            {lane.result.placeLabel} place
+                        </strong>
+                        <div class="gps-time">
+                            {formatGpsTime(lane.result.gpsMicros)}
+                        </div>
+                        {#if formatWinningMargin(lane.result)}
+                            <div class="delta">
+                                {formatWinningMargin(lane.result)}
+                            </div>
+                        {/if}
+                    {:else}
+                        <div class="pending">Pending</div>
+                    {/if}
+                </article>
+            {/each}
+        </div>
+    </section>
+{/each}
 
 <style>
     * {
@@ -507,8 +498,7 @@
         overflow-wrap: anywhere;
     }
 
-    .configuration-error,
-    .access-denied {
+    .configuration-error {
         background: #f8d7da;
         border: 1px solid #842029;
         color: #842029;

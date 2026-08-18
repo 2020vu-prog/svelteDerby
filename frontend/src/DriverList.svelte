@@ -13,7 +13,6 @@
         selectedDriverList,
     } from "./stores.js";
     import CarAndDriver from "./CarAndDriver.svelte";
-    import MaterialAdd from "./MaterialAdd.svelte";
     import CarFilter from "./CarFilter.svelte";
     import { safeGetAt } from "./utils.js";
     import { isEmailAllowedRoutePath } from "./utils.js";
@@ -112,10 +111,6 @@
 
     <p />
 </div>
-
-{#if !selectable}
-    <MaterialAdd clickHandleRoute="/driverAdd" />
-{/if}
 
 <VirtualList
     height="{mainFullPx}px"

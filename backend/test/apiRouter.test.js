@@ -1,5 +1,5 @@
 const ApiRouter = require("../modules/lambdaDerby/src/ApiRouter.js");
-const RoutePermission = require("../modules/lambdaDerby/src/RoutePermission.js");
+const RoutePermission = require("../modules/lambdaDerby/src/shared/RoutePermission.js");
 
 const CAN_EXAMPLE = new RoutePermission("CanExample");
 const CAN_PLUGIN = new RoutePermission("CanPlugin");

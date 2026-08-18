@@ -17,7 +17,6 @@
 
     import SpinnerButton from "./SpinnerButton.svelte";
 
-    import MaterialAdd from "./MaterialAdd.svelte";
     import OrgName from "./OrgName.svelte";
     import { onMount, tick } from "svelte";
     import {
@@ -260,11 +259,6 @@
 </script>
 
 <div>
-    <MaterialAdd
-        overrideOrgIz={params.orgIz}
-        clickHandleRoute="/eventAdd/{params.orgIz}/Add"
-    />
-
     <h4>
         EventSelection for
         <OrgName orgIz={decodeURIComponent(params.orgIz)} />

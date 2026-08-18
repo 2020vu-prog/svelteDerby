@@ -3,61 +3,15 @@
     const { v4: uuidv4 } = require("uuid");
 
     import aws_exports from "./aws-config";
-    import Router from "svelte-spa-router";
     import { location, replace } from "svelte-spa-router";
     import { querystring } from "svelte-spa-router";
 
     import SpinnerPanel from "./SpinnerPanel.svelte";
     import Splash from "./Splash.svelte";
     import BottomNav from "./BottomNav.svelte";
-    import CaptureVideo from "./CaptureVideo.svelte";
-    import RaceStandingList from "./RaceStandingList.svelte";
-    import RacePhaseList from "./RacePhaseList.svelte";
-    import RacePhaseElapsed from "./RacePhaseElapsed.svelte";
-    import ChartList from "./ChartList2.svelte";
-    import ChartEdit from "./ChartEdit.svelte";
-    import ChartFill from "./ChartFill.svelte";
-    import ChartAdd from "./ChartAdd.svelte";
-    import DriverList from "./DriverList.svelte";
-    import DriverAdd from "./DriverAdd.svelte";
-    import DriverInfo from "./DriverInfo.svelte";
-    import DownloadCsv from "./DownloadCsv.svelte";
-    import EventSelection from "./EventSelection.svelte";
-    import EventAdd from "./EventAdd.svelte";
-    import HistoryList from "./HistoryList.svelte";
-
-    import OrgUserAdd from "./OrgUserAdd.svelte";
-    import OrgUserList from "./OrgUserList.svelte";
-    import OrgSelection from "./OrgSelection.svelte";
-    import OrgAdd from "./OrgAdd.svelte";
-    import ManualTimerAdd from "./ManualTimerAdd.svelte";
-    import ManualAnnouncement from "./ManualAnnouncement.svelte";
-    import RaceStandingAdd from "./RaceStandingAdd.svelte";
-    import RawTimerList from "./RawTimerList.svelte";
-    import LogMessageViewer from "./LogMessageViewer.svelte";
-    import AboutPage from "./AboutPage.svelte";
-    import PreferencesPage from "./PreferencesPage.svelte";
-    import ProvisionWifi from "./ProvisionWifi.svelte";
-    import ChartDetail from "./ChartDetail.svelte";
-    import ChartDetailCardList from "./ChartDetailCardList.svelte";
-    import ChartPosition from "./ChartPosition.svelte";
-    import TimerConfig from "./TimerConfig.svelte";
-    import TimerConfigList from "./TimerConfigList.svelte";
-    import TimerConfigElapsed from "./TimerConfigElapsed.svelte";
-    import TimerAlignment from "./TimerAlignment.svelte";
-    import TimerPbAlignment from "./TimerPbAlignment.svelte";
-    import TimerColumns from "./TimerColumns.svelte";
-    import TimerPlot from "./TimerPlot.svelte";
-    import RouteSelection from "./RouteSelection.svelte";
-    import ForceLoad from "./ForceLoad.svelte";
-    import MediaList from "./MediaList.svelte";
-    import PaInfo from "./PaInfo.svelte";
-
-    import ForceReloadPage from "./ForceReloadPage.svelte";
-    import LoginH from "./LoginH.svelte";
+    import RouteHost from "./routes/RouteHost.svelte";
     import HotLoad from "./HotLoad.svelte";
     import ElectronTimerRelay from "./ElectronTimerRelay.svelte";
-    import MediaViewer from "./MediaViewer.svelte";
     import {
         raceConfig,
         theme,
@@ -77,74 +31,16 @@
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
-    import {
-        isEmailAllowedRoutePath,
-        sleep,
-        refreshOrgRoles,
-    } from "./utils.js";
+    import { sleep, refreshOrgRoles } from "./utils.js";
+    import { routeRegistry } from "./routes/routeRuntime.js";
     import { setIdTokenFromCognitoCallback } from "./utilHosted.js";
     import { urlParseSpotify } from "./utils/spotify";
-    const routes = {
-        // Exact path
-        "/": RaceStandingList,
-        "/RsList/:type": RaceStandingList,
-        "/RpList": RacePhaseList,
-        "/RpElapsed/:rpKey": RacePhaseElapsed,
-        "/drivers/:selectable?": DriverList,
-        "/loginH": LoginH,
-        "/ManualTimerAdd/:rpKey/:winningLane?/:winningTime?": ManualTimerAdd,
-        "/ManualAnnouncement": ManualAnnouncement,
-        "/raceStandingAdd/:type": RaceStandingAdd,
-        "/driverAdd/:number?": DriverAdd,
-        "/driverInfo/:number?": DriverInfo,
-        "/downloadCsv": DownloadCsv,
-        "/eventSelection/:orgIz": EventSelection,
-        "/as/:orgIz/:orgId": EventSelection, //autoSelect shortcut
-        "/eventAdd/:orgIz/:mode": EventAdd,
-        "/historyList/:PK/:SK": HistoryList,
-        "/orgUserList": OrgUserList,
-        "/orgUserAdd/:b64User?": OrgUserAdd,
-        "/orgSelection": OrgSelection,
-        "/orgAdd": OrgAdd,
-        "/about": AboutPage,
-        "/preferences": PreferencesPage,
-        "/provisionWifi": ProvisionWifi,
-        "/chartDetail/:chartId": ChartDetail,
-        "/chartDetailCardList/:chartId": ChartDetailCardList,
-        "/chartPosition/:chartId/:chartPosition": ChartPosition,
-        "/chartList": ChartList,
-        "/pa_info": PaInfo,
-        "/chartEdit/:chartId": ChartEdit,
-        "/chartFill/:chartId": ChartFill,
-        "/chartAdd": ChartAdd,
-        "/forceLoad/:b64route": ForceLoad,
-        "/routeSelection/:mode": RouteSelection,
-        "/timerConfig": TimerConfig,
-        "/timerConfigList": TimerConfigList,
-        "/timerConfigElapsed": TimerConfigElapsed,
-        "/timerAlignment": TimerAlignment,
-        "/timerPbAlignment": TimerPbAlignment,
-        "/timerColumns": TimerColumns,
-        "/timerPlot": TimerPlot,
-        "/rawTimerList": RawTimerList,
-        "/logMessageViewer": LogMessageViewer,
-        "/spMediaList/:dbName/:dbKey": MediaList,
-        "/mediaDemo": MediaViewer,
-        "/forceReloadPage": ForceReloadPage,
-        "/captureVideo": CaptureVideo,
-        // '/raceStandingAdd': RaceStandingAdd,
-    };
+    const { canAccessRoute } = require("./routes/routeAccess.js");
+    const { getMenuItems } = require("./routes/routeRegistry.js");
+    const { MenuSection } = require("./routes/routeDefinitions.js");
 
     var isMounted = false;
-    // empty generalMenuMap here seems to cause CSS issues!
-    let generalMenuMap = [
-        {
-            text: "Watch Different Event",
-            menuRoute: "/orgSelection",
-
-            alwaysShow: true,
-        },
-    ];
+    let generalMenuMap = [];
     let adminMenuMap = [];
 
     const MenuType = {
@@ -166,13 +62,24 @@
         }
     }
 
-    $: {
-        if (isMounted) {
-            // rebuild menu maps when roleMap changes
-            log.debug("bmm:", $userId, $userEmail, $roleMap);
-            buildMenuMaps($userId, $userEmail, $roleMap);
-        }
-    }
+    $: menuContext = {
+        raceConfig: $raceConfig,
+        roleMap: $roleMap,
+        userEmail: $userEmail,
+        userId: $userId,
+    };
+    $: generalMenuMap = getMenuItems(
+        routeRegistry,
+        MenuSection.GENERAL,
+        menuContext,
+        canAccessRoute
+    );
+    $: adminMenuMap = getMenuItems(
+        routeRegistry,
+        MenuSection.ADMIN,
+        menuContext,
+        canAccessRoute
+    );
     $: {
         if ($developerLogging) {
             log.setLevel(log.levels.TRACE);
@@ -219,92 +126,6 @@
             }
         }
         return -1; // shouldn't happen
-    }
-    async function buildMenuMaps() {
-        log.debug("bmm: userEmailStored:", $userEmail);
-
-        if ($userId) {
-            log.debug("bmm: uid:", $userId);
-        }
-
-        const loginLabel = $userId ? `Logout [${$userId}]` : "Login";
-
-        generalMenuMap = [
-            {
-                text: "Drivers",
-                menuRoute: "/drivers",
-            },
-            {
-                text: "Phase History",
-                menuRoute: "/RpList",
-            },
-            {
-                text: "Race History",
-                menuRoute: "/RsList/History",
-            },
-            {
-                text: "Pending Races",
-                menuRoute: "/RsList/Pending",
-            },
-            {
-                text: "Charts",
-                menuRoute: "/chartList",
-            },
-            {
-                text: "Watch Different Event",
-                menuRoute: "/orgSelection",
-                alwaysShow: true,
-            },
-            {
-                text: "Preferences & Sharing",
-                menuRoute: "/preferences",
-                alwaysShow: true,
-            },
-            {
-                text: loginLabel,
-                menuRoute: "/loginH",
-                alwaysShow: true,
-            },
-        ];
-        adminMenuMap = [
-            {
-                text: "Timer Config",
-                menuRoute: "/timerConfigList",
-            },
-            {
-                text: "Timer Columns",
-                menuRoute: "/timerColumns",
-            },
-            {
-                text: "List All Media",
-                menuRoute: "/spMediaList/*/*",
-            },
-            {
-                text: "Org Users",
-                menuRoute: "/orgUserList",
-            },
-            {
-                text: "Manual Announcement",
-                menuRoute: "/ManualAnnouncement",
-            },
-            {
-                text: "PA Info",
-                menuRoute: "/pa_info",
-            },
-            {
-                text: "Capture Video",
-                menuRoute: "/captureVideo",
-            },
-            {
-                text: "Raw Timer List",
-                menuRoute: "/rawTimerList",
-                neverShow: true,
-            },
-            {
-                text: "Log Messages",
-                menuRoute: "/logMessageViewer",
-            },
-        ];
     }
     const reloadEvent = async (raceConfigParam) => {
         const start = new Date().getTime();
@@ -386,23 +207,6 @@
             replace("/orgSelection");
         }
     }
-    const shouldDisplay = (email, menuOption, raceConfigParam) => {
-        if (menuOption.alwaysShow) return true;
-        if (menuOption.neverShow) return false;
-
-        //return raceConfigParam.orgIz && raceConfigParam.orgId;
-        /*
-        log.debug(
-            `iuarp: ${email} `,
-            isEmailAllowedRoutePath(email, menuOption.menuRoute)
-        );
-        */
-        return (
-            raceConfigParam.orgIz &&
-            raceConfigParam.orgId &&
-            isEmailAllowedRoutePath(email, menuOption.menuRoute)
-        );
-    };
     const getTitle = (cfg) => {
         let orgIz = "";
         if ($developerMode && cfg && cfg.orgIz) {
@@ -439,11 +243,7 @@
     }
 
     function shouldDisplayAdminNavIcon() {
-        for (const adminMenuOption of adminMenuMap) {
-            if (shouldDisplay($userEmail, adminMenuOption, $raceConfig))
-                return true;
-        }
-        return false;
+        return adminMenuMap.length > 0;
     }
 </script>
 
@@ -583,20 +383,16 @@
     </div>
     <div style="display: {visibleMenu == MenuType.GENERAL ? 'block' : 'none'}">
         {#each generalMenuMap as menuOption}
-            {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
-                <a on:click={() => navTo(menuOption)}>
-                    {menuOption.text}
-                </a>
-            {/if}
+            <a on:click={() => navTo(menuOption)}>
+                {menuOption.text}
+            </a>
         {/each}
     </div>
     <div style="display: {visibleMenu == MenuType.ADMIN ? 'block' : 'none'}">
         {#each adminMenuMap as adminMenuOption}
-            {#if shouldDisplay($userEmail, adminMenuOption, $raceConfig)}
-                <a on:click={() => navTo(adminMenuOption)}>
-                    {adminMenuOption.text}
-                </a>
-            {/if}
+            <a on:click={() => navTo(adminMenuOption)}>
+                {adminMenuOption.text}
+            </a>
         {/each}
     </div>
 
@@ -624,7 +420,7 @@
     <main>
         <SpinnerPanel />
         <Splash />
-        <Router routes={routes} />
+        <RouteHost authorizationReady={Boolean(isMounted)} />
     </main>
     <BottomNav />
 {/if}

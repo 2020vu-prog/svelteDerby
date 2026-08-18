@@ -17,7 +17,6 @@
     import RacePhase from "./RacePhase.svelte";
     import Annotate from "./Annotate.svelte";
     import CarFilter from "./CarFilter.svelte";
-    import MaterialAdd from "./MaterialAdd.svelte";
     import { onMount } from "svelte";
     export let params = {};
     import { location, replace, push } from "svelte-spa-router";
@@ -122,10 +121,6 @@
 
 <style>
 </style>
-
-{#if params.type === "Pending"}
-    <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
-{/if}
 
 {#each standingList as item, i (item.at)}
     {#if item.type === "NOB"}

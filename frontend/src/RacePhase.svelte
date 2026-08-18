@@ -22,7 +22,6 @@
         nextOnBlockKey,
         standingsMap,
     } from "./stores.js";
-    import MaterialAdd from "./MaterialAdd.svelte";
     import {
         safeGetAt,
         fmtChartPosition,

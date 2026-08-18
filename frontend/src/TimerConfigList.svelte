@@ -4,7 +4,6 @@
     import { Base64 } from "js-base64";
     import EllipsisButton from "./EllipsisButton.svelte";
     import log from "loglevel";
-    import MaterialAdd from "./MaterialAdd.svelte";
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import { push, pop, replace, location } from "svelte-spa-router";
@@ -71,8 +70,6 @@
 First Timer added will be finish line timer. Subsequent additions may be used to report
 elapsed time split(s).
 <p />
-<MaterialAdd clickHandleRoute="/timerConfigElapsed" />
-
 {#each getSortedTc(tcFromDexie) as tc (tc.at)}
     <Card class="mtj-3 border border-info">
         <CardHeader class="bg-info text-white">

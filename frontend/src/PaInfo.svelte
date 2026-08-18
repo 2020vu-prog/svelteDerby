@@ -3,8 +3,6 @@
         driverMap,
         nextOnBlockKey,
         racePhaseMap,
-        raceConfig,
-        roleMap,
         standingsMap,
     } from "./stores.js";
     import PaInfoDriverCard from "./PaInfoDriverCard.svelte";
@@ -14,7 +12,6 @@
         getRaceTypeEmoji,
         hhmmssFmt,
         isPendingNeeded,
-        isAllowedRoutePath,
     } from "./utils.js";
     import {
         getCarNumber,
@@ -27,10 +24,6 @@
     let nextRaceLabel = "";
     let completedRaceLabel = "";
 
-    $: activeOrg = $raceConfig?.orgIz;
-    $: activeRoles = $roleMap;
-    $: canAnnounce =
-        Boolean(activeOrg && activeRoles) && isAllowedRoutePath("/pa_info");
     $: nextRace =
         ($nextOnBlockKey && $racePhaseMap[$nextOnBlockKey]) || undefined;
     $: completedRace = getLatestCompletedStanding($standingsMap);
@@ -70,93 +63,84 @@
     }
 </script>
 
-{#if canAnnounce}
-    <section class="pa-info">
-        <h1>PA Info</h1>
+<section class="pa-info">
+    <h1>PA Info</h1>
 
-        <section class="race-section" aria-labelledby="next-on-blocks-heading">
-            <header
-                class="race-header next-race-header"
-                style:background={getNextRaceBackground(nextRace)}
-            >
-                <div>
-                    <h2 id="next-on-blocks-heading">Next on Blocks</h2>
-                    {#if nextRace}
-                        <div>{nextRaceLabel}</div>
-                    {/if}
-                </div>
+    <section class="race-section" aria-labelledby="next-on-blocks-heading">
+        <header
+            class="race-header next-race-header"
+            style:background={getNextRaceBackground(nextRace)}
+        >
+            <div>
+                <h2 id="next-on-blocks-heading">Next on Blocks</h2>
                 {#if nextRace}
-                    <div class="race-meta">
-                        <span class="phase-icon">{getPhaseIcon(nextRace)}</span>
-                        <span>{hhmmssFmt(nextRace.at)}</span>
-                    </div>
+                    <div>{nextRaceLabel}</div>
                 {/if}
-            </header>
-
+            </div>
             {#if nextRace}
-                <div class="lane-grid">
-                    {#each [1, 2] as lane}
-                        <PaInfoDriverCard
-                            lane={lane}
-                            carNumber={getCarNumber(nextRace, lane)}
-                            participant={participantFor(nextRace, lane)}
-                            isWinner={Boolean(nextRace.isWinner?.(lane, true))}
-                            statuses={getNextOnBlocksStatuses(
-                                nextRace,
-                                lane,
-                                $standingsMap,
-                                formatWinTime
-                            )}
-                        />
-                    {/each}
+                <div class="race-meta">
+                    <span class="phase-icon">{getPhaseIcon(nextRace)}</span>
+                    <span>{hhmmssFmt(nextRace.at)}</span>
                 </div>
-            {:else}
-                <div class="empty-state">Starting blocks are empty.</div>
             {/if}
-        </section>
+        </header>
 
-        <section class="race-section" aria-labelledby="completed-race-heading">
-            <header class="race-header completed-race-header">
-                <div>
-                    <h2 id="completed-race-heading">Most Recent Finish</h2>
-                    {#if completedRace}
-                        <div>{completedRaceLabel}</div>
-                    {/if}
-                </div>
+        {#if nextRace}
+            <div class="lane-grid">
+                {#each [1, 2] as lane}
+                    <PaInfoDriverCard
+                        lane={lane}
+                        carNumber={getCarNumber(nextRace, lane)}
+                        participant={participantFor(nextRace, lane)}
+                        isWinner={Boolean(nextRace.isWinner?.(lane, true))}
+                        statuses={getNextOnBlocksStatuses(
+                            nextRace,
+                            lane,
+                            $standingsMap,
+                            formatWinTime
+                        )}
+                    />
+                {/each}
+            </div>
+        {:else}
+            <div class="empty-state">Starting blocks are empty.</div>
+        {/if}
+    </section>
+
+    <section class="race-section" aria-labelledby="completed-race-heading">
+        <header class="race-header completed-race-header">
+            <div>
+                <h2 id="completed-race-heading">Most Recent Finish</h2>
                 {#if completedRace}
-                    <span>{hhmmssFmt(completedRace.at)}</span>
+                    <div>{completedRaceLabel}</div>
                 {/if}
-            </header>
-
+            </div>
             {#if completedRace}
-                <div class="lane-grid">
-                    {#each [1, 2] as lane}
-                        <PaInfoDriverCard
-                            lane={lane}
-                            carNumber={getCarNumber(completedRace, lane)}
-                            participant={participantFor(completedRace, lane)}
-                            isWinner={Boolean(
-                                completedRace.isWinner?.(lane, 0)
-                            )}
-                            statuses={getCompletedRaceStatuses(
-                                completedRace,
-                                lane,
-                                formatWinTime
-                            )}
-                        />
-                    {/each}
-                </div>
-            {:else}
-                <div class="empty-state">No completed races.</div>
+                <span>{hhmmssFmt(completedRace.at)}</span>
             {/if}
-        </section>
+        </header>
+
+        {#if completedRace}
+            <div class="lane-grid">
+                {#each [1, 2] as lane}
+                    <PaInfoDriverCard
+                        lane={lane}
+                        carNumber={getCarNumber(completedRace, lane)}
+                        participant={participantFor(completedRace, lane)}
+                        isWinner={Boolean(completedRace.isWinner?.(lane, 0))}
+                        statuses={getCompletedRaceStatuses(
+                            completedRace,
+                            lane,
+                            formatWinTime
+                        )}
+                    />
+                {/each}
+            </div>
+        {:else}
+            <div class="empty-state">No completed races.</div>
+        {/if}
     </section>
-{:else}
-    <section class="pa-info permission-denied" aria-live="polite">
-        <h1>PA Info</h1>
-        <p>You do not have permission to view this screen.</p>
-    </section>
-{/if}
+</section>
 
 <style>
     .pa-info {

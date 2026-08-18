@@ -1,38 +1,12 @@
 <script>
-    import log from "loglevel";
-
-    import { push, pop, replace } from "svelte-spa-router";
-    import { raceConfig, roleMap, theme, userEmail } from "./stores.js";
-    import { isAllowedRoutePath } from "./utils.js";
+    import { push } from "svelte-spa-router";
+    import { theme } from "./stores.js";
 
     export let clickHandleRoute;
-    export let overrideOrgIz; //allow null.  this is an override
-
-    var userHasPermission = false;
-    let permissionRequest = 0;
 
     const chFunction = () => {
         push(clickHandleRoute);
     };
-
-    $: refreshPermission(
-        clickHandleRoute,
-        overrideOrgIz,
-        $userEmail,
-        $roleMap,
-        $raceConfig.orgIz
-    );
-
-    async function refreshPermission() {
-        const requestId = ++permissionRequest;
-        const allowed = await isAllowedRoutePath(
-            clickHandleRoute,
-            overrideOrgIz
-        );
-        if (requestId === permissionRequest) {
-            userHasPermission = allowed;
-        }
-    }
 </script>
 
 <style>
@@ -71,8 +45,6 @@
     }
 </style>
 
-{#if userHasPermission}
-    <div class="fab" style="background-color: {$theme}" on:click={chFunction}>
-        <img src="plus-solid.svg" />
-    </div>
-{/if}
+<div class="fab" style="background-color: {$theme}" on:click={chFunction}>
+    <img src="plus-solid.svg" />
+</div>

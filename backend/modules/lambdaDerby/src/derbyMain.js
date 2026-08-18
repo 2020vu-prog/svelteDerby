@@ -23,7 +23,7 @@ const log = require("loglevel");
 const EntityFactory = require("./shared/EntityFactory.js");
 const { hasPermission } = require("./shared/PermissionLookup.js");
 const ApiRouter = require("./ApiRouter.js");
-const RoutePermission = require("./RoutePermission.js");
+const RoutePermission = require("./shared/RoutePermission.js");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
     AttachPrincipalPolicyCommand,

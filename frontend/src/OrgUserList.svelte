@@ -3,7 +3,6 @@
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import VirtualList from "@sveltejs/svelte-virtual-list";
     import { userEmail, uiPageSize, axios, raceConfig } from "./stores.js";
-    import MaterialAdd from "./MaterialAdd.svelte";
     import { safeGetAt } from "./utils.js";
     import { isEmailAllowedRoutePath } from "./utils.js";
     import { onMount } from "svelte";
@@ -53,7 +52,6 @@
 
 <p />
 
-<MaterialAdd clickHandleRoute="/orgUserAdd" />
 {#each orgUserList as item (item.at)}
     <Card class="mt-3 border border-info" on:click={() => editOrgUser(item)}>
         <CardBody>

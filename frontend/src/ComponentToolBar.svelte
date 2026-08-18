@@ -20,7 +20,8 @@
 
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
-    import { isEmailAllowedRoutePath } from "./utils.js";
+    import { hasFrontendPermission, isEmailAllowedRoutePath } from "./utils.js";
+    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     import { db } from "./eventDb.js";
@@ -189,14 +190,13 @@
         return isEmailAllowedRoutePath($userEmail, "/ManualAnnouncement");
     }
     function isDeleteAllowed() {
-        var protectedPath = "/unknownPath";
         if (dbName === "RacePhase") {
-            protectedPath = "/sveltePermissionCanDeleteBlocks";
+            return hasFrontendPermission(RoutePermission.CAN_DELETE_BLOCKS);
         }
         if (dbName === "RaceStanding") {
-            protectedPath = "/sveltePermissionCanDeleteStanding";
+            return hasFrontendPermission(RoutePermission.CAN_DELETE_STANDING);
         }
-        return isEmailAllowedRoutePath($userEmail, protectedPath);
+        return false;
     }
 </script>
 
