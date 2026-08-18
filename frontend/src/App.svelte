@@ -46,6 +46,7 @@
     import TimerConfigElapsed from "./TimerConfigElapsed.svelte";
     import TimerAlignment from "./TimerAlignment.svelte";
     import TimerPbAlignment from "./TimerPbAlignment.svelte";
+    import TimerColumns from "./TimerColumns.svelte";
     import TimerPlot from "./TimerPlot.svelte";
     import RouteSelection from "./RouteSelection.svelte";
     import ForceLoad from "./ForceLoad.svelte";
@@ -124,6 +125,7 @@
         "/timerConfigElapsed": TimerConfigElapsed,
         "/timerAlignment": TimerAlignment,
         "/timerPbAlignment": TimerPbAlignment,
+        "/timerColumns": TimerColumns,
         "/timerPlot": TimerPlot,
         "/rawTimerList": RawTimerList,
         "/logMessageViewer": LogMessageViewer,
@@ -269,6 +271,10 @@
             {
                 text: "Timer Config",
                 menuRoute: "/timerConfigList",
+            },
+            {
+                text: "Timer Columns",
+                menuRoute: "/timerColumns",
             },
             {
                 text: "List All Media",
