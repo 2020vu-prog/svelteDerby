@@ -124,6 +124,14 @@ export const mqttMapData = writable({}); //subscription data.  keyed by topic.
 export const mqttTimerSubscribe = writable(false);
 export const mqttTimerTopic = persistable("pref:mqttTimerTopic", "");
 export const mqttEnabled = persistable("pref:mqttEnabled", true);
+export const timerColumnMappings = persistable("pref:timerColumnMappings", [
+    { virtualLane: 1, timerName: "", timerId: "", pinName: 1 },
+    { virtualLane: 2, timerName: "", timerId: "", pinName: 2 },
+]);
+export const timerColumnsDuration = persistable(
+    "pref:timerColumnsDuration",
+    "PT20M"
+);
 export const mqttTriggerVideoCapture = writable(0);
 export const beginAnonymousLogin = writable(false);
 export const timerState = writable({});

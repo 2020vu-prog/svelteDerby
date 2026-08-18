@@ -34,16 +34,17 @@ Add additional workflows for materially different user roles or outcomes.
 ### Inputs
 
 - Route parameters: none
-- Svelte stores: new vlane mapping
+- Svelte stores: `timerColumnMappings` and `timerColumnsDuration`
 - Component properties: none
 - IndexedDB tables: none
 
 ### API Requests
 
+- `GET /app/getTimerPbHistory` once for each selected timer, using the configured duration to set `loIso` and the current time for `hiIso`
 
 ### Data Changes
 
-recalc & re-render asnew timing data arrives via mqtt 
+Recalculate and re-render as new timing data arrives via MQTT.
 ## Layout
 
 Describe the screen from top to bottom:
@@ -54,6 +55,6 @@ Describe the screen from top to bottom:
 
 ## Components
 
-- Existing components to reuse: [list]
-- New components expected: [list]
-- Components that must not be changed: [list]
+- Existing components to reuse: `Annotate.svelte`, `SpinnerButton.svelte`, and `TimerSubscribeStub.svelte`
+- New components expected: `TimerColumns.svelte` and a standalone race-calculation module
+- Components that must not be changed: none
