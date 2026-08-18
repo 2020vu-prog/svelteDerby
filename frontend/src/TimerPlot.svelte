@@ -123,8 +123,8 @@
     $: title = timerName
         ? `${selectedMetric.title} (${selectedMetric.unit}) [${timerName}]`
         : label === "Timer Plot"
-        ? `${selectedMetric.title} (${selectedMetric.unit})`
-        : label;
+          ? `${selectedMetric.title} (${selectedMetric.unit})`
+          : label;
     $: if (ChartLib && chartCanvas) {
         renderChart(numericPoints, rebootPoints, title, selectedMetric);
     }
@@ -402,6 +402,54 @@
     }
 </script>
 
+{#if timerName || timerId}
+    <div class="timerHeader">
+        {#if timerName}
+            <span class="timerName">{timerName}</span>
+        {/if}
+        {#if timerId}
+            <span class="timerId">{timerId}</span>
+        {/if}
+    </div>
+{/if}
+
+<div class="plotControls">
+    <select class="form-control metricSelect" bind:value={metric}>
+        {#each metrics as option}
+            <option value={option.value}>{option.label}</option>
+        {/each}
+    </select>
+    <TimerHistoryAge
+        bind:beginAgeDuration={historyBeginAgeDuration}
+        bind:endAgeDuration={historyEndAgeDuration}
+        spinning={loading || chartLoading}
+        on:refresh={loadCpuTempHistory}
+    />
+</div>
+
+{#if chartError}
+    <div class="chartMessage">{chartError}</div>
+{:else if chartLoading}
+    <div class="chartMessage">Loading Chart.js</div>
+{:else if loading}
+    <div class="chartMessage">Loading timer data</div>
+{/if}
+
+<div class="chartShell" style={`height: ${height}px;`}>
+    <canvas bind:this={chartCanvas} aria-label={title} />
+</div>
+<div class="chartLegend">
+    <span class="legendItem">
+        <span class="lineSample" />
+        {selectedMetric.label} ({selectedMetric.unit})
+    </span>
+    <span class="legendItem">
+        <span class="rebootSample" />
+        Reboot
+    </span>
+    <span>Samples: {numericPoints.length}</span>
+</div>
+
 <style>
     .plotControls {
         margin-bottom: 0.5rem;
@@ -469,51 +517,3 @@
         width: 2px;
     }
 </style>
-
-{#if timerName || timerId}
-    <div class="timerHeader">
-        {#if timerName}
-            <span class="timerName">{timerName}</span>
-        {/if}
-        {#if timerId}
-            <span class="timerId">{timerId}</span>
-        {/if}
-    </div>
-{/if}
-
-<div class="plotControls">
-    <select class="form-control metricSelect" bind:value={metric}>
-        {#each metrics as option}
-            <option value={option.value}>{option.label}</option>
-        {/each}
-    </select>
-    <TimerHistoryAge
-        bind:beginAgeDuration={historyBeginAgeDuration}
-        bind:endAgeDuration={historyEndAgeDuration}
-        spinning={loading || chartLoading}
-        on:refresh={loadCpuTempHistory}
-    />
-</div>
-
-{#if chartError}
-    <div class="chartMessage">{chartError}</div>
-{:else if chartLoading}
-    <div class="chartMessage">Loading Chart.js</div>
-{:else if loading}
-    <div class="chartMessage">Loading timer data</div>
-{/if}
-
-<div class="chartShell" style={`height: ${height}px;`}>
-    <canvas bind:this={chartCanvas} aria-label={title} />
-</div>
-<div class="chartLegend">
-    <span class="legendItem">
-        <span class="lineSample" />
-        {selectedMetric.label} ({selectedMetric.unit})
-    </span>
-    <span class="legendItem">
-        <span class="rebootSample" />
-        Reboot
-    </span>
-    <span>Samples: {numericPoints.length}</span>
-</div>

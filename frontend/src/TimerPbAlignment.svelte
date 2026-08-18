@@ -517,6 +517,65 @@
     }
 </script>
 
+<h3>Timer Alignment [{timerName}]</h3>
+<h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
+{#if loadingAlignment}
+    <SpinnerButton disabled={true} spinning={true}>
+        Loading Timer Alignment
+    </SpinnerButton>
+{:else}
+    <div class="alignmentControls">
+        {#if timerName && timerId}
+            <div class="alignmentControl">
+                <TimerPbHealth {timerName} {timerId} />
+            </div>
+            <div class="alignmentControl">
+                <TimerHistoryAge
+                    bind:beginAgeDuration={historyBeginAgeDuration}
+                    bind:endAgeDuration={historyEndAgeDuration}
+                    spinning={historySpinning}
+                    on:refresh={getTimerHistoryFromApi}
+                />
+            </div>
+            <div class="alignmentControl plotControl">
+                <SpinnerButton on:click={showTimerPlot}>Plot</SpinnerButton>
+            </div>
+        {/if}
+    </div>
+    <div class="row">
+        {#each Object.entries(laneStatusList) as [lane, ls]}
+            <div class="column" style="background-color:#bbb;">
+                <Card class="mt-3 border border-info">
+                    <!--
+
+                <CardHeader class="bg-info">
+                    Lane {lane.replace(/[A-Z]+/i, "")} &nbsp;&nbsp;&nbsp;Audio: &nbsp;&nbsp;
+                    <input type="checkbox" bind:checked={ls.checked} />
+                </CardHeader>
+                -->
+                    <CardBody
+                        style="background-color: {getLaneStatusColor(ls)}"
+                    >
+                        <h5>
+                            Lane {lane.replace(/[A-Z]+/i, "")}
+                            <strong>
+                                {getLaneStatusText(ls)}
+                            </strong>
+                        </h5>
+                        {#if paddlePosition}
+                            <h6>{paddlePosition}</h6>
+                        {/if}
+                    </CardBody>
+                </Card>
+            </div>
+        {/each}
+    </div>
+
+    {#each markupPins(sortedPbTimerPinHistory) as cdBlock}
+        <TimerPbCard {cdBlock} {timerPbConfig} />
+    {/each}
+{/if}
+
 <style>
     * {
         box-sizing: border-box;
@@ -549,62 +608,3 @@
         padding: 10px;
     }
 </style>
-
-<h3>Timer Alignment [{timerName}]</h3>
-<h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
-{#if loadingAlignment}
-    <SpinnerButton disabled={true} spinning={true}>
-        Loading Timer Alignment
-    </SpinnerButton>
-{:else}
-    <div class="alignmentControls">
-        {#if timerName && timerId}
-            <div class="alignmentControl">
-                <TimerPbHealth {timerName} {timerId} />
-            </div>
-            <div class="alignmentControl">
-                <TimerHistoryAge
-                    bind:beginAgeDuration={historyBeginAgeDuration}
-                    bind:endAgeDuration={historyEndAgeDuration}
-                    spinning={historySpinning}
-                    on:refresh={getTimerHistoryFromApi}
-                />
-            </div>
-            <div class="alignmentControl plotControl">
-                <SpinnerButton on:click={showTimerPlot}>
-                    Plot
-                </SpinnerButton>
-            </div>
-        {/if}
-    </div>
-    <div class="row">
-        {#each Object.entries(laneStatusList) as [lane, ls]}
-            <div class="column" style="background-color:#bbb;">
-                <Card class="mt-3 border border-info">
-                    <!--
-
-                <CardHeader class="bg-info">
-                    Lane {lane.replace(/[A-Z]+/i, "")} &nbsp;&nbsp;&nbsp;Audio: &nbsp;&nbsp;
-                    <input type="checkbox" bind:checked={ls.checked} />
-                </CardHeader>
-                -->
-                    <CardBody style="background-color: {getLaneStatusColor(ls)}">
-                        <h5>
-                            Lane {lane.replace(/[A-Z]+/i, "")}
-                            <strong>
-                                {getLaneStatusText(ls)}
-                            </strong>
-                        </h5>
-                        {#if paddlePosition}
-                            <h6>{paddlePosition}</h6>
-                        {/if}
-                    </CardBody>
-                </Card>
-            </div>
-        {/each}
-    </div>
-
-    {#each markupPins(sortedPbTimerPinHistory) as cdBlock}
-        <TimerPbCard {cdBlock} {timerPbConfig} />
-    {/each}
-{/if}

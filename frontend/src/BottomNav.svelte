@@ -53,44 +53,6 @@
     };
 </script>
 
-<style>
-    .footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        overflow: hidden;
-        width: 100%;
-    }
-
-    /* Place the navbar at the bottom of the page, and make it stick */
-    .navbar {
-        background-color: #333;
-
-        /* override body padding */
-        padding: 0px;
-        /* override bootstrap margin*/
-        margin: 0px;
-        margin-bottom: 0px;
-    }
-
-    /* Style the links inside the navigation bar */
-    .navbar a {
-        float: left;
-        display: block;
-        color: #f2f2f2;
-        text-align: center;
-        padding: 7px 0px 7px 0px;
-        text-decoration: none;
-        font-size: 17px;
-        width: 25%;
-    }
-
-    /* Hide the link that should open and close the navbar on small screens */
-    .navbar .icon {
-        display: none;
-    }
-</style>
-
 {#if $showBottomNav}
     <div
         class="bottomNavScrollPlaceholder"
@@ -129,3 +91,41 @@
         </div>
     {/if}
 </div>
+
+<style>
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    /* Place the navbar at the bottom of the page, and make it stick */
+    .navbar {
+        background-color: #333;
+
+        /* override body padding */
+        padding: 0px;
+        /* override bootstrap margin*/
+        margin: 0px;
+        margin-bottom: 0px;
+    }
+
+    /* Style the links inside the navigation bar */
+    .navbar a {
+        float: left;
+        display: block;
+        color: #f2f2f2;
+        text-align: center;
+        padding: 7px 0px 7px 0px;
+        text-decoration: none;
+        font-size: 17px;
+        width: 25%;
+    }
+
+    /* Hide the link that should open and close the navbar on small screens */
+    .navbar .icon {
+        display: none;
+    }
+</style>

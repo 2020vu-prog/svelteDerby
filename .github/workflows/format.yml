@@ -28,7 +28,7 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Check JavaScript formatting
+      - name: Check JavaScript and Svelte formatting
         run: ./prettier.sh --check
 
       - name: Set up Terraform

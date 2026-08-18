@@ -1,11 +1,11 @@
 <script>
-    import './Charts.css';
+    import "./Charts.css";
     import log from "loglevel";
 
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
-    import { parseHeatPos,augmentChartState } from "./utils.js";
+    import { parseHeatPos, augmentChartState } from "./utils.js";
     import { doRefreshBlocks, driverMap } from "./stores.js";
     import { pannable } from "./pannable.js";
     import { createEventDispatcher } from "svelte";
@@ -50,14 +50,17 @@
     var rsFromDexie = {};
     var posHtml = "";
     const refreshDataFromDb = async (trigger) => {
-  
-        const rc=await augmentChartState(chartJson,chartId,heatPos,heatLetter)
+        const rc = await augmentChartState(
+            chartJson,
+            chartId,
+            heatPos,
+            heatLetter
+        );
 
         //log.debug('acs:',JSON.stringify(rc))
-        bracketClass=rc.bracketClass
-        posHtml=rc.posHtml
-
-    }
+        bracketClass = rc.bracketClass;
+        posHtml = rc.posHtml;
+    };
 
     function handlePanStart() {
         log.debug("chs panStart  ");
@@ -78,9 +81,7 @@
         });
         log.debug("chs panMoved.");
     }
-
 </script>
-
 
 {#if isPannable}
     <div

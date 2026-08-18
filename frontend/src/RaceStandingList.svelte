@@ -120,9 +120,6 @@
     }
 </script>
 
-<style>
-</style>
-
 {#if params.type === "Pending"}
     <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
 {/if}
@@ -148,7 +145,13 @@
         </h4>
     {:else}
         <!-- this will be rendered for each currently visible item -->
-        <Annotate text={dateChangeLabel(item.at, getPriorStanding(i)?.at)} style="margin-top: 1rem" />
+        <Annotate
+            text={dateChangeLabel(item.at, getPriorStanding(i)?.at)}
+            style="margin-top: 1rem"
+        />
         <RaceStanding standing={item} refresh={doRefreshBlocks} />
     {/if}
 {/each}
+
+<style>
+</style>

@@ -7,7 +7,7 @@
     import Annotate from "./Annotate.svelte";
     import RacePhase from "./RacePhase.svelte";
     import RaceStanding from "./RaceStanding.svelte";
-    import HistoryBracketPos from "./HistoryBracketPos.svelte"
+    import HistoryBracketPos from "./HistoryBracketPos.svelte";
     import { dateChangeLabel } from "./utils.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -45,8 +45,11 @@
     {#if historyLoaded && history.length === 0}
         <p>No history items found.</p>
     {/if}
-    {#each history as entity,i (entity.at)}
-        <Annotate text={dateChangeLabel(entity.at, history[i - 1]?.at)} style="margin-top: 1rem" />
+    {#each history as entity, i (entity.at)}
+        <Annotate
+            text={dateChangeLabel(entity.at, history[i - 1]?.at)}
+            style="margin-top: 1rem"
+        />
         {#if entity.PK.endsWith(":RP")}
             <RacePhase
                 source="EventHistory"
@@ -60,7 +63,7 @@
             <RaceStanding standing={entity} source="EventHistory" />
         {/if}
         {#if entity.PK.endsWith(":Bp")}
-            <HistoryBracketPos index={i} bp={entity}/>
+            <HistoryBracketPos index={i} bp={entity} />
         {/if}
     {/each}
 </div>

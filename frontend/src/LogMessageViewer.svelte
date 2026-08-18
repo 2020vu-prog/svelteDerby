@@ -63,6 +63,46 @@
     }
 </script>
 
+<div class="toolbar">
+    <h4>Log Messages</h4>
+    <Button
+        color="primary"
+        size="sm"
+        on:click={refreshLogMessages}
+        disabled={loading}
+    >
+        Refresh
+    </Button>
+</div>
+
+{#if loading}
+    <p>Loading log messages...</p>
+{:else if errorMessage}
+    <p class="text-danger">Unable to load log messages: {errorMessage}</p>
+{:else if logMessages.length === 0}
+    <p>No log messages found.</p>
+{:else}
+    {#each logMessages as logMessage (logMessage.SK)}
+        <section class="log-message" on:click={() => toggleDetail(logMessage)}>
+            <div class="log-message-header">
+                {formatTime(logMessage)}
+                | {getLevelEmoji(logMessage.level)}
+                {logMessage.level || "debug"}
+                {#if expandedMessageKey === logMessage.SK && logMessage.source}
+                    | {logMessage.source}
+                {/if}
+            </div>
+            <div class="message">{logMessage.message}</div>
+            {#if expandedMessageKey === logMessage.SK}
+                <ByLine entity={logMessage} />
+                {#if formatDetail(logMessage.detail)}
+                    <pre>{formatDetail(logMessage.detail)}</pre>
+                {/if}
+            {/if}
+        </section>
+    {/each}
+{/if}
+
 <style>
     .toolbar {
         align-items: center;
@@ -100,38 +140,3 @@
         white-space: pre-wrap;
     }
 </style>
-
-<div class="toolbar">
-    <h4>Log Messages</h4>
-    <Button color="primary" size="sm" on:click={refreshLogMessages} disabled={loading}>
-        Refresh
-    </Button>
-</div>
-
-{#if loading}
-    <p>Loading log messages...</p>
-{:else if errorMessage}
-    <p class="text-danger">Unable to load log messages: {errorMessage}</p>
-{:else if logMessages.length === 0}
-    <p>No log messages found.</p>
-{:else}
-    {#each logMessages as logMessage (logMessage.SK)}
-        <section class="log-message" on:click={() => toggleDetail(logMessage)}>
-            <div class="log-message-header">
-                {formatTime(logMessage)}
-                | {getLevelEmoji(logMessage.level)}
-                {logMessage.level || "debug"}
-                {#if expandedMessageKey === logMessage.SK && logMessage.source}
-                    | {logMessage.source}
-                {/if}
-            </div>
-            <div class="message">{logMessage.message}</div>
-            {#if expandedMessageKey === logMessage.SK}
-                <ByLine entity={logMessage} />
-                {#if formatDetail(logMessage.detail)}
-                    <pre>{formatDetail(logMessage.detail)}</pre>
-                {/if}
-            {/if}
-        </section>
-    {/each}
-{/if}

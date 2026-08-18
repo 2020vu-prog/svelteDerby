@@ -59,10 +59,9 @@
         log.debug(`driver virtualList: start: ${start} end: ${end}`);
     }
     $: {
-        carNumberList = getCarNumbersAsList(
-            $driverMap,
-            $carFilter
-        ).filter((cn) => filterMatches(cn, $carFilter));
+        carNumberList = getCarNumbersAsList($driverMap, $carFilter).filter(
+            (cn) => filterMatches(cn, $carFilter)
+        );
     }
 
     function carAndDriverOnClick(number) {
@@ -89,12 +88,6 @@
         //wipTotal = $selectedDriverList.length
     }
 </script>
-
-<style>
-    div :global(.xLargeEdit) {
-        font-size: 28px;
-    }
-</style>
 
 <div id="dlTitle">
     <h4>
@@ -171,3 +164,9 @@
         Select [{$selectedDriverList.length}] Drivers
     </SpinnerButton>
 {/if}
+
+<style>
+    div :global(.xLargeEdit) {
+        font-size: 28px;
+    }
+</style>

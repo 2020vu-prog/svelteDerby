@@ -38,7 +38,7 @@
             push(timerLink);
         }
     };
-    function getSponsor (number)  {
+    function getSponsor(number) {
         if (number && $driverMap[number]) {
             return $driverMap[number].spon;
         } else {
@@ -54,10 +54,17 @@
         }
     };
 </script>
+
 {#if isWinner}
     <img alt="flag" src="data/checkered-flag-svgrepo-com.svg" width="25px" />
 {:else if phaseLetter}
-    <button type="button" class="btn {phaseClass} phase-icon-btn" on:click={() => { if (isManualTimerAllowed()) gotoTimer()}}>
+    <button
+        type="button"
+        class="btn {phaseClass} phase-icon-btn"
+        on:click={() => {
+            if (isManualTimerAllowed()) gotoTimer();
+        }}
+    >
         {phaseLetter}
     </button>
 {:else}
@@ -69,10 +76,10 @@
     />
 {/if}
 <div style="vertical-align: middle; display: inline">
-<b class="bigText">{number}</b>
-{name}
-{#if getSponsor(number)}
-    <br />
-    <b>{getSponsor(number)}</b>
-{/if}
+    <b class="bigText">{number}</b>
+    {name}
+    {#if getSponsor(number)}
+        <br />
+        <b>{getSponsor(number)}</b>
+    {/if}
 </div>

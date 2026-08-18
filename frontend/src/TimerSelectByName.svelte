@@ -8,7 +8,7 @@
     let tcList = [];
     let selectedTc = "";
     export let preSelect = "";
-    export let mode= "normal";
+    export let mode = "normal";
     const dispatch = createEventDispatcher();
 
     onMount(async () => {
@@ -33,7 +33,12 @@
         });
     }
 </script>
-<select bind:value={selectedTc} on:change={doDispatch} disabled={mode==="disabled"}>
+
+<select
+    bind:value={selectedTc}
+    on:change={doDispatch}
+    disabled={mode === "disabled"}
+>
     {#each tcList as tc}
         <option>{tc.SK}</option>
     {/each}

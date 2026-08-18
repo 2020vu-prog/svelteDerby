@@ -133,7 +133,7 @@
                     seedObject.ptcp = posForm[ab].carNumber.toString();
                 } else {
                     log.debug("invalid preSeed:", posForm[ab]);
-                    pushMessage( {
+                    pushMessage({
                         text: `Invalid Participant: [${posForm[ab].carNumber}]`,
                         type: "error",
                     });
@@ -165,7 +165,7 @@
             .then((response) => {
                 log.debug("addChartPosition axios success ", response);
                 if (response.data.error) {
-                    pushMessage( {
+                    pushMessage({
                         text: response.data.error,
                         type: "error",
                     });
@@ -210,28 +210,11 @@
             }
         }
     };
-    function pushHistory(){
-        const chartKey=`${params.chartId}:${params.chartPosition}`
-        push(`/historyList/${$raceConfig.orgId}:Bp/${chartKey}`)
+    function pushHistory() {
+        const chartKey = `${params.chartId}:${params.chartPosition}`;
+        push(`/historyList/${$raceConfig.orgId}:Bp/${chartKey}`);
     }
 </script>
-
-<style>
-    .card {
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-        transition: 0.3s;
-        width: min-content;
-        border-radius: 5px;
-    }
-
-    .card:hover {
-        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
-    }
-
-    .container {
-        padding: 2px 16px;
-    }
-</style>
 
 <h2>Heat: {params.chartPosition}</h2>
 <form>
@@ -305,9 +288,7 @@
     <br />
     <br />
 
-        <SpinnerButton on:click={pushHistory} >
-            History
-        </SpinnerButton>
+    <SpinnerButton on:click={pushHistory}>History</SpinnerButton>
 
     {#if editable}
         <SpinnerButton
@@ -325,3 +306,20 @@
         <RaceStanding standing={rsFromDexie} refresh={doRefreshBlocks} />
     {/if}
 </form>
+
+<style>
+    .card {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        transition: 0.3s;
+        width: min-content;
+        border-radius: 5px;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .container {
+        padding: 2px 16px;
+    }
+</style>

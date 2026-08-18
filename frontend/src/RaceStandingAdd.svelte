@@ -13,16 +13,16 @@
     } from "./stores.js";
     import { onMount, tick } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
-    import { 
+    import {
         participantValid,
         participantFocusCompletion,
         getRaceTypeEmoji,
     } from "./utils.js";
 
     export let params = {};
-    const mode=params.type
-    const modeRaceStanding='RaceStanding'
-    const modeRacePhase='RacePhase'
+    const mode = params.type;
+    const modeRaceStanding = "RaceStanding";
+    const modeRacePhase = "RacePhase";
     log.debug("RaceStandingAdd", params, mode);
     var mounted = false;
     var submitFocused = false;
@@ -76,11 +76,10 @@
         log.debug("mounted type:", params.type);
         title = unMapType("title");
         document.getElementById("cn1").focus();
-        if(mode===modeRacePhase){
-            carNumberForm.promptPhaseType= $defaultPhaseType
-
+        if (mode === modeRacePhase) {
+            carNumberForm.promptPhaseType = $defaultPhaseType;
         }
-    
+
         mounted = true;
     });
     function changeFocus(carNumber, seedIdentifier) {
@@ -112,9 +111,8 @@
         const endPoint = unMapType("endPoint");
 
         if (endPoint == "/addBlocks" && blocksOccupied) {
-            pushMessage( {
-                text:
-                    "You cannot add a race to the blocks when the blocks are already occupied.",
+            pushMessage({
+                text: "You cannot add a race to the blocks when the blocks are already occupied.",
                 type: "error",
             });
             return;
@@ -132,7 +130,7 @@
             pt: carNumberForm.promptPhaseType,
         };
         if (req.cn[0] === req.cn[1]) {
-            pushMessage( {
+            pushMessage({
                 text: `Car numbers must not match [${req.cn[0]}] [${req.cn[1]}]`,
                 type: "error",
             });
@@ -166,8 +164,7 @@
     function sleep(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
-    let carNumberForm = {
-    };
+    let carNumberForm = {};
     function syncAddButton(advanceFocusToSubmit) {
         if (!mounted) {
             return;
@@ -223,10 +220,14 @@
 <h3>{title}</h3>
 
 <form>
-    {#if mode==modeRacePhase && !submitSpinning}
+    {#if mode == modeRacePhase && !submitSpinning}
         <h4>
-            Blocks are 
-            <strong style="background-color: {blocksOccupied ? '#FF0000' : 'lightgreen'}">
+            Blocks are
+            <strong
+                style="background-color: {blocksOccupied
+                    ? '#FF0000'
+                    : 'lightgreen'}"
+            >
                 {blocksOccupied ? "OCCUPIED" : "EMPTY"}
             </strong>
         </h4>
@@ -276,9 +277,9 @@
         />
         <p>{getDriverName(carNumberForm.car2)}</p>
     </label>
-    {#if mode==modeRacePhase}
-        <AuditBlocks carNumberForm={carNumberForm} />
-        <br/>
+    {#if mode == modeRacePhase}
+        <AuditBlocks {carNumberForm} />
+        <br />
     {/if}
     <SpinnerButton
         disabled={submitDisabled}
@@ -287,7 +288,7 @@
         focused={submitFocused}
     >
         {getRaceTypeEmoji(carNumberForm.promptPhaseType)}
-        Add 
+        Add
         {getRaceTypeEmoji(carNumberForm.promptPhaseType)}
     </SpinnerButton>
 </form>

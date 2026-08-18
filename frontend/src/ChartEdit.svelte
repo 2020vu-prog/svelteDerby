@@ -52,14 +52,14 @@
         submitSpinning = true;
         try {
             const response = await $axios.post(url, req);
-            pushMessage( {
+            pushMessage({
                 text: `Chart [${chartForm.name}] Updated.`,
                 type: "success",
             });
             pop();
         } catch (error) {
             submitSpinning = false;
-            pushMessage( {
+            pushMessage({
                 text: "chartEdit failed: " + error,
                 type: "error",
             });

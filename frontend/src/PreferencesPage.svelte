@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
 
-    import QRCode from 'qrcode'
+    import QRCode from "qrcode";
 
     import {
         theme,
@@ -40,46 +40,45 @@
     let timeFormatSelected;
     var selectedPageSize = undefined;
 
-    var qrCodeUrl=''
-    var qrsvg=''
+    var qrCodeUrl = "";
+    var qrsvg = "";
     function getHostname() {
         const url = new URL(window.location.href);
-        return url.hostname
+        return url.hostname;
     }
     async function getQrSvg() {
-        const myUrl=getUrl()
+        const myUrl = getUrl();
         try {
-            qrsvg=await QRCode.toString(myUrl,{type:'svg'})
-            log.debug(qrsvg.length,':',qrsvg)
-//            console.log(await QRCode.toDataURL(myUrl,{type:'svg'}))
-            qrCodeUrl=await QRCode.toDataURL(myUrl)
-            log.debug(qrCodeUrl.length,':',qrCodeUrl)
+            qrsvg = await QRCode.toString(myUrl, { type: "svg" });
+            log.debug(qrsvg.length, ":", qrsvg);
+            //            console.log(await QRCode.toDataURL(myUrl,{type:'svg'}))
+            qrCodeUrl = await QRCode.toDataURL(myUrl);
+            log.debug(qrCodeUrl.length, ":", qrCodeUrl);
             return qrCodeUrl;
         } catch (err) {
-            console.error(err)
+            console.error(err);
         }
-        return ''
-
+        return "";
     }
     function getUrl(encode) {
         const url = new URL(window.location.href);
         const orgIz = $raceConfig.orgIz;
         const orgId = $raceConfig.orgId;
 
-        let pport=''
-        if(url.port){
-            pport=`:${url.port}`
+        let pport = "";
+        if (url.port) {
+            pport = `:${url.port}`;
         }
         const link = `${url.protocol}//${url.hostname}${pport}/#/as/${orgIz}/${orgId}`;
-        if(encode){
+        if (encode) {
             return encodeURIComponent(link);
-        }else{
-            return link
+        } else {
+            return link;
         }
     }
     onMount(async () => {
         log.debug(`qr: ${getUrl()}`);
-        getQrSvg()
+        getQrSvg();
         if (getCacheKey()) {
             disableCache = true;
         } else {
@@ -105,10 +104,10 @@
     }
     async function clickDisableCache() {
         log.debug("check do");
-        $mqttPsUrlMap.expires=2
-        $mqttPsUrlMap.requested=2
-        $mqttPsUrlMap.issued=2
-        $mqttPsUrlMap=$mqttPsUrlMap
+        $mqttPsUrlMap.expires = 2;
+        $mqttPsUrlMap.requested = 2;
+        $mqttPsUrlMap.issued = 2;
+        $mqttPsUrlMap = $mqttPsUrlMap;
 
         if (!disableCache) {
             // negated test, b/c clickhandler called before bind value :-(
@@ -134,8 +133,8 @@
             log.debug("A " + String(element.value) + " B " + String($theme));
             if (String(element.value) == String($theme)) {
                 log.debug("MATCH");
-                themeSelected = document.querySelectorAll("option")[index]
-                    .value;
+                themeSelected =
+                    document.querySelectorAll("option")[index].value;
                 log.debug(
                     "label of option: " +
                         document.querySelectorAll("option")[index].value
@@ -156,40 +155,15 @@
 
     async function nativeShare() {
         try {
-            await navigator.share({text: "Soap Box Derby race results! Click the link to watch live.", url: getUrl()})
+            await navigator.share({
+                text: "Soap Box Derby race results! Click the link to watch live.",
+                url: getUrl(),
+            });
         } catch (err) {
             log.debug("sharing err/abort:", err);
         }
     }
 </script>
-
-<style>
-    :root {
-        --themeFromJS: "black";
-    }
-
-    div.singularSettingDiv {
-        display: inline;
-    }
-
-    h4 {
-        display: inline;
-    }
-
-    input[type="checkbox"],
-    select {
-        float: right;
-        margin-right: 10px;
-    }
-
-    hr {
-        border: 1px solid var(--themeFromJS);
-    }
-
-    input[type="checkbox"] {
-        transform: scale(2);
-    }
-</style>
 
 <div class="settings">
     <h1>Preferences</h1>
@@ -197,10 +171,10 @@
     <h2>Sharing</h2>
     <hr />
     <div style="text-align: center;">
-    <div style="max-width: 400px; margin-left: auto; margin-right: auto;">
-    {@html qrsvg}
-    </div>
-    <!-- 
+        <div style="max-width: 400px; margin-left: auto; margin-right: auto;">
+            {@html qrsvg}
+        </div>
+        <!--
 
     <img
         src={qrCodeUrl}
@@ -208,11 +182,13 @@
         title=""
     />
     -->
-    <h3>{getHostname()}</h3>
-    {#if $developerMode}
-        <h6>{getUrl()}</h6>
-    {/if}
-    <button on:click={()=> nativeShare()}>Share <img style="width: 20px" src="share-solid.svg"></button>
+        <h3>{getHostname()}</h3>
+        {#if $developerMode}
+            <h6>{getUrl()}</h6>
+        {/if}
+        <button on:click={() => nativeShare()}
+            >Share <img style="width: 20px" src="share-solid.svg" /></button
+        >
     </div>
     <hr />
 
@@ -236,8 +212,8 @@
     </div>
     <h6>
         This toggles whether or not your device will automatically receive new
-        data. Turning this off will improve device battery life but will require pressing the refresh button in order to receive
-        updates.
+        data. Turning this off will improve device battery life but will require
+        pressing the refresh button in order to receive updates.
     </h6>
     <hr />
 
@@ -260,11 +236,10 @@
         on:click={() => push("/routeSelection/nav")}
     >
         <h4>Toolbar Options</h4>
-        <button style="float: right; margin-right: 10px;">
-            Customize
-        </button>
+        <button style="float: right; margin-right: 10px;"> Customize </button>
         <h6>
-            This allows you to customize the buttons that appear in the bottom toolbar.
+            This allows you to customize the buttons that appear in the bottom
+            toolbar.
         </h6>
     </div>
     <hr />
@@ -273,11 +248,10 @@
         on:click={() => push("/routeSelection/carousel")}
     >
         <h4>Carousel</h4>
-        <button style="float: right; margin-right: 10px;">
-            Set Up
-        </button>
+        <button style="float: right; margin-right: 10px;"> Set Up </button>
         <h6>
-            This feature allows you to have the app automatically cycle through pages of your choosing with customizable timing.
+            This feature allows you to have the app automatically cycle through
+            pages of your choosing with customizable timing.
         </h6>
     </div>
     <hr />
@@ -344,11 +318,12 @@
             <option class="sortOption">Heat</option>
         </select>
         <h6>
-            This controls how your pending races screen is sorted. It defaults to
+            This controls how your pending races screen is sorted. It defaults
+            to
             <strong>age</strong>
             (newest to oldest) but it can also be set to
-            <strong>heat</strong>,
-            which will group like-numbered heats of different charts together.
+            <strong>heat</strong>, which will group like-numbered heats of
+            different charts together.
         </h6>
     </div>
     <hr />
@@ -383,9 +358,9 @@
             <option value="">*</option>
         </select>
         <h6>
-            This adjusts which file format appears when you view a race phase's media.
-            It should automatically be set to whatever is most compatible for
-            your device.
+            This adjusts which file format appears when you view a race phase's
+            media. It should automatically be set to whatever is most compatible
+            for your device.
         </h6>
     </div>
     <hr />
@@ -411,8 +386,7 @@
                 About Page
             </button>
             <h6>
-                Visit the about page to access
-                event and version information.
+                Visit the about page to access event and version information.
             </h6>
         </div>
         <hr />
@@ -420,3 +394,31 @@
 
     <BottomNav />
 </div>
+
+<style>
+    :root {
+        --themeFromJS: "black";
+    }
+
+    div.singularSettingDiv {
+        display: inline;
+    }
+
+    h4 {
+        display: inline;
+    }
+
+    input[type="checkbox"],
+    select {
+        float: right;
+        margin-right: 10px;
+    }
+
+    hr {
+        border: 1px solid var(--themeFromJS);
+    }
+
+    input[type="checkbox"] {
+        transform: scale(2);
+    }
+</style>

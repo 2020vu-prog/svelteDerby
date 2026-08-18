@@ -268,37 +268,6 @@
     }
 </script>
 
-<style>
-    :root {
-        --themeFromJS: "black";
-    }
-
-    .switch-toggle {
-        float: left;
-        background: #242729;
-        border-radius: 20px;
-        overflow: hidden;
-    }
-
-    .switch-toggle input {
-        position: absolute;
-        opacity: 0;
-    }
-
-    .switch-toggle input + label {
-        padding: 7px;
-        float: left;
-        color: #fff;
-        cursor: pointer;
-        background-color: #242729;
-        transition: background-color 0.4s ease;
-    }
-
-    .switch-toggle input:checked + label {
-        background: var(--themeFromJS);
-    }
-</style>
-
 <svelte:head>
     <script
         src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"
@@ -504,3 +473,34 @@
         Add
     </SpinnerButton>
 </form>
+
+<style>
+    :root {
+        --themeFromJS: "black";
+    }
+
+    .switch-toggle {
+        float: left;
+        background: #242729;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .switch-toggle input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .switch-toggle input + label {
+        padding: 7px;
+        float: left;
+        color: #fff;
+        cursor: pointer;
+        background-color: #242729;
+        transition: background-color 0.4s ease;
+    }
+
+    .switch-toggle input:checked + label {
+        background: var(--themeFromJS);
+    }
+</style>

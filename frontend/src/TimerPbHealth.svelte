@@ -104,12 +104,11 @@
             if (response.error) {
                 log.debug("getTimerHistory:", response);
                 //TODO: not working!?
-                pushMessage( {
+                pushMessage({
                     text: `getTimerHistory Failed: ${response.error}.`,
                     type: "error",
                 });
             } else {
-
                 historyList = response.data;
                 log.debug("getTimerHistory: ", historyList);
                 if (historyList && historyList.length > 0) {
@@ -122,7 +121,7 @@
                         //const buf = h.data;
                         //log.debug("getTimerHistory h: ", h.SK," buf:",buf);
                         //const buf8 = buf.data;
-                        const buf8=Buffer.from(h.data64, 'base64')
+                        const buf8 = Buffer.from(h.data64, "base64");
 
                         //log.debug("getTimerHistory h: ", h.SK," buf8:",buf8);
                         if (h.SK.startsWith("9999:")) {
@@ -138,7 +137,7 @@
             }
         } catch (err) {
             log.error("getTimerHistory error: ", err);
-            pushMessage( {
+            pushMessage({
                 text: "getTimerHistory error: " + err,
                 type: "error",
             });
@@ -162,7 +161,7 @@
                 }
             }
         }
-        buildMsgs(recentHealth)
+        buildMsgs(recentHealth);
     }
     function cToF(x) {
         if (x) {
@@ -188,7 +187,9 @@
     }
     function fmtVersionStamp() {
         if (recentHealth.buildEpoch) {
-            return new Date(protobufLongToNumber(recentHealth.buildEpoch) * 1000).toLocaleString();
+            return new Date(
+                protobufLongToNumber(recentHealth.buildEpoch) * 1000
+            ).toLocaleString();
         } else {
             return "";
         }
@@ -205,98 +206,148 @@
             return "Unknown";
         }
     }
-    let msgs=[]
-    function msgCpuTemp(msgs,recentHealth){
-        let ll=log.levels.ERROR
-        if(recentHealth.cpuTempC <60){
-            ll= log.levels.WARN
+    let msgs = [];
+    function msgCpuTemp(msgs, recentHealth) {
+        let ll = log.levels.ERROR;
+        if (recentHealth.cpuTempC < 60) {
+            ll = log.levels.WARN;
         }
-        if(recentHealth.cpuTempC <50){
-            ll= log.levels.INFO
+        if (recentHealth.cpuTempC < 50) {
+            ll = log.levels.INFO;
         }
-        msgs.push({msg: `CPU Temp: ${recentHealth.tempFmt}`,level: ll})
+        msgs.push({ msg: `CPU Temp: ${recentHealth.tempFmt}`, level: ll });
     }
-    function msgFsOverlay(msgs,recentHealth){
+    function msgFsOverlay(msgs, recentHealth) {
         if (MqttIsClientEsp32(timerId)) {
             return;
         }
-        const ll=recentHealth.overlayFsEnabled?log.levels.INFO:log.levels.WARN
-        msgs.push({msg: `OverlayFS: ${recentHealth.overlayFsEnabled}`,level: ll})
-
+        const ll = recentHealth.overlayFsEnabled
+            ? log.levels.INFO
+            : log.levels.WARN;
+        msgs.push({
+            msg: `OverlayFS: ${recentHealth.overlayFsEnabled}`,
+            level: ll,
+        });
     }
 
-    function msgChronyPPS(msgs,recentHealth){
+    function msgChronyPPS(msgs, recentHealth) {
         if (MqttIsClientEsp32(timerId)) {
             return;
         }
 
-        const ll=recentHealth.chronyUsingPps?log.levels.DEBUG:log.levels.ERROR
-        msgs.push({msg: `Chrony PPS: ${recentHealth.chronyUsingPps}`,level: ll})
+        const ll = recentHealth.chronyUsingPps
+            ? log.levels.DEBUG
+            : log.levels.ERROR;
+        msgs.push({
+            msg: `Chrony PPS: ${recentHealth.chronyUsingPps}`,
+            level: ll,
+        });
     }
-    function msgCpuIdle(msgs,recentHealth){
-        if(undefined === recentHealth.cpuIdlePercent){
-            return
+    function msgCpuIdle(msgs, recentHealth) {
+        if (undefined === recentHealth.cpuIdlePercent) {
+            return;
         }
-        const cpuLoad=100 - recentHealth.cpuIdlePercent
-        const ll=cpuLoad<25?log.levels.DEBUG:log.levels.WARN
+        const cpuLoad = 100 - recentHealth.cpuIdlePercent;
+        const ll = cpuLoad < 25 ? log.levels.DEBUG : log.levels.WARN;
 
-        msgs.push({msg: `CPU Load: ${cpuLoad}%`,level: ll})
-
+        msgs.push({ msg: `CPU Load: ${cpuLoad}%`, level: ll });
     }
 
-    function msgGpsAll(msgs,recentHealth){
-
-        msgs.push({msg:`GPS enabled: ${timerPbConfig.useGpsTime }`,level: log.levels.INFO})
-        let ll=log.levels.DEBUG
-        if(timerPbConfig.useGpsTime){
-            ll=log.levels.INFO
+    function msgGpsAll(msgs, recentHealth) {
+        msgs.push({
+            msg: `GPS enabled: ${timerPbConfig.useGpsTime}`,
+            level: log.levels.INFO,
+        });
+        let ll = log.levels.DEBUG;
+        if (timerPbConfig.useGpsTime) {
+            ll = log.levels.INFO;
         }
-        if (recentHealth.gpsInitialAcquisitionSecondsAfterBoot){
-            msgs.push({msg: `Gps Acquistion delay: ${secondsToHHMMSS(recentHealth.gpsInitialAcquisitionSecondsAfterBoot)}`,level: ll})
-            const m=`Gps Total Uptime: ${secondsToHHMMSS(
-                        recentHealth.gpsUptimeTotal
-                    )}
+        if (recentHealth.gpsInitialAcquisitionSecondsAfterBoot) {
+            msgs.push({
+                msg: `Gps Acquistion delay: ${secondsToHHMMSS(recentHealth.gpsInitialAcquisitionSecondsAfterBoot)}`,
+                level: ll,
+            });
+            const m = `Gps Total Uptime: ${secondsToHHMMSS(
+                recentHealth.gpsUptimeTotal
+            )}
                     (${getUptimePct(recentHealth)})
-                    `
-            msgs.push({msg: m,level: ll})
-            msgs.push({msg: `Gps Recent Uptime: ${secondsToHHMMSS(recentHealth.gpsUptimeContiguous)}`,level: ll})
-            msgs.push({msg: `Gps Flutter: ${recentHealth.gpsFlutter}`,level: ll})
-            msgs.push({msg: `Gps PPS: ${recentHealth.gpsEmittingPps}`,level: ll})
-        }else{
-            if(timerPbConfig.useGpsTime){
-                msgs.push({msg: `Gps Not yet acquired`,level: log.levels.ERROR})
-            }else{
-                msgs.push({msg: `Gps Not yet acquired`,level: log.levels.INFO})
-
+                    `;
+            msgs.push({ msg: m, level: ll });
+            msgs.push({
+                msg: `Gps Recent Uptime: ${secondsToHHMMSS(recentHealth.gpsUptimeContiguous)}`,
+                level: ll,
+            });
+            msgs.push({
+                msg: `Gps Flutter: ${recentHealth.gpsFlutter}`,
+                level: ll,
+            });
+            msgs.push({
+                msg: `Gps PPS: ${recentHealth.gpsEmittingPps}`,
+                level: ll,
+            });
+        } else {
+            if (timerPbConfig.useGpsTime) {
+                msgs.push({
+                    msg: `Gps Not yet acquired`,
+                    level: log.levels.ERROR,
+                });
+            } else {
+                msgs.push({
+                    msg: `Gps Not yet acquired`,
+                    level: log.levels.INFO,
+                });
             }
         }
     }
-    function buildMsgs(recentHealth){
-        msgs=[]
-        msgs.push({msg: `Timer Id: ${timerId}`,level: log.levels.INFO})
-        msgs.push({msg: `Last Status: ${secondsToHHMMSS(recentHealth.ageSeconds)} seconds ago`,level: log.levels.INFO})
-        msgCpuTemp(msgs,recentHealth)
-        const m=`CPU Uptime: ${secondsToHHMMSS( recentHealth.cpuIncrementingUptime)}`
-        msgs.push({msg: m,level: log.levels.INFO})
-        msgCpuIdle(msgs,recentHealth)
+    function buildMsgs(recentHealth) {
+        msgs = [];
+        msgs.push({ msg: `Timer Id: ${timerId}`, level: log.levels.INFO });
+        msgs.push({
+            msg: `Last Status: ${secondsToHHMMSS(recentHealth.ageSeconds)} seconds ago`,
+            level: log.levels.INFO,
+        });
+        msgCpuTemp(msgs, recentHealth);
+        const m = `CPU Uptime: ${secondsToHHMMSS(recentHealth.cpuIncrementingUptime)}`;
+        msgs.push({ msg: m, level: log.levels.INFO });
+        msgCpuIdle(msgs, recentHealth);
 
+        msgGpsAll(msgs, recentHealth);
+        msgChronyPPS(msgs, recentHealth);
+        msgs.push({
+            msg: `Free Mem: ${recentHealth.ramFreeKB} KB`,
+            level: log.levels.INFO,
+        });
+        msgs.push({
+            msg: `SSID: ${recentHealth.ssid}`,
+            level: log.levels.INFO,
+        });
+        msgs.push({
+            msg: `IP: ${recentHealth.wifiIP}`,
+            level: log.levels.INFO,
+        });
+        msgs.push({
+            msg: `Rss: ${recentHealth.wifiRss}`,
+            level: log.levels.INFO,
+        });
+        msgs.push({
+            msg: `Xmit Credits: ${recentHealth.xmitCredits}`,
+            level: log.levels.INFO,
+        });
+        msgs.push({
+            msg: `mqtt Connections: ${recentHealth.mqttConnections}`,
+            level: log.levels.INFO,
+        });
+        msgs.push({
+            msg: `Timer GitHash: ${fmtGitHash()}`,
+            level: log.levels.INFO,
+        });
+        msgs.push({
+            msg: `Timer Build: ${fmtVersionStamp()}`,
+            level: log.levels.INFO,
+        });
+        msgFsOverlay(msgs, recentHealth);
 
-
-        msgGpsAll(msgs,recentHealth)
-        msgChronyPPS(msgs,recentHealth)
-        msgs.push({msg: `Free Mem: ${recentHealth.ramFreeKB} KB`,level: log.levels.INFO})
-        msgs.push({msg: `SSID: ${recentHealth.ssid}`,level: log.levels.INFO})
-        msgs.push({msg: `IP: ${recentHealth.wifiIP}`,level: log.levels.INFO})
-        msgs.push({msg: `Rss: ${recentHealth.wifiRss}`,level: log.levels.INFO})
-        msgs.push({msg: `Xmit Credits: ${recentHealth.xmitCredits}`,level: log.levels.INFO})
-        msgs.push({msg: `mqtt Connections: ${recentHealth.mqttConnections}`,level: log.levels.INFO})
-        msgs.push({msg: `Timer GitHash: ${fmtGitHash()}`,level: log.levels.INFO})
-        msgs.push({msg: `Timer Build: ${fmtVersionStamp()}`,level: log.levels.INFO})
-        msgFsOverlay(msgs,recentHealth)
-
-
-
-        msgs=msgs
+        msgs = msgs;
     }
 </script>
 
@@ -317,6 +368,6 @@
         {/if}
     </Button>
     <Collapse isOpen={open} {toggle}>
-        <LogList {msgs}/>
+        <LogList {msgs} />
     </Collapse>
 </div>

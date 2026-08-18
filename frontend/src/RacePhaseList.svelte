@@ -67,9 +67,6 @@
     }
 </script>
 
-<style>
-</style>
-
 <MaterialAdd clickHandleRoute="/raceStandingAdd/RacePhase" />
 <div id="rpTitle">
     <h4>
@@ -80,7 +77,10 @@
 
 {#each phaseList as item, i (item.at)}
     {#key getKey(item.at, i, $nextOnBlockKey)}
-        <Annotate text={dateChangeLabel(item.at, phaseList[i - 1]?.at)} style="margin-top: 1rem" />
+        <Annotate
+            text={dateChangeLabel(item.at, phaseList[i - 1]?.at)}
+            style="margin-top: 1rem"
+        />
         <RacePhase
             refreshTime={$doRefreshBlocks}
             phaseKey={item.classKey}
@@ -88,3 +88,6 @@
         />
     {/key}
 {/each}
+
+<style>
+</style>

@@ -209,12 +209,6 @@
     }
 </script>
 
-<style>
-    div :global(.xLargeEdit) {
-        font-size: 28px;
-    }
-</style>
-
 <div>
     <h4>Chart List</h4>
     <p />
@@ -331,3 +325,9 @@
         <br />
     {/if}
 {/if}
+
+<style>
+    div :global(.xLargeEdit) {
+        font-size: 28px;
+    }
+</style>

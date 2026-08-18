@@ -29,29 +29,13 @@
     refreshDevices();
 </script>
 
-<style>
-    .deviceSelection {
-        margin: 1rem 0;
-        padding: 1rem;
-        border: 1px solid #888;
-    }
-
-    .deviceStatus {
-        display: block;
-        margin-top: 0.35rem;
-    }
-
-    select,
-    button {
-        font-size: 1rem;
-        margin-top: 0.5rem;
-        padding: 0.5rem;
-    }
-</style>
-
-<section class:deviceSelection={!readOnly} class:deviceStatus={readOnly} aria-label="Spotify playback device">
+<section
+    class:deviceSelection={!readOnly}
+    class:deviceStatus={readOnly}
+    aria-label="Spotify playback device"
+>
     {#if !readOnly}
-    <strong>Walk-up playback device</strong>
+        <strong>Walk-up playback device</strong>
     {/if}
     {#await devicesPromise}
         {#if readOnly}
@@ -76,7 +60,9 @@
                     <option value="">Active Spotify device (automatic)</option>
                     {#each devices as device (device.id)}
                         <option value={device.id}>
-                            {device.name} ({device.type}){device.is_active ? " — active" : ""}
+                            {device.name} ({device.type}){device.is_active
+                                ? " — active"
+                                : ""}
                         </option>
                     {/each}
                 </select>
@@ -89,7 +75,29 @@
             <p>No controllable Spotify devices are currently available.</p>
         {/if}
         {#if !readOnly}
-            <button type="button" on:click={refreshDevices}>Refresh devices</button>
+            <button type="button" on:click={refreshDevices}
+                >Refresh devices</button
+            >
         {/if}
     {/await}
 </section>
+
+<style>
+    .deviceSelection {
+        margin: 1rem 0;
+        padding: 1rem;
+        border: 1px solid #888;
+    }
+
+    .deviceStatus {
+        display: block;
+        margin-top: 0.35rem;
+    }
+
+    select,
+    button {
+        font-size: 1rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+    }
+</style>

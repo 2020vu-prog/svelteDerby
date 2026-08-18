@@ -155,21 +155,6 @@
     }
 </script>
 
-<style>
-    .column {
-        float: left;
-        width: 50%;
-        text-align: center;
-    }
-
-    /* Clear floats after the columns */
-    .row:after {
-        content: "";
-        display: table;
-        clear: both;
-    }
-</style>
-
 <div style="font-size: xx-large; width: 100%; text-align: center">
     <CarAndDriver
         number={params.number}
@@ -222,3 +207,18 @@
         issues to your local race city official.
     </h6>
 </div>
+
+<style>
+    .column {
+        float: left;
+        width: 50%;
+        text-align: center;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>

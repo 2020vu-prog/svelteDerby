@@ -25,11 +25,14 @@
             if (!msg) {
                 return;
             }
-        log.debug(`dispatchMsg. topic: [${mqTopic}] msg: [${JSON.stringify(msg)}]`);
+            log.debug(
+                `dispatchMsg. topic: [${mqTopic}] msg: [${JSON.stringify(msg)}]`
+            );
             dispatch("mqMessage", msg);
         }
     }
 </script>
+
 {#if verbose}
     Id: {mqTopic}
 {/if}

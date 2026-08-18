@@ -29,7 +29,7 @@
         } else if (timerResult.lane === "2") {
             phr = [winMicros, 0];
         } else {
-            pushMessage( {
+            pushMessage({
                 text: `Invalid Timer Lane ${timerResult.lane}`,
                 type: "error",
             });
@@ -51,13 +51,13 @@
             );
             if (response.data.error) {
                 log.debug("Timer post failed", response);
-                pushMessage( {
+                pushMessage({
                     text: response.data.error,
                     type: "error",
                 });
             } else {
                 log.debug(endPoint + " axios success");
-                pushMessage( {
+                pushMessage({
                     text: "Winning Time applied!",
                 });
             }

@@ -26,7 +26,7 @@
         $clearOldStatusMessages = false;
         messages = [];
         //This message is used to coerce the empty list to repaint.
-        pushMessage( {
+        pushMessage({
             text: `New race selected.`,
             type: "success",
         });
@@ -38,15 +38,14 @@
     });
     $: {
         $statusMessageList.forEach((msg, index) => {
-            loadNewMsg(msg)
+            loadNewMsg(msg);
         });
-       //$statusMessageList.length=0;  // truncate array to empty
-       if($statusMessageList.length>0){
-            $statusMessageList=[] // expect to recurse back to self as empty
-       }
+        //$statusMessageList.length=0;  // truncate array to empty
+        if ($statusMessageList.length > 0) {
+            $statusMessageList = []; // expect to recurse back to self as empty
+        }
     }
-    function loadNewMsg(msg){
-
+    function loadNewMsg(msg) {
         log.debug(`loadNewMsg triggered by statusMessage change: `, msg);
         if (msg && msg.text) {
             if (!msg.type) {
@@ -111,6 +110,20 @@
     };
 </script>
 
+<div class="toasty">
+    {#each messages as message}
+        {#if message.type === "error"}
+            <p class="errorMessage">{message.text}</p>
+        {/if}
+        {#if message.type === "success"}
+            <p class="successMessage">{message.text}</p>
+        {/if}
+        {#if message.type === "archiveWarning"}
+            <p class="archiveWarningMessage">{message.text}</p>
+        {/if}
+    {/each}
+</div>
+
 <style>
     .errorMessage {
         background: papayawhip;
@@ -134,17 +147,3 @@
         z-index: 50;
     }
 </style>
-
-<div class="toasty">
-    {#each messages as message}
-        {#if message.type === "error"}
-            <p class="errorMessage">{message.text}</p>
-        {/if}
-        {#if message.type === "success"}
-            <p class="successMessage">{message.text}</p>
-        {/if}
-        {#if message.type === "archiveWarning"}
-            <p class="archiveWarningMessage">{message.text}</p>
-        {/if}
-    {/each}
-</div>

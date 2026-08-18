@@ -13,12 +13,12 @@
     import SpinnerButton from "./SpinnerButton.svelte";
     import { doRefreshBlocks } from "./stores.js";
     import {
-         hhmmssFmt, 
-         mmddyyFmt,
-        isEmailAllowedRoutePath, 
-        sleep ,
+        hhmmssFmt,
+        mmddyyFmt,
+        isEmailAllowedRoutePath,
+        sleep,
         extractS3VideoMeta,
-        } from "./utils.js";
+    } from "./utils.js";
     import { onMount } from "svelte";
     import {
         axios,
@@ -32,7 +32,7 @@
     import MediaViewer from "./MediaViewer.svelte";
 
     export let params = {};
-    var vtime=1;
+    var vtime = 1;
 
     var loadingMedia = true;
     var rpFromDexie;
@@ -40,13 +40,15 @@
     var selectedVideo;
     var selectedAudio;
     var linkFrom = "";
-    var paused=true
+    var paused = true;
     const SKIP_PREFIX = "_SKIP_";
     const ALL_PREFIX = "_ALL_";
 
     onMount(async () => {
         // neuter chrome long press default
-        window.oncontextmenu = function() { return false; }
+        window.oncontextmenu = function () {
+            return false;
+        };
 
         if (params.dbName === "RacePhase") {
             rpFromDexie = await db.RacePhase.get(params.dbKey);
@@ -66,9 +68,7 @@
     function getMediaPrefix(racePhase) {
         const rc = [];
         if (racePhase && racePhase.phr && racePhase.phr.length) {
-            rc.push(
-                        `${$raceConfig.orgId}/RP-${racePhase.SK.toString()}`
-                )
+            rc.push(`${$raceConfig.orgId}/RP-${racePhase.SK.toString()}`);
             //const prefixSeed = Math.min(...racePhase.phr);
             const psList = [...racePhase.phr];
             psList.sort(function (a, b) {
@@ -133,33 +133,33 @@
         }
         return [];
     }
-    $:{
-        console.log(`video changed: ${selectedVideo}`)
-        vtime=0
-        futureVtime(1)
-        paused=true
+    $: {
+        console.log(`video changed: ${selectedVideo}`);
+        vtime = 0;
+        futureVtime(1);
+        paused = true;
     }
-    async function futureVtime(vp){
-//        await sleep(5000)
-        await tick()
-        vtime=vp
+    async function futureVtime(vp) {
+        //        await sleep(5000)
+        await tick();
+        vtime = vp;
     }
     async function showMedia(key) {
         selectedVideo = null;
         selectedAudio = null;
-        $videoHref=getMediaHref(key)
-       // await tick();
+        $videoHref = getMediaHref(key);
+        // await tick();
         if (key.toString().endsWith(".mp3"))
             //new Audio(getMediaHref(key)).play();
             selectedAudio = key;
         else {
             //document.location = getMediaHref(key);
-            push("/mediaDemo")
-            return
+            push("/mediaDemo");
+            return;
 
             selectedVideo = key;
         }
-        paused=true
+        paused = true;
     }
     function getMediaHref(key) {
         return `/${key}`;
@@ -167,25 +167,19 @@
     function getMediaMMDDYYHHMMSS(mediaItem) {
         log.debug("LMOD:", mediaItem.LastModified);
         log.debug("LMOD parsed:", Date.parse(mediaItem.LastModified));
-        let d=Date.parse(mediaItem.LastModified)
-        const meta=extractS3VideoMeta(mediaItem.Key)
-        if (meta&&meta.tgtTimeMs) {
-            d=meta.tgtTimeMs
+        let d = Date.parse(mediaItem.LastModified);
+        const meta = extractS3VideoMeta(mediaItem.Key);
+        if (meta && meta.tgtTimeMs) {
+            d = meta.tgtTimeMs;
         }
 
-
-        return (
-            mmddyyFmt(d)+
-            " " +
-            hhmmssFmt(d)
-        );
+        return mmddyyFmt(d) + " " + hhmmssFmt(d);
     }
 
-
     function getDisplayName(key) {
-        const meta=extractS3VideoMeta(key)
-        if (meta&&(meta.perspective||meta.timerName)) {
-            return `${meta.timerName} ${meta.perspective}`
+        const meta = extractS3VideoMeta(key);
+        if (meta && (meta.perspective || meta.timerName)) {
+            return `${meta.timerName} ${meta.perspective}`;
         }
 
         if (linkFrom == ALL_PREFIX) {
@@ -207,40 +201,30 @@
         const lcKey = item.Key.toLowerCase();
         return lcKey.endsWith(lcType) || lcKey.endsWith("mp3");
     }
-    let animateDir=0
-    let animateRequest=0
-    function slowV(direction){
-        animateDir=direction
-        animateRequest=Date.now()
-        animateLoop(animateRequest)
+    let animateDir = 0;
+    let animateRequest = 0;
+    function slowV(direction) {
+        animateDir = direction;
+        animateRequest = Date.now();
+        animateLoop(animateRequest);
         //log.debug("slowV",direction)
     }
-    async function animateLoop(arParam){
+    async function animateLoop(arParam) {
         //log.debug("animateLoop ad",animateDir)
 
-        while(animateDir!=0 && arParam===animateRequest){
-            await sleep(200)
-            stepMedia(animateDir)
+        while (animateDir != 0 && arParam === animateRequest) {
+            await sleep(200);
+            stepMedia(animateDir);
         }
     }
-    function stepMedia(direction){
-        const step=.02
-        vtime=vtime+ (step *direction)
+    function stepMedia(direction) {
+        const step = 0.02;
+        vtime = vtime + step * direction;
     }
-    function mediaDemo(){
-        push("/mediaDemo")
+    function mediaDemo() {
+        push("/mediaDemo");
     }
 </script>
-
-<style>
-    .filter-black {
-        filter: saturate(100%) brightness(0%);
-    }
-
-    div :global(.xLargeIcon) {
-        font-size: 28px;
-    }
-</style>
 
 <div style="height: fill-parent">
     <h3>Media List</h3>
@@ -294,10 +278,13 @@
 
                         {#if selectedVideo === mediaItem.Key}
                             <br />
-                            <video width="320" height="240" controls 
-                            		bind:currentTime={vtime}		
-                            		bind:paused
-                                    >
+                            <video
+                                width="320"
+                                height="240"
+                                controls
+                                bind:currentTime={vtime}
+                                bind:paused
+                            >
                                 <source
                                     src={getMediaHref(selectedVideo)}
                                     type="video/mp4"
@@ -318,7 +305,7 @@
                 </Card>
             {/each}
         {/if}
-                            <!--
+        <!--
             <span
                             on:click={() => stepMedia(-1)}
                             on:mousedown={()=>slowV(-1)}
@@ -354,9 +341,19 @@
     {:else}
         <b>No Media found</b>
     {/if}
-                            <!--
+    <!--
 
                             <MediaViewer/>
     <SpinnerButton on:click={mediaDemo}>demo</SpinnerButton>
                             -->
 </div>
+
+<style>
+    .filter-black {
+        filter: saturate(100%) brightness(0%);
+    }
+
+    div :global(.xLargeIcon) {
+        font-size: 28px;
+    }
+</style>

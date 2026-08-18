@@ -58,8 +58,6 @@
         }
     }
 
-
-
     const augmentDataFromDb = async (trigger) => {
         log.debug("refreshDataFromDb data:", trigger);
 
@@ -114,14 +112,14 @@
     async function showCarousel() {
         saveWip();
         if (!wip.find((item) => item.delay)) {
-            pushMessage( {
+            pushMessage({
                 text: `No delay values entered.`,
                 type: "error",
             });
             return;
         }
 
-        pushMessage( {
+        pushMessage({
             text: `Carousel Mode will begin shortly.  PRESS your Browser reload button to stop it!`,
             type: "success",
         });
@@ -150,12 +148,6 @@
         return "Unknown";
     }
 </script>
-
-<style>
-    div :global(.xLargeEdit) {
-        font-size: 28px;
-    }
-</style>
 
 <div id="dlTitle">
     <h4>{getTitle()}</h4>
@@ -206,3 +198,9 @@
         </CardBody>
     </Card>
 {/each}
+
+<style>
+    div :global(.xLargeEdit) {
+        font-size: 28px;
+    }
+</style>

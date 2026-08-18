@@ -37,7 +37,7 @@
             return true; // skip edit if prefs allow
         }
         if (laneX.toString().includes(".")) {
-            pushMessage( {
+            pushMessage({
                 text: `Invalid Input: [${laneX}] (do not include decimal for time).`,
                 type: "error",
             });
@@ -86,7 +86,7 @@
             if (response.data.error) {
                 submitSpinning = false;
                 log.debug("add failed", response);
-                pushMessage( {
+                pushMessage({
                     text: response.data.error,
                     type: "error",
                 });
@@ -144,7 +144,7 @@
     async function getCarNumbersFromRP() {
         rpFromDexie = await db.RacePhase.get(params.rpKey);
         if (!rpFromDexie || !rpFromDexie.cn) {
-            pushMessage( {
+            pushMessage({
                 text: "No race is currently on blocks.",
                 type: "error",
             });
@@ -155,21 +155,6 @@
         carNumber2 = rpFromDexie.cn[1];
     }
 </script>
-
-<style>
-    .column {
-        float: left;
-        width: 50%;
-        text-align: center;
-    }
-
-    /* Clear floats after the columns */
-    .row:after {
-        content: "";
-        display: table;
-        clear: both;
-    }
-</style>
 
 <div style="width: 100%; text-align: center;">
     <h3>Manual Timing Results</h3>
@@ -225,3 +210,18 @@
         </SpinnerButton>
     {/if}
 </form>
+
+<style>
+    .column {
+        float: left;
+        width: 50%;
+        text-align: center;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>
