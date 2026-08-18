@@ -224,7 +224,7 @@
     {/if}
 
     {#if pieShowing}
-        <PieProgress pieTitle="AutoFill Progress" {piePercent} />
+        <PieProgress pieTitle="AutoFill Progress" piePercent={piePercent} />
     {:else}
         {#each seeds as seed}
             <Card class="mt-3 border border-info">

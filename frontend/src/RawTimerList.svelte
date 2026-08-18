@@ -181,6 +181,14 @@
     }
 </script>
 
+<style>
+    .successMessage {
+        background: rgb(218, 238, 218);
+        color: black;
+        padding: 1rem;
+    }
+</style>
+
 <div>
     <h4>Raw Timer List</h4>
 
@@ -224,11 +232,3 @@
         </div>
     {/each}
 </div>
-
-<style>
-    .successMessage {
-        background: rgb(218, 238, 218);
-        color: black;
-        padding: 1rem;
-    }
-</style>

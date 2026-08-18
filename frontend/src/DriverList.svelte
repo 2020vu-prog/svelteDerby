@@ -89,6 +89,12 @@
     }
 </script>
 
+<style>
+    div :global(.xLargeEdit) {
+        font-size: 28px;
+    }
+</style>
+
 <div id="dlTitle">
     <h4>
         Driver
@@ -115,8 +121,8 @@
     height="{mainFullPx}px"
     itemHeight={driverRowHeight}
     items={carNumberList}
-    bind:start
-    bind:end
+    bind:start={start}
+    bind:end={end}
     let:item
 >
     <Card
@@ -164,9 +170,3 @@
         Select [{$selectedDriverList.length}] Drivers
     </SpinnerButton>
 {/if}
-
-<style>
-    div :global(.xLargeEdit) {
-        font-size: 28px;
-    }
-</style>

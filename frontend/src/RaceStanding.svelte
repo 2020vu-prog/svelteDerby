@@ -77,6 +77,11 @@
         if (getBracketLink(standing)) push(getBracketLink(standing));
     };
 </script>
+<style>
+    .list-group-item {
+        border-radius: 0;
+    }
+</style>
 
 {#if shouldRender(standing, at)}
     <Card class="mt-3 border border-info cjw-border-5">
@@ -179,9 +184,3 @@
         {/if}
     </Card>
 {/if}
-
-<style>
-    .list-group-item {
-        border-radius: 0;
-    }
-</style>

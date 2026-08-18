@@ -2,10 +2,9 @@
     export let width = "25px";
     export let height = "25px";
 </script>
-
 <svg
-    {width}
-    {height}
+    width={width}
+    height={height}
     viewBox="0 0 135 135"
     xmlns="http://www.w3.org/2000/svg"
     fill="#fff"

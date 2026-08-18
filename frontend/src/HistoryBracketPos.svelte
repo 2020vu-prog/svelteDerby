@@ -35,7 +35,6 @@
         return status;
     }
 </script>
-
 {#if bmdFromDexie.bracketName}
     <h4>
         {bmdFromDexie.bracketName}

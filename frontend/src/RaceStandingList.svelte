@@ -120,6 +120,9 @@
     }
 </script>
 
+<style>
+</style>
+
 {#if params.type === "Pending"}
     <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
 {/if}
@@ -152,6 +155,3 @@
         <RaceStanding standing={item} refresh={doRefreshBlocks} />
     {/if}
 {/each}
-
-<style>
-</style>

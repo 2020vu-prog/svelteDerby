@@ -29,6 +29,26 @@
     refreshDevices();
 </script>
 
+<style>
+    .deviceSelection {
+        margin: 1rem 0;
+        padding: 1rem;
+        border: 1px solid #888;
+    }
+
+    .deviceStatus {
+        display: block;
+        margin-top: 0.35rem;
+    }
+
+    select,
+    button {
+        font-size: 1rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+    }
+</style>
+
 <section
     class:deviceSelection={!readOnly}
     class:deviceStatus={readOnly}
@@ -81,23 +101,3 @@
         {/if}
     {/await}
 </section>
-
-<style>
-    .deviceSelection {
-        margin: 1rem 0;
-        padding: 1rem;
-        border: 1px solid #888;
-    }
-
-    .deviceStatus {
-        display: block;
-        margin-top: 0.35rem;
-    }
-
-    select,
-    button {
-        font-size: 1rem;
-        margin-top: 0.5rem;
-        padding: 0.5rem;
-    }
-</style>

@@ -128,6 +128,46 @@
     }
 </script>
 
+<style>
+    :root {
+        --themeFromJS: "black";
+    }
+
+    /* https://stackoverflow.com/questions/3779534/how-do-i-disable-text-selection-with-css-or-javascript */
+    .noselect {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    div.singularSettingDiv {
+        display: inline;
+    }
+
+    h4 {
+        display: inline;
+    }
+
+    hr {
+        border: 1px solid var(--themeFromJS);
+    }
+
+    input[type="checkbox"] {
+        transform: scale(2);
+        float: right;
+        margin-right: 10px;
+    }
+
+    div :global(.xLargeEdit) {
+        font-size: 28px;
+        float: right;
+        margin-right: 10px;
+    }
+</style>
+
 <div class="settings">
     <h1>About</h1>
     <hr />
@@ -240,43 +280,3 @@
 
     <BottomNav />
 </div>
-
-<style>
-    :root {
-        --themeFromJS: "black";
-    }
-
-    /* https://stackoverflow.com/questions/3779534/how-do-i-disable-text-selection-with-css-or-javascript */
-    .noselect {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-    }
-
-    div.singularSettingDiv {
-        display: inline;
-    }
-
-    h4 {
-        display: inline;
-    }
-
-    hr {
-        border: 1px solid var(--themeFromJS);
-    }
-
-    input[type="checkbox"] {
-        transform: scale(2);
-        float: right;
-        margin-right: 10px;
-    }
-
-    div :global(.xLargeEdit) {
-        font-size: 28px;
-        float: right;
-        margin-right: 10px;
-    }
-</style>

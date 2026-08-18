@@ -165,6 +165,34 @@
     }
 </script>
 
+<style>
+    :root {
+        --themeFromJS: "black";
+    }
+
+    div.singularSettingDiv {
+        display: inline;
+    }
+
+    h4 {
+        display: inline;
+    }
+
+    input[type="checkbox"],
+    select {
+        float: right;
+        margin-right: 10px;
+    }
+
+    hr {
+        border: 1px solid var(--themeFromJS);
+    }
+
+    input[type="checkbox"] {
+        transform: scale(2);
+    }
+</style>
+
 <div class="settings">
     <h1>Preferences</h1>
     <br />
@@ -394,31 +422,3 @@
 
     <BottomNav />
 </div>
-
-<style>
-    :root {
-        --themeFromJS: "black";
-    }
-
-    div.singularSettingDiv {
-        display: inline;
-    }
-
-    h4 {
-        display: inline;
-    }
-
-    input[type="checkbox"],
-    select {
-        float: right;
-        margin-right: 10px;
-    }
-
-    hr {
-        border: 1px solid var(--themeFromJS);
-    }
-
-    input[type="checkbox"] {
-        transform: scale(2);
-    }
-</style>

@@ -19,12 +19,6 @@
     }
 </script>
 
-<p />
-{lane} CarLength: {getCarLenMillis()}
-{#if getLaneError()}
-    <p class="errorMessage">Error: {getLaneError()}</p>
-{/if}
-
 <style>
     .errorMessage {
         background: papayawhip;
@@ -32,3 +26,9 @@
         padding: 1rem;
     }
 </style>
+
+<p />
+{lane} CarLength: {getCarLenMillis()}
+{#if getLaneError()}
+    <p class="errorMessage">Error: {getLaneError()}</p>
+{/if}

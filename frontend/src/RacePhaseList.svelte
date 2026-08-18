@@ -67,6 +67,9 @@
     }
 </script>
 
+<style>
+</style>
+
 <MaterialAdd clickHandleRoute="/raceStandingAdd/RacePhase" />
 <div id="rpTitle">
     <h4>
@@ -88,6 +91,3 @@
         />
     {/key}
 {/each}
-
-<style>
-</style>

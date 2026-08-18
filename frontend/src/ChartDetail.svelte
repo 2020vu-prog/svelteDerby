@@ -319,6 +319,13 @@
     }
 </script>
 
+<style>
+    div.container {
+        width: 100%;
+        height: 30px;
+    }
+</style>
+
 <svelte:window on:keydown={handleKeydown} />
 
 <svelte:head>
@@ -340,7 +347,7 @@
             chartJson={brackets2}
             id={pos}
             pos={Object.keys(brackets2.imgPositions)[pos]}
-            {scale}
+            scale={scale}
             left={bracket.left}
             top={bracket.top}
             chartId={params.chartId}
@@ -363,10 +370,3 @@
 
     <ChartClickLogger on:copyJson={copyJson} />
 </div>
-
-<style>
-    div.container {
-        width: 100%;
-        height: 30px;
-    }
-</style>

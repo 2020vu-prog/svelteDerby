@@ -2,11 +2,10 @@
     export let width = "20px";
     export let height = "20px";
 </script>
-
 <!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
 <svg
     iwidth={width}
-    {height}
+    height={height}
     viewBox="0 0 24 24"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     xmlns="http://www.w3.org/2000/svg"

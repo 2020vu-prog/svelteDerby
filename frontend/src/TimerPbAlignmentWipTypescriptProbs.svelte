@@ -476,12 +476,28 @@
     }
 </script>
 
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    .row {
+        display: flex;
+    }
+
+    /* Create two equal columns that sits next to each other */
+    .column {
+        flex: 50%;
+        padding: 10px;
+    }
+</style>
+
 <h3>Timer Alignment [{timerName}]</h3>
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
 <div class="row">
     {#if timerName && timerId}
         <div class="column">
-            <TimerPbHealth {timerName} {timerId} />
+            <TimerPbHealth timerName={timerName} timerId={timerId} />
         </div>
         <div class="column">
             <span
@@ -548,19 +564,3 @@
         </code>
     </div>
 {/each}
-
-<style>
-    * {
-        box-sizing: border-box;
-    }
-
-    .row {
-        display: flex;
-    }
-
-    /* Create two equal columns that sits next to each other */
-    .column {
-        flex: 50%;
-        padding: 10px;
-    }
-</style>

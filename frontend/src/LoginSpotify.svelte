@@ -25,7 +25,16 @@
         }
     }
 </script>
-
+<style>
+    .premiumRequired {
+        background: #fff0f0;
+        border: 4px solid #d00000;
+        color: #9b0000;
+        font-size: 1.25rem;
+        font-weight: bold;
+        padding: 1.25rem;
+    }
+</style>
 <br />
 <h4>Spotify</h4>
 {#if $spotifyLoggedIn}
@@ -48,14 +57,3 @@
 {:else}
     <SpinnerButton on:click={loginPKCE}>Login Spotify</SpinnerButton>
 {/if}
-
-<style>
-    .premiumRequired {
-        background: #fff0f0;
-        border: 4px solid #d00000;
-        color: #9b0000;
-        font-size: 1.25rem;
-        font-weight: bold;
-        padding: 1.25rem;
-    }
-</style>

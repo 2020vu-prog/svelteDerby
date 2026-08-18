@@ -55,38 +55,6 @@
     }
 </script>
 
-{#if text}
-    <div class="annotationWrap" {style}>
-        <div class="annotation">
-            <span class="annotationText">{text}</span>
-            {#if hasMenu}
-                <button
-                    aria-label="Annotation menu"
-                    class="menuButton"
-                    type="button"
-                    on:click={toggleMenu}
-                >
-                    <Icon icon={faEllipsisV} />
-                </button>
-            {/if}
-        </div>
-        {#if hasMenu && menuOpen}
-            <div class="menuPanel">
-                {#each menu as item}
-                    <button
-                        class="menuItem"
-                        disabled={item.disabled}
-                        type="button"
-                        on:click={() => handleMenu(item)}
-                    >
-                        {getMenuText(item)}
-                    </button>
-                {/each}
-            </div>
-        {/if}
-    </div>
-{/if}
-
 <style>
     .annotationWrap {
         position: relative;
@@ -154,3 +122,35 @@
         color: #777;
     }
 </style>
+
+{#if text}
+    <div class="annotationWrap" style={style}>
+        <div class="annotation">
+            <span class="annotationText">{text}</span>
+            {#if hasMenu}
+                <button
+                    aria-label="Annotation menu"
+                    class="menuButton"
+                    type="button"
+                    on:click={toggleMenu}
+                >
+                    <Icon icon={faEllipsisV} />
+                </button>
+            {/if}
+        </div>
+        {#if hasMenu && menuOpen}
+            <div class="menuPanel">
+                {#each menu as item}
+                    <button
+                        class="menuItem"
+                        disabled={item.disabled}
+                        type="button"
+                        on:click={() => handleMenu(item)}
+                    >
+                        {getMenuText(item)}
+                    </button>
+                {/each}
+            </div>
+        {/if}
+    </div>
+{/if}

@@ -33,7 +33,6 @@
         });
     }
 </script>
-
 <select
     bind:value={selectedTc}
     on:change={doDispatch}

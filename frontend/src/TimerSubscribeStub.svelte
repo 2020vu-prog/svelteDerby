@@ -94,7 +94,6 @@
         return false;
     }
 </script>
-
 {#if verbose}
     Id: {timerId}
 {/if}

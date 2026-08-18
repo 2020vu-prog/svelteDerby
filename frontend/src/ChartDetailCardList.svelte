@@ -170,7 +170,8 @@
         shown[tab] = true;
     }
 </script>
-
+<style>
+</style>
 <h3 style="text-align:center;z-index: 9;">
     <span on:click={gotoChartPdf}>
         Chart Name: {bmdFromDexie.bracketName}
@@ -226,6 +227,3 @@
         {/if}
     {/each}
 {/key}
-
-<style>
-</style>

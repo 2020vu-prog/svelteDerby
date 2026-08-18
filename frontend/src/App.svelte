@@ -447,6 +447,91 @@
     }
 </script>
 
+<style>
+    /* Style the navigation menu */
+    .topnav {
+        overflow: visible;
+        background-color: #333;
+        position: relative;
+    }
+
+    /* Style navigation menu links */
+    .topnav a {
+        color: white;
+        padding: 14px 16px;
+        text-decoration: none;
+        font-size: 17px;
+        display: block;
+    }
+
+    /* Style the hamburger menu */
+    .topnav div.icon {
+        display: block;
+        position: absolute;
+        top: 0;
+        height: 50px;
+        width: 50px;
+    }
+
+    /* Style the active link (or home/logo) */
+    .active {
+        background-color: #4caf50;
+        color: white;
+        display: grid;
+        align-items: center;
+        box-sizing: border-box;
+        grid-template-columns: minmax(0, 1fr) auto 50px;
+        min-height: 50px;
+        padding: 4px 0 4px 16px;
+        position: relative;
+    }
+
+    .active.has-admin-menu {
+        grid-template-columns: minmax(0, 1fr) auto 100px;
+    }
+
+    .event-title-button {
+        background: transparent;
+        border: 0;
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+        min-width: 0;
+        overflow: hidden;
+        padding: 0 1rem 0 0;
+        text-align: left;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .event-title-button:focus-visible {
+        outline: 2px solid white;
+        outline-offset: 2px;
+    }
+
+    .event-title-popover {
+        background-color: #333;
+        border: 0;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+        color: white;
+        cursor: pointer;
+        font: inherit;
+        left: 16px;
+        max-width: calc(100vw - 32px);
+        overflow-wrap: anywhere;
+        padding: 0.5rem 0.75rem;
+        position: absolute;
+        text-align: left;
+        top: calc(100% + 4px);
+        z-index: 30;
+    }
+
+    .refresh-control {
+        height: 40px;
+    }
+</style>
+
 <svelte:window
     on:pageshow={onPageShow}
     on:keydown={closeEventTitlePopoverOnEscape}
@@ -539,92 +624,7 @@
     <main>
         <SpinnerPanel />
         <Splash />
-        <Router {routes} />
+        <Router routes={routes} />
     </main>
     <BottomNav />
 {/if}
-
-<style>
-    /* Style the navigation menu */
-    .topnav {
-        overflow: visible;
-        background-color: #333;
-        position: relative;
-    }
-
-    /* Style navigation menu links */
-    .topnav a {
-        color: white;
-        padding: 14px 16px;
-        text-decoration: none;
-        font-size: 17px;
-        display: block;
-    }
-
-    /* Style the hamburger menu */
-    .topnav div.icon {
-        display: block;
-        position: absolute;
-        top: 0;
-        height: 50px;
-        width: 50px;
-    }
-
-    /* Style the active link (or home/logo) */
-    .active {
-        background-color: #4caf50;
-        color: white;
-        display: grid;
-        align-items: center;
-        box-sizing: border-box;
-        grid-template-columns: minmax(0, 1fr) auto 50px;
-        min-height: 50px;
-        padding: 4px 0 4px 16px;
-        position: relative;
-    }
-
-    .active.has-admin-menu {
-        grid-template-columns: minmax(0, 1fr) auto 100px;
-    }
-
-    .event-title-button {
-        background: transparent;
-        border: 0;
-        color: inherit;
-        cursor: pointer;
-        font: inherit;
-        min-width: 0;
-        overflow: hidden;
-        padding: 0 1rem 0 0;
-        text-align: left;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .event-title-button:focus-visible {
-        outline: 2px solid white;
-        outline-offset: 2px;
-    }
-
-    .event-title-popover {
-        background-color: #333;
-        border: 0;
-        border-radius: 4px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-        color: white;
-        cursor: pointer;
-        font: inherit;
-        left: 16px;
-        max-width: calc(100vw - 32px);
-        overflow-wrap: anywhere;
-        padding: 0.5rem 0.75rem;
-        position: absolute;
-        text-align: left;
-        top: calc(100% + 4px);
-        z-index: 30;
-    }
-
-    .refresh-control {
-        height: 40px;
-    }
-</style>

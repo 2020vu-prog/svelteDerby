@@ -32,7 +32,6 @@
         }
     }
 </script>
-
 {#if verbose}
     Id: {mqTopic}
 {/if}

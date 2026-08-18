@@ -200,6 +200,32 @@
     }
 </script>
 
+<style>
+    /* Place the navbar at the bottom of the page, and make it stick */
+
+    .navbar {
+        background-color: #333;
+        overflow: hidden;
+        width: 100%;
+        justify-content: space-evenly;
+        padding: 1px;
+    }
+
+    /* Style the links inside the navigation bar */
+    .navbarItem {
+        float: left;
+        display: block;
+        color: #f2f2f2;
+        text-align: center;
+        padding: 3.5px 4px;
+        text-decoration: none;
+        font-size: 20px;
+        font-weight: bold;
+        flex: 1;
+        border: 3px solid black;
+    }
+</style>
+
 <div style="color:black">
     <Modal isOpen={modalOpen} toggle={modalToggle} fullscreen>
         {#if modalType === "deleteConfirmation"}
@@ -305,29 +331,3 @@
         </span>
     {/if}
 </div>
-
-<style>
-    /* Place the navbar at the bottom of the page, and make it stick */
-
-    .navbar {
-        background-color: #333;
-        overflow: hidden;
-        width: 100%;
-        justify-content: space-evenly;
-        padding: 1px;
-    }
-
-    /* Style the links inside the navigation bar */
-    .navbarItem {
-        float: left;
-        display: block;
-        color: #f2f2f2;
-        text-align: center;
-        padding: 3.5px 4px;
-        text-decoration: none;
-        font-size: 20px;
-        font-weight: bold;
-        flex: 1;
-        border: 3px solid black;
-    }
-</style>

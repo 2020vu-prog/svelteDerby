@@ -35,12 +35,6 @@
     }
 </script>
 
-{#if userHasPermission}
-    <div class="fab" style="background-color: {$theme}" on:click={chFunction}>
-        <img src="plus-solid.svg" />
-    </div>
-{/if}
-
 <style>
     .fab {
         width: 1.5em;
@@ -76,3 +70,9 @@
         transform: scale(1.05);
     }
 </style>
+
+{#if userHasPermission}
+    <div class="fab" style="background-color: {$theme}" on:click={chFunction}>
+        <img src="plus-solid.svg" />
+    </div>
+{/if}

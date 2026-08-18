@@ -22,7 +22,6 @@
         return "";
     }
 </script>
-
 <h4>Setup Timer WiFi</h4>
 <ul>
     <li>Power on timer and wait 3 minutes</li>

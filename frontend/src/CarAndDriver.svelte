@@ -54,7 +54,6 @@
         }
     };
 </script>
-
 {#if isWinner}
     <img alt="flag" src="data/checkered-flag-svgrepo-com.svg" width="25px" />
 {:else if phaseLetter}

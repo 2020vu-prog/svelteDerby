@@ -97,7 +97,7 @@
                 <div class="lane-grid">
                     {#each [1, 2] as lane}
                         <PaInfoDriverCard
-                            {lane}
+                            lane={lane}
                             carNumber={getCarNumber(nextRace, lane)}
                             participant={participantFor(nextRace, lane)}
                             isWinner={Boolean(nextRace.isWinner?.(lane, true))}
@@ -132,7 +132,7 @@
                 <div class="lane-grid">
                     {#each [1, 2] as lane}
                         <PaInfoDriverCard
-                            {lane}
+                            lane={lane}
                             carNumber={getCarNumber(completedRace, lane)}
                             participant={participantFor(completedRace, lane)}
                             isWinner={Boolean(

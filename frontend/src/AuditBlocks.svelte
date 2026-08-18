@@ -119,5 +119,4 @@
         return rc.filter((rs) => rs.isPending()).filter((rs) => !rs.del);
     }
 </script>
-
-<LogList {msgs} />
+<LogList msgs={msgs} />

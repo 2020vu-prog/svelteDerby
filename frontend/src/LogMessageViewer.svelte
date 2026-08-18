@@ -63,6 +63,44 @@
     }
 </script>
 
+<style>
+    .toolbar {
+        align-items: center;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: space-between;
+        margin: 0.75rem 0;
+    }
+
+    .log-message {
+        border-bottom: 1px solid #ddd;
+        cursor: pointer;
+        padding: 0.75rem 0;
+    }
+
+    .log-message-header {
+        color: #444;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .message {
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    pre {
+        background-color: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        margin: 0.5rem 0 0;
+        overflow-x: auto;
+        padding: 0.5rem;
+        white-space: pre-wrap;
+    }
+</style>
+
 <div class="toolbar">
     <h4>Log Messages</h4>
     <Button
@@ -102,41 +140,3 @@
         </section>
     {/each}
 {/if}
-
-<style>
-    .toolbar {
-        align-items: center;
-        display: flex;
-        gap: 0.75rem;
-        justify-content: space-between;
-        margin: 0.75rem 0;
-    }
-
-    .log-message {
-        border-bottom: 1px solid #ddd;
-        cursor: pointer;
-        padding: 0.75rem 0;
-    }
-
-    .log-message-header {
-        color: #444;
-        font-size: 0.9rem;
-        margin-bottom: 0.25rem;
-    }
-
-    .message {
-        font-size: 1rem;
-        margin-bottom: 0.25rem;
-    }
-
-    pre {
-        background-color: #f5f5f5;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        margin: 0.5rem 0 0;
-        overflow-x: auto;
-        padding: 0.5rem;
-        white-space: pre-wrap;
-    }
-</style>

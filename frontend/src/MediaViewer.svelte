@@ -160,8 +160,8 @@
         on:mousedown={handleMousedown}
         on:mouseup={handleMouseup}
         bind:currentTime={time}
-        bind:duration
-        bind:paused
+        bind:duration={duration}
+        bind:paused={paused}
         bind:this={video}
     >
         <track kind="captions" />
@@ -213,7 +213,6 @@
     <br />
     Offset: {tgtTimeSeconds}
 {/if}
-
 <style>
     div {
         position: relative;

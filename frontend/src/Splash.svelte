@@ -26,8 +26,8 @@
 </script>
 
 {#if open}
-    <Modal isOpen={open} {toggle}>
-        <ModalHeader {toggle}>
+    <Modal isOpen={open} toggle={toggle}>
+        <ModalHeader toggle={toggle}>
             RR1.US is the Official Timer App of NDR!
         </ModalHeader>
         <ModalBody>

@@ -965,7 +965,7 @@
 </script>
 
 {#if isArchived(ecFromDexie, $raceConfig)}
-    <SpinnerButton spinning={false} disabled={true} {btnClass}>
+    <SpinnerButton spinning={false} disabled={true} btnClass={btnClass}>
         Archived
     </SpinnerButton>
 {:else}
@@ -975,7 +975,7 @@
         spinning={refreshInProgressButton ||
             refreshInProgressMq ||
             refreshInProgressCca}
-        {btnClass}
+        btnClass={btnClass}
     >
         Refresh
     </SpinnerButton>

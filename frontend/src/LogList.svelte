@@ -25,7 +25,6 @@
         return "❌";
     }
 </script>
-
 <span on:click={() => (showDebug = !showDebug)}>
     {#each msgs as msg (msg.msg)}
         {#if showDebug || msg.level > log.levels.DEBUG}

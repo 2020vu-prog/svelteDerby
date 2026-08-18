@@ -94,7 +94,6 @@
         $spotifyApiReady.createController(iframeElement, options, callback);
     }
 </script>
-
 <svelte:head>
     <script src="https://open.spotify.com/embed/iframe-api/v1"></script>
 </svelte:head>

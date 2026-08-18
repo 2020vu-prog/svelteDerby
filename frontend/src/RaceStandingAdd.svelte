@@ -278,7 +278,7 @@
         <p>{getDriverName(carNumberForm.car2)}</p>
     </label>
     {#if mode == modeRacePhase}
-        <AuditBlocks {carNumberForm} />
+        <AuditBlocks carNumberForm={carNumberForm} />
         <br />
     {/if}
     <SpinnerButton

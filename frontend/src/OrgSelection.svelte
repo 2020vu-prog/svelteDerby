@@ -83,7 +83,7 @@
             <CardBody>
                 <div on:click={() => push("/eventSelection/" + orgIz)}>
                     <a href="javascript:void(0);">
-                        <OrgName {orgIz} />
+                        <OrgName orgIz={orgIz} />
                     </a>
                 </div>
             </CardBody>

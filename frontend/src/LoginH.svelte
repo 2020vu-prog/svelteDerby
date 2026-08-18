@@ -69,7 +69,6 @@
         window.location.href = loginUrl;
     }
 </script>
-
 {#if redirecting}
     <SpinnerButton spinning>Loading</SpinnerButton>
 {:else if $userEmail}

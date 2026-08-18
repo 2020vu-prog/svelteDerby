@@ -5,7 +5,14 @@
     const screenH = window.screen.height;
     const spinXY = Math.min(screenH, screenW);
 </script>
-
+<style>
+    div {
+        position: absolute;
+        background: black;
+        color: whitesmoke;
+        z-index: 289;
+    }
+</style>
 {#if $spinnerPanelBusy}
     <!--
 
@@ -16,12 +23,3 @@
         <CirclesSvg width={spinXY} height={spinXY} />
     </div>
 {/if}
-
-<style>
-    div {
-        position: absolute;
-        background: black;
-        color: whitesmoke;
-        z-index: 289;
-    }
-</style>

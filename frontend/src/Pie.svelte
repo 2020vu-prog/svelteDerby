@@ -13,7 +13,7 @@
     $: dashArray = `0 ${halfCircumference - pieSize} ${pieSize}`;
 </script>
 
-<svg width={size} height={size} {viewBox}>
+<svg width={size} height={size} viewBox={viewBox}>
     <circle r={radius} cx={radius} cy={radius} fill={bgColor} />
     <circle
         r={radius / 2}

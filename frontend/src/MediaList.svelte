@@ -226,6 +226,16 @@
     }
 </script>
 
+<style>
+    .filter-black {
+        filter: saturate(100%) brightness(0%);
+    }
+
+    div :global(.xLargeIcon) {
+        font-size: 28px;
+    }
+</style>
+
 <div style="height: fill-parent">
     <h3>Media List</h3>
     {#if loadingMedia}
@@ -283,7 +293,7 @@
                                 height="240"
                                 controls
                                 bind:currentTime={vtime}
-                                bind:paused
+                                bind:paused={paused}
                             >
                                 <source
                                     src={getMediaHref(selectedVideo)}
@@ -347,13 +357,3 @@
     <SpinnerButton on:click={mediaDemo}>demo</SpinnerButton>
                             -->
 </div>
-
-<style>
-    .filter-black {
-        filter: saturate(100%) brightness(0%);
-    }
-
-    div :global(.xLargeIcon) {
-        font-size: 28px;
-    }
-</style>

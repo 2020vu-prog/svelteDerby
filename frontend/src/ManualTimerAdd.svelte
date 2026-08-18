@@ -156,6 +156,21 @@
     }
 </script>
 
+<style>
+    .column {
+        float: left;
+        width: 50%;
+        text-align: center;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>
+
 <div style="width: 100%; text-align: center;">
     <h3>Manual Timing Results</h3>
 </div>
@@ -210,18 +225,3 @@
         </SpinnerButton>
     {/if}
 </form>
-
-<style>
-    .column {
-        float: left;
-        width: 50%;
-        text-align: center;
-    }
-
-    /* Clear floats after the columns */
-    .row:after {
-        content: "";
-        display: table;
-        clear: both;
-    }
-</style>

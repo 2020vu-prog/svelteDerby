@@ -354,7 +354,7 @@
 <div>
     {#key timerId}
         <TimerSubscribeStub
-            {timerId}
+            timerId={timerId}
             verbose=""
             on:timerDataList={(e) => {
                 showHealth(e.detail);
@@ -367,7 +367,7 @@
             <img alt="spinner" src="data/circles.svg" width="25px" />
         {/if}
     </Button>
-    <Collapse isOpen={open} {toggle}>
-        <LogList {msgs} />
+    <Collapse isOpen={open} toggle={toggle}>
+        <LogList msgs={msgs} />
     </Collapse>
 </div>

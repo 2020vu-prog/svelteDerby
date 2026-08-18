@@ -186,6 +186,14 @@
     };
 </script>
 
+<style>
+    .column {
+        flex: 1 1 0px;
+    }
+    .list-group-item {
+        border-radius: 0;
+    }
+</style>
 {#key at}
     {#if refreshTime && shouldRender(rp, boundVars)}
         {#if !compressedLayout}
@@ -230,7 +238,7 @@
                                 number={rp.carNumbers[0]}
                                 isWinner={racePhase.isWinner(1, true)}
                                 phaseLetter={getPhaseIcon(rp)}
-                                {phaseClass}
+                                phaseClass={phaseClass}
                                 timerLink={getTimerLink(rp)}
                                 at={safeGetAt($driverMap, rp.carNumbers[0])}
                             />
@@ -260,7 +268,7 @@
                                 number={rp.carNumbers[1]}
                                 isWinner={racePhase.isWinner(2, true)}
                                 phaseLetter={getPhaseIcon(rp)}
-                                {phaseClass}
+                                phaseClass={phaseClass}
                                 timerLink={getTimerLink(rp)}
                                 at={safeGetAt($driverMap, rp.carNumbers[1])}
                             />
@@ -367,12 +375,3 @@
         {/if}
     {/if}
 {/key}
-
-<style>
-    .column {
-        flex: 1 1 0px;
-    }
-    .list-group-item {
-        border-radius: 0;
-    }
-</style>

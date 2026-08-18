@@ -517,6 +517,39 @@
     }
 </script>
 
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    .row {
+        display: flex;
+    }
+
+    .alignmentControls {
+        align-items: flex-start;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .alignmentControl {
+        flex: 1 1 14rem;
+    }
+
+    .plotControl {
+        flex: 0 0 auto;
+        padding-top: 0.15rem;
+    }
+
+    /* Create two equal columns that sits next to each other */
+    .column {
+        flex: 50%;
+        padding: 10px;
+    }
+</style>
+
 <h3>Timer Alignment [{timerName}]</h3>
 <h5>Selected Timer [{timerPbConfig.timerMqttClientId}]</h5>
 {#if loadingAlignment}
@@ -527,7 +560,7 @@
     <div class="alignmentControls">
         {#if timerName && timerId}
             <div class="alignmentControl">
-                <TimerPbHealth {timerName} {timerId} />
+                <TimerPbHealth timerName={timerName} timerId={timerId} />
             </div>
             <div class="alignmentControl">
                 <TimerHistoryAge
@@ -572,39 +605,6 @@
     </div>
 
     {#each markupPins(sortedPbTimerPinHistory) as cdBlock}
-        <TimerPbCard {cdBlock} {timerPbConfig} />
+        <TimerPbCard cdBlock={cdBlock} timerPbConfig={timerPbConfig} />
     {/each}
 {/if}
-
-<style>
-    * {
-        box-sizing: border-box;
-    }
-
-    .row {
-        display: flex;
-    }
-
-    .alignmentControls {
-        align-items: flex-start;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem 1rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .alignmentControl {
-        flex: 1 1 14rem;
-    }
-
-    .plotControl {
-        flex: 0 0 auto;
-        padding-top: 0.15rem;
-    }
-
-    /* Create two equal columns that sits next to each other */
-    .column {
-        flex: 50%;
-        padding: 10px;
-    }
-</style>

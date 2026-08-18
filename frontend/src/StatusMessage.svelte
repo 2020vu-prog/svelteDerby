@@ -110,20 +110,6 @@
     };
 </script>
 
-<div class="toasty">
-    {#each messages as message}
-        {#if message.type === "error"}
-            <p class="errorMessage">{message.text}</p>
-        {/if}
-        {#if message.type === "success"}
-            <p class="successMessage">{message.text}</p>
-        {/if}
-        {#if message.type === "archiveWarning"}
-            <p class="archiveWarningMessage">{message.text}</p>
-        {/if}
-    {/each}
-</div>
-
 <style>
     .errorMessage {
         background: papayawhip;
@@ -147,3 +133,17 @@
         z-index: 50;
     }
 </style>
+
+<div class="toasty">
+    {#each messages as message}
+        {#if message.type === "error"}
+            <p class="errorMessage">{message.text}</p>
+        {/if}
+        {#if message.type === "success"}
+            <p class="successMessage">{message.text}</p>
+        {/if}
+        {#if message.type === "archiveWarning"}
+            <p class="archiveWarningMessage">{message.text}</p>
+        {/if}
+    {/each}
+</div>

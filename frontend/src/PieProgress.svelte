@@ -13,13 +13,6 @@
     }
 </script>
 
-<div class="modal">
-    <div class="modal-content">
-        <p>{pieTitle}</p>
-        <Pie size={150} percent={$ps} />
-    </div>
-</div>
-
 <style>
     /* The Modal (background) */
     .modal {
@@ -51,3 +44,10 @@
         width: min-content;
     }
 </style>
+
+<div class="modal">
+    <div class="modal-content">
+        <p>{pieTitle}</p>
+        <Pie size={150} percent={$ps} />
+    </div>
+</div>

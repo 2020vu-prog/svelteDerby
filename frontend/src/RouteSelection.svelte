@@ -149,6 +149,12 @@
     }
 </script>
 
+<style>
+    div :global(.xLargeEdit) {
+        font-size: 28px;
+    }
+</style>
+
 <div id="dlTitle">
     <h4>{getTitle()}</h4>
     <SpinnerButton on:click={clearSelect}>Clear Selection</SpinnerButton>
@@ -198,9 +204,3 @@
         </CardBody>
     </Card>
 {/each}
-
-<style>
-    div :global(.xLargeEdit) {
-        font-size: 28px;
-    }
-</style>

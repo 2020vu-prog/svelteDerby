@@ -21,7 +21,6 @@
         );
     }
 </script>
-
 {#each Object.keys(heats) as heat}
     {#if isFilterMatch(heat)}
         <div

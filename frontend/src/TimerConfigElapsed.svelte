@@ -339,7 +339,7 @@
     >
         Timer Alignment
     </SpinnerButton>
-    <TimerPbHealth {timerName} {timerId} />
+    <TimerPbHealth timerName={timerName} timerId={timerId} />
 {/if}
 <Form>
     <FormGroup>

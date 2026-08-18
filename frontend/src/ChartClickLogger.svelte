@@ -30,26 +30,6 @@
     });
 </script>
 
-<!-- @format -->
-{#if $chartClickLoggerShow}
-    <span style="position: absolute; z-index: 9; top:100px;left:0px;">
-        <input
-            id="cclInput"
-            type="string"
-            maxLength="7"
-            size="7"
-            bind:value={$chartClickLoggerId}
-        />
-        <p />
-        <button on:click={copyJson}>Copy Json</button>
-    </span>
-{/if}
-{#if showFab}
-    <div class="fab" style="background-color: {$theme};" on:click={toggleShow}>
-        {#if $chartClickLoggerShow}X{:else}E{/if}
-    </div>
-{/if}
-
 <style>
     .fab {
         width: 1.5em;
@@ -75,3 +55,23 @@
         transform: scale(1.05);
     }
 </style>
+
+<!-- @format -->
+{#if $chartClickLoggerShow}
+    <span style="position: absolute; z-index: 9; top:100px;left:0px;">
+        <input
+            id="cclInput"
+            type="string"
+            maxLength="7"
+            size="7"
+            bind:value={$chartClickLoggerId}
+        />
+        <p />
+        <button on:click={copyJson}>Copy Json</button>
+    </span>
+{/if}
+{#if showFab}
+    <div class="fab" style="background-color: {$theme};" on:click={toggleShow}>
+        {#if $chartClickLoggerShow}X{:else}E{/if}
+    </div>
+{/if}
