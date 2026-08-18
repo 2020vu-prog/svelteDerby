@@ -50,6 +50,7 @@
     import RouteSelection from "./RouteSelection.svelte";
     import ForceLoad from "./ForceLoad.svelte";
     import MediaList from "./MediaList.svelte";
+    import PaInfo from "./PaInfo.svelte";
 
     import ForceReloadPage from "./ForceReloadPage.svelte";
     import LoginH from "./LoginH.svelte";
@@ -112,6 +113,7 @@
         "/chartDetailCardList/:chartId": ChartDetailCardList,
         "/chartPosition/:chartId/:chartPosition": ChartPosition,
         "/chartList": ChartList,
+        "/pa_info": PaInfo,
         "/chartEdit/:chartId": ChartEdit,
         "/chartFill/:chartId": ChartFill,
         "/chartAdd": ChartAdd,
@@ -279,6 +281,10 @@
             {
                 text: "Manual Announcement",
                 menuRoute: "/ManualAnnouncement",
+            },
+            {
+                text: "PA Info",
+                menuRoute: "/pa_info",
             },
             {
                 text: "Capture Video",
@@ -573,9 +579,11 @@
     </div>
     <div style="display: {visibleMenu == MenuType.GENERAL ? "block" : "none"}">
         {#each generalMenuMap as menuOption}
-            <a on:click={() => navTo(menuOption)}>
-                {menuOption.text}
-            </a>
+            {#if shouldDisplay($userEmail, menuOption, $raceConfig)}
+                <a on:click={() => navTo(menuOption)}>
+                    {menuOption.text}
+                </a>
+            {/if}
         {/each}
     </div>
     <div style="display: {visibleMenu == MenuType.ADMIN ? "block" : "none"}">
