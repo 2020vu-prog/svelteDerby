@@ -1,6 +1,6 @@
 "use strict";
 
-const RoutePermission = require("./RoutePermission.js");
+const RoutePermission = require("./shared/RoutePermission.js");
 
 /**
  * @typedef {Object} RouteDefinition

@@ -2,9 +2,11 @@ import log from "loglevel";
 import axios from "axios";
 import { Base64 } from "js-base64";
 import { tutorial as Timer } from "@rr1.us/timer_protobuf";
+const routeRegistry = require("./routes/routeCatalog.js");
 const {
-    hasSvelteRoutePath,
-} = require("../../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
+    canAccessPath,
+    hasNamedPermission,
+} = require("./routes/routeAccess.js");
 import { db } from "./eventDb.js";
 import {
     userEmail as userEmailStore,
@@ -131,16 +133,6 @@ export function getBracketLink(RpRs) {
         return undefined; // No bracketLink for adhoc.
     }
 }
-function getRoleListByOrgUser(userEmail, orgIz) {
-    const roleMap = get(roleMapStore);
-    //log.debug("isAllowedRoutePath map:", userEmail,orgIz);
-    //log.debug("isAllowedRoutePath map:", roleMap);
-    if (userEmail && orgIz && roleMap[userEmail] && roleMap[userEmail][orgIz]) {
-        return roleMap[userEmail][orgIz];
-    } else {
-        return []; //no roles
-    }
-}
 export function isAllowedRoutePath(routePath, orgIz = null) {
     const userEmail = get(userEmailStore);
     // orgIz usually can default to active RaceConfig.
@@ -151,9 +143,22 @@ export function isAllowedRoutePath(routePath, orgIz = null) {
         orgIz = raceConfig.orgIz;
     }
     log.debug("isAllowedRoutePath effective org:", userEmail, orgIz);
-    const roleList = getRoleListByOrgUser(userEmail, orgIz);
-    log.debug("isAllowedRoutePath roles:", roleList);
-    return hasSvelteRoutePath(null, roleList, routePath);
+    return canAccessPath(routeRegistry, routePath, {
+        orgIz,
+        raceConfig: get(raceConfigStore),
+        roleMap: get(roleMapStore),
+        userEmail,
+    });
+}
+
+export function hasFrontendPermission(permission, orgIz = null) {
+    const raceConfig = get(raceConfigStore);
+    return hasNamedPermission(permission, {
+        orgIz,
+        raceConfig,
+        roleMap: get(roleMapStore),
+        userEmail: get(userEmailStore),
+    });
 }
 // deprecated
 export function isEmailAllowedRoutePath(email, routePath) {

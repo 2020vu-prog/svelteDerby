@@ -8,16 +8,19 @@
         driverMap,
         doRefreshBlocks,
         pushMessage,
-        userEmail,
         axios,
     } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
-    import { participantValid, participantFocusCompletion } from "./utils.js";
+    import {
+        hasFrontendPermission,
+        participantValid,
+        participantFocusCompletion,
+    } from "./utils.js";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
-    import { isEmailAllowedRoutePath } from "./utils.js";
+    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
     export let params = {};
     var bposFromDexie = null;
@@ -34,9 +37,9 @@
         resetForm();
         await refreshChartFromDb();
         await refreshStandingFromDb();
-        editable = await isEmailAllowedRoutePath(
-            $userEmail,
-            "/addChartPosition"
+        editable = hasFrontendPermission(
+            RoutePermission.CHART_POSITION,
+            $raceConfig.orgIz
         );
     });
     $: {

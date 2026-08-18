@@ -9,11 +9,12 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { participantValid, participantFocusCompletion } from "./utils.js";
-    import { isAllowedRoutePath, downloadFile } from "./utils.js";
+    import { downloadFile, hasFrontendPermission } from "./utils.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import { stringify as csvStringify } from "csv-stringify/sync";
     import { parse as csvParse } from "csv-parse/sync";
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
+    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
     import Icon from "fa-svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -36,8 +37,8 @@
         mounted = true;
         await refreshDataFromDb();
         syncAddButton();
-        allowDriverJson = await isAllowedRoutePath(
-            "/svelteDriverJson",
+        allowDriverJson = hasFrontendPermission(
+            RoutePermission.POWER,
             $raceConfig.orgIz
         );
     });

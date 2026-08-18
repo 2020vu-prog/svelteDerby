@@ -8,7 +8,6 @@
     import { theme } from "./stores.js";
 
     import { driverMap, doRefreshBlocks } from "./stores.js";
-    import MaterialAdd from "./MaterialAdd.svelte";
     import { safeGetAt, getChartJson } from "./utils.js";
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
@@ -218,8 +217,6 @@
 <div>
     <h4>Chart List</h4>
     <p />
-    <MaterialAdd clickHandleRoute="/chartAdd" />
-
     {#each bmdFromDexie as bmd (bmd.at)}
         {#if shouldDisplay(bmd)}
             <Card class="mt-3 border border-info">

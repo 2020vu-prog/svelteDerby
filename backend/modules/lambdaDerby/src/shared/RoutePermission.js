@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Immutable, enum-like route permission value.
+ * Immutable, enum-like permission shared by backend and frontend routes.
  *
  * Permission values remain string-compatible because roles are persisted and
  * evaluated by their existing string names.

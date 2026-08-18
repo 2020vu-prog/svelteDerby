@@ -29,6 +29,8 @@
     var submitDisabled = true;
     var submitSpinning = false;
     var blocksOccupied = true;
+    let car1Input;
+    let car2Input;
     const PhaseTypes = {
         R: { type: "Race" },
         T: { type: "Trial Run" },
@@ -75,7 +77,8 @@
     onMount(async () => {
         log.debug("mounted type:", params.type);
         title = unMapType("title");
-        document.getElementById("cn1").focus();
+        await tick();
+        car1Input?.focus();
         if (mode === modeRacePhase) {
             carNumberForm.promptPhaseType = $defaultPhaseType;
         }
@@ -86,7 +89,7 @@
         //log.debug("changeFocus ", seedIdentifier, " ", carNumber);
         if (participantFocusCompletion(carNumber)) {
             if (seedIdentifier == "A") {
-                document.getElementById("cn2").focus();
+                car2Input?.focus();
                 syncAddButton(false);
             } else if (seedIdentifier == "B") {
                 syncAddButton(true);
@@ -254,6 +257,7 @@
             bind:value={carNumberForm.car1}
             placeholder="Lane 1"
             id="cn1"
+            bind:this={car1Input}
             on:keyup={() => {
                 changeFocus(carNumberForm.car1, "A");
             }}
@@ -270,6 +274,7 @@
             bind:value={carNumberForm.car2}
             placeholder="Lane 2"
             id="cn2"
+            bind:this={car2Input}
             on:keyup={() => {
                 changeFocus(carNumberForm.car2, "B");
             }}
