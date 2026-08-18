@@ -35,8 +35,10 @@
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
     import { push } from "svelte-spa-router";
-    import { createPermissionStore } from "./routes/permissionStore.js";
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
 
     let mounted = false;
     const canUseManualTimer = createPermissionStore(

@@ -10,12 +10,14 @@
     import { db } from "./eventDb.js";
     import { participantValid, participantFocusCompletion } from "./utils.js";
     import { downloadFile } from "./utils.js";
-    import { createPermissionStore } from "./routes/permissionStore.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import { stringify as csvStringify } from "csv-stringify/sync";
     import { parse as csvParse } from "csv-parse/sync";
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
     import Icon from "fa-svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");

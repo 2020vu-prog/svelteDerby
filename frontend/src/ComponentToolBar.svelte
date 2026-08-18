@@ -19,8 +19,10 @@
 
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
-    import { createPermissionStore } from "./routes/permissionStore.js";
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     import { db } from "./eventDb.js";

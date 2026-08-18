@@ -14,13 +14,15 @@
     import CarAndDriver from "./CarAndDriver.svelte";
     import CarFilter from "./CarFilter.svelte";
     import { safeGetAt } from "./utils.js";
-    import { createPermissionStore } from "./routes/permissionStore.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     import { onMount } from "svelte";
     import { push, pop, location } from "svelte-spa-router";
     import { getMainFull, filterMatches } from "./utils.js";
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
     export let params = {};
     const driverRowHeight = 82;
     var mainFullPx = 300;

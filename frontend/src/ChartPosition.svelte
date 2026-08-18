@@ -14,10 +14,12 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { participantValid, participantFocusCompletion } from "./utils.js";
-    import { createPermissionStore } from "./routes/permissionStore.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
     export let params = {};
     var bposFromDexie = null;

@@ -1,7 +1,10 @@
 <script>
     import log from "loglevel";
 
-    import { createPermissionStore } from "./routes/permissionStore.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     import { createEventDispatcher } from "svelte";
 
     import {
@@ -9,7 +12,6 @@
         chartClickLoggerShow,
         theme,
     } from "./stores.js";
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
     const canConfigureTimer = createPermissionStore(
         RoutePermission.CAN_TIMER_CONFIG
     );

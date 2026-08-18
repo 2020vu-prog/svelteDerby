@@ -2,7 +2,7 @@
 
 const regexparamModule = require("regexparam");
 const regexparam = regexparamModule.default || regexparamModule;
-const RoutePermission = require("../../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
+const { RoutePermission } = require("./routePermission.js");
 
 /**
  * Runtime state available when resolving permissions, menus, and actions.

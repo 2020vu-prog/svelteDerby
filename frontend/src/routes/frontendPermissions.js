@@ -2,7 +2,12 @@ import { derived } from "svelte/store";
 import { raceConfig, roleMap, userEmail } from "../stores.js";
 
 const { hasNamedPermission } = require("./routeAccess.js");
-const RoutePermission = require("../../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
+const { RoutePermission } = require("./routePermission.js");
+
+/**
+ * Shared permission definitions for frontend route and component access.
+ */
+export { RoutePermission };
 
 /**
  * Creates a reactive boolean store for one named frontend permission.

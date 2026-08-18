@@ -15,7 +15,7 @@
         resolveRouteAction,
     } = require("./routeRegistry.js");
     const { RouteAction } = require("./routeDefinitions.js");
-    const RoutePermission = require("../../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
+    const { RoutePermission } = require("./routePermission.js");
 
     /** Whether App has finished loading the current user's role assignments. */
     export let authorizationReady = false;

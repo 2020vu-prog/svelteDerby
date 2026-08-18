@@ -7,7 +7,7 @@ const {
     getPermissionOrgIz,
     getRequiredPermission,
 } = require("./routeRegistry.js");
-const RoutePermission = require("../../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
+const { RoutePermission } = require("./routePermission.js");
 
 /**
  * Returns the current user's roles for an organization.

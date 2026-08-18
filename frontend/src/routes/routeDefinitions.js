@@ -1,6 +1,6 @@
 "use strict";
 
-const RoutePermission = require("../../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
+const { RoutePermission } = require("./routePermission.js");
 
 const MenuSection = Object.freeze({ ADMIN: "admin", GENERAL: "general" });
 const RouteAction = Object.freeze({ MATERIAL_ADD: "materialAdd" });

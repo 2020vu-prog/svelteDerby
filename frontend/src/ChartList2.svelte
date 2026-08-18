@@ -12,10 +12,12 @@
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
-    import { createPermissionStore } from "./routes/permissionStore.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     import { standingsMap } from "./stores.js";
     import SpinnerButton from "./SpinnerButton.svelte";
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
     const canAddChart = createPermissionStore(RoutePermission.CAN_ADD_CHART);
 

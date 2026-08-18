@@ -2,10 +2,12 @@
     import log from "loglevel";
 
     import { driverMap } from "./stores.js";
-    import { createPermissionStore } from "./routes/permissionStore.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     import { push, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
     export let isWinner;
     export let phaseLetter;
