@@ -44,6 +44,22 @@ One component may have a public file, any number of permission-specific files,
 or only permission-specific files. A Markdown heading supplies the displayed
 section title, so no separate title configuration is required.
 
+When one component has distinct route usages, the route may provide a static or
+function-valued `helpId`. Contextual files put that identifier before `.help`:
+
+```text
+frontend/src/help/RaceStandingList.Pending.help.md
+frontend/src/help/RaceStandingList.Pending.help.CAN_ADD_PENDING.md
+frontend/src/help/DriverList.Selection.help.md
+frontend/src/help/DriverList.Browse.help.CAN_ADD_PARTICIPANT.md
+frontend/src/help/RaceStandingAdd.Pending.help.md
+frontend/src/help/RaceStandingAdd.Blocks.help.md
+```
+
+The component's base help remains visible. Contextual help is added to it, so
+shared instructions do not need to be duplicated. A `helpId` function receives
+the matched route parameters and the standard route context.
+
 Example public help:
 
 ```markdown
@@ -65,9 +81,11 @@ Select a phase letter to enter or correct its finish time manually.
 ## Resolution and authorization
 
 `RouteHelp.svelte` receives the current route match from `RouteHost.svelte` and
-uses `currentMatch.definition.component` as the help filename prefix. For
-example, the `RacePhaseList` component resolves files beginning with
-`RacePhaseList.help`.
+uses `currentMatch.definition.component` as the base help filename prefix. It
+also resolves `currentMatch.definition.helpId`, when configured, and includes
+matching contextual files. For example, the pending race route resolves files
+beginning with both `RaceStandingList.help` and
+`RaceStandingList.Pending.help`.
 
 Webpack `require.context()` discovers matching Markdown files at build time.
 The list of filenames can be inspected without loading every document. Help
@@ -118,11 +136,13 @@ Automated tests should verify that:
 - Restricted help appears when the permission is granted.
 - Restricted help disappears reactively after logout or a role change.
 - A route without applicable help does not display the help launcher.
-- Routes sharing a component share its help documents.
+- Routes sharing a component share its base help documents.
+- Static and function-valued `helpId` values add the expected contextual help.
+- Changing route parameters immediately replaces contextual help sections.
 
-## Escape hatch
+## Contextual help
 
-The component-name convention should be the default. If two routes using the
-same component eventually require different help, an optional `helpId` route
-property may override the component name. Do not add that configuration until a
-real route requires it.
+The component-name convention remains the default. An optional `helpId` route
+property adds help for a distinct usage without creating a duplicate component
+or route. Use it only when the user workflow differs materially, such as race
+history versus pending races or normal driver browsing versus driver selection.

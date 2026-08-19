@@ -2,6 +2,7 @@
     import { tick } from "svelte";
     import { theme } from "../stores.js";
     import { loadHelpMarkdown, resolveVisibleHelp } from "./routeHelpLoader.js";
+    const { resolveRouteHelpIds } = require("./routeHelp.js");
 
     /** @type {import("./routeRegistry.js").RouteMatch|null} */
     export let currentMatch = null;
@@ -16,16 +17,17 @@
     let loadRequest = 0;
     let launcher;
     let closeButton;
-    let previousComponentName = "";
+    let previousHelpContext = "";
     let markdownPromise;
 
-    $: componentName = currentMatch?.definition?.component || "";
-    $: visibleHelp = resolveVisibleHelp(componentName, context);
+    $: helpIds = resolveRouteHelpIds(currentMatch, context);
+    $: helpContext = helpIds.join("|");
+    $: visibleHelp = resolveVisibleHelp(helpIds, context);
     $: visibleSignature = visibleHelp
         .map((descriptor) => descriptor.key)
         .join("|");
-    $: if (componentName !== previousComponentName) {
-        previousComponentName = componentName;
+    $: if (helpContext !== previousHelpContext) {
+        previousHelpContext = helpContext;
         isOpen = false;
         sections = [];
         loadedSignature = "";
