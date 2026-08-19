@@ -58,8 +58,10 @@
         position: fixed;
         bottom: 0;
         left: 0;
+        z-index: 80;
         overflow: hidden;
         width: 100%;
+        background-color: #333;
     }
 
     /* Place the navbar at the bottom of the page, and make it stick */
@@ -104,7 +106,6 @@
             bind:this={thisBottomNav}
             class="navbar"
             id="bottomNavBar"
-            style="z-index:20"
         >
             {#each $selectedToolbarList as item, index (item.path)}
                 <a

@@ -322,7 +322,9 @@
 <style>
     div.container {
         width: 100%;
-        height: 30px;
+        max-width: 100vw;
+        height: auto;
+        overflow-x: auto;
     }
 </style>
 
