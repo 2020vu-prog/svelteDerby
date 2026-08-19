@@ -1,5 +1,6 @@
 const ApiRouter = require("../modules/lambdaDerby/src/ApiRouter.js");
 const RoutePermission = require("../modules/lambdaDerby/src/shared/RoutePermission.js");
+const RoleName = require("../modules/lambdaDerby/src/shared/RoleName.js");
 
 const CAN_EXAMPLE = new RoutePermission("CanExample");
 const CAN_PLUGIN = new RoutePermission("CanPlugin");
@@ -15,7 +16,7 @@ function buildRouter(overrides = {}) {
             orgIz: "Test",
             defaultTTL: 123,
             config: {},
-            roleList: ["registration"],
+            roleList: [RoleName.REGISTRATION],
         })),
         buildResponse: jest.fn((body) => body),
         isFrozen: jest.fn(() => false),
