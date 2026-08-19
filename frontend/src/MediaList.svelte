@@ -15,7 +15,6 @@
     import {
         hhmmssFmt,
         mmddyyFmt,
-        isEmailAllowedRoutePath,
         sleep,
         extractS3VideoMeta,
     } from "./utils.js";

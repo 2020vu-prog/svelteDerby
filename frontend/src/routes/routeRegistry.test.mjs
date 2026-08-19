@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import test from "node:test";
 
 const require = createRequire(import.meta.url);
-const RoutePermission = require("../../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
+const { RoutePermission } = require("./routePermission.js");
 const RoleName = require("../../../backend/modules/lambdaDerby/src/shared/RoleName.js");
 const routeRegistry = require("./routeCatalog.js");
 const { canAccessRoute } = require("./routeAccess.js");

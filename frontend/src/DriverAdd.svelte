@@ -9,12 +9,15 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { participantValid, participantFocusCompletion } from "./utils.js";
-    import { downloadFile, hasFrontendPermission } from "./utils.js";
+    import { downloadFile } from "./utils.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import { stringify as csvStringify } from "csv-stringify/sync";
     import { parse as csvParse } from "csv-parse/sync";
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
     import Icon from "fa-svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -26,7 +29,7 @@
     var submitDisabled = true;
     var submitSpinning = false;
     var speakSpinning = false;
-    var allowDriverJson = false;
+    const canManageDriverJson = createPermissionStore(RoutePermission.POWER);
     let doPlay = false;
 
     onMount(async () => {
@@ -37,10 +40,6 @@
         mounted = true;
         await refreshDataFromDb();
         syncAddButton();
-        allowDriverJson = hasFrontendPermission(
-            RoutePermission.POWER,
-            $raceConfig.orgIz
-        );
     });
     const onFileSelected = (e) => {
         //postDrivers(e.target.files[0])
@@ -454,7 +453,7 @@
             <SpotifyEmbedded autoPlay="false" href={driverForm.walkupLink} />
         {/key}
     {/if}
-    {#if allowDriverJson}
+    {#if $canManageDriverJson}
         <br />
         <br />
         <br />

@@ -5,7 +5,7 @@
     import { db, localConfigDb } from "./eventDb.js";
     import { tick } from "svelte";
     import { racePhaseMap, raceConfig } from "./stores";
-    import { isAllowedRoutePath, downloadFile } from "./utils.js";
+    import { downloadFile } from "./utils.js";
     import { stringify as csvStringify } from "csv-stringify/sync";
 
     const onFileSelected = (e) => {

@@ -13,20 +13,21 @@
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
+    import { participantValid, participantFocusCompletion } from "./utils.js";
     import {
-        hasFrontendPermission,
-        participantValid,
-        participantFocusCompletion,
-    } from "./utils.js";
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
 
     export let params = {};
     var bposFromDexie = null;
     var rsFromDexie = null;
     const posForm = { A: {}, B: {} };
-    var editable = false;
+    const canEditChartPosition = createPermissionStore(
+        RoutePermission.CHART_POSITION
+    );
 
     var submitDisabled = false;
     var submitSpinning = false;
@@ -37,21 +38,17 @@
         resetForm();
         await refreshChartFromDb();
         await refreshStandingFromDb();
-        editable = hasFrontendPermission(
-            RoutePermission.CHART_POSITION,
-            $raceConfig.orgIz
-        );
     });
     $: {
         refreshStandingFromDb($doRefreshBlocks);
     }
     $: {
-        if (editable) {
-            if (posForm.A.input) posForm.A.input.disabled = false;
-            if (posForm.B.input) posForm.B.input.disabled = false;
-            if (posForm.A.select) posForm.A.select.disabled = false;
-            if (posForm.B.select) posForm.B.select.disabled = false;
-        }
+        if (posForm.A.input) posForm.A.input.disabled = !$canEditChartPosition;
+        if (posForm.B.input) posForm.B.input.disabled = !$canEditChartPosition;
+        if (posForm.A.select)
+            posForm.A.select.disabled = !$canEditChartPosition;
+        if (posForm.B.select)
+            posForm.B.select.disabled = !$canEditChartPosition;
     }
     const refreshChartFromDb = async (trigger) => {
         log.debug("refreshChartFromDb data:", trigger);
@@ -310,7 +307,7 @@
 
     <SpinnerButton on:click={pushHistory}>History</SpinnerButton>
 
-    {#if editable}
+    {#if $canEditChartPosition}
         <SpinnerButton
             disabled={submitDisabled}
             on:click={handleSubmit}

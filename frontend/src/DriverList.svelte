@@ -4,7 +4,6 @@
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import VirtualList from "@sveltejs/svelte-virtual-list";
     import {
-        userEmail,
         driverMap,
         carFilter,
         doRefreshBlocks,
@@ -15,7 +14,10 @@
     import CarAndDriver from "./CarAndDriver.svelte";
     import CarFilter from "./CarFilter.svelte";
     import { safeGetAt } from "./utils.js";
-    import { isEmailAllowedRoutePath } from "./utils.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     import { onMount } from "svelte";
     import { push, pop, location } from "svelte-spa-router";
     import { getMainFull, filterMatches } from "./utils.js";
@@ -24,17 +26,17 @@
     export let params = {};
     const driverRowHeight = 82;
     var mainFullPx = 300;
+    const canAddParticipant = createPermissionStore(
+        RoutePermission.CAN_ADD_PARTICIPANT
+    );
 
-    var editable = false;
     var selectable = false;
     var carNumberList = [];
     var start;
     var end;
     onMount(async () => {
-        log.debug(`DriverList userEmail: ${$userEmail}`);
         log.debug("DriverList mounted : ", $location, params);
 
-        editable = isDriverEditable($userEmail);
         mainFullPx = getMainFull(["#dlTitle"]);
 
         wip = $selectedDriverMap;
@@ -50,10 +52,6 @@
             .filter((carNumber) => filterMatches(carNumber, carFilter))
             .slice(0, $uiPageSize);
     };
-    function isDriverEditable(paramEmail) {
-        return isEmailAllowedRoutePath(paramEmail, "/driverAdd");
-    }
-
     $: {
         log.debug(`driver virtualList: start: ${start} end: ${end}`);
     }
@@ -145,7 +143,7 @@
                             }}
                         />
                     </span>
-                {:else if editable}
+                {:else if $canAddParticipant}
                     <span
                         on:click={(event) => {
                             push(`/driverAdd/${item}`);

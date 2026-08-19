@@ -14,14 +14,15 @@
         axios,
         raceConfig,
         pushMessage,
-        userEmail,
         nextOnBlockKey,
     } from "./stores.js";
 
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
-    import { hasFrontendPermission, isEmailAllowedRoutePath } from "./utils.js";
-    const RoutePermission = require("../../backend/modules/lambdaDerby/src/shared/RoutePermission.js");
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     import { db } from "./eventDb.js";
@@ -34,6 +35,19 @@
     export let bracketLink;
     export let cn;
     let deleteReason = "";
+
+    const canUseManualTimer = createPermissionStore(
+        RoutePermission.MANUAL_FINISH_TIME
+    );
+    const canAnnounce = createPermissionStore(
+        RoutePermission.CAN_INITIATE_ANNOUNCEMENT
+    );
+    const canDeleteBlocks = createPermissionStore(
+        RoutePermission.CAN_DELETE_BLOCKS
+    );
+    const canDeleteStanding = createPermissionStore(
+        RoutePermission.CAN_DELETE_STANDING
+    );
 
     const mediaLink = `/spMediaList/${dbName}/${dbKey}`;
     const elapsedLink = `/RpElapsed/${dbKey}`;
@@ -183,18 +197,12 @@
         const PK = `${$raceConfig.orgId}:${pkSuffix}`;
         push(`/historyList/${PK}/${dbKey}`);
     }
-    function isManualTimerAllowed() {
-        return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
-    }
-    function isAnnounceAllowed() {
-        return isEmailAllowedRoutePath($userEmail, "/ManualAnnouncement");
-    }
     function isDeleteAllowed() {
         if (dbName === "RacePhase") {
-            return hasFrontendPermission(RoutePermission.CAN_DELETE_BLOCKS);
+            return $canDeleteBlocks;
         }
         if (dbName === "RaceStanding") {
-            return hasFrontendPermission(RoutePermission.CAN_DELETE_STANDING);
+            return $canDeleteStanding;
         }
         return false;
     }
@@ -264,7 +272,7 @@
     </Modal>
 </div>
 <div class="navbar" id="myNavbar">
-    {#if timerLink && isManualTimerAllowed()}
+    {#if timerLink && $canUseManualTimer}
         <span
             class="navbarItem"
             style="background-color: {$theme}"
@@ -321,7 +329,7 @@
             Elapsed
         </span>
     {/if}
-    {#if window.location.href.includes("RsList/Pending") && isAnnounceAllowed()}
+    {#if window.location.href.includes("RsList/Pending") && $canAnnounce}
         <span
             class="navbarItem"
             style="background-color: {$theme}"
