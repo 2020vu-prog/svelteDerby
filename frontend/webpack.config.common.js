@@ -154,8 +154,15 @@ module.exports = (cloudfrontTarget) => {
         optimization: {
             splitChunks: {
                 cacheGroups: {
+                    routeHelpMarkdown: {
+                        test: /[\\/]node_modules[\\/](?:markdown-it|argparse|entities|linkify-it|mdurl|punycode\.js|uc\.micro)[\\/]/,
+                        name: "route-help-markdown",
+                        chunks: "async",
+                        enforce: true,
+                        priority: 20,
+                    },
                     commons: {
-                        test: /[\\/]node_modules[\\/]/,
+                        test: /[\\/]node_modules[\\/](?!(?:markdown-it|argparse|entities|linkify-it|mdurl|punycode\.js|uc\.micro)(?:[\\/]|$))/,
                         name: "vendors",
                         chunks: "all",
                     },
@@ -194,6 +201,10 @@ module.exports = (cloudfrontTarget) => {
                         prod ? MiniCssExtractPlugin.loader : "style-loader",
                         "css-loader",
                     ],
+                },
+                {
+                    test: /\.help(?:\.[^.]+)?\.md$/,
+                    type: "asset/source",
                 },
                 {
                     test: /EntityFactory\.m?js$/,
