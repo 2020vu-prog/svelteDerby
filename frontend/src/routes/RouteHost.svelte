@@ -5,6 +5,7 @@
      */
     import Router, { location } from "svelte-spa-router";
     import MaterialAdd from "../MaterialAdd.svelte";
+    import RouteHelp from "./RouteHelp.svelte";
     import { raceConfig, roleMap, userEmail, userId } from "../stores.js";
     import PermissionDenied from "./PermissionDenied.svelte";
     import { routeRegistry, routerMap } from "./routeRuntime.js";
@@ -51,6 +52,7 @@
     <Router routes={routerMap} />
 {:else if routeAllowed}
     <Router routes={routerMap} />
+    <RouteHelp currentMatch={currentMatch} context={context} />
     {#if routeAction?.type === RouteAction.MATERIAL_ADD && actionAllowed}
         <MaterialAdd clickHandleRoute={routeAction.target} />
     {/if}

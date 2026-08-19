@@ -1,6 +1,12 @@
 # Frontend Route Help
 
-Status: proposed design; not yet implemented.
+Status: implemented.
+
+Public help is provided for every stable routed component. The transient
+`ForceLoad` and `ForceReloadPage` routes and the `MediaViewer` demonstration
+route intentionally do not display the help launcher. A coverage test requires
+new stable routed components to add a public help file or be explicitly listed
+as an exception.
 
 ## Goals
 
