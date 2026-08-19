@@ -14,12 +14,12 @@ const helpCatalog = createHelpCatalog(helpContext.keys());
 /**
  * Resolves the authorized help documents for a routed component.
  *
- * @param {string} componentName
+ * @param {string[]} helpIds
  * @param {import("./routeRegistry.js").RouteContext} context
  * @returns {ReturnType<typeof createHelpCatalog>}
  */
-export function resolveVisibleHelp(componentName, context) {
-    return getVisibleHelpDescriptors(helpCatalog, componentName, context);
+export function resolveVisibleHelp(helpIds, context) {
+    return getVisibleHelpDescriptors(helpCatalog, helpIds, context);
 }
 
 /**

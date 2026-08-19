@@ -72,6 +72,10 @@ const routeDefinitions = [
         path: "/RsList/:type",
         component: "RaceStandingList",
         permission: RoutePermission.ANONYMOUS,
+        helpId: ({ params }) =>
+            ["History", "Pending"].includes(params.type)
+                ? `RaceStandingList.${params.type}`
+                : null,
         action: materialAdd("/raceStandingAdd/RaceStanding", {
             visible: ({ params }) => params.type === "Pending",
         }),
@@ -95,6 +99,8 @@ const routeDefinitions = [
         path: "/drivers/:selectable?",
         component: "DriverList",
         permission: RoutePermission.ANONYMOUS,
+        helpId: ({ params }) =>
+            params.selectable ? "DriverList.Selection" : "DriverList.Browse",
         menu: generalMenu("Drivers", 10, { to: "/drivers" }),
         action: materialAdd("/driverAdd", {
             visible: ({ params }) => !params.selectable,
@@ -130,6 +136,11 @@ const routeDefinitions = [
         id: "raceStandingAdd",
         path: "/raceStandingAdd/:type",
         component: "RaceStandingAdd",
+        helpId: ({ params }) =>
+            ({
+                RacePhase: "RaceStandingAdd.Blocks",
+                RaceStanding: "RaceStandingAdd.Pending",
+            })[params.type],
         permission: ({ params }) =>
             params.type === "RacePhase"
                 ? RoutePermission.CAN_ADD_BLOCKS

@@ -36,6 +36,7 @@ const { RoutePermission } = require("./routePermission.js");
  * @property {string} component Key in routeComponents.
  * @property {RouteValue<RoutePermission>} permission Required route access level or named permission.
  * @property {RouteValue<string>} [permissionOrgIz] Organization used for permission resolution.
+ * @property {RouteValue<string|null|undefined>} [helpId] Additional contextual help identifier.
  * @property {Object} [menu] Primary navigation metadata.
  * @property {Object[]} [menuAliases] Additional navigation entries for the same route.
  * @property {Object} [action] Contextual action displayed while this route is active.
