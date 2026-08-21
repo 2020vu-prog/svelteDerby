@@ -6,6 +6,10 @@ data "aws_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
+data "external" "terraform_backend_config" {
+  program = ["python3", "${path.module}/read-backend-config.py"]
+}
+
 locals {
   account_id                            = data.aws_caller_identity.current.account_id
   partition                             = data.aws_partition.current.partition
@@ -17,8 +21,10 @@ locals {
   oidc_provider_arn                     = var.create_oidc_provider ? aws_iam_openid_connect_provider.github_actions[0].arn : local.existing_oidc_provider_arn
   managed_role_permissions_boundary_arn = var.create_managed_role_permissions_boundary ? aws_iam_policy.managed_role_boundary[0].arn : var.existing_managed_role_permissions_boundary_arn
   selected_backend_config               = lookup(var.terraform_backend_configs, var.DnsDomain, null)
-  terraform_state_bucket_name           = var.terraform_state_bucket_name != "" ? var.terraform_state_bucket_name : try(local.selected_backend_config.terraform_state_bucket_name, "")
-  terraform_lock_table_name             = var.terraform_lock_table_name != "" ? var.terraform_lock_table_name : try(local.selected_backend_config.terraform_lock_table_name, "")
+  configured_state_bucket_name          = try(local.selected_backend_config.terraform_state_bucket_name, "")
+  configured_lock_table_name            = try(local.selected_backend_config.terraform_lock_table_name, "")
+  terraform_state_bucket_name           = var.terraform_state_bucket_name != "" ? var.terraform_state_bucket_name : local.configured_state_bucket_name != "" ? local.configured_state_bucket_name : data.external.terraform_backend_config.result.bucket
+  terraform_lock_table_name             = var.terraform_lock_table_name != "" ? var.terraform_lock_table_name : local.configured_lock_table_name != "" ? local.configured_lock_table_name : data.external.terraform_backend_config.result.dynamodb_table
 
   app_bucket_arns = [
     "arn:${local.partition}:s3:::svelte-static-*",
