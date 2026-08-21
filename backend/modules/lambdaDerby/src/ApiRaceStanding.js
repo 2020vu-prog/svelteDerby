@@ -1,16 +1,24 @@
 const log = require("loglevel");
 const { getSourceName } = require("./utils");
+const {
+    PublishCommand: SnsPublishCommand,
+    SNSClient,
+} = require("@aws-sdk/client-sns");
 class ApiRaceStanding {
-    AWS = null;
     ddbUtils = null;
     announceResults = null;
     logUtils = null;
 
-    constructor(AWS, ddbUtils, announceResults, logUtils) {
-        this.AWS = AWS;
+    constructor(
+        ddbUtils,
+        announceResults,
+        logUtils,
+        snsClient = new SNSClient()
+    ) {
         this.ddbUtils = ddbUtils;
         this.announceResults = announceResults;
         this.logUtils = logUtils;
+        this.sns = snsClient;
     }
     async deleteRaceStanding(json) {
         log.debug(
@@ -158,9 +166,7 @@ class ApiRaceStanding {
 
         try {
             console.log("SNS sending fanout:", params);
-            const sent = await new this.AWS.SNS({ apiVersion: "2010-03-31" })
-                .publish(params)
-                .promise();
+            const sent = await this.sns.send(new SnsPublishCommand(params));
             console.log("SNS send Success", sent);
         } catch (err) {
             console.log("SNS send Error", err);

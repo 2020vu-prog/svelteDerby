@@ -17,7 +17,6 @@
     import RacePhase from "./RacePhase.svelte";
     import Annotate from "./Annotate.svelte";
     import CarFilter from "./CarFilter.svelte";
-    import MaterialAdd from "./MaterialAdd.svelte";
     import { onMount } from "svelte";
     export let params = {};
     import { location, replace, push } from "svelte-spa-router";
@@ -123,10 +122,6 @@
 <style>
 </style>
 
-{#if params.type === "Pending"}
-    <MaterialAdd clickHandleRoute="/raceStandingAdd/RaceStanding" />
-{/if}
-
 {#each standingList as item, i (item.at)}
     {#if item.type === "NOB"}
         <h4>Next On Blocks</h4>
@@ -148,7 +143,10 @@
         </h4>
     {:else}
         <!-- this will be rendered for each currently visible item -->
-        <Annotate text={dateChangeLabel(item.at, getPriorStanding(i)?.at)} style="margin-top: 1rem" />
+        <Annotate
+            text={dateChangeLabel(item.at, getPriorStanding(i)?.at)}
+            style="margin-top: 1rem"
+        />
         <RaceStanding standing={item} refresh={doRefreshBlocks} />
     {/if}
 {/each}

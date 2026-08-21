@@ -2,7 +2,7 @@
     import log from "loglevel";
 
     import SpinnerButton from "./SpinnerButton.svelte";
-    import * as axiosVanilla  from "axios";
+    import axiosVanilla from "axios";
     import {
         driverMap,
         nextOnBlockKey,
@@ -32,7 +32,7 @@
     import { onDestroy } from "svelte";
     import { tick } from "svelte";
 
-    import aws_exports from "./aws-exports";
+    import aws_exports from "./aws-config";
     import { exclude_internal_props } from "svelte/internal";
     //var mqSem = require("semaphore")(1);
     import { Lock } from "semaphore-async-await";
@@ -49,9 +49,9 @@
     var client;
     var btnClass = "btn-info";
     let activeIotWatch = {
-        errors:[],
-        currentDistTopic:"",
-        topic:{}
+        errors: [],
+        currentDistTopic: "",
+        topic: {},
     };
 
     var refreshInProgressButton = false;
@@ -71,7 +71,7 @@
     }
     */
     $: {
-        configChanged($raceConfig,$mqttEnabled)
+        configChanged($raceConfig, $mqttEnabled);
     }
 
     $: {
@@ -84,7 +84,7 @@
         checkIfRaceFrozenAndDisplayMessage($raceConfig);
     }
 
-    function applyBtnClass(){
+    function applyBtnClass() {
         if (isArchived()) {
             btnClass = "btn-secondary";
             return;
@@ -93,65 +93,61 @@
             btnClass = "btn-secondary";
             return;
         }
-        if(activeIotWatch['errors'].length>0){
+        if (activeIotWatch["errors"].length > 0) {
             btnClass = "btn-danger";
             return;
         }
-        if (mqClient && mqClient.connected){
-                btnClass = "btn-success";
-        }else{
-
-                btnClass = "btn-warning";
+        if (mqClient && mqClient.connected) {
+            btnClass = "btn-success";
+        } else {
+            btnClass = "btn-warning";
         }
-
     }
-    function resetMqtt(){
-        log.debug('resetMqtt')
+    function resetMqtt() {
+        log.debug("resetMqtt");
         activeIotWatch = {
-            errors:[],
-            topic:{},
-        currentDistTopic:""
-
+            errors: [],
+            topic: {},
+            currentDistTopic: "",
         };
 
-        if(mqClient){
+        if (mqClient) {
             mqClient.end();
-            mqClient=""
+            mqClient = "";
         }
-        applyBtnClass()
+        applyBtnClass();
     }
-    async function configChanged(){
-            log.debug("configChanged : begin:",$raceConfig.orgId);
+    async function configChanged() {
+        log.debug("configChanged : begin:", $raceConfig.orgId);
         if (!$raceConfig.orgId) {
-            resetMqtt()
+            resetMqtt();
             log.debug("configChanged : no org:  skip");
             return; // nothing to watch
         }
-        if(isArchived()){
-            resetMqtt()
-            log.debug("configChanged : isArchived!skip",$raceConfig.orgId);
+        if (isArchived()) {
+            resetMqtt();
+            log.debug("configChanged : isArchived!skip", $raceConfig.orgId);
             doRefreshViaHttp();
             return;
         }
         if (!$mqttEnabled) {
-            resetMqtt()
+            resetMqtt();
             log.debug("configChanged : not enabled:  skip", $mqttEnabled);
             doRefreshViaHttp();
             return;
         }
-        if(activeIotWatch.currentDistTopic !==getDistTopic()){
+        if (activeIotWatch.currentDistTopic !== getDistTopic()) {
             log.debug("configChanged : mqtt reset");
-            resetMqtt() //fall thru to re-connect
+            resetMqtt(); //fall thru to re-connect
         }
         // watchIot will call doRefreshViaHttp() onConnect
         log.debug("configChanged : fall through");
-        await watchIot("configChanged") 
-
+        await watchIot("configChanged");
     }
     async function watchIot(from) {
         applyBtnClass();
 
-        log.debug("watchIot : do mqtt:  ", $mqttEnabled,"from:",from);
+        log.debug("watchIot : do mqtt:  ", $mqttEnabled, "from:", from);
 
         /*
         const ccSession = await Auth.currentSession();
@@ -168,9 +164,9 @@
 
         if (activeIotWatch && !activeIotWatch.plugged) {
             await refreshPsUrl();
-            mqClient = mqtt.connect($mqttPsUrlMap.url,{
+            mqClient = mqtt.connect($mqttPsUrlMap.url, {
                 transformWsUrl: transformWsUrl,
-                reconnectPeriod:4000,
+                reconnectPeriod: 4000,
             });
             mqClient.on("message", onMsgGeneric);
             mqClient.on("connect", onConnect);
@@ -182,13 +178,12 @@
             activeIotWatch.plugged = true; // first time only.
         }
 
-        const topic = getDistTopic()
-
+        const topic = getDistTopic();
 
         log.debug("watchIot: Subscribing to:", topic);
         //mqClient.subscribe(topic, {}, onSubscribed);
-        syncSubscription(true, topic, applyFromMqMsg)
-        activeIotWatch.currentDistTopic=topic
+        syncSubscription(true, topic, applyFromMqMsg);
+        activeIotWatch.currentDistTopic = topic;
 
         /*
         activeIotWatch.subscription = PubSub.subscribe(topic).subscribe({
@@ -216,15 +211,13 @@
         syncAutoAnnounceSubscription();
         //syncVideoCaptureSubscription();
     }
-    function getDistTopic(){
-        if($raceConfig && $raceConfig.orgId){
-
+    function getDistTopic() {
+        if ($raceConfig && $raceConfig.orgId) {
             const topic = "derby/" + $raceConfig.orgId + "/dist";
-            return topic
-        }else{
+            return topic;
+        } else {
             return "";
         }
-
     }
 
     // toggle subscription when prefs change.
@@ -233,7 +226,7 @@
     $: syncMapSubscriptions($mqttMapSubscribe);
 
     function isPsMapRefreshNeeded() {
-        const now=new Date().getTime()
+        const now = new Date().getTime();
         /* ps url expires early :-(
         if($mqttPsUrlMap && 
         $mqttPsUrlMap.expires &&
@@ -243,75 +236,77 @@
         }
         */
         // todo: aws urll expiring after 5 minutes instead of 1 hour !??
-        if($mqttPsUrlMap && 
-        $mqttPsUrlMap.issued &&
-        $mqttPsUrlMap.issued +(5*60*1000) > now){
+        if (
+            $mqttPsUrlMap &&
+            $mqttPsUrlMap.issued &&
+            $mqttPsUrlMap.issued + 5 * 60 * 1000 > now
+        ) {
             log.debug("refresh ps bpass: issue recent");
-            return false
-        } 
+            return false;
+        }
 
         //no aggressive retries.  give backend a chance to reply!
-        if($mqttPsUrlMap && 
-        $mqttPsUrlMap.requested &&
-        $mqttPsUrlMap.requested +(30*1000) > now){
+        if (
+            $mqttPsUrlMap &&
+            $mqttPsUrlMap.requested &&
+            $mqttPsUrlMap.requested + 30 * 1000 > now
+        ) {
             log.debug("refresh ps bpass: request recent");
-            return false
-        } 
-            log.debug("refresh ps bpass: NOT");
-        
-        return true
+            return false;
+        }
+        log.debug("refresh ps bpass: NOT");
+
+        return true;
     }
     async function refreshPsUrl() {
-        if(! isPsMapRefreshNeeded()){
+        if (!isPsMapRefreshNeeded()) {
             log.debug("refresh ps bpass: BPASS");
             return;
-
         }
 
         log.debug("refresh ps bpass:  PROCEED");
-        $mqttPsUrlMap.requested=new Date().getTime();
-        $mqttPsUrlMap = $mqttPsUrlMap 
-       
-         //   log.debug("refresh ps ",$mqttPsUrlMap);
+        $mqttPsUrlMap.requested = new Date().getTime();
+        $mqttPsUrlMap = $mqttPsUrlMap;
+
+        //   log.debug("refresh ps ",$mqttPsUrlMap);
         //log.debug("refresh ps0",$mqttPsUrlMap.epoch +(600*1000))
         //log.debug("refresh ps1",new Date().getTime())
-            log.debug("refresh ps stale");
+        log.debug("refresh ps stale");
         const response = await axiosVanilla.get(aws_exports.mqtt_ps_url, {
             headers: {
                 "x-invoke-key": aws_exports.mqtt_ps_key,
             },
         });
         if (response.data.url) {
-            log.debug("refresh ps good:",JSON.stringify(response.data));
+            log.debug("refresh ps good:", JSON.stringify(response.data));
             $mqttPsUrlMap = {
-                url:response.data.url,
-                expires:response.data.expires,
+                url: response.data.url,
+                expires: response.data.expires,
                 issued: new Date().getTime(),
-                requested:$mqttPsUrlMap.requested,
-            }
+                requested: $mqttPsUrlMap.requested,
+            };
         } else {
             log.debug("refresh ps fail");
-            $mqttPsUrlMap.url="";
-            $mqttPsUrlMap = $mqttPsUrlMap 
+            $mqttPsUrlMap.url = "";
+            $mqttPsUrlMap = $mqttPsUrlMap;
         }
     }
 
-    function onSubscribed(err,granted) {
-        if(err){
-            activeIotWatch['errors'].push(err);
-            pushMessage( {
-            text: err,
-            type: "error",
-        });
+    function onSubscribed(err, granted) {
+        if (err) {
+            activeIotWatch["errors"].push(err);
+            pushMessage({
+                text: err,
+                type: "error",
+            });
             applyBtnClass();
         }
-        log.debug("onSubscribed", err,JSON.stringify(granted));
+        log.debug("onSubscribed", err, JSON.stringify(granted));
     }
-    const msgQ=[]
+    const msgQ = [];
     async function onConnect(topic, message) {
-        applyBtnClass()
+        applyBtnClass();
         doRefreshViaHttp();
-
     }
     async function onMsgGeneric(topic, message) {
         // message is Buffer
@@ -322,48 +317,46 @@
         }
         msgQ.push({
             topic: topic,
-            message:message,
-        })
-        potentialDrainQ()
-
+            message: message,
+        });
+        potentialDrainQ();
 
         //await sleep(1000); // does parent await for handler??
         //TODO: parent does NOT wait. we should queue and single thread
-        log.debug("onMsgGeneric done")
+        log.debug("onMsgGeneric done");
     }
 
-
-            let drainingQ=false
-        function potentialDrainQ(){
-            if(drainingQ)return
-            drainingQ=true
-        log.debug("draining begin")
-            try {
-                while (msgQ.length>0){
-                    log.debug("draining ONE")
-                    const m=msgQ.pop()
-                    try {
-                        const topicHandler = activeIotWatch.topic[m.topic];
-                        if (!isTopicHandler(topicHandler)) {
-                            log.debug("draining skipping, no handler:", m.topic);
-                            continue;
-                        }
-                        const jsonMsg = JSON.parse(m.message.toString());
-                        topicHandler(jsonMsg,m.topic)
-                    } catch (err) {
-                        log.error("draining message failed:", m.topic, err);
+    let drainingQ = false;
+    function potentialDrainQ() {
+        if (drainingQ) return;
+        drainingQ = true;
+        log.debug("draining begin");
+        try {
+            while (msgQ.length > 0) {
+                log.debug("draining ONE");
+                const m = msgQ.pop();
+                try {
+                    const topicHandler = activeIotWatch.topic[m.topic];
+                    if (!isTopicHandler(topicHandler)) {
+                        log.debug("draining skipping, no handler:", m.topic);
+                        continue;
                     }
+                    const jsonMsg = JSON.parse(m.message.toString());
+                    topicHandler(jsonMsg, m.topic);
+                } catch (err) {
+                    log.error("draining message failed:", m.topic, err);
                 }
-            } finally {
-                log.debug("draining done")
-                drainingQ=false
             }
+        } finally {
+            log.debug("draining done");
+            drainingQ = false;
         }
+    }
 
     function isTopicHandler(topicHandler) {
         return "function" === typeof topicHandler;
     }
-        
+
     async function syncAutoAnnounceSubscription() {
         const shouldSub = $autoAnnounceResults && $mqttEnabled && !isArchived();
         log.debug("syncAutoAnnounceSubscription: voice ", shouldSub);
@@ -378,26 +371,26 @@
     }
     async function potentialDoubleClickReloadPage() {
         log.debug("potentialDoubleClickReloadPage: begin");
-            pushMessage( {
-                text: `Refreshing token, please Wait.`,
-                type: "success",
-            });
+        pushMessage({
+            text: `Refreshing token, please Wait.`,
+            type: "success",
+        });
 
-            await tick();
-            await sleep(1000);
-            expirePsUrl()
-            log.debug("potentialDoubleClickReloadPage: fired");
-            //recentRefreshMs window.location.reload();
+        await tick();
+        await sleep(1000);
+        expirePsUrl();
+        log.debug("potentialDoubleClickReloadPage: fired");
+        //recentRefreshMs window.location.reload();
 
-            // install our uuid to requests reload.
-            // --limits request to once per instance
-            $reRenderHotLoad=uuidConst 
+        // install our uuid to requests reload.
+        // --limits request to once per instance
+        $reRenderHotLoad = uuidConst;
     }
-    function expirePsUrl(){
-        $mqttPsUrlMap.expires=2
-        $mqttPsUrlMap.requested=2
-        $mqttPsUrlMap.issued=2
-        $mqttPsUrlMap=$mqttPsUrlMap
+    function expirePsUrl() {
+        $mqttPsUrlMap.expires = 2;
+        $mqttPsUrlMap.requested = 2;
+        $mqttPsUrlMap.issued = 2;
+        $mqttPsUrlMap = $mqttPsUrlMap;
     }
     function potentialReloadPage() {
         log.debug("potentialReloadPage: begin");
@@ -463,11 +456,16 @@
                 log.debug(`${tag}: ${topicP} subscribe stand down`);
             } else {
                 log.debug(`${tag}: Subscribing ${topicP}`);
-                activeIotWatch.topic[topicP] = await mySubscribe(topicP, onMsgh);
+                activeIotWatch.topic[topicP] = await mySubscribe(
+                    topicP,
+                    onMsgh
+                );
             }
         } else {
             if (activeIotWatch.topic[topicP]) {
-                log.debug(`${tag}: UnSubscribing ${activeIotWatch.topic[topicP]}`);
+                log.debug(
+                    `${tag}: UnSubscribing ${activeIotWatch.topic[topicP]}`
+                );
                 //activeIotWatch[topicP].unsubscribe();
                 mqClient.unsubscribe(topicP);
                 delete activeIotWatch.topic[topicP];
@@ -480,7 +478,7 @@
     async function mySubscribe(topicP, onMsgh) {
         const tag = "tag:mySubscribe";
         mqClient.subscribe(topicP, {}, onSubscribed);
-        return onMsgh
+        return onMsgh;
         return PubSub.subscribe(topicP).subscribe({
             next: async (data) => {
                 log.debug(`${tag}: ${topicP} mqMessage received`, data);
@@ -507,7 +505,7 @@
         reverse = !reverse ? 1 : -1;
 
         return function (a, b) {
-            return (a = key(a)), (b = key(b)), reverse * ((a > b) - (b > a));
+            return ((a = key(a)), (b = key(b)), reverse * ((a > b) - (b > a)));
         };
     };
 
@@ -724,14 +722,14 @@
     const pendingAudioList = [];
 
     watchMqttSubscriptions();
-    onMount( () => {
-        onMountAsync()
+    onMount(() => {
+        onMountAsync();
         return () => {
             log.debug("HotLoad unmount");
-            resetMqtt()
+            resetMqtt();
         };
     });
-    async function onMountAsync(){
+    async function onMountAsync() {
         /*
         document.addEventListener("contextmenu", function (e){
             e.preventDefault();
@@ -756,9 +754,9 @@
     }
 
     async function announceFromMqtt(mqMsg) {
-        const qid=$developerMode?uuidConst:"";
+        const qid = $developerMode ? uuidConst : "";
 
-        log.debug("announceFromMqtt qid: ",  qid);
+        log.debug("announceFromMqtt qid: ", qid);
         log.debug("announceFromMqtt: ", mqMsg);
         log.debug(`announceFromMqtt: ${mqMsg}`, mqMsg);
         log.debug(`announceFromMqtt already parsed?: ${mqMsg.outputUri}`);
@@ -767,7 +765,7 @@
         const mediaMatch = mqMsg.outputUri.match(/\/media\/.*/);
         if (mediaMatch && mediaMatch[0]) {
             const path = mediaMatch[0];
-            pushMessage( {
+            pushMessage({
                 text: `Audio queueing.${qid}`,
                 type: "success",
             });
@@ -776,7 +774,7 @@
             queueAudio(path);
         } else {
             log.debug(`announceFromMqtt MISSING path`);
-            pushMessage( {
+            pushMessage({
                 text: `Audio missing path.`,
                 type: "error",
             });
@@ -796,9 +794,8 @@
         }
     }
     var audioPlaying = false;
-    $:{
-        $mp3Playing= audioPlaying
-
+    $: {
+        $mp3Playing = audioPlaying;
     }
     var lastPlayed = "";
     function getNextAudio() {
@@ -835,22 +832,19 @@
         // root cause looks like double subscribe.
         log.debug("tattle :", msg, pendingAudioList.length);
     }
-    function doRefreshClicked(){
+    function doRefreshClicked() {
         //potentialDoubleClickReloadPage();
         doRefreshViaHttp();
-
     }
-    function doRefreshPressed(){
+    function doRefreshPressed() {
         potentialDoubleClickReloadPage();
-
     }
     const doRefreshViaHttp = async () => {
         const tag = "doRefresh";
         log.debug(`${tag} begin`);
         if (refreshInProgressButton) {
             log.debug(`${tag} skipped, already working`);
-            return
-
+            return;
         }
         refreshInProgressButton = true;
         //await dbInit();
@@ -866,7 +860,7 @@
             await loadArchivedData();
         } else {
             //watchIot can now invoke http refresh on re-connect
-            //await watchIot("fdr"); 
+            //await watchIot("fdr");
 
             const url =
                 $raceConfig.baseUrl +
@@ -891,9 +885,13 @@
         log.debug(`${tag} done ${$recentRefreshMs}`);
     };
     function isArchived(ttlSecondsUnusedSvelteTrigger) {
-        log.debug("isArchived passed ecFromDexie: ", ecFromDexie,JSON.stringify($raceConfig));
-        if($raceConfig && $raceConfig.archived){
-            return true
+        log.debug(
+            "isArchived passed ecFromDexie: ",
+            ecFromDexie,
+            JSON.stringify($raceConfig)
+        );
+        if ($raceConfig && $raceConfig.archived) {
+            return true;
         }
         return false;
         //return ecFromDexie && ecFromDexie[0] && ecFromDexie[0].archived;
@@ -909,7 +907,7 @@
             const eventConfigEntity = entityFactory.build(ecFromDexie[0]);
             const faReturn = eventConfigEntity.checkIfFrozenOrArchived();
             if (faReturn["status"] == "frozen") {
-                pushMessage( {
+                pushMessage({
                     text:
                         `This race is frozen. It will archive at: ` +
                         new Date(ecFromDexie[0].TTL * 1000),
@@ -955,21 +953,19 @@
         }
         refreshInProgressCca = false;
     }
-    let recentPsUrl="";
-    function transformWsUrl  (url, options, client)  {
-      //client.options.username = `token=${this.get_current_auth_token()}`;
-      //client.options.clientId = `${this.get_updated_clientId()}`;
+    let recentPsUrl = "";
+    function transformWsUrl(url, options, client) {
+        //client.options.username = `token=${this.get_current_auth_token()}`;
+        //client.options.clientId = `${this.get_updated_clientId()}`;
 
-            refreshPsUrl(); // async request but transform won't await.  issue the request so it will be avlbl on subsequent retry...
+        refreshPsUrl(); // async request but transform won't await.  issue the request so it will be avlbl on subsequent retry...
 
-            return $mqttPsUrlMap.url
+        return $mqttPsUrlMap.url;
     }
 </script>
 
 {#if isArchived(ecFromDexie, $raceConfig)}
-    <SpinnerButton spinning={false} disabled={true}
-        {btnClass}
-      >
+    <SpinnerButton spinning={false} disabled={true} btnClass={btnClass}>
         Archived
     </SpinnerButton>
 {:else}
@@ -979,7 +975,7 @@
         spinning={refreshInProgressButton ||
             refreshInProgressMq ||
             refreshInProgressCca}
-        {btnClass}
+        btnClass={btnClass}
     >
         Refresh
     </SpinnerButton>

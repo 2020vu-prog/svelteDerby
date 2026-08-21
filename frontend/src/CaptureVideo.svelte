@@ -13,36 +13,32 @@
         videoCaptureCodec,
         videoClientTimeFixedMs,
         videoClientTimeAdjustmentMs,
-        videoClientTimeAdjustmentMarginMs
+        videoClientTimeAdjustmentMarginMs,
     } from "./stores.js";
 
-    import {
-        sleep,
-        hhmmssFmt,
-        secondsToHHMMSS,
-    } from "./utils.js";
+    import { sleep, hhmmssFmt, secondsToHHMMSS } from "./utils.js";
 
     const { v4: uuidv4 } = require("uuid");
     import TimerSelectByName from "./TimerSelectByName.svelte";
     import MqttSubscribeStub from "./MqttSubscribeStub.svelte";
     var timerId = "";
     var timerName = "";
-    var timerTopic="";
+    var timerTopic = "";
 
-    var showAdvanced=false
+    var showAdvanced = false;
     var mediaRecorder = [];
     var activeSnipList = [];
-    var oldestSnipHHMMSS=""
-    const mqttMsgKey="mqttMsgKey"
+    var oldestSnipHHMMSS = "";
+    const mqttMsgKey = "mqttMsgKey";
 
-    function newVideoSnip(){
-        return{
-            snipVideoData:[],
+    function newVideoSnip() {
+        return {
+            snipVideoData: [],
             snipStart: Date.now(),
-            snipEnd:0,
-            isRecording:true,
-            pendingUploadKey: undefined,  //allow active videoto auto upload onStop
-        }
+            snipEnd: 0,
+            isRecording: true,
+            pendingUploadKey: undefined, //allow active videoto auto upload onStop
+        };
     }
     var uploadPending;
     var nextSnum = 0; // 2 streams.  this will toggle b/t 0,1
@@ -58,24 +54,23 @@
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
     const tag = "CaptureVideo";
-    var snipAgeSeconds = 300
-    var snipLengthSeconds=6
-    var recordTimeOverlay = false
-    var timerSelectMode="normal"
-    $:{ if(recordSpinning){
-            timerSelectMode="disabled"
-        }else{
-            timerSelectMode="normal"
-
+    var snipAgeSeconds = 300;
+    var snipLengthSeconds = 6;
+    var recordTimeOverlay = false;
+    var timerSelectMode = "normal";
+    $: {
+        if (recordSpinning) {
+            timerSelectMode = "disabled";
+        } else {
+            timerSelectMode = "normal";
         }
-}
+    }
     onMount(async () => {
-        if(isIos()){
-            pushMessage( {
+        if (isIos()) {
+            pushMessage({
                 text: `Video capture does not work on iOS.  Please use android for video.`,
                 type: "error",
             });
-
         }
     });
     onDestroy(() => {
@@ -112,79 +107,79 @@
         });
     }
 
-    async function handleRemoteRequest(json){
+    async function handleRemoteRequest(json) {
         const tag = "handleRemoteRequest";
         //const json=JSON.parse(jsonString)
         log.debug(`${tag}: invoked: ${JSON.stringify(json)}`);
 
-        auditClientTime(json.issuedMs,tag)
+        auditClientTime(json.issuedMs, tag);
         await calcClientTimeAdjustmentMs();
 
-        if(!json.tgtTimeMs){
+        if (!json.tgtTimeMs) {
             log.error(`${tag}: INVALID`);
-            return
+            return;
         }
-        if(!json.prefix){
+        if (!json.prefix) {
             log.error(`${tag}: INVALID`);
-            return
+            return;
         }
-        const tgtAdjMs=json.tgtTimeMs+$videoClientTimeAdjustmentMs+$videoClientTimeFixedMs;
-        const lo=tgtAdjMs-500
-        const hi=tgtAdjMs+500
-        const futureHi=(hi - Date.now())+5000
-        if (futureHi>0){ //wait for video capture if hi is 'now-ish' or future
-            pushMessage( {
-                    text: `Video upload in [${futureHi/1000}] seconds.`,
-                    key: mqttMsgKey,
-                    type: "success",
-                    TTL:Date.now()+futureHi,
+        const tgtAdjMs =
+            json.tgtTimeMs +
+            $videoClientTimeAdjustmentMs +
+            $videoClientTimeFixedMs;
+        const lo = tgtAdjMs - 500;
+        const hi = tgtAdjMs + 500;
+        const futureHi = hi - Date.now() + 5000;
+        if (futureHi > 0) {
+            //wait for video capture if hi is 'now-ish' or future
+            pushMessage({
+                text: `Video upload in [${futureHi / 1000}] seconds.`,
+                key: mqttMsgKey,
+                type: "success",
+                TTL: Date.now() + futureHi,
             });
             log.debug(`${tag}: waiting ${futureHi}`);
-            await sleep(futureHi)
+            await sleep(futureHi);
             log.debug(`${tag}: waited  ${futureHi}`);
-        }
-        else{
+        } else {
             log.debug(`${tag}: noWait ${futureHi}`);
-            pushMessage( {
-                    text: `Video upload searching...`,
-                    key: mqttMsgKey,
-                    type: "success",
+            pushMessage({
+                text: `Video upload searching...`,
+                key: mqttMsgKey,
+                type: "success",
             });
-
         }
 
-        const sMatch=findSnipMatch(lo,hi)
-        if(sMatch){
-            const oldSnip=sMatch
+        const sMatch = findSnipMatch(lo, hi);
+        if (sMatch) {
+            const oldSnip = sMatch;
             const hhmmss = hhmmssFmt(oldSnip.snipStart);
-            const key=`${oldSnip.snipStart}-TestRmt`;
-            captureSpinning = true
-            oldSnip.tgtTimeMs=tgtAdjMs
-            doUploadToServer(oldSnip, json.prefix) 
-        }else{
-
-            pushMessage( {
+            const key = `${oldSnip.snipStart}-TestRmt`;
+            captureSpinning = true;
+            oldSnip.tgtTimeMs = tgtAdjMs;
+            doUploadToServer(oldSnip, json.prefix);
+        } else {
+            pushMessage({
                 text: `Remote Video capture snip NOT FOUND!.`,
                 type: "error",
             });
-
         }
     }
-    function nowFloor(){
-        return Math.floor(Date.now()/5000)*5000
-    }   
+    function nowFloor() {
+        return Math.floor(Date.now() / 5000) * 5000;
+    }
     async function clickedRequestCapture() {
-        if(!timerName){
-            pushMessage( {
+        if (!timerName) {
+            pushMessage({
                 text: `No timer selected.`,
                 type: "error",
                 key: mqttMsgKey,
             });
-            return
+            return;
         }
 
-            remoteeSpinning = true
-        pushMessage( {
+        remoteeSpinning = true;
+        pushMessage({
             text: `Beginning Request.`,
             type: "success",
             key: mqttMsgKey,
@@ -192,7 +187,7 @@
         try {
             const endPoint = "/requestVideoUpload";
             const req = {
-                tgtTimeMs:nowFloor()+5000,
+                tgtTimeMs: nowFloor() + 5000,
                 timerName: timerName,
                 orgId: $raceConfig.orgId,
                 orgIz: $raceConfig.orgIz,
@@ -201,14 +196,14 @@
                 params: req,
             });
             log.debug("clickedRequestCapture response", response);
-            pushMessage( {
+            pushMessage({
                 text: `Completed [${timerName}] Request.`,
                 type: "success",
                 key: mqttMsgKey,
             });
         } catch (err) {
-                log.debug("clickedRequestCapture caught:", err);
-            pushMessage( {
+            log.debug("clickedRequestCapture caught:", err);
+            pushMessage({
                 text: err,
                 type: "error",
             });
@@ -216,59 +211,61 @@
             remoteeSpinning = false;
         }
     }
-    function isTimeInSnip(snip,xMs,rsn){
-            //log.debug(`VCALC: istis BEGIN ${rsn}: `,snip,xMs)
+    function isTimeInSnip(snip, xMs, rsn) {
+        //log.debug(`VCALC: istis BEGIN ${rsn}: `,snip,xMs)
         //TODO: active snips!
-     //       log.debug("VCALC: wtf: ",xMs,snip.snipStart,snip.snipEnd)
-    //        log.debug("VCALC: wtf2: ",xMs,snip)
-        const rc=(xMs > snip.snipStart && xMs < snip.snipEnd)
-            rc && log.debug(`VCALC: istis ${rsn} true: `,snip,xMs)
-        return rc
+        //       log.debug("VCALC: wtf: ",xMs,snip.snipStart,snip.snipEnd)
+        //        log.debug("VCALC: wtf2: ",xMs,snip)
+        const rc = xMs > snip.snipStart && xMs < snip.snipEnd;
+        rc && log.debug(`VCALC: istis ${rsn} true: `, snip, xMs);
+        return rc;
     }
-    function getSnipDistance(snip,loMs,hiMs){
-            //log.debug("VCALC: wtf3z: ",isTimeInSnip(snip,hiMs,'hcrack'))
-            //log.debug("VCALC: wtf3a: ",loMs,hiMs,snip)
-        const beginD=loMs-snip.snipStart
-        const endD=snip.snipEnd-hiMs
-            //log.debug("VCALC: wtf3b: ",beginD,endD,snip)
-        return Math.min(beginD,endD)
-
+    function getSnipDistance(snip, loMs, hiMs) {
+        //log.debug("VCALC: wtf3z: ",isTimeInSnip(snip,hiMs,'hcrack'))
+        //log.debug("VCALC: wtf3a: ",loMs,hiMs,snip)
+        const beginD = loMs - snip.snipStart;
+        const endD = snip.snipEnd - hiMs;
+        //log.debug("VCALC: wtf3b: ",beginD,endD,snip)
+        return Math.min(beginD, endD);
     }
-    function findSnipMatch(lo,hi){
-            const candidates=videoSnipHistory.filter((snipp)=>{
-                return(isTimeInSnip(snipp,lo,'lo') &&
-                   isTimeInSnip(snipp,hi,'hi') )
-            })
-            log.debug("VCALC: candidates: ",candidates.length);
-            var rc=undefined;
-            var fitDistance=0
-            for (let idx in candidates) {
-                const snip=candidates[idx]
-                const thisFit=getSnipDistance(snip,lo,hi)
-            log.debug("VCALC: may tf: ",thisFit)
-                if(thisFit>fitDistance){
-                    fitDistance=thisFit
-                    rc=snip
-                }
+    function findSnipMatch(lo, hi) {
+        const candidates = videoSnipHistory.filter((snipp) => {
+            return (
+                isTimeInSnip(snipp, lo, "lo") && isTimeInSnip(snipp, hi, "hi")
+            );
+        });
+        log.debug("VCALC: candidates: ", candidates.length);
+        var rc = undefined;
+        var fitDistance = 0;
+        for (let idx in candidates) {
+            const snip = candidates[idx];
+            const thisFit = getSnipDistance(snip, lo, hi);
+            log.debug("VCALC: may tf: ", thisFit);
+            if (thisFit > fitDistance) {
+                fitDistance = thisFit;
+                rc = snip;
             }
-            log.debug("VCALC: using Fd: ",fitDistance)
-            return rc
+        }
+        log.debug("VCALC: using Fd: ", fitDistance);
+        return rc;
     }
     function clickedCapture() {
         const now = new Date().getTime();
         deferredCapture(`${now}-TestClick`);
     }
 
-    function embedMeta(uploadKey,videoSnip){
-        let tgtTimeMs=videoSnip.tgtTimeMs
-        if(! tgtTimeMs){
-            const m=/\d\d\d\d+/.exec(uploadKey);
-            log.debug(`infer tgtTime: ${JSON.stringify(m)}`)
-            if(m && m.length>0){
-                const candidate=parseInt(m[0])
-                if (candidate>=videoSnip.snipStart
-                && candidate<=videoSnip.snipEnd){
-                    tgtTimeMs=candidate
+    function embedMeta(uploadKey, videoSnip) {
+        let tgtTimeMs = videoSnip.tgtTimeMs;
+        if (!tgtTimeMs) {
+            const m = /\d\d\d\d+/.exec(uploadKey);
+            log.debug(`infer tgtTime: ${JSON.stringify(m)}`);
+            if (m && m.length > 0) {
+                const candidate = parseInt(m[0]);
+                if (
+                    candidate >= videoSnip.snipStart &&
+                    candidate <= videoSnip.snipEnd
+                ) {
+                    tgtTimeMs = candidate;
                 }
             }
         }
@@ -276,35 +273,34 @@
         // . s3 upload works with long fname/url,
         // but mediaconvert job submit FAILS when ss3 url too long :-(
         // . limit approx 256 chars?!?!?!
-        const meta={
-               // perspective: $videoPerspective,
-                p: $videoPerspective,
-                //snipStart: videoSnip.snipStart,
-                ss: videoSnip.snipStart,
-                //snipEnd: videoSnip.snipEnd,
-                lMs: videoSnip.snipEnd-videoSnip.snipStart,
-                toMs: tgtTimeMs-videoSnip.snipStart,
-                n : timerName,
-        }
-        const metaJson=JSON.stringify(meta)
-        const metaEnc=encodeURIComponent(metaJson)
-        log.debug(`metaEnc: ${metaEnc}`)
+        const meta = {
+            // perspective: $videoPerspective,
+            p: $videoPerspective,
+            //snipStart: videoSnip.snipStart,
+            ss: videoSnip.snipStart,
+            //snipEnd: videoSnip.snipEnd,
+            lMs: videoSnip.snipEnd - videoSnip.snipStart,
+            toMs: tgtTimeMs - videoSnip.snipStart,
+            n: timerName,
+        };
+        const metaJson = JSON.stringify(meta);
+        const metaEnc = encodeURIComponent(metaJson);
+        log.debug(`metaEnc: ${metaEnc}`);
         const regex = /%/gi;
-        const metaEnc2=metaEnc.replaceAll(regex,'_')
-        log.debug(`metaEnc2: ${metaEnc2}`)
+        const metaEnc2 = metaEnc.replaceAll(regex, "_");
+        log.debug(`metaEnc2: ${metaEnc2}`);
 
         //return $videoPerspective
-        return `__${metaEnc2}__`
-
+        return `__${metaEnc2}__`;
     }
-    function auditClientTime(issuedMs,tag){
-        const offset=issuedMs - Date.now()
-        log.debug(`auditClientTime ${tag}: ${offset}`)
+    function auditClientTime(issuedMs, tag) {
+        const offset = issuedMs - Date.now();
+        log.debug(`auditClientTime ${tag}: ${offset}`);
     }
-    async function doUploadToServer(videoSnip, uploadKey ){
-        const tag='doUploadToServer'
-        const videoDataBlob=new Blob(videoSnip.snipVideoData)
-        pushMessage( {
+    async function doUploadToServer(videoSnip, uploadKey) {
+        const tag = "doUploadToServer";
+        const videoDataBlob = new Blob(videoSnip.snipVideoData);
+        pushMessage({
             text: `Beginning upload. ${uploadKey}`,
             type: "success",
             key: uploadKey,
@@ -312,8 +308,8 @@
         try {
             const endPoint = "/requestS3PutObjectUrl";
             //const axios = await $getAxios();
-            if(!$videoPerspective){
-                $videoPerspective=uuidv4().substring(0, 5);
+            if (!$videoPerspective) {
+                $videoPerspective = uuidv4().substring(0, 5);
             }
             const req = {
                 key: `${uploadKey}_${embedMeta(uploadKey, videoSnip)}.webm`,
@@ -327,7 +323,7 @@
             });
             log.debug("requestS3PutObjectUrl response", response);
             if (response.data.issuedMs) {
-                auditClientTime(response.data.issuedMs,tag)
+                auditClientTime(response.data.issuedMs, tag);
             }
             if (response.data.signedUrl) {
                 const options = {
@@ -339,7 +335,7 @@
                 };
 
                 const axiosGeneric = $getAxiosNew();
-                pushMessage( {
+                pushMessage({
                     text: `Beginning upload s3.`,
                     type: "success",
                     key: uploadKey,
@@ -352,7 +348,7 @@
                     options
                 );
                 log.debug("s3PutResponse", putRc);
-                pushMessage( {
+                pushMessage({
                     text: `Completed upload s3 ${videoDataBlob.size}`,
                     type: "success",
                     key: uploadKey,
@@ -360,15 +356,15 @@
             }
             if (response.data.error) {
                 log.debug("requestS3PutObjectUrl failed", response);
-                pushMessage( {
+                pushMessage({
                     text: response.data.error,
                     type: "error",
                 });
             } else {
             }
         } catch (err) {
-                log.debug("requestS3PutObjectUrl caught:", err);
-            pushMessage( {
+            log.debug("requestS3PutObjectUrl caught:", err);
+            pushMessage({
                 text: err,
                 type: "error",
             });
@@ -388,23 +384,22 @@
     }
     async function doStart() {
         if (!timerId) {
-            pushMessage( {
+            pushMessage({
                 text: `Missing selected Timer[2].`,
                 type: "error",
             });
             return;
         }
-        if( snipLengthSeconds >12 || snipLengthSeconds <4 ){
-       
-            pushMessage( {
+        if (snipLengthSeconds > 12 || snipLengthSeconds < 4) {
+            pushMessage({
                 text: `Snip length s/b 4<->12.`,
                 type: "error",
             });
             return;
         }
 
-        showAdvanced=false
-        hidePreview=false
+        showAdvanced = false;
+        hidePreview = false;
         const snum = 0;
         recordSpinning = true;
         const constraints = {
@@ -420,13 +415,12 @@
     }
     async function init(constraints, snum) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia(
-                constraints
-            );
+            const stream =
+                await navigator.mediaDevices.getUserMedia(constraints);
             handleGotMedia(stream, snum);
         } catch (e) {
             console.error("navigator.getUserMedia error:", e);
-            pushMessage( {
+            pushMessage({
                 text: e,
                 type: "error",
             });
@@ -452,7 +446,7 @@
         rawVideo.play();
 
         if (!canvas.captureStream) {
-            pushMessage( {
+            pushMessage({
                 text: `Canvas video capture is not supported by this browser.`,
                 type: "error",
             });
@@ -464,7 +458,10 @@
         recordStream(canvasStream, 1);
 
         // 2 concurrent recording sessions.  end each at half desired length
-        timerHandle = setInterval(myTimer, Math.floor((snipLengthSeconds*1000)/2));
+        timerHandle = setInterval(
+            myTimer,
+            Math.floor((snipLengthSeconds * 1000) / 2)
+        );
     }
     function formatOverlayTime(now) {
         const d = new Date(now);
@@ -524,7 +521,7 @@
     }
     async function doCaptureAndUpload(uploadKey) {
         const tag = "doCaptureAndUpload";
-            log.debug(`${tag}: invoked: ${uploadKey}`);
+        log.debug(`${tag}: invoked: ${uploadKey}`);
         if (captureDisabled) {
             log.debug(`${tag}: skipping, not armed`);
             return;
@@ -536,18 +533,21 @@
         captureOldest(); // stop oldest and upload it
         videoRefreshCount = 0;
     }
-    const videoSnipHistory=[]
-    function accrueSnips(snum){
+    const videoSnipHistory = [];
+    function accrueSnips(snum) {
         //const blob = new Blob(activeSnipList[snum].snipVideoData);
-        videoSnipHistory.push(activeSnipList[snum])
-        const thresh=Date.now() - (snipAgeSeconds*1000)
-        while(videoSnipHistory.length>0 && videoSnipHistory[0].snipStart<thresh){
-            videoSnipHistory.shift()
+        videoSnipHistory.push(activeSnipList[snum]);
+        const thresh = Date.now() - snipAgeSeconds * 1000;
+        while (
+            videoSnipHistory.length > 0 &&
+            videoSnipHistory[0].snipStart < thresh
+        ) {
+            videoSnipHistory.shift();
         }
-        if(videoSnipHistory.length>0){
-            oldestSnipHHMMSS=`${secondsToHHMMSS((Date.now() - videoSnipHistory[0].snipStart)/1000)}`
-        }else{
-            oldestSnipHHMMSS=""
+        if (videoSnipHistory.length > 0) {
+            oldestSnipHHMMSS = `${secondsToHHMMSS((Date.now() - videoSnipHistory[0].snipStart) / 1000)}`;
+        } else {
+            oldestSnipHHMMSS = "";
         }
         /*
         const msg=`videoSnipHistory: ${videoSnipHistory.length}  ${now}`
@@ -557,10 +557,9 @@
                     key: "dillerup",
                 });
                 */
-
     }
     function myTimer() {
-        log.debug(`myTimer`)
+        log.debug(`myTimer`);
         captureOldest(); // keep video clips short
         if (videoRefreshCount++ > 1) {
             captureDisabled = false;
@@ -580,10 +579,10 @@
     const mimeType = "video/webm";
     const fileExt = mimeType.split("/")[1];
 
-    function growBlob(event,snum){
+    function growBlob(event, snum) {
         if (event && event.data && event.data.size > 0) {
             activeSnipList[snum].snipVideoData.push(event.data);
-            activeSnipList[snum].snipEnd=Date.now() // end will update with each append
+            activeSnipList[snum].snipEnd = Date.now(); // end will update with each append
         }
     }
     function recordStream(stream, snum) {
@@ -597,21 +596,21 @@
             mimeType: `${mimeType}; codecs=${$videoCaptureCodec}`,
             videoBitsPerSecond: parseInt(videoBitsPerSecond, 10),
         };
-        activeSnipList[snum] = newVideoSnip()
+        activeSnipList[snum] = newVideoSnip();
         mediaRecorder[snum] = new MediaRecorder(stream, options);
 
         //event is a BlobEvent
         mediaRecorder[snum].ondataavailable = (event) => {
             log.debug("Recorder data-available", snum);
             log.debug("Recorder data-available", event.data);
-            growBlob(event,snum)
+            growBlob(event, snum);
         };
         mediaRecorder[snum].onstop = (event) => {
             log.debug("Recorder stopped: ", event.data);
-            growBlob(event,snum)
-            activeSnipList[snum].isRecording=false
+            growBlob(event, snum);
+            activeSnipList[snum].isRecording = false;
 
-                accrueSnips(snum)
+            accrueSnips(snum);
             if (uploadPending) {
                 doUploadToServer(activeSnipList[snum], uploadPending);
                 uploadPending = undefined;
@@ -626,10 +625,9 @@
         mediaRecorder[snum].start();
         log.debug("recordStream done", snum);
     }
-    async function calcClientTimeAdjustmentMs(){
-        
+    async function calcClientTimeAdjustmentMs() {
         calcSpinning = true;
-        var beginMS=new Date().getTime();
+        var beginMS = new Date().getTime();
         try {
             const endPoint = "/requestServerEpochMS";
             const req = {
@@ -640,31 +638,28 @@
                 params: req,
             });
             log.debug("calcClientTimeAdjustmentMs response", response);
-            var doneMS=new Date().getTime();
-            var elapsedMS=(doneMS-beginMS);
-            var middleMS=Math.round(elapsedMS/2)+beginMS;
-            if(response.data.epochMS && elapsedMS<1000){
-                var offsetMS=middleMS-response.data.epochMS;
-                $videoClientTimeAdjustmentMs=offsetMS;
-                $videoClientTimeAdjustmentMarginMs= Math.round(elapsedMS/2);
-                pushMessage( {
+            var doneMS = new Date().getTime();
+            var elapsedMS = doneMS - beginMS;
+            var middleMS = Math.round(elapsedMS / 2) + beginMS;
+            if (response.data.epochMS && elapsedMS < 1000) {
+                var offsetMS = middleMS - response.data.epochMS;
+                $videoClientTimeAdjustmentMs = offsetMS;
+                $videoClientTimeAdjustmentMarginMs = Math.round(elapsedMS / 2);
+                pushMessage({
                     text: `Completed time compensation. ${offsetMS}`,
                     type: "success",
                 });
-            }
-            else{
-
+            } else {
             }
         } catch (err) {
-                log.debug("calcClientTimeAdjustmentMs caught:", err);
-            pushMessage( {
+            log.debug("calcClientTimeAdjustmentMs caught:", err);
+            pushMessage({
                 text: err,
                 type: "error",
             });
         } finally {
             calcSpinning = false;
         }
-
     }
     function handleTimerSelect(event) {
         log.debug("handleTimerSelect got event:", event.detail);
@@ -675,17 +670,17 @@
             );
             timerId = event.detail.decoded.timerMqttClientId;
             timerName = event.detail.text;
-            timerTopic = `derby/${$raceConfig.orgId}/video/${timerName}`
+            timerTopic = `derby/${$raceConfig.orgId}/video/${timerName}`;
             log.debug("handleTimerSelect set:", timerId);
         }
     }
-    let videoDisplay=''
-    let hidePreview=false
-    $:{
-        if(hidePreview){
-            videoDisplay="display:none"
-        }else{
-            videoDisplay=""
+    let videoDisplay = "";
+    let hidePreview = false;
+    $: {
+        if (hidePreview) {
+            videoDisplay = "display:none";
+        } else {
+            videoDisplay = "";
         }
     }
 </script>
@@ -704,75 +699,84 @@
 </label>
 
 {#if showAdvanced}
+    <label
+        >Codec
+        <select bind:value={$videoCaptureCodec}>
+            <option>vp8</option>
+            <option>vp9</option>
+        </select>
+    </label>
 
-<label>Codec
-<select bind:value={$videoCaptureCodec}>
-    <option>vp8</option>
-    <option>vp9</option>
-</select>
-</label>
+    <label
+        >Resolution
+        <select bind:value={resolution}>
+            <option>320x240</option>
+            <option>640x480</option>
+            <option>720x576</option>
+            <option>1920x1080</option>
+        </select>
+    </label>
 
-<label>Resolution
-<select bind:value={resolution}>
-    <option>320x240</option>
-    <option>640x480</option>
-    <option>720x576</option>
-    <option>1920x1080</option>
-</select>
-</label>
+    <label
+        >Frame Rate
+        <select bind:value={frameRate}>
+            <option>5</option>
+            <option>15</option>
+            <option>30</option>
+        </select>
+    </label>
 
-<label>Frame Rate
-<select bind:value={frameRate}>
-    <option>5</option>
-    <option>15</option>
-    <option>30</option>
-</select>
-</label>
-
-<label>videoBitsPerSecond
-<select bind:value={videoBitsPerSecond}>
-    <option>500000</option>
-    <option>1000000</option>
-    <option>2000000</option>
-    <option>8000000</option>
-</select>
-</label>
-<label>
-    Record time overlay:
-    <input class="big" type="checkbox" bind:checked={recordTimeOverlay} />
-</label>
-<label>Age of oldest snippet (seconds)
-<input 
-    bind:value={snipAgeSeconds}
-    type="number" />
-</label>
-<label>Snippet length (seconds)
-    <input 
-        bind:value={snipLengthSeconds}
-        type="number" />
-</label>
-<label>Time adjustment [d](ms)
-    <input 
-        bind:value={$videoClientTimeAdjustmentMs}
-        type="number" disabled/>
-    ± {$videoClientTimeAdjustmentMarginMs}ms
-</label>
-<label>Time adjustment [f](ms)
-    <input 
-        bind:value={$videoClientTimeFixedMs}
-        type="number" />
-</label>
-<SpinnerButton on:click={calcClientTimeAdjustmentMs} spinning={calcSpinning}>
-    Calculate time offset
-</SpinnerButton>
+    <label
+        >videoBitsPerSecond
+        <select bind:value={videoBitsPerSecond}>
+            <option>500000</option>
+            <option>1000000</option>
+            <option>2000000</option>
+            <option>8000000</option>
+        </select>
+    </label>
+    <label>
+        Record time overlay:
+        <input class="big" type="checkbox" bind:checked={recordTimeOverlay} />
+    </label>
+    <label
+        >Age of oldest snippet (seconds)
+        <input bind:value={snipAgeSeconds} type="number" />
+    </label>
+    <label
+        >Snippet length (seconds)
+        <input bind:value={snipLengthSeconds} type="number" />
+    </label>
+    <label
+        >Time adjustment [d](ms)
+        <input
+            bind:value={$videoClientTimeAdjustmentMs}
+            type="number"
+            disabled
+        />
+        ± {$videoClientTimeAdjustmentMarginMs}ms
+    </label>
+    <label
+        >Time adjustment [f](ms)
+        <input bind:value={$videoClientTimeFixedMs} type="number" />
+    </label>
+    <SpinnerButton
+        on:click={calcClientTimeAdjustmentMs}
+        spinning={calcSpinning}
+    >
+        Calculate time offset
+    </SpinnerButton>
 {/if}
-<label>Perspective
-<input bind:value={$videoPerspective}
-placeholder="Overhead"
- />
+<label
+    >Perspective
+    <input bind:value={$videoPerspective} placeholder="Overhead" />
 </label>
 <label>Linked Timer</label>
-<TimerSelectByName on:select={handleTimerSelect} preSelect="Finish" mode={timerSelectMode}/>
+<TimerSelectByName
+    on:select={handleTimerSelect}
+    preSelect="Finish"
+    mode={timerSelectMode}
+/>
 
 {#key timerTopic}
     <MqttSubscribeStub
@@ -794,17 +798,17 @@ placeholder="Overhead"
 >
     Capture&Upload
 </SpinnerButton>
-<br/>
+<br />
 
 <SpinnerButton
     on:click={clickedRequestCapture}
     spinning={remoteeSpinning}
     disabled={remoteeDisabled}
 >
-   Simulate [{timerName}] Capture
+    Simulate [{timerName}] Capture
 </SpinnerButton>
-<br/>
-<br/>
-<br/>
-<br/>
-<Walkup/>
+<br />
+<br />
+<br />
+<br />
+<Walkup />

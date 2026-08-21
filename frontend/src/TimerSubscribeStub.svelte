@@ -7,7 +7,11 @@
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { createEventDispatcher } from "svelte";
-    import { getTimerPbConfig, MqttMapSubscription, MqttGetTopic } from "./utils.js";
+    import {
+        getTimerPbConfig,
+        MqttMapSubscription,
+        MqttGetTopic,
+    } from "./utils.js";
     import { mqttMapData } from "./stores.js";
     export let timerId = "";
     export let verbose = "truthyString";

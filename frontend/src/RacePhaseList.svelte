@@ -12,7 +12,6 @@
     import RacePhase from "./RacePhase.svelte";
     import Annotate from "./Annotate.svelte";
     import CarFilter from "./CarFilter.svelte";
-    import MaterialAdd from "./MaterialAdd.svelte";
     import { onMount } from "svelte";
     import { dateChangeLabel, getMainFull } from "./utils.js";
     import { location } from "svelte-spa-router";
@@ -70,7 +69,6 @@
 <style>
 </style>
 
-<MaterialAdd clickHandleRoute="/raceStandingAdd/RacePhase" />
 <div id="rpTitle">
     <h4>
         Race Phases
@@ -80,7 +78,10 @@
 
 {#each phaseList as item, i (item.at)}
     {#key getKey(item.at, i, $nextOnBlockKey)}
-        <Annotate text={dateChangeLabel(item.at, phaseList[i - 1]?.at)} style="margin-top: 1rem" />
+        <Annotate
+            text={dateChangeLabel(item.at, phaseList[i - 1]?.at)}
+            style="margin-top: 1rem"
+        />
         <RacePhase
             refreshTime={$doRefreshBlocks}
             phaseKey={item.classKey}

@@ -1,14 +1,14 @@
 const EntityFactory = require("./shared/EntityFactory.js");
+const { EC2Client, RunInstancesCommand } = require("@aws-sdk/client-ec2");
 //import { EC2Client, RunInstancesCommand } from "@aws-sdk/client-ec2"; // ES Modules import
 // const { EC2Client, RunInstancesCommand } = require("@aws-sdk/client-ec2"); // CommonJS import
 
 const log = require("loglevel");
 class DiscordUtils {
-    AWS = null;
     ddbUtils = null;
-    constructor(AWS, ddbUtils) {
-        this.AWS = AWS;
+    constructor(ddbUtils, ec2Client = new EC2Client()) {
         this.ddbUtils = ddbUtils;
+        this.ec2 = ec2Client;
     }
     // TODO: iam permissions on runInstance not working
     // TODO: multiple org strategy (currently thinking one bot/org)
@@ -39,7 +39,7 @@ class DiscordUtils {
                 },
             ],
         };
-        let data = await new this.AWS.EC2().runInstances(params).promise();
+        let data = await this.ec2.send(new RunInstancesCommand(params));
         log.debug("launchEc2Bot gave:", data);
         return data;
     }

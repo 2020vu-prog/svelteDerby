@@ -1,17 +1,20 @@
 <script>
     import log from "loglevel";
 
-    import { isEmailAllowedRoutePath } from "./utils.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     import { createEventDispatcher } from "svelte";
-    import { onMount } from "svelte";
 
     import {
         chartClickLoggerId,
         chartClickLoggerShow,
         theme,
-        userEmail,
     } from "./stores.js";
-    var showFab = false;
+    const canConfigureTimer = createPermissionStore(
+        RoutePermission.CAN_TIMER_CONFIG
+    );
     const dispatch = createEventDispatcher();
     const toggleEdit = async () => {
         log.debug("toggle:", editMode);
@@ -25,9 +28,6 @@
     function copyJson() {
         dispatch("copyJson", {});
     }
-    onMount(async () => {
-        showFab = await isEmailAllowedRoutePath($userEmail, "/timerConfig");
-    });
 </script>
 
 <style>
@@ -70,7 +70,7 @@
         <button on:click={copyJson}>Copy Json</button>
     </span>
 {/if}
-{#if showFab}
+{#if $canConfigureTimer}
     <div class="fab" style="background-color: {$theme};" on:click={toggleShow}>
         {#if $chartClickLoggerShow}X{:else}E{/if}
     </div>

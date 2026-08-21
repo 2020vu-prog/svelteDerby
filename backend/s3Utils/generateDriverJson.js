@@ -42,41 +42,41 @@ const doOne = async (tgt) => {
     };
     const rs = fs.createReadStream(`${baseDirAndFile}.csv`);
 
-    const parser = parse({ columns: true, relax_column_count: true }, function (
-        err,
-        data
-    ) {
-        if (err) console.log("err:", err);
-        if (data) console.log("data:", data);
-        for (let idx in data) {
-            const r = data[idx];
-            console.log("driver: ", r);
-            console.log(`${JSON.stringify(r)}\n`);
-            if (r.CarNumber && r.ShortName) {
-                const driver = {
-                    orgId: orgId,
-                    orgIz: orgIz,
-                    PK: `${orgId}:PTCP`,
-                    name: r.ShortName,
-                    number: r.CarNumber,
-                };
-                //outJson.bulk.push(driver);
-                outJson[r.CarNumber]={
-                    orgId: orgId,
-                    orgIz: orgIz,
-                    PK: `${orgId}:PTCP`,
-                    name: r.ShortName,
-                    number: r.CarNumber,
-		};
+    const parser = parse(
+        { columns: true, relax_column_count: true },
+        function (err, data) {
+            if (err) console.log("err:", err);
+            if (data) console.log("data:", data);
+            for (let idx in data) {
+                const r = data[idx];
+                console.log("driver: ", r);
+                console.log(`${JSON.stringify(r)}\n`);
+                if (r.CarNumber && r.ShortName) {
+                    const driver = {
+                        orgId: orgId,
+                        orgIz: orgIz,
+                        PK: `${orgId}:PTCP`,
+                        name: r.ShortName,
+                        number: r.CarNumber,
+                    };
+                    //outJson.bulk.push(driver);
+                    outJson[r.CarNumber] = {
+                        orgId: orgId,
+                        orgIz: orgIz,
+                        PK: `${orgId}:PTCP`,
+                        name: r.ShortName,
+                        number: r.CarNumber,
+                    };
+                }
             }
-        }
 
-        console.log(JSON.stringify(outJson));
-        fs.writeFileSync(
-            `${baseDirAndFile}.json`,
-            JSON.stringify(outJson, null, "\t")
-        );
-    });
+            console.log(JSON.stringify(outJson));
+            fs.writeFileSync(
+                `${baseDirAndFile}.json`,
+                JSON.stringify(outJson, null, "\t")
+            );
+        }
+    );
 
     const pout = rs.pipe(parser);
     //	console.log("pout:", pout);

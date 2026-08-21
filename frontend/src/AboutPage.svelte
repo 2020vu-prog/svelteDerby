@@ -24,17 +24,10 @@
         buildGitHash,
         buildGitDirty,
         formatBuildEpoch,
-        isEmailAllowedRoutePath,
     } from "./utils.js";
 
     import { onMount } from "svelte";
-    import {
-        getCacheKey,
-        setCacheKey,
-        userEmail,
-        axios,
-        raceConfig,
-    } from "./stores.js";
+    import { getCacheKey, setCacheKey, axios, raceConfig } from "./stores.js";
     import { db, localConfigDb } from "./eventDb.js";
     import BottomNav from "./BottomNav.svelte";
     import OrgName from "./OrgName.svelte";
@@ -42,8 +35,16 @@
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
     import { push } from "svelte-spa-router";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
 
     let mounted = false;
+    const canUseManualTimer = createPermissionStore(
+        RoutePermission.MANUAL_FINISH_TIME
+    );
+    const canEditEvent = createPermissionStore(RoutePermission.POWER);
 
     var ecFromDexie;
     var histCountFromDexie = "";
@@ -103,7 +104,7 @@
     var devClickCount = 0;
     function devClick() {
         if ($developerMode && devClickCount < 8) {
-            pushMessage( {
+            pushMessage({
                 text: `You are already a developer.`,
                 type: "success",
             });
@@ -112,19 +113,11 @@
         if (devClickCount++ > 8) {
             log.warn("devmodeA");
             $developerMode = true;
-            pushMessage( {
+            pushMessage({
                 text: `Developer Mode Enabled.`,
                 type: "success",
             });
         }
-    }
-
-    function isManualTimerAllowed() {
-        return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
-    }
-
-    function isEventEditAllowed() {
-        return isEmailAllowedRoutePath($userEmail, "/eventAdd/db/Update");
     }
 </script>
 
@@ -179,15 +172,15 @@
 
         <div class="singularSettingDiv">
             <h4>Event Name / Org Name</h4>
-            {#if isEventEditAllowed($userEmail)}
-            <span
-                on:click={(event) => {
-                    push(`/eventAdd/db/Update`);
-                    event.stopPropagation();
-                }}
-            >
-            <Icon class="xLargeEdit" icon={faEdit} />
-            </span>
+            {#if $canEditEvent}
+                <span
+                    on:click={(event) => {
+                        push(`/eventAdd/db/Update`);
+                        event.stopPropagation();
+                    }}
+                >
+                    <Icon class="xLargeEdit" icon={faEdit} />
+                </span>
             {/if}
             <h6>
                 <span>{ecFromDexie[0].name}</span>
@@ -264,15 +257,17 @@
                 <strong>all screens</strong>.
             </h6>
         </div>
-        {#if isManualTimerAllowed($userEmail)}
-        <hr />
-        <div class="singularSettingDiv">
-            <h4>Allow Fractional MS timing</h4>
-            <input type="checkbox" bind:checked={$enableFractionalMs} />
-            <h6>
-                This enables partial MS entry on manual timer. <strong>NOT recommended</strong>.
-            </h6>
-        </div>
+        {#if $canUseManualTimer}
+            <hr />
+            <div class="singularSettingDiv">
+                <h4>Allow Fractional MS timing</h4>
+                <input type="checkbox" bind:checked={$enableFractionalMs} />
+                <h6>
+                    This enables partial MS entry on manual timer. <strong
+                        >NOT recommended</strong
+                    >.
+                </h6>
+            </div>
         {/if}
     {/if}
 

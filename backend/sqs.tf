@@ -1,13 +1,13 @@
 module "sqsLambda" {
   source = "./modules/lambdaSqs"
 
-  DistDbArn         = aws_dynamodb_table.derby-distribution.arn
-  DynamoDbArn       = aws_dynamodb_table.derby-dynamodb-table.arn
-  DeployEnvironment = var.DeployEnvironment
-  AwsRegion         = var.AwsRegion
-  S3DistBucket      = aws_s3_bucket.dstBucket.id
-  S3DistBucketArn   = aws_s3_bucket.dstBucket.arn
-  CcaQueueArn       = aws_sqs_queue.cacheAlignmentQueue.arn
+  DistDbArn                         = aws_dynamodb_table.derby-distribution.arn
+  DynamoDbArn                       = aws_dynamodb_table.derby-dynamodb-table.arn
+  DeployEnvironment                 = var.DeployEnvironment
+  AwsRegion                         = var.AwsRegion
+  S3DistBucket                      = aws_s3_bucket.dstBucket.id
+  S3DistBucketArn                   = aws_s3_bucket.dstBucket.arn
+  CcaQueueArn                       = aws_sqs_queue.cacheAlignmentQueue.arn
   ManagedRolePermissionsBoundaryArn = var.ManagedRolePermissionsBoundaryArn
 
 }

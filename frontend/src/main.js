@@ -1,10 +1,21 @@
-import App from "./App.svelte";
+import axios from "axios";
+import { initializeAwsConfig } from "./aws-config";
 
-const app = new App({
-    target: document.body,
-    props: {
-        name: "world",
-    },
+async function startApp() {
+    const response = await axios.get("/app/getAwsConfig", {
+        params: { cache: "[AIV]{date}[/AIV]" },
+    });
+    initializeAwsConfig(response.data);
+    const { default: App } = await import("./App.svelte");
+
+    return new App({
+        target: document.body,
+        props: {
+            name: "world",
+        },
+    });
+}
+
+startApp().catch((error) => {
+    console.error("Unable to load deployment configuration", error);
 });
-
-export default app;

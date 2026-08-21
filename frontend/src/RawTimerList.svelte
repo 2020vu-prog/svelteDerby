@@ -44,7 +44,7 @@
         log.debug("rawTimer: refreshDataFromDb gave:", timerHistoryList);
         log.debug(`timerHistoryList: ${JSON.stringify(timerHistoryList)}`);
         if (timerHistoryList.error) {
-            pushMessage( {
+            pushMessage({
                 text: timerHistoryList.error,
                 type: "error",
             });
@@ -98,14 +98,14 @@
                 { params: req }
             );
             const data = response.data;
-            pushMessage( {
+            pushMessage({
                 text: `History loaded.`,
                 type: "success",
             });
             return data;
         } catch (error) {
             log.debug(error);
-            pushMessage( {
+            pushMessage({
                 text: "rawTimer failed: " + err,
                 type: "error",
             });
@@ -159,7 +159,7 @@
                 )}`
             );
         } else {
-            pushMessage( {
+            pushMessage({
                 text: `There is no race on the blocks.`,
                 type: "error",
             });

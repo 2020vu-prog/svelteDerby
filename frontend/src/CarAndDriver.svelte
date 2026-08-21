@@ -1,8 +1,11 @@
 <script>
     import log from "loglevel";
 
-    import { driverMap, userEmail } from "./stores.js";
-    import { isEmailAllowedRoutePath } from "./utils.js";
+    import { driverMap } from "./stores.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
     import { push, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
 
@@ -13,6 +16,9 @@
     export let phaseClass = "btn-warning";
     let name = "";
     export let at;
+    const canUseManualTimer = createPermissionStore(
+        RoutePermission.MANUAL_FINISH_TIME
+    );
     onMount(async () => {
         log.debug(
             `CarAndDriver onMount: ${number} winner ${isWinner} pl ${phaseLetter} `
@@ -22,10 +28,6 @@
     $: {
         log.debug("lookup modified DN:", number);
         name = getDriverName(number, at);
-    }
-
-    function isManualTimerAllowed() {
-        return isEmailAllowedRoutePath($userEmail, "/ManualTimerAdd");
     }
 
     //log.debug("timerLink",timerLink);
@@ -38,7 +40,7 @@
             push(timerLink);
         }
     };
-    function getSponsor (number)  {
+    function getSponsor(number) {
         if (number && $driverMap[number]) {
             return $driverMap[number].spon;
         } else {
@@ -57,7 +59,13 @@
 {#if isWinner}
     <img alt="flag" src="data/checkered-flag-svgrepo-com.svg" width="25px" />
 {:else if phaseLetter}
-    <button type="button" class="btn {phaseClass} phase-icon-btn" on:click={() => { if (isManualTimerAllowed()) gotoTimer()}}>
+    <button
+        type="button"
+        class="btn {phaseClass} phase-icon-btn"
+        on:click={() => {
+            if ($canUseManualTimer) gotoTimer();
+        }}
+    >
         {phaseLetter}
     </button>
 {:else}
@@ -69,10 +77,10 @@
     />
 {/if}
 <div style="vertical-align: middle; display: inline">
-<b class="bigText">{number}</b>
-{name}
-{#if getSponsor(number)}
-    <br />
-    <b>{getSponsor(number)}</b>
-{/if}
+    <b class="bigText">{number}</b>
+    {name}
+    {#if getSponsor(number)}
+        <br />
+        <b>{getSponsor(number)}</b>
+    {/if}
 </div>

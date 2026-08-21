@@ -2,9 +2,6 @@ import log from "loglevel";
 import axios from "axios";
 import { Base64 } from "js-base64";
 import { tutorial as Timer } from "@rr1.us/timer_protobuf";
-const {
-    hasSvelteRoutePath,
-} = require("../../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
 import { db } from "./eventDb.js";
 import {
     userEmail as userEmailStore,
@@ -131,41 +128,6 @@ export function getBracketLink(RpRs) {
         return undefined; // No bracketLink for adhoc.
     }
 }
-function getRoleListByOrgUser(userEmail, orgIz) {
-    const roleMap = get(roleMapStore);
-    //log.debug("isAllowedRoutePath map:", userEmail,orgIz);
-    //log.debug("isAllowedRoutePath map:", roleMap);
-    if (userEmail && orgIz && roleMap[userEmail] && roleMap[userEmail][orgIz]) {
-        return roleMap[userEmail][orgIz];
-    } else {
-        return []; //no roles
-    }
-}
-export function isAllowedRoutePath(routePath, orgIz = null) {
-    const userEmail = get(userEmailStore);
-    // orgIz usually can default to active RaceConfig.
-    //   eventSelection may try to add an event for a different org.
-    //   (it will pass in an override for orgIz)
-    if (!orgIz) {
-        const raceConfig = get(raceConfigStore);
-        orgIz = raceConfig.orgIz;
-    }
-    log.debug("isAllowedRoutePath effective org:", userEmail, orgIz);
-    const roleList = getRoleListByOrgUser(userEmail, orgIz);
-    log.debug("isAllowedRoutePath roles:", roleList);
-    return hasSvelteRoutePath(null, roleList, routePath);
-}
-// deprecated
-export function isEmailAllowedRoutePath(email, routePath) {
-    //const raceConfig = get(raceConfigStore);
-    return isAllowedRoutePath(routePath);
-}
-// deprecated
-export async function isUserAllowedRoutePath(routePath) {
-    return isAllowedRoutePath(routePath);
-    //return isEmailAllowedRoutePath(email, routePath);
-}
-
 async function requstPermissionHack(cognitoIdentityId) {
     if (!cognitoIdentityId) {
         log.debug("mfi.bypass rph. no id");
@@ -581,7 +543,8 @@ export async function augmentChartState(
         bpFromDexie &&
         bpFromDexie.pos &&
         bpFromDexie.pos[heatLetter] &&
-        (bpFromDexie.pos[heatLetter].status == "bye" || bpFromDexie.pos[heatLetter].ptcp)
+        (bpFromDexie.pos[heatLetter].status == "bye" ||
+            bpFromDexie.pos[heatLetter].ptcp)
     ) {
         if (bpFromDexie.pos[heatLetter].status == "ptcp") {
             posHtml = ` - ${

@@ -4,8 +4,8 @@
     import SpinnerButton from "./SpinnerButton.svelte";
     import { db, localConfigDb } from "./eventDb.js";
     import { tick } from "svelte";
-    import { racePhaseMap ,raceConfig} from "./stores";
-    import { isAllowedRoutePath, downloadFile } from "./utils.js";
+    import { racePhaseMap, raceConfig } from "./stores";
+    import { downloadFile } from "./utils.js";
     import { stringify as csvStringify } from "csv-stringify/sync";
 
     const onFileSelected = (e) => {
@@ -35,16 +35,18 @@
         Object.keys(current).forEach((key) => (known[key] = current[key]));
     }
     async function downloadPhases() {
-        const rows = [["At","By","Lane1","Lane2","Delta","Win Lane","Raw"]];
+        const rows = [
+            ["At", "By", "Lane1", "Lane2", "Delta", "Win Lane", "Raw"],
+        ];
         await asyncForEach(Object.values($racePhaseMap), async function (rp) {
-            if(rp.del){
-                return
+            if (rp.del) {
+                return;
             }
-            if(!rp.phr){
-                return
+            if (!rp.phr) {
+                return;
             }
-                const result=(rp.phr[1]-rp.phr[0])/1000
-                const winLane=(result>0)?"Lane1":"Lane2"
+            const result = (rp.phr[1] - rp.phr[0]) / 1000;
+            const winLane = result > 0 ? "Lane1" : "Lane2";
             rows.push([
                 new Date(rp.at).toLocaleString(),
                 rp.by,
@@ -53,7 +55,7 @@
                 result,
                 winLane,
                 rp.phr,
-            ])
+            ]);
         });
         const output = csvStringify(rows, {
             quoted: true,

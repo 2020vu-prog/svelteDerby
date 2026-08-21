@@ -8,22 +8,26 @@
         driverMap,
         doRefreshBlocks,
         pushMessage,
-        userEmail,
         axios,
     } from "./stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import { participantValid, participantFocusCompletion } from "./utils.js";
+    import {
+        createPermissionStore,
+        RoutePermission,
+    } from "./routes/frontendPermissions.js";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
-    import { isEmailAllowedRoutePath } from "./utils.js";
 
     export let params = {};
     var bposFromDexie = null;
     var rsFromDexie = null;
     const posForm = { A: {}, B: {} };
-    var editable = false;
+    const canEditChartPosition = createPermissionStore(
+        RoutePermission.CHART_POSITION
+    );
 
     var submitDisabled = false;
     var submitSpinning = false;
@@ -34,21 +38,17 @@
         resetForm();
         await refreshChartFromDb();
         await refreshStandingFromDb();
-        editable = await isEmailAllowedRoutePath(
-            $userEmail,
-            "/addChartPosition"
-        );
     });
     $: {
         refreshStandingFromDb($doRefreshBlocks);
     }
     $: {
-        if (editable) {
-            if (posForm.A.input) posForm.A.input.disabled = false;
-            if (posForm.B.input) posForm.B.input.disabled = false;
-            if (posForm.A.select) posForm.A.select.disabled = false;
-            if (posForm.B.select) posForm.B.select.disabled = false;
-        }
+        if (posForm.A.input) posForm.A.input.disabled = !$canEditChartPosition;
+        if (posForm.B.input) posForm.B.input.disabled = !$canEditChartPosition;
+        if (posForm.A.select)
+            posForm.A.select.disabled = !$canEditChartPosition;
+        if (posForm.B.select)
+            posForm.B.select.disabled = !$canEditChartPosition;
     }
     const refreshChartFromDb = async (trigger) => {
         log.debug("refreshChartFromDb data:", trigger);
@@ -133,7 +133,7 @@
                     seedObject.ptcp = posForm[ab].carNumber.toString();
                 } else {
                     log.debug("invalid preSeed:", posForm[ab]);
-                    pushMessage( {
+                    pushMessage({
                         text: `Invalid Participant: [${posForm[ab].carNumber}]`,
                         type: "error",
                     });
@@ -165,7 +165,7 @@
             .then((response) => {
                 log.debug("addChartPosition axios success ", response);
                 if (response.data.error) {
-                    pushMessage( {
+                    pushMessage({
                         text: response.data.error,
                         type: "error",
                     });
@@ -210,9 +210,9 @@
             }
         }
     };
-    function pushHistory(){
-        const chartKey=`${params.chartId}:${params.chartPosition}`
-        push(`/historyList/${$raceConfig.orgId}:Bp/${chartKey}`)
+    function pushHistory() {
+        const chartKey = `${params.chartId}:${params.chartPosition}`;
+        push(`/historyList/${$raceConfig.orgId}:Bp/${chartKey}`);
     }
 </script>
 
@@ -305,11 +305,9 @@
     <br />
     <br />
 
-        <SpinnerButton on:click={pushHistory} >
-            History
-        </SpinnerButton>
+    <SpinnerButton on:click={pushHistory}>History</SpinnerButton>
 
-    {#if editable}
+    {#if $canEditChartPosition}
         <SpinnerButton
             disabled={submitDisabled}
             on:click={handleSubmit}

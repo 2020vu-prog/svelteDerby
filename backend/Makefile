@@ -1,15 +1,18 @@
 SUBDIRS := $(wildcard modules/*/src/.)
+NODE22_LAMBDA_DIRS := modules/lambdaDerby/src/. modules/lambdaDynamo/src/. modules/lambdaSqs/src/.
+NON_NODE_LAMBDA_DIRS := $(filter-out $(NODE22_LAMBDA_DIRS),$(SUBDIRS))
 
 all: lambdaPkgs tfplan
 auto: lambdaPkgs tfauto
 
 lambdaPkgs: $(SUBDIRS) 
+lambdaPkgsNonNode: $(NON_NODE_LAMBDA_DIRS)
 
 $(SUBDIRS):
 	$(MAKE) -C $@
 	echo $@
 
-.PHONY: all $(SUBDIRS) tfplan lambdaPkgs auto tfauto
+.PHONY: all $(SUBDIRS) tfplan lambdaPkgs lambdaPkgsNonNode auto tfauto
 
 tfplan: $(SUBDIRS) terraEnv
 	terraform apply

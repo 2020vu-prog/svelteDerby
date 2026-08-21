@@ -1,19 +1,34 @@
 const crypto = require("crypto");
 const EntityFactory = require("./shared/EntityFactory.js");
 const log = require("loglevel");
+const {
+    IoTDataPlaneClient,
+    PublishCommand: IotPublishCommand,
+} = require("@aws-sdk/client-iot-data-plane");
+const {
+    PollyClient,
+    SynthesizeSpeechCommand,
+} = require("@aws-sdk/client-polly");
+const { PutObjectCommand, S3Client } = require("@aws-sdk/client-s3");
+const {
+    PublishCommand: SnsPublishCommand,
+    SNSClient,
+} = require("@aws-sdk/client-sns");
 
 function isDefined(x) {
     return !(typeof x === "undefined" || x === null);
 }
 class AnnounceResults {
-    AWS = null;
     iotdata;
     ddbUtils = null;
     namesByCarNumber = {};
 
-    constructor(AWS, ddbUtils) {
-        this.AWS = AWS;
+    constructor(ddbUtils, clients = {}) {
         this.ddbUtils = ddbUtils;
+        this.sns = clients.sns || new SNSClient();
+        this.polly = clients.polly || new PollyClient();
+        this.s3 = clients.s3 || new S3Client();
+        this.iotdata = clients.iotdata;
     }
 
     async propagateIotFromSns(json) {
@@ -86,9 +101,7 @@ class AnnounceResults {
 
         try {
             console.log("SNS sending zelloArn:", params);
-            const sent = await new this.AWS.SNS({ apiVersion: "2010-03-31" })
-                .publish(params)
-                .promise();
+            const sent = await this.sns.send(new SnsPublishCommand(params));
             console.log("SNS send Success", sent);
         } catch (err) {
             console.log("SNS send Error", err);
@@ -97,8 +110,8 @@ class AnnounceResults {
     async propagateIotMqtt(orgId, mp3Path) {
         if (!this.iotdata) {
             // first time
-            this.iotdata = new this.AWS.IotData({
-                endpoint: process.env.IotEndpoint,
+            this.iotdata = new IoTDataPlaneClient({
+                endpoint: `https://${process.env.IotEndpoint}`,
             });
         }
         const payload = { outputUri: "/" + mp3Path };
@@ -109,7 +122,7 @@ class AnnounceResults {
         };
         try {
             log.debug("Iot PA broadcast request:", params);
-            var data = await this.iotdata.publish(params).promise();
+            var data = await this.iotdata.send(new IotPublishCommand(params));
             log.debug("Iot PA broadcast Success.", params);
             return { status: "ok", detail: "Published" };
         } catch (err) {
@@ -126,17 +139,12 @@ class AnnounceResults {
         return voice;
     }
     async submitToPolly(msg, orgId, mediaPrefix) {
-        if (!this.AWS) {
-            log.debug("Polly unavailable. AWS is null");
-            return;
-        }
         if (msg.includes("ResetPollyAA466430-D313-488D-A485-22CC00FE84B0")) {
             console.log("Polly resetting zello. ");
-            return this.saveToS3(orgId, ""); // empty file!
+            return await this.saveToS3(orgId, ""); // empty file!
         }
 
         console.log("Polly msg: ", msg);
-        var polly = new this.AWS.Polly({ apiVersion: "2016-06-10" });
         //OutputS3BucketName: process.env.DstBucket /*required */,
         //OutputS3KeyPrefix: `media/${orgId}/msg`,
         //SnsTopicArn: process.env.PollyCompleteSnsArn,
@@ -150,16 +158,23 @@ class AnnounceResults {
             VoiceId: this.randomPollyVoice(),
         };
         try {
-            const pollySpeech = await polly.synthesizeSpeech(params).promise();
+            const pollySpeech = await this.polly.send(
+                new SynthesizeSpeechCommand(params)
+            );
             log.debug(`pollySpeech ok: ${pollySpeech.RequestCharacters}`); // successful response
 
-            return this.saveToS3(orgId, pollySpeech.AudioStream);
+            if (!pollySpeech.AudioStream) {
+                throw new Error("Polly returned no audio stream");
+            }
+            const audioBytes = Buffer.from(
+                await pollySpeech.AudioStream.transformToByteArray()
+            );
+            return await this.saveToS3(orgId, audioBytes);
         } catch (err) {
             log.debug("pollySpeech err:", err); // successful response
         }
     }
     async saveToS3(orgId, bytes) {
-        const s3 = new this.AWS.S3({ apiVersion: "2006-03-01" });
         const now = new Date().getTime();
         var s3Params = {
             Body: bytes,
@@ -168,7 +183,7 @@ class AnnounceResults {
         };
 
         log.debug(`pollySpeech s3 saving:`, s3Params); // successful response
-        const s3Response = await s3.putObject(s3Params).promise();
+        const s3Response = await this.s3.send(new PutObjectCommand(s3Params));
         log.debug(`pollySpeech s3 saved:`, s3Response); // successful response
         return s3Params.Key;
     }
@@ -256,10 +271,9 @@ class AnnounceResults {
     async formatCallToRaceAnnouncement(orgId, tgtRs) {
         await this.lookupNames(tgtRs.carNumbers, orgId);
         var rc = "";
-        const [
-            spokenCarAndDriver1,
-            spokenCarAndDriver2,
-        ] = tgtRs.carNumbers.map((cn) => this.getSpokenCarAndDriver(cn));
+        const [spokenCarAndDriver1, spokenCarAndDriver2] = tgtRs.carNumbers.map(
+            (cn) => this.getSpokenCarAndDriver(cn)
+        );
 
         rc += `Call to race for ${spokenCarAndDriver1}.<p/>  Call to Race for ${spokenCarAndDriver2}.`;
         const ssml = `<speak>${rc}</speak>`;

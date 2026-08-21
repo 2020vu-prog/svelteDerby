@@ -85,7 +85,7 @@
         if (!(await finishTimerAlreadyExists())) {
             pbForm.timerName = "Finish";
             pbForm.timerNameDisabled = true;
-            pbForm.seq="900"
+            pbForm.seq = "900";
         } else {
             pbForm.timerNameDisabled = false;
         }
@@ -214,7 +214,7 @@
     }
     function isFormValid() {
         if (!pbForm.timerName) {
-            pushMessage( {
+            pushMessage({
                 text: "TimerName required",
                 type: "error",
             });
@@ -222,28 +222,28 @@
         }
         //long names will mess with eplapsed tbl fmt!
         if (pbForm.timerName.length > 7) {
-            pushMessage( {
+            pushMessage({
                 text: "TimerName too long. [max 7 chars]",
                 type: "error",
             });
             return false;
         }
         if (!pbForm.timerMqttClientId) {
-            pushMessage( {
+            pushMessage({
                 text: "Timer Selection required",
                 type: "error",
             });
             return false;
         }
         if (!pbForm.seq) {
-            pushMessage( {
+            pushMessage({
                 text: "Timer Sequence required",
                 type: "error",
             });
             return false;
         }
         if (parseInt(pbForm.seq) < 100 || parseInt(pbForm.seq) > 999) {
-            pushMessage( {
+            pushMessage({
                 text: "Timer Sequence must be n range of 100 - 999",
                 type: "error",
             });
@@ -298,19 +298,19 @@
             const response = await $axios.post(url, payloadWithPB);
             if (response.error) {
                 //TODO: not working!?
-                pushMessage( {
+                pushMessage({
                     text: `TimerConfigElapsed Failed: ${response.error}.`,
                     type: "error",
                 });
             } else {
-                pushMessage( {
+                pushMessage({
                     text: `TimerConfigElapsed Processed.`,
                     type: "success",
                 });
                 pop();
             }
         } catch (error) {
-            pushMessage( {
+            pushMessage({
                 text: "TimerConfigElapsed error: " + error,
                 type: "error",
             });
@@ -339,7 +339,7 @@
     >
         Timer Alignment
     </SpinnerButton>
-    <TimerPbHealth {timerName} {timerId} />
+    <TimerPbHealth timerName={timerName} timerId={timerId} />
 {/if}
 <Form>
     <FormGroup>
@@ -390,7 +390,11 @@
             Use GPS time
             <br />
             <!-- workaround for bootstrap broken layout -->
-            <Input type="checkbox" class="big" bind:checked={pbForm.useGpsTime} />
+            <Input
+                type="checkbox"
+                class="big"
+                bind:checked={pbForm.useGpsTime}
+            />
             <br />
             <FormText color="muted">
                 Gps time is required for elapsed times to work. It can be
@@ -476,7 +480,9 @@
                 Paddles Up Lane1:
                 <Input
                     type="select"
-                    bind:value={pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState}
+                    bind:value={
+                        pbForm.timerConfigOpposedStarter_paddlesUp_0_pinState
+                    }
                 >
                     <option value={Timer.PinState.BLOCKED}>Blocked</option>
                     <option value={Timer.PinState.CLEAR}>Clear</option>
@@ -489,7 +495,9 @@
                 <Input
                     type="select"
                     disabled
-                    bind:value={pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState}
+                    bind:value={
+                        pbForm.timerConfigOpposedStarter_paddlesUp_1_pinState
+                    }
                 >
                     <option value={Timer.PinState.BLOCKED}>Blocked</option>
                     <option value={Timer.PinState.CLEAR}>Clear</option>
@@ -501,7 +509,9 @@
                 MaxTransitionMS:
                 <Input
                     type="number"
-                    bind:value={pbForm.timerConfigOpposedStarter_maxTransitionMS}
+                    bind:value={
+                        pbForm.timerConfigOpposedStarter_maxTransitionMS
+                    }
                     placeholder="50"
                 />
             </Label>
@@ -512,7 +522,9 @@
                 Lane1 Sensor When paddles Down:
                 <Input
                     type="select"
-                    bind:value={pbForm.timerConfigLanePhotoEye_paddlesDropped_pinState}
+                    bind:value={
+                        pbForm.timerConfigLanePhotoEye_paddlesDropped_pinState
+                    }
                 >
                     <option value={Timer.PinState.BLOCKED}>Blocked</option>
                     <option value={Timer.PinState.CLEAR}>Clear</option>

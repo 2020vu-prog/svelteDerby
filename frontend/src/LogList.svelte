@@ -1,16 +1,16 @@
 <script>
     import log from "loglevel";
     import WarningSvg from "./svg/warningSvg.svelte";
-    export let msgs=[];
-    let showDebug=false
+    export let msgs = [];
+    let showDebug = false;
 
-    function getMsgEmoji(msg){
-        let lvl=msg.level
-        if(!lvl){
-            lvl=log.levels.DEBUG
+    function getMsgEmoji(msg) {
+        let lvl = msg.level;
+        if (!lvl) {
+            lvl = log.levels.DEBUG;
         }
-        
-        switch(lvl){
+
+        switch (lvl) {
             case log.levels.DEBUG:
                 return "️️🐞";
                 return "️ℹ️";
@@ -22,22 +22,19 @@
                 //return "ℹ️";
                 return "️✅";
         }
-                return "❌";
-
+        return "❌";
     }
 </script>
-<span 
-    on:click={() => showDebug=!showDebug}
->
-{#each msgs as msg (msg.msg)}
-    {#if showDebug || msg.level > log.levels.DEBUG}
-        {#if msg.level == log.levels.WARN }
-            <WarningSvg/>
-        {:else}
-            {getMsgEmoji(msg)} 
+<span on:click={() => (showDebug = !showDebug)}>
+    {#each msgs as msg (msg.msg)}
+        {#if showDebug || msg.level > log.levels.DEBUG}
+            {#if msg.level == log.levels.WARN}
+                <WarningSvg />
+            {:else}
+                {getMsgEmoji(msg)}
+            {/if}
+            {msg.msg}
+            <br />
         {/if}
-        {msg.msg}
-        <br/>
-    {/if}
-{/each}
+    {/each}
 </span>

@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require("uuid");
 import { persistable } from "./storedb.js";
 import { derived, writable, readable, get as getStore } from "svelte/store";
 import { buildVersion, getSpaLocation } from "./utils.js";
-import { replace} from "svelte-spa-router";
+import { replace } from "svelte-spa-router";
 
 function parseBool(val) {
     return val === true || val === "true";
@@ -33,8 +33,7 @@ function dtoken(bearerToken, prop) {
     if (decoded) {
         //log.debug("derive dtoken decoded jwt:", decoded);
         //log.debug("derive dtoken decoded prop:", decoded[prop]);
-        if(decoded.exp && decoded.exp > new Date().getTime()/1000){
-
+        if (decoded.exp && decoded.exp > new Date().getTime() / 1000) {
             return decoded[prop];
         }
     }
@@ -56,15 +55,15 @@ export const roleMap = persistable("roleMap", {});
 
 export const theme = persistable("pref:themeBg", "#4CAF50");
 export const timeFormat = persistable("pref:timeFormat", "ms-padded-nounit");
-export function pushMessage(msg){
-    if(!msg.key){
-        msg.key=uuidv4();
+export function pushMessage(msg) {
+    if (!msg.key) {
+        msg.key = uuidv4();
     }
     log.debug("pushMessage :", msg);
-    const sml=getStore(statusMessageList)
-    sml.push(msg)
+    const sml = getStore(statusMessageList);
+    sml.push(msg);
 
-    statusMessageList.set(sml)
+    statusMessageList.set(sml);
 }
 /**
  * @deprecated with pushStatusMessage()
@@ -87,9 +86,18 @@ export const developerLogging = persistable("pref:developerLogging");
 export const enableFractionalMs = persistable("pref:enableFractionalMs", false);
 export const defaultPhaseType = persistable("pref:defaultPhaseType", "R");
 export const videoCaptureCodec = persistable("pref:videoCaptureCodec", "vp8");
-export const videoClientTimeFixedMs = persistable("pref:videoClientTimeFixedMs", -1000);
-export const videoClientTimeAdjustmentMs = persistable("pref:videoClientTimeAdjustmentMs", 0);
-export const videoClientTimeAdjustmentMarginMs = persistable("pref:videoClientTimeAdjustmentMarginMs", 0);
+export const videoClientTimeFixedMs = persistable(
+    "pref:videoClientTimeFixedMs",
+    -1000
+);
+export const videoClientTimeAdjustmentMs = persistable(
+    "pref:videoClientTimeAdjustmentMs",
+    0
+);
+export const videoClientTimeAdjustmentMarginMs = persistable(
+    "pref:videoClientTimeAdjustmentMarginMs",
+    0
+);
 export const videoHref = writable("");
 export const lastSplash = persistable("pref:lastSplash", 0);
 export const videoPerspective = persistable("pref:videoPerspective");
@@ -106,14 +114,12 @@ export const autoAnnounceResults = persistable(
     "pref:autoAnnounceResults",
     false
 );
-export const mp3Playing = writable(0); 
+export const mp3Playing = writable(0);
 export const spotifyApiReady = writable(false); //only loads once globally
 export const spotifyAccessToken = persistable("spotify:access_token", "");
 export const spotifyRefreshToken = persistable("spotify:refresh_token", "");
 export const spotifyExpiresAt = persistable("spotify:expires_at", 0);
-export const spotifyLoggedIn = writable(
-    Boolean(getStore(spotifyRefreshToken))
-);
+export const spotifyLoggedIn = writable(Boolean(getStore(spotifyRefreshToken)));
 export const spotifyPremiumRequired = writable(false);
 export const spotifySelectedDeviceId = persistable(
     "spotify:selectedDeviceId",
@@ -124,14 +130,22 @@ export const mqttMapData = writable({}); //subscription data.  keyed by topic.
 export const mqttTimerSubscribe = writable(false);
 export const mqttTimerTopic = persistable("pref:mqttTimerTopic", "");
 export const mqttEnabled = persistable("pref:mqttEnabled", true);
+export const timerColumnMappings = persistable("pref:timerColumnMappings", [
+    { virtualLane: 1, timerName: "", timerId: "", pinName: 1 },
+    { virtualLane: 2, timerName: "", timerId: "", pinName: 2 },
+]);
+export const timerColumnsDuration = persistable(
+    "pref:timerColumnsDuration",
+    "PT20M"
+);
 export const mqttTriggerVideoCapture = writable(0);
 export const beginAnonymousLogin = writable(false);
 export const timerState = writable({});
 export const recentRefreshMs = writable(0);
-export const reRenderHotLoad= writable(0);
-export const spinnerPanelBusy= writable(false);
+export const reRenderHotLoad = writable(0);
+export const spinnerPanelBusy = writable(false);
 export const uiPageSize = persistable("pref:uiPageSize", undefined);
-export const mqttPsUrlMap= persistable("mqttPsUrlMap", {});
+export const mqttPsUrlMap = persistable("mqttPsUrlMap", {});
 //export const uiPageSize = writable(100);
 export const raceConfig = persistable("pref:uiRaceConfig", {
     orgName: "",
@@ -208,16 +222,15 @@ axiosCommon.interceptors.response.use(
         }
         if (response.data.error) {
             log.debug("AINT 200 with error:", response);
-            if(response.data.error==="Unable to determine orgIz"){
+            if (response.data.error === "Unable to determine orgIz") {
                 log.debug("AINT current page is ", getSpaLocation());
-                if("/orgSelection"!==getSpaLocation()){
+                if ("/orgSelection" !== getSpaLocation()) {
                     pushMessage({
                         text: "Please select event",
                         type: "error",
                     });
-                    replace("/orgSelection")
+                    replace("/orgSelection");
                 }
-
             }
             pushMessage({
                 text: response.data.error,
@@ -359,15 +372,15 @@ const sortBy = (field, reverse, primer) => {
     reverse = !reverse ? 1 : -1;
 
     return function (a, b) {
-        return (a = key(a)), (b = key(b)), reverse * ((a > b) - (b > a));
+        return ((a = key(a)), (b = key(b)), reverse * ((a > b) - (b > a)));
     };
 };
-export function isIos(){
+export function isIos() {
     const iOS = navigator.userAgent.match(/(iPad|iPhone|iPod)/i) ? true : false;
-    return iOS
+    return iOS;
 }
 function getDefaultFileFormat() {
-    const iOS = isIos()
+    const iOS = isIos();
     if (iOS) {
         return "Mp4";
     }

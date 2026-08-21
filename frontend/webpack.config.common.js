@@ -4,6 +4,7 @@ const webpack = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WorkboxWebpackPlugin = require("workbox-webpack-plugin");
+const sveltePreprocess = require("svelte-preprocess");
 const packageJson = require("./package.json");
 const { execSync } = require("child_process");
 
@@ -69,9 +70,18 @@ class BuildVersionPlugin {
                             source
                                 .replaceAll("[AIV]{version}[/AIV]", version)
                                 .replaceAll("[AIV]{date}[/AIV]", buildEpoch)
-                                .replaceAll("[AIV]{gitBranch}[/AIV]", gitInfo.branch)
-                                .replaceAll("[AIV]{gitHash}[/AIV]", gitInfo.hash)
-                                .replaceAll("[AIV]{gitDirty}[/AIV]", gitInfo.dirty);
+                                .replaceAll(
+                                    "[AIV]{gitBranch}[/AIV]",
+                                    gitInfo.branch
+                                )
+                                .replaceAll(
+                                    "[AIV]{gitHash}[/AIV]",
+                                    gitInfo.hash
+                                )
+                                .replaceAll(
+                                    "[AIV]{gitDirty}[/AIV]",
+                                    gitInfo.dirty
+                                );
 
                         compilation.updateAsset(
                             assetName,
@@ -120,6 +130,7 @@ module.exports = (cloudfrontTarget) => {
         },
         resolve: {
             alias: {
+                "process/browser": require.resolve("process/browser.js"),
                 svelte: path.resolve("node_modules", "svelte"),
             },
             extensions: [".mjs", ".js", ".svelte"],
@@ -138,17 +149,31 @@ module.exports = (cloudfrontTarget) => {
         output: {
             path: path.resolve(__dirname, "public"),
             filename: "[name].[contenthash].js",
+            chunkFilename: "bundle.[contenthash].js",
         },
         optimization: {
             splitChunks: {
                 cacheGroups: {
+                    routeHelpMarkdown: {
+                        test: /[\\/]node_modules[\\/](?:markdown-it|argparse|entities|linkify-it|mdurl|punycode\.js|uc\.micro)[\\/]/,
+                        name: "route-help-markdown",
+                        chunks: "async",
+                        enforce: true,
+                        priority: 20,
+                    },
                     commons: {
-                        test: /[\\/]node_modules[\\/]/,
+                        test: /[\\/]node_modules[\\/](?!(?:markdown-it|argparse|entities|linkify-it|mdurl|punycode\.js|uc\.micro)(?:[\\/]|$))/,
                         name: "vendors",
                         chunks: "all",
                     },
                 },
             },
+        },
+        performance: {
+            // The application intentionally ships a shared vendor bundle. Keep a
+            // meaningful ceiling instead of Webpack's generic 244 KiB default.
+            maxAssetSize: 1024 * 1024,
+            maxEntrypointSize: 1024 * 1024,
         },
         module: {
             rules: [
@@ -157,6 +182,9 @@ module.exports = (cloudfrontTarget) => {
                     use: {
                         loader: "svelte-loader",
                         options: {
+                            preprocess: sveltePreprocess({
+                                typescript: true,
+                            }),
                             onwarn: (warning, handleWarning) => {
                                 if (!warning.toString().includes("A11y")) {
                                     handleWarning(warning);
@@ -175,13 +203,19 @@ module.exports = (cloudfrontTarget) => {
                     ],
                 },
                 {
+                    test: /\.help(?:\.[^.]+)?\.md$/,
+                    type: "asset/source",
+                },
+                {
                     test: /EntityFactory\.m?js$/,
                     exclude: /(node_modules|bower_components)/,
                     use: {
                         loader: "babel-loader",
                         options: {
                             presets: ["@babel/preset-env"],
-                            plugins: ["@babel/plugin-proposal-class-properties"],
+                            plugins: [
+                                "@babel/plugin-proposal-class-properties",
+                            ],
                         },
                     },
                 },

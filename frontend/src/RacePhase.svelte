@@ -16,8 +16,12 @@
     import EllipsisButton from "./EllipsisButton.svelte";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
-    import { racePhaseMap, driverMap, nextOnBlockKey, standingsMap } from "./stores.js";
-    import MaterialAdd from "./MaterialAdd.svelte";
+    import {
+        racePhaseMap,
+        driverMap,
+        nextOnBlockKey,
+        standingsMap,
+    } from "./stores.js";
     import {
         safeGetAt,
         fmtChartPosition,
@@ -70,7 +74,7 @@
         }
         boundVars = true;
         //log.debug("rp changed:", at);
-        at=at+"UI";//since this method is async force the ui to (re)-render
+        at = at + "UI"; //since this method is async force the ui to (re)-render
         //log.debug("rp changed2:", at);
     };
     $: {
@@ -104,8 +108,8 @@
 
     const getPhaseIcon = (racePhase) => {
         const i = _getPhaseIcon(racePhase);
-        if(getRaceTypeEmoji(i)){
-           return getRaceTypeEmoji(i)
+        if (getRaceTypeEmoji(i)) {
+            return getRaceTypeEmoji(i);
         }
         return i;
     };
@@ -162,7 +166,8 @@
     };
 
     const getAPhaseWinForBlocks = (bPhaseLane) => {
-        if (!(rp.phaseLiteral == "B" && rp.rs && $standingsMap[rp.rs])) return false;
+        if (!(rp.phaseLiteral == "B" && rp.rs && $standingsMap[rp.rs]))
+            return false;
 
         var phaseWinTime = $standingsMap[rp.rs].phase1DeltaMS;
 
@@ -195,11 +200,23 @@
                 class="mt-3 border border-info cjw-border-5"
                 style="background: {bgColor}"
             >
-                <CardHeader class="bg-info text-white" style="padding: 2px; border: 0; border-radius: 0">
-                    <CardTitle color="info" style="align-items: center; padding: 0px 2px">
+                <CardHeader
+                    class="bg-info text-white"
+                    style="padding: 2px; border: 0; border-radius: 0"
+                >
+                    <CardTitle
+                        color="info"
+                        style="align-items: center; padding: 0px 2px"
+                    >
                         <span on:click={gotoBracket}>{chartPosition}</span>
-                        <span class="spanRight" style="display: flex; align-items: center; gap: 0.5rem">
-                            <span style="display: inline-flex; align-items: center">{hhmmss}</span>
+                        <span
+                            class="spanRight"
+                            style="display: flex; align-items: center; gap: 0.5rem"
+                        >
+                            <span
+                                style="display: inline-flex; align-items: center"
+                                >{hhmmss}</span
+                            >
                             {#if !isHistory()}
                                 <EllipsisButton
                                     on:message={toggleToolbar}
@@ -210,26 +227,36 @@
                         </span>
                     </CardTitle>
                 </CardHeader>
-                <CardBody color="info" style="{bgColor == "Gray" ? "padding: 0px" : ""}">
+                <CardBody
+                    color="info"
+                    style={bgColor == "Gray" ? "padding: 0px" : ""}
+                >
                     <ul class="list-group">
                         <li class="list-group-item">
                             <CarAndDriver
                                 number={rp.carNumbers[0]}
                                 isWinner={racePhase.isWinner(1, true)}
                                 phaseLetter={getPhaseIcon(rp)}
-                                {phaseClass}
+                                phaseClass={phaseClass}
                                 timerLink={getTimerLink(rp)}
                                 at={safeGetAt($driverMap, rp.carNumbers[0])}
                             />
                             {#if racePhase.isWinner(1, true)}
                                 <span class="spanRight">
                                     <Badge pill class="bigText">
-                                        {getPhaseLetter(rp)}: {getWinTime(1, rp)}
+                                        {getPhaseLetter(rp)}: {getWinTime(
+                                            1,
+                                            rp
+                                        )}
                                     </Badge>
                                 </span>
                             {:else if $nextOnBlockKey == phaseKey && getAPhaseWinForBlocks(1)}
                                 <span class="spanRight">
-                                    <Badge pill class="bigText" style="background: {bgColor}">
+                                    <Badge
+                                        pill
+                                        class="bigText"
+                                        style="background: {bgColor}"
+                                    >
                                         A: {getAPhaseWinForBlocks(1)}
                                     </Badge>
                                 </span>
@@ -240,19 +267,26 @@
                                 number={rp.carNumbers[1]}
                                 isWinner={racePhase.isWinner(2, true)}
                                 phaseLetter={getPhaseIcon(rp)}
-                                {phaseClass}
+                                phaseClass={phaseClass}
                                 timerLink={getTimerLink(rp)}
                                 at={safeGetAt($driverMap, rp.carNumbers[1])}
                             />
                             {#if racePhase.isWinner(2, true)}
                                 <span class="spanRight">
                                     <Badge pill class="bigText">
-                                        {getPhaseLetter(rp)}: {getWinTime(2, rp)}
+                                        {getPhaseLetter(rp)}: {getWinTime(
+                                            2,
+                                            rp
+                                        )}
                                     </Badge>
                                 </span>
                             {:else if $nextOnBlockKey == phaseKey && getAPhaseWinForBlocks(2)}
                                 <span class="spanRight">
-                                    <Badge pill class="bigText" style="background: {bgColor}">
+                                    <Badge
+                                        pill
+                                        class="bigText"
+                                        style="background: {bgColor}"
+                                    >
                                         A: {getAPhaseWinForBlocks(2)}
                                     </Badge>
                                 </span>
@@ -295,15 +329,22 @@
                                     at={safeGetAt($driverMap, rp.carNumbers[0])}
                                 />
                                 {#if $nextOnBlockKey == phaseKey && getAPhaseWinForBlocks(1)}
-                                    <br>
-                                    <Badge pill class="bigText" style="background: {bgColor}">
+                                    <br />
+                                    <Badge
+                                        pill
+                                        class="bigText"
+                                        style="background: {bgColor}"
+                                    >
                                         A: {getAPhaseWinForBlocks(1)}
                                     </Badge>
                                 {/if}
                             </div>
 
                             <div style="text-align: center;" class="column">
-                                <button type="button" class="btn btn-warning phase-icon-btn">
+                                <button
+                                    type="button"
+                                    class="btn btn-warning phase-icon-btn"
+                                >
                                     {getPhaseIcon(rp)}
                                 </button>
                                 <br />
@@ -316,8 +357,12 @@
                                     at={safeGetAt($driverMap, rp.carNumbers[1])}
                                 />
                                 {#if $nextOnBlockKey == phaseKey && getAPhaseWinForBlocks(2)}
-                                    <br>
-                                    <Badge pill class="bigText" style="background: {bgColor}">
+                                    <br />
+                                    <Badge
+                                        pill
+                                        class="bigText"
+                                        style="background: {bgColor}"
+                                    >
                                         A: {getAPhaseWinForBlocks(2)}
                                     </Badge>
                                 {/if}

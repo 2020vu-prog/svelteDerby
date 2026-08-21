@@ -1,13 +1,10 @@
 const fs = require("fs");
 const path = require("path");
 const jwt = require("jsonwebtoken");
+const { getAwsConfig } = require("./deploymentConfig.js");
 
-const devConfig = require(path.resolve(
-    __dirname,
-    process.env.TEST_AWS_EXPORTS_FILE || "./aws-exports.json"
-));
-
-test("Cognito token uses hosted client and expected pool", () => {
+test("Cognito token uses hosted client and expected pool", async () => {
+    const devConfig = await getAwsConfig();
     const token = fs.readFileSync(path.resolve(__dirname, "token.txt"), "utf8");
     const decoded = jwt.decode(token);
 

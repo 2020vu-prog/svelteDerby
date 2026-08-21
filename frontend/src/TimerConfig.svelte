@@ -85,18 +85,18 @@
             const response = await $axios.post(url, req);
             if (response.error) {
                 //TODO: not working!?
-                pushMessage( {
+                pushMessage({
                     text: `TimerConfig Failed: ${response.error}.`,
                     type: "error",
                 });
             } else {
-                pushMessage( {
+                pushMessage({
                     text: `TimerConfig Processed.`,
                     type: "success",
                 });
             }
         } catch (error) {
-            pushMessage( {
+            pushMessage({
                 text: "TimerConfig error: " + error,
                 type: "error",
             });

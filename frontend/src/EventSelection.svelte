@@ -17,7 +17,6 @@
 
     import SpinnerButton from "./SpinnerButton.svelte";
 
-    import MaterialAdd from "./MaterialAdd.svelte";
     import OrgName from "./OrgName.svelte";
     import { onMount, tick } from "svelte";
     import {
@@ -51,7 +50,7 @@
         if (!$userEmail) {
             log.debug(`${tag} email bypass`);
             //auto select requires auth :-(
-            pushMessage( {
+            pushMessage({
                 text: `AS: No Eligible user.`,
             });
             return;
@@ -63,7 +62,7 @@
         const orgEvents = Object.values(eventMap);
         if (orgEvents.length == 0) {
             log.debug(`${tag} event bypass`);
-            pushMessage( {
+            pushMessage({
                 text: `AS: No Eligible map.`,
             });
             return;
@@ -73,7 +72,7 @@
         if (previousActivate) {
             const msg = `AS: Skipping, previous runner: ${userEmail} ${previousActivate}`;
             log.debug(`${tag} ${msg}`);
-            pushMessage( {
+            pushMessage({
                 text: msg,
             });
             return;
@@ -100,7 +99,7 @@
         }
 
         if (!selectedConfig.SK) {
-            pushMessage( {
+            pushMessage({
                 text: `AS: No Eligible event.`,
             });
             return;
@@ -182,9 +181,11 @@
     };
     const doSelect = async (config) => {
         log.debug("selected:", config);
-        if($raceConfig.orgIz===config.orgIz
-        && $raceConfig.orgId===config.orgId){
-            pushMessage( {
+        if (
+            $raceConfig.orgIz === config.orgIz &&
+            $raceConfig.orgId === config.orgId
+        ) {
+            pushMessage({
                 text: `Event already active.`,
             });
             replace("/RpList");
@@ -200,7 +201,6 @@
         config.baseUrl = "/app";
         config.title = getRaceName(config);
         log.debug("selecting config:", config);
-
 
         $raceConfig = config;
         waitingForReloadBeginMs = new Date().getTime();
@@ -259,11 +259,6 @@
 </script>
 
 <div>
-    <MaterialAdd
-        overrideOrgIz={params.orgIz}
-        clickHandleRoute="/eventAdd/{params.orgIz}/Add"
-    />
-
     <h4>
         EventSelection for
         <OrgName orgIz={decodeURIComponent(params.orgIz)} />

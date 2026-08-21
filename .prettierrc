@@ -1,7 +1,8 @@
 {
   "svelteSortOrder": "none",
+  "svelteAllowShorthand": false,
 
-  "arrowParens": always,
+  "arrowParens": "always",
   "trailingComma": "es5",
 
   "tabWidth": 4,

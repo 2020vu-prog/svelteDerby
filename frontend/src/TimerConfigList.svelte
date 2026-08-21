@@ -4,7 +4,6 @@
     import { Base64 } from "js-base64";
     import EllipsisButton from "./EllipsisButton.svelte";
     import log from "loglevel";
-    import MaterialAdd from "./MaterialAdd.svelte";
     import { db } from "./eventDb.js";
     import { onMount } from "svelte";
     import { push, pop, replace, location } from "svelte-spa-router";
@@ -12,7 +11,7 @@
     import { doRefreshBlocks } from "./stores.js";
     import TimerPbHealth from "./TimerPbHealth.svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
-    
+
     var tcFromDexie = [{ timerName: "Initializing..." }];
     onMount(async () => {
         refreshDataFromDb();
@@ -49,7 +48,7 @@
         return tcFromDexie;
     }
     function provisionWifi() {
-        push("/provisionWifi")
+        push("/provisionWifi");
         //push("/RpList")
         //showToolbar = !showToolbar;
     }
@@ -68,11 +67,9 @@
 </script>
 
 <h4>Race Timers</h4>
-First Timer added will be finish line timer. Subsequent additions may be used to
-report elapsed time split(s).
+First Timer added will be finish line timer. Subsequent additions may be used to report
+elapsed time split(s).
 <p />
-<MaterialAdd clickHandleRoute="/timerConfigElapsed" />
-
 {#each getSortedTc(tcFromDexie) as tc (tc.at)}
     <Card class="mtj-3 border border-info">
         <CardHeader class="bg-info text-white">
@@ -93,8 +90,6 @@ report elapsed time split(s).
     </Card>
 {/each}
 <p />
-<SpinnerButton
-on:click={provisionWifi}
->
-Setup Timer WiFi Instructions
+<SpinnerButton on:click={provisionWifi}>
+    Setup Timer WiFi Instructions
 </SpinnerButton>

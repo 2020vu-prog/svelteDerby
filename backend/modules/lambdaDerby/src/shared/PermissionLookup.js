@@ -2,42 +2,53 @@
 
 const log = require("loglevel");
 const { permissionMap2 } = require("./permissionLits.js");
+const RoutePermission = require("./RoutePermission.js");
+const RoleName = require("./RoleName.js");
 const powerPerms = { ...permissionMap2 };
-const starterLimitedPerms = { CanAddBlocks: true };
-const starterPerms = { CanAddBlocks: true, CanDeleteBlocks: true };
+const starterLimitedPerms = {
+    [RoutePermission.CAN_ADD_BLOCKS.toString()]: true,
+};
+const starterPerms = {
+    [RoutePermission.CAN_ADD_BLOCKS.toString()]: true,
+    [RoutePermission.CAN_DELETE_BLOCKS.toString()]: true,
+};
 const registrationPerms = {
-    CanAddBlocks: true,
-    CanAddChart: true,
-    ChartPosition: true,
-    CanInitiateAnnouncement: true,
-    Anonymous: true,
-    CanAddParticipant: true,
-    CanAddPending: true,
-    CanManageDiscord: true,
+    [RoutePermission.CAN_ADD_BLOCKS.toString()]: true,
+    [RoutePermission.CAN_ADD_CHART.toString()]: true,
+    [RoutePermission.CHART_POSITION.toString()]: true,
+    [RoutePermission.CAN_INITIATE_ANNOUNCEMENT.toString()]: true,
+    [RoutePermission.ANONYMOUS.toString()]: true,
+    [RoutePermission.CAN_ADD_PARTICIPANT.toString()]: true,
+    [RoutePermission.CAN_ADD_PENDING.toString()]: true,
+    [RoutePermission.CAN_MANAGE_DISCORD.toString()]: true,
 };
 const videoPerms = {
-    CanCaptureVideo: true,
+    [RoutePermission.CAN_CAPTURE_VIDEO.toString()]: true,
+};
+const announcerPerms = {
+    [RoutePermission.CAN_INITIATE_ANNOUNCEMENT.toString()]: true,
 };
 
 const permsByRoleMap = {
-    power: powerPerms, // john harmon, Akron Local org
-    starter: starterPerms,
-    starterLimited: starterLimitedPerms,
-    registration: registrationPerms,
-    video: videoPerms,
+    [RoleName.POWER]: powerPerms,
+    [RoleName.STARTER]: starterPerms,
+    [RoleName.STARTER_LIMITED]: starterLimitedPerms,
+    [RoleName.REGISTRATION]: registrationPerms,
+    [RoleName.VIDEO]: videoPerms,
+    [RoleName.ANNOUNCER]: announcerPerms,
 };
-function roleHasRoutePath(routeType, orgIz, roleList, routePath) {
+function roleHasRoutePath(orgIz, roleList, routePath) {
     log.debug("TODO: routepath:");
     const permKeys = getRolePermissions(roleList);
-    return isRoutePathInPermissionList(routeType, permKeys, routePath);
+    return isRoutePathInPermissionList(permKeys, routePath);
 }
 
-function isRoutePathInPermissionList(routeType, permList, routePath) {
+function isRoutePathInPermissionList(permList, routePath) {
     log.debug("permList:", permList);
     var rc = false;
     permList.forEach((permKey) => {
         const p2 = permissionMap2[permKey];
-        if (p2 && p2.routeMatches(routeType, routePath)) {
+        if (p2 && p2.routeMatches(routePath)) {
             rc = true;
         }
     });
@@ -59,16 +70,17 @@ function getRolePermissions(roleList) {
         grantedPerms = { ...grantedPerms, ...permsByRoleMap[role] };
     });
 
-    grantedPerms.Anonymous = "value ignored";
+    grantedPerms[RoutePermission.ANONYMOUS.toString()] = "value ignored";
     const granted = Object.keys(grantedPerms);
     log.debug(`permissions for ${roleList} -- `, granted);
     return granted; // list of perms
 }
 
-module.exports.hasSvelteRoutePath = (orgIz, roleList, svelteRoutePath) => {
-    return roleHasRoutePath("svelte", orgIz, roleList, svelteRoutePath);
+module.exports.hasPermission = (roleList, permissionName) => {
+    return getRolePermissions(roleList).includes(permissionName);
 };
+
 module.exports.hasServerRoutePath = (orgIz, roleList, serverRoutePath) => {
-    return roleHasRoutePath("server", orgIz, roleList, serverRoutePath);
+    return roleHasRoutePath(orgIz, roleList, serverRoutePath);
 };
 module.exports.getNamedRoles = getNamedRoles;

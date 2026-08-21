@@ -1,7 +1,6 @@
 <script>
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
-    import MaterialAdd from "./MaterialAdd.svelte";
     import OrgName from "./OrgName.svelte";
     import SpinnerButton from "./SpinnerButton.svelte";
     import { raceConfig } from "./stores.js";
@@ -67,8 +66,6 @@
 </script>
 
 <div>
-    <MaterialAdd clickHandleRoute="/orgAdd" />
-
     <h4>Organization List</h4>
     <p />
 
@@ -83,7 +80,7 @@
             <CardBody>
                 <div on:click={() => push("/eventSelection/" + orgIz)}>
                     <a href="javascript:void(0);">
-                        <OrgName {orgIz} />
+                        <OrgName orgIz={orgIz} />
                     </a>
                 </div>
             </CardBody>

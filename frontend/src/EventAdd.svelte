@@ -56,7 +56,7 @@
             .post($raceConfig.baseUrl + postPath, req)
             .then((response) => {
                 log.debug("addEventConfig axios success");
-                pushMessage( {
+                pushMessage({
                     text: `Event [${params.mode}] Complete.`,
                     type: "success",
                 });

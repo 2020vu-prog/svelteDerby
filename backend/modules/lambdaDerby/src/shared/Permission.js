@@ -2,18 +2,13 @@
 const log = require("loglevel");
 class Permission {
     //propOverrides = {}
-    constructor(permissionName, serverRouteList, svelteRouteList) {
+    constructor(permissionName, serverRouteList) {
         this.permissionName = permissionName;
         this.serverRouteList = serverRouteList;
-        this.svelteRouteList = svelteRouteList;
     }
-    routeMatches(routeType, tgtRoute) {
-        const allowedRouteList =
-            routeType === "server"
-                ? this.serverRouteList
-                : this.svelteRouteList;
+    routeMatches(tgtRoute) {
         var rc = false;
-        allowedRouteList.forEach((allowedRoute) => {
+        this.serverRouteList.forEach((allowedRoute) => {
             if (tgtRoute && tgtRoute.startsWith(allowedRoute)) {
                 rc = true;
             }

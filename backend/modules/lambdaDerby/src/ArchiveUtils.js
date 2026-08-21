@@ -2,11 +2,9 @@ const EntityFactory = require("./shared/EntityFactory.js");
 const log = require("loglevel");
 const requestContext = require("./RequestContext");
 class ArchiveUtils {
-    AWS = null;
     ddbUtils = null;
 
-    constructor(AWS, ddbUtils) {
-        this.AWS = AWS;
+    constructor(ddbUtils) {
         this.ddbUtils = ddbUtils;
     }
 

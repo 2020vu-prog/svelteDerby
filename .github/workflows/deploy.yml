@@ -3,6 +3,15 @@ name: Deploy
 on:
   workflow_dispatch:
     inputs:
+      target_environment:
+        description: GitHub environment to plan or deploy
+        required: true
+        default: test.rr1.us
+        type: choice
+        options:
+          - test.rr1.us
+          - stage.rr1.us
+          - go.rr1.us
       deployment_mode:
         description: Plan only, or apply the plan and deploy the frontend
         required: true
@@ -17,7 +26,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: deploy-${{ github.ref_name }}
+  group: deploy-${{ inputs.target_environment }}
   cancel-in-progress: false
 
 jobs:
@@ -30,24 +39,10 @@ jobs:
     steps:
       - id: resolve
         env:
-          DEPLOY_BRANCH: ${{ github.ref_name }}
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
         run: |
           set -euo pipefail
-          case "${DEPLOY_BRANCH}" in
-            test.rr1.us)
-              echo "github_environment=test.rr1.us" >> "${GITHUB_OUTPUT}"
-              ;;
-            go.rr1.us)
-              echo "github_environment=go.rr1.us" >> "${GITHUB_OUTPUT}"
-              ;;
-            stage.rr1.us)
-              echo "github_environment=stage.rr1.us" >> "${GITHUB_OUTPUT}"
-              ;;
-            *)
-              echo "No deployment configuration is defined for branch ${DEPLOY_BRANCH}" >&2
-              exit 1
-              ;;
-          esac
+          echo "github_environment=${TARGET_ENVIRONMENT}" >> "${GITHUB_OUTPUT}"
 
   deploy:
     name: ${{ inputs.deployment_mode == 'live' && 'Deploy backend and frontend' || 'Plan backend and build frontend' }}
@@ -74,20 +69,12 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Set up Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: 18
-
-      - name: Set up npm
-        run: npm install --global npm@8.19.4
-
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: 1.5.7
 
@@ -107,7 +94,7 @@ jobs:
           AWS_REGION: ${{ vars.AWS_REGION }}
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # v4.2.1
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           role-session-name: svelte-derby-deploy
@@ -129,7 +116,33 @@ jobs:
             exit 1
           fi
 
-      - name: Test backend
+      - name: Set up Node 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Test and package Node 22 Lambdas
+        working-directory: backend
+        run: |
+          (
+            cd modules/lambdaDynamo/src
+            npm ci
+            npm test
+            make package.zip
+          )
+          (
+            cd modules/lambdaSqs/src
+            npm ci
+            npm test
+            make package.zip
+          )
+          (
+            cd modules/lambdaDerby/src
+            npm ci
+            make package.zip
+          )
+
+      - name: Test backend with Node 22
         working-directory: backend/test
         run: |
           npm ci
@@ -139,8 +152,9 @@ jobs:
       - name: Plan backend
         working-directory: backend
         run: |
-          make lambdaPkgs
-          terraform init -reconfigure -backend-config="${TF_BACKEND_CONFIG}"
+          make lambdaPkgsNonNode
+          terraform init -reconfigure -lockfile=readonly -backend-config="${TF_BACKEND_CONFIG}"
+          git diff --exit-code
           terraform plan -out="${RUNNER_TEMP}/backend.tfplan"
 
       - name: Apply planned backend

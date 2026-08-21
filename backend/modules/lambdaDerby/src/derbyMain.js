@@ -2,13 +2,13 @@
 const clientMinimumVersion = "1.1.24";
 const derbyMainVersion = "1.1.15";
 const { CognitoJwtVerifier } = require("aws-jwt-verify");
-const awsCognitoSettings=JSON.parse(process.env.AwsCognitoSettingsJson)
+const awsCognitoSettings = JSON.parse(process.env.AwsCognitoSettingsJson);
 const jwtVerifier = CognitoJwtVerifier.create({
     userPoolId: awsCognitoSettings.aws_user_pools_id,
     tokenUse: "id",
     //tokenUse: "access",
     clientId: awsCognitoSettings.aws_user_pools_hosted_client_id,
-  });
+});
 const crypto = require("crypto");
 const path = require("path");
 //const timer_protobuf_1 = require("timer_protobuf");
@@ -21,16 +21,38 @@ const { Base64 } = require("js-base64");
 const log = require("loglevel");
 
 const EntityFactory = require("./shared/EntityFactory.js");
+const { hasPermission } = require("./shared/PermissionLookup.js");
+const ApiRouter = require("./ApiRouter.js");
+const RoutePermission = require("./shared/RoutePermission.js");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
-    hasServerRoutePath,
-} = require("./shared/PermissionLookup.js");
-const AWS = require("aws-sdk");
-const { DynamoDB } = require("@aws-sdk/client-dynamodb-v2-node");
+    AttachPrincipalPolicyCommand,
+    IoTClient,
+} = require("@aws-sdk/client-iot");
+const {
+    IoTDataPlaneClient,
+    PublishCommand: IotPublishCommand,
+} = require("@aws-sdk/client-iot-data-plane");
+const {
+    CopyObjectCommand,
+    ListObjectsV2Command,
+    PutObjectCommand,
+    S3Client,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const {
+    PublishCommand: SnsPublishCommand,
+    SNSClient,
+} = require("@aws-sdk/client-sns");
+const { SQSClient } = require("@aws-sdk/client-sqs");
+const { GetParameterCommand, SSMClient } = require("@aws-sdk/client-ssm");
 
-const ddbClient = new DynamoDB({ region: process.env.AwsRegion });
-const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
-const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
-const ssm = new AWS.SSM({ apiVersion: "2014-11-06" });
+const ddbClient = new DynamoDBClient({ region: process.env.AwsRegion });
+const sqsClient = new SQSClient({ region: process.env.AwsRegion });
+const s3Client = new S3Client({ region: process.env.AwsRegion });
+const ssmClient = new SSMClient({ region: process.env.AwsRegion });
+const snsClient = new SNSClient({ region: process.env.AwsRegion });
+const iotClient = new IoTClient({ region: process.env.AwsRegion });
 const TmpCache = require("./tmpCache.js");
 const DdbUtils = require("./DdbUtils");
 const ArchiveUtils = require("./ArchiveUtils");
@@ -39,19 +61,25 @@ const AnnounceResults = require("./AnnounceResults");
 const ApiRaceStanding = require("./ApiRaceStanding");
 const LogUtils = require("./LogUtils");
 const { getShaCars, getSourceName } = require("./utils");
+const { getAllKeys } = require("./S3Utils");
 const requestContext = require("./RequestContext");
 
-const ddbUtils = new DdbUtils(AWS, ddbClient, sqs);
-const archiveUtils = new ArchiveUtils(AWS, ddbUtils);
-const discordUtils = new DiscordUtils(AWS, ddbUtils);
+const ddbUtils = new DdbUtils(ddbClient, sqsClient);
+const archiveUtils = new ArchiveUtils(ddbUtils);
+const discordUtils = new DiscordUtils(ddbUtils);
 const logUtils = new LogUtils(ddbUtils);
 
 function newAnnounceResults() {
-    return new AnnounceResults(AWS, ddbUtils);
+    return new AnnounceResults(ddbUtils);
 }
 
 function newApiRaceStanding() {
-    return new ApiRaceStanding(AWS, ddbUtils, newAnnounceResults(), logUtils);
+    return new ApiRaceStanding(
+        ddbUtils,
+        newAnnounceResults(),
+        logUtils,
+        snsClient
+    );
 }
 
 log.setLevel(log.levels.TRACE);
@@ -62,7 +90,7 @@ const s3QueryChartTypes = async () => {
         Prefix: "data/brackets",
     };
     try {
-        const data = await s3.listObjectsV2(params).promise();
+        const data = await s3Client.send(new ListObjectsV2Command(params));
         return data;
     } catch (err) {
         log.debug("s3 list Error", err);
@@ -77,31 +105,18 @@ async function s3QueryMediaPrefix(queryStringParameters) {
         Bucket: process.env.DstBucket,
         Prefix: `media/${prefix}`,
     };
-    const allKeys = await getAllKeys(params);
+    const allKeys = await getAllKeys(s3Client, params);
     log.debug("s3QueryMediaPrefix: ", params, allKeys);
-    return allKeys;
-}
-async function getAllKeys(params, allKeys = []) {
-    const response = await s3.listObjectsV2(params).promise();
-    log.debug("getAllKeys count:", response.Contents.length);
-    response.Contents.forEach((obj) =>
-        allKeys.push({ Key: obj.Key, LastModified: obj.LastModified })
-    );
-
-    if (response.NextContinuationToken) {
-        params.ContinuationToken = response.NextContinuationToken;
-        await getAllKeys(params, allKeys); // RECURSIVE CALL
-    }
     return allKeys;
 }
 const attachPrincipalPolicy = async (policyName, principal) => {
     try {
-        const data = await new AWS.Iot()
-            .attachPrincipalPolicy({
+        const data = await iotClient.send(
+            new AttachPrincipalPolicyCommand({
                 policyName: policyName,
                 principal: principal,
             })
-            .promise();
+        );
         log.debug("attachPrincipalPolicy Data", data);
     } catch (err) {
         log.debug("attachPrincipalPolicy Error", err);
@@ -183,7 +198,7 @@ const applyFinishTime = async (json) => {
             SK: tgtRp.rs,
         });
     }
-    
+
     const rpUpdatePromise = ddbUtils.addSingle(tgtRp);
     const iotVideoRequestPromise = requestIotVideoUploadByRP(tgtRp);
 
@@ -250,57 +265,54 @@ const applyFinishTime = async (json) => {
         status: "ok",
     };
 };
-function getLowestPhrMillis(rp){
-    const lowest=Math.min(rp.phr)
-    return Math.floor(lowest/1000)// micros->millis
+function getLowestPhrMillis(rp) {
+    const lowest = Math.min(rp.phr);
+    return Math.floor(lowest / 1000); // micros->millis
 }
-let iotdata=""
-async function requestIotVideoUploadByRP(tgtRp){
-    let tgtTimeMs=getLowestPhrMillis(tgtRp)
-    if (!tgtTimeMs){
+let iotdata = "";
+async function requestIotVideoUploadByRP(tgtRp) {
+    let tgtTimeMs = getLowestPhrMillis(tgtRp);
+    if (!tgtTimeMs) {
         // allow capture to proceed.... helpful for testing...
-        tgtTimeMs=Date.now()
+        tgtTimeMs = Date.now();
         //return;
     }
-    const timerName="Finish" //finish timer
-    const vr={
-        orgId:tgtRp.orgId,
-        orgIz:tgtRp.orgIz,
-        tgtTimeMs:tgtTimeMs,
+    const timerName = "Finish"; //finish timer
+    const vr = {
+        orgId: tgtRp.orgId,
+        orgIz: tgtRp.orgIz,
+        tgtTimeMs: tgtTimeMs,
         timerName,
         prefix: `RP-${tgtRp.SK}`,
-    }
-    await requestIotVideoUploadRaw(vr)
+    };
+    await requestIotVideoUploadRaw(vr);
 }
-async function requestIotVideoUploadRaw(videoRequest){
-
-        if (!iotdata) {
-            // first time
-            iotdata = new AWS.IotData({
-                endpoint: process.env.IotEndpoint,
-            });
-        }
-        const payload = { 
-            ...videoRequest,
-            issuedMs:Date.now(),
-        };
-        const params = {
-            topic: `derby/${videoRequest.orgId}/video/${videoRequest.timerName}`,
-            payload: JSON.stringify(payload),
-            qos: 0,
-        };
-        try {
-            log.debug("requestIotVideoUpload request:", params);
-            var data = await iotdata.publish(params).promise();
-            log.debug("requestIotVideoUpload Success.", params);
-            return { status: "ok", detail: "Published" };
-        } catch (err) {
-            log.debug("requestIotVideoUpload Error.", err);
-            log.debug(err, err.stack); // an error occurred
-            return { error: err };
-        }
-
-
+async function requestIotVideoUploadRaw(videoRequest) {
+    if (!iotdata) {
+        // first time
+        iotdata = new IoTDataPlaneClient({
+            endpoint: `https://${process.env.IotEndpoint}`,
+        });
+    }
+    const payload = {
+        ...videoRequest,
+        issuedMs: Date.now(),
+    };
+    const params = {
+        topic: `derby/${videoRequest.orgId}/video/${videoRequest.timerName}`,
+        payload: JSON.stringify(payload),
+        qos: 0,
+    };
+    try {
+        log.debug("requestIotVideoUpload request:", params);
+        var data = await iotdata.send(new IotPublishCommand(params));
+        log.debug("requestIotVideoUpload Success.", params);
+        return { status: "ok", detail: "Published" };
+    } catch (err) {
+        log.debug("requestIotVideoUpload Error.", err);
+        log.debug(err, err.stack); // an error occurred
+        return { error: err };
+    }
 }
 
 // srcRs / bracketPos can be null.  Not both.
@@ -412,24 +424,22 @@ const logPendingFromChartPosError = async (bracketPos, pendingRC) => {
         bracketPos.getPtcpNumber("A"),
         bracketPos.getPtcpNumber("B"),
     ].filter((carNumber) => carNumber);
-    await logUtils.persistLogMessage(
-        {
-            orgId: bracketPos.orgId,
-            message: `Unable to add pending race for [${chartName}] heat [${heatNumber}] with cars [${carNumbers.join(
-                " and "
-            )}]: ${pendingRC.error}`,
-            level: "warn",
-            source: getSourceName(),
-            detail: {
-                chartId,
-                chartName,
-                bracketPosKey: bracketPos.SK,
-                heatNumber,
-                carNumbers,
-                addPendingResult: pendingRC,
-            },
-        }
-    );
+    await logUtils.persistLogMessage({
+        orgId: bracketPos.orgId,
+        message: `Unable to add pending race for [${chartName}] heat [${heatNumber}] with cars [${carNumbers.join(
+            " and "
+        )}]: ${pendingRC.error}`,
+        level: "warn",
+        source: getSourceName(),
+        detail: {
+            chartId,
+            chartName,
+            bracketPosKey: bracketPos.SK,
+            heatNumber,
+            carNumbers,
+            addPendingResult: pendingRC,
+        },
+    });
 };
 
 const loadBracketPosFromRaceStanding = async (rs) => {
@@ -686,7 +696,7 @@ const addChartMetaData = async (json) => {
 };
 
 const getCachedBmd = async (orgId, chartId) => {
-    const tmpCache = new TmpCache(AWS, ddbClient, s3);
+    const tmpCache = new TmpCache(ddbClient, s3Client);
 
     const bmd = await tmpCache.getObject({
         //PK: `${json.orgId}:Bmd`,
@@ -850,8 +860,7 @@ const addTimerPbConfig = async (json) => {
     if (oldTimerPbMain && oldTimerPbMain.at != json.at) {
         return {
             status: "error",
-            error:
-                "Update request ignored due to stale data.  Refresh your Browser.",
+            error: "Update request ignored due to stale data.  Refresh your Browser.",
         };
     }
     //let decoded = timer_protobuf_1.tutorial.TimerConfig.decode(bdata)
@@ -889,35 +898,33 @@ const addTimerPbConfig = async (json) => {
 
     return rc[0];
 };
-const addNewEventPushSns = async (orgId,json) => {
-        const AddEventSnsArn = process.env.AddEventSnsArn;
-        const environ=process.env.DeployEnvironment;
-        var params = {
-            Message: `new event for org: ${json.orgIz}\nName: ${json.name}`,
-            TopicArn: AddEventSnsArn,
-            Subject: `RR1 [${environ}] new event`,
+const addNewEventPushSns = async (orgId, json) => {
+    const AddEventSnsArn = process.env.AddEventSnsArn;
+    const environ = process.env.DeployEnvironment;
+    var params = {
+        Message: `new event for org: ${json.orgIz}\nName: ${json.name}`,
+        TopicArn: AddEventSnsArn,
+        Subject: `RR1 [${environ}] new event`,
 
-            MessageAttributes: {
-                orgId: {
-                    DataType: "String",
-                    StringValue: orgId,
-                },
+        MessageAttributes: {
+            orgId: {
+                DataType: "String",
+                StringValue: orgId,
             },
-        };
-
-        try {
-            const snsModule = new AWS.SNS({ apiVersion: "2010-03-31" });
-
-            console.log("SNS json    AddEventSnsArn:", json);
-            console.log("SNS sending AddEventSnsArn:", params);
-            //console.log("SNS module1 AddEventSnsArn:", snsModule);
-            const sent = await snsModule.publish(params).promise();
-            console.log("AddEventSnsArn send Success", sent);
-        } catch (err) {
-            console.log("AddEventSnsArn send Error", err);
-        }
+        },
     };
- 
+
+    try {
+        console.log("SNS json    AddEventSnsArn:", json);
+        console.log("SNS sending AddEventSnsArn:", params);
+        //console.log("SNS module1 AddEventSnsArn:", snsModule);
+        const sent = await snsClient.send(new SnsPublishCommand(params));
+        console.log("AddEventSnsArn send Success", sent);
+    } catch (err) {
+        console.log("AddEventSnsArn send Error", err);
+    }
+};
+
 const addTimerConfig = async (json, initialLoad) => {
     if (!json.orgIz) {
         return { error: "Missing orgIz" };
@@ -997,12 +1004,10 @@ const updateEventConfig = async (json) => {
 
     ddbUtils.flushEventCache(); //TODO: flush event cache in other instances of lambda...
     const eventConfigResult = await ddbUtils.addSingle(eventConfig);
-    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
-        {
-            orgIz: eventConfig.orgIz || json.orgIz,
-            orgId: eventConfig.orgId || json.orgId,
-        }
-    );
+    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm({
+        orgIz: eventConfig.orgIz || json.orgIz,
+        orgId: eventConfig.orgId || json.orgId,
+    });
     eventConfigResult.userDisplayNameResult = userDisplayNameResult;
     return eventConfigResult;
 };
@@ -1037,31 +1042,32 @@ const addEventConfig = async (event) => {
 
     json.TTL = newTtl;
 
-    const eventConfigEntityFactory = requestContext.getEntityFactory().copyWith({
-        orgId: json.orgId,
-        TTL: json.TTL,
-    });
+    const eventConfigEntityFactory = requestContext
+        .getEntityFactory()
+        .copyWith({
+            orgId: json.orgId,
+            TTL: json.TTL,
+        });
     requestContext.setEntityFactory(eventConfigEntityFactory);
     const eventRC = await ddbUtils.addSingle(json);
-    await logUtils.persistLogMessage(
-        {
+    await logUtils.persistLogMessage({
+        orgId: json.orgId,
+        message: `Added event: ${json.name || json.orgId}`,
+        level: "debug",
+        source: getSourceName(),
+        detail: {
+            orgIz: json.orgIz,
             orgId: json.orgId,
-            message: `Added event: ${json.name || json.orgId}`,
-            level: "debug",
-            source: getSourceName(),
-            detail: {
-                orgIz: json.orgIz,
-                orgId: json.orgId,
-                name: json.name,
-            },
-        }
-    );
-    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
-        { orgIz: json.orgIz, orgId: json.orgId }
-    );
+            name: json.name,
+        },
+    });
+    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm({
+        orgIz: json.orgIz,
+        orgId: json.orgId,
+    });
     eventRC.userDisplayNameResult = userDisplayNameResult;
 
-    await addNewEventPushSns(json.orgId,json); 
+    await addNewEventPushSns(json.orgId, json);
     await addTimerConfig(json, true); // TODO: revisit default TimerConfig?
     return eventRC;
 };
@@ -1103,58 +1109,60 @@ const getEventKey = (event) => {
     return getOrgIz(event) + ":" + getOrgId(event);
 };
 async function iotDefaultPri(event) {
-	let backendPri=5;
+    let backendPri = 5;
 
-	const environ=process.env.DeployEnvironment
-	if(environ.search(/test/i) >=0){
-		backendPri=100;
-	}
-	if(environ.search(/stage/i) >=0){
-		backendPri=200;
-	}
-	if(environ.search(/go-derby-prod/i) >=0){
-		backendPri=500;
-	}
-	return backendPri
-
+    const environ = process.env.DeployEnvironment;
+    if (environ.search(/test/i) >= 0) {
+        backendPri = 100;
+    }
+    if (environ.search(/stage/i) >= 0) {
+        backendPri = 200;
+    }
+    if (environ.search(/go-derby-prod/i) >= 0) {
+        backendPri = 500;
+    }
+    return backendPri;
 }
 async function iotOverridePri(event) {
     const discoverOvrd = await ddbUtils.ddbQueryRawPkSk(
-		`DiscoverTimerOverride`,
-            event.headers["x-rr1-timer"],
+        `DiscoverTimerOverride`,
+        event.headers["x-rr1-timer"],
         process.env.TimerProtobufDbArn
     );
-	    log.debug("iotOverridePri: ddbRC:", discoverOvrd);
+    log.debug("iotOverridePri: ddbRC:", discoverOvrd);
 
-    if (discoverOvrd && discoverOvrd.Items.length &&  discoverOvrd.Items[0].pri){
-	    log.debug("iotOverridePri: using:", discoverOvrd.Items[0].pri);
-		return discoverOvrd.Items[0].pri.N
+    if (
+        discoverOvrd &&
+        discoverOvrd.Items.length &&
+        discoverOvrd.Items[0].pri
+    ) {
+        log.debug("iotOverridePri: using:", discoverOvrd.Items[0].pri);
+        return discoverOvrd.Items[0].pri.N;
     }
-    return 0
+    return 0;
 }
 async function iotDiscover(event, apiProps) {
-	const backendPri= Math.max(
-		await iotDefaultPri(event),
-		await iotOverridePri(event),
-	)
+    const backendPri = Math.max(
+        await iotDefaultPri(event),
+        await iotOverridePri(event)
+    );
 
-            return {
-                priority: backendPri,
-                "backends":[
-                    "go.rr1.us",
-                    "cf.test.rr1.us",
-                    "test.rr1.us",
-                    "stage.rr1.us",
-                    "cf.www.rr1.us",
-                    "c.comicNotARealDomainButKKindOfLongish",
-                ],
-                authUrl: `${process.env.IotPiAccessUrl}iot/auth`,
-                bundleUrl: "https://cf.test.rr1.us/gpsRelay.tar.zst",
-            };
-                //authUrl: "https://xcfoeorhj5s4ubgaawz2rv45re0nxyqh.lambda-url.us-east-2.on.aws/iot/auth",
+    return {
+        priority: backendPri,
+        backends: [
+            "go.rr1.us",
+            "cf.test.rr1.us",
+            "test.rr1.us",
+            "stage.rr1.us",
+            "cf.www.rr1.us",
+            "c.comicNotARealDomainButKKindOfLongish",
+        ],
+        authUrl: `${process.env.IotPiAccessUrl}iot/auth`,
+        bundleUrl: "https://cf.test.rr1.us/gpsRelay.tar.zst",
+    };
+    //authUrl: "https://xcfoeorhj5s4ubgaawz2rv45re0nxyqh.lambda-url.us-east-2.on.aws/iot/auth",
 }
 async function getOrgRoles(event, apiProps) {
-
     log.debug("getOrgRoles: apiEmail:", apiProps);
     log.debug("getOrgRoles: qsEmail:", event.queryStringParameters);
     if (
@@ -1174,14 +1182,17 @@ async function getOrgRoles(event, apiProps) {
             };
         }
     }
-    return { // no roles on error
+    return {
+        // no roles on error
         roleList: [],
         email: apiProps.email.toLowerCase(),
-    }
+    };
     return { statusCode: 403, error: "email not aligned" };
 }
 const routeMap = {
-    "/iot/discover": { allowFrozen: true,
+    "/iot/discover": {
+        permission: RoutePermission.ANONYMOUS,
+        allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
         allowMissingOrgIz: true,
@@ -1190,6 +1201,7 @@ const routeMap = {
         },
     },
     "/getOrgRoles": {
+        permission: RoutePermission.ANONYMOUS,
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
@@ -1198,6 +1210,7 @@ const routeMap = {
         },
     },
     "/addEventConfig": {
+        permission: RoutePermission.POWER,
         allowFrozen: true, // not really allowing frozen, but skip edit.  race not yet existent.
         allowMissingTtl: true,
         h: async (event) => {
@@ -1205,6 +1218,7 @@ const routeMap = {
         },
     },
     "/updateEventConfig": {
+        permission: RoutePermission.POWER,
         h: async (event) => {
             return buildResponse(
                 await updateEventConfig(JSON.parse(event.body))
@@ -1212,18 +1226,21 @@ const routeMap = {
         },
     },
     "/getActiveTimers": {
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
             return buildResponse(await getSanitizedTimers());
         },
     },
     "/getActivePbTimers": {
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
             return buildResponse(await getActivePbTimers());
         },
     },
     "/timerConfig": {
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         h: async (event) => {
             return buildResponse(
                 await addTimerConfig(JSON.parse(event.body), false)
@@ -1231,6 +1248,7 @@ const routeMap = {
         },
     },
     "/timerPbConfig": {
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         h: async (event) => {
             return buildResponse(
                 await addTimerPbConfig(JSON.parse(event.body), false)
@@ -1238,16 +1256,16 @@ const routeMap = {
         },
     },
     "/listOrgUser": {
+        permission: RoutePermission.CAN_ADD_ORG_USER,
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
         h: async (event, apiProps) => {
-            return buildResponse(
-                await listOrgUser(event, apiProps)
-            );
+            return buildResponse(await listOrgUser(event, apiProps));
         },
     },
     "/addOrgUser": {
+        permission: RoutePermission.CAN_ADD_ORG_USER,
         allowFrozen: true,
         allowMissingTtl: true,
         allowMissingOrgId: true,
@@ -1258,33 +1276,41 @@ const routeMap = {
         },
     },
     "/addParticipant": {
+        permission: RoutePermission.CAN_ADD_PARTICIPANT,
         h: async (event) => {
             return buildResponse(await addParticipant2(JSON.parse(event.body)));
         },
     },
     "/addPending": {
+        permission: RoutePermission.CAN_ADD_PENDING,
         h: async (event) => {
             return buildResponse(await addPending2(event));
         },
     },
     "/addBlocks": {
+        permission: RoutePermission.CAN_ADD_BLOCKS,
         h: async (event) => {
             return buildResponse(await addBlocks(JSON.parse(event.body)));
         },
     },
     "/deleteRacePhase": {
+        permission: RoutePermission.CAN_DELETE_BLOCKS,
         h: async (event) => {
             return buildResponse(await deleteRacePhase(JSON.parse(event.body)));
         },
     },
     "/deleteRaceStanding": {
+        permission: RoutePermission.CAN_DELETE_STANDING,
         h: async (event) => {
             return buildResponse(
-                await newApiRaceStanding().deleteRaceStanding(JSON.parse(event.body))
+                await newApiRaceStanding().deleteRaceStanding(
+                    JSON.parse(event.body)
+                )
             );
         },
     },
     "/getPhaseElapsed": {
+        permission: RoutePermission.ANONYMOUS,
         allowFrozen: true,
         h: async (event) => {
             return buildResponse(
@@ -1293,6 +1319,7 @@ const routeMap = {
         },
     },
     "/RaceStanding/addTag": {
+        permission: RoutePermission.CAN_INITIATE_ANNOUNCEMENT,
         h: async (event) => {
             return buildResponse(
                 await newApiRaceStanding().addTag(JSON.parse(event.body))
@@ -1300,6 +1327,7 @@ const routeMap = {
         },
     },
     "/addChart": {
+        permission: RoutePermission.CAN_ADD_CHART,
         h: async (event) => {
             return buildResponse(
                 await addChartMetaData(JSON.parse(event.body))
@@ -1307,6 +1335,7 @@ const routeMap = {
         },
     },
     "/addChartPosition": {
+        permission: RoutePermission.CHART_POSITION,
         h: async (event) => {
             requestContext.resetErrorList(); // TODO: re-visit multiple low level error messages from advanceChartPos
             const localMsg = await addOrUpdateChartPosition(
@@ -1321,18 +1350,37 @@ const routeMap = {
         },
     },
     "/doApplyFinishTime": {
+        permission: RoutePermission.MANUAL_FINISH_TIME,
         h: async (event) => {
-            return buildResponse(await applyFinishTime(JSON.parse(event.body)));
+            const finishTimeRequest = JSON.parse(event.body);
+            if (!finishTimeRequest.SK) {
+                return buildResponse({
+                    status: "error",
+                    error: "Missing SK",
+                    statusCode: 400,
+                });
+            }
+            return buildResponse(await applyFinishTime(finishTimeRequest));
         },
     },
     "/addBulk": {
+        permission: RoutePermission.POWER,
         h: async (event) => {
             return buildResponse(
                 await ddbUtils.addBulk(JSON.parse(event.body))
             );
         },
     },
+    "/addLogMessage": {
+        permission: RoutePermission.POWER,
+        h: async (event) => {
+            return buildResponse(
+                await logUtils.persistLogMessage(JSON.parse(event.body))
+            );
+        },
+    },
     "/ddbQuery": {
+        permission: RoutePermission.POWER,
         allowFrozen: true,
         h: async (event) => {
             var qr = await ddbUtils.ddbQueryRsContains(JSON.parse(event.body));
@@ -1341,6 +1389,7 @@ const routeMap = {
         },
     },
     "/getNextOnBlocks": {
+        permission: RoutePermission.POWER,
         allowFrozen: true,
         h: async (event) => {
             const nob = await ddbUtils.ddbQueryRpNextOnBlocks(
@@ -1350,6 +1399,7 @@ const routeMap = {
         },
     },
     "/getRaceHistory": {
+        permission: RoutePermission.ANONYMOUS,
         allowFrozen: true,
         h: async (event) => {
             var [qr, cacheMaxSeconds] = await ddbUtils.ddbQueryRaceHistory(
@@ -1360,6 +1410,7 @@ const routeMap = {
         },
     },
     "/getTimerHistory": {
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
             var qr = await queryTimerHistoryByOrgId(
@@ -1369,6 +1420,7 @@ const routeMap = {
         },
     },
     "/getTimerPbHistory": {
+        permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
             var qr = await queryTimerPbHistory(event.queryStringParameters);
@@ -1376,6 +1428,7 @@ const routeMap = {
         },
     },
     "/listMediaPrefix": {
+        permission: RoutePermission.ANONYMOUS,
         allowFrozen: true,
         h: async (event) => {
             var qr = await s3QueryMediaPrefix(event.queryStringParameters);
@@ -1384,6 +1437,7 @@ const routeMap = {
         },
     },
     "/listChartTypes": {
+        permission: RoutePermission.CAN_ADD_CHART,
         allowFrozen: true,
         h: async (event) => {
             var chartTypes = await s3QueryChartTypes();
@@ -1392,6 +1446,7 @@ const routeMap = {
         },
     },
     "/initiateAnnouncement": {
+        permission: RoutePermission.CAN_INITIATE_ANNOUNCEMENT,
         h: async (event) => {
             var json = JSON.parse(event.body);
             var paMessage = json.paMessage;
@@ -1414,16 +1469,21 @@ const routeMap = {
         },
     },
     "/requestTts": {
+        permission: RoutePermission.CAN_ADD_PARTICIPANT,
         h: async (event) => {
             var json = JSON.parse(event.body);
             var ssml = json.ssml;
             var orgId = json.orgId;
-            const speechMp3 = await newAnnounceResults().submitToPolly(ssml, orgId);
+            const speechMp3 = await newAnnounceResults().submitToPolly(
+                ssml,
+                orgId
+            );
             log.debug("requestTts: " + ssml + " gave: ", speechMp3);
             return buildResponse({ speechMp3: speechMp3 });
         },
     },
     "/requestMqttSubPermission": {
+        permission: RoutePermission.ANONYMOUS,
         h: async (event) => {
             const qsp = event.queryStringParameters;
             if (!qsp) {
@@ -1443,23 +1503,25 @@ const routeMap = {
         },
     },
     "/requestVideoUpload": {
+        permission: RoutePermission.CAN_CAPTURE_VIDEO,
         h: async (event) => {
-//            var json = JSON.parse(event.body);
+            //            var json = JSON.parse(event.body);
             const qsp = event.queryStringParameters;
-            const vr={
-                orgId:qsp.orgId,
-                orgIz:qsp.orgIz,
-                timerName:qsp.timerName,
-                tgtTimeMs:parseInt(qsp.tgtTimeMs),
+            const vr = {
+                orgId: qsp.orgId,
+                orgIz: qsp.orgIz,
+                timerName: qsp.timerName,
+                tgtTimeMs: parseInt(qsp.tgtTimeMs),
                 //prefix: `${qsp.orgId}-${qsp.tgtTimeMs}-TestUpload-${qsp.timerName}`,
                 prefix: `${qsp.tgtTimeMs}-TestRemote`,
-            }
+            };
 
-            await requestIotVideoUploadRaw(vr)
+            await requestIotVideoUploadRaw(vr);
             return buildResponse({ requested: qsp.timerName });
         },
     },
     "/requestServerEpochMS": {
+        permission: RoutePermission.CAN_CAPTURE_VIDEO,
         h: async (event) => {
             //var json = JSON.parse(event.body);
             const epochMs = new Date().getTime();
@@ -1469,6 +1531,7 @@ const routeMap = {
         },
     },
     "/requestS3PutObjectUrl": {
+        permission: RoutePermission.CAN_CAPTURE_VIDEO,
         h: async (event) => {
             const qsp = event.queryStringParameters;
             if (!qsp) {
@@ -1492,21 +1555,25 @@ const routeMap = {
             }
             const mimeType = "video/webm";
             var params = {
-                Expires: 600, // allow for slow video upload
                 Bucket: bucket,
                 Key: key,
                 ContentType: mimeType,
             };
-            var signedUrl = s3.getSignedUrl("putObject", params);
+            var signedUrl = await getSignedUrl(
+                s3Client,
+                new PutObjectCommand(params),
+                { expiresIn: 600 } // allow for slow video upload
+            );
             log.debug("For params:", params, " The signed URL is", signedUrl);
 
-            return buildResponse({ 
+            return buildResponse({
                 signedUrl: signedUrl,
-                issuedMs:Date.now(),
+                issuedMs: Date.now(),
             });
         },
     },
     "/manageDiscord": {
+        permission: RoutePermission.CAN_MANAGE_DISCORD,
         h: async (event) => {
             const qsp = event.queryStringParameters;
             if (!qsp) {
@@ -1536,14 +1603,141 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
 
 async function getDerbyMainVersionInfo() {
     const parameterName = `/deploy/${process.env.DeployEnvironment}/git-breadcrumb`;
-    const gitBreadcrumbParameterResponse = await ssm
-        .getParameter({ Name: parameterName })
-        .promise();
+    const gitBreadcrumbParameterResponse = await ssmClient.send(
+        new GetParameterCommand({ Name: parameterName })
+    );
+    const gitBreadcrumb = gitBreadcrumbParameterResponse.Parameter.Value;
+    try {
+        const { buildTime } = JSON.parse(gitBreadcrumb);
+        const buildTimeMs = Number(buildTime);
+        const monitorTestEndTimeMs = buildTimeMs + 10 * 60 * 1000;
+        const nowMs = Date.now();
+        if (nowMs >= buildTimeMs && nowMs <= monitorTestEndTimeMs) {
+            log.error(
+                "ERROR CloudWatch monitor test from getDerbyMainVersionInfo"
+            );
+        }
+    } catch (err) {
+        log.warn("Unable to parse git breadcrumb buildTime");
+    }
     return {
         version: derbyMainVersion,
-        gitBreadcrumb: gitBreadcrumbParameterResponse.Parameter.Value,
+        gitBreadcrumb,
     };
 }
+
+function registerPublicRoutes(router) {
+    router.register("/testArchive", {
+        permission: RoutePermission.PUBLIC,
+        loadContext: false,
+        handler: async () => {
+            await archiveUtils.processExpiringEventConfig();
+            return buildResponse({ tested: "ok" });
+        },
+    });
+    router.register("/listOrgEvents", {
+        permission: RoutePermission.PUBLIC,
+        loadContext: false,
+        handler: async (event) => {
+            const result = await ddbUtils.ddbListEventConfigByOrg(
+                getOrgIz(event)
+            );
+            return buildResponse(result, "max-age=307");
+        },
+    });
+    router.register("/listOrgConfig", {
+        permission: RoutePermission.PUBLIC,
+        loadContext: false,
+        handler: async () => {
+            const result = await ddbUtils.ddbQueryOrgConfig();
+            return buildResponse(result, "max-age=1807");
+        },
+    });
+    router.register("/getAwsConfig", {
+        permission: RoutePermission.PUBLIC,
+        loadContext: false,
+        handler: async () => {
+            const aYear = 3600 * 24 * 360; // client will change cacheBuster key if environment changes
+            return buildResponse(
+                JSON.parse(process.env.AwsCognitoSettingsJson),
+                `max-age=${aYear}`
+            );
+        },
+    });
+    router.register("/getDerbyMainVersion", {
+        permission: RoutePermission.PUBLIC,
+        loadContext: false,
+        handler: async () =>
+            buildResponse(await getDerbyMainVersionInfo(), "max-age=120"),
+    });
+}
+
+function registerCoreRoutes(router) {
+    Object.entries(routeMap).forEach(([path, definition]) => {
+        const { h, ...metadata } = definition;
+        router.register(path, { ...metadata, handler: h });
+    });
+}
+
+async function authenticateApiRequest(event) {
+    let decodedJwt = { email: "Anonymous" };
+    try {
+        const payload = await jwtVerifier.verify(event.headers.authorization);
+        if (payload && payload.email) decodedJwt = payload;
+    } catch (err) {
+        log.debug("Token not valid; continuing as Anonymous", err);
+    }
+    return {
+        claims: decodedJwt,
+        email: decodedJwt.email,
+        by: decodedJwt["cognito:username"] || decodedJwt.email,
+    };
+}
+
+async function loadApiRequestContext(event, principal) {
+    const eventKey = getEventKey(event);
+    const orgId = getOrgId(event);
+    const orgIz = getOrgIz(event);
+    const config = await ddbUtils.getEventConfig(eventKey, event.headers);
+    const defaultTTL = await getTtl(config);
+    const roleList = await getUserRoles(orgIz, principal.email);
+
+    requestContext.setEntityFactory(
+        new EntityFactory({
+            orgId,
+            byEmail: principal.email,
+            TTL: defaultTTL,
+        })
+    );
+    return { config, defaultTTL, eventKey, orgId, orgIz, roleList };
+}
+
+function authorizeApiRequest(permission, context, principal) {
+    const allowed = Boolean(
+        principal.email && hasPermission(context.roleList, permission)
+    );
+    log.debug(
+        `${allowed ? "allowing" : "prohibiting"} access to permission ` +
+            `${permission} for [${principal.email}]`
+    );
+    return allowed;
+}
+
+function createApiRouter() {
+    return new ApiRouter({
+        pathPrefix: "/app",
+        authenticate: authenticateApiRequest,
+        authorize: authorizeApiRequest,
+        loadContext: loadApiRequestContext,
+        buildResponse,
+        isFrozen: frozenOrArchived,
+        log,
+    })
+        .use(registerPublicRoutes)
+        .use(registerCoreRoutes);
+}
+
+const apiRouter = createApiRouter();
 
 async function snsApplyPbLogMessage(snsMessageJson, snsPublishedTimestamp) {
     // add ssml markup.  (svelte does this for manual announcements.)
@@ -1579,7 +1773,7 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         throw ("missing finishLineBlock", finishLineBlock);
     }
     const finishLineBlock = finishLineBlockList[0]; //change array to filtered object
-    
+
     var l1Micros = parseInt(finishLineBlock.rpiNoseMicros[0]);
     var l2Micros = parseInt(finishLineBlock.rpiNoseMicros[1]);
     var byLine = "rpi.local";
@@ -1588,7 +1782,7 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         l1Micros = finishLineBlock.gpsNoseMs[0] * 1000;
         l2Micros = finishLineBlock.gpsNoseMs[1] * 1000;
         byLine = "rpi.gps";
-        snsPublishedTimestamp=finishLineBlock.gpsNoseMs[0];  // mqtt qos 1 re-xmit can obscure snsPubTime!
+        snsPublishedTimestamp = finishLineBlock.gpsNoseMs[0]; // mqtt qos 1 re-xmit can obscure snsPubTime!
         // need workaround for no gps, but this should help for gps
     }
 
@@ -1602,18 +1796,19 @@ async function snsApplyPbTimerHandler(snsMessageJson, snsPublishedTimestamp) {
     log.debug("snsApplyPbTimerHandler rp:", rp);
     //throw "snsApplyPbTimerHandler unfinished.";
 
-
     if (rp.cn[0] && !validNumericTime(l1Micros)) {
         throw `missing time [${l1Micros}] for car [${rp.cn}] in lane 1`;
     }
     if (rp.cn[1] && !validNumericTime(l2Micros)) {
         throw `missing time [${l2Micros}] for car [${rp.cn}] in lane 2`;
     }
-    requestContext.setEntityFactory(new EntityFactory({
-        orgId: finishLineBlock.timerConfig.orgId,
-        by: byLine,
-        TTL: rp.TTL,
-    }));
+    requestContext.setEntityFactory(
+        new EntityFactory({
+            orgId: finishLineBlock.timerConfig.orgId,
+            by: byLine,
+            TTL: rp.TTL,
+        })
+    );
 
     const req = {
         orgId: finishLineBlock.timerConfig.orgId,
@@ -1662,11 +1857,13 @@ async function snsApplyTimerHandler(snsMessageJson, snsPublishedTimestamp) {
         // sns gave us a timer config.  use that instead of
         //   waiting for another dynamo read
         const timerConfig = json.timerConfig;
-        requestContext.setEntityFactory(new EntityFactory({
-            orgId: timerConfig.orgId,
-            by: "rpi.local",
-            TTL: timerConfig.TTL,
-        }));
+        requestContext.setEntityFactory(
+            new EntityFactory({
+                orgId: timerConfig.orgId,
+                by: "rpi.local",
+                TTL: timerConfig.TTL,
+            })
+        );
 
         const deltaLanes = json.deltas[0].lanes;
         const candidateBlock = json.deltas[0].cBlock;
@@ -1741,10 +1938,10 @@ async function getApplyableNextOnBlocks(
     // wall time may slip on pi.   if sns time (from AWS datacenter) is older than NOB time. don't apply time.
     if (snsPublishedTimestamp < rp.at) {
         throw (
-            ("getApplyableNextOnBlocks Message : skipping stale SNS finish time : ",
+            "getApplyableNextOnBlocks Message : skipping stale SNS finish time : ",
             snsPubDate,
             " rpDate:",
-            rp.at)
+            rp.at
         );
         return;
     }
@@ -1765,123 +1962,7 @@ async function getApplyableNextOnBlocks(
     return rp;
 }
 async function apiGatewayHandler(event) {
-    const dbArn = process.env.DynamoDbArn;
-
-    log.debug("event.path: ", event.path);
-
-    const routePath = event.path.replace(/^\/app/, "");
-    if (routePath === "/testArchive") {
-        await archiveUtils.processExpiringEventConfig();
-        return buildResponse({ tested: "ok" });
-    }
-
-    if (routePath === "/listOrgEvents") {
-        const qr = await ddbUtils.ddbListEventConfigByOrg(getOrgIz(event));
-        log.debug("getEventConfig 23232:", qr);
-        return buildResponse(qr, "max-age=307");
-    }
-    if (routePath === "/listOrgConfig") {
-        const qr = await ddbUtils.ddbQueryOrgConfig();
-        log.debug("listOrgConfig :", qr);
-        return buildResponse(qr, "max-age=1807");
-    }
-    if (routePath === "/getAwsConfig") {
-        const aYear = 3600 * 24 * 360; // client will change cacheBuster key if environment changes
-        return buildResponse(
-            JSON.parse(process.env.AwsCognitoSettingsJson),
-            `max-age=${aYear}`
-        );
-    }
-    if (routePath === "/getDerbyMainVersion") {
-        return buildResponse(await getDerbyMainVersionInfo(), "max-age=120");
-    }
-
-    var decodedJwt={
-            email: "Anonymous"
-        }
-    try {
-        const start=new Date().getTime()
-        const payload = await jwtVerifier.verify(
-            event.headers.authorization
-        );
-        const elapsed=new Date().getTime() - start
-        console.log("Token is valid. Payload:", payload," elapsed: ",elapsed);
-        if(payload && payload.email){
-            decodedJwt=payload
-        }
-      } catch(err){
-        console.log("Token not valid!",err); // decodedJwt will remain 'anonymous'
-      }
-
-    const eventKey = getEventKey(event);
-    const orgId = getOrgId(event);
-    const orgIz = getOrgIz(event);
-    const config = await ddbUtils.getEventConfig(eventKey, event.headers);
-    const defaultTTL = await getTtl(config);
-
-    const by = decodedJwt["cognito:username"]
-        ? decodedJwt["cognito:username"]
-        : decodedJwt.email;
-    const email = decodedJwt.email;
-    requestContext.setEntityFactory(new EntityFactory({
-        orgId: orgId,
-        byEmail: email,
-        TTL: defaultTTL,
-    }));
-    log.debug("Begin event", event, " with config: ", config);
-
-    const roleList = await getUserRoles(orgIz, email);
-    if (email && hasServerRoutePath(orgIz, roleList, routePath)) {
-        log.debug(`allowing access to ${routePath} for [${email}]`);
-    } else {
-        log.debug(`prohibiting access to ${routePath} for [${email}]`);
-        return buildResponse({ error: "unauthorized", statusCode: 401 });
-    }
-
-    if (!orgId && !routeMap[routePath].allowMissingOrgId) {
-        const qr = { error: "Unable to determine orgId" };
-        return buildResponse(qr);
-    }
-
-    if (!orgIz && !routeMap[routePath].allowMissingOrgIz) {
-        const qr = { error: "Unable to determine orgIz" };
-        return buildResponse(qr);
-    }
-
-    if (!routeMap[routePath].allowMissingTtl && !defaultTTL) {
-        const qr = { error: "Unable to determine default TTL" };
-        return buildResponse(qr);
-    }
-
-    if (routeMap[routePath] && routeMap[routePath].h) {
-        log.debug(
-            "ph routeMap handling: " + routePath,
-            " object:",
-            routeMap[routePath]
-        );
-
-        if (!routeMap[routePath].allowFrozen && frozenOrArchived(config)) {
-            return buildResponse({
-                error: "Can't edit a frozen/archived race",
-            });
-        }
-
-        const phandler = routeMap[routePath].h;
-        log.debug("routeMap handling: " + phandler);
-
-        return await phandler(event, {
-            orgIz: orgIz,
-            orgId: orgId,
-            email: email,
-            roleList: roleList,
-        });
-    }
-
-    log.debug("Unhandled Path: " + routePath + " ep: " + event.path);
-    return buildResponse({
-        status: "unhandled",
-        error: "Unhandled",
-    });
+    return apiRouter.dispatch(event);
 }
 async function listOrgUser(event, apiProps) {
     const rolesByOrg = await ddbUtils.ddbQueryOrgPerms({
@@ -1908,9 +1989,10 @@ async function addOrgUser(json, apiProps) {
         requestContext.setEntityFactory(tmpEntityFactory);
 
         const orgPermResult = await ddbUtils.addSingle(json);
-        const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm(
-            { orgIz: json.orgIz, orgId }
-        );
+        const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm({
+            orgIz: json.orgIz,
+            orgId,
+        });
 
         return {
             status:
@@ -1998,28 +2080,29 @@ async function getUserRolesForOrgIz(orgIz, email) {
     return [];
 }
 function lowercaseHeaders(event) {
-    var headerKeys= Object.keys(event.headers);
+    var headerKeys = Object.keys(event.headers);
 
     headerKeys.forEach((headerKey) => {
-        if(headerKey!==headerKey.toLowerCase()){
-            event.headers[headerKey.toLowerCase()]=event.headers[headerKey]
+        if (headerKey !== headerKey.toLowerCase()) {
+            event.headers[headerKey.toLowerCase()] = event.headers[headerKey];
         }
     });
 }
 async function lambdaHandler(event) {
     log.debug("Received event:", JSON.stringify(event, null, 4));
-    if (event && event.path) { // api gateway format v1
-        lowercaseHeaders(event)
+    if (event && event.path) {
+        // api gateway format v1
+        lowercaseHeaders(event);
         //log.debug("Modified event:", JSON.stringify(event, null, 4));
         const response = await apiGatewayHandler(event);
         return response;
     }
-    if (event && event.rawPath) { // api gateway format v2 (lambda function url!)
-        event.path=event.rawPath
+    if (event && event.rawPath) {
+        // api gateway format v2 (lambda function url!)
+        event.path = event.rawPath;
         const response = await apiGatewayHandler(event);
         return response;
     }
-
 
     if (event.source == "aws.events") {
         log.debug("handling archive rulefrom cron0");
@@ -2084,7 +2167,9 @@ async function lambdaHandler(event) {
             Bucket: process.env.DstBucket,
         };
         log.debug("s3 mp4 copyParams:", s3CopyParams);
-        const s3copyDone = await s3.copyObject(s3CopyParams).promise();
+        const s3copyDone = await s3Client.send(
+            new CopyObjectCommand(s3CopyParams)
+        );
         log.debug("s3 mp4 copyDone:", s3copyDone);
 
         const webmSrcKey = `inputs/${basefile}`.replace(".mp4", ".webm");
@@ -2095,7 +2180,9 @@ async function lambdaHandler(event) {
             Bucket: process.env.DstBucket,
         };
         log.debug("s3 webm copyParams:", s3CopyParamsWebm);
-        const s3copyDoneWebm = await s3.copyObject(s3CopyParamsWebm).promise();
+        const s3copyDoneWebm = await s3Client.send(
+            new CopyObjectCommand(s3CopyParamsWebm)
+        );
         log.debug("s3 webm copyDone:", s3copyDoneWebm);
         return "s3 success";
     }

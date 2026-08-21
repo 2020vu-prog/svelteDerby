@@ -1,18 +1,16 @@
 const DdbUtils = require("../modules/lambdaDerby/src/DdbUtils.js");
 const EntityFactory = require("../modules/lambdaDerby/src/shared/EntityFactory.js");
 const requestContext = require("../modules/lambdaDerby/src/RequestContext.js");
+const {
+    marshall,
+} = require("../modules/lambdaDerby/src/node_modules/@aws-sdk/util-dynamodb");
 
 function buildDdbUtils() {
-    const AWS = {
-        DynamoDB: {
-            DocumentClient: class {},
-            Converter: {
-                marshall: (entity) => ({ ...entity }),
-                unmarshall: (entity) => ({ ...entity }),
-            },
-        },
-    };
-    const ddbUtils = new DdbUtils(AWS, {}, {});
+    const ddbUtils = new DdbUtils(
+        { send: jest.fn() },
+        { send: jest.fn() },
+        { send: jest.fn() }
+    );
     ddbUtils.flushedRequests = [];
     ddbUtils.flushBulkRequests = async (requests) => {
         ddbUtils.flushedRequests.push(...requests);
@@ -43,9 +41,10 @@ describe("DdbUtils addSingle", () => {
         expect(result.status).toBe("ok");
         expect(result.entity.PK).toBe("requestEvent:RS");
         expect(result.entity.by).toBe("requestUser");
-        expect(ddbUtils.flushedRequests[0].PutRequest.Item.PK).toBe(
+        expect(ddbUtils.flushedRequests[0].PutRequest.Item.PK.S).toBe(
             "requestEvent:RS"
         );
+        expect(ddbUtils.flushedRequests[0].PutRequest.Item.M).toBeUndefined();
     });
 
     test("uses scoped EntityFactory override from RequestContext", async () => {
@@ -57,19 +56,21 @@ describe("DdbUtils addSingle", () => {
 
         const result = await requestContext.withEntityFactory(
             overrideFactory,
-            () => ddbUtils.addSingle({
-                PK: ":RS",
-                SK: "standing1",
-                cn: ["101", "102"],
-            })
+            () =>
+                ddbUtils.addSingle({
+                    PK: ":RS",
+                    SK: "standing1",
+                    cn: ["101", "102"],
+                })
         );
 
         expect(result.status).toBe("ok");
         expect(result.entity.PK).toBe("overrideEvent:RS");
         expect(result.entity.by).toBe("overrideUser");
-        expect(ddbUtils.flushedRequests[0].PutRequest.Item.PK).toBe(
+        expect(ddbUtils.flushedRequests[0].PutRequest.Item.PK.S).toBe(
             "overrideEvent:RS"
         );
+        expect(ddbUtils.flushedRequests[0].PutRequest.Item.M).toBeUndefined();
     });
 
     test("keeps overlapping async EntityFactory contexts isolated", async () => {
@@ -110,8 +111,16 @@ describe("DdbUtils unmarshalling", () => {
         const ddbUtils = buildDdbUtils();
         const data = {
             Items: [
-                { PK: "event1:RS", SK: "standing1", cn: ["101", "102"] },
-                { PK: "event1:RS", SK: "standing2", cn: ["103", "104"] },
+                marshall({
+                    PK: "event1:RS",
+                    SK: "standing1",
+                    cn: ["101", "102"],
+                }),
+                marshall({
+                    PK: "event1:RS",
+                    SK: "standing2",
+                    cn: ["103", "104"],
+                }),
             ],
         };
 

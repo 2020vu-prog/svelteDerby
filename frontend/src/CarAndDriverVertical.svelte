@@ -17,7 +17,7 @@
         name = getDriverName(number, at);
     }
 
-    function getSponsor (number)  {
+    function getSponsor(number) {
         if (number && $driverMap[number]) {
             return $driverMap[number].spon;
         } else {
@@ -32,9 +32,8 @@
             return " ";
         }
     };
-    function showDriver(){
-
-        push(`/driverAdd/${number}`)
+    function showDriver() {
+        push(`/driverAdd/${number}`);
     }
 </script>
 
@@ -42,7 +41,7 @@
     <b style="font-size: 31px">{number}</b>
     <br />
     <span class="noselect" on:click={showDriver}>
-    {name}
+        {name}
     </span>
     {#if getSponsor(number)}
         <br />

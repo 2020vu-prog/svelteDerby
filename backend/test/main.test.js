@@ -1,10 +1,31 @@
 const { CF, getData, postData, getHHMMSS } = require("./common.js");
+const fs = require("fs");
+const path = require("path");
+const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const testers = new RegExp(process.env.TEST_USER);
+const EntityFactory = require("../modules/lambdaDerby/src/shared/EntityFactory.js");
+const { orgId, orgIz } = require("./integrationRun.js");
+const token = fs.readFileSync(path.resolve(__dirname, "token.txt"), "utf8");
+const testerEmail = jwt.decode(token).email;
+const testerEmailHash = new EntityFactory({}).getHashFromEmail(testerEmail);
 
 const slowDrivers = false;
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForRaceHistory(predicate, attempts = 10) {
+    for (let attempt = 0; attempt < attempts; attempt++) {
+        const data = await getData(
+            `${CF}/getRaceHistory?orgId=${orgId}&orgIz=${orgIz}&cache=${uuidv4()}`
+        );
+        const matchingRace = data.find(predicate);
+        if (matchingRace) {
+            return matchingRace;
+        }
+        await sleep(500);
+    }
+    return undefined;
 }
 
 const dmax = slowDrivers ? 800 : 520;
@@ -13,10 +34,6 @@ const dloop = [];
 for (var x = 501; x < dmax; x++) {
     dloop.push([x]);
 }
-
-const orgU = uuidv4().substring(0, 5);
-const orgIz = "Test";
-const orgId = `${orgIz}.${orgU}`;
 
 test("listOrgConfig: ", () => {
     return getData(`${CF}/listOrgConfig`).then((data) => {
@@ -153,10 +170,11 @@ test("postDdbQuery: ", () => {
     });
 });
 
-test("getHistory: the data should by created by a real tester", () => {
+test("getHistory: the data should be attributed to the tester", () => {
     return getData(`${CF}/getRaceHistory?orgId=${orgId}&orgIz=${orgIz}`).then(
         (data) => {
-            expect(data[0].by).toMatch(testers);
+            expect(data[0].byH).toBe(testerEmailHash);
+            expect(data[0].by).toBeUndefined();
         }
     );
 });
@@ -168,9 +186,11 @@ test("getNextOnBlocks: ", () => {
     return getData(`${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`).then(
         (data) => {
             //console.log("nextOnBlocks:", data);
-            expect(data[0].by).toMatch(testers);
             expect(data.length).toEqual(1);
             timerSkAPhase = data[0].SK;
+            expect(timerSkAPhase).toBeTruthy();
+            expect(data[0].byH).toBe(testerEmailHash);
+            expect(data[0].by).toBeUndefined();
         }
     );
 });
@@ -294,7 +314,74 @@ test("postAddChartPosition should work ", () => {
     });
 });
 
+test("chart heat 1 creates pending race for cars 100 and 109", async () => {
+    const heatKey = `${testChartId}:01`;
+    const pendingRace = await waitForRaceHistory(
+        (race) => race.SK === heatKey && race.Bp === heatKey
+    );
+
+    expect(pendingRace).toBeDefined();
+    expect(pendingRace.cn).toEqual(["100", "109"]);
+    expect(pendingRace.ph1).toBeUndefined();
+    expect(pendingRace.ph2).toBeUndefined();
+});
+
+test("completes both phases of chart heat 1", async () => {
+    const heat1Key = `${testChartId}:01`;
+
+    const phaseA = await postData(`${CF}/addBlocks`, {
+        orgIz,
+        orgId,
+        pt: "R",
+        cn: ["100", "109"],
+    });
+    expect(phaseA.data.status).toMatch(/ok/i);
+
+    const phaseAOnBlocks = await getData(
+        `${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`
+    );
+    expect(phaseAOnBlocks).toHaveLength(1);
+    expect(phaseAOnBlocks[0].Bp).toBe(heat1Key);
+
+    const phaseAResult = await postData(`${CF}/doApplyFinishTime`, {
+        orgIz,
+        orgId,
+        SK: phaseAOnBlocks[0].SK,
+        phr: [0, 33000],
+    });
+    expect(phaseAResult.data.status).toMatch(/ok/i);
+
+    const phaseB = await postData(`${CF}/addBlocks`, {
+        orgIz,
+        orgId,
+        pt: "R",
+        cn: ["109", "100"],
+    });
+    expect(phaseB.data.status).toMatch(/ok/i);
+
+    const phaseBOnBlocks = await getData(
+        `${CF}/getNextOnBlocks?orgId=${orgId}&orgIz=${orgIz}`
+    );
+    expect(phaseBOnBlocks).toHaveLength(1);
+    expect(phaseBOnBlocks[0].Bp).toBe(heat1Key);
+
+    const phaseBResult = await postData(`${CF}/doApplyFinishTime`, {
+        orgIz,
+        orgId,
+        SK: phaseBOnBlocks[0].SK,
+        phr: [44000, 0],
+    });
+    expect(phaseBResult.data.status).toMatch(/ok/i);
+
+    const completedRace = await waitForRaceHistory(
+        (race) => race.SK === heat1Key && race.ph1 && race.ph2
+    );
+    expect(completedRace).toBeDefined();
+});
+
 test.skip("startDiscordBot: skipped until manageDiscord is stable in integration", async () => {
-    const data = await getData(`${CF}/manageDiscord?orgId=${orgId}&orgIz=${orgIz}`)
+    const data = await getData(
+        `${CF}/manageDiscord?orgId=${orgId}&orgIz=${orgIz}`
+    );
     expect(Object.keys(data).length).toBeGreaterThan(0);
 });

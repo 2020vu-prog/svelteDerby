@@ -1,17 +1,17 @@
 variable "GoogleClientId" {}
 variable "GoogleClientSecret" {}
 locals {
-	cognitoDomain= replace(var.DnsDomain, "/\\./", "-")
+  cognitoDomain = replace(var.DnsDomain, "/\\./", "-")
 
 }
 data "aws_region" "current" {}
 resource "aws_cognito_user_pool_domain" "derbyUserPool" {
-  domain                     = "${local.cognitoDomain}"
+  domain       = local.cognitoDomain
   user_pool_id = aws_cognito_user_pool.derbyUserPool.id
 }
 
 resource "aws_cognito_user_pool" "derbyUserPool" {
-  name = "derbyUserPool"
+  name                       = "derbyUserPool"
   email_verification_subject = "User Verification for ${var.DeployEnvironment}"
   auto_verified_attributes   = ["email"]
   schema {
@@ -35,14 +35,14 @@ resource "aws_cognito_user_pool" "derbyUserPool" {
 resource "aws_cognito_user_pool_client" "sveltePoolClient" {
   name = "sveltePoolClient"
 
-      access_token_validity                         = 720 
-      id_token_validity                             = 720
+  access_token_validity = 720
+  id_token_validity     = 720
 
-      token_validity_units {
-          access_token  = "minutes"
-          id_token      = "minutes"
-          refresh_token = "days" 
-        }
+  token_validity_units {
+    access_token  = "minutes"
+    id_token      = "minutes"
+    refresh_token = "days"
+  }
   user_pool_id = aws_cognito_user_pool.derbyUserPool.id
 }
 resource "aws_cognito_user_pool_client" "svelteHostedPoolClient" {
@@ -67,19 +67,19 @@ resource "aws_cognito_user_pool_client" "svelteHostedPoolClient" {
     "COGNITO",
     "Google",
   ]
-// wtf... these are for hosted ui!
-  logout_urls                                 = [
-        "https://0.0.0.0:8080/",
-        "https://localhost:5173/",
-        "https://d38fl44wj64v4n.cloudfront.net/",
-        "https://${local.DnsCfAliasFq}/",
-        ]
-  callback_urls                                 = [
-        "https://0.0.0.0:8080/",
-        "https://localhost:5173/",
-        "https://d38fl44wj64v4n.cloudfront.net/",
-        "https://${local.DnsCfAliasFq}/",
-        ]
+  // wtf... these are for hosted ui!
+  logout_urls = [
+    "https://0.0.0.0:8080/",
+    "https://localhost:5173/",
+    "https://d38fl44wj64v4n.cloudfront.net/",
+    "https://${local.DnsCfAliasFq}/",
+  ]
+  callback_urls = [
+    "https://0.0.0.0:8080/",
+    "https://localhost:5173/",
+    "https://d38fl44wj64v4n.cloudfront.net/",
+    "https://${local.DnsCfAliasFq}/",
+  ]
 }
 resource "aws_cognito_identity_provider" "google" {
   user_pool_id  = aws_cognito_user_pool.derbyUserPool.id
@@ -101,8 +101,8 @@ resource "aws_cognito_identity_provider" "google" {
   attribute_mapping = {
     email    = "email"
     username = "sub"
-    name = "name"
-    profile = "profile"
+    name     = "name"
+    profile  = "profile"
   }
 }
 resource "aws_cognito_user_pool_client" "idpLink" {
@@ -127,70 +127,30 @@ resource "aws_cognito_identity_pool" "derbyMainIdp" {
 }
 locals {
   awsCognitoSettingsJson = jsonencode({
-    "aws_project_region"           = "${data.aws_region.current.name}",
-    "aws_cognito_identity_pool_id" = "${aws_cognito_identity_pool.derbyMainIdp.id}",
-    "aws_cognito_region"           = "${data.aws_region.current.name}",
-    "aws_user_pools_id"            = "${aws_cognito_user_pool.derbyUserPool.id}",
-    "aws_user_pools_web_client_id" = "${aws_cognito_user_pool_client.sveltePoolClient.id}",
+    "aws_project_region"              = "${data.aws_region.current.name}",
+    "aws_cognito_identity_pool_id"    = "${aws_cognito_identity_pool.derbyMainIdp.id}",
+    "aws_cognito_region"              = "${data.aws_region.current.name}",
+    "aws_user_pools_id"               = "${aws_cognito_user_pool.derbyUserPool.id}",
+    "aws_user_pools_web_client_id"    = "${aws_cognito_user_pool_client.sveltePoolClient.id}",
     "aws_user_pools_hosted_client_id" = aws_cognito_user_pool_client.hosted_client.id,
 
-    "aws_pubsub_region"            = "${data.aws_region.current.name}",
-    "aws_pubsub_endpoint"          = "wss://${data.aws_iot_endpoint.mqtt.endpoint_address}/mqtt",
-    "oauth"                        = {}
+    "aws_pubsub_region"   = "${data.aws_region.current.name}",
+    "aws_pubsub_endpoint" = "wss://${data.aws_iot_endpoint.mqtt.endpoint_address}/mqtt",
+    "hosted_url"          = "https://${aws_cognito_user_pool_domain.derbyUserPool.domain}.auth.${data.aws_region.current.name}.amazoncognito.com",
+    "mqtt_ps_url"         = data.aws_ssm_parameter.iot_access_url.value,
+    "mqtt_ps_key"         = data.aws_ssm_parameter.iot_access_key.value,
+    "DeployEnvironment"   = var.DeployEnvironment,
+    "oauth"               = {}
   })
 
 }
 
 data "aws_ssm_parameter" "iot_access_url" {
-      name           = "/iot/IotAccessUrl"
+  name = "/iot/IotAccessUrl"
 }
 data "aws_ssm_parameter" "iot_access_key" {
-      name           = "/iot/IotAccessKey"
+  name = "/iot/IotAccessKey"
 }
-resource "local_file" "migrateToAjax" {
-  content  = <<-EOT
-// WARNING: DO NOT EDIT. This file is automatically generated by terraform  counterfeitAmplifySettings. It will be overwritten.
-const awsmobile = ${local.awsCognitoSettingsJson}
-
-export default awsmobile;
-  EOT
-  filename = "/tmp/migrate-exports-${var.DeployEnvironment}.js"
-}
-
-
-//
-//
-//
-
-resource "local_file" "counterfeitAmplifySettings" {
-//	depends_on = [ aws_cognito_user_pool_domain.derbyUserPool]
-  content  = <<-EOT
-// WARNING: DO NOT EDIT. This file is automatically generated by terraform  counterfeitAmplifySettings. It will be overwritten.
-
-const awsmobile = {
-    "aws_project_region": "${data.aws_region.current.name}",
-    "aws_cognito_identity_pool_id": "${aws_cognito_identity_pool.derbyMainIdp.id}",
-    "aws_cognito_region": "${data.aws_region.current.name}",
-    "aws_user_pools_id": "${aws_cognito_user_pool.derbyUserPool.id}",
-    "aws_user_pools_web_client_id": "${aws_cognito_user_pool_client.sveltePoolClient.id}",
-    "aws_user_pools_hosted_client_id": "${aws_cognito_user_pool_client.hosted_client.id}",
-    "aws_pubsub_region": "${data.aws_region.current.name}",
-    "aws_pubsub_endpoint": "wss://${data.aws_iot_endpoint.mqtt.endpoint_address}/mqtt",
-    "hosted_url": "https://${aws_cognito_user_pool_domain.derbyUserPool.domain}.auth.${data.aws_region.current.name}.amazoncognito.com",
-    "mqtt_ps_url": "${data.aws_ssm_parameter.iot_access_url.value}",
-    "mqtt_ps_key": "${data.aws_ssm_parameter.iot_access_key.value}",
-    "derby_main_url": "${module.derbyMainLambda.lambda_function_url}",
-    "DeployEnvironment": "${var.DeployEnvironment}",
-    "oauth": {}
-};
-
-
-export default awsmobile;
-  EOT
-  filename = "${path.module}/../frontend/src/aws-exports-${var.DeployEnvironment}.js"
-}
-
-
 output "derbyUserPool" {
   value = aws_cognito_user_pool_domain.derbyUserPool.domain
 }
