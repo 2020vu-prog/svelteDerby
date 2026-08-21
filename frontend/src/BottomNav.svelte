@@ -102,11 +102,7 @@
 <div class="footer">
     <StatusMessage />
     {#if $showBottomNav}
-        <div
-            bind:this={thisBottomNav}
-            class="navbar"
-            id="bottomNavBar"
-        >
+        <div bind:this={thisBottomNav} class="navbar" id="bottomNavBar">
             {#each $selectedToolbarList as item, index (item.path)}
                 <a
                     href="/#/{item.path}"
