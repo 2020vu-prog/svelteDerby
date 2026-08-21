@@ -7,6 +7,12 @@ terraform {
       source  = "hashicorp/aws"
       version = "5.82.2"
     }
+    # Some existing environment states still contain a local_file resource.
+    # Keep its provider available until those states have been reconciled.
+    local = {
+      source  = "hashicorp/local"
+      version = "2.9.0"
+    }
   }
   backend "s3" { key = "backend/code" }
 }
