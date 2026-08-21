@@ -153,6 +153,11 @@ jobs:
         working-directory: backend
         run: |
           make lambdaPkgsNonNode
+          # Temporary diagnostic: show any provider lockfile change before a
+          # plan can run. Backend initialization is deliberately disabled.
+          terraform init -backend=false
+          git diff -- backend/.terraform.lock.hcl
+          git diff --exit-code -- backend/.terraform.lock.hcl
           terraform init -reconfigure -lockfile=readonly -backend-config="${TF_BACKEND_CONFIG}"
           git diff --exit-code
           terraform plan -out="${RUNNER_TEMP}/backend.tfplan"
