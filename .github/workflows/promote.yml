@@ -1,0 +1,107 @@
+name: Promote environment branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: Environment branch to promote
+        required: true
+        type: choice
+        options:
+          - stage
+          - go
+      source_sha:
+        description: Full 40-character SHA that successfully deployed to the prior environment
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  promote:
+    name: Promote ${{ inputs.target_environment }}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.target_environment == 'stage' && 'stage.rr1.us' || 'go.rr1.us' }}
+
+    steps:
+      - name: Verify deployment and fast-forward target branch
+        id: promote
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const promotions = {
+              stage: {
+                sourceBranch: "test.rr1.us",
+                targetBranch: "stage.rr1.us",
+              },
+              go: {
+                sourceBranch: "stage.rr1.us",
+                targetBranch: "go.rr1.us",
+              },
+            };
+            const targetEnvironment = context.payload.inputs.target_environment;
+            const sourceSha = context.payload.inputs.source_sha;
+            const promotion = promotions[targetEnvironment];
+
+            if (!promotion || !/^[0-9a-f]{40}$/i.test(sourceSha)) {
+              core.setFailed("Provide a valid target environment and full 40-character source SHA.");
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+            const sourceRef = await github.rest.git.getRef({
+              owner,
+              repo,
+              ref: `heads/${promotion.sourceBranch}`,
+            });
+            if (sourceRef.data.object.sha !== sourceSha) {
+              core.setFailed(
+                `${promotion.sourceBranch} is ${sourceRef.data.object.sha}, not requested ${sourceSha}.`
+              );
+              return;
+            }
+
+            const deploymentRuns = await github.paginate(
+              github.rest.actions.listWorkflowRuns,
+              {
+                owner,
+                repo,
+                workflow_id: "deploy.yml",
+                branch: promotion.sourceBranch,
+                status: "completed",
+                per_page: 100,
+              }
+            );
+            const successfulRun = deploymentRuns.find(
+              (run) => run.head_sha === sourceSha && run.conclusion === "success"
+            );
+            if (!successfulRun) {
+              core.setFailed(
+                `No successful Deploy workflow run exists for ${promotion.sourceBranch} at ${sourceSha}.`
+              );
+              return;
+            }
+
+            const targetRef = await github.rest.git.getRef({
+              owner,
+              repo,
+              ref: `heads/${promotion.targetBranch}`,
+            });
+            if (targetRef.data.object.sha === sourceSha) {
+              core.notice(`${promotion.targetBranch} already points to ${sourceSha}.`);
+              return;
+            }
+
+            await github.rest.git.updateRef({
+              owner,
+              repo,
+              ref: `heads/${promotion.targetBranch}`,
+              sha: sourceSha,
+              force: false,
+            });
+            core.notice(
+              `Promoted ${sourceSha} from ${promotion.sourceBranch} to ${promotion.targetBranch}; source Deploy run: ${successfulRun.html_url}`
+            );
