@@ -38,3 +38,7 @@ jobs:
 
       - name: Check Terraform formatting
         run: terraform fmt -check -recursive .
+
+      - name: Verify backend provider lock
+        working-directory: backend
+        run: terraform init -backend=false -lockfile=readonly
