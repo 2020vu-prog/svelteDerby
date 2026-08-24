@@ -40,6 +40,7 @@
     const { MenuSection } = require("./routes/routeDefinitions.js");
 
     var isMounted = false;
+    let initialRouteHandled = false;
     let generalMenuMap = [];
     let adminMenuMap = [];
 
@@ -168,14 +169,24 @@
         }
     }
     $: {
-        // $userEmail required so bearer token is ready when calling apis
-        replaceRouteOnInitialLoad(isMounted, $userEmail);
+        replaceRouteOnInitialLoad(isMounted, $userEmail, $location);
     }
     async function replaceRouteOnInitialLoad() {
         const tag = "replaceRouteOnInitialLoad";
         const now = new Date().getTime();
-        if (!isMounted || !$userEmail) {
+        if (initialRouteHandled) return;
+        if (!isMounted) {
             console.log(`${tag} ignoring not mounted`, isMounted);
+            return;
+        }
+        // Auto-selection is public and must survive anonymous/slow auth startup.
+        if ($location.startsWith("/as/")) {
+            initialRouteHandled = true;
+            log.debug(`${tag} honoring auto select:`, $location);
+            replace($location);
+            return;
+        }
+        if (!$userEmail) {
             console.log(`${tag} ignoring not email`, $userEmail);
             return;
         }
@@ -185,14 +196,12 @@
             );
             return;
         }
+        initialRouteHandled = true;
         const cfg = await db.EventConfig.toArray();
         log.debug(`${tag} config:`, cfg);
         log.debug(`${tag} location:`, $location, " qs:", $querystring);
 
         if (false) {
-        } else if ($location.startsWith("/as/")) {
-            log.debug(`${tag} honoring auto select:`, $location);
-            replace($location);
         } else if ($location.startsWith("/loginH")) {
             log.debug(`${tag} honoring auto select:`, $location);
             replace($location);
