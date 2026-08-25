@@ -142,14 +142,15 @@
     onMount(async () => {
         log.debug("mounted app");
         setEnvTitle();
-        const orgIz = $raceConfig.orgIz;
+        const initialRoute = routeRegistry.match($location);
+        const orgIz = initialRoute?.params?.orgIz || $raceConfig.orgIz;
         await setIdTokenFromCognitoCallback();
         try {
             await urlParseSpotify();
         } catch (error) {
             log.error("Spotify callback failed", error);
         }
-        await refreshOrgRoles(orgIz);
+        if (orgIz) await refreshOrgRoles(orgIz);
         let msg = "Using public access";
         if ($userEmail) {
             msg = `Logged in: [${$userEmail}]`;
