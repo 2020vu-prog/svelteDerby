@@ -43,7 +43,7 @@
     }
 
     function goLogin() {
-        $initialReloadRoute = `/driverDelegate/${params.orgId}/${params.token}`;
+        $initialReloadRoute = `/driverDelegate/${params.orgIz}/${params.orgId}/${params.token}`;
         replace("/loginH");
     }
 
@@ -52,14 +52,32 @@
         try {
             const response = await $axios.post(
                 $raceConfig.baseUrl + "/claimDriverDelegation",
-                { orgId: params.orgId, token: params.token }
+                { orgId: params.orgId, orgIz: params.orgIz, token: params.token }
             );
             status = "claimed";
             pushMessage({
                 text: `You can now maintain driver #${response.data.number}'s walkup track.`,
                 type: "success",
             });
-            replace(`/driverProfile/${response.data.number}`);
+            const target = `/driverProfile/${response.data.number}`;
+            const alreadyOnThisEvent =
+                $raceConfig.orgId === params.orgId &&
+                $raceConfig.orgIz === params.orgIz;
+            if (alreadyOnThisEvent) {
+                replace(target);
+            } else {
+                // This driver's own event may not be the one this client
+                // currently has loaded (car numbers aren't stable across
+                // events, so /driverProfile must not be reached against the
+                // wrong one). Reuse the existing auto-select-event flow to
+                // switch onto the delegator's event first, then continue on
+                // to the driver's profile.
+                replace(
+                    `/as/${params.orgIz}/${params.orgId}?then=${encodeURIComponent(
+                        target
+                    )}`
+                );
+            }
         } catch (err) {
             log.error("DriverDelegate: claim failed", err);
             pushMessage({

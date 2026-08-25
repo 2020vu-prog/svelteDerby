@@ -66,7 +66,7 @@
             );
             const { token, expiresAt } = response.data;
             delegateExpiresAt = expiresAt;
-            delegateLink = `${window.location.origin}/#/driverDelegate/${$raceConfig.orgId}/${token}`;
+            delegateLink = `${window.location.origin}/#/driverDelegate/${$raceConfig.orgIz}/${$raceConfig.orgId}/${token}`;
             delegateQrSvg = await QRCode.toString(delegateLink, {
                 type: "svg",
             });

@@ -160,7 +160,7 @@ const routeDefinitions = [
     },
     {
         id: "driverDelegate",
-        path: "/driverDelegate/:orgId/:token",
+        path: "/driverDelegate/:orgIz/:orgId/:token",
         component: "DriverDelegate",
         permission: RoutePermission.PUBLIC,
     },
