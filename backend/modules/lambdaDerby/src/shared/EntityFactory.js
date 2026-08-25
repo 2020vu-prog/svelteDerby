@@ -692,6 +692,7 @@ entityFactories["Participant"] = class Participant extends EntityBase {
         "spon",
         "notes",
         "wLink",
+        "maintainerHashes",
     ];
     static eid = ":PTCP";
     static canBuild(json) {
@@ -705,6 +706,22 @@ entityFactories["Participant"] = class Participant extends EntityBase {
         super.preWrite();
         this.PK = this.orgId + ParticipantEid;
         this.SK = this.number + "";
+        // Normalize to a native Set so this always marshals as a DynamoDB
+        // String Set (matching what the atomic ADD/DELETE claim/revoke path
+        // writes), whether this came from a full-record JSON/CSV re-import
+        // (plain array) or a re-read/re-saved record (already a Set). A
+        // DynamoDB String Set can't be empty, so drop the attribute entirely
+        // rather than writing `SS: []`, which DynamoDB rejects.
+        if (this.maintainerHashes !== undefined) {
+            const hashes = new Set(
+                [...(this.maintainerHashes || [])].filter(Boolean)
+            );
+            if (hashes.size) {
+                this.maintainerHashes = hashes;
+            } else {
+                delete this.maintainerHashes;
+            }
+        }
     }
     get classType() {
         return "Participant";

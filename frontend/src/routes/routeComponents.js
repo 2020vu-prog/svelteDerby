@@ -9,8 +9,11 @@ import ChartList from "../ChartList2.svelte";
 import ChartPosition from "../ChartPosition.svelte";
 import DownloadCsv from "../DownloadCsv.svelte";
 import DriverAdd from "../DriverAdd.svelte";
+import DriverDelegate from "../DriverDelegate.svelte";
 import DriverInfo from "../DriverInfo.svelte";
 import DriverList from "../DriverList.svelte";
+import DriverProfile from "../DriverProfile.svelte";
+import DriverProfileList from "../DriverProfileList.svelte";
 import EventAdd from "../EventAdd.svelte";
 import EventSelection from "../EventSelection.svelte";
 import ForceLoad from "../ForceLoad.svelte";
@@ -60,8 +63,11 @@ export const routeComponents = {
     ChartPosition,
     DownloadCsv,
     DriverAdd,
+    DriverDelegate,
     DriverInfo,
     DriverList,
+    DriverProfile,
+    DriverProfileList,
     EventAdd,
     EventSelection,
     ForceLoad,

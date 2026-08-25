@@ -31,6 +31,15 @@ const buildDistributionRecord = (sourceRecord) => ({
     DS: getMicroEpoch(),
 });
 
+// unmarshall() turns a DynamoDB String/Number/Binary Set attribute (e.g.
+// Participant.maintainerHashes) into a native JS Set. JSON.stringify has no
+// idea what to do with a Set -- it silently serializes to "{}" with no
+// replacer, which would make maintainerHashes vanish for every already-open
+// client on the realtime IoT channel. Same fix as derbyMain.js's
+// buildResponse, needed here too since this is a separate deploy unit.
+const replaceSetsForJson = (key, value) =>
+    value instanceof Set ? Array.from(value) : value;
+
 const publishDistributionRecord = async (distributionRecord) => {
     log.debug("Iot Begin.");
     if (!iotData) {
@@ -41,7 +50,7 @@ const publishDistributionRecord = async (distributionRecord) => {
     }
     const params = {
         topic: `derby/${distributionRecord.orgId}/dist`,
-        payload: JSON.stringify(distributionRecord),
+        payload: JSON.stringify(distributionRecord, replaceSetsForJson),
         qos: 0,
     };
     try {

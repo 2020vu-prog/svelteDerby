@@ -205,13 +205,22 @@
         } else if ($location.startsWith("/loginH")) {
             log.debug(`${tag} honoring auto select:`, $location);
             replace($location);
+        } else if ($initialReloadRoute) {
+            // Set by flows like DriverDelegate.svelte before sending the
+            // user through Cognito hosted login, which always redirects
+            // back to "/" -- this is the only thing that survives that
+            // round trip. Must win even with no event ever loaded yet
+            // (cfg.length === 0), since a first-time visitor delegated
+            // walkup maintenance may never have opened this app before.
+            const target = $initialReloadRoute;
+            $initialReloadRoute = ""; // consume once; persisted, so it must not replay forever
+            if (cfg.length) {
+                await reloadEvent(cfg[0]);
+            }
+            replace(target);
         } else if (cfg.length) {
             await reloadEvent(cfg[0]);
-            if ($initialReloadRoute) {
-                replace($initialReloadRoute);
-            } else {
-                replace("/RpList");
-            }
+            replace("/RpList");
         } else {
             replace("/orgSelection");
         }

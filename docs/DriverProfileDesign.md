@@ -1,0 +1,142 @@
+# Design proposal: driver-maintained walkup tracks
+
+Date: 2026-08-25 (revised)
+Requirements: `docs/driverProfile.md`
+Touches: `frontend/src/DriverAdd.svelte`, `frontend/src/routes/*`, `frontend/src/eventDb.js` (Dexie schema/queries), `backend/modules/lambdaDerby/src/derbyMain.js`, `backend/modules/lambdaDerby/src/shared/EntityFactory.js`, `backend/modules/lambdaDerby/src/DdbUtils.js`
+
+**Revision note:** the requirements doc picked up four new notes since the first pass of this proposal — don't store claim tokens in the logged/propagated `DerbyMain` table, car numbers aren't stable across events within an org, the maintainer hash list should live on the `Participant` record itself so re-importing a roster preserves it, and delegation should be scoped to an event. Those four notes cascade into most of the sections below: the standing grant is no longer a separate table (it's now a field on `Participant`), and the ephemeral claim token moves to a different, unstreamed table. The overall shape of the flow — QR → scan → login → claim → "my drivers" screen — is unchanged.
+
+**Second revision:** dropped the `GET /app/listMyDriverDelegations` endpoint. Because `maintainerHashes` lives on `Participant`, and `Participant` already syncs to every client's local Dexie cache, "which drivers can I edit" is answerable entirely client-side by computing the caller's hash (`EntityFactory.getHashFromEmail()`, which already works in the browser via the `crypto-browserify` webpack fallback) and filtering the local `db.Participant` table — no new backend endpoint needed for that read at all.
+
+**Third revision:** CSV bulk import/export now carries `maintainerHashes` the same way JSON already does, via a new `MaintainerHashes` column, instead of leaving CSV re-import as a documented way to silently wipe delegations.
+
+## What this is, in one paragraph
+
+Today a driver's Spotify walkup link (`wLink` on the `Participant` entity) can only be set by staff, through `DriverAdd.svelte`, gated on `CAN_ADD_PARTICIPANT`. The goal is to let a driver update their own `wLink` without becoming an org user — a staff member with `CAN_ADD_PARTICIPANT` delegates maintenance of one driver number, for the current event, to an email address, ideally by showing that person a QR code; the driver scans it, logs in with their own Cognito account, and from then on can revisit a "my drivers" screen and edit their track directly. Nothing about race scoring, standings, or the existing org-role system changes.
+
+## The good news: most of the plumbing already exists
+
+**Authenticated email, verified server-side.** `authenticateApiRequest` (`derbyMain.js:1682`) already runs every non-public request through `CognitoJwtVerifier`, and `principal.email` is never trusted from the client. A driver logging in through the existing hosted-Cognito flow (`LoginH.svelte`) is exactly "maintainer must have authenticated email" — no new auth system needed.
+
+**Hash-only email storage.** `EntityFactory.getHashFromEmail()` (`shared/EntityFactory.js:924`) already exists and is already used for exactly this purpose: `refreshUserDisplayNamesFromOrgPerm` (`derbyMain.js:2010`) writes a `UserDisplayName` record keyed by `getHashFromEmail(orgPerm.SK)`, never the raw address. Every entity written through the standard `EntityFactory` path also gets a hash-only audit trail for free — `loadApiRequestContext` builds the request's factory with `byEmail: principal.email` (`derbyMain.js:1705`), and `EntityBase.preWrite()` (`shared/EntityFactory.js:62`) converts that into a hashed `byH` field, never a plaintext `by`. So the audit trail for a maintainer's edit needs no new code; the only place this design mints a hash on purpose is the grant itself, below.
+
+**A precedent for "don't put this in the propagated table."** `DerbyMain` has `stream_enabled = true` (`dynamo.tf:38`) feeding `derbyDynamoLambda` over its DynamoDB Stream, which the audit describes as consolidating updates into IoT publishes to connected clients — this is almost certainly what the requirements note means by "logged and propagated." The codebase already has an established escape hatch for data that shouldn't go through that pipeline: `ElapsedTemp` (`dynamo.tf:58`, `stream_enabled = false`), already used exactly this way — `snsApplyPbTimerHandler` writes scratch finish-block data with `ddbUtils.ddbPut(fbJson, process.env.ElapsedTempDbTable)` (`derbyMain.js:1831`) and reads it back with `ddbUtils.ddbQueryPkSk(pk, sk, process.env.ElapsedTempDbTable)` (`derbyMain.js:578`). This is the same shape the claim token needs, and it means zero new Terraform.
+
+**QR generation and post-login return.** `ProvisionWifi.svelte` already renders a QR via `QRCode.toString(url, { type: "svg" })`; the app already has a "send through Cognito hosted login, land back on a specific URL" pattern (`initialReloadRoute`, `/forceLoad/:b64route`). Both are reused as-is.
+
+**`getHashFromEmail()` already works in the browser, not just server-side.** `webpack.config.common.js:142` configures `resolve.fallback.crypto = require.resolve("crypto-browserify")`, so Node's `crypto` module — the only thing `getHashFromEmail()` calls — is already polyfilled into the frontend bundle. `EntityFactory` is already `require()`'d directly into Svelte components (`DriverAdd.svelte`, `DriverInfo.svelte`, `HotLoad.svelte`), so no new dependency or bundle change is needed to compute a maintainer's hash client-side, from their already-known logged-in email, with the exact same function the backend uses. That's what makes "my drivers" a pure Dexie read rather than a new API call — see below.
+
+What's still missing is a permission axis the app doesn't have yet: authorization scoped to *one driver number, for one event*, independent of org roles — and that's now simpler to build than the first pass of this proposal assumed, because of where the requirements say the grant should live.
+
+## Why this needs a new authorization axis, not a new `RoutePermission`
+
+`RoutePermission` and `roleMap` (`routes/routePermission.js`, `routes/routeAccess.js`) answer "does this email hold role X in org Y" — flat, org-wide, and a fixed menu of capabilities. A maintainer grant is "may this email edit driver #47 at this event," which varies per number and per event, and a maintainer typically holds no org role at all. That doesn't fit the enum-of-frozen-constants design of `RoutePermission.js` and shouldn't be bent to fit it.
+
+So, as before: a second, narrower check sitting beside the existing one, in the same style `getOrgRoles` (`derbyMain.js:1165`) already uses for its own ad hoc `apiProps.email` check outside `hasPermission`. New endpoints register at the router with `RoutePermission.ANONYMOUS` (authenticate, but no org-role gate); each handler does its own driver-scoped check.
+
+## Data model
+
+**No new standing-grant table.** Per the updated requirements, the maintainer hash list lives directly on the existing `Participant` record — add `maintainerHashes` to `Participant.members` in `shared/EntityFactory.js:687`, alongside `wLink`. This is a real simplification, not just compliance with the note:
+
+- It's inherently scoped to one event, because `Participant.PK` already is (`this.PK = this.orgId + ParticipantEid`, `shared/EntityFactory.js:706`) — which is exactly what "delegation should be scoped to an event" and "car numbers may not have the same driver in different events within an org" both require. There's no separate scoping decision to get wrong.
+- Checking "may this email edit this driver" no longer needs a second lookup — it's `(participant.maintainerHashes || []).includes(hash)` on the very record `updateDriverWalkup` is already reading to write `wLink`.
+- Re-importing a roster into a new event (`DriverAdd.svelte`'s JSON bulk upload → `addBulk`) carries `maintainerHashes` forward automatically, once it's a normal member field, because the JSON round-trip (`downloadDriverJson`, `fmtAndPostJson`) already serializes and restores the whole object — no new "carry forward" mechanism to build. This is what the requirements note is asking for.
+
+**One deliberate refinement: store it as a DynamoDB String Set, not a plain list.** The requirements note says "a list," but a plain JSON array written back with a full-item `PutItem` (the only write DdbUtils currently does — `addSingle`/`ddbPut` both wrap `PutItem`) has a read-modify-write race: two people claiming a delegation for the same driver close together, or a claim landing while staff happens to save an unrelated field on that driver, can silently drop one of the two changes. A DynamoDB String Set supports `ADD`/`DELETE` as atomic, idempotent operations at the attribute level — adding a hash that's already present is a no-op, two concurrent adds both survive, and it de-duplicates for free. This preserves everything the requirements note asked for (a saved set of hashes on the participant record, round-tripped through re-import) while closing a race the literal "list" phrasing would otherwise leave open. The hash value added to the set is `getHashFromEmail()`, same as everywhere else in the app — see the privacy section below for why a special-purpose hash isn't worth doing here.
+
+**Claim token moves off `DerbyMain` entirely**, into `ElapsedTemp`, following the `RpElapsed` pattern cited above:
+
+| Field | Value |
+|---|---|
+| Table | `process.env.ElapsedTempDbTable` |
+| PK | `${orgId}:DriverDelegationToken` |
+| SK | opaque random token |
+| Attributes | `number`, `expiresAt`, `TTL`, `byH` |
+
+`TTL` here is background hygiene only (see below), not the enforcement mechanism, and `ElapsedTemp`'s `stream_enabled = false` means writing and deleting this record never touches the stream/IoT-propagation path the requirements note is warning off — the same reason `RpElapsed` scratch data already lives there instead of in `DerbyMain`.
+
+## The delegation flow
+
+1. Staff member with `CAN_ADD_PARTICIPANT`, on `DriverAdd.svelte` in `Update` mode for a specific driver, clicks a new "Delegate walkup maintenance" action.
+2. Frontend calls `POST /app/createDriverDelegation { orgId, orgIz, number }`. Handler is gated `RoutePermission.CAN_ADD_PARTICIPANT` at the router level — exactly "delegator must have permission for `CAN_ADD_PARTICIPANT`," no new permission needed. It generates a token (`crypto.randomBytes(16).toString("base64url")` — `crypto` is already imported in `derbyMain.js:12`), writes the token record above with `expiresAt` 20 minutes out, and returns the token.
+3. Frontend renders a QR (`qrcode`, same call shape as `ProvisionWifi.svelte`) encoding `${origin}/#/driverDelegate/${orgId}/${token}`, plus the plain link as text/button for anyone who can't scan.
+4. Driver scans, lands on the new public route `driverDelegate/:orgId/:token`. Before requiring login, the screen calls a public `GET /app/getDriverDelegationToken?orgId=&token=` (`RoutePermission.PUBLIC`, a plain `ddbQueryPkSk` against `ElapsedTemp`) to show "Claim access to maintain driver #47's walkup track" or a clear "expired/already used" message, before asking anyone to log in.
+5. If not logged in, the screen sets `initialReloadRoute` to itself and sends the driver through the existing Cognito hosted-login redirect (same call `LoginH.svelte` already makes).
+6. Back on the claim screen, authenticated, the frontend calls `POST /app/claimDriverDelegation { orgId, token }`. The handler re-reads the token, rejects it if `Date.now() > expiresAt` or the record is gone, computes `emailHash` from the verified `principal.email`, `ADD`s that hash to the target `Participant`'s `maintainerHashes` set, and consumes the token — see below for why that consumption step needs a new primitive.
+7. Driver is redirected to `driverProfile`, the "my drivers" screen, scoped to the event they just claimed into.
+
+### Why `expiresAt` is checked explicitly, not left to DynamoDB TTL
+
+DynamoDB's TTL sweep isn't instantaneous — items can remain readable well after their TTL passes. A 20-minute claim window (confirmed below) enforced only by TTL could stay valid much longer than intended in practice. `TTL` on the token record stays as background cleanup; `claimDriverDelegation` always checks the explicit `expiresAt` field first, regardless of which table the token lives in.
+
+### Two new `DdbUtils` primitives, both small
+
+Neither of these existed before this feature, and both are needed regardless of the table-location fix above:
+
+- **`ddbConsumeSingleUse(pk, sk, tableName)`** — a `DeleteItemCommand` with `ConditionExpression: "attribute_exists(PK)"`. `DdbUtils.js` currently has no conditional write or true delete at all (`addSingle`/`addBulk` wrap plain `PutItem`; the codebase's only "delete" convention is the soft-delete-by-low-TTL pattern in `OrgUserAdd.svelte`'s `req.TTL = 999`). A delegation token is exactly the case where two near-simultaneous claims (a slow retry, a second tap) must not both succeed — the handler catches `ConditionalCheckFailedException` and reports "already claimed" to whichever request loses the race, instead of silently double-processing.
+- **`ddbUpdateStringSet(pk, sk, attributeName, value, { add })`** — an `UpdateItem` with `ADD maintainerHashes :h` (or `DELETE` for revocation), where `:h` is a one-element string set. This is what makes the `maintainerHashes` design above actually race-free instead of just described as one.
+
+## Backend endpoints
+
+| Path | Router permission | Extra handler-level check | Purpose |
+|---|---|---|---|
+| `POST /app/createDriverDelegation` | `CAN_ADD_PARTICIPANT` | — | Staff mints a delegation token for one driver number at the current event. |
+| `GET /app/getDriverDelegationToken` | `PUBLIC` | — | Unauthenticated preview so the claim screen can show what's being claimed, or a clear expiry message, before login. |
+| `POST /app/claimDriverDelegation` | `ANONYMOUS` | requires `principal.email` present (actually authenticated) | Consumes a valid token and `ADD`s the caller's hash to the target driver's `maintainerHashes`. |
+| `POST /app/updateDriverWalkup` | `ANONYMOUS` | reads the target `Participant`, checks `maintainerHashes.includes(hash)`; 401 if absent | Writes `wLink` only, via the normal `EntityFactory`/`addSingle` path — narrower than the existing staff `/addParticipant`, which stays the only way to change number, name, sponsor, etc. |
+| `POST /app/revokeDriverMaintainer` | `CAN_ADD_PARTICIPANT` | — | `DELETE`s a hash from a driver's `maintainerHashes` set (the same new primitive, used the other direction). |
+
+`ANONYMOUS` here means what it already means for `driverInfo`/`drivers` — the router still authenticates and resolves `principal.email` when a bearer token is present, it just skips the org-role gate. The real gate for the write/revoke endpoints is the driver-scoped check inside the handler.
+
+**No `listMyDriverDelegations` endpoint.** "Which driver numbers does this maintainer have?" doesn't need a round trip: `Participant` records (including `maintainerHashes`, once it's a member field) already sync to every client's local Dexie cache through the existing IoT/HTTP sync pipeline (`HotLoad.svelte`'s `applyHistToStore`/`parseAndApply`), the same way `DriverAdd.svelte` and `Walkup.svelte` already read driver data today. The "my drivers" screen computes `myHash = EntityFactory.getHashFromEmail($userEmail)` client-side (see the browser-`crypto` note above) and filters the already-local `db.Participant` table for `maintainerHashes.includes(myHash)` — a plain Dexie query, zero new backend surface, and it updates live if a grant or revoke arrives over the same sync path while the screen is open, for free.
+
+## Frontend surface
+
+| Route | Permission | Component | Notes |
+|---|---|---|---|
+| `driverDelegate/:orgId/:token` | `PUBLIC` | new `DriverDelegate.svelte` | Preview → login redirect (via `initialReloadRoute`) → claim → forward to `driverProfile`. |
+| `driverProfile` | `ANONYMOUS` | new `DriverProfileList.svelte` | No API call: computes `myHash` client-side and queries the local Dexie `db.Participant` table (already synced) for the currently selected event, filtering on `maintainerHashes.includes(myHash)`. If empty and logged out, prompts login; if empty and logged in, explains there's nothing delegated yet at this event. |
+| `driverProfile/:number` | `ANONYMOUS` | new `DriverProfile.svelte` | Text field for the Spotify link, live preview via the existing `SpotifyEmbedded.svelte` (already used this way in `DriverAdd.svelte`), save button hitting `updateDriverWalkup`. Client-side membership check is UX only — the server is the real gate. |
+
+On the staff side, `DriverAdd.svelte`'s `Update` mode gets a "Delegate walkup maintenance" section: a button that calls `createDriverDelegation` and renders the QR inline (same `QRCode.toString` call as `ProvisionWifi.svelte`), plus a small "N active maintainer(s)" indicator with a revoke control per grant. Since the record only ever holds a hash, staff can't see *which* email a given entry is — they can only revoke by count/grant time, not by recognizing an address. That's the direct, honest consequence of the no-plaintext-email requirement; worth confirming with whoever staffs registration that revoking "the most recent grant" or "all of them" is good enough, versus wanting a maintainer-supplied display name (not their email) captured at claim time purely for staff-side legibility.
+
+`RouteHelp` needs a public help file for each new component (`DriverDelegate.help.md`, `DriverProfileList.help.md`, `DriverProfile.help.md`) per `docs/FrontendRouteHelp.md`'s coverage requirement.
+
+## Implementation detail that's easy to miss: `EntityFactory.members`
+
+`cHelper()` (`shared/EntityFactory.js`) only copies fields listed in a class's `static members` array onto the built entity — anything else in the incoming JSON is silently dropped. `maintainerHashes` has to be added to `Participant.members` (`shared/EntityFactory.js:687`) for it to survive `entityFactory.build()` at all, including during bulk import. Concretely, this also means the JSON export/import path (`downloadDriverJson`/`fmtAndPostJson` in `DriverAdd.svelte`) preserves delegation across a re-import for free once that one array entry is added, because `downloadDriverJson` serializes `$driverMap` whole — every member field along for the ride, `maintainerHashes` included.
+
+**CSV should carry it too**, so a staff member who round-trips through a spreadsheet doesn't unknowingly wipe every driver's delegations on re-upload — bulk import is a full `PutItem` per record, so any field missing from the incoming row is simply gone from the record afterward, not merged. `csvXref`/`getCsvXrefAsMap` (`DriverAdd.svelte:151-169`) needs a `MaintainerHashes` ↔ `maintainerHashes` column added alongside the existing pairs. The one wrinkle: every other `csvXref` field is a scalar, and `maintainerHashes` is a set of hashes, so `downloadDriverCsv`'s row-building loop (`csvXref[1].forEach((fld) => row.push(drvr[fld]))`) and `fmtAndPostCsv`'s per-row assignment (`drvr[xmap[fldName]] = fldValue`) both need a small serialize/deserialize step for that one column specifically — join the set with `;` on export, split on `;` (dropping empties) on import. `csvStringify`/`csvParse` already run with `quoted: true`, so a semicolon-joined cell round-trips safely without touching the CSV dialect. Net effect: CSV export/import preserves `maintainerHashes` exactly like JSON does, and the requirements note's "preserved across re-import" applies uniformly regardless of which format staff re-upload.
+
+## Content risk worth flagging, not just plumbing
+
+Today, every value in `wLink` was chosen by someone with `CAN_ADD_PARTICIPANT` — effectively vetted before it can be auto-played over the venue's PA by `Walkup.svelte`/`SpotifyApi.svelte`. This feature hands that same write path to anyone a staff member scans a QR code for, a much larger and less vetted population. Two cheap mitigations worth a deliberate yes/no rather than skipping past: validate `wLink` is actually a `open.spotify.com/track/...` URL (or bare track ID, matching what `spotifyLookupTrack` already expects) before saving, and consider whether `updateDriverWalkup` should stage the change for staff review rather than writing `wLink` live, at least for the first event this ships at.
+
+## Privacy consequence of storing the hash set on `Participant`, worth naming plainly
+
+`Participant` records are already broadcast to every connected client through the same stream/IoT pipeline referenced above, and `driverInfo`/`drivers` are public routes — so `maintainerHashes` will reach every viewer's browser, spectators included, not just org staff. This is a direct, intended consequence of the requirements note (the grant has to live on the record that gets re-imported, and that record is already public), not a new design choice being smuggled in.
+
+**Correction to an earlier draft of this section:** `byH`/`UserDisplayName.byEmailHash` exist to keep plaintext email addresses out of the database and off spam-harvester radar, not to prevent a hash from being traced back to a person — that's why `getHashFromEmail()` is unsalted; defeating harvesting only requires avoiding plaintext storage, not resisting correlation. Reusing it for `maintainerHashes` fully satisfies that actual goal, exactly as the requirements note asks: no plaintext email is ever written. The correlation property I'd flagged in an earlier pass — the same hash for a given email shows up wherever that email has ever touched `byH` or `UserDisplayName` — is real, but it's a pre-existing characteristic of `getHashFromEmail()` that already applies today on every publicly-broadcast record carrying a `byH`, not something this feature introduces. Giving `maintainerHashes` its own purpose-specific hash wouldn't close that exposure either, since an observer could still correlate via `byH` itself — it would just add one more hash-derivation convention to maintain for a mitigation that doesn't reach the actual source. **Recommendation: reuse `getHashFromEmail()` as-is** (no special-casing) and ship the broadcast-to-everyone consequence as a deliberate yes; correlation-resistance is a question about `getHashFromEmail()` itself, app-wide, and out of scope for this feature.
+
+## Testing
+
+- Token claim succeeds once, fails on a second attempt against the same token (`ddbConsumeSingleUse`).
+- Claim is rejected once `expiresAt` has passed even if the token item is still physically present (explicit-expiry check, independent of TTL timing).
+- Concurrent claims for two different maintainer emails against the same driver both succeed and both end up in `maintainerHashes` (exercises the `ADD`-on-a-set primitive actually being race-free, not just described that way).
+- `updateDriverWalkup` is rejected for an authenticated email whose hash isn't in `maintainerHashes`, and for an unauthenticated caller.
+- Token records and `Participant.maintainerHashes` never contain a plaintext email — assert this on every write in these handlers.
+- A JSON export → re-import round-trip of a driver preserves `maintainerHashes`, and so does a CSV export → re-import (the new `MaintainerHashes` column, semicolon-joined).
+- A CSV row with an empty `MaintainerHashes` cell re-imports to no maintainers (not a parse error), and a set with one hash round-trips without a stray trailing `;`.
+- One maintainer email claiming two different driver numbers at the same event shows up in the Dexie-filtered `driverProfile` list for both, without any additional network request.
+- `driverProfile` reflects a new grant or a revoke as soon as the corresponding `Participant` update arrives over the existing sync path — no separate cache-invalidation logic to test, since it's the same reactivity every other screen reading `db.Participant` already relies on.
+- Frontend: `driverProfile`/`driverProfile/:number` reactively drop access if `revokeDriverMaintainer` runs mid-session, mirroring the reactive-role-change expectation `docs/FrontendRouteHelp.md` already requires elsewhere.
+
+## Decided
+
+- **Claim-token lifetime: 20 minutes.** Confirmed — long enough to cover a staff member walking a QR code over to a driver at check-in or reading it off a shared screen, short enough that a photographed/leaked code doesn't stay live for the rest of the event. This is the literal `expiresAt` window `createDriverDelegation` writes into the token record.
+
+## Open questions to confirm before implementation
+
+- Sign-off on the privacy recommendation above (reuse `getHashFromEmail()` as-is, ship the broadcast-to-everyone consequence as a deliberate yes).
+- Whether to gate `wLink` writes behind a lightweight staff review queue for the first event this ships at, per the content-risk note, or ship it live from day one.
+- Whether staff need more than "revoke by count/grant time" for a driver's maintainers, or whether that's an acceptable trade for never storing the address (see the `DriverAdd.svelte` note above).

@@ -5,7 +5,12 @@ const {
     BatchWriteItemCommand,
     QueryCommand,
 } = require("@aws-sdk/client-dynamodb");
-const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
+const {
+    DynamoDBDocumentClient,
+    PutCommand,
+    UpdateCommand,
+    DeleteCommand,
+} = require("@aws-sdk/lib-dynamodb");
 const { SendMessageCommand } = require("@aws-sdk/client-sqs");
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const skipDeleteFilter = "attribute_not_exists(del) ";
@@ -861,6 +866,80 @@ class DdbUtils {
         }
         return { error: "Invalid Request" };
     }
+    /**
+     * Deletes an item once, and only once. A `DeleteItemCommand` with
+     * `ConditionExpression: attribute_exists(PK)` -- the first caller to
+     * reach DynamoDB wins and gets `true`; anyone racing them (a slow retry,
+     * a second tap) hits `ConditionalCheckFailedException` and gets `false`,
+     * rather than both silently succeeding against an already-consumed item.
+     * Used to consume a one-time claim token exactly once.
+     *
+     * @param {string} pk
+     * @param {string} sk
+     * @param {string} [tableName]
+     * @returns {Promise<boolean>} true if this call consumed the item.
+     */
+    async ddbConsumeSingleUse(pk, sk, tableName = process.env.DynamoDbTable) {
+        try {
+            await this.ddocClient.send(
+                new DeleteCommand({
+                    TableName: tableName,
+                    Key: { PK: pk, SK: sk },
+                    ConditionExpression: "attribute_exists(PK)",
+                })
+            );
+            return true;
+        } catch (err) {
+            if (err.name === "ConditionalCheckFailedException") {
+                return false;
+            }
+            log.debug("ddbConsumeSingleUse failed: ", err, err.stack);
+            throw err;
+        }
+    }
+
+    /**
+     * Atomically adds to or removes from a DynamoDB String Set attribute via
+     * `ADD`/`DELETE`, instead of a read-modify-write `PutItem`. Two concurrent
+     * adds both survive (Sets de-duplicate for free); removing the last
+     * element leaves DynamoDB to drop the attribute entirely rather than
+     * writing an empty set (which DynamoDB rejects).
+     *
+     * @param {string} pk
+     * @param {string} sk
+     * @param {string} attributeName
+     * @param {string|string[]} value One or more values to add or remove.
+     * @param {{add?: boolean, tableName?: string}} [options] `add: false` removes instead.
+     */
+    async ddbUpdateStringSet(
+        pk,
+        sk,
+        attributeName,
+        value,
+        { add = true, tableName = process.env.DynamoDbTable } = {}
+    ) {
+        const values = (Array.isArray(value) ? value : [value]).filter(
+            Boolean
+        );
+        if (!values.length) {
+            return { status: "ok", detail: "No values to update" };
+        }
+        try {
+            await this.ddocClient.send(
+                new UpdateCommand({
+                    TableName: tableName,
+                    Key: { PK: pk, SK: sk },
+                    UpdateExpression: `${add ? "ADD" : "DELETE"} ${attributeName} :v`,
+                    ExpressionAttributeValues: { ":v": new Set(values) },
+                })
+            );
+            return { status: "ok" };
+        } catch (err) {
+            log.debug("ddbUpdateStringSet failed: ", err, err.stack);
+            throw err;
+        }
+    }
+
     async requestCC(qsp, ccType = "CCA") {
         qsp.ccType = ccType;
         var params = {
