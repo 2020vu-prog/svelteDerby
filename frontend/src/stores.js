@@ -223,8 +223,12 @@ axiosCommon.interceptors.response.use(
         if (response.data.error) {
             log.debug("AINT 200 with error:", response);
             if (response.data.error === "Unable to determine orgIz") {
-                log.debug("AINT current page is ", getSpaLocation());
-                if ("/orgSelection" !== getSpaLocation()) {
+                const spaLocation = getSpaLocation();
+                log.debug("AINT current page is ", spaLocation);
+                if (
+                    "/orgSelection" !== spaLocation &&
+                    !spaLocation.startsWith("/as/")
+                ) {
                     pushMessage({
                         text: "Please select event",
                         type: "error",
