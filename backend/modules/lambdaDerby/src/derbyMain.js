@@ -1077,6 +1077,24 @@ const addEventConfig = async (event) => {
 async function addParticipant2(json) {
     log.debug("addParticipant2: " + JSON.stringify(json));
     json.PK = ":PTCP"; // force Participant
+    if (json.maintainerHashes === undefined && json.number != null) {
+        // addSingle is a full-record PutItem -- there's no partial-attribute
+        // update for entity records, so any field missing from `json` is
+        // permanently erased from what's stored. Ordinary staff edits (the
+        // single-driver Update form) never carry maintainerHashes in their
+        // payload, so without this, saving a routine name/sponsor/notes
+        // change would silently wipe out every QR-code delegation grant on
+        // that driver. Preserve the existing value whenever the caller
+        // doesn't explicitly supply one, same read-modify-write convention
+        // DriverDelegationService uses for this same field.
+        const existing = await ddbUtils.ddbQueryPkSk(
+            `${json.orgId}:PTCP`,
+            String(json.number)
+        );
+        if (existing && existing.maintainerHashes) {
+            json.maintainerHashes = existing.maintainerHashes;
+        }
+    }
     const paTask = await newAnnounceResults().submitToPolly(
         "added driver: " + json.name,
         json.orgId
