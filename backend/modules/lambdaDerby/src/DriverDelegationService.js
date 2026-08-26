@@ -8,6 +8,34 @@ const DRIVER_DELEGATION_TOKEN_PK = (orgId) => `${orgId}:DriverDelegationToken`;
 const isAuthenticated = (context) =>
     Boolean(context.email && context.email !== "Anonymous");
 
+const SPOTIFY_TRACK_ID = "[A-Za-z0-9]{22}";
+const SPOTIFY_TRACK_URL_RE = new RegExp(
+    `^https://open\\.spotify\\.com/(?:intl-[a-z]{2}/)?track/${SPOTIFY_TRACK_ID}(?:[?/].*)?$`,
+    "i"
+);
+const SPOTIFY_TRACK_URI_RE = new RegExp(`^spotify:track:${SPOTIFY_TRACK_ID}$`);
+const SPOTIFY_TRACK_ID_RE = new RegExp(`^${SPOTIFY_TRACK_ID}$`);
+
+/**
+ * `wLink` feeds straight into an `<iframe src>` on Walkup.svelte's
+ * unattended announcer screen, and into every other client this
+ * `Participant` record syncs to. Staff (`CAN_ADD_PARTICIPANT`, via
+ * `/addParticipant`) are an already-vetted population and stay
+ * unrestricted, but `updateDriverWalkup` hands this same write path to
+ * anyone a staff member has scanned a QR code for -- a much larger, less
+ * vetted population -- so a value written through *that* endpoint has to
+ * actually resolve to a Spotify track, not just be any string.
+ */
+const isValidWalkupLink = (value) => {
+    if (!value) return true; // clearing the walkup track is always allowed
+    const trimmed = String(value).trim();
+    return (
+        SPOTIFY_TRACK_ID_RE.test(trimmed) ||
+        SPOTIFY_TRACK_URI_RE.test(trimmed) ||
+        SPOTIFY_TRACK_URL_RE.test(trimmed)
+    );
+};
+
 /**
  * Backs the QR-code walkup-track delegation flow: staff (CAN_ADD_PARTICIPANT)
  * mints a short-lived, single-use claim token for one driver number; the
@@ -211,6 +239,12 @@ class DriverDelegationService {
         if (!participant || !maintainerHashes.includes(hash)) {
             return { error: "unauthorized", statusCode: 401 };
         }
+        if (!isValidWalkupLink(json.wLink)) {
+            return {
+                error: "wLink must be a Spotify track link or ID",
+                statusCode: 400,
+            };
+        }
         // Full-record write, matching the existing addParticipant/addSingle
         // convention: there's no partial-attribute update for entity records, so
         // every field the driver already has has to ride along, or PutItem would
@@ -223,7 +257,7 @@ class DriverDelegationService {
             ...participant,
             PK: ":PTCP",
             orgId: context.orgId,
-            wLink: json.wLink,
+            wLink: json.wLink ? String(json.wLink).trim() : json.wLink,
         });
     }
 
