@@ -103,8 +103,8 @@ class DriverDelegationService {
     }
 
     async createDelegation(json, context) {
-        const number = json.number != null ? String(json.number) : "";
-        if (!number) {
+        const carNumber = json.number != null ? String(json.number) : "";
+        if (!carNumber) {
             return { error: "Missing number", statusCode: 400 };
         }
         const token = crypto.randomBytes(16).toString("base64url");
@@ -112,7 +112,7 @@ class DriverDelegationService {
         const record = {
             PK: DRIVER_DELEGATION_TOKEN_PK(context.orgId),
             SK: token,
-            number,
+            number: carNumber,
             expiresAt,
             // Background hygiene only -- claim() always checks expiresAt
             // explicitly, since DynamoDB's TTL sweep isn't instant.
@@ -130,7 +130,7 @@ class DriverDelegationService {
         if (status !== "OK") {
             return { error: "Unable to create delegation", statusCode: 500 };
         }
-        return { status: "ok", token, expiresAt, number };
+        return { status: "ok", token, expiresAt, number: carNumber };
     }
 
     async claim(json, context) {
@@ -161,9 +161,10 @@ class DriverDelegationService {
             // Lost a race against another claim (or a retry) of the same token.
             return { error: "Token already claimed", statusCode: 409 };
         }
+        const carNumber = record.number;
         const participant = await this.ddbUtils.ddbQueryPkSk(
             `${context.orgId}:PTCP`,
-            record.number
+            carNumber
         );
         if (!participant) {
             return { error: "Driver not found", statusCode: 404 };
@@ -186,20 +187,20 @@ class DriverDelegationService {
             orgId: context.orgId,
             maintainerHashes,
         });
-        return { status: "ok", number: record.number };
+        return { status: "ok", number: carNumber };
     }
 
     async updateWalkup(json, context) {
         if (!isAuthenticated(context)) {
             return { error: "unauthorized", statusCode: 401 };
         }
-        const number = json.number != null ? String(json.number) : "";
-        if (!number) {
+        const carNumber = json.number != null ? String(json.number) : "";
+        if (!carNumber) {
             return { error: "Missing number", statusCode: 400 };
         }
         const participant = await this.ddbUtils.ddbQueryPkSk(
             `${context.orgId}:PTCP`,
-            number
+            carNumber
         );
         const hash = requestContext
             .getEntityFactory()
@@ -227,13 +228,13 @@ class DriverDelegationService {
     }
 
     async revokeMaintainer(json, context) {
-        const number = json.number != null ? String(json.number) : "";
-        if (!number || !json.hash) {
+        const carNumber = json.number != null ? String(json.number) : "";
+        if (!carNumber || !json.hash) {
             return { error: "Missing number or hash", statusCode: 400 };
         }
         const participant = await this.ddbUtils.ddbQueryPkSk(
             `${context.orgId}:PTCP`,
-            number
+            carNumber
         );
         if (!participant) {
             return { error: "Driver not found", statusCode: 404 };
