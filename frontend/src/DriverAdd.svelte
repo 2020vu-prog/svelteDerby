@@ -18,6 +18,7 @@
     import { stringify as csvStringify } from "csv-stringify/sync";
     import { parse as csvParse } from "csv-parse/sync";
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
+    import QRCode from "qrcode";
 
     import Icon from "fa-svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -32,6 +33,13 @@
     const canManageDriverJson = createPermissionStore(RoutePermission.POWER);
     let doPlay = false;
 
+    let delegateSpinning = false;
+    let delegateQrSvg = "";
+    let delegateLink = "";
+    let delegateExpiresAt = 0;
+    let maintainerHashes = [];
+    let revokeSpinningHash = "";
+
     onMount(async () => {
         log.debug("mounted focus: ", params);
 
@@ -39,8 +47,70 @@
         document.getElementById("carNumber").focus();
         mounted = true;
         await refreshDataFromDb();
+        if (mode === "Update") {
+            await refreshMaintainers();
+        }
         syncAddButton();
     });
+
+    async function delegateWalkup() {
+        delegateSpinning = true;
+        try {
+            const response = await $axios.post(
+                $raceConfig.baseUrl + "/createDriverDelegation",
+                {
+                    orgId: $raceConfig.orgId,
+                    orgIz: $raceConfig.orgIz,
+                    number: driverForm.carNumber,
+                }
+            );
+            const { token, expiresAt } = response.data;
+            delegateExpiresAt = expiresAt;
+            delegateLink = `${window.location.origin}/#/driverDelegate/${$raceConfig.orgIz}/${$raceConfig.orgId}/${token}`;
+            delegateQrSvg = await QRCode.toString(delegateLink, {
+                type: "svg",
+            });
+        } catch (err) {
+            log.debug("delegateWalkup failed: " + err);
+            pushMessage({
+                text: "Unable to create delegation link.",
+                type: "error",
+            });
+        } finally {
+            delegateSpinning = false;
+        }
+    }
+
+    async function refreshMaintainers() {
+        const ptcpFromDexie = await db.Participant.get(
+            params.number.toString()
+        );
+        maintainerHashes = ptcpFromDexie
+            ? ptcpFromDexie.maintainerHashes || []
+            : [];
+    }
+
+    async function revokeMaintainer(hash) {
+        revokeSpinningHash = hash;
+        try {
+            await $axios.post($raceConfig.baseUrl + "/revokeDriverMaintainer", {
+                orgId: $raceConfig.orgId,
+                orgIz: $raceConfig.orgIz,
+                number: driverForm.carNumber,
+                hash,
+            });
+            pushMessage({ text: "Maintainer revoked.", type: "success" });
+            await refreshMaintainers();
+        } catch (err) {
+            log.debug("revokeMaintainer failed: " + err);
+            pushMessage({
+                text: "Unable to revoke maintainer.",
+                type: "error",
+            });
+        } finally {
+            revokeSpinningHash = "";
+        }
+    }
     const onFileSelected = (e) => {
         //postDrivers(e.target.files[0])
         let jsonFile = e.target.files[0];
@@ -89,7 +159,14 @@
                 PK: "Test.4b117:PTCP",
             };
             for (const [fldName, fldValue] of Object.entries(crec)) {
-                drvr[xmap[fldName]] = fldValue;
+                const targetField = xmap[fldName];
+                if (targetField === MAINTAINER_HASHES_FIELD) {
+                    drvr[targetField] = fldValue
+                        ? fldValue.split(";").filter(Boolean)
+                        : [];
+                } else {
+                    drvr[targetField] = fldValue;
+                }
             }
             if (drvr.name && drvr.number) {
                 jrecList.push(drvr);
@@ -157,9 +234,23 @@
             "PhoneticType",
             "PhoneticName",
             "WalkupLink",
+            "MaintainerHashes",
         ],
-        ["number", "name", "spon", "notes", "pType", "pName", "wLink"],
+        [
+            "number",
+            "name",
+            "spon",
+            "notes",
+            "pType",
+            "pName",
+            "wLink",
+            "maintainerHashes",
+        ],
     ];
+    // The only non-scalar csvXref field: a semicolon-joined cell instead of
+    // a plain column value. csvStringify/csvParse both run with
+    // `quoted: true`, so an embedded ";" round-trips fine either way.
+    const MAINTAINER_HASHES_FIELD = "maintainerHashes";
     function getCsvXrefAsMap() {
         const rc = {};
         csvXref[0].forEach((literal, idx) => {
@@ -181,7 +272,13 @@
         mapToArray.forEach((drvr) => {
             console.log(JSON.stringify(drvr));
             const row = [];
-            csvXref[1].forEach((fld) => row.push(drvr[fld]));
+            csvXref[1].forEach((fld) => {
+                if (fld === MAINTAINER_HASHES_FIELD) {
+                    row.push(Array.from(drvr[fld] || []).join(";"));
+                } else {
+                    row.push(drvr[fld]);
+                }
+            });
 
             //rows.push([drvr.number,drvr.name,drvr.spon,drvr.notes])
             rows.push(row);
@@ -452,6 +549,34 @@
         {#key driverForm.walkupLink}
             <SpotifyEmbedded autoPlay="false" href={driverForm.walkupLink} />
         {/key}
+    {/if}
+    {#if mode === "Update"}
+        <br />
+        <br />
+        <h4>Delegate Walkup Maintenance</h4>
+        <SpinnerButton on:click={delegateWalkup} spinning={delegateSpinning}>
+            Generate QR Code
+        </SpinnerButton>
+        {#if delegateLink}
+            <p>
+                Valid until {new Date(delegateExpiresAt).toLocaleTimeString()}.
+                <br />
+                <a href={delegateLink}>{delegateLink}</a>
+            </p>
+            {@html delegateQrSvg}
+        {/if}
+        <p>{maintainerHashes.length} active maintainer(s)</p>
+        {#each maintainerHashes as hash}
+            <div>
+                {hash}
+                <SpinnerButton
+                    spinning={revokeSpinningHash === hash}
+                    on:click={() => revokeMaintainer(hash)}
+                >
+                    Revoke
+                </SpinnerButton>
+            </div>
+        {/each}
     {/if}
     {#if $canManageDriverJson}
         <br />

@@ -692,6 +692,7 @@ entityFactories["Participant"] = class Participant extends EntityBase {
         "spon",
         "notes",
         "wLink",
+        "maintainerHashes",
     ];
     static eid = ":PTCP";
     static canBuild(json) {
@@ -705,6 +706,18 @@ entityFactories["Participant"] = class Participant extends EntityBase {
         super.preWrite();
         this.PK = this.orgId + ParticipantEid;
         this.SK = this.number + "";
+        // Plain string list, not a DynamoDB Set: simpler to read/write/
+        // reason about (a List marshals from and to an ordinary JS array,
+        // no Set-specific serialization pitfalls) at the cost of losing
+        // the atomic ADD/DELETE update the Set type allowed -- claim/revoke
+        // do a read-modify-write instead, same as every other field on this
+        // record. Deduped so a maintainer can't accumulate the same hash
+        // twice across retries.
+        if (this.maintainerHashes !== undefined) {
+            this.maintainerHashes = [
+                ...new Set([...(this.maintainerHashes || [])].filter(Boolean)),
+            ];
+        }
     }
     get classType() {
         return "Participant";

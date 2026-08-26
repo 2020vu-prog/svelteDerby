@@ -60,6 +60,7 @@ const DiscordUtils = require("./DiscordUtils");
 const AnnounceResults = require("./AnnounceResults");
 const ApiRaceStanding = require("./ApiRaceStanding");
 const LogUtils = require("./LogUtils");
+const DriverDelegationService = require("./DriverDelegationService");
 const { getShaCars, getSourceName } = require("./utils");
 const { getAllKeys } = require("./S3Utils");
 const requestContext = require("./RequestContext");
@@ -68,6 +69,7 @@ const ddbUtils = new DdbUtils(ddbClient, sqsClient);
 const archiveUtils = new ArchiveUtils(ddbUtils);
 const discordUtils = new DiscordUtils(ddbUtils);
 const logUtils = new LogUtils(ddbUtils);
+const driverDelegationService = new DriverDelegationService(ddbUtils);
 
 function newAnnounceResults() {
     return new AnnounceResults(ddbUtils);
@@ -1075,12 +1077,31 @@ const addEventConfig = async (event) => {
 async function addParticipant2(json) {
     log.debug("addParticipant2: " + JSON.stringify(json));
     json.PK = ":PTCP"; // force Participant
+    if (json.maintainerHashes === undefined && json.number != null) {
+        // addSingle is a full-record PutItem -- there's no partial-attribute
+        // update for entity records, so any field missing from `json` is
+        // permanently erased from what's stored. Ordinary staff edits (the
+        // single-driver Update form) never carry maintainerHashes in their
+        // payload, so without this, saving a routine name/sponsor/notes
+        // change would silently wipe out every QR-code delegation grant on
+        // that driver. Preserve the existing value whenever the caller
+        // doesn't explicitly supply one, same read-modify-write convention
+        // DriverDelegationService uses for this same field.
+        const existing = await ddbUtils.ddbQueryPkSk(
+            `${json.orgId}:PTCP`,
+            String(json.number)
+        );
+        if (existing && existing.maintainerHashes) {
+            json.maintainerHashes = existing.maintainerHashes;
+        }
+    }
     const paTask = await newAnnounceResults().submitToPolly(
         "added driver: " + json.name,
         json.orgId
     );
     return await ddbUtils.addSingle(json);
 }
+
 const getOrgId = (event) => {
     if (event.body) {
         return JSON.parse(event.body).orgId;
@@ -1734,7 +1755,10 @@ function createApiRouter() {
         log,
     })
         .use(registerPublicRoutes)
-        .use(registerCoreRoutes);
+        .use(registerCoreRoutes)
+        .use((router) =>
+            driverDelegationService.registerRoutes(router, { buildResponse })
+        );
 }
 
 const apiRouter = createApiRouter();

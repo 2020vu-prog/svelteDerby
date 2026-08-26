@@ -159,6 +159,25 @@ const routeDefinitions = [
         permission: RoutePermission.ANONYMOUS,
     },
     {
+        id: "driverDelegate",
+        path: "/driverDelegate/:orgIz/:orgId/:token",
+        component: "DriverDelegate",
+        permission: RoutePermission.PUBLIC,
+    },
+    {
+        id: "driverProfile",
+        path: "/driverProfile",
+        component: "DriverProfileList",
+        permission: RoutePermission.ANONYMOUS,
+        menu: generalMenu("My Drivers", 65, { requiresEvent: true }),
+    },
+    {
+        id: "driverProfileEdit",
+        path: "/driverProfile/:number",
+        component: "DriverProfile",
+        permission: RoutePermission.ANONYMOUS,
+    },
+    {
         id: "downloadCsv",
         path: "/downloadCsv",
         component: "DownloadCsv",

@@ -141,6 +141,13 @@
     const requestClearStore = () => {
         $doRefreshBlocks = -1;
     };
+    // Optional continuation target (e.g. `/as/:orgIz/:orgId?then=/driverProfile/123`)
+    // used by flows -- like claiming a driver delegation -- that need this
+    // client's selected event switched before landing somewhere other than
+    // the default race list.
+    const getThenTarget = () => {
+        return new URLSearchParams($querystring).get("then") || "/RpList";
+    };
     const doSelect = async (config) => {
         log.debug("selected:", config);
         if (
@@ -150,7 +157,7 @@
             pushMessage({
                 text: `Event already active.`,
             });
-            replace("/RpList");
+            replace(getThenTarget());
             return;
         }
 
@@ -178,7 +185,7 @@
 
         $clearOldStatusMessages = true;
 
-        replace("/RpList");
+        replace(getThenTarget());
     }
     const getRaceName = (config) => {
         return config.name ? config.name : config.orgId;
