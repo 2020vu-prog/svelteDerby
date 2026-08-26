@@ -1284,50 +1284,6 @@ const routeMap = {
             return buildResponse(await addParticipant2(JSON.parse(event.body)));
         },
     },
-    "/createDriverDelegation": {
-        permission: RoutePermission.CAN_ADD_PARTICIPANT,
-        h: async (event, apiProps) => {
-            return buildResponse(
-                await driverDelegationService.createDelegation(
-                    JSON.parse(event.body),
-                    apiProps
-                )
-            );
-        },
-    },
-    "/claimDriverDelegation": {
-        permission: RoutePermission.ANONYMOUS,
-        h: async (event, apiProps) => {
-            return buildResponse(
-                await driverDelegationService.claim(
-                    JSON.parse(event.body),
-                    apiProps
-                )
-            );
-        },
-    },
-    "/updateDriverWalkup": {
-        permission: RoutePermission.ANONYMOUS,
-        h: async (event, apiProps) => {
-            return buildResponse(
-                await driverDelegationService.updateWalkup(
-                    JSON.parse(event.body),
-                    apiProps
-                )
-            );
-        },
-    },
-    "/revokeDriverMaintainer": {
-        permission: RoutePermission.CAN_ADD_PARTICIPANT,
-        h: async (event, apiProps) => {
-            return buildResponse(
-                await driverDelegationService.revokeMaintainer(
-                    JSON.parse(event.body),
-                    apiProps
-                )
-            );
-        },
-    },
     "/addPending": {
         permission: RoutePermission.CAN_ADD_PENDING,
         h: async (event) => {
@@ -1717,16 +1673,6 @@ function registerPublicRoutes(router) {
         handler: async () =>
             buildResponse(await getDerbyMainVersionInfo(), "max-age=120"),
     });
-    router.register("/getDriverDelegationToken", {
-        permission: RoutePermission.PUBLIC,
-        loadContext: false,
-        handler: async (event) => {
-            const qs = event.queryStringParameters || {};
-            return buildResponse(
-                await driverDelegationService.previewToken(qs)
-            );
-        },
-    });
 }
 
 function registerCoreRoutes(router) {
@@ -1791,7 +1737,10 @@ function createApiRouter() {
         log,
     })
         .use(registerPublicRoutes)
-        .use(registerCoreRoutes);
+        .use(registerCoreRoutes)
+        .use((router) =>
+            driverDelegationService.registerRoutes(router, { buildResponse })
+        );
 }
 
 const apiRouter = createApiRouter();

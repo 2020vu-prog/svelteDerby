@@ -1,6 +1,7 @@
 "use strict";
 const crypto = require("crypto");
 const requestContext = require("./RequestContext");
+const RoutePermission = require("./shared/RoutePermission.js");
 
 const DRIVER_DELEGATION_TOKEN_LIFETIME_MS = 20 * 60 * 1000;
 const DRIVER_DELEGATION_TOKEN_PK = (orgId) => `${orgId}:DriverDelegationToken`;
@@ -19,6 +20,65 @@ class DriverDelegationService {
 
     constructor(ddbUtils) {
         this.ddbUtils = ddbUtils;
+    }
+
+    /**
+     * Installs this service's routes onto an ApiRouter -- an ApiRouter
+     * "plugin" per its own `.use(plugin)` convention (see ApiRouter.js),
+     * the same mechanism `registerPublicRoutes`/`registerCoreRoutes` in
+     * derbyMain.js already use. Keeps route ownership (paths, permissions,
+     * body parsing) colocated with the logic that implements them, instead
+     * of derbyMain.js re-declaring a thin wrapper per method.
+     *
+     * @param {import("./ApiRouter.js")} router
+     * @param {{buildResponse: function}} deps `buildResponse` is
+     * constructed in derbyMain.js (it needs module version/build info that
+     * lives there), so it's passed in rather than duplicated here.
+     */
+    registerRoutes(router, { buildResponse }) {
+        router.register("/createDriverDelegation", {
+            permission: RoutePermission.CAN_ADD_PARTICIPANT,
+            handler: async (event, apiProps) =>
+                buildResponse(
+                    await this.createDelegation(
+                        JSON.parse(event.body),
+                        apiProps
+                    )
+                ),
+        });
+        router.register("/claimDriverDelegation", {
+            permission: RoutePermission.ANONYMOUS,
+            handler: async (event, apiProps) =>
+                buildResponse(
+                    await this.claim(JSON.parse(event.body), apiProps)
+                ),
+        });
+        router.register("/updateDriverWalkup", {
+            permission: RoutePermission.ANONYMOUS,
+            handler: async (event, apiProps) =>
+                buildResponse(
+                    await this.updateWalkup(JSON.parse(event.body), apiProps)
+                ),
+        });
+        router.register("/revokeDriverMaintainer", {
+            permission: RoutePermission.CAN_ADD_PARTICIPANT,
+            handler: async (event, apiProps) =>
+                buildResponse(
+                    await this.revokeMaintainer(
+                        JSON.parse(event.body),
+                        apiProps
+                    )
+                ),
+        });
+        router.register("/getDriverDelegationToken", {
+            permission: RoutePermission.PUBLIC,
+            loadContext: false,
+            handler: async (event) =>
+                buildResponse(
+                    await this.previewToken(event.queryStringParameters || {})
+                ),
+        });
+        return router;
     }
 
     /**
