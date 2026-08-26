@@ -101,16 +101,31 @@ class DriverDelegationService {
             // Lost a race against another claim (or a retry) of the same token.
             return { error: "Token already claimed", statusCode: 409 };
         }
+        const participant = await this.ddbUtils.ddbQueryPkSk(
+            `${context.orgId}:PTCP`,
+            record.number
+        );
+        if (!participant) {
+            return { error: "Driver not found", statusCode: 404 };
+        }
         const hash = requestContext
             .getEntityFactory()
             .getHashFromEmail(context.email);
-        await this.ddbUtils.ddbUpdateStringSet(
-            `${context.orgId}:PTCP`,
-            record.number,
-            "maintainerHashes",
-            hash,
-            { add: true }
-        );
+        const maintainerHashes = Array.from(participant.maintainerHashes || []);
+        if (!maintainerHashes.includes(hash)) {
+            maintainerHashes.push(hash);
+        }
+        // Full-record write, same convention as updateWalkup below: no
+        // partial-attribute update exists for entity records. Accepted,
+        // narrow race: this read-modify-write can lose against another
+        // claim or a staff revoke landing on the same driver at the same
+        // instant, same as any other field on this record already can.
+        await this.ddbUtils.addSingle({
+            ...participant,
+            PK: ":PTCP",
+            orgId: context.orgId,
+            maintainerHashes,
+        });
         return { status: "ok", number: record.number };
     }
 
@@ -156,13 +171,25 @@ class DriverDelegationService {
         if (!number || !json.hash) {
             return { error: "Missing number or hash", statusCode: 400 };
         }
-        return await this.ddbUtils.ddbUpdateStringSet(
+        const participant = await this.ddbUtils.ddbQueryPkSk(
             `${context.orgId}:PTCP`,
-            number,
-            "maintainerHashes",
-            json.hash,
-            { add: false }
+            number
         );
+        if (!participant) {
+            return { error: "Driver not found", statusCode: 404 };
+        }
+        const maintainerHashes = Array.from(
+            participant.maintainerHashes || []
+        ).filter((h) => h !== json.hash);
+        // Same read-modify-write tradeoff as claim() above: a claim landing
+        // on this same driver at the same instant can lose this revoke, or
+        // vice versa.
+        return await this.ddbUtils.addSingle({
+            ...participant,
+            PK: ":PTCP",
+            orgId: context.orgId,
+            maintainerHashes,
+        });
     }
 }
 module.exports = DriverDelegationService;

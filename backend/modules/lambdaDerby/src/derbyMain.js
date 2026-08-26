@@ -1632,15 +1632,6 @@ const routeMap = {
     },
 };
 
-// EntityFactory-built entities can carry DynamoDB String Set attributes
-// (e.g. Participant.maintainerHashes) as native JS Sets once unmarshalled.
-// JSON.stringify silently drops a Set to "{}" with no replacer -- this keeps
-// every response (and the IoT-propagated stream payload in lambdaDynamo,
-// which needs the same fix) actually carrying that data to clients.
-function replaceSetsForJson(key, value) {
-    return value instanceof Set ? Array.from(value) : value;
-}
-
 function buildResponse(jsonObj, cacheControl = "no-cache") {
     if (!jsonObj) {
         jsonObj = {};
@@ -1653,7 +1644,7 @@ function buildResponse(jsonObj, cacheControl = "no-cache") {
             "x-client-minimum": clientMinimumVersion,
             "x-derby-main-version": derbyMainVersion,
         },
-        body: JSON.stringify(jsonObj, replaceSetsForJson),
+        body: JSON.stringify(jsonObj),
     };
 }
 

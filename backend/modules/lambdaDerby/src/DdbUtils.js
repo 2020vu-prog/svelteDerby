@@ -8,7 +8,6 @@ const {
 const {
     DynamoDBDocumentClient,
     PutCommand,
-    UpdateCommand,
     DeleteCommand,
 } = require("@aws-sdk/lib-dynamodb");
 const { SendMessageCommand } = require("@aws-sdk/client-sqs");
@@ -894,46 +893,6 @@ class DdbUtils {
                 return false;
             }
             log.debug("ddbConsumeSingleUse failed: ", err, err.stack);
-            throw err;
-        }
-    }
-
-    /**
-     * Atomically adds to or removes from a DynamoDB String Set attribute via
-     * `ADD`/`DELETE`, instead of a read-modify-write `PutItem`. Two concurrent
-     * adds both survive (Sets de-duplicate for free); removing the last
-     * element leaves DynamoDB to drop the attribute entirely rather than
-     * writing an empty set (which DynamoDB rejects).
-     *
-     * @param {string} pk
-     * @param {string} sk
-     * @param {string} attributeName
-     * @param {string|string[]} value One or more values to add or remove.
-     * @param {{add?: boolean, tableName?: string}} [options] `add: false` removes instead.
-     */
-    async ddbUpdateStringSet(
-        pk,
-        sk,
-        attributeName,
-        value,
-        { add = true, tableName = process.env.DynamoDbTable } = {}
-    ) {
-        const values = (Array.isArray(value) ? value : [value]).filter(Boolean);
-        if (!values.length) {
-            return { status: "ok", detail: "No values to update" };
-        }
-        try {
-            await this.ddocClient.send(
-                new UpdateCommand({
-                    TableName: tableName,
-                    Key: { PK: pk, SK: sk },
-                    UpdateExpression: `${add ? "ADD" : "DELETE"} ${attributeName} :v`,
-                    ExpressionAttributeValues: { ":v": new Set(values) },
-                })
-            );
-            return { status: "ok" };
-        } catch (err) {
-            log.debug("ddbUpdateStringSet failed: ", err, err.stack);
             throw err;
         }
     }

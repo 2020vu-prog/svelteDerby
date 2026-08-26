@@ -14,7 +14,7 @@
         : "";
     $: myDrivers = myHash
         ? Object.values($driverMap).filter((ptcp) =>
-              Array.from(ptcp.maintainerHashes || []).includes(myHash)
+              (ptcp.maintainerHashes || []).includes(myHash)
           )
         : [];
 </script>

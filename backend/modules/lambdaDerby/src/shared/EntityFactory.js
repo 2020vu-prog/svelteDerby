@@ -706,21 +706,17 @@ entityFactories["Participant"] = class Participant extends EntityBase {
         super.preWrite();
         this.PK = this.orgId + ParticipantEid;
         this.SK = this.number + "";
-        // Normalize to a native Set so this always marshals as a DynamoDB
-        // String Set (matching what the atomic ADD/DELETE claim/revoke path
-        // writes), whether this came from a full-record JSON/CSV re-import
-        // (plain array) or a re-read/re-saved record (already a Set). A
-        // DynamoDB String Set can't be empty, so drop the attribute entirely
-        // rather than writing `SS: []`, which DynamoDB rejects.
+        // Plain string list, not a DynamoDB Set: simpler to read/write/
+        // reason about (a List marshals from and to an ordinary JS array,
+        // no Set-specific serialization pitfalls) at the cost of losing
+        // the atomic ADD/DELETE update the Set type allowed -- claim/revoke
+        // do a read-modify-write instead, same as every other field on this
+        // record. Deduped so a maintainer can't accumulate the same hash
+        // twice across retries.
         if (this.maintainerHashes !== undefined) {
-            const hashes = new Set(
-                [...(this.maintainerHashes || [])].filter(Boolean)
-            );
-            if (hashes.size) {
-                this.maintainerHashes = hashes;
-            } else {
-                delete this.maintainerHashes;
-            }
+            this.maintainerHashes = [
+                ...new Set([...(this.maintainerHashes || [])].filter(Boolean)),
+            ];
         }
     }
     get classType() {

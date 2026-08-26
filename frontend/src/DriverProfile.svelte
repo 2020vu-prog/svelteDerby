@@ -27,8 +27,7 @@
     $: myHash = $userEmail
         ? new EntityFactory({}).getHashFromEmail($userEmail)
         : "";
-    $: isMaintainer =
-        ptcp && Array.from(ptcp.maintainerHashes || []).includes(myHash);
+    $: isMaintainer = ptcp && (ptcp.maintainerHashes || []).includes(myHash);
 
     async function save() {
         saveSpinning = true;

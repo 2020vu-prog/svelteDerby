@@ -86,7 +86,7 @@
             params.number.toString()
         );
         maintainerHashes = ptcpFromDexie
-            ? Array.from(ptcpFromDexie.maintainerHashes || [])
+            ? ptcpFromDexie.maintainerHashes || []
             : [];
     }
 
