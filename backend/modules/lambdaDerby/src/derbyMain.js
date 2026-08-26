@@ -60,6 +60,7 @@ const DiscordUtils = require("./DiscordUtils");
 const AnnounceResults = require("./AnnounceResults");
 const ApiRaceStanding = require("./ApiRaceStanding");
 const LogUtils = require("./LogUtils");
+const DriverDelegationService = require("./DriverDelegationService");
 const { getShaCars, getSourceName } = require("./utils");
 const { getAllKeys } = require("./S3Utils");
 const requestContext = require("./RequestContext");
@@ -68,6 +69,7 @@ const ddbUtils = new DdbUtils(ddbClient, sqsClient);
 const archiveUtils = new ArchiveUtils(ddbUtils);
 const discordUtils = new DiscordUtils(ddbUtils);
 const logUtils = new LogUtils(ddbUtils);
+const driverDelegationService = new DriverDelegationService(ddbUtils);
 
 function newAnnounceResults() {
     return new AnnounceResults(ddbUtils);
@@ -1082,126 +1084,6 @@ async function addParticipant2(json) {
     return await ddbUtils.addSingle(json);
 }
 
-const DRIVER_DELEGATION_TOKEN_LIFETIME_MS = 20 * 60 * 1000;
-const DRIVER_DELEGATION_TOKEN_PK = (orgId) => `${orgId}:DriverDelegationToken`;
-const isAuthenticated = (context) =>
-    Boolean(context.email && context.email !== "Anonymous");
-
-async function createDriverDelegation(json, context) {
-    const number = json.number != null ? String(json.number) : "";
-    if (!number) {
-        return { error: "Missing number", statusCode: 400 };
-    }
-    const token = crypto.randomBytes(16).toString("base64url");
-    const expiresAt = Date.now() + DRIVER_DELEGATION_TOKEN_LIFETIME_MS;
-    const record = {
-        PK: DRIVER_DELEGATION_TOKEN_PK(context.orgId),
-        SK: token,
-        number,
-        expiresAt,
-        // Background hygiene only -- claimDriverDelegation always checks
-        // expiresAt explicitly, since DynamoDB's TTL sweep isn't instant.
-        TTL:
-            Math.floor(expiresAt / 1000) +
-            Math.floor(DRIVER_DELEGATION_TOKEN_LIFETIME_MS / 1000),
-        byH: requestContext.getEntityFactory().getHashFromEmail(context.email),
-    };
-    const status = await ddbUtils.ddbPut(
-        record,
-        process.env.ElapsedTempDbTable
-    );
-    if (status !== "OK") {
-        return { error: "Unable to create delegation", statusCode: 500 };
-    }
-    return { status: "ok", token, expiresAt, number };
-}
-
-async function claimDriverDelegation(json, context) {
-    if (!isAuthenticated(context)) {
-        return { error: "unauthorized", statusCode: 401 };
-    }
-    const tokenPk = DRIVER_DELEGATION_TOKEN_PK(context.orgId);
-    const record = await ddbUtils.ddbQueryPkSk(
-        tokenPk,
-        json.token,
-        process.env.ElapsedTempDbTable
-    );
-    if (!record) {
-        return { error: "Token not found or already used", statusCode: 410 };
-    }
-    if (Date.now() > record.expiresAt) {
-        return { error: "Token expired", statusCode: 410 };
-    }
-    const consumed = await ddbUtils.ddbConsumeSingleUse(
-        tokenPk,
-        json.token,
-        process.env.ElapsedTempDbTable
-    );
-    if (!consumed) {
-        // Lost a race against another claim (or a retry) of the same token.
-        return { error: "Token already claimed", statusCode: 409 };
-    }
-    const hash = requestContext
-        .getEntityFactory()
-        .getHashFromEmail(context.email);
-    await ddbUtils.ddbUpdateStringSet(
-        `${context.orgId}:PTCP`,
-        record.number,
-        "maintainerHashes",
-        hash,
-        { add: true }
-    );
-    return { status: "ok", number: record.number };
-}
-
-async function updateDriverWalkup(json, context) {
-    if (!isAuthenticated(context)) {
-        return { error: "unauthorized", statusCode: 401 };
-    }
-    const number = json.number != null ? String(json.number) : "";
-    if (!number) {
-        return { error: "Missing number", statusCode: 400 };
-    }
-    const participant = await ddbUtils.ddbQueryPkSk(
-        `${context.orgId}:PTCP`,
-        number
-    );
-    const hash = requestContext
-        .getEntityFactory()
-        .getHashFromEmail(context.email);
-    const maintainerHashes = Array.from(participant?.maintainerHashes || []);
-    if (!participant || !maintainerHashes.includes(hash)) {
-        return { error: "unauthorized", statusCode: 401 };
-    }
-    // Full-record write, matching the existing addParticipant/addSingle
-    // convention: there's no partial-attribute update for entity records, so
-    // every field the driver already has has to ride along, or PutItem would
-    // silently erase it -- name, sponsor, notes, and maintainerHashes itself
-    // included. (Narrow, accepted tradeoff: a maintainer write racing a
-    // staff revoke on the same driver at the same instant could re-include
-    // the just-revoked hash, the same read-modify-write race every other
-    // field on this record already has today.)
-    return await ddbUtils.addSingle({
-        ...participant,
-        PK: ":PTCP",
-        orgId: context.orgId,
-        wLink: json.wLink,
-    });
-}
-
-async function revokeDriverMaintainer(json, context) {
-    const number = json.number != null ? String(json.number) : "";
-    if (!number || !json.hash) {
-        return { error: "Missing number or hash", statusCode: 400 };
-    }
-    return await ddbUtils.ddbUpdateStringSet(
-        `${context.orgId}:PTCP`,
-        number,
-        "maintainerHashes",
-        json.hash,
-        { add: false }
-    );
-}
 const getOrgId = (event) => {
     if (event.body) {
         return JSON.parse(event.body).orgId;
@@ -1406,7 +1288,10 @@ const routeMap = {
         permission: RoutePermission.CAN_ADD_PARTICIPANT,
         h: async (event, apiProps) => {
             return buildResponse(
-                await createDriverDelegation(JSON.parse(event.body), apiProps)
+                await driverDelegationService.createDelegation(
+                    JSON.parse(event.body),
+                    apiProps
+                )
             );
         },
     },
@@ -1414,7 +1299,10 @@ const routeMap = {
         permission: RoutePermission.ANONYMOUS,
         h: async (event, apiProps) => {
             return buildResponse(
-                await claimDriverDelegation(JSON.parse(event.body), apiProps)
+                await driverDelegationService.claim(
+                    JSON.parse(event.body),
+                    apiProps
+                )
             );
         },
     },
@@ -1422,7 +1310,10 @@ const routeMap = {
         permission: RoutePermission.ANONYMOUS,
         h: async (event, apiProps) => {
             return buildResponse(
-                await updateDriverWalkup(JSON.parse(event.body), apiProps)
+                await driverDelegationService.updateWalkup(
+                    JSON.parse(event.body),
+                    apiProps
+                )
             );
         },
     },
@@ -1430,7 +1321,10 @@ const routeMap = {
         permission: RoutePermission.CAN_ADD_PARTICIPANT,
         h: async (event, apiProps) => {
             return buildResponse(
-                await revokeDriverMaintainer(JSON.parse(event.body), apiProps)
+                await driverDelegationService.revokeMaintainer(
+                    JSON.parse(event.body),
+                    apiProps
+                )
             );
         },
     },
@@ -1837,21 +1731,9 @@ function registerPublicRoutes(router) {
         loadContext: false,
         handler: async (event) => {
             const qs = event.queryStringParameters || {};
-            if (!qs.orgId || !qs.token) {
-                return buildResponse({
-                    error: "Missing orgId or token",
-                    statusCode: 400,
-                });
-            }
-            const record = await ddbUtils.ddbQueryPkSk(
-                DRIVER_DELEGATION_TOKEN_PK(qs.orgId),
-                qs.token,
-                process.env.ElapsedTempDbTable
+            return buildResponse(
+                await driverDelegationService.previewToken(qs)
             );
-            if (!record || Date.now() > record.expiresAt) {
-                return buildResponse({ valid: false });
-            }
-            return buildResponse({ valid: true, number: record.number });
         },
     });
 }
