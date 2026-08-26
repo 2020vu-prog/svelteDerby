@@ -93,15 +93,12 @@
     async function revokeMaintainer(hash) {
         revokeSpinningHash = hash;
         try {
-            await $axios.post(
-                $raceConfig.baseUrl + "/revokeDriverMaintainer",
-                {
-                    orgId: $raceConfig.orgId,
-                    orgIz: $raceConfig.orgIz,
-                    number: driverForm.carNumber,
-                    hash,
-                }
-            );
+            await $axios.post($raceConfig.baseUrl + "/revokeDriverMaintainer", {
+                orgId: $raceConfig.orgId,
+                orgIz: $raceConfig.orgIz,
+                number: driverForm.carNumber,
+                hash,
+            });
             pushMessage({ text: "Maintainer revoked.", type: "success" });
             await refreshMaintainers();
         } catch (err) {
@@ -562,9 +559,7 @@
         </SpinnerButton>
         {#if delegateLink}
             <p>
-                Valid until {new Date(
-                    delegateExpiresAt
-                ).toLocaleTimeString()}.
+                Valid until {new Date(delegateExpiresAt).toLocaleTimeString()}.
                 <br />
                 <a href={delegateLink}>{delegateLink}</a>
             </p>

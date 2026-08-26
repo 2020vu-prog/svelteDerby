@@ -1141,7 +1141,9 @@ async function claimDriverDelegation(json, context) {
         // Lost a race against another claim (or a retry) of the same token.
         return { error: "Token already claimed", statusCode: 409 };
     }
-    const hash = requestContext.getEntityFactory().getHashFromEmail(context.email);
+    const hash = requestContext
+        .getEntityFactory()
+        .getHashFromEmail(context.email);
     await ddbUtils.ddbUpdateStringSet(
         `${context.orgId}:PTCP`,
         record.number,
@@ -1164,7 +1166,9 @@ async function updateDriverWalkup(json, context) {
         `${context.orgId}:PTCP`,
         number
     );
-    const hash = requestContext.getEntityFactory().getHashFromEmail(context.email);
+    const hash = requestContext
+        .getEntityFactory()
+        .getHashFromEmail(context.email);
     const maintainerHashes = Array.from(participant?.maintainerHashes || []);
     if (!participant || !maintainerHashes.includes(hash)) {
         return { error: "unauthorized", statusCode: 401 };

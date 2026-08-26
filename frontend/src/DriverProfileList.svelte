@@ -26,15 +26,16 @@
     <a href="#/loginH">Log in</a>
 {:else if myDrivers.length === 0}
     <p>
-        Nothing has been delegated to you at this event yet. Ask a staff
-        member to send you a QR code from the driver's entry.
+        Nothing has been delegated to you at this event yet. Ask a staff member
+        to send you a QR code from the driver's entry.
     </p>
 {:else}
     <ul>
         {#each myDrivers as ptcp (ptcp.number)}
             <li>
                 <a href="#/driverProfile/{ptcp.number}">
-                    #{ptcp.number} {ptcp.name}
+                    #{ptcp.number}
+                    {ptcp.name}
                 </a>
             </li>
         {/each}

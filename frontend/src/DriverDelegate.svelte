@@ -52,7 +52,11 @@
         try {
             const response = await $axios.post(
                 $raceConfig.baseUrl + "/claimDriverDelegation",
-                { orgId: params.orgId, orgIz: params.orgIz, token: params.token }
+                {
+                    orgId: params.orgId,
+                    orgIz: params.orgIz,
+                    token: params.token,
+                }
             );
             status = "claimed";
             pushMessage({
@@ -97,8 +101,8 @@
     <SpinnerButton disabled spinning>Checking link</SpinnerButton>
 {:else if status === "invalid"}
     <p>
-        This link is invalid, expired, or has already been used. Ask staff
-        for a new one.
+        This link is invalid, expired, or has already been used. Ask staff for a
+        new one.
     </p>
 {:else if status === "valid" || status === "claiming" || status === "claimed"}
     <p>Claim access to maintain driver #{previewNumber}'s walkup track.</p>

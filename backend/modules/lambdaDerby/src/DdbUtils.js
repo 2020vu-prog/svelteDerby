@@ -918,9 +918,7 @@ class DdbUtils {
         value,
         { add = true, tableName = process.env.DynamoDbTable } = {}
     ) {
-        const values = (Array.isArray(value) ? value : [value]).filter(
-            Boolean
-        );
+        const values = (Array.isArray(value) ? value : [value]).filter(Boolean);
         if (!values.length) {
             return { status: "ok", detail: "No values to update" };
         }
