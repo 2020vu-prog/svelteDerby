@@ -9,6 +9,7 @@ const routeRegistry = require("./routeCatalog.js");
 const { canAccessRoute } = require("./routeAccess.js");
 const {
     createRouteRegistry,
+    decodeRouteParams,
     getMenuItems,
     getRequiredPermission,
     resolveRouteAction,
@@ -109,6 +110,23 @@ test("matches parameterized and optional routes", () => {
         orgIz: "Test Org",
         mode: "Add",
     });
+});
+
+test("decodes component route parameters at the router boundary", () => {
+    assert.deepEqual(
+        decodeRouteParams({
+            orgIz: "IL%3ACHI2",
+            label: "Race%20Day",
+            optional: null,
+            malformed: "%E0%A4%A",
+        }),
+        {
+            orgIz: "IL:CHI2",
+            label: "Race Day",
+            optional: null,
+            malformed: "%E0%A4%A",
+        }
+    );
 });
 
 test("resolves parameter-specific route permission", () => {
