@@ -124,7 +124,10 @@ class DriverDelegationService {
             qs.token,
             process.env.ElapsedTempDbTable
         );
-        if (!record || Date.now() > record.expiresAt) {
+        // A claimed token is tombstoned (consumedAt set), not deleted -- see
+        // ddbMarkSingleUseConsumed -- so it's still findable here until TTL
+        // sweeps it. Treat that the same as "gone" for preview purposes.
+        if (!record || record.consumedAt || Date.now() > record.expiresAt) {
             return { valid: false };
         }
         return { valid: true, number: record.number };
@@ -141,6 +144,14 @@ class DriverDelegationService {
             PK: DRIVER_DELEGATION_TOKEN_PK(context.orgId),
             SK: token,
             number: carNumber,
+            // Stored explicitly, not just implied by PK, so claim() can
+            // verify both against whatever the claiming request supplies --
+            // orgId and orgIz together identify the event a delegation is
+            // scoped to (car numbers aren't stable across events within an
+            // org), and orgIz otherwise has no other checkpoint in this
+            // flow at all.
+            orgId: context.orgId,
+            orgIz: context.orgIz,
             expiresAt,
             // Background hygiene only -- claim() always checks expiresAt
             // explicitly, since DynamoDB's TTL sweep isn't instant.
@@ -177,10 +188,28 @@ class DriverDelegationService {
                 statusCode: 410,
             };
         }
+        // orgId is already implicit in tokenPk -- this can't actually
+        // mismatch -- but orgIz has no other checkpoint in this flow, so
+        // it's checked here explicitly against what the token was created
+        // under. Same response as a genuinely missing token, not a
+        // separate error: don't reveal that a token exists at all under a
+        // different event than the one the claim request specified.
+        if (record.orgId !== context.orgId || record.orgIz !== context.orgIz) {
+            return {
+                error: "Token not found or already used",
+                statusCode: 410,
+            };
+        }
         if (Date.now() > record.expiresAt) {
             return { error: "Token expired", statusCode: 410 };
         }
-        const consumed = await this.ddbUtils.ddbConsumeSingleUse(
+        // ddbMarkSingleUseConsumed is a virtual delete (tombstones the
+        // record with consumedAt, doesn't actually remove it -- this
+        // Lambda's role has dynamodb:UpdateItem on this table but not
+        // dynamodb:DeleteItem), so this still fails atomically for a
+        // token that's already been claimed, same guarantee a real delete
+        // would give: the first caller to reach DynamoDB wins.
+        const consumed = await this.ddbUtils.ddbMarkSingleUseConsumed(
             tokenPk,
             json.token,
             process.env.ElapsedTempDbTable
