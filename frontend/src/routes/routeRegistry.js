@@ -79,13 +79,30 @@ function assertDefinition(definition) {
  * @param {string|null|undefined} value
  * @returns {RoutePermission|undefined}
  */
-function decode(value) {
+function decodeRouteParam(value) {
     if (value == null) return value;
     try {
         return decodeURIComponent(value);
     } catch (error) {
         return value;
     }
+}
+
+/**
+ * Decodes every parameter supplied by svelte-spa-router. That router exposes
+ * raw URL path captures, so components otherwise receive values such as
+ * `IL%3ACHI2` even though application and database keys use `IL:CHI2`.
+ *
+ * @param {Object<string, string|null>} [params]
+ * @returns {Object<string, string|null>}
+ */
+function decodeRouteParams(params = {}) {
+    return Object.fromEntries(
+        Object.entries(params).map(([key, value]) => [
+            key,
+            decodeRouteParam(value),
+        ])
+    );
 }
 
 /**
@@ -112,7 +129,7 @@ function matchCompiledRoute(definition, path) {
 
     const params = {};
     definition.keys.forEach((key, index) => {
-        params[key] = decode(matches[index + 1] || null);
+        params[key] = decodeRouteParam(matches[index + 1] || null);
     });
     return { definition, params, path };
 }
@@ -266,6 +283,7 @@ function resolveRouteAction(match, context = {}) {
 
 module.exports = {
     createRouteRegistry,
+    decodeRouteParams,
     getMenuItems,
     getPermissionOrgIz,
     getRequiredPermission,
