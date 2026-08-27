@@ -21,12 +21,21 @@
     function stringIsTrue(stringValue) {
         return stringValue.toLowerCase() == "true" ? true : false;
     }
+    function decodeRouteParam(value) {
+        try {
+            return decodeURIComponent(value);
+        } catch (error) {
+            return value;
+        }
+    }
     async function handleSubmit() {
         syncAddButton();
 
         log.debug("Adding:" + JSON.stringify(orgForm), " to: ", $raceConfig);
         const orgU = uuidv4().substring(0, 5);
-        const orgIz = isUpdateMode() ? $raceConfig.orgIz : params.orgIz;
+        const orgIz = isUpdateMode()
+            ? $raceConfig.orgIz
+            : decodeRouteParam(params.orgIz);
         if (!orgIz) {
             log.debug("Cannot add w/o org");
             return;
