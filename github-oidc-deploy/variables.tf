@@ -78,6 +78,16 @@ variable "DeployEnvironment" {
   default     = "derbyTest"
 }
 
+variable "AppShortName" {
+  description = "Short PWA name uploaded to the matching GitHub Environment. Supply it with TF_VAR_AppShortName."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9._-]+$", var.AppShortName))
+    error_message = "AppShortName must be non-empty and contain only letters, digits, dots, underscores, and hyphens."
+  }
+}
+
 variable "DnsDomain" {
   description = "Deployment DNS domain; also used in the generated GitHub setup script filename."
   type        = string
