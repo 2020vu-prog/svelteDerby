@@ -124,7 +124,10 @@ class DriverDelegationService {
             qs.token,
             process.env.ElapsedTempDbTable
         );
-        if (!record || Date.now() > record.expiresAt) {
+        // A claimed token is tombstoned (consumedAt set), not deleted -- see
+        // ddbMarkSingleUseConsumed -- so it's still findable here until TTL
+        // sweeps it. Treat that the same as "gone" for preview purposes.
+        if (!record || record.consumedAt || Date.now() > record.expiresAt) {
             return { valid: false };
         }
         return { valid: true, number: record.number };
@@ -180,7 +183,13 @@ class DriverDelegationService {
         if (Date.now() > record.expiresAt) {
             return { error: "Token expired", statusCode: 410 };
         }
-        const consumed = await this.ddbUtils.ddbConsumeSingleUse(
+        // ddbMarkSingleUseConsumed is a virtual delete (tombstones the
+        // record with consumedAt, doesn't actually remove it -- this
+        // Lambda's role has dynamodb:UpdateItem on this table but not
+        // dynamodb:DeleteItem), so this still fails atomically for a
+        // token that's already been claimed, same guarantee a real delete
+        // would give: the first caller to reach DynamoDB wins.
+        const consumed = await this.ddbUtils.ddbMarkSingleUseConsumed(
             tokenPk,
             json.token,
             process.env.ElapsedTempDbTable
