@@ -144,6 +144,14 @@ class DriverDelegationService {
             PK: DRIVER_DELEGATION_TOKEN_PK(context.orgId),
             SK: token,
             number: carNumber,
+            // Stored explicitly, not just implied by PK, so claim() can
+            // verify both against whatever the claiming request supplies --
+            // orgId and orgIz together identify the event a delegation is
+            // scoped to (car numbers aren't stable across events within an
+            // org), and orgIz otherwise has no other checkpoint in this
+            // flow at all.
+            orgId: context.orgId,
+            orgIz: context.orgIz,
             expiresAt,
             // Background hygiene only -- claim() always checks expiresAt
             // explicitly, since DynamoDB's TTL sweep isn't instant.
@@ -175,6 +183,18 @@ class DriverDelegationService {
             process.env.ElapsedTempDbTable
         );
         if (!record) {
+            return {
+                error: "Token not found or already used",
+                statusCode: 410,
+            };
+        }
+        // orgId is already implicit in tokenPk -- this can't actually
+        // mismatch -- but orgIz has no other checkpoint in this flow, so
+        // it's checked here explicitly against what the token was created
+        // under. Same response as a genuinely missing token, not a
+        // separate error: don't reveal that a token exists at all under a
+        // different event than the one the claim request specified.
+        if (record.orgId !== context.orgId || record.orgIz !== context.orgIz) {
             return {
                 error: "Token not found or already used",
                 statusCode: 410,
