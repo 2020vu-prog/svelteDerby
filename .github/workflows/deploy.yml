@@ -54,6 +54,7 @@ jobs:
       id-token: write
 
     env:
+      DEPLOY_SOURCE_BRANCH: ${{ inputs.target_environment }}
       AWS_REGION: ${{ vars.AWS_REGION }}
       AWS_DEFAULT_REGION: ${{ vars.AWS_REGION }}
       TF_VAR_AwsRegion: ${{ vars.AWS_REGION }}
@@ -72,6 +73,7 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.target_environment }}
           persist-credentials: false
 
       - name: Set up Terraform
@@ -82,6 +84,7 @@ jobs:
       - name: Check deployment configuration
         run: |
           set -euo pipefail
+          [[ "$(git branch --show-current)" == "${DEPLOY_SOURCE_BRANCH}" ]] || (echo "Checked-out branch does not match deployment target: expected ${DEPLOY_SOURCE_BRANCH}" >&2 && exit 1)
           [[ -n "${AWS_DEPLOY_ROLE_ARN}" ]] || (echo "Missing GitHub environment variable AWS_DEPLOY_ROLE_ARN" >&2 && exit 1)
           [[ -n "${AWS_REGION}" ]] || (echo "Missing GitHub environment variable AWS_REGION" >&2 && exit 1)
           [[ -n "${TF_VAR_DeployEnvironment}" ]] || (echo "Missing GitHub environment variable TF_VAR_DeployEnvironment" >&2 && exit 1)
