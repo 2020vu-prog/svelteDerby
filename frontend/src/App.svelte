@@ -36,7 +36,10 @@
     import { setIdTokenFromCognitoCallback } from "./utilHosted.js";
     import { urlParseSpotify } from "./utils/spotify";
     const { canAccessRoute } = require("./routes/routeAccess.js");
-    const { getMenuItems } = require("./routes/routeRegistry.js");
+    const {
+        getMenuItems,
+        isRecognizedDeepLink,
+    } = require("./routes/routeRegistry.js");
     const { MenuSection } = require("./routes/routeDefinitions.js");
 
     var isMounted = false;
@@ -180,10 +183,12 @@
             console.log(`${tag} ignoring not mounted`, isMounted);
             return;
         }
-        // Auto-selection is public and must survive anonymous/slow auth startup.
-        if ($location.startsWith("/as/")) {
+        // A cold start must not replace a recognized deep link after auth or
+        // IndexedDB state becomes ready. RouteHost handles that destination's
+        // own public/authenticated permission state.
+        if (isRecognizedDeepLink(routeRegistry, $location)) {
             initialRouteHandled = true;
-            log.debug(`${tag} honoring auto select:`, $location);
+            log.debug(`${tag} honoring deep link:`, $location);
             replace($location);
             return;
         }
@@ -202,11 +207,7 @@
         log.debug(`${tag} config:`, cfg);
         log.debug(`${tag} location:`, $location, " qs:", $querystring);
 
-        if (false) {
-        } else if ($location.startsWith("/loginH")) {
-            log.debug(`${tag} honoring auto select:`, $location);
-            replace($location);
-        } else if ($initialReloadRoute) {
+        if ($initialReloadRoute) {
             // Set by flows like DriverDelegate.svelte before sending the
             // user through Cognito hosted login, which always redirects
             // back to "/" -- this is the only thing that survives that
