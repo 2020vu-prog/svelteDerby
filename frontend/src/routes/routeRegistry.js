@@ -106,6 +106,19 @@ function decodeRouteParams(params = {}) {
 }
 
 /**
+ * Returns whether startup should preserve a routed location instead of
+ * replacing it with the default event screen. The root route intentionally
+ * remains eligible for normal startup selection.
+ *
+ * @param {RouteRegistry} registry
+ * @param {string} path
+ * @returns {boolean}
+ */
+function isRecognizedDeepLink(registry, path) {
+    return path !== "/" && Boolean(registry.match(path));
+}
+
+/**
  * Compiles a route's path pattern and retains its declarative metadata.
  *
  * @param {RouteDefinition} definition
@@ -287,5 +300,6 @@ module.exports = {
     getMenuItems,
     getPermissionOrgIz,
     getRequiredPermission,
+    isRecognizedDeepLink,
     resolveRouteAction,
 };

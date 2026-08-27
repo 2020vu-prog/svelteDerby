@@ -12,6 +12,7 @@ const {
     decodeRouteParams,
     getMenuItems,
     getRequiredPermission,
+    isRecognizedDeepLink,
     resolveRouteAction,
 } = require("./routeRegistry.js");
 const { MenuSection } = require("./routeDefinitions.js");
@@ -127,6 +128,23 @@ test("decodes component route parameters at the router boundary", () => {
             malformed: "%E0%A4%A",
         }
     );
+});
+
+test("preserves recognized non-root routes during cold startup", () => {
+    assert.equal(isRecognizedDeepLink(routeRegistry, "/"), false);
+    assert.equal(isRecognizedDeepLink(routeRegistry, "/not-a-route"), false);
+    assert.equal(
+        isRecognizedDeepLink(
+            routeRegistry,
+            "/driverDelegate/IL%3ACHI2/IL%3ACHI2.99bf5/token"
+        ),
+        true
+    );
+    assert.equal(
+        isRecognizedDeepLink(routeRegistry, "/as/IL%3ACHI2/Event.1"),
+        true
+    );
+    assert.equal(isRecognizedDeepLink(routeRegistry, "/loginH"), true);
 });
 
 test("resolves parameter-specific route permission", () => {
