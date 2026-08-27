@@ -1,6 +1,5 @@
 SHELL := /bin/bash
 
-TF_VAR_AppShortName?=Test.RR1
 .PHONY: install env environment shared
 
 install: environment shared

@@ -58,6 +58,7 @@ jobs:
       AWS_DEFAULT_REGION: ${{ vars.AWS_REGION }}
       TF_VAR_AwsRegion: ${{ vars.AWS_REGION }}
       TF_VAR_DeployEnvironment: ${{ vars.TF_VAR_DeployEnvironment }}
+      TF_VAR_AppShortName: ${{ vars.TF_VAR_AppShortName }}
       TF_VAR_ManagedRolePermissionsBoundaryArn: ${{ vars.TF_VAR_ManagedRolePermissionsBoundaryArn }}
       TF_VAR_AcmArn: ${{ vars.TF_VAR_AcmArn }}
       TF_VAR_DnsDomain: ${{ vars.TF_VAR_DnsDomain }}
@@ -84,6 +85,7 @@ jobs:
           [[ -n "${AWS_DEPLOY_ROLE_ARN}" ]] || (echo "Missing GitHub environment variable AWS_DEPLOY_ROLE_ARN" >&2 && exit 1)
           [[ -n "${AWS_REGION}" ]] || (echo "Missing GitHub environment variable AWS_REGION" >&2 && exit 1)
           [[ -n "${TF_VAR_DeployEnvironment}" ]] || (echo "Missing GitHub environment variable TF_VAR_DeployEnvironment" >&2 && exit 1)
+          [[ -n "${TF_VAR_AppShortName}" ]] || (echo "Missing GitHub environment variable TF_VAR_AppShortName" >&2 && exit 1)
           [[ -n "${TF_VAR_ManagedRolePermissionsBoundaryArn}" ]] || (echo "Missing GitHub environment variable TF_VAR_ManagedRolePermissionsBoundaryArn" >&2 && exit 1)
           [[ -n "${TF_VAR_AcmArn}" ]] || (echo "Missing GitHub environment variable TF_VAR_AcmArn" >&2 && exit 1)
           [[ -n "${TF_VAR_DnsDomain}" ]] || (echo "Missing GitHub environment variable TF_VAR_DnsDomain" >&2 && exit 1)

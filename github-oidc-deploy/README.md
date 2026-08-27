@@ -56,6 +56,7 @@ for a fully non-interactive run:
 ```bash
 gh auth status
 export TF_BACKEND_CONFIG=/private/path/test.backend.hcl
+export TF_VAR_AppShortName=Test.RR1
 export TF_VAR_GoogleClientId=...
 export TF_VAR_GoogleClientSecret=...
 terraform apply
@@ -84,6 +85,7 @@ The generated script configures:
 - `AWS_DEPLOY_ROLE_ARN` variable.
 - `AWS_REGION` variable.
 - `TF_VAR_DeployEnvironment` variable.
+- `TF_VAR_AppShortName` variable.
 - `TF_VAR_ManagedRolePermissionsBoundaryArn` variable.
 - `TF_VAR_AcmArn` variable.
 - `TF_VAR_DnsDomain` variable.
