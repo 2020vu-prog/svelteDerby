@@ -22,6 +22,7 @@
     import { push, pop, location } from "svelte-spa-router";
     import { getMainFull, filterMatches } from "./utils.js";
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
+    import { faMusic } from "@fortawesome/free-solid-svg-icons/faMusic";
     import Icon from "fa-svelte";
     export let params = {};
     const driverRowHeight = 82;
@@ -130,6 +131,11 @@
                     isWinner=""
                     phaseLetter=""
                 />
+                {#if $driverMap[item] && $driverMap[item].wLink}
+                    <span title="Walkup track set" style="margin-left: 8px">
+                        <Icon icon={faMusic} />
+                    </span>
+                {/if}
 
                 {#if selectable}
                     <span style="display: inline; float: right">
