@@ -85,12 +85,6 @@
     Click below to proceed to external (Amazon/AWS) login page.
     <br />
     <SpinnerButton on:click={clickedLogin}>Login</SpinnerButton>
-    <br />
-    User information was reset (deleted) for all userids on this site on
-    <strong> June 21, 2024 </strong>
-    <br />
-    If you had a user/password that was created before then, you will need to SIGN
-    UP again using the SAME email address.
 {/if}
 
 {#if $developerMode}
