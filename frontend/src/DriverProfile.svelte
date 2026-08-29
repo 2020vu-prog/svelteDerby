@@ -17,6 +17,7 @@
     let wLink = "";
     let wLinkInitializedForNumber;
     let saveSpinning = false;
+    let wLinkValid = true;
 
     // Reactive, not a one-time fetch: $driverMap already syncs live over the
     // app's existing realtime/HTTP pipeline (see $driverMap in
@@ -81,9 +82,22 @@
     </p>
 {:else}
     <h3>#{ptcp.number} {ptcp.name} -- Walkup Track</h3>
-    <WalkupLink bind:saveValue={wLink} let:valid>
-        <SpinnerButton disabled={!valid} spinning={saveSpinning} on:click={save}
-            >Save</SpinnerButton
+    <WalkupLink
+        bind:saveValue={wLink}
+        on:validitychange={(event) => (wLinkValid = event.detail.valid)}
+    />
+    <div class="walkup-actions">
+        <SpinnerButton
+            disabled={!wLinkValid}
+            spinning={saveSpinning}
+            on:click={save}>Save</SpinnerButton
         >
-    </WalkupLink>
+    </div>
 {/if}
+
+<style>
+    .walkup-actions {
+        display: block;
+        margin-top: 0.5rem;
+    }
+</style>

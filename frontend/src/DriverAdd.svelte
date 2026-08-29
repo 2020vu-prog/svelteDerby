@@ -31,6 +31,7 @@
     var submitSpinning = false;
     var speakSpinning = false;
     const canManageDriverJson = createPermissionStore(RoutePermission.POWER);
+    let walkupLinkValid = true;
 
     let delegateSpinning = false;
     let delegateQrSvg = "";
@@ -523,18 +524,22 @@
             .
         </p>
     {/if}
-    <WalkupLink bind:saveValue={driverForm.walkupLink} let:valid>
+    <WalkupLink
+        bind:saveValue={driverForm.walkupLink}
+        on:validitychange={(event) => (walkupLinkValid = event.detail.valid)}
+    />
+    <div class="walkup-actions">
         <SpinnerButton on:click={requestSpeech} spinning={speakSpinning}>
             Speak
         </SpinnerButton>
         <SpinnerButton
-            disabled={submitDisabled || !valid}
+            disabled={submitDisabled || !walkupLinkValid}
             on:click={handleSubmit}
             spinning={submitSpinning}
         >
             {mode}
         </SpinnerButton>
-    </WalkupLink>
+    </div>
     {#if mode === "Update"}
         <br />
         <br />
@@ -589,3 +594,10 @@
         </div>
     {/if}
 </form>
+
+<style>
+    .walkup-actions {
+        display: block;
+        margin-top: 0.5rem;
+    }
+</style>

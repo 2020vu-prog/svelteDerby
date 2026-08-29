@@ -1,6 +1,7 @@
 <script>
     import SpinnerButton from "./SpinnerButton.svelte";
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import Icon from "fa-svelte";
     import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
     import {
@@ -12,6 +13,7 @@
 
     let showPlayer = false;
     let valid = true;
+    const dispatch = createEventDispatcher();
 
     function normalize() {
         if (valid) saveValue = spotifyTrackId(saveValue);
@@ -23,7 +25,10 @@
     }
 
     $: valid = isValidSpotifyTrack(saveValue);
+    $: dispatch("validitychange", { valid });
     $: if (!saveValue || !valid) showPlayer = false;
+
+    onMount(() => dispatch("validitychange", { valid }));
 </script>
 
 <div class="field-row">
@@ -63,7 +68,6 @@
     </p>
 {/if}
 <div class="actions">
-    <slot valid={valid} />
     <SpinnerButton
         disabled={!saveValue || !valid}
         on:click={() => (showPlayer = !showPlayer)}
