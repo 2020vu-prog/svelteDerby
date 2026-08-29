@@ -24,7 +24,8 @@ export async function setIdTokenFromCognitoCallback() {
             cognitoUserManager,
             document.URL
         );
-        const user = callbackUser || (await freshCognitoUser(cognitoUserManager));
+        const user =
+            callbackUser || (await freshCognitoUser(cognitoUserManager));
         userJwtStore.set(user?.id_token || "");
     } catch (error) {
         log.warn("Cognito session restore failed", error);
