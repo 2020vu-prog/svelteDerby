@@ -86,7 +86,7 @@
         bind:saveValue={wLink}
         on:validitychange={(event) => (wLinkValid = event.detail.valid)}
     />
-    <div class="walkup-actions">
+    <div class="form-actions">
         <SpinnerButton
             disabled={!wLinkValid}
             spinning={saveSpinning}
@@ -96,7 +96,7 @@
 {/if}
 
 <style>
-    .walkup-actions {
+    .form-actions {
         display: block;
         margin-top: 0.5rem;
     }

@@ -528,7 +528,7 @@
         bind:saveValue={driverForm.walkupLink}
         on:validitychange={(event) => (walkupLinkValid = event.detail.valid)}
     />
-    <div class="walkup-actions">
+    <div class="form-actions">
         <SpinnerButton on:click={requestSpeech} spinning={speakSpinning}>
             Speak
         </SpinnerButton>
@@ -596,7 +596,7 @@
 </form>
 
 <style>
-    .walkup-actions {
+    .form-actions {
         display: block;
         margin-top: 0.5rem;
     }
