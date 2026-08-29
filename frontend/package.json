@@ -61,6 +61,7 @@
         "long": "^5.2.3",
         "markdown-it": "^14.3.0",
         "mqtt": "^4.3.8",
+        "oidc-client-ts": "^3.5.0",
         "protobufjs": "^7.6.4",
         "pure-rand": "^6.1.0",
         "qrcode": "^1.5.3",
