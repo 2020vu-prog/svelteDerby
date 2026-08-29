@@ -10,6 +10,7 @@ import { persistable } from "./storedb.js";
 import { derived, writable, readable, get as getStore } from "svelte/store";
 import { buildVersion, getSpaLocation } from "./utils.js";
 import { replace } from "svelte-spa-router";
+import { cognitoUserManager, freshCognitoUser } from "./utils/cognitoAuth.js";
 
 function parseBool(val) {
     return val === true || val === "true";
@@ -194,6 +195,10 @@ export function setCacheKey(newKey) {
     prefs.disableCache = newKey;
     prefStore.set(prefs);
 }
+// Single-flight guard so concurrent 401s (e.g. a burst of requests on tab
+// wake) share one forced Cognito refresh instead of each starting their own.
+let pendingCognitoRefresh = null;
+
 // Add a request interceptor
 axiosCommon.interceptors.request.use(function (config) {
     //const token = store.getState().session.token;
@@ -246,46 +251,40 @@ axiosCommon.interceptors.response.use(
         return response;
     },
     async function (error) {
-        return Promise.reject(error);
-        const axErrorKey = uuidv4();
-        console.log("AC:error0", error);
         const originalRequest = error.config;
-        let refreshTokenError, res;
-        if (error.response.status === 401 && !originalRequest._retry) {
-            userJwtStore.set(""); // whatever this was didn't work.
+        if (
+            error.response?.status === 401 &&
+            originalRequest &&
+            !originalRequest._retry
+        ) {
             originalRequest._retry = true;
-            console.log("AC:refreshing");
-            pushMessage({
-                text: "Renewing Credentials...",
-                key: axErrorKey,
-            });
-            const bt = await getRR1AuthTokenSlow(originalRequest);
-            console.log("AC:refreshed");
-            console.log(`AC: New Credentials... ${bt.length}`);
-
-            if (bt && bt.length > 0) {
-                pushMessage({
-                    text: `Renewed Credentials... ${bt.length}`,
-                    key: axErrorKey,
-                    type: "success",
-                });
-            } else {
-                pushMessage({
-                    text: `Renewal Failed. ${bt.length}`,
-                    key: axErrorKey,
-                });
+            try {
+                // A 401 can happen even on a token the client still
+                // considers valid -- e.g. automaticSilentRenew hasn't run
+                // yet because the tab was suspended/throttled. Force a real
+                // signinSilent() rather than trusting the local expiry
+                // check, and de-dupe concurrent 401s onto one attempt.
+                if (!pendingCognitoRefresh) {
+                    pendingCognitoRefresh = freshCognitoUser(
+                        cognitoUserManager,
+                        true
+                    ).finally(() => {
+                        pendingCognitoRefresh = null;
+                    });
+                }
+                await pendingCognitoRefresh;
+                // userJwtStore is already updated by cognitoUserManager's
+                // addUserLoaded listener (utilHosted.js) by the time
+                // signinSilent() resolves, so the retried request picks up
+                // the fresh token via the request interceptor above.
+                return axiosCommon.request(originalRequest);
+            } catch (refreshError) {
+                log.warn(
+                    "Cognito forced refresh after 401 failed",
+                    refreshError
+                );
             }
-            const retryPromise = axiosCommon.request(originalRequest);
-            console.log("AC:retry:", retryPromise);
-            return retryPromise;
-            return [null, await axiosCommon.request(originalRequest)];
-
-            if (refreshTokenError) {
-                return Promise.reject(refreshTokenError);
-            }
-            return Promise.resolve(res);
         }
-        console.log("AC:reject");
         return Promise.reject(error);
     }
 );
