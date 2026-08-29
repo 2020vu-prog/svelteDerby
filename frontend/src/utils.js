@@ -6,6 +6,7 @@ import { db } from "./eventDb.js";
 import {
     userEmail as userEmailStore,
     userJwtStore,
+    clearCognitoSession,
     pushMessage,
     getAxios as getAxiosStore,
     raceConfig as raceConfigStore,
@@ -155,8 +156,12 @@ async function requstPermissionHack(cognitoIdentityId) {
         });
 }
 
-export function logout() {
-    //cognitoLogout();
+export async function logout() {
+    try {
+        await clearCognitoSession();
+    } catch (error) {
+        log.warn("Cognito token revocation failed during logout", error);
+    }
     userJwtStore.set("");
 }
 export function safeGetAt(map, key) {

@@ -10,6 +10,14 @@ import { persistable } from "./storedb.js";
 import { derived, writable, readable, get as getStore } from "svelte/store";
 import { buildVersion, getSpaLocation } from "./utils.js";
 import { replace } from "svelte-spa-router";
+import aws_exports from "./aws-config";
+import {
+    beginCognitoLogin as redirectToCognitoLogin,
+    completeCognitoLogin,
+    createCognitoUserManager,
+    freshCognitoUser,
+    removeCognitoUser,
+} from "./utils/cognitoAuth.js";
 
 function parseBool(val) {
     return val === true || val === "true";
@@ -40,6 +48,80 @@ function dtoken(bearerToken, prop) {
     return "";
 }
 export const userJwtStore = persistable("userJwt", "");
+
+const cognitoUserManager = createCognitoUserManager({
+    hostedUrl: aws_exports.hosted_url,
+    clientId: aws_exports.aws_user_pools_hosted_client_id,
+    redirectUri: `${window.location.origin}/`,
+    region: aws_exports.aws_cognito_region,
+    userPoolId: aws_exports.aws_user_pools_id,
+});
+let cognitoRefreshPromise;
+
+function storeCognitoUser(user) {
+    userJwtStore.set(user?.id_token || "");
+}
+
+cognitoUserManager.events.addUserLoaded(storeCognitoUser);
+cognitoUserManager.events.addUserUnloaded(() => storeCognitoUser(null));
+cognitoUserManager.events.addSilentRenewError((error) =>
+    log.warn("Cognito automatic token renewal failed", error)
+);
+
+export function beginCognitoLogin() {
+    return redirectToCognitoLogin(cognitoUserManager);
+}
+
+export async function initializeCognitoSession(callbackUrl) {
+    const callbackUser = await completeCognitoLogin(
+        cognitoUserManager,
+        callbackUrl
+    );
+    if (callbackUser) {
+        storeCognitoUser(callbackUser);
+        return callbackUser.id_token;
+    }
+    return ensureFreshCognitoSession();
+}
+
+export async function ensureFreshCognitoSession(force = false) {
+    if (!cognitoRefreshPromise) {
+        cognitoRefreshPromise = freshCognitoUser(cognitoUserManager, force)
+            .then((user) => {
+                if (user) {
+                    storeCognitoUser(user);
+                    return user.id_token;
+                }
+                // During the staged implicit-to-code migration, honor an
+                // existing unexpired ID token until the user next signs in.
+                const legacyToken = getStore(userJwtStore);
+                const legacyClaims = legacyToken
+                    ? jwt.decode(legacyToken)
+                    : null;
+                if (
+                    !force &&
+                    legacyClaims?.exp &&
+                    legacyClaims.exp > Date.now() / 1000
+                ) {
+                    return legacyToken;
+                }
+                storeCognitoUser(null);
+                return "";
+            })
+            .finally(() => {
+                cognitoRefreshPromise = null;
+            });
+    }
+    return cognitoRefreshPromise;
+}
+
+export async function clearCognitoSession() {
+    try {
+        await removeCognitoUser(cognitoUserManager);
+    } finally {
+        storeCognitoUser(null);
+    }
+}
 //export const userEmail = persistable("userEmail", "");
 export const userId = derived(userJwtStore, ($bearer) => {
     return dtoken($bearer, "cognito:username");
@@ -195,11 +277,17 @@ export function setCacheKey(newKey) {
     prefStore.set(prefs);
 }
 // Add a request interceptor
-axiosCommon.interceptors.request.use(function (config) {
+axiosCommon.interceptors.request.use(async function (config) {
     //const token = store.getState().session.token;
     const raceConfigVal = getStore(raceConfig);
     config.headers["x-event-ts"] = raceConfigVal.at;
-    const bearer = getRR1AuthTokenNow();
+    let bearer = "";
+    try {
+        bearer = await ensureFreshCognitoSession();
+    } catch (error) {
+        // Public routes must remain usable during a temporary Cognito outage.
+        log.warn("Cognito token refresh failed before request", error);
+    }
     console.log(`AC: setup... ${bearer.length}`);
     config.headers["Authorization"] = bearer;
     config.headers["cjwrr1"] = `cjwrr1`;
@@ -246,46 +334,16 @@ axiosCommon.interceptors.response.use(
         return response;
     },
     async function (error) {
-        return Promise.reject(error);
-        const axErrorKey = uuidv4();
-        console.log("AC:error0", error);
         const originalRequest = error.config;
-        let refreshTokenError, res;
-        if (error.response.status === 401 && !originalRequest._retry) {
-            userJwtStore.set(""); // whatever this was didn't work.
+        if (error.response?.status === 401 && !originalRequest?._retry) {
             originalRequest._retry = true;
-            console.log("AC:refreshing");
-            pushMessage({
-                text: "Renewing Credentials...",
-                key: axErrorKey,
-            });
-            const bt = await getRR1AuthTokenSlow(originalRequest);
-            console.log("AC:refreshed");
-            console.log(`AC: New Credentials... ${bt.length}`);
-
-            if (bt && bt.length > 0) {
-                pushMessage({
-                    text: `Renewed Credentials... ${bt.length}`,
-                    key: axErrorKey,
-                    type: "success",
-                });
-            } else {
-                pushMessage({
-                    text: `Renewal Failed. ${bt.length}`,
-                    key: axErrorKey,
-                });
+            try {
+                const token = await ensureFreshCognitoSession(true);
+                if (token) return axiosCommon.request(originalRequest);
+            } catch (refreshError) {
+                log.warn("Cognito token refresh failed", refreshError);
             }
-            const retryPromise = axiosCommon.request(originalRequest);
-            console.log("AC:retry:", retryPromise);
-            return retryPromise;
-            return [null, await axiosCommon.request(originalRequest)];
-
-            if (refreshTokenError) {
-                return Promise.reject(refreshTokenError);
-            }
-            return Promise.resolve(res);
         }
-        console.log("AC:reject");
         return Promise.reject(error);
     }
 );
@@ -346,23 +404,7 @@ function getAxiosNewInstance() {
     return axiosXyz.create();
 }
 async function getAxiosCommon() {
-    //await getRR1AuthTokenSlow("initial get.");
     return axiosCommon;
-}
-function getRR1AuthTokenNow() {
-    var bearer = getStore(userJwtStore);
-    if (bearer) {
-        var decoded = jwt.decode(bearer);
-        log.debug("AC: decoded jwt:", decoded);
-        const now = new Date().getTime() / 1000;
-        let exp = 0;
-        if (decoded && decoded.exp) {
-            exp = decoded.exp;
-        }
-        const tte = exp - now;
-        log.debug("getRR1AuthTokenNow tte:", tte);
-    }
-    return bearer;
 }
 
 const sortBy = (field, reverse, primer) => {

@@ -1,6 +1,6 @@
 resource "aws_cognito_user_pool_client" "hosted_client" {
   access_token_validity                = 60
-  allowed_oauth_flows                  = ["implicit"]
+  allowed_oauth_flows                  = ["code", "implicit"]
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes                 = ["email", "openid", "phone"]
   auth_session_validity                = 3
@@ -23,7 +23,7 @@ resource "aws_cognito_user_pool_client" "hosted_client" {
   enable_token_revocation                       = true
   explicit_auth_flows                           = ["ALLOW_CUSTOM_AUTH", "ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_SRP_AUTH"]
   generate_secret                               = null
-  id_token_validity                             = 1
+  id_token_validity                             = 60
   name                                          = "hosted-spa-derby"
   prevent_user_existence_errors                 = "LEGACY"
   read_attributes                               = ["address", "birthdate", "email", "email_verified", "family_name", "gender", "given_name", "locale", "middle_name", "name", "nickname", "phone_number", "phone_number_verified", "picture", "preferred_username", "profile", "updated_at", "website", "zoneinfo"]
@@ -34,7 +34,7 @@ resource "aws_cognito_user_pool_client" "hosted_client" {
   write_attributes             = ["address", "birthdate", "email", "family_name", "gender", "given_name", "locale", "middle_name", "name", "nickname", "phone_number", "picture", "preferred_username", "profile", "updated_at", "website", "zoneinfo"]
   token_validity_units {
     access_token  = "minutes"
-    id_token      = "days"
+    id_token      = "minutes"
     refresh_token = "days"
   }
 }

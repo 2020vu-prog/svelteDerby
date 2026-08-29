@@ -4,6 +4,7 @@
     import LoginSpotify from "./LoginSpotify.svelte";
     import { logout, sleep } from "./utils.js";
     import {
+        beginCognitoLogin,
         developerMode,
         pushMessage,
         userExpCountDownSecs,
@@ -19,25 +20,14 @@
     const cognitoConfig = aws_exports as CognitoHostedConfig;
     let redirecting: boolean = false;
 
-    function hostedLogin(): { loginUrl: string; logoutUrl: string } {
+    function hostedLogin(): { logoutUrl: string } {
         const u = new URL(document.URL);
-        console.log(`Twiddle qul:`, u);
         const clientId = `client_id=${cognitoConfig.aws_user_pools_hosted_client_id}`;
         const encodedRedir = encodeURIComponent(`${u.origin}/`);
-        const redir = `redirect_uri=${encodedRedir}`;
-        //loginUrl = `https://cf-test-rr1-us.auth.us-east-2.amazoncognito.com/oauth2/authorize?${clientId}&response_type=token&scope=email+openid+phone&${redir}`
-        const loginUrl = `${cognitoConfig.hosted_url}/oauth2/authorize?${clientId}&response_type=token&scope=email+openid+phone&${redir}`;
         const logoutUrl = `${cognitoConfig.hosted_url}/logout?${clientId}&logout_uri=${encodedRedir}`;
-        const regex = /\/+/gi;
-
-        console.log("login1:", loginUrl);
-        // loginUrl =loginUrl.replaceAll(regex,"/");
-        console.log("login2:", loginUrl);
-        console.log("login debug:", document.URL);
-
-        return { loginUrl, logoutUrl };
+        return { logoutUrl };
     }
-    const { loginUrl, logoutUrl } = hostedLogin();
+    const { logoutUrl } = hostedLogin();
     function m60(x: number): [number, number] {
         const modx = x % 60;
         const remx = Math.floor(x / 60);
@@ -59,14 +49,13 @@
     }
     async function clickedLogout(): Promise<void> {
         redirecting = true;
-        logout();
+        await logout();
         await sleep(300);
         window.location.href = logoutUrl;
     }
     async function clickedLogin(): Promise<void> {
         redirecting = true;
-        await sleep(300);
-        window.location.href = loginUrl;
+        await beginCognitoLogin();
     }
 </script>
 {#if redirecting}

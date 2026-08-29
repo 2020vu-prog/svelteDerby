@@ -26,14 +26,12 @@
         initialReloadRoute,
         getOrgName,
         reRenderHotLoad,
-        userExpCountDownSecs,
-        userJwtStore,
+        initializeCognitoSession,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
     import { sleep, refreshOrgRoles } from "./utils.js";
     import { routeRegistry } from "./routes/routeRuntime.js";
-    import { setIdTokenFromCognitoCallback } from "./utilHosted.js";
     import { urlParseSpotify } from "./utils/spotify";
     const { canAccessRoute } = require("./routes/routeAccess.js");
     const {
@@ -59,13 +57,6 @@
     const closeEventTitlePopoverOnEscape = (event) => {
         if (event.key === "Escape") eventTitlePopoverVisible = false;
     };
-    $: {
-        if ($userJwtStore && $userExpCountDownSecs == 0) {
-            log.warn("app: cleared expired jwt");
-            $userJwtStore = "";
-        }
-    }
-
     $: menuContext = {
         raceConfig: $raceConfig,
         roleMap: $roleMap,
@@ -147,7 +138,15 @@
         setEnvTitle();
         const initialRoute = routeRegistry.match($location);
         const orgIz = initialRoute?.params?.orgIz || $raceConfig.orgIz;
-        await setIdTokenFromCognitoCallback();
+        try {
+            await initializeCognitoSession(window.location.href);
+        } catch (error) {
+            log.error("Cognito session initialization failed", error);
+            pushMessage({
+                text: "Unable to renew login. Please sign in again.",
+                type: "error",
+            });
+        }
         try {
             await urlParseSpotify();
         } catch (error) {
