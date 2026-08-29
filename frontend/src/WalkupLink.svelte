@@ -3,7 +3,7 @@
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
     import { createEventDispatcher, onMount } from "svelte";
     import Icon from "fa-svelte";
-    import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
+    import { faBackspace } from "@fortawesome/free-solid-svg-icons/faBackspace";
     import {
         isValidSpotifyTrack,
         spotifyTrackId,
@@ -57,7 +57,7 @@
                 type="button"
                 aria-label="Clear walk up Spotify link"
                 title="Clear walk up Spotify link"
-                on:click={clear}><Icon icon={faTimes} /></button
+                on:click={clear}><Icon icon={faBackspace} /></button
             >
         {/if}
     </span>
