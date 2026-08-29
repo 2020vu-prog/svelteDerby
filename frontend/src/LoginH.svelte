@@ -4,13 +4,13 @@
     import LoginSpotify from "./LoginSpotify.svelte";
     import { logout, sleep } from "./utils.js";
     import {
-        beginCognitoLogin,
         developerMode,
         pushMessage,
         userExpCountDownSecs,
         userEmail,
         userId,
     } from "./stores.js";
+    import { beginCognitoLogin } from "./utils/cognitoSession.js";
 
     interface CognitoHostedConfig {
         aws_user_pools_hosted_client_id: string;

@@ -26,13 +26,13 @@
         initialReloadRoute,
         getOrgName,
         reRenderHotLoad,
-        initializeCognitoSession,
     } from "./stores.js";
     import { onMount } from "svelte";
     import { db, localConfigDb } from "./eventDb.js";
     import { sleep, refreshOrgRoles } from "./utils.js";
     import { routeRegistry } from "./routes/routeRuntime.js";
     import { urlParseSpotify } from "./utils/spotify";
+    import { initializeCognitoSession } from "./utils/cognitoSession.js";
     const { canAccessRoute } = require("./routes/routeAccess.js");
     const {
         getMenuItems,

@@ -10,14 +10,10 @@ import { persistable } from "./storedb.js";
 import { derived, writable, readable, get as getStore } from "svelte/store";
 import { buildVersion, getSpaLocation } from "./utils.js";
 import { replace } from "svelte-spa-router";
-import aws_exports from "./aws-config";
 import {
-    beginCognitoLogin as redirectToCognitoLogin,
-    completeCognitoLogin,
-    createCognitoUserManager,
-    freshCognitoUser,
-    removeCognitoUser,
-} from "./utils/cognitoAuth.js";
+    configureCognitoSession,
+    ensureFreshCognitoSession,
+} from "./utils/cognitoSession.js";
 
 function parseBool(val) {
     return val === true || val === "true";
@@ -48,80 +44,10 @@ function dtoken(bearerToken, prop) {
     return "";
 }
 export const userJwtStore = persistable("userJwt", "");
-
-const cognitoUserManager = createCognitoUserManager({
-    hostedUrl: aws_exports.hosted_url,
-    clientId: aws_exports.aws_user_pools_hosted_client_id,
-    redirectUri: `${window.location.origin}/`,
-    region: aws_exports.aws_cognito_region,
-    userPoolId: aws_exports.aws_user_pools_id,
+configureCognitoSession({
+    get: () => getStore(userJwtStore),
+    set: (token) => userJwtStore.set(token),
 });
-let cognitoRefreshPromise;
-
-function storeCognitoUser(user) {
-    userJwtStore.set(user?.id_token || "");
-}
-
-cognitoUserManager.events.addUserLoaded(storeCognitoUser);
-cognitoUserManager.events.addUserUnloaded(() => storeCognitoUser(null));
-cognitoUserManager.events.addSilentRenewError((error) =>
-    log.warn("Cognito automatic token renewal failed", error)
-);
-
-export function beginCognitoLogin() {
-    return redirectToCognitoLogin(cognitoUserManager);
-}
-
-export async function initializeCognitoSession(callbackUrl) {
-    const callbackUser = await completeCognitoLogin(
-        cognitoUserManager,
-        callbackUrl
-    );
-    if (callbackUser) {
-        storeCognitoUser(callbackUser);
-        return callbackUser.id_token;
-    }
-    return ensureFreshCognitoSession();
-}
-
-export async function ensureFreshCognitoSession(force = false) {
-    if (!cognitoRefreshPromise) {
-        cognitoRefreshPromise = freshCognitoUser(cognitoUserManager, force)
-            .then((user) => {
-                if (user) {
-                    storeCognitoUser(user);
-                    return user.id_token;
-                }
-                // During the staged implicit-to-code migration, honor an
-                // existing unexpired ID token until the user next signs in.
-                const legacyToken = getStore(userJwtStore);
-                const legacyClaims = legacyToken
-                    ? jwt.decode(legacyToken)
-                    : null;
-                if (
-                    !force &&
-                    legacyClaims?.exp &&
-                    legacyClaims.exp > Date.now() / 1000
-                ) {
-                    return legacyToken;
-                }
-                storeCognitoUser(null);
-                return "";
-            })
-            .finally(() => {
-                cognitoRefreshPromise = null;
-            });
-    }
-    return cognitoRefreshPromise;
-}
-
-export async function clearCognitoSession() {
-    try {
-        await removeCognitoUser(cognitoUserManager);
-    } finally {
-        storeCognitoUser(null);
-    }
-}
 //export const userEmail = persistable("userEmail", "");
 export const userId = derived(userJwtStore, ($bearer) => {
     return dtoken($bearer, "cognito:username");

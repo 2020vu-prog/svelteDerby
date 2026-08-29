@@ -6,7 +6,6 @@ import { db } from "./eventDb.js";
 import {
     userEmail as userEmailStore,
     userJwtStore,
-    clearCognitoSession,
     pushMessage,
     getAxios as getAxiosStore,
     raceConfig as raceConfigStore,
@@ -17,6 +16,7 @@ import {
     nowDate,
     timeFormat,
 } from "./stores.js";
+import { clearCognitoSession } from "./utils/cognitoSession.js";
 import { get } from "svelte/store";
 import { localConfigDb } from "./eventDb.js";
 import { location as spaLocation } from "svelte-spa-router";
