@@ -1,4 +1,5 @@
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
+import aws_exports from "../aws-config";
 
 const COGNITO_URL_STATE = "cognito";
 
@@ -26,7 +27,7 @@ function clearCallbackParameters(callbackUrl) {
     return url.toString();
 }
 
-export function createCognitoUserManager({
+function createCognitoUserManager({
     hostedUrl,
     clientId,
     redirectUri,
@@ -56,6 +57,17 @@ export function createCognitoUserManager({
     });
 }
 
+// Constructed once here (rather than in utilHosted.js) so both stores.js
+// (the 401 retry path) and utilHosted.js (login/logout/callback) can import
+// the same singleton without stores.js <-> utilHosted.js becoming a cycle.
+export const cognitoUserManager = createCognitoUserManager({
+    hostedUrl: aws_exports.hosted_url,
+    clientId: aws_exports.aws_user_pools_hosted_client_id,
+    redirectUri: `${window.location.origin}/`,
+    region: aws_exports.aws_cognito_region,
+    userPoolId: aws_exports.aws_user_pools_id,
+});
+
 export function beginCognitoLogin(userManager) {
     return userManager.signinRedirect({ url_state: COGNITO_URL_STATE });
 }
@@ -76,9 +88,13 @@ export async function completeCognitoLogin(userManager, callbackUrl) {
     }
 }
 
-export async function freshCognitoUser(userManager) {
+// force=true bypasses the client-side expiry check: a 401 means the server
+// rejected the token even though the client's clock may still consider it
+// valid (clock skew, revocation), so it's worth a real signinSilent() rather
+// than trusting the local expiry check.
+export async function freshCognitoUser(userManager, force = false) {
     const user = await userManager.getUser();
     if (!user) return null;
-    if (user.expired) return userManager.signinSilent();
+    if (force || user.expired) return userManager.signinSilent();
     return user;
 }

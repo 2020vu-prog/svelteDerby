@@ -1,20 +1,11 @@
 import log from "loglevel";
-import aws_exports from "./aws-config";
 import { userJwtStore } from "./stores.js";
 import {
-    createCognitoUserManager,
+    cognitoUserManager,
     beginCognitoLogin as signinRedirect,
     completeCognitoLogin,
     freshCognitoUser,
 } from "./utils/cognitoAuth.js";
-
-export const cognitoUserManager = createCognitoUserManager({
-    hostedUrl: aws_exports.hosted_url,
-    clientId: aws_exports.aws_user_pools_hosted_client_id,
-    redirectUri: `${window.location.origin}/`,
-    region: aws_exports.aws_cognito_region,
-    userPoolId: aws_exports.aws_user_pools_id,
-});
 
 // Keeps userJwtStore in sync as oidc-client-ts's automaticSilentRenew mints
 // fresh tokens in the background -- this is what "extends login" past the
