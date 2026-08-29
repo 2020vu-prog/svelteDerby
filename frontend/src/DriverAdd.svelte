@@ -387,10 +387,6 @@
             log.debug("sync add button FAIL");
         }
     };
-    $: if (mounted) {
-        driverForm.walkupLink;
-        syncAddButton();
-    }
     function getLocalSSML() {
         var mockUpDriverObject = {
             number: Number(driverForm.carNumber),
