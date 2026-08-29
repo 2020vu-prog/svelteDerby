@@ -82,10 +82,8 @@
 {:else}
     <h3>#{ptcp.number} {ptcp.name} -- Walkup Track</h3>
     <WalkupLink bind:saveValue={wLink} let:valid>
-        <SpinnerButton
-            disabled={!valid}
-            spinning={saveSpinning}
-            on:click={save}>Save</SpinnerButton
+        <SpinnerButton disabled={!valid} spinning={saveSpinning} on:click={save}
+            >Save</SpinnerButton
         >
     </WalkupLink>
 {/if}

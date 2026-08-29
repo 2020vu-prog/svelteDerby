@@ -63,7 +63,7 @@
     </p>
 {/if}
 <div class="actions">
-    <slot {valid} />
+    <slot valid={valid} />
     <SpinnerButton
         disabled={!saveValue || !valid}
         on:click={() => (showPlayer = !showPlayer)}
