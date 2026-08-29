@@ -17,7 +17,7 @@
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import { stringify as csvStringify } from "csv-stringify/sync";
     import { parse as csvParse } from "csv-parse/sync";
-    import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
+    import WalkupLink from "./WalkupLink.svelte";
     import QRCode from "qrcode";
 
     import Icon from "fa-svelte";
@@ -31,7 +31,7 @@
     var submitSpinning = false;
     var speakSpinning = false;
     const canManageDriverJson = createPermissionStore(RoutePermission.POWER);
-    let doPlay = false;
+    let walkupLinkValid = true;
 
     let delegateSpinning = false;
     let delegateQrSvg = "";
@@ -520,36 +520,22 @@
             .
         </p>
     {/if}
-    <label>
-        <a target="_blank" href="https://open.spotify.com/">
-            Walk up Spotify link
-        </a>
-
-        <input
-            id="walkUp"
-            type="text"
-            bind:value={driverForm.walkupLink}
-            placeholder="Walkup Link"
-        />
-    </label>
-    <SpinnerButton on:click={requestSpeech} spinning={speakSpinning}>
-        Speak
-    </SpinnerButton>
-    <SpinnerButton
-        disabled={submitDisabled}
-        on:click={handleSubmit}
-        spinning={submitSpinning}
-    >
-        {mode}
-    </SpinnerButton>
-    {#if driverForm.walkupLink}
-        <SpinnerButton on:click={() => (doPlay = true)}>Play</SpinnerButton>
-    {/if}
-    {#if doPlay && driverForm.walkupLink}
-        {#key driverForm.walkupLink}
-            <SpotifyEmbedded autoPlay="false" href={driverForm.walkupLink} />
-        {/key}
-    {/if}
+    <WalkupLink
+        bind:saveValue={driverForm.walkupLink}
+        on:validitychange={(event) => (walkupLinkValid = event.detail.valid)}
+    />
+    <div class="form-actions">
+        <SpinnerButton on:click={requestSpeech} spinning={speakSpinning}>
+            Speak
+        </SpinnerButton>
+        <SpinnerButton
+            disabled={submitDisabled || !walkupLinkValid}
+            on:click={handleSubmit}
+            spinning={submitSpinning}
+        >
+            {mode}
+        </SpinnerButton>
+    </div>
     {#if mode === "Update"}
         <br />
         <br />
@@ -604,3 +590,10 @@
         </div>
     {/if}
 </form>
+
+<style>
+    .form-actions {
+        display: block;
+        margin-top: 0.5rem;
+    }
+</style>

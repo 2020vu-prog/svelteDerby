@@ -8,7 +8,7 @@
         driverMap,
     } from "./stores.js";
     import SpinnerButton from "./SpinnerButton.svelte";
-    import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
+    import WalkupLink from "./WalkupLink.svelte";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -17,6 +17,7 @@
     let wLink = "";
     let wLinkInitializedForNumber;
     let saveSpinning = false;
+    let wLinkValid = true;
 
     // Reactive, not a one-time fetch: $driverMap already syncs live over the
     // app's existing realtime/HTTP pipeline (see $driverMap in
@@ -81,17 +82,22 @@
     </p>
 {:else}
     <h3>#{ptcp.number} {ptcp.name} -- Walkup Track</h3>
-    <label>
-        Spotify Link:
-        <input
-            type="text"
-            bind:value={wLink}
-            placeholder="https://open.spotify.com/track/..."
-        />
-    </label>
-    <br />
-    <SpinnerButton spinning={saveSpinning} on:click={save}>Save</SpinnerButton>
-    {#if wLink}
-        <SpotifyEmbedded href={wLink} />
-    {/if}
+    <WalkupLink
+        bind:saveValue={wLink}
+        on:validitychange={(event) => (wLinkValid = event.detail.valid)}
+    />
+    <div class="form-actions">
+        <SpinnerButton
+            disabled={!wLinkValid}
+            spinning={saveSpinning}
+            on:click={save}>Save</SpinnerButton
+        >
+    </div>
 {/if}
+
+<style>
+    .form-actions {
+        display: block;
+        margin-top: 0.5rem;
+    }
+</style>
