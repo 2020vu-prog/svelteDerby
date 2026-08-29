@@ -1,6 +1,6 @@
 <script>
     import { tick } from "svelte";
-    import { theme } from "../stores.js";
+    import { theme, showHelpIcon } from "../stores.js";
     import { loadHelpMarkdown, resolveVisibleHelp } from "./routeHelpLoader.js";
     const { resolveRouteHelpIds } = require("./routeHelp.js");
 
@@ -33,7 +33,7 @@
         loadedSignature = "";
         loadRequest += 1;
     }
-    $: if (!visibleHelp.length && isOpen) {
+    $: if ((!visibleHelp.length || !$showHelpIcon) && isOpen) {
         closeHelp(false);
     }
     $: if (isOpen && visibleSignature !== loadedSignature) {
@@ -211,7 +211,7 @@
     }
 </style>
 
-{#if visibleHelp.length}
+{#if visibleHelp.length && $showHelpIcon}
     <button
         bind:this={launcher}
         type="button"
