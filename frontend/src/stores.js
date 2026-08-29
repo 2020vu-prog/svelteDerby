@@ -81,6 +81,7 @@ export const orgMap = writable({});
 export const carFilter = writable("");
 export const nextOnBlockKey = writable("");
 export const showBottomNav = persistable("pref:showBottomNav", true);
+export const showHelpIcon = persistable("pref:showHelpIcon", true);
 export const developerMode = persistable("pref:developerMode", false);
 export const developerLogging = persistable("pref:developerLogging");
 export const enableFractionalMs = persistable("pref:enableFractionalMs", false);
