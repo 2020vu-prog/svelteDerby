@@ -189,6 +189,8 @@ data "aws_iam_policy_document" "deploy_compute" {
       "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:dynamoMain:*",
       "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:sqsCcaMain",
       "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:sqsCcaMain:*",
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:videoMotionDetect",
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:videoMotionDetect:*",
       "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:event-source-mapping:*",
     ]
   }
@@ -212,6 +214,7 @@ data "aws_iam_policy_document" "deploy_compute" {
       "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/derbyMain*",
       "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/dynamoMain*",
       "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/sqsCcaMain*",
+      "arn:${local.partition}:logs:${var.AwsRegion}:${local.account_id}:log-group:/aws/lambda/videoMotionDetect*",
     ]
   }
 
@@ -260,6 +263,7 @@ data "aws_iam_policy_document" "deploy_iam" {
       "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_dynamo_*",
       "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_cca_*",
       "arn:${local.partition}:iam::${local.account_id}:role/cognito_authenticated_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/video_motion_detect_*",
       "arn:${local.partition}:iam::${local.account_id}:policy/cloudwatch_allow_*",
       "arn:${local.partition}:iam::${local.account_id}:policy/dynamo_allow_*",
       "arn:${local.partition}:iam::${local.account_id}:policy/ccaMain_allow_*",
@@ -275,6 +279,7 @@ data "aws_iam_policy_document" "deploy_iam" {
       "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_dynamo_*",
       "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_cca_*",
       "arn:${local.partition}:iam::${local.account_id}:role/cognito_authenticated_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/video_motion_detect_*",
     ]
 
     condition {
@@ -293,6 +298,7 @@ data "aws_iam_policy_document" "deploy_iam" {
       "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_dynamo_*",
       "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_cca_*",
       "arn:${local.partition}:iam::${local.account_id}:role/cognito_authenticated_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/video_motion_detect_*",
     ]
 
     condition {
@@ -331,6 +337,7 @@ data "aws_iam_policy_document" "deploy_iam" {
       "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_*",
       "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_dynamo_*",
       "arn:${local.partition}:iam::${local.account_id}:role/iam_for_lambda_cca_*",
+      "arn:${local.partition}:iam::${local.account_id}:role/video_motion_detect_*",
     ]
 
     condition {
