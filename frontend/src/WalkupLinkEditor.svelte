@@ -1,7 +1,7 @@
 <script>
     import SpinnerButton from "./SpinnerButton.svelte";
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import Icon from "fa-svelte";
     import { faBackspace } from "@fortawesome/free-solid-svg-icons/faBackspace";
     import {
@@ -13,11 +13,8 @@
 
     let showPlayer = false;
     let valid = true;
+    let focused = false;
     const dispatch = createEventDispatcher();
-
-    function normalize() {
-        if (valid) saveValue = spotifyTrackId(saveValue);
-    }
 
     function clear() {
         saveValue = "";
@@ -27,16 +24,17 @@
     $: valid = isValidSpotifyTrack(saveValue);
     $: dispatch("validitychange", { valid });
     $: if (!saveValue || !valid) showPlayer = false;
-
-    onMount(() => {
-        // Show the bare track ID on load, not whatever form (full URL,
-        // spotify: URI) happens to already be saved -- normalize() already
-        // does this on every user edit, so run it once for the initial
-        // value too instead of leaving it in raw/legacy form until the
-        // user's next edit triggers a change event.
-        normalize();
-        dispatch("validitychange", { valid });
-    });
+    // Collapse a full URL/URI down to the bare track ID whenever the field
+    // isn't actively being typed into. Reactive (not onMount-only) because
+    // saveValue can arrive well after this component mounts -- e.g.
+    // DriverAdd.svelte loads the existing driver from IndexedDB inside an
+    // async onMount, so this component first mounts with an empty
+    // saveValue and only gets the real stored URL once that load resolves.
+    // Guarding on !focused keeps it from rewriting the field mid-edit.
+    $: if (!focused && saveValue && isValidSpotifyTrack(saveValue)) {
+        const normalized = spotifyTrackId(saveValue);
+        if (normalized !== saveValue) saveValue = normalized;
+    }
 </script>
 
 <div class="field-row">
@@ -55,7 +53,8 @@
             type="text"
             bind:value={saveValue}
             on:input
-            on:change={normalize}
+            on:focus={() => (focused = true)}
+            on:blur={() => (focused = false)}
             placeholder="https://open.spotify.com/track/..."
             aria-invalid={!valid}
         />
