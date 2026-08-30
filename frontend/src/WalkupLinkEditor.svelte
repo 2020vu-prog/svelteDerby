@@ -11,10 +11,7 @@
 
     export let saveValue = "";
 
-    // Show the player immediately for an already-saved link, so opening
-    // this editor to check/change an existing walkup track doesn't require
-    // an extra "Play" click just to see what's currently set.
-    let showPlayer = Boolean(saveValue) && isValidSpotifyTrack(saveValue);
+    let showPlayer = false;
     let valid = true;
     const dispatch = createEventDispatcher();
 
@@ -31,7 +28,15 @@
     $: dispatch("validitychange", { valid });
     $: if (!saveValue || !valid) showPlayer = false;
 
-    onMount(() => dispatch("validitychange", { valid }));
+    onMount(() => {
+        // Show the bare track ID on load, not whatever form (full URL,
+        // spotify: URI) happens to already be saved -- normalize() already
+        // does this on every user edit, so run it once for the initial
+        // value too instead of leaving it in raw/legacy form until the
+        // user's next edit triggers a change event.
+        normalize();
+        dispatch("validitychange", { valid });
+    });
 </script>
 
 <div class="field-row">
