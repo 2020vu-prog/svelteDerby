@@ -78,11 +78,14 @@ resource "aws_lambda_function" "video_motion_detect" {
 
   # There's no per-key claim/lock -- concurrent requests for the same
   # not-yet-tagged key can each pass the cache check and duplicate the
-  # ffmpeg work before the first invocation's tag write lands. This doesn't
-  # close that race (would need a real lock, e.g. a conditional DynamoDB
-  # write, to do that), it just bounds the worst-case cost/duplication
-  # blast radius on this public, unauthenticated endpoint.
-  reserved_concurrent_executions = 5
+  # ffmpeg work before the first invocation's tag write lands. Wanted to
+  # bound that with reserved_concurrent_executions, but this account's
+  # available *unreserved* concurrency is already too tight for even a
+  # small reservation ("decreases account's UnreservedConcurrentExecution
+  # below its minimum value of [10]" on deploy) -- would need coordination
+  # with whatever else in the account is already reserving concurrency
+  # before this can be set. Left unset; the known limitation is still real,
+  # just unmitigated here for now.
 
   environment {
     variables = {
