@@ -2,7 +2,10 @@
     import { tick } from "svelte";
     import { theme, showHelpIcon } from "../stores.js";
     import { loadHelpMarkdown, resolveVisibleHelp } from "./routeHelpLoader.js";
-    const { resolveRouteHelpIds } = require("./routeHelp.js");
+    const {
+        resolveRouteHelpIds,
+        resolveRoutePermissionName,
+    } = require("./routeHelp.js");
 
     /** @type {import("./routeRegistry.js").RouteMatch|null} */
     export let currentMatch = null;
@@ -21,6 +24,10 @@
     let markdownPromise;
 
     $: helpIds = resolveRouteHelpIds(currentMatch, context);
+    $: requiredPermissionName = resolveRoutePermissionName(
+        currentMatch,
+        context
+    );
     $: helpContext = helpIds.join("|");
     $: visibleHelp = resolveVisibleHelp(helpIds, context);
     $: visibleSignature = visibleHelp
@@ -196,6 +203,13 @@
         content: " ↗";
     }
 
+    .help-permission {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #ccc;
+        font-size: 0.9rem;
+    }
+
     @media (max-width: 600px) {
         .help-backdrop {
             align-items: flex-end;
@@ -254,6 +268,12 @@
                             {@html section.html}
                         </article>
                     {/each}
+                    {#if requiredPermissionName}
+                        <footer class="help-permission">
+                            <strong>Required permission:</strong>
+                            {requiredPermissionName}
+                        </footer>
+                    {/if}
                 </div>
             {/if}
         </section>
