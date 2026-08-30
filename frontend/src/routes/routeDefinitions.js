@@ -112,7 +112,7 @@ const routeDefinitions = [
         component: "LoginH",
         permission: RoutePermission.PUBLIC,
         menu: generalMenu(
-            ({ userId }) => (userId ? `Logout [${userId}]` : "Login"),
+            ({ userEmail }) => (userEmail ? `Logout [${userEmail}]` : "Login"),
             80,
             {
                 requiresEvent: false,
