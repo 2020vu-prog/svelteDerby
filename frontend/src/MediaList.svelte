@@ -24,11 +24,13 @@
         raceConfig,
         pushMessage,
         mediaFileType,
+        mediaFilter,
         videoHref,
     } from "./stores.js";
     import { tick } from "svelte";
     import { db } from "./eventDb.js";
     import MediaViewer from "./MediaViewer.svelte";
+    import CarFilter from "./CarFilter.svelte";
 
     export let params = {};
     var vtime = 1;
@@ -188,17 +190,21 @@
             return key.replace(/.*-/, "");
         }
     }
-    function getMediaItems(mediaList) {
-        return mediaList.filter((item) => shouldDisplayMediaItem(item));
+    function getMediaItems(mediaList, mediaFileType, mediaFilter) {
+        return mediaList.filter((item) =>
+            shouldDisplayMediaItem(item, mediaFileType, mediaFilter)
+        );
     }
-    function shouldDisplayMediaItem(item) {
-        //return true;
-        if (!$mediaFileType) return true;
-
-        const lcType = $mediaFileType.toString().toLowerCase();
-
+    function shouldDisplayMediaItem(item, mediaFileType, mediaFilter) {
         const lcKey = item.Key.toLowerCase();
-        return lcKey.endsWith(lcType) || lcKey.endsWith("mp3");
+        if (mediaFileType) {
+            const lcType = mediaFileType.toString().toLowerCase();
+            if (!lcKey.endsWith(lcType) && !lcKey.endsWith("mp3")) {
+                return false;
+            }
+        }
+        const filter = mediaFilter.trim().toLowerCase();
+        return !filter || lcKey.includes(filter);
     }
     let animateDir = 0;
     let animateRequest = 0;
@@ -236,7 +242,7 @@
 </style>
 
 <div style="height: fill-parent">
-    <h3>Media List</h3>
+    <h3>Media List <CarFilter filterStore={mediaFilter} alphanumeric /></h3>
     {#if loadingMedia}
         <div
             style="margin: 0; position: absolute; top: 50%; left: 50%;
@@ -259,7 +265,7 @@
         {#if mediaList.length == 0}
             <h5>No media found.</h5>
         {:else}
-            {#each getMediaItems(mediaList) as mediaItem (mediaItem.Key)}
+            {#each getMediaItems(mediaList, $mediaFileType, $mediaFilter) as mediaItem (mediaItem.Key)}
                 <Card
                     class="mt-3 border border-info"
                     on:click={() => showMedia(mediaItem.Key)}

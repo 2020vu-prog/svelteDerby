@@ -7,32 +7,38 @@
     import { faBackspace } from "@fortawesome/free-solid-svg-icons/faBackspace";
     import { tick } from "svelte";
 
+    export let filterStore = carFilter;
+    export let alphanumeric = false;
+    export let maxLength = null;
+
     let icon = faFilter;
     let editMode = false;
+    let filterInput;
+    $: effectiveMaxLength = maxLength ?? (alphanumeric ? 40 : 3);
     const toggleEdit = async () => {
         log.debug("toggle:", editMode);
-        $carFilter = "";
+        $filterStore = "";
         editMode = !editMode;
         if (editMode) {
             await tick();
-            document.getElementById("cfInput").focus();
+            filterInput?.focus();
         }
     };
 </script>
 
 <!-- @format -->
-{#if $carFilter || editMode}
+{#if $filterStore || editMode}
     <span on:click={toggleEdit}>
         <Icon icon={faBackspace} />
     </span>
     <input
-        id="cfInput"
+        bind:this={filterInput}
         type="text"
-        pattern="\d*"
-        inputmode="numeric"
-        maxLength="3"
-        size="3"
-        bind:value={$carFilter}
+        pattern={alphanumeric ? "[A-Za-z0-9]*" : "\\d*"}
+        inputmode={alphanumeric ? "text" : "numeric"}
+        maxLength={effectiveMaxLength}
+        size={alphanumeric ? 12 : 3}
+        bind:value={$filterStore}
     />
 {:else}
     <span on:click={toggleEdit}>

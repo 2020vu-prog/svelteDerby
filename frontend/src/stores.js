@@ -83,6 +83,7 @@ export const racePhaseMap = writable({});
 export const driverMap = writable({});
 export const orgMap = writable({});
 export const carFilter = writable("");
+export const mediaFilter = writable("");
 export const nextOnBlockKey = writable("");
 export const showBottomNav = persistable("pref:showBottomNav", true);
 export const showHelpIcon = persistable("pref:showHelpIcon", true);
