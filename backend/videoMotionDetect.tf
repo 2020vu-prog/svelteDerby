@@ -78,14 +78,15 @@ resource "aws_lambda_function" "video_motion_detect" {
 
   # There's no per-key claim/lock -- concurrent requests for the same
   # not-yet-tagged key can each pass the cache check and duplicate the
-  # ffmpeg work before the first invocation's tag write lands. Wanted to
-  # bound that with reserved_concurrent_executions, but this account's
-  # available *unreserved* concurrency is already too tight for even a
-  # small reservation ("decreases account's UnreservedConcurrentExecution
-  # below its minimum value of [10]" on deploy) -- would need coordination
-  # with whatever else in the account is already reserving concurrency
-  # before this can be set. Left unset; the known limitation is still real,
-  # just unmitigated here for now.
+  # ffmpeg work before the first invocation's tag write lands. Capping
+  # reserved concurrency at 1 closes that race outright (AWS throttles any
+  # invocation beyond the one already running, rather than running them in
+  # parallel) instead of just bounding the blast radius. Requires the
+  # account to have at least 11 total concurrent-executions quota (1
+  # reserved + AWS's mandatory 10-unreserved floor) -- deploy will repeat
+  # the earlier "UnreservedConcurrentExecution below its minimum" failure
+  # until that quota increase lands.
+  reserved_concurrent_executions = 1
 
   environment {
     variables = {
