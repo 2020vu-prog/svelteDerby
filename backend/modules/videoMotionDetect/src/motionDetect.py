@@ -57,14 +57,18 @@ def handler(event, context):
         return _response(200, existing)
 
     result = _detect(key)
-    _write_result(key, result)
+    if result["status"] != "not_found":
+        # A nonexistent object can't hold tags -- put_object_tagging on a
+        # missing key is rejected by S3, so there's nothing to cache here.
+        # A not_found key just gets re-checked (and re-fails the same way)
+        # on every request instead of being remembered.
+        _write_result(key, result)
     return _response(200, result)
 
 
 def _read_existing_result(key):
     """Returns the previously-stored result for key, or None if this key
-    hasn't been processed yet (distinct from a `not_found` result, which
-    means it WAS processed and the key didn't exist in the bucket)."""
+    hasn't been processed yet."""
     try:
         tagging = s3.get_object_tagging(Bucket=BUCKET, Key=key)
     except s3.exceptions.ClientError:

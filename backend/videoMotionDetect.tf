@@ -65,11 +65,24 @@ resource "aws_lambda_function" "video_motion_detect" {
   filename         = local.videoMotionDetectZip
   source_code_hash = filebase64sha256(local.videoMotionDetectZip)
 
-  role        = aws_iam_role.video_motion_detect.arn
-  handler     = "motionDetect.handler"
-  runtime     = "python3.13"
-  timeout     = 30
+  role    = aws_iam_role.video_motion_detect.arn
+  handler = "motionDetect.handler"
+  runtime = "python3.13"
+  # motionDetect.py's own subprocess timeouts already sum to 35s
+  # (FFPROBE_TIMEOUT_SECONDS=10 + FFMPEG_TIMEOUT_SECONDS=25), before S3
+  # download, cold start init, frame-diff, or tag I/O. A shorter Lambda
+  # timeout would hard-kill the invocation before those internal timeouts
+  # ever get a chance to return a clean decode_error.
+  timeout     = 60
   memory_size = 1024
+
+  # There's no per-key claim/lock -- concurrent requests for the same
+  # not-yet-tagged key can each pass the cache check and duplicate the
+  # ffmpeg work before the first invocation's tag write lands. This doesn't
+  # close that race (would need a real lock, e.g. a conditional DynamoDB
+  # write, to do that), it just bounds the worst-case cost/duplication
+  # blast radius on this public, unauthenticated endpoint.
+  reserved_concurrent_executions = 5
 
   environment {
     variables = {
