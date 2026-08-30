@@ -931,16 +931,20 @@ class EntityFactory {
     /**
      * Produce the short audit hash used for by-email attribution.
      *
-     * @param {string} email
+     * @param {*} email
      * @returns {string}
      */
     getHashFromEmail(email) {
-        if (!email) {
+        if (typeof email !== "string") {
+            return "";
+        }
+        const normalizedEmail = email.trim().toLowerCase();
+        if (!normalizedEmail) {
             return "";
         }
         return crypto
             .createHash("sha512")
-            .update(email.trim().toLowerCase())
+            .update(normalizedEmail)
             .digest("base64")
             .substring(0, 8);
     }

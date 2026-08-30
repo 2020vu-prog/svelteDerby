@@ -45,6 +45,13 @@ test("EntityFactory hashes normalized email", () => {
     );
 });
 
+test.each([undefined, null, "", "   ", 123, {}])(
+    "EntityFactory returns no email hash for invalid input %#",
+    (email) => {
+        expect(entityFactory.getHashFromEmail(email)).toBe("");
+    }
+);
+
 test("EntityFactory adds byH without raw email", () => {
     const hashingFactory = new EntityFactory({
         orgIz: "testme",
