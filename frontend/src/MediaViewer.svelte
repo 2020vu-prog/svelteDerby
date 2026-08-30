@@ -3,6 +3,7 @@
     import axios from "axios";
     import aws_exports from "./aws-config";
     import { videoHref, developerMode } from "./stores.js";
+    import SpinnerButton from "./SpinnerButton.svelte";
     import Icon from "fa-svelte";
     import { faBackward } from "@fortawesome/free-solid-svg-icons/faBackward";
     import { faForward } from "@fortawesome/free-solid-svg-icons/faForward";
@@ -134,19 +135,28 @@
             return 0;
         }
     }
+    let detecting = false;
+    let detectionMessage = "";
+    const DETECTION_STATUS_MESSAGES = {
+        found: "Motion detected",
+        no_motion: "No motion detected in this clip",
+        decode_error: "Unable to process this clip",
+        not_found: "Clip not found",
+    };
+
     async function seekToFinish() {
         video.pause();
         time = 0;
         await tick();
         // Refine tgtTimeSeconds from the motion-detect Lambda if it has an
-        // answer ready. Bounded by a short timeout rather than awaited
-        // indefinitely -- an unprocessed clip's first detection can take a
-        // while (real ffmpeg work), and this shouldn't block seeking to the
-        // existing toMs-derived estimate. Re-running this on every
-        // seekToFinish call (not just at mount) means a click that missed
+        // answer ready. Bounded (not awaited indefinitely) -- an
+        // unprocessed clip's first detection is real ffmpeg work and can
+        // take a while, and this shouldn't block seeking to the existing
+        // toMs-derived estimate forever. Re-running this on every
+        // seekToFinish call (not just at mount) means a click that misses
         // the timeout window self-heals on the next click, once the
         // Lambda's own (idempotent, tag-cached) processing has caught up.
-        const detected = await detectMotionOffsetSeconds();
+        const detected = await runMotionDetection();
         if (detected != null) {
             tgtTimeSeconds = detected;
         }
@@ -154,15 +164,25 @@
         makeControlsVisible();
     }
 
-    async function detectMotionOffsetSeconds() {
+    async function runMotionDetection() {
         const detectUrl = aws_exports.video_motion_detect_url;
         if (!detectUrl || !$videoHref) return null;
+        detecting = true;
+        detectionMessage = "";
         try {
             const response = await axios.get(detectUrl, {
                 params: { key: $videoHref.replace(/^\//, "") },
-                timeout: 3000,
+                // Long enough to usually cover a first-time detection run
+                // now that there's a visible spinner for it, but still
+                // bounded -- a click that misses even this window
+                // self-heals on the next click via the tag cache.
+                timeout: 15000,
             });
             const result = response.data;
+            detectionMessage =
+                DETECTION_STATUS_MESSAGES[result?.status] ||
+                result?.status ||
+                "";
             if (
                 result?.status === "found" &&
                 typeof result.offsetMs === "number"
@@ -171,6 +191,9 @@
             }
         } catch (error) {
             log.warn("motion detection request failed or timed out", error);
+            detectionMessage = "Motion detection unavailable";
+        } finally {
+            detecting = false;
         }
         return null;
     }
@@ -244,6 +267,14 @@
     <Icon class="xLargeIcon" icon={faForward} />
     <p></p>
 </span>
+{#if detecting}
+    <br />
+    <SpinnerButton spinning disabled>Waiting for motion detection</SpinnerButton
+    >
+{:else if detectionMessage}
+    <br />
+    <span class="detection-message">{detectionMessage}</span>
+{/if}
 {#if $developerMode}
     <br />
     Offset: {tgtTimeSeconds}
@@ -251,6 +282,11 @@
 <style>
     div {
         position: relative;
+    }
+
+    .detection-message {
+        color: gray;
+        font-style: italic;
     }
 
     .controls {
