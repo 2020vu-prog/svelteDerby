@@ -48,6 +48,9 @@ export const userId = derived(userJwtStore, ($bearer) => {
 export const userEmail = derived(userJwtStore, ($bearer) => {
     return dtoken($bearer, "email");
 });
+export const userAuthTime = derived(userJwtStore, ($bearer) => {
+    return dtoken($bearer, "auth_time");
+});
 export const userExp = derived(userJwtStore, ($bearer) => {
     log.info("userExp: begin");
     return dtoken($bearer, "exp");
