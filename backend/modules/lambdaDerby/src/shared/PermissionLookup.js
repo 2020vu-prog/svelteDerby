@@ -84,3 +84,4 @@ module.exports.hasServerRoutePath = (orgIz, roleList, serverRoutePath) => {
     return roleHasRoutePath(orgIz, roleList, serverRoutePath);
 };
 module.exports.getNamedRoles = getNamedRoles;
+module.exports.getRolePermissions = getRolePermissions;
