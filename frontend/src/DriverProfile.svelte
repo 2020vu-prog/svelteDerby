@@ -8,7 +8,7 @@
         driverMap,
     } from "./stores.js";
     import SpinnerButton from "./SpinnerButton.svelte";
-    import WalkupLink from "./WalkupLink.svelte";
+    import WalkupLinkEditor from "./WalkupLinkEditor.svelte";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
@@ -82,7 +82,7 @@
     </p>
 {:else}
     <h3>#{ptcp.number} {ptcp.name} -- Walkup Track</h3>
-    <WalkupLink
+    <WalkupLinkEditor
         bind:saveValue={wLink}
         on:validitychange={(event) => (wLinkValid = event.detail.valid)}
     />
