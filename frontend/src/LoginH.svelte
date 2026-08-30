@@ -6,8 +6,9 @@
     import { beginCognitoLogin, cognitoLogout } from "./utilHosted.js";
     import {
         developerMode,
+        nowDate,
         pushMessage,
-        userExpCountDownSecs,
+        userAuthTime,
         userEmail,
         userId,
     } from "./stores.js";
@@ -27,24 +28,14 @@
         return `${cognitoConfig.hosted_url}/logout?${clientId}&logout_uri=${encodedRedir}`;
     }
     const logoutUrl = hostedLogoutUrl();
-    function m60(x: number): [number, number] {
-        const modx = x % 60;
-        const remx = Math.floor(x / 60);
-        return [remx, modx];
-    }
-
-    function hhmmss(secs: number): string {
-        const [fatMM, ss] = m60(secs);
-        const [hh, mm] = m60(fatMM);
-        //return `[${secs}] ` + hh + ":" + mm + ":" + ss + "__" +
-        return (
-            "" +
-            ("0" + hh).slice(-2) +
-            ":" +
-            ("0" + mm).slice(-2) +
-            ":" +
-            ("0" + ss).slice(-2)
+    function loginAge(authTime: number, now: Date): string {
+        const elapsedDays = Math.max(
+            0,
+            Math.floor((now.getTime() / 1000 - authTime) / 86400)
         );
+        if (elapsedDays === 0) return "today";
+        if (elapsedDays === 1) return "1 day ago";
+        return `${elapsedDays} days ago`;
     }
     async function clickedLogout(): Promise<void> {
         redirecting = true;
@@ -74,8 +65,10 @@
     <br />
     Email: [{$userEmail}]
     <br />
-    Token expiration: {hhmmss($userExpCountDownSecs)}
-    <br />
+    {#if $userAuthTime}
+        Logged in: {loginAge($userAuthTime, $nowDate)}
+        <br />
+    {/if}
     <SpinnerButton on:click={clickedLogout}>Logout</SpinnerButton>
 {:else}
     <br />
