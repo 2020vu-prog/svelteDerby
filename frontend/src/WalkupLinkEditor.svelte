@@ -11,7 +11,10 @@
 
     export let saveValue = "";
 
-    let showPlayer = false;
+    // Show the player immediately for an already-saved link, so opening
+    // this editor to check/change an existing walkup track doesn't require
+    // an extra "Play" click just to see what's currently set.
+    let showPlayer = Boolean(saveValue) && isValidSpotifyTrack(saveValue);
     let valid = true;
     const dispatch = createEventDispatcher();
 
