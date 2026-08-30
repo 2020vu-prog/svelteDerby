@@ -17,7 +17,7 @@
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import { stringify as csvStringify } from "csv-stringify/sync";
     import { parse as csvParse } from "csv-parse/sync";
-    import WalkupLink from "./WalkupLink.svelte";
+    import WalkupLinkEditor from "./WalkupLinkEditor.svelte";
     import QRCode from "qrcode";
 
     import Icon from "fa-svelte";
@@ -520,7 +520,7 @@
             .
         </p>
     {/if}
-    <WalkupLink
+    <WalkupLinkEditor
         bind:saveValue={driverForm.walkupLink}
         on:validitychange={(event) => (walkupLinkValid = event.detail.valid)}
     />
