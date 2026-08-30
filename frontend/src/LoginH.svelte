@@ -12,6 +12,7 @@
         userEmail,
         userId,
     } from "./stores.js";
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     interface CognitoHostedConfig {
         aws_user_pools_hosted_client_id: string;
@@ -19,7 +20,9 @@
     }
 
     const cognitoConfig = aws_exports as CognitoHostedConfig;
+    const entityFactory = new EntityFactory({});
     let redirecting: boolean = false;
+    $: emailHash = $userEmail ? entityFactory.getHashFromEmail($userEmail) : "";
 
     function hostedLogoutUrl(): string {
         const u = new URL(document.URL);
@@ -65,6 +68,10 @@
     <br />
     Email: [{$userEmail}]
     <br />
+    {#if $developerMode}
+        Email hash: [{emailHash}]
+        <br />
+    {/if}
     {#if $userAuthTime}
         Logged in: {loginAge($userAuthTime, $nowDate)}
         <br />

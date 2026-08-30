@@ -1,5 +1,6 @@
 const {
     getNamedRoles,
+    getRolePermissions,
     hasPermission,
 } = require("../modules/lambdaDerby/src/shared/PermissionLookup.js");
 const RoleName = require("../modules/lambdaDerby/src/shared/RoleName.js");
@@ -24,4 +25,10 @@ test("registration can view PA Info through its announcement permission", () => 
     expect(
         hasPermission([RoleName.REGISTRATION], "CanInitiateAnnouncement")
     ).toBe(true);
+});
+
+test("resolved permissions combine selected roles without duplicates", () => {
+    expect(
+        getRolePermissions([RoleName.STARTER, RoleName.STARTER_LIMITED]).sort()
+    ).toEqual(["Anonymous", "CanAddBlocks", "CanDeleteBlocks"]);
 });
