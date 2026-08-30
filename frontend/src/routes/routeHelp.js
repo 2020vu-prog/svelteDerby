@@ -1,6 +1,7 @@
 "use strict";
 
 const { hasNamedPermission } = require("./routeAccess.js");
+const { getRequiredPermission } = require("./routeRegistry.js");
 const { RoutePermission } = require("./routePermission.js");
 
 const HELP_FILE_PATTERN =
@@ -122,9 +123,22 @@ function resolveRouteHelpIds(match, context = {}) {
     return helpIds;
 }
 
+/**
+ * Resolves the permission name for the routed component currently receiving
+ * help. Function-valued permissions receive the active route parameters.
+ *
+ * @param {import("./routeRegistry.js").RouteMatch|null} match
+ * @param {import("./routeRegistry.js").RouteContext} [context]
+ * @returns {string}
+ */
+function resolveRoutePermissionName(match, context = {}) {
+    return getRequiredPermission(match, context)?.toString() || "";
+}
+
 module.exports = {
     createHelpCatalog,
     getVisibleHelpDescriptors,
     parseHelpFileKey,
     resolveRouteHelpIds,
+    resolveRoutePermissionName,
 };
