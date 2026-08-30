@@ -1,5 +1,7 @@
 <script>
     import log from "loglevel";
+    import axios from "axios";
+    import aws_exports from "./aws-config";
     import { videoHref, developerMode } from "./stores.js";
     import Icon from "fa-svelte";
     import { faBackward } from "@fortawesome/free-solid-svg-icons/faBackward";
@@ -136,8 +138,41 @@
         video.pause();
         time = 0;
         await tick();
+        // Refine tgtTimeSeconds from the motion-detect Lambda if it has an
+        // answer ready. Bounded by a short timeout rather than awaited
+        // indefinitely -- an unprocessed clip's first detection can take a
+        // while (real ffmpeg work), and this shouldn't block seeking to the
+        // existing toMs-derived estimate. Re-running this on every
+        // seekToFinish call (not just at mount) means a click that missed
+        // the timeout window self-heals on the next click, once the
+        // Lambda's own (idempotent, tag-cached) processing has caught up.
+        const detected = await detectMotionOffsetSeconds();
+        if (detected != null) {
+            tgtTimeSeconds = detected;
+        }
         time = tgtTimeSeconds;
         makeControlsVisible();
+    }
+
+    async function detectMotionOffsetSeconds() {
+        const detectUrl = aws_exports.video_motion_detect_url;
+        if (!detectUrl || !$videoHref) return null;
+        try {
+            const response = await axios.get(detectUrl, {
+                params: { key: $videoHref.replace(/^\//, "") },
+                timeout: 3000,
+            });
+            const result = response.data;
+            if (
+                result?.status === "found" &&
+                typeof result.offsetMs === "number"
+            ) {
+                return result.offsetMs / 1000;
+            }
+        } catch (error) {
+            log.warn("motion detection request failed or timed out", error);
+        }
+        return null;
     }
 </script>
 
