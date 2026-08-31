@@ -29,7 +29,7 @@ resource "aws_s3_bucket_ownership_controls" "lambdaSrcBucket" {
 
 resource "aws_s3_object" "vod_src_file_upload" {
   bucket = aws_s3_bucket.lambdaSrcBucket.id
-  key    = "vodTranscode/lambda.zip"
+  key    = "vodTranscode/lambda-${filemd5("${path.module}/src/lambda.zip")}.zip"
   source = "${path.module}/src/lambda.zip"
   etag   = filemd5("${path.module}/src/lambda.zip")
 }
@@ -42,6 +42,7 @@ resource "aws_cloudformation_stack" "vodTranscodeStack" {
   parameters = {
     NotifcationEmail = "2020vu+videoJobDone@gmail.com"
     LambdaSrcBucket  = aws_s3_bucket.lambdaSrcBucket.id
+    LambdaSrcKey     = aws_s3_object.vod_src_file_upload.key
   }
   depends_on = [aws_s3_object.vod_src_file_upload]
 }
@@ -55,4 +56,3 @@ output "WatchFolderBucket" {
 output "VodCompleteSnsArn" {
   value = aws_cloudformation_stack.vodTranscodeStack.outputs.NotificationSnsArn
 }
-
