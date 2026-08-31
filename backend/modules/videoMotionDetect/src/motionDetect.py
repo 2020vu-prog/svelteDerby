@@ -238,11 +238,15 @@ def _find_motion_onset(frame_files):
 
 
 def _response(status_code, body):
+    # No Access-Control-Allow-Origin here: the Lambda Function URL's own
+    # CORS config (the `cors` block on aws_lambda_function_url in
+    # videoMotionDetect.tf) already adds it to every response. Adding it
+    # again here duplicates the header into "*, *", which browsers reject
+    # as an invalid CORS response.
     return {
         "statusCode": status_code,
         "headers": {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
         },
         "body": json.dumps(body),
     }
