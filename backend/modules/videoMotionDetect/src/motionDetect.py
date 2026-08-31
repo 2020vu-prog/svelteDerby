@@ -48,13 +48,15 @@ VERSION_TAG = "motionAlgorithmVersion"
 VALID_STATUSES = {"found", "no_motion", "decode_error", "not_found"}
 
 # Bump whenever a change could produce a different result for the same clip
-# (e.g. _find_motion_onset's logic, or the tuning constants above) -- not
-# for unrelated changes like response headers. A cached tag written under
-# an older (or missing/unversioned) algorithm version is treated as stale
-# and reprocessed; see _read_existing_result. 2 reflects the "pick the
-# highest-peak run, not the first" fix -- results tagged by the original
-# first-run-wins logic (which never wrote this tag at all) are version 0.
-ALGORITHM_VERSION = 2
+# (e.g. _find_motion_onset's logic, the tuning constants above, or which
+# file actually gets analyzed) -- not for unrelated changes like response
+# headers. A cached tag written under an older (or missing/unversioned)
+# algorithm version is treated as stale and reprocessed; see
+# _read_existing_result. 2 reflects the "pick the highest-peak run, not the
+# first" fix (results tagged by the original first-run-wins logic, which
+# never wrote this tag at all, are version 0); 3 reflects preferring the
+# transcoded .mp4 over a .webm request (see _prefer_transcoded_key).
+ALGORITHM_VERSION = 3
 
 
 def _tag_version(tags):
@@ -130,13 +132,39 @@ def _write_result(key, result):
     )
 
 
+def _prefer_transcoded_key(key):
+    """A raw .webm capture's actual frame rate can drift from its declared
+    nominal rate (browser MediaRecorder output is often variable-frame-rate).
+    Extracting frames at a fixed rate from that then duplicates frames to
+    fill the gaps, which can break the consecutive-frame motion check even
+    during large, real motion. The MediaConvert-transcoded .mp4 counterpart
+    is re-encoded at a clean, constant frame rate (and is also smaller, with
+    fewer frames to process) -- prefer it when a .webm key is requested.
+    """
+    if key.lower().endswith(".webm"):
+        return key[: -len(".webm")] + ".mp4"
+    return key
+
+
+def _download(key, dest_path):
+    try:
+        s3.download_file(BUCKET, key, dest_path)
+        return True
+    except Exception:
+        return False
+
+
 def _detect(key):
     with tempfile.TemporaryDirectory() as tmpdir:
         video_path = os.path.join(tmpdir, "clip")
-        try:
-            s3.download_file(BUCKET, key, video_path)
-        except Exception:
-            return {"status": "not_found"}
+        preferred_key = _prefer_transcoded_key(key)
+        if not _download(preferred_key, video_path):
+            # Transcoded .mp4 isn't available yet (or this key has no .mp4
+            # counterpart) -- fall back to the originally-requested file
+            # rather than failing outright, unless that's the same key we
+            # already just tried.
+            if preferred_key == key or not _download(key, video_path):
+                return {"status": "not_found"}
 
         fps = _probe_fps(video_path)
         if fps is None:
