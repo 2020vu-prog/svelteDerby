@@ -202,13 +202,23 @@ def _changed_pixel_count(prev, frame):
 
 
 def _find_motion_onset(frame_files):
-    """Returns the 0-based index into frame_files of the first frame in a
-    sustained run of motion, or None if no such run exists.
+    """Returns the 0-based index into frame_files of the first frame of the
+    clip's most prominent sustained motion run, or None if no run of at
+    least CONSECUTIVE_FRAMES_REQUIRED frames clears the noise-floor
+    threshold.
 
     counts[i] is the diff between frame_files[i] and frame_files[i + 1], so
     a run starting at counts index run_start reflects frame_files[run_start
     + 1] onward as the frames that actually show the change -- the onset
     frame is run_start + 1, not run_start.
+
+    Picks the run with the highest peak changed-pixel count, not simply the
+    first qualifying run chronologically: a clip can have an early, weaker
+    burst (camera settling, compression noise, vibration in an edge-dense
+    scene) well before the real, much stronger car-crossing signal later.
+    Taking the first run alone reports the spurious one -- confirmed
+    against two real archived clips where the true crossing's peak was
+    5-10x the false run's peak.
     """
     counts = []
     prev = None
@@ -225,16 +235,26 @@ def _find_motion_onset(frame_files):
     median_noise = sorted_counts[len(sorted_counts) // 2]
     threshold = max(MIN_ABSOLUTE_PIXELS, median_noise * NOISE_FLOOR_MULTIPLIER)
 
+    # Every maximal run of consecutive frames at/above threshold that's at
+    # least CONSECUTIVE_FRAMES_REQUIRED long, as (start_index, peak_count).
+    runs = []
     run_start = None
     for i, count in enumerate(counts):
         if count >= threshold:
             if run_start is None:
                 run_start = i
-            if i - run_start + 1 >= CONSECUTIVE_FRAMES_REQUIRED:
-                return run_start + 1
         else:
+            if run_start is not None and i - run_start >= CONSECUTIVE_FRAMES_REQUIRED:
+                runs.append((run_start, max(counts[run_start:i])))
             run_start = None
-    return None
+    if run_start is not None and len(counts) - run_start >= CONSECUTIVE_FRAMES_REQUIRED:
+        runs.append((run_start, max(counts[run_start:])))
+
+    if not runs:
+        return None
+
+    best_start, _ = max(runs, key=lambda run: run[1])
+    return best_start + 1
 
 
 def _response(status_code, body):
