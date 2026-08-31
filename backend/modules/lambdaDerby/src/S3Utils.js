@@ -23,4 +23,13 @@ async function getAllKeys(s3Client, params, allKeys = []) {
     return allKeys;
 }
 
-module.exports = { getAllKeys };
+function decodeS3EventKey(key) {
+    return decodeURIComponent(key.replace(/\+/g, " "));
+}
+
+function encodeS3CopySource(bucket, key) {
+    const encodedKey = key.split("/").map(encodeURIComponent).join("/");
+    return `/${bucket}/${encodedKey}`;
+}
+
+module.exports = { decodeS3EventKey, encodeS3CopySource, getAllKeys };

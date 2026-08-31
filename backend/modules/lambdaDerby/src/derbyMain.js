@@ -62,7 +62,11 @@ const ApiRaceStanding = require("./ApiRaceStanding");
 const LogUtils = require("./LogUtils");
 const DriverDelegationService = require("./DriverDelegationService");
 const { getShaCars, getSourceName } = require("./utils");
-const { getAllKeys } = require("./S3Utils");
+const {
+    decodeS3EventKey,
+    encodeS3CopySource,
+    getAllKeys,
+} = require("./S3Utils");
 const requestContext = require("./RequestContext");
 
 const ddbUtils = new DdbUtils(ddbClient, sqsClient);
@@ -2181,12 +2185,11 @@ async function lambdaHandler(event) {
         const s3Event = event.Records[0].s3;
         log.debug("s3 trigger:", s3Event);
 
-        var basefile = path.basename(s3Event.object.key);
+        const sourceKey = decodeS3EventKey(s3Event.object.key);
+        var basefile = path.basename(sourceKey);
         const tgtFile = basefile.replace("-", "/");
         const s3CopyParams = {
-            CopySource: encodeURI(
-                `/${s3Event.bucket.name}/${s3Event.object.key}`
-            ),
+            CopySource: encodeS3CopySource(s3Event.bucket.name, sourceKey),
             Key: `media/${tgtFile}`,
             Bucket: process.env.DstBucket,
         };
@@ -2199,7 +2202,10 @@ async function lambdaHandler(event) {
         const webmSrcKey = `inputs/${basefile}`.replace(".mp4", ".webm");
         const webmTgtKey = tgtFile.replace(".mp4", ".webm");
         const s3CopyParamsWebm = {
-            CopySource: encodeURI(`/${process.env.s3VideoWatch}/${webmSrcKey}`),
+            CopySource: encodeS3CopySource(
+                process.env.s3VideoWatch,
+                webmSrcKey
+            ),
             Key: `media/${webmTgtKey}`,
             Bucket: process.env.DstBucket,
         };
