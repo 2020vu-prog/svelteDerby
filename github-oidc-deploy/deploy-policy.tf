@@ -150,6 +150,20 @@ data "aws_iam_policy_document" "deploy_storage" {
 
 data "aws_iam_policy_document" "deploy_compute" {
   statement {
+    sid    = "ManageVodLambdaCode"
+    effect = "Allow"
+    actions = [
+      "lambda:GetFunction",
+      "lambda:GetFunctionConfiguration",
+      "lambda:UpdateFunctionCode",
+    ]
+    resources = [
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:vod-transcode-stack-convert",
+      "arn:${local.partition}:lambda:${var.AwsRegion}:${local.account_id}:function:vod-transcode-stack-convert:*",
+    ]
+  }
+
+  statement {
     sid    = "ManageAppLambdas"
     effect = "Allow"
     actions = [
@@ -605,12 +619,13 @@ data "aws_iam_policy_document" "deploy_iot" {
   }
 
   statement {
-    sid    = "ReadVodCloudFormationStack"
+    sid    = "ManageVodCloudFormationStack"
     effect = "Allow"
     actions = [
       "cloudformation:DescribeStacks",
       "cloudformation:GetTemplate",
       "cloudformation:ListStackResources",
+      "cloudformation:UpdateStack",
     ]
     resources = ["arn:${local.partition}:cloudformation:${var.AwsRegion}:${local.account_id}:stack/vod-transcode-stack/*"]
   }
