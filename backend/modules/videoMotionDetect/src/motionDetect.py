@@ -8,10 +8,17 @@ GET ?key=<S3 key of an uploaded clip under media/> ->
     {"status": "decode_error"}                    -- ffmpeg/ffprobe couldn't process it
     {"status": "not_found"}                       -- key doesn't exist in the bucket
 
-Idempotent: the result is stored as S3 object tags on the clip itself, and a
-second call for the same key returns the stored tags instead of
-reprocessing. This also makes the same endpoint usable to (re-)run detection
-against archived clips for further validation, not just newly uploaded ones.
+Detection always runs against the transcoded .mp4 (see _mp4_key), even when
+a .webm key is requested -- the raw .webm's actual frame rate can drift from
+its declared nominal rate, which breaks the motion check (see
+docs/VideoCarAppearanceDetectionProposal.md). If the .mp4 isn't available
+yet, that's a not_found for now rather than falling back to the .webm.
+
+Idempotent: the result is stored as S3 object tags on the .mp4 itself, and a
+second call for either its key or the matching .webm key returns the stored
+tags instead of reprocessing. This also makes the same endpoint usable to
+(re-)run detection against archived clips for further validation, not just
+newly uploaded ones.
 """
 
 import json
@@ -48,13 +55,15 @@ VERSION_TAG = "motionAlgorithmVersion"
 VALID_STATUSES = {"found", "no_motion", "decode_error", "not_found"}
 
 # Bump whenever a change could produce a different result for the same clip
-# (e.g. _find_motion_onset's logic, or the tuning constants above) -- not
-# for unrelated changes like response headers. A cached tag written under
-# an older (or missing/unversioned) algorithm version is treated as stale
-# and reprocessed; see _read_existing_result. 2 reflects the "pick the
-# highest-peak run, not the first" fix -- results tagged by the original
-# first-run-wins logic (which never wrote this tag at all) are version 0.
-ALGORITHM_VERSION = 2
+# (e.g. _find_motion_onset's logic, the tuning constants above, or which
+# file actually gets analyzed) -- not for unrelated changes like response
+# headers. A cached tag written under an older (or missing/unversioned)
+# algorithm version is treated as stale and reprocessed; see
+# _read_existing_result. 2 reflects the "pick the highest-peak run, not the
+# first" fix (results tagged by the original first-run-wins logic, which
+# never wrote this tag at all, are version 0); 3 reflects always using the
+# transcoded .mp4 for a .webm request (see _mp4_key).
+ALGORITHM_VERSION = 3
 
 
 def _tag_version(tags):
@@ -69,17 +78,23 @@ def handler(event, context):
     if not key:
         return _response(400, {"error": "Missing required query parameter: key"})
 
-    existing = _read_existing_result(key)
+    # Always operate on the transcoded .mp4 -- see _mp4_key. Both the cache
+    # (tags) and the actual detection live on that key, regardless of which
+    # extension the caller asked about, so there's only ever one tagged
+    # copy of a result per clip.
+    mp4_key = _mp4_key(key)
+
+    existing = _read_existing_result(mp4_key)
     if existing is not None:
         return _response(200, existing)
 
-    result = _detect(key)
+    result = _detect(mp4_key)
     if result["status"] != "not_found":
         # A nonexistent object can't hold tags -- put_object_tagging on a
         # missing key is rejected by S3, so there's nothing to cache here.
         # A not_found key just gets re-checked (and re-fails the same way)
         # on every request instead of being remembered.
-        _write_result(key, result)
+        _write_result(mp4_key, result)
     return _response(200, result)
 
 
@@ -128,6 +143,22 @@ def _write_result(key, result):
         Key=key,
         Tagging={"TagSet": [{"Key": k, "Value": v} for k, v in merged.items()]},
     )
+
+
+def _mp4_key(key):
+    """A raw .webm capture's actual frame rate can drift from its declared
+    nominal rate (browser MediaRecorder output is often variable-frame-rate).
+    Extracting frames at a fixed rate from that then duplicates frames to
+    fill the gaps, which can break the consecutive-frame motion check even
+    during large, real motion. The MediaConvert-transcoded .mp4 counterpart
+    is re-encoded at a clean, constant frame rate (and is also smaller, with
+    fewer frames to process) -- always use it instead of a .webm key. If the
+    transcode isn't available yet, that's a not_found for now rather than a
+    fallback to the raw .webm; the tag cache only ever lives on the .mp4 key.
+    """
+    if key.lower().endswith(".webm"):
+        return key[: -len(".webm")] + ".mp4"
+    return key
 
 
 def _detect(key):
