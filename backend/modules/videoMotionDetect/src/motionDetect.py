@@ -44,7 +44,24 @@ FFPROBE_TIMEOUT_SECONDS = 10
 
 STATUS_TAG = "motionStatus"
 OFFSET_TAG = "motionOffsetMs"
+VERSION_TAG = "motionAlgorithmVersion"
 VALID_STATUSES = {"found", "no_motion", "decode_error", "not_found"}
+
+# Bump whenever a change could produce a different result for the same clip
+# (e.g. _find_motion_onset's logic, or the tuning constants above) -- not
+# for unrelated changes like response headers. A cached tag written under
+# an older (or missing/unversioned) algorithm version is treated as stale
+# and reprocessed; see _read_existing_result. 2 reflects the "pick the
+# highest-peak run, not the first" fix -- results tagged by the original
+# first-run-wins logic (which never wrote this tag at all) are version 0.
+ALGORITHM_VERSION = 2
+
+
+def _tag_version(tags):
+    try:
+        return int(tags.get(VERSION_TAG, "0"))
+    except (TypeError, ValueError):
+        return 0
 
 
 def handler(event, context):
@@ -68,7 +85,8 @@ def handler(event, context):
 
 def _read_existing_result(key):
     """Returns the previously-stored result for key, or None if this key
-    hasn't been processed yet."""
+    hasn't been processed yet, or was tagged by an older algorithm version
+    and needs to be recomputed."""
     try:
         tagging = s3.get_object_tagging(Bucket=BUCKET, Key=key)
     except s3.exceptions.ClientError:
@@ -79,6 +97,8 @@ def _read_existing_result(key):
     tags = {t["Key"]: t["Value"] for t in tagging.get("TagSet", [])}
     status = tags.get(STATUS_TAG)
     if status not in VALID_STATUSES:
+        return None
+    if _tag_version(tags) < ALGORITHM_VERSION:
         return None
     result = {"status": status}
     if status == "found" and OFFSET_TAG in tags:
@@ -98,6 +118,7 @@ def _write_result(key, result):
         existing_tags = []
     merged = {t["Key"]: t["Value"] for t in existing_tags}
     merged[STATUS_TAG] = result["status"]
+    merged[VERSION_TAG] = str(ALGORITHM_VERSION)
     if "offsetMs" in result:
         merged[OFFSET_TAG] = str(result["offsetMs"])
     else:
