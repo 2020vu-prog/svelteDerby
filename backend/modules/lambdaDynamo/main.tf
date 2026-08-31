@@ -81,6 +81,14 @@ resource "aws_lambda_function" "lambda" {
   memory_size = 1024
   publish     = true
   tags        = local.tags
+
+  # Capped at 1: this function is invoked via the DynamoDB Streams event
+  # source mapping (dynamo_stream_link in dynamo.tf), so a reservation of 1
+  # serializes stream-record processing region-wide (Lambda concurrency
+  # limits and reservations are scoped per region, not globally across the
+  # account) rather than letting multiple shards fan out into concurrent
+  # invocations.
+  reserved_concurrent_executions = 1
   environment {
     variables = {
       DistDbTable   = local.DistDbTable
