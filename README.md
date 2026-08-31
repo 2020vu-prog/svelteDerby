@@ -75,8 +75,8 @@ repository does not enforce VS Code format-on-save settings.
 
 The `Deploy` GitHub Actions workflow deploys the backend first, then builds and
 pushes the frontend using the same local scripts used from this repository. It
-selects its deployment configuration from the current branch and refuses every
-branch that is not explicitly mapped in the workflow.
+automatically deploys pushes to `test.rr1.us`. Successful stage and production
+promotions dispatch the same workflow in live mode for the promoted environment.
 Manual runs default to `dry-run`, which tests and plans the backend and builds
 the frontend without changing AWS. Select `live` in the workflow dispatch form
 to apply the saved Terraform plan and upload the built frontend.
