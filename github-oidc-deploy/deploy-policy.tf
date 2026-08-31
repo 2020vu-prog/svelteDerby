@@ -242,10 +242,10 @@ data "aws_iam_policy_document" "deploy_compute" {
 
 data "aws_iam_policy_document" "deploy_iam" {
   statement {
-    sid       = "ReadVodLambdaRole"
+    sid       = "ReadVodStackRoles"
     effect    = "Allow"
     actions   = ["iam:GetRole"]
-    resources = ["arn:${local.partition}:iam::${local.account_id}:role/vod-transcode-stack-LambdaRole"]
+    resources = ["arn:${local.partition}:iam::${local.account_id}:role/vod-transcode-stack-*Role"]
   }
 
   statement {
