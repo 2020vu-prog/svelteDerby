@@ -10,14 +10,24 @@
         nextOnBlockKey,
         mp3Playing,
         spotifyLoggedIn,
+        spotifySelectedDeviceId,
     } from "./stores.js";
     import { persistable } from "./storedb.js";
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { db } from "./eventDb.js";
     import { sleep } from "./utils.js";
+    import { getSoloCarNumber } from "./paInfo.js";
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
     import SpotifyApi from "./SpotifyApi.svelte";
     import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
+    import {
+        sanitizeTrack,
+        spotifyActiveDeviceId,
+        spotifyGetPlaybackState,
+        spotifyLookupTrack,
+        spotifyPause,
+        spotifyRestorePlaybackState,
+    } from "./utils/spotify.js";
     //let href='https://open.spotify.com/track/2DnJjbjNTV9Nd5NOa1KGba?si=07ae100fdc0e4f49'
     let requestedHref = "";
     let playingHref = "";
@@ -66,35 +76,251 @@
         mayToggleSpotify($mp3Playing, requestedHref);
     }
 
-    function mayToggleSpotify(mp3Playing, requestedHref) {
-        log.debug(
-            `walkup: mayToggleSpotify hrefs [${requestedHref}] [${playingHref}]`
+    // Tracks the listener's pre-walkup Spotify state so it can be restored
+    // once the whole walkup sequence ends. Save/restore only fire on the
+    // rising/falling edge of "a walkup is playing" -- a walkup that starts
+    // before the previous one's slot ends must not clobber this with the
+    // interrupted walkup's own state, so walkup-to-walkup transitions leave
+    // it untouched.
+    let savedPlaybackState = null;
+
+    // Serializes edge handling against playingHref changes: the state-save
+    // GET must fully resolve before playingHref is set (that assignment is
+    // what triggers the walkup's own play request), so the two never race.
+    // requestedHref/$mp3Playing can move again while we're awaiting the
+    // save -- applyDirty makes the loop re-read the live values instead of
+    // committing playingHref to a now-stale target.
+    let applyingHref = false;
+    let applyDirty = false;
+
+    // The Spotify track ID of the last walk-up we actually started playing.
+    // Guards the rising-edge save against capturing our own leftover walk-up
+    // playback as "the listener's prior state" (e.g. if a pause request was
+    // slow, dropped, or raced) -- without this, that leftover walk-up track
+    // gets replayed later as a "restore", which looks like an unrequested
+    // walk-up starting on its own.
+    let lastWalkupTrackId = "";
+
+    const walkupLogLimit = 50;
+    let walkupLog = [];
+
+    function logWalkupEvent(text, type = "info") {
+        walkupLog = [{ time: new Date(), text, type }, ...walkupLog].slice(
+            0,
+            walkupLogLimit
         );
-        if (requestedHref !== playingHref && !mp3Playing) {
-            playingHref = requestedHref;
+    }
+
+    // Nothing else in the app ever learns that a walk-up track finished
+    // playing on its own -- the falling edge is otherwise driven purely by
+    // requestedHref changing, which only happens when the race phase
+    // advances. Without this, a walk-up that plays to completion while the
+    // operator hasn't yet moved to the next block never restores the
+    // listener's prior playback.
+    //
+    // This deliberately does NOT poll Spotify's playback state: instead it
+    // looks up the track's duration once (a cache hit in the common case,
+    // since SpotifyApi.svelte already looked it up before playing) and sets
+    // a single timer for when the track should end. No repeated requests,
+    // at the cost of being an estimate -- it doesn't notice a seek, a device
+    // that loops the track, or playback that started later than expected.
+    // Only meaningful on the device-API path.
+    const walkupEndGraceMs = 3000;
+    const walkupEndFallbackMs = 5 * 60 * 1000; // used only if the duration lookup fails
+    let walkupEndTimer = null;
+
+    function clearWalkupEndTimer() {
+        if (walkupEndTimer) {
+            clearTimeout(walkupEndTimer);
+            walkupEndTimer = null;
         }
-        log.debug(
-            `walkup: mayToggleSpotify hreff [${requestedHref}] [${playingHref}]`
-        );
+    }
+
+    async function scheduleWalkupEndTimer(href) {
+        clearWalkupEndTimer();
+        const trackId = sanitizeTrack(href);
+
+        let delayMs = walkupEndFallbackMs;
+        try {
+            const trackMetadata = await spotifyLookupTrack(href);
+            if (trackMetadata?.duration_ms) {
+                delayMs = trackMetadata.duration_ms + walkupEndGraceMs;
+            }
+        } catch (error) {
+            log.debug(`walkup: track duration lookup failed: ${error.message}`);
+        }
+
+        // The walk-up in play may have moved on while the lookup was in
+        // flight; only arm the timer if it's still the one we looked up.
+        if (trackId !== lastWalkupTrackId) return;
+
+        walkupEndTimer = setTimeout(() => {
+            walkupEndTimer = null;
+            if (
+                playingHref !== requestedHref ||
+                sanitizeTrack(playingHref) !== trackId
+            ) {
+                return;
+            }
+            logWalkupEvent("Walk-up finished playing.");
+            requestedHref = "";
+        }, delayMs);
+    }
+
+    onDestroy(clearWalkupEndTimer);
+
+    // Pauses the walk-up device directly via the Web API, independent of
+    // whether SpotifyApi's bound ppause is still live -- that component
+    // unmounts as soon as playingHref clears, so by the time we know there's
+    // nothing to restore to, relying on its binding isn't guaranteed.
+    async function stopWalkupPlayback() {
+        let deviceId = $spotifySelectedDeviceId;
+        if (!deviceId) {
+            try {
+                deviceId = await spotifyActiveDeviceId();
+            } catch (error) {
+                log.debug(
+                    `walkup: stop device lookup failed: ${error.message}`
+                );
+            }
+        }
+        if (deviceId) {
+            await spotifyPause(deviceId);
+        }
+    }
+
+    async function togglePlayPause(mp3Playing) {
         if (playSpotify) {
             log.debug(`walkup: mayToggleSpotify 3p: ${mp3Playing}`);
             if (mp3Playing || playingHref.length == 0) {
                 log.debug(`walkup: mayToggleSpotify pause`);
-                pauseSpotify();
+                await pauseSpotify();
             } else {
                 log.debug(`walkup: mayToggleSpotify play`);
-                playSpotify();
+                await playSpotify();
             }
         } else {
             log.debug(`walkup: mayToggleSpotify NOT playing s`);
         }
-        /*
-        setTimeout(()=>{
-                    EmbedController.pause();
-                }, 30000) 
-                */
+    }
+
+    async function reconcileWalkupStep() {
+        log.debug(
+            `walkup: mayToggleSpotify hrefs [${requestedHref}] [${playingHref}]`
+        );
+        if (requestedHref === playingHref || $mp3Playing) {
+            await togglePlayPause($mp3Playing);
+            return;
+        }
+
+        const previousHref = playingHref;
+        const nextHref = requestedHref;
+        const wasWalkup = previousHref.length > 0;
+        const isWalkup = nextHref.length > 0;
+
+        if ($spotifyLoggedIn && !wasWalkup && isWalkup) {
+            let state = null;
+            try {
+                state = await spotifyGetPlaybackState();
+            } catch (error) {
+                log.debug(
+                    `walkup: save playback state failed: ${error.message}`
+                );
+            }
+            if (requestedHref !== nextHref || $mp3Playing) {
+                // The desired target moved on while the GET was in flight;
+                // discard this result and let the loop re-evaluate from
+                // scratch instead of committing playingHref for a stale
+                // target (and instead of re-firing the same GET forever).
+                applyDirty = true;
+                return;
+            }
+            if (
+                state &&
+                lastWalkupTrackId &&
+                sanitizeTrack(state.trackUri) === lastWalkupTrackId
+            ) {
+                // What's "currently playing" is actually our own leftover
+                // walk-up track (the pause after it never landed / hasn't
+                // landed yet) -- not something to restore later.
+                state = null;
+            }
+            savedPlaybackState = state;
+            logWalkupEvent(
+                state
+                    ? `Saved playback to restore later: ${sanitizeTrack(state.trackUri)}`
+                    : "No active playback to save before walk-up."
+            );
+        }
+
+        playingHref = nextHref;
+        if (isWalkup) {
+            lastWalkupTrackId = sanitizeTrack(nextHref);
+            logWalkupEvent(`Walk-up playing: ${lastWalkupTrackId}`);
+            if ($spotifyLoggedIn) {
+                scheduleWalkupEndTimer(nextHref);
+            }
+        } else {
+            clearWalkupEndTimer();
+        }
+        log.debug(
+            `walkup: mayToggleSpotify hreff [${requestedHref}] [${playingHref}]`
+        );
+        await togglePlayPause($mp3Playing);
+
+        if (wasWalkup && !isWalkup) {
+            logWalkupEvent("Walk-up ended.");
+        }
+
+        if ($spotifyLoggedIn && wasWalkup && !isWalkup) {
+            const state = savedPlaybackState;
+            savedPlaybackState = null;
+            if (state) {
+                const result = await spotifyRestorePlaybackState(state);
+                if (result?.skipped) {
+                    // Nothing was actually playing before the walk-up (it
+                    // was paused/idle), so there's nothing to resume --
+                    // just make sure the walk-up itself is stopped.
+                    await stopWalkupPlayback();
+                    logWalkupEvent(
+                        "No previous playback to restore; walk-up stopped."
+                    );
+                } else if (result?.ok) {
+                    logWalkupEvent(
+                        `Restored previous playback: ${sanitizeTrack(state.trackUri)}`
+                    );
+                } else {
+                    logWalkupEvent(
+                        `Failed to restore previous playback: ${result?.reason || "unknown error"}`,
+                        "error"
+                    );
+                }
+            } else {
+                await stopWalkupPlayback();
+                logWalkupEvent(
+                    "No previous playback to restore; walk-up stopped."
+                );
+            }
+        }
+    }
+
+    function mayToggleSpotify() {
+        if (applyingHref) {
+            applyDirty = true;
+            return;
+        }
+        applyingHref = true;
+        (async () => {
+            do {
+                applyDirty = false;
+                await reconcileWalkupStep();
+            } while (applyDirty);
+        })().finally(() => {
+            applyingHref = false;
+        });
     }
     function setWalkupStatus(text, type = "error") {
+        logWalkupEvent(text, type);
         if ($playWalkup) {
             pushMessage({ key: "walkup-playback-status", text, type });
         }
@@ -131,17 +357,25 @@
         await sleep(500);
         if (request !== potentialPlayRequest) return;
 
-        const lane1Car = String(nob.carNumbers[0]);
-        const ptcpFromDexie = await db.Participant.get(lane1Car);
+        // Fun/trial/hot runs and byes only ever load one car, but it can
+        // land in either lane -- in that case play whichever car is
+        // actually loaded rather than assuming lane 1. A normal two-lane
+        // race still uses lane 1, matching the existing walk-up-for-lane-1
+        // convention.
+        const targetCar = String(getSoloCarNumber(nob) ?? nob.carNumbers[0]);
+        const ptcpFromDexie = await db.Participant.get(targetCar);
         if (ptcpFromDexie && ptcpFromDexie.wLink) {
             requestedHref = ptcpFromDexie.wLink;
             log.debug(`walkup: hitme: ${requestedHref}`);
+            logWalkupEvent(
+                `Walk-up requested for car ${targetCar}: ${sanitizeTrack(requestedHref)}`
+            );
         } else {
-            log.debug(`walkup: no link ${lane1Car}`);
+            log.debug(`walkup: no link ${targetCar}`);
             requestedHref = "";
             if (playEnabled)
                 setWalkupStatus(
-                    `No walk-up track requested for car ${lane1Car}.`
+                    `No walk-up track requested for car ${targetCar}.`
                 );
         }
     }
@@ -196,3 +430,59 @@
         {/if}
     {/key}
 {/if}
+
+<details class="walkup-log">
+    <summary>Walk-up log ({walkupLog.length})</summary>
+    {#if walkupLog.length === 0}
+        <p class="walkup-log-empty">No walk-up events yet.</p>
+    {:else}
+        <ul class="walkup-log-list">
+            {#each walkupLog as entry}
+                <li
+                    class="walkup-log-entry"
+                    class:walkup-log-error={entry.type === "error"}
+                >
+                    <span class="walkup-log-time"
+                        >{entry.time.toLocaleTimeString()}</span
+                    >
+                    {entry.text}
+                </li>
+            {/each}
+        </ul>
+    {/if}
+</details>
+
+<style>
+    .walkup-log {
+        margin-top: 0.75rem;
+    }
+
+    .walkup-log-empty {
+        color: #666;
+        font-style: italic;
+    }
+
+    .walkup-log-list {
+        list-style: none;
+        margin: 0.5rem 0 0;
+        max-height: 16rem;
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    .walkup-log-entry {
+        border-bottom: 1px solid #ddd;
+        font-size: 0.9rem;
+        padding: 0.25rem 0;
+    }
+
+    .walkup-log-error {
+        color: #b00020;
+    }
+
+    .walkup-log-time {
+        color: #666;
+        font-variant-numeric: tabular-nums;
+        margin-right: 0.5rem;
+    }
+</style>

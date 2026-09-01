@@ -281,7 +281,7 @@ export async function spotifyVolume(volume) {
     }
 }
 
-function sanitizeTrack(track) {
+export function sanitizeTrack(track) {
     if (track && track.length > 0) {
         track = track.replace(/^spotify:track:/, "");
         track = track.replace(/.*\//, "");
@@ -409,6 +409,102 @@ export async function spotifyPlay(track, doPlay, recurse, deviceId) {
         };
     }
     return { ok: true, response, track: trackMetadata };
+}
+
+export async function spotifyPause(deviceId) {
+    if (!deviceId) {
+        return { ok: true, skipped: true };
+    }
+
+    const url = new URL("https://api.spotify.com/v1/me/player/pause");
+    url.searchParams.set("device_id", deviceId);
+    const payload = {
+        method: "PUT",
+        headers: {
+            Authorization: `Bearer DEFER`,
+        },
+    };
+
+    const response = await fetch401retry(url, payload);
+    if (!response.ok && response.status !== 204) {
+        const body = await response.json().catch(() => ({}));
+        const detail = body?.error?.message || `HTTP ${response.status}`;
+        log.debug(`spotifyPause failed: ${detail}`);
+        return { ok: false, reason: detail };
+    }
+    return { ok: true };
+}
+
+export async function spotifyGetPlaybackState() {
+    const url = new URL("https://api.spotify.com/v1/me/player");
+    const payload = {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer DEFER`,
+        },
+    };
+
+    const response = await fetch401retry(url, payload);
+    if (response.status === 204 || response.status === 404) {
+        return null;
+    }
+    if (!response.ok) {
+        throw new Error(
+            `Spotify playback state lookup failed: ${response.status}`
+        );
+    }
+    const body = await response.json();
+    if (!body || !body.item || !body.device) {
+        return null;
+    }
+    return {
+        deviceId: body.device.id,
+        contextUri: body.context?.uri || null,
+        trackUri: body.item.uri,
+        positionMs: body.progress_ms || 0,
+        isPlaying: Boolean(body.is_playing),
+    };
+}
+
+export async function spotifyRestorePlaybackState(state) {
+    if (!state || !state.isPlaying || !state.deviceId || !state.trackUri) {
+        return { ok: true, skipped: true };
+    }
+
+    const url = new URL("https://api.spotify.com/v1/me/player/play");
+    url.searchParams.set("device_id", state.deviceId);
+    const payload = {
+        method: "PUT",
+        headers: {
+            Authorization: `Bearer DEFER`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(
+            state.contextUri
+                ? {
+                      context_uri: state.contextUri,
+                      offset: { uri: state.trackUri },
+                      position_ms: state.positionMs,
+                  }
+                : {
+                      uris: [state.trackUri],
+                      position_ms: state.positionMs,
+                  }
+        ),
+    };
+
+    const response = await fetch401retry(url, payload);
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const detail = body?.error?.message || `HTTP ${response.status}`;
+        pushMessage({
+            key: "spotify-restore-error",
+            text: `Spotify: could not resume previous playback: ${detail}`,
+            type: "error",
+        });
+        return { ok: false, reason: detail };
+    }
+    return { ok: true };
 }
 
 const insertToken = (payload) => {

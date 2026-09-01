@@ -63,6 +63,22 @@ export function getCarNumber(race, lane) {
 }
 
 /**
+ * Returns the sole car number on a race with exactly one lane filled in
+ * (e.g. a fun/trial/hot run loaded with a single car), regardless of which
+ * lane it's in.
+ *
+ * @param {Object|undefined} race Race phase or standing with a carNumbers array.
+ * @returns {string|number|undefined} The sole car number, or undefined when
+ *   zero or both lanes are filled.
+ */
+export function getSoloCarNumber(race) {
+    const loaded = (race?.carNumbers || []).filter(
+        (carNumber) => carNumber != null && carNumber !== ""
+    );
+    return loaded.length === 1 ? loaded[0] : undefined;
+}
+
+/**
  * Builds winner-status labels for a race currently shown as next on blocks.
  *
  * For phase B, this also reports the driver's prior phase-A win when the
