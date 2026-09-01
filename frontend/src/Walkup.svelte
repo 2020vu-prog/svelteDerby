@@ -18,6 +18,10 @@
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
     import SpotifyApi from "./SpotifyApi.svelte";
     import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
+    import {
+        spotifyGetPlaybackState,
+        spotifyRestorePlaybackState,
+    } from "./utils/spotify.js";
     //let href='https://open.spotify.com/track/2DnJjbjNTV9Nd5NOa1KGba?si=07ae100fdc0e4f49'
     let requestedHref = "";
     let playingHref = "";
@@ -66,16 +70,24 @@
         mayToggleSpotify($mp3Playing, requestedHref);
     }
 
-    function mayToggleSpotify(mp3Playing, requestedHref) {
-        log.debug(
-            `walkup: mayToggleSpotify hrefs [${requestedHref}] [${playingHref}]`
-        );
-        if (requestedHref !== playingHref && !mp3Playing) {
-            playingHref = requestedHref;
-        }
-        log.debug(
-            `walkup: mayToggleSpotify hreff [${requestedHref}] [${playingHref}]`
-        );
+    // Tracks the listener's pre-walkup Spotify state so it can be restored
+    // once the whole walkup sequence ends. Save/restore only fire on the
+    // rising/falling edge of "a walkup is playing" -- a walkup that starts
+    // before the previous one's slot ends must not clobber this with the
+    // interrupted walkup's own state, so walkup-to-walkup transitions leave
+    // it untouched.
+    let savedPlaybackState = null;
+
+    // Serializes edge handling against playingHref changes: the state-save
+    // GET must fully resolve before playingHref is set (that assignment is
+    // what triggers the walkup's own play request), so the two never race.
+    // requestedHref/$mp3Playing can move again while we're awaiting the
+    // save -- applyDirty makes the loop re-read the live values instead of
+    // committing playingHref to a now-stale target.
+    let applyingHref = false;
+    let applyDirty = false;
+
+    function togglePlayPause(mp3Playing) {
         if (playSpotify) {
             log.debug(`walkup: mayToggleSpotify 3p: ${mp3Playing}`);
             if (mp3Playing || playingHref.length == 0) {
@@ -88,11 +100,62 @@
         } else {
             log.debug(`walkup: mayToggleSpotify NOT playing s`);
         }
-        /*
-        setTimeout(()=>{
-                    EmbedController.pause();
-                }, 30000) 
-                */
+    }
+
+    async function reconcileWalkupStep() {
+        log.debug(
+            `walkup: mayToggleSpotify hrefs [${requestedHref}] [${playingHref}]`
+        );
+        if (requestedHref === playingHref || $mp3Playing) {
+            togglePlayPause($mp3Playing);
+            return;
+        }
+
+        const previousHref = playingHref;
+        const nextHref = requestedHref;
+        const wasWalkup = previousHref.length > 0;
+        const isWalkup = nextHref.length > 0;
+
+        if ($spotifyLoggedIn && !wasWalkup && isWalkup) {
+            try {
+                savedPlaybackState = await spotifyGetPlaybackState();
+            } catch (error) {
+                log.debug(`walkup: save playback state failed: ${error.message}`);
+                savedPlaybackState = null;
+            }
+            applyDirty = true;
+            return;
+        }
+
+        playingHref = nextHref;
+        log.debug(
+            `walkup: mayToggleSpotify hreff [${requestedHref}] [${playingHref}]`
+        );
+        togglePlayPause($mp3Playing);
+
+        if ($spotifyLoggedIn && wasWalkup && !isWalkup) {
+            const state = savedPlaybackState;
+            savedPlaybackState = null;
+            if (state) {
+                await spotifyRestorePlaybackState(state);
+            }
+        }
+    }
+
+    function mayToggleSpotify() {
+        if (applyingHref) {
+            applyDirty = true;
+            return;
+        }
+        applyingHref = true;
+        (async () => {
+            do {
+                applyDirty = false;
+                await reconcileWalkupStep();
+            } while (applyDirty);
+        })().finally(() => {
+            applyingHref = false;
+        });
     }
     function setWalkupStatus(text, type = "error") {
         if ($playWalkup) {
