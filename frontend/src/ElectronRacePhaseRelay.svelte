@@ -35,18 +35,26 @@
     }
 
     function sendIfNewRacePhase(key, racePhaseMapVal, driverMapVal) {
-        if (!key) {
+        const racePhase =
+            typeof key === "string" && key ? racePhaseMapVal[key] : undefined;
+
+        if (!racePhase || !racePhase.carNumbers) {
+            // Nothing valid on the blocks -- nextOnBlockKey can be "", the
+            // sentinel string "N/A", or an empty object {} depending on how
+            // it was cleared, and none of those map to a real phase here.
+            // Reset the dedup marker so a later reload of the *same* phase
+            // (e.g. after correcting/removing results) isn't suppressed.
             lastSentKey = "";
             return;
         }
         if (key === lastSentKey) return;
 
-        const racePhase = racePhaseMapVal[key];
-        if (!racePhase || !racePhase.carNumbers) return;
-
         const lane1 = laneInfo(racePhase, driverMapVal, 1);
         const lane2 = laneInfo(racePhase, driverMapVal, 2);
-        if (lane1.carNumber == null && lane2.carNumber == null) return;
+        if (lane1.carNumber == null && lane2.carNumber == null) {
+            lastSentKey = "";
+            return;
+        }
 
         lastSentKey = key;
 
