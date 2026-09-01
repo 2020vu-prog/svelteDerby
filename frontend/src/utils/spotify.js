@@ -425,7 +425,9 @@ export async function spotifyGetPlaybackState() {
         return null;
     }
     if (!response.ok) {
-        throw new Error(`Spotify playback state lookup failed: ${response.status}`);
+        throw new Error(
+            `Spotify playback state lookup failed: ${response.status}`
+        );
     }
     const body = await response.json();
     if (!body || !body.item || !body.device) {

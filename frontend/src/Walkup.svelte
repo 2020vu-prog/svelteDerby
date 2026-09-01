@@ -121,7 +121,9 @@
             try {
                 state = await spotifyGetPlaybackState();
             } catch (error) {
-                log.debug(`walkup: save playback state failed: ${error.message}`);
+                log.debug(
+                    `walkup: save playback state failed: ${error.message}`
+                );
             }
             if (requestedHref !== nextHref || $mp3Playing) {
                 // The desired target moved on while the GET was in flight;
