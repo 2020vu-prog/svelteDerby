@@ -10,6 +10,7 @@
         nextOnBlockKey,
         mp3Playing,
         spotifyLoggedIn,
+        spotifySelectedDeviceId,
     } from "./stores.js";
     import { persistable } from "./storedb.js";
     import { onMount, onDestroy } from "svelte";
@@ -21,8 +22,10 @@
     import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
     import {
         sanitizeTrack,
+        spotifyActiveDeviceId,
         spotifyGetPlaybackState,
         spotifyLookupTrack,
+        spotifyPause,
         spotifyRestorePlaybackState,
     } from "./utils/spotify.js";
     //let href='https://open.spotify.com/track/2DnJjbjNTV9Nd5NOa1KGba?si=07ae100fdc0e4f49'
@@ -166,6 +169,26 @@
 
     onDestroy(clearWalkupEndTimer);
 
+    // Pauses the walk-up device directly via the Web API, independent of
+    // whether SpotifyApi's bound ppause is still live -- that component
+    // unmounts as soon as playingHref clears, so by the time we know there's
+    // nothing to restore to, relying on its binding isn't guaranteed.
+    async function stopWalkupPlayback() {
+        let deviceId = $spotifySelectedDeviceId;
+        if (!deviceId) {
+            try {
+                deviceId = await spotifyActiveDeviceId();
+            } catch (error) {
+                log.debug(
+                    `walkup: stop device lookup failed: ${error.message}`
+                );
+            }
+        }
+        if (deviceId) {
+            await spotifyPause(deviceId);
+        }
+    }
+
     async function togglePlayPause(mp3Playing) {
         if (playSpotify) {
             log.debug(`walkup: mayToggleSpotify 3p: ${mp3Playing}`);
@@ -255,7 +278,13 @@
             if (state) {
                 const result = await spotifyRestorePlaybackState(state);
                 if (result?.skipped) {
-                    logWalkupEvent("No previous playback to restore.");
+                    // Nothing was actually playing before the walk-up (it
+                    // was paused/idle), so there's nothing to resume --
+                    // just make sure the walk-up itself is stopped.
+                    await stopWalkupPlayback();
+                    logWalkupEvent(
+                        "No previous playback to restore; walk-up stopped."
+                    );
                 } else if (result?.ok) {
                     logWalkupEvent(
                         `Restored previous playback: ${sanitizeTrack(state.trackUri)}`
@@ -267,7 +296,10 @@
                     );
                 }
             } else {
-                logWalkupEvent("No previous playback to restore.");
+                await stopWalkupPlayback();
+                logWalkupEvent(
+                    "No previous playback to restore; walk-up stopped."
+                );
             }
         }
     }
