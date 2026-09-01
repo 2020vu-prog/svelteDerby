@@ -117,14 +117,21 @@
         const isWalkup = nextHref.length > 0;
 
         if ($spotifyLoggedIn && !wasWalkup && isWalkup) {
+            let state = null;
             try {
-                savedPlaybackState = await spotifyGetPlaybackState();
+                state = await spotifyGetPlaybackState();
             } catch (error) {
                 log.debug(`walkup: save playback state failed: ${error.message}`);
-                savedPlaybackState = null;
             }
-            applyDirty = true;
-            return;
+            if (requestedHref !== nextHref || $mp3Playing) {
+                // The desired target moved on while the GET was in flight;
+                // discard this result and let the loop re-evaluate from
+                // scratch instead of committing playingHref for a stale
+                // target (and instead of re-firing the same GET forever).
+                applyDirty = true;
+                return;
+            }
+            savedPlaybackState = state;
         }
 
         playingHref = nextHref;
