@@ -15,6 +15,7 @@
     import { onMount, onDestroy } from "svelte";
     import { db } from "./eventDb.js";
     import { sleep } from "./utils.js";
+    import { getSoloCarNumber } from "./paInfo.js";
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
     import SpotifyApi from "./SpotifyApi.svelte";
     import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
@@ -324,20 +325,25 @@
         await sleep(500);
         if (request !== potentialPlayRequest) return;
 
-        const lane1Car = String(nob.carNumbers[0]);
-        const ptcpFromDexie = await db.Participant.get(lane1Car);
+        // Fun/trial/hot runs and byes only ever load one car, but it can
+        // land in either lane -- in that case play whichever car is
+        // actually loaded rather than assuming lane 1. A normal two-lane
+        // race still uses lane 1, matching the existing walk-up-for-lane-1
+        // convention.
+        const targetCar = String(getSoloCarNumber(nob) ?? nob.carNumbers[0]);
+        const ptcpFromDexie = await db.Participant.get(targetCar);
         if (ptcpFromDexie && ptcpFromDexie.wLink) {
             requestedHref = ptcpFromDexie.wLink;
             log.debug(`walkup: hitme: ${requestedHref}`);
             logWalkupEvent(
-                `Walk-up requested for car ${lane1Car}: ${sanitizeTrack(requestedHref)}`
+                `Walk-up requested for car ${targetCar}: ${sanitizeTrack(requestedHref)}`
             );
         } else {
-            log.debug(`walkup: no link ${lane1Car}`);
+            log.debug(`walkup: no link ${targetCar}`);
             requestedHref = "";
             if (playEnabled)
                 setWalkupStatus(
-                    `No walk-up track requested for car ${lane1Car}.`
+                    `No walk-up track requested for car ${targetCar}.`
                 );
         }
     }
