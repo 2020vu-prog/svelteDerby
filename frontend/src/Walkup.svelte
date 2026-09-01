@@ -96,6 +96,16 @@
     // walk-up starting on its own.
     let lastWalkupTrackId = "";
 
+    const walkupLogLimit = 50;
+    let walkupLog = [];
+
+    function logWalkupEvent(text, type = "info") {
+        walkupLog = [{ time: new Date(), text, type }, ...walkupLog].slice(
+            0,
+            walkupLogLimit
+        );
+    }
+
     async function togglePlayPause(mp3Playing) {
         if (playSpotify) {
             log.debug(`walkup: mayToggleSpotify 3p: ${mp3Playing}`);
@@ -153,22 +163,46 @@
                 state = null;
             }
             savedPlaybackState = state;
+            logWalkupEvent(
+                state
+                    ? `Saved playback to restore later: ${sanitizeTrack(state.trackUri)}`
+                    : "No active playback to save before walk-up."
+            );
         }
 
         playingHref = nextHref;
         if (isWalkup) {
             lastWalkupTrackId = sanitizeTrack(nextHref);
+            logWalkupEvent(`Walk-up playing: ${lastWalkupTrackId}`);
         }
         log.debug(
             `walkup: mayToggleSpotify hreff [${requestedHref}] [${playingHref}]`
         );
         await togglePlayPause($mp3Playing);
 
+        if (wasWalkup && !isWalkup) {
+            logWalkupEvent("Walk-up ended.");
+        }
+
         if ($spotifyLoggedIn && wasWalkup && !isWalkup) {
             const state = savedPlaybackState;
             savedPlaybackState = null;
             if (state) {
-                await spotifyRestorePlaybackState(state);
+                const result = await spotifyRestorePlaybackState(state);
+                if (result?.skipped) {
+                    logWalkupEvent("No previous playback to restore.");
+                } else if (result?.ok) {
+                    logWalkupEvent(
+                        `Restored previous playback: ${sanitizeTrack(state.trackUri)}`
+                    );
+                } else {
+                    logWalkupEvent(
+                        `Failed to restore previous playback: ${result?.reason || "unknown error"}`,
+                        "error"
+                    );
+                }
+            } else {
+                logWalkupEvent("No previous playback to restore.");
             }
         }
     }
@@ -189,6 +223,7 @@
         });
     }
     function setWalkupStatus(text, type = "error") {
+        logWalkupEvent(text, type);
         if ($playWalkup) {
             pushMessage({ key: "walkup-playback-status", text, type });
         }
@@ -230,6 +265,9 @@
         if (ptcpFromDexie && ptcpFromDexie.wLink) {
             requestedHref = ptcpFromDexie.wLink;
             log.debug(`walkup: hitme: ${requestedHref}`);
+            logWalkupEvent(
+                `Walk-up requested for car ${lane1Car}: ${sanitizeTrack(requestedHref)}`
+            );
         } else {
             log.debug(`walkup: no link ${lane1Car}`);
             requestedHref = "";
@@ -290,3 +328,59 @@
         {/if}
     {/key}
 {/if}
+
+<details class="walkup-log">
+    <summary>Walk-up log ({walkupLog.length})</summary>
+    {#if walkupLog.length === 0}
+        <p class="walkup-log-empty">No walk-up events yet.</p>
+    {:else}
+        <ul class="walkup-log-list">
+            {#each walkupLog as entry}
+                <li
+                    class="walkup-log-entry"
+                    class:walkup-log-error={entry.type === "error"}
+                >
+                    <span class="walkup-log-time"
+                        >{entry.time.toLocaleTimeString()}</span
+                    >
+                    {entry.text}
+                </li>
+            {/each}
+        </ul>
+    {/if}
+</details>
+
+<style>
+    .walkup-log {
+        margin-top: 0.75rem;
+    }
+
+    .walkup-log-empty {
+        color: #666;
+        font-style: italic;
+    }
+
+    .walkup-log-list {
+        list-style: none;
+        margin: 0.5rem 0 0;
+        max-height: 16rem;
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    .walkup-log-entry {
+        border-bottom: 1px solid #ddd;
+        font-size: 0.9rem;
+        padding: 0.25rem 0;
+    }
+
+    .walkup-log-error {
+        color: #b00020;
+    }
+
+    .walkup-log-time {
+        color: #666;
+        font-variant-numeric: tabular-nums;
+        margin-right: 0.5rem;
+    }
+</style>
