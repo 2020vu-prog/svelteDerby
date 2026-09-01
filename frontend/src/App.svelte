@@ -12,6 +12,7 @@
     import RouteHost from "./routes/RouteHost.svelte";
     import HotLoad from "./HotLoad.svelte";
     import ElectronTimerRelay from "./ElectronTimerRelay.svelte";
+    import ElectronRacePhaseRelay from "./ElectronRacePhaseRelay.svelte";
     import {
         raceConfig,
         theme,
@@ -358,6 +359,7 @@
 />
 
 <ElectronTimerRelay />
+<ElectronRacePhaseRelay />
 
 <!-- Top Navigation Menu -->
 <div id="topnav" class="topnav" style="z-index: 20; ">
