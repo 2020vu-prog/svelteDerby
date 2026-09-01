@@ -19,6 +19,7 @@
     import SpotifyApi from "./SpotifyApi.svelte";
     import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
     import {
+        sanitizeTrack,
         spotifyGetPlaybackState,
         spotifyRestorePlaybackState,
     } from "./utils/spotify.js";
@@ -87,15 +88,23 @@
     let applyingHref = false;
     let applyDirty = false;
 
-    function togglePlayPause(mp3Playing) {
+    // The Spotify track ID of the last walk-up we actually started playing.
+    // Guards the rising-edge save against capturing our own leftover walk-up
+    // playback as "the listener's prior state" (e.g. if a pause request was
+    // slow, dropped, or raced) -- without this, that leftover walk-up track
+    // gets replayed later as a "restore", which looks like an unrequested
+    // walk-up starting on its own.
+    let lastWalkupTrackId = "";
+
+    async function togglePlayPause(mp3Playing) {
         if (playSpotify) {
             log.debug(`walkup: mayToggleSpotify 3p: ${mp3Playing}`);
             if (mp3Playing || playingHref.length == 0) {
                 log.debug(`walkup: mayToggleSpotify pause`);
-                pauseSpotify();
+                await pauseSpotify();
             } else {
                 log.debug(`walkup: mayToggleSpotify play`);
-                playSpotify();
+                await playSpotify();
             }
         } else {
             log.debug(`walkup: mayToggleSpotify NOT playing s`);
@@ -107,7 +116,7 @@
             `walkup: mayToggleSpotify hrefs [${requestedHref}] [${playingHref}]`
         );
         if (requestedHref === playingHref || $mp3Playing) {
-            togglePlayPause($mp3Playing);
+            await togglePlayPause($mp3Playing);
             return;
         }
 
@@ -133,14 +142,27 @@
                 applyDirty = true;
                 return;
             }
+            if (
+                state &&
+                lastWalkupTrackId &&
+                sanitizeTrack(state.trackUri) === lastWalkupTrackId
+            ) {
+                // What's "currently playing" is actually our own leftover
+                // walk-up track (the pause after it never landed / hasn't
+                // landed yet) -- not something to restore later.
+                state = null;
+            }
             savedPlaybackState = state;
         }
 
         playingHref = nextHref;
+        if (isWalkup) {
+            lastWalkupTrackId = sanitizeTrack(nextHref);
+        }
         log.debug(
             `walkup: mayToggleSpotify hreff [${requestedHref}] [${playingHref}]`
         );
-        togglePlayPause($mp3Playing);
+        await togglePlayPause($mp3Playing);
 
         if ($spotifyLoggedIn && wasWalkup && !isWalkup) {
             const state = savedPlaybackState;

@@ -281,7 +281,7 @@ export async function spotifyVolume(volume) {
     }
 }
 
-function sanitizeTrack(track) {
+export function sanitizeTrack(track) {
     if (track && track.length > 0) {
         track = track.replace(/^spotify:track:/, "");
         track = track.replace(/.*\//, "");
@@ -409,6 +409,30 @@ export async function spotifyPlay(track, doPlay, recurse, deviceId) {
         };
     }
     return { ok: true, response, track: trackMetadata };
+}
+
+export async function spotifyPause(deviceId) {
+    if (!deviceId) {
+        return { ok: true, skipped: true };
+    }
+
+    const url = new URL("https://api.spotify.com/v1/me/player/pause");
+    url.searchParams.set("device_id", deviceId);
+    const payload = {
+        method: "PUT",
+        headers: {
+            Authorization: `Bearer DEFER`,
+        },
+    };
+
+    const response = await fetch401retry(url, payload);
+    if (!response.ok && response.status !== 204) {
+        const body = await response.json().catch(() => ({}));
+        const detail = body?.error?.message || `HTTP ${response.status}`;
+        log.debug(`spotifyPause failed: ${detail}`);
+        return { ok: false, reason: detail };
+    }
+    return { ok: true };
 }
 
 export async function spotifyGetPlaybackState() {
