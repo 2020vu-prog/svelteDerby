@@ -12,7 +12,7 @@
         spotifyLoggedIn,
     } from "./stores.js";
     import { persistable } from "./storedb.js";
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { db } from "./eventDb.js";
     import { sleep } from "./utils.js";
     import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
@@ -106,6 +106,64 @@
         );
     }
 
+    // Nothing else in the app ever learns that a walk-up track finished
+    // playing on its own -- the falling edge is otherwise driven purely by
+    // requestedHref changing, which only happens when the race phase
+    // advances. Without this poll, a walk-up that plays to completion while
+    // the operator hasn't yet moved to the next block never restores the
+    // listener's prior playback. Only meaningful on the device-API path;
+    // there's nothing to poll for the embedded iframe player.
+    const walkupPollIntervalMs = 3000;
+    let walkupPollTimer = null;
+
+    function stopWalkupCompletionPoll() {
+        if (walkupPollTimer) {
+            clearTimeout(walkupPollTimer);
+            walkupPollTimer = null;
+        }
+    }
+
+    function scheduleWalkupCompletionPoll() {
+        stopWalkupCompletionPoll();
+        walkupPollTimer = setTimeout(
+            pollWalkupCompletion,
+            walkupPollIntervalMs
+        );
+    }
+
+    async function pollWalkupCompletion() {
+        walkupPollTimer = null;
+        if (
+            !$spotifyLoggedIn ||
+            !playingHref ||
+            playingHref !== requestedHref
+        ) {
+            return;
+        }
+
+        let state = null;
+        try {
+            state = await spotifyGetPlaybackState();
+        } catch (error) {
+            log.debug(`walkup: completion poll failed: ${error.message}`);
+            scheduleWalkupCompletionPoll();
+            return;
+        }
+
+        const finished =
+            !state ||
+            !state.isPlaying ||
+            sanitizeTrack(state.trackUri) !== lastWalkupTrackId;
+        if (finished) {
+            logWalkupEvent("Walk-up finished playing.");
+            requestedHref = "";
+            return;
+        }
+        scheduleWalkupCompletionPoll();
+    }
+
+    onDestroy(stopWalkupCompletionPoll);
+
     async function togglePlayPause(mp3Playing) {
         if (playSpotify) {
             log.debug(`walkup: mayToggleSpotify 3p: ${mp3Playing}`);
@@ -174,6 +232,11 @@
         if (isWalkup) {
             lastWalkupTrackId = sanitizeTrack(nextHref);
             logWalkupEvent(`Walk-up playing: ${lastWalkupTrackId}`);
+            if ($spotifyLoggedIn) {
+                scheduleWalkupCompletionPoll();
+            }
+        } else {
+            stopWalkupCompletionPoll();
         }
         log.debug(
             `walkup: mayToggleSpotify hreff [${requestedHref}] [${playingHref}]`
