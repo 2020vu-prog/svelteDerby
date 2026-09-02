@@ -67,10 +67,15 @@
     }
 
     function dispatchToElectron(payload) {
-        const hookElement = document.getElementById("udpRacePhaseSpan");
-        if (!hookElement) return; // not running inside the electron shell
         log.debug("racePhase relay: dispatching", payload);
-        hookElement.dispatchEvent(
+        // Dispatched on `document` (rather than a hook element looked up by
+        // id, as ElectronTimerRelay's udpTimerSpan does for the opposite
+        // direction) because electronDerby's preload script listens on
+        // `document` directly: it runs before this component has mounted
+        // anything, so a by-id element wouldn't exist yet for it to find.
+        // Outside the Electron shell this is simply a no-op -- nothing is
+        // listening, so the dispatch has no effect.
+        document.dispatchEvent(
             new CustomEvent("racePhaseEntered", {
                 detail: JSON.stringify(payload),
             })
@@ -78,4 +83,4 @@
     }
 </script>
 
-<span id="udpRacePhaseSpan" />
+<!-- No markup: this component only relays events via document.dispatchEvent. -->
