@@ -82,3 +82,5 @@
         );
     }
 </script>
+
+<!-- No markup: this component only relays events via document.dispatchEvent. -->
