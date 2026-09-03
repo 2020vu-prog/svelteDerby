@@ -60,6 +60,7 @@
 
         const payload = {
             heatNumber: getHeatNumberOrLabel(racePhase),
+            phase: racePhase.phaseLiteral ?? null,
             lane1,
             lane2,
         };
