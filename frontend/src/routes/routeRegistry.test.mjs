@@ -198,8 +198,9 @@ test("anonymous users only receive general event menus", () => {
             "Pending Races",
             "Charts",
             "Watch Different Event",
+            "My Drivers",
             "Preferences & Sharing",
-            "Logout [TestUser]",
+            "Logout [user@example.com]",
         ]
     );
 });
