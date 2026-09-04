@@ -16,6 +16,10 @@
     let icon = faFilter;
     let editMode = false;
     let filterInput;
+    // `alphanumeric` (prop) is the page's fixed starting mode, set once
+    // by the caller. `alphaMode` (state) is the live mode the user is
+    // actually in -- it starts at `alphanumeric` but the toggle button
+    // below lets the user flip it at runtime, independent of the prop.
     let alphaMode = alphanumeric;
     $: effectiveMaxLength = maxLength ?? (alphaMode ? 40 : 3);
     const toggleEdit = async () => {
