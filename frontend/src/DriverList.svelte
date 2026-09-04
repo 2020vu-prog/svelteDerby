@@ -109,7 +109,7 @@
     <h4>
         Driver
         {#if selectable}Selection{:else}List{/if}
-        <CarFilter />
+        <CarFilter allowKeyboardToggle />
     </h4>
     {#if selectable}
         <SpinnerButton on:click={finishSelect}>

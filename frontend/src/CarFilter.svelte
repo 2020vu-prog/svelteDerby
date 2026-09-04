@@ -12,6 +12,7 @@
     export let filterStore = carFilter;
     export let defaultAlphanumeric = false;
     export let maxLength = null;
+    export let allowKeyboardToggle = false;
 
     let icon = faFilter;
     let editMode = false;
@@ -46,12 +47,16 @@
     <span on:click={toggleEdit}>
         <Icon icon={faBackspace} />
     </span>
-    <span
-        on:click={toggleKeyboardMode}
-        title={isAlphanumeric ? "Switch to numeric" : "Switch to alphanumeric"}
-    >
-        <Icon icon={isAlphanumeric ? faHashtag : faFont} />
-    </span>
+    {#if allowKeyboardToggle}
+        <span
+            on:click={toggleKeyboardMode}
+            title={isAlphanumeric
+                ? "Switch to numeric"
+                : "Switch to alphanumeric"}
+        >
+            <Icon icon={isAlphanumeric ? faHashtag : faFont} />
+        </span>
+    {/if}
     <input
         bind:this={filterInput}
         type="text"

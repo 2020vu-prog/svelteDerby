@@ -38,7 +38,8 @@
         "dev": "./devEnv.sh && webpack serve",
         "amplify-modelgen": "node amplify/scripts/amplify-modelgen.js",
         "version": "echo $npm_package_version",
-        "amplify-push": "node amplify/scripts/amplify-push.js"
+        "amplify-push": "node amplify/scripts/amplify-push.js",
+        "test": "node --test"
     },
     "overrides": {
         "websocket-driver": "0.7.5"
