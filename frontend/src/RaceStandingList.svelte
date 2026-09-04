@@ -78,7 +78,10 @@
 
         return standing.carNumbers.filter((cn) => cn.match(re)).length > 0;
     };
-    //loc &drb passed in to coerce svelte refesh screen
+    // loc & drb are unused here -- they're only passed through so this
+    // call, referenced directly in the reactive block above, re-runs
+    // whenever $location/$doRefreshBlocks change (svelte's dependency
+    // tracking). carFilter and type are real values used below.
     function getStandings(loc, carFilter, drb, type) {
         const rc = Object.values($standingsMap);
         const sortBy = getSortAlgorithm(type);
