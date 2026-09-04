@@ -18,6 +18,7 @@ import {
 } from "./stores.js";
 import { get } from "svelte/store";
 import { localConfigDb } from "./eventDb.js";
+import { escapeRegExp } from "./regexEscape.js";
 import { location as spaLocation } from "svelte-spa-router";
 
 const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -514,9 +515,7 @@ export function downloadFile(filename, text) {
 
     document.body.removeChild(element);
 }
-// Regex metacharacters in user-typed filter text (e.g. a trailing "\")
-// must not reach `new RegExp` unescaped -- it throws on invalid patterns.
-export const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export { escapeRegExp };
 export const filterMatches = (carNumber, lclFilter) => {
     if (!lclFilter) return true;
     let re = new RegExp("^" + escapeRegExp(lclFilter));
