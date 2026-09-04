@@ -20,7 +20,7 @@
     import { onMount } from "svelte";
     export let params = {};
     import { location, replace, push } from "svelte-spa-router";
-    import { dateChangeLabel, getMainFull } from "./utils.js";
+    import { dateChangeLabel, getMainFull, escapeRegExp } from "./utils.js";
     var mainFullPx = 300;
 
     var mounted = false;
@@ -74,7 +74,7 @@
         log.debug("filterMatches", standing);
 
         if (!lclFilter) return true;
-        let re = new RegExp("^" + lclFilter);
+        let re = new RegExp("^" + escapeRegExp(lclFilter));
 
         return standing.carNumbers.filter((cn) => cn.match(re)).length > 0;
     };
