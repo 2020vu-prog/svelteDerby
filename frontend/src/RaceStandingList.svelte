@@ -38,9 +38,10 @@
         potentialReload($doRefreshBlocks);
     }
     var standingList = [nob0];
+    $: type = params.type;
     $: {
         standingList = [nob0].concat(
-            getStandings($location, $carFilter, $doRefreshBlocks)
+            getStandings($location, $carFilter, $doRefreshBlocks, type)
         );
         log.debug(`refreshed standingList: ${standingList.length}`);
     }
@@ -55,14 +56,14 @@
         }
     }
 
-    function getTitle() {
-        log.debug("mounted type:", params.type);
-        return params.type === "Pending" ? "Pending Races" : "Race History";
+    function getTitle(type) {
+        log.debug("mounted type:", type);
+        return type === "Pending" ? "Pending Races" : "Race History";
     }
-    const typeFilter = (standing) => {
-        log.debug(" type filter:", params.type);
+    const typeFilter = (standing, type) => {
+        log.debug(" type filter:", type);
 
-        if (params.type === "Pending") {
+        if (type === "Pending") {
             return standing.isPending();
         } else {
             // History
@@ -78,17 +79,17 @@
         return standing.carNumbers.filter((cn) => cn.match(re)).length > 0;
     };
     //loc &drb passed in to coerce svelte refesh screen
-    function getStandings(loc, carFilter, drb) {
+    function getStandings(loc, carFilter, drb, type) {
         const rc = Object.values($standingsMap);
-        const sortBy = getSortAlgorithm();
+        const sortBy = getSortAlgorithm(type);
         rc.sort(sortBy);
         return rc
             .filter((rs) => filterMatches(rs, carFilter, drb))
-            .filter((rs) => typeFilter(rs, drb))
+            .filter((rs) => typeFilter(rs, type))
             .slice(0, $uiPageSize);
     }
-    function getSortAlgorithm() {
-        if (params.type === "Pending") {
+    function getSortAlgorithm(type) {
+        if (type === "Pending") {
             return $pendingSortAlgorithm === "Heat" ? sortByHeat : sortByAt;
         } else {
             return sortByAt; // history is always sorted by age.
@@ -138,7 +139,7 @@
         <hr />
 
         <h4>
-            {getTitle($location)}
+            {getTitle(type)}
             <CarFilter />
         </h4>
     {:else}
