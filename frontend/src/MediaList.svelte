@@ -242,7 +242,9 @@
 </style>
 
 <div style="height: fill-parent">
-    <h3>Media List <CarFilter filterStore={mediaFilter} alphanumeric /></h3>
+    <h3>
+        Media List <CarFilter filterStore={mediaFilter} defaultAlphanumeric />
+    </h3>
     {#if loadingMedia}
         <div
             style="margin: 0; position: absolute; top: 50%; left: 50%;

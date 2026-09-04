@@ -10,30 +10,26 @@
     import { tick } from "svelte";
 
     export let filterStore = carFilter;
-    export let alphanumeric = false;
+    export let defaultAlphanumeric = false;
     export let maxLength = null;
 
     let icon = faFilter;
     let editMode = false;
     let filterInput;
-    // `alphanumeric` (prop) is the page's fixed starting mode, set once
-    // by the caller. `alphaMode` (state) is the live mode the user is
-    // actually in -- it starts at `alphanumeric` but the toggle button
-    // below lets the user flip it at runtime, independent of the prop.
-    let alphaMode = alphanumeric;
-    $: effectiveMaxLength = maxLength ?? (alphaMode ? 40 : 3);
+    let isAlphanumeric = defaultAlphanumeric;
+    $: effectiveMaxLength = maxLength ?? (isAlphanumeric ? 40 : 3);
     const toggleEdit = async () => {
         log.debug("toggle:", editMode);
         $filterStore = "";
         editMode = !editMode;
-        alphaMode = alphanumeric;
+        isAlphanumeric = defaultAlphanumeric;
         if (editMode) {
             await tick();
             filterInput?.focus();
         }
     };
-    const toggleAlphaMode = async () => {
-        alphaMode = !alphaMode;
+    const toggleKeyboardMode = async () => {
+        isAlphanumeric = !isAlphanumeric;
         // Mobile keyboards (notably iOS Safari) don't reliably re-read
         // inputmode on an already-focused field -- blur/refocus forces
         // the keyboard to redraw with the new layout.
@@ -51,18 +47,18 @@
         <Icon icon={faBackspace} />
     </span>
     <span
-        on:click={toggleAlphaMode}
-        title={alphaMode ? "Switch to numeric" : "Switch to alphanumeric"}
+        on:click={toggleKeyboardMode}
+        title={isAlphanumeric ? "Switch to numeric" : "Switch to alphanumeric"}
     >
-        <Icon icon={alphaMode ? faHashtag : faFont} />
+        <Icon icon={isAlphanumeric ? faHashtag : faFont} />
     </span>
     <input
         bind:this={filterInput}
         type="text"
-        pattern={alphaMode ? "[A-Za-z0-9]*" : "\\d*"}
-        inputmode={alphaMode ? "text" : "numeric"}
+        pattern={isAlphanumeric ? "[A-Za-z0-9]*" : "\\d*"}
+        inputmode={isAlphanumeric ? "text" : "numeric"}
         maxLength={effectiveMaxLength}
-        size={alphaMode ? 12 : 3}
+        size={isAlphanumeric ? 12 : 3}
         bind:value={$filterStore}
     />
 {:else}
