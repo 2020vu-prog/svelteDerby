@@ -5,6 +5,8 @@
     import Icon from "fa-svelte";
     import { faFilter } from "@fortawesome/free-solid-svg-icons/faFilter";
     import { faBackspace } from "@fortawesome/free-solid-svg-icons/faBackspace";
+    import { faFont } from "@fortawesome/free-solid-svg-icons/faFont";
+    import { faHashtag } from "@fortawesome/free-solid-svg-icons/faHashtag";
     import { tick } from "svelte";
 
     export let filterStore = carFilter;
@@ -14,15 +16,28 @@
     let icon = faFilter;
     let editMode = false;
     let filterInput;
-    $: effectiveMaxLength = maxLength ?? (alphanumeric ? 40 : 3);
+    let alphaMode = alphanumeric;
+    $: effectiveMaxLength = maxLength ?? (alphaMode ? 40 : 3);
     const toggleEdit = async () => {
         log.debug("toggle:", editMode);
         $filterStore = "";
         editMode = !editMode;
+        alphaMode = alphanumeric;
         if (editMode) {
             await tick();
             filterInput?.focus();
         }
+    };
+    const toggleAlphaMode = async () => {
+        alphaMode = !alphaMode;
+        // Mobile keyboards (notably iOS Safari) don't reliably re-read
+        // inputmode on an already-focused field -- blur/refocus forces
+        // the keyboard to redraw with the new layout.
+        filterInput?.blur();
+        await tick();
+        filterInput?.focus();
+        const len = $filterStore.length;
+        filterInput?.setSelectionRange(len, len);
     };
 </script>
 
@@ -31,13 +46,19 @@
     <span on:click={toggleEdit}>
         <Icon icon={faBackspace} />
     </span>
+    <span
+        on:click={toggleAlphaMode}
+        title={alphaMode ? "Switch to numeric" : "Switch to alphanumeric"}
+    >
+        <Icon icon={alphaMode ? faHashtag : faFont} />
+    </span>
     <input
         bind:this={filterInput}
         type="text"
-        pattern={alphanumeric ? "[A-Za-z0-9]*" : "\\d*"}
-        inputmode={alphanumeric ? "text" : "numeric"}
+        pattern={alphaMode ? "[A-Za-z0-9]*" : "\\d*"}
+        inputmode={alphaMode ? "text" : "numeric"}
         maxLength={effectiveMaxLength}
-        size={alphanumeric ? 12 : 3}
+        size={alphaMode ? 12 : 3}
         bind:value={$filterStore}
     />
 {:else}
