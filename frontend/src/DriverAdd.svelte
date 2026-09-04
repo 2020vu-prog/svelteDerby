@@ -639,7 +639,9 @@
                 <br />
                 <a href={delegateLink}>{delegateLink}</a>
             </p>
-            {@html delegateQrSvg}
+            <div class="delegateQr">
+                {@html delegateQrSvg}
+            </div>
         {/if}
         <p>{maintainerHashes.length} active maintainer(s)</p>
         {#each maintainerHashes as hash}
@@ -692,5 +694,14 @@
     .form-actions {
         display: block;
         margin-top: 0.5rem;
+    }
+    .delegateQr {
+        width: 200px;
+        max-width: 100%;
+    }
+    .delegateQr :global(svg) {
+        display: block;
+        width: 100%;
+        height: auto;
     }
 </style>
