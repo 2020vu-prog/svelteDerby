@@ -259,7 +259,9 @@ export async function spotifyMe(volume) {
             text: `Spotify profile lookup failed: ${detail}`,
             type: "error",
         });
-        throw new Error(`Spotify profile lookup failed: ${response.status} ${detail}`);
+        throw new Error(
+            `Spotify profile lookup failed: ${response.status} ${detail}`
+        );
     }
     const body = await response.json();
     return body;
