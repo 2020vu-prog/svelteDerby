@@ -251,12 +251,17 @@ export async function spotifyMe(volume) {
     url.search = new URLSearchParams(params).toString();
 
     const response = await fetch401retry(url, payload);
-    if (response.status === 403) {
-        showSpotifyPremiumRequired();
-        return {};
-    }
     if (!response.ok) {
-        throw new Error(`Spotify profile lookup failed: ${response.status}`);
+        const body = await response.json().catch(() => ({}));
+        const detail = body?.error?.message || `HTTP ${response.status}`;
+        pushMessage({
+            key: "spotify-profile-error",
+            text: `Spotify profile lookup failed: ${detail}`,
+            type: "error",
+        });
+        throw new Error(
+            `Spotify profile lookup failed: ${response.status} ${detail}`
+        );
     }
     const body = await response.json();
     return body;
