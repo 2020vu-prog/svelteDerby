@@ -53,6 +53,12 @@
     var resolution = "640x480";
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
+    // How to fit the raw camera frame into the target resolution when
+    // its native aspect ratio doesn't match: "letterbox" scales down to
+    // fit entirely inside (adds bars, keeps full field of view),
+    // "cover" scales up to fill it (crops edges, no bars). Either way,
+    // the frame is scaled uniformly -- never stretched/distorted.
+    var frameFit = "letterbox";
     const tag = "CaptureVideo";
     var snipAgeSeconds = 300;
     var snipLengthSeconds = 6;
@@ -404,8 +410,12 @@
         recordSpinning = true;
         const constraints = {
             video: {
-                width: getVideoWidth(),
-                height: getVideoHeight(),
+                // `ideal` (not a bare/exact value) so the browser picks
+                // the closest resolution at the camera's own native
+                // aspect ratio instead of stretching the frame to force
+                // an exact WxH the sensor doesn't natively support.
+                width: { ideal: parseInt(getVideoWidth(), 10) },
+                height: { ideal: parseInt(getVideoHeight(), 10) },
                 frameRate: { ideal: parseInt(frameRate, 10), max: 30 },
                 facingMode: "environment",
             },
@@ -474,11 +484,37 @@
         });
         return `${localTime} | ${now}`;
     }
+    // Draws `source` into a `canvasWidth`x`canvasHeight` box, scaled
+    // uniformly (never stretched) to either fully cover it (cropping
+    // overflow) or fit entirely inside it (letterboxed with bars).
+    function drawFittedFrame(ctx, source, canvasWidth, canvasHeight, mode) {
+        const srcWidth = source.videoWidth;
+        const srcHeight = source.videoHeight;
+        const scale =
+            mode === "cover"
+                ? Math.max(canvasWidth / srcWidth, canvasHeight / srcHeight)
+                : Math.min(canvasWidth / srcWidth, canvasHeight / srcHeight);
+        const drawWidth = srcWidth * scale;
+        const drawHeight = srcHeight * scale;
+        const offsetX = (canvasWidth - drawWidth) / 2;
+        const offsetY = (canvasHeight - drawHeight) / 2;
+
+        if (mode !== "cover") {
+            // Letterbox: paint the bars the scaled frame won't reach.
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+        ctx.drawImage(source, offsetX, offsetY, drawWidth, drawHeight);
+    }
     function drawTimestampedPreview(rawVideo, canvas, width, height) {
         const ctx = canvas.getContext("2d");
         const draw = () => {
-            if (rawVideo.readyState >= 2) {
-                ctx.drawImage(rawVideo, 0, 0, width, height);
+            if (
+                rawVideo.readyState >= 2 &&
+                rawVideo.videoWidth &&
+                rawVideo.videoHeight
+            ) {
+                drawFittedFrame(ctx, rawVideo, width, height, frameFit);
             } else {
                 ctx.fillStyle = "black";
                 ctx.fillRect(0, 0, width, height);
@@ -714,6 +750,14 @@
             <option>640x480</option>
             <option>720x576</option>
             <option>1920x1080</option>
+        </select>
+    </label>
+
+    <label
+        >Frame Fit
+        <select bind:value={frameFit}>
+            <option value="letterbox">Letterbox (show full frame)</option>
+            <option value="cover">Crop to fill (no bars)</option>
         </select>
     </label>
 
