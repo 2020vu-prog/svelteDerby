@@ -68,6 +68,18 @@
     // "cover" scales up to fill it (crops edges, no bars). Either way,
     // the frame is scaled uniformly -- never stretched/distorted.
     var frameFit = "letterbox";
+    // Empty = no deviceId constraint, browser picks per facingMode as
+    // before. Populated from enumerateDevices() -- labels (e.g. "Back
+    // Ultra Wide Camera") are only available once permission has been
+    // granted at least once in this browser/origin.
+    var videoDeviceId = "";
+    var videoDeviceOptions = [];
+    // Populated from the active track's getCapabilities() once
+    // recording starts -- zoom can't be known before a stream exists,
+    // and isn't supported by every browser/camera (mainly Chrome on
+    // Android; not available on iOS Safari at all).
+    var zoomCapabilities = null;
+    var zoomLevel = null;
     const tag = "CaptureVideo";
     var snipAgeSeconds = 300;
     var snipLengthSeconds = 6;
@@ -87,7 +99,20 @@
                 type: "error",
             });
         }
+        refreshVideoDevices();
     });
+    // Device labels are blank until permission has been granted at
+    // least once, so this is also re-run after a stream is obtained
+    // (see handleGotMedia) to pick up real labels for next time.
+    async function refreshVideoDevices() {
+        if (!navigator.mediaDevices?.enumerateDevices) return;
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            videoDeviceOptions = devices.filter((d) => d.kind === "videoinput");
+        } catch (e) {
+            log.warn("enumerateDevices failed:", e);
+        }
+    }
     onDestroy(() => {
         isDestroying = true;
         if (timerHandle) {
@@ -446,7 +471,14 @@
                 width: { ideal: idealWidth, max: maxWidth },
                 height: { ideal: idealHeight, max: maxHeight },
                 frameRate: { ideal: parseInt(frameRate, 10), max: 30 },
-                facingMode: "environment",
+                // A specific lens (deviceId) already implies which
+                // physical camera to use -- combining it with
+                // facingMode risks the two constraints conflicting on
+                // some browsers, so only fall back to facingMode when
+                // no explicit lens is chosen.
+                ...(videoDeviceId
+                    ? { deviceId: { exact: videoDeviceId } }
+                    : { facingMode: "environment" }),
             },
         };
         log.debug("Using media constraints:", constraints);
@@ -487,6 +519,32 @@
         );
         return { width: 640, height: 480 };
     }
+    // Zoom is a track-level constraint (part of the Image Capture API
+    // extensions, not the base MediaTrackConstraints spec), so it can
+    // only be discovered/applied against an already-active track --
+    // there's no way to request a starting zoom level up front the way
+    // resolution/frameRate can.
+    function refreshZoomCapabilities(stream) {
+        const track = stream.getVideoTracks()[0];
+        const caps = track?.getCapabilities?.();
+        if (caps?.zoom) {
+            zoomCapabilities = caps.zoom;
+            zoomLevel = track.getSettings?.().zoom ?? caps.zoom.min;
+        } else {
+            zoomCapabilities = null;
+            zoomLevel = null;
+        }
+    }
+    async function setZoom(value) {
+        const track = mainStream?.getVideoTracks()[0];
+        if (!track || !zoomCapabilities) return;
+        try {
+            await track.applyConstraints({ advanced: [{ zoom: value }] });
+            zoomLevel = value;
+        } catch (e) {
+            log.warn("applyConstraints zoom failed:", e);
+        }
+    }
     var mainStream;
     var canvasStream;
     var canvasAnimationFrame;
@@ -516,6 +574,8 @@
         recordStream(canvasStream, 0);
         recordStream(canvasStream, 1);
         recordingActive = true;
+        refreshZoomCapabilities(stream);
+        refreshVideoDevices(); // labels are reliably populated post-permission
 
         clearTimeout(previewHideTimeout);
         previewHideTimeout = setTimeout(
@@ -790,6 +850,19 @@
         RECORDING
     </div>
 {/if}
+{#if zoomCapabilities}
+    <label
+        >Zoom ({zoomLevel}x)
+        <input
+            type="range"
+            min={zoomCapabilities.min}
+            max={zoomCapabilities.max}
+            step={zoomCapabilities.step}
+            value={zoomLevel}
+            on:input={(e) => setZoom(parseFloat(e.target.value))}
+        />
+    </label>
+{/if}
 <label>
     Hide Preview:
     <input class="big" type="checkbox" bind:checked={hidePreview} />
@@ -816,6 +889,18 @@
             <option>640x480</option>
             <option>720x576</option>
             <option>1920x1080</option>
+        </select>
+    </label>
+
+    <label
+        >Lens
+        <select bind:value={videoDeviceId}>
+            <option value="">Default (environment)</option>
+            {#each videoDeviceOptions as device}
+                <option value={device.deviceId}>
+                    {device.label || `Camera ${device.deviceId.slice(0, 8)}`}
+                </option>
+            {/each}
         </select>
     </label>
 
