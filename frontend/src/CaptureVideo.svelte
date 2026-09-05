@@ -517,10 +517,13 @@
         isRecording = true;
 
         clearTimeout(previewHideTimeout);
-        previewHideTimeout = setTimeout(() => {
-            hidePreview = true;
-            previewHideTimeout = undefined;
-        }, 2 * 60 * 1000);
+        previewHideTimeout = setTimeout(
+            () => {
+                hidePreview = true;
+                previewHideTimeout = undefined;
+            },
+            2 * 60 * 1000
+        );
 
         // 2 concurrent recording sessions.  end each at half desired length
         timerHandle = setInterval(
