@@ -536,13 +536,22 @@
         }
     }
     async function setZoom(value) {
+        // zoomLevel is bind:value'd to the slider, so the thumb already
+        // reflects `value` before this runs -- don't gate that on the
+        // async applyConstraints() call below, or a rejected/unsupported
+        // value (some devices report a wider getCapabilities() range
+        // than they actually honor) snaps the slider back to the last
+        // applied value and looks like it's simply not responding.
         const track = mainStream?.getVideoTracks()[0];
         if (!track || !zoomCapabilities) return;
         try {
             await track.applyConstraints({ advanced: [{ zoom: value }] });
-            zoomLevel = value;
         } catch (e) {
             log.warn("applyConstraints zoom failed:", e);
+            pushMessage({
+                text: `Camera rejected zoom level ${value}x.`,
+                type: "error",
+            });
         }
     }
     var mainStream;
@@ -858,8 +867,8 @@
             min={zoomCapabilities.min}
             max={zoomCapabilities.max}
             step={zoomCapabilities.step}
-            value={zoomLevel}
-            on:input={(e) => setZoom(parseFloat(e.target.value))}
+            bind:value={zoomLevel}
+            on:input={() => setZoom(zoomLevel)}
         />
     </label>
 {/if}
