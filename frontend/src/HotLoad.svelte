@@ -436,6 +436,15 @@
     }
     const msgQ = [];
     async function onConnect(client) {
+        // activeIotWatch.errors only ever gets cleared by resetMqtt() --
+        // without this, one subscribe failure (e.g. right at wake,
+        // before the radio has fully reassociated) leaves the button
+        // permanently red even after mqtt.js's own reconnectPeriod
+        // silently recovers the same client, since that path never
+        // calls resetMqtt().
+        if (client === mqClient && activeIotWatch.errors.length > 0) {
+            activeIotWatch.errors = [];
+        }
         applyBtnClass();
         // Reconnects need a fresh snapshot. The initial snapshot is started by
         // configChanged only after the subscription acknowledgement.
