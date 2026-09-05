@@ -38,6 +38,7 @@ import RaceStandingAdd from "../RaceStandingAdd.svelte";
 import RaceStandingList from "../RaceStandingList.svelte";
 import RawTimerList from "../RawTimerList.svelte";
 import RouteSelection from "../RouteSelection.svelte";
+import Spotify from "../Spotify.svelte";
 import TimerAlignment from "../TimerAlignment.svelte";
 import TimerColumns from "../TimerColumns.svelte";
 import TimerConfig from "../TimerConfig.svelte";
@@ -92,6 +93,7 @@ export const routeComponents = {
     RaceStandingList,
     RawTimerList,
     RouteSelection,
+    Spotify,
     TimerAlignment,
     TimerColumns,
     TimerConfig,

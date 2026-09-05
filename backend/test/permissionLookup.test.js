@@ -27,6 +27,12 @@ test("registration can view PA Info through its announcement permission", () => 
     ).toBe(true);
 });
 
+test("registration can manage Spotify", () => {
+    expect(hasPermission([RoleName.REGISTRATION], "CanManageSpotify")).toBe(
+        true
+    );
+});
+
 test("resolved permissions combine selected roles without duplicates", () => {
     expect(
         getRolePermissions([RoleName.STARTER, RoleName.STARTER_LIMITED]).sort()

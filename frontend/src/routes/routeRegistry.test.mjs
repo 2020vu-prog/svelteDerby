@@ -180,6 +180,17 @@ test("route access follows named role permissions", () => {
         ),
         true
     );
+    assert.equal(
+        canAccessRoute(
+            routeRegistry.match("/spotify"),
+            context([RoleName.REGISTRATION])
+        ),
+        true
+    );
+    assert.equal(
+        canAccessRoute(routeRegistry.match("/spotify"), context([])),
+        false
+    );
 });
 
 test("anonymous users only receive general event menus", () => {
@@ -232,6 +243,7 @@ test("admin menus are derived from route permission", () => {
             "Org Users",
             "Manual Announcement",
             "PA Info",
+            "Spotify",
             "Capture Video",
             "Log Messages",
         ]

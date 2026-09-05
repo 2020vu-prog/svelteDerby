@@ -59,6 +59,7 @@ RoutePermission.CAN_INITIATE_ANNOUNCEMENT = new RoutePermission(
     "CanInitiateAnnouncement"
 );
 RoutePermission.CAN_MANAGE_DISCORD = new RoutePermission("CanManageDiscord");
+RoutePermission.CAN_MANAGE_SPOTIFY = new RoutePermission("CanManageSpotify");
 RoutePermission.CAN_DELETE_STANDING = new RoutePermission("CanDeleteStanding");
 RoutePermission.CAN_CAPTURE_VIDEO = new RoutePermission("CanCaptureVideo");
 
