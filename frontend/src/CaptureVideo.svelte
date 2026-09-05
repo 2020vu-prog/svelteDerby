@@ -865,7 +865,8 @@
 {/if}
 {#if zoomCapabilities}
     <label
-        >Zoom ({zoomLevel}x)
+        >Zoom ({zoomLevel}x, range {zoomCapabilities.min}-{zoomCapabilities.max}
+        step {zoomCapabilities.step})
         <input
             type="range"
             min={zoomCapabilities.min}
