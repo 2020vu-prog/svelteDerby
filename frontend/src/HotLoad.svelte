@@ -121,6 +121,24 @@
         }
         applyBtnClass();
     }
+    // Mobile OS sleep can silently kill the MQTT socket without ever
+    // firing a close/error event on it -- mqtt.js's own reconnectPeriod
+    // retry only runs off those events, so the client is left believing
+    // it's still connected and never attempts to reconnect on its own.
+    // Force a fresh connection whenever the page becomes visible again,
+    // but only if the existing client isn't actually healthy -- resetMqtt()
+    // clears activeIotWatch.plugged, so the next watchIot() (via
+    // configChanged()) opens a brand new mqtt.connect(), same path
+    // already used when $raceConfig/$mqttEnabled change.
+    function handleWakeReconnect() {
+        if (document.visibilityState !== "visible") return;
+        if (mqClient && mqClient.connected) return;
+        log.debug(
+            "HotLoad: page visible again with a stale MQTT connection -- reconnecting"
+        );
+        resetMqtt();
+        configChanged();
+    }
     function configChanged() {
         configChangeGeneration++;
         if (!configChangeRunning) drainConfigChanges();
@@ -784,8 +802,15 @@
     watchMqttSubscriptions();
     onMount(() => {
         onMountAsync();
+        document.addEventListener("visibilitychange", handleWakeReconnect);
+        window.addEventListener("pageshow", handleWakeReconnect);
         return () => {
             log.debug("HotLoad unmount");
+            document.removeEventListener(
+                "visibilitychange",
+                handleWakeReconnect
+            );
+            window.removeEventListener("pageshow", handleWakeReconnect);
             resetMqtt();
         };
     });
