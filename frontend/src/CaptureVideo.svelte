@@ -50,7 +50,12 @@
     var calcSpinning = false;
     var remoteeDisabled = false;
     var isDestroying = false;
-    var resolution = "640x480";
+    // "auto" defers to the camera's own native resolution (see
+    // resolveCaptureSize()) instead of forcing a fixed WxH -- avoids the
+    // aspect-ratio mismatch case entirely for the common case, since
+    // most camera sensors are natively 16:9, not one of the fixed
+    // options below.
+    var resolution = "auto";
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
     // How to fit the raw camera frame into the target resolution when
@@ -410,14 +415,20 @@
         recordSpinning = true;
         const constraints = {
             video: {
+                frameRate: { ideal: parseInt(frameRate, 10), max: 30 },
+                facingMode: "environment",
+                // Omitted entirely in "auto" mode -- letting the browser
+                // pick the camera's own native resolution. Otherwise
                 // `ideal` (not a bare/exact value) so the browser picks
                 // the closest resolution at the camera's own native
                 // aspect ratio instead of stretching the frame to force
                 // an exact WxH the sensor doesn't natively support.
-                width: { ideal: parseInt(getVideoWidth(), 10) },
-                height: { ideal: parseInt(getVideoHeight(), 10) },
-                frameRate: { ideal: parseInt(frameRate, 10), max: 30 },
-                facingMode: "environment",
+                ...(resolution !== "auto"
+                    ? {
+                          width: { ideal: parseInt(getVideoWidth(), 10) },
+                          height: { ideal: parseInt(getVideoHeight(), 10) },
+                      }
+                    : {}),
             },
         };
         log.debug("Using media constraints:", constraints);
@@ -437,6 +448,26 @@
             //errorMsgElement.innerHTML = `navigator.getUserMedia error: ${ e.toString() }`;
         }
     }
+    // In "auto" mode, reads back whatever resolution the camera actually
+    // delivered (via the track's settings, populated as soon as
+    // getUserMedia resolves -- no need to wait for the video element to
+    // load) instead of a fixed dropdown value.
+    function resolveCaptureSize(stream) {
+        if (resolution !== "auto") {
+            return {
+                width: parseInt(getVideoWidth(), 10),
+                height: parseInt(getVideoHeight(), 10),
+            };
+        }
+        const settings = stream.getVideoTracks()[0]?.getSettings?.() || {};
+        if (settings.width && settings.height) {
+            return { width: settings.width, height: settings.height };
+        }
+        log.warn(
+            "Camera did not report its resolution; falling back to 640x480."
+        );
+        return { width: 640, height: 480 };
+    }
     var mainStream;
     var canvasStream;
     var canvasAnimationFrame;
@@ -447,8 +478,7 @@
         mainStream = stream;
         const rawVideo = document.querySelector(`video#rawGum${snum}`);
         const canvas = document.querySelector(`canvas#gum${snum}`);
-        const width = parseInt(getVideoWidth(), 10);
-        const height = parseInt(getVideoHeight(), 10);
+        const { width, height } = resolveCaptureSize(stream);
 
         canvas.width = width;
         canvas.height = height;
@@ -746,6 +776,7 @@
     <label
         >Resolution
         <select bind:value={resolution}>
+            <option value="auto">Match Camera</option>
             <option>320x240</option>
             <option>640x480</option>
             <option>720x576</option>
