@@ -134,19 +134,39 @@
         }
     }
     // Mobile OS sleep can silently kill the MQTT socket without ever
-    // firing a close/error event on it -- mqtt.js's own reconnectPeriod
-    // retry only runs off those events, so the client is left believing
-    // it's still connected and never attempts to reconnect on its own.
-    // Force a fresh connection whenever the page becomes visible again,
-    // but only if the existing client isn't actually healthy -- resetMqtt()
-    // clears activeIotWatch.plugged, so the next watchIot() (via
-    // configChanged()) opens a brand new mqtt.connect(), same path
-    // already used when $raceConfig/$mqttEnabled change.
-    function handleWakeReconnect() {
-        if (document.visibilityState !== "visible") return;
-        if (mqClient && mqClient.connected) return;
+    // firing a close/error event on it. mqtt.js's `connected` flag only
+    // updates in response to that event, so after a silent kill it's
+    // stuck at a stale `true` -- checking it alone (an earlier version
+    // of this fix did exactly that) trusts the one signal that's
+    // unreliable in precisely the failure case this exists for, and
+    // skips reconnecting. `connected === false` IS trustworthy (mqtt.js
+    // wouldn't report that without a real event), so that case still
+    // reconnects immediately; a `true` after a meaningful background
+    // interval can't be trusted either way and is forced regardless.
+    let pageHiddenAtMs = null;
+    const wakeReconnectThresholdMs = 15000;
+    function handleVisibilityChange() {
+        if (document.visibilityState === "hidden") {
+            pageHiddenAtMs = Date.now();
+        } else if (document.visibilityState === "visible") {
+            maybeReconnectAfterWake(
+                Date.now() - (pageHiddenAtMs || Date.now())
+            );
+        }
+    }
+    function handlePageShow() {
+        // A bfcache restore freezes the whole JS context for an
+        // unbounded, unknown duration -- always treat it as long enough
+        // to force the check, same as a long background period.
+        maybeReconnectAfterWake(wakeReconnectThresholdMs);
+    }
+    function maybeReconnectAfterWake(hiddenForMs) {
+        const knownDisconnected = !mqClient || !mqClient.connected;
+        if (!knownDisconnected && hiddenForMs < wakeReconnectThresholdMs) {
+            return; // brief background; connected state is still trustworthy
+        }
         log.debug(
-            "HotLoad: page visible again with a stale MQTT connection -- reconnecting"
+            `HotLoad: forcing MQTT reconnect check after wake (hiddenForMs=${hiddenForMs}, knownDisconnected=${knownDisconnected})`
         );
         resetMqtt();
         configChanged();
@@ -819,15 +839,15 @@
     watchMqttSubscriptions();
     onMount(() => {
         onMountAsync();
-        document.addEventListener("visibilitychange", handleWakeReconnect);
-        window.addEventListener("pageshow", handleWakeReconnect);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("pageshow", handlePageShow);
         return () => {
             log.debug("HotLoad unmount");
             document.removeEventListener(
                 "visibilitychange",
-                handleWakeReconnect
+                handleVisibilityChange
             );
-            window.removeEventListener("pageshow", handleWakeReconnect);
+            window.removeEventListener("pageshow", handlePageShow);
             resetMqtt();
         };
     });
