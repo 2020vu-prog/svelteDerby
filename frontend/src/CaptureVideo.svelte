@@ -548,6 +548,10 @@
             await track.applyConstraints({ advanced: [{ zoom: value }] });
         } catch (e) {
             log.warn("applyConstraints zoom failed:", e);
+            const appliedZoom = track.getSettings?.().zoom;
+            if (typeof appliedZoom === "number") {
+                zoomLevel = appliedZoom;
+            }
             pushMessage({
                 text: `Camera rejected zoom level ${value}x.`,
                 type: "error",
