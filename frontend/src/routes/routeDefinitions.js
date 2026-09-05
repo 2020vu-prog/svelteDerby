@@ -299,6 +299,13 @@ const routeDefinitions = [
         menu: adminMenu("PA Info", 60),
     },
     {
+        id: "spotify",
+        path: "/spotify",
+        component: "Spotify",
+        permission: RoutePermission.CAN_MANAGE_SPOTIFY,
+        menu: adminMenu("Spotify", 65),
+    },
+    {
         id: "chartEdit",
         path: "/chartEdit/:chartId",
         component: "ChartEdit",

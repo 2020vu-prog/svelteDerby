@@ -40,6 +40,7 @@ addPermission(RoutePermission.CAN_INITIATE_ANNOUNCEMENT, [
     "/RaceStanding/addTag",
 ]);
 addPermission(RoutePermission.CAN_MANAGE_DISCORD, ["/manageDiscord"]);
+addPermission(RoutePermission.CAN_MANAGE_SPOTIFY, []);
 addPermission(RoutePermission.CAN_DELETE_STANDING, ["/deleteRaceStanding"]);
 addPermission(RoutePermission.CAN_CAPTURE_VIDEO, [
     "/requestS3PutObjectUrl",

@@ -21,6 +21,7 @@ const registrationPerms = {
     [RoutePermission.CAN_ADD_PARTICIPANT.toString()]: true,
     [RoutePermission.CAN_ADD_PENDING.toString()]: true,
     [RoutePermission.CAN_MANAGE_DISCORD.toString()]: true,
+    [RoutePermission.CAN_MANAGE_SPOTIFY.toString()]: true,
 };
 const videoPerms = {
     [RoutePermission.CAN_CAPTURE_VIDEO.toString()]: true,
