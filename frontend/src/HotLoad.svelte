@@ -144,14 +144,22 @@
     // reconnects immediately; a `true` after a meaningful background
     // interval can't be trusted either way and is forced regardless.
     let pageHiddenAtMs = null;
+    let lastForcedReconnectAtMs = 0;
     const wakeReconnectThresholdMs = 15000;
+    // A single bfcache restore fires both pageshow (persisted) and a
+    // visibilitychange to "visible" -- without this, both independently
+    // call maybeReconnectAfterWake() for the same wake, double-resetting
+    // MQTT and double-counting the reconnect stat.
+    const wakeReconnectDebounceMs = 2000;
     function handleVisibilityChange() {
         if (document.visibilityState === "hidden") {
             pageHiddenAtMs = Date.now();
         } else if (document.visibilityState === "visible") {
-            maybeReconnectAfterWake(
-                Date.now() - (pageHiddenAtMs || Date.now())
-            );
+            const hiddenForMs = pageHiddenAtMs
+                ? Date.now() - pageHiddenAtMs
+                : 0;
+            pageHiddenAtMs = null;
+            maybeReconnectAfterWake(hiddenForMs);
         }
     }
     function handlePageShow(event) {
@@ -171,6 +179,11 @@
         if (!knownDisconnected && hiddenForMs < wakeReconnectThresholdMs) {
             return; // brief background; connected state is still trustworthy
         }
+        const now = Date.now();
+        if (now - lastForcedReconnectAtMs < wakeReconnectDebounceMs) {
+            return; // already handled this wake via the other listener
+        }
+        lastForcedReconnectAtMs = now;
         log.debug(
             `HotLoad: forcing MQTT reconnect check after wake (hiddenForMs=${hiddenForMs}, knownDisconnected=${knownDisconnected})`
         );
