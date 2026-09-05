@@ -50,9 +50,22 @@
     var calcSpinning = false;
     var remoteeDisabled = false;
     var isDestroying = false;
-    var resolution = "640x480";
+    // "auto" requests a bounded 16:9 ideal resolution (see doStart())
+    // instead of forcing one of the ~4:3 fixed options below, then reads
+    // back whatever the camera actually delivered (see
+    // resolveCaptureSize()) to size the canvas -- avoids the
+    // aspect-ratio mismatch case for the common case, since most camera
+    // sensors are natively 16:9, while still capping the request so a
+    // phone can't hand back an unbounded 1080p/4K stream.
+    var resolution = "auto";
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
+    // How to fit the raw camera frame into the target resolution when
+    // its native aspect ratio doesn't match: "letterbox" scales down to
+    // fit entirely inside (adds bars, keeps full field of view),
+    // "cover" scales up to fill it (crops edges, no bars). Either way,
+    // the frame is scaled uniformly -- never stretched/distorted.
+    var frameFit = "letterbox";
     const tag = "CaptureVideo";
     var snipAgeSeconds = 300;
     var snipLengthSeconds = 6;
@@ -402,10 +415,29 @@
         hidePreview = false;
         const snum = 0;
         recordSpinning = true;
+        // `ideal` (not a bare/exact value) so the browser picks the
+        // closest resolution at the camera's own native aspect ratio
+        // instead of stretching the frame to force an exact WxH the
+        // sensor doesn't natively support. In "auto" mode the ideal
+        // target is a 16:9 box close in pixel count to the old 640x480
+        // default -- still bounded with `max`, since an unconstrained
+        // request can hand back 1080p/4K, and this component redraws
+        // every frame through a canvas into two concurrent
+        // MediaRecorders, which is enough load to drop frames or fail
+        // to capture at all on the mobile hardware used trackside.
+        const [idealWidth, idealHeight, maxWidth, maxHeight] =
+            resolution === "auto"
+                ? [854, 480, 1280, 720]
+                : [
+                      parseInt(getVideoWidth(), 10),
+                      parseInt(getVideoHeight(), 10),
+                      parseInt(getVideoWidth(), 10),
+                      parseInt(getVideoHeight(), 10),
+                  ];
         const constraints = {
             video: {
-                width: getVideoWidth(),
-                height: getVideoHeight(),
+                width: { ideal: idealWidth, max: maxWidth },
+                height: { ideal: idealHeight, max: maxHeight },
                 frameRate: { ideal: parseInt(frameRate, 10), max: 30 },
                 facingMode: "environment",
             },
@@ -427,6 +459,26 @@
             //errorMsgElement.innerHTML = `navigator.getUserMedia error: ${ e.toString() }`;
         }
     }
+    // In "auto" mode, reads back whatever resolution the camera actually
+    // delivered (via the track's settings, populated as soon as
+    // getUserMedia resolves -- no need to wait for the video element to
+    // load) instead of a fixed dropdown value.
+    function resolveCaptureSize(stream) {
+        if (resolution !== "auto") {
+            return {
+                width: parseInt(getVideoWidth(), 10),
+                height: parseInt(getVideoHeight(), 10),
+            };
+        }
+        const settings = stream.getVideoTracks()[0]?.getSettings?.() || {};
+        if (settings.width && settings.height) {
+            return { width: settings.width, height: settings.height };
+        }
+        log.warn(
+            "Camera did not report its resolution; falling back to 640x480."
+        );
+        return { width: 640, height: 480 };
+    }
     var mainStream;
     var canvasStream;
     var canvasAnimationFrame;
@@ -437,8 +489,7 @@
         mainStream = stream;
         const rawVideo = document.querySelector(`video#rawGum${snum}`);
         const canvas = document.querySelector(`canvas#gum${snum}`);
-        const width = parseInt(getVideoWidth(), 10);
-        const height = parseInt(getVideoHeight(), 10);
+        const { width, height } = resolveCaptureSize(stream);
 
         canvas.width = width;
         canvas.height = height;
@@ -474,11 +525,37 @@
         });
         return `${localTime} | ${now}`;
     }
+    // Draws `source` into a `canvasWidth`x`canvasHeight` box, scaled
+    // uniformly (never stretched) to either fully cover it (cropping
+    // overflow) or fit entirely inside it (letterboxed with bars).
+    function drawFittedFrame(ctx, source, canvasWidth, canvasHeight, mode) {
+        const srcWidth = source.videoWidth;
+        const srcHeight = source.videoHeight;
+        const scale =
+            mode === "cover"
+                ? Math.max(canvasWidth / srcWidth, canvasHeight / srcHeight)
+                : Math.min(canvasWidth / srcWidth, canvasHeight / srcHeight);
+        const drawWidth = srcWidth * scale;
+        const drawHeight = srcHeight * scale;
+        const offsetX = (canvasWidth - drawWidth) / 2;
+        const offsetY = (canvasHeight - drawHeight) / 2;
+
+        if (mode !== "cover") {
+            // Letterbox: paint the bars the scaled frame won't reach.
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+        ctx.drawImage(source, offsetX, offsetY, drawWidth, drawHeight);
+    }
     function drawTimestampedPreview(rawVideo, canvas, width, height) {
         const ctx = canvas.getContext("2d");
         const draw = () => {
-            if (rawVideo.readyState >= 2) {
-                ctx.drawImage(rawVideo, 0, 0, width, height);
+            if (
+                rawVideo.readyState >= 2 &&
+                rawVideo.videoWidth &&
+                rawVideo.videoHeight
+            ) {
+                drawFittedFrame(ctx, rawVideo, width, height, frameFit);
             } else {
                 ctx.fillStyle = "black";
                 ctx.fillRect(0, 0, width, height);
@@ -710,10 +787,19 @@
     <label
         >Resolution
         <select bind:value={resolution}>
+            <option value="auto">Match Camera</option>
             <option>320x240</option>
             <option>640x480</option>
             <option>720x576</option>
             <option>1920x1080</option>
+        </select>
+    </label>
+
+    <label
+        >Frame Fit
+        <select bind:value={frameFit}>
+            <option value="letterbox">Letterbox (show full frame)</option>
+            <option value="cover">Crop to fill (no bars)</option>
         </select>
     </label>
 
