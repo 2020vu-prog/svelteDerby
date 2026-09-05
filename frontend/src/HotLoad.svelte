@@ -154,7 +154,13 @@
             );
         }
     }
-    function handlePageShow() {
+    function handlePageShow(event) {
+        // pageshow fires on every normal page load too, not just a
+        // bfcache restore -- event.persisted is what distinguishes
+        // them. Forcing a reconnect check on an ordinary load would
+        // race with the initial connection flow onMount already kicks
+        // off, producing a redundant connection and an inflated count.
+        if (!event.persisted) return;
         // A bfcache restore freezes the whole JS context for an
         // unbounded, unknown duration -- always treat it as long enough
         // to force the check, same as a long background period.
