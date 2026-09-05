@@ -24,6 +24,7 @@
         reRenderHotLoad,
         developerMode,
         mp3Playing,
+        mqttReconnectStats,
     } from "./stores.js";
     //import { mqtt } from "mqtt";
     import * as mqtt from "mqtt";
@@ -121,6 +122,17 @@
         }
         applyBtnClass();
     }
+    // mqttReconnectStats.count is scoped to the currently selected
+    // event -- reset it whenever orgId actually changes (including to/
+    // from empty), but leave it alone for reasons resetMqtt() gets
+    // called for other than that (disabling MQTT, waking from sleep,
+    // an archived event), since those aren't event changes.
+    function clearReconnectCountIfEventChanged() {
+        const orgId = $raceConfig.orgId || "";
+        if ($mqttReconnectStats.orgId !== orgId) {
+            mqttReconnectStats.set({ orgId, count: 0 });
+        }
+    }
     // Mobile OS sleep can silently kill the MQTT socket without ever
     // firing a close/error event on it -- mqtt.js's own reconnectPeriod
     // retry only runs off those events, so the client is left believing
@@ -162,6 +174,7 @@
     }
     async function applyConfigChanged(generation) {
         log.debug("configChanged : begin:", $raceConfig.orgId);
+        clearReconnectCountIfEventChanged();
         if (!$raceConfig.orgId) {
             resetMqtt();
             log.debug("configChanged : no org:  skip");
@@ -243,6 +256,10 @@
                 reconnectPeriod: 4000,
             });
             mqClient = client;
+            mqttReconnectStats.update((stats) => ({
+                ...stats,
+                count: stats.count + 1,
+            }));
             client.on("message", onMsgGeneric);
             client.on("connect", () => onConnect(client));
             client.on("disconnect", applyBtnClass);
@@ -1093,5 +1110,8 @@
         btnClass={btnClass}
     >
         Refresh
+        {#if $developerMode}
+            ({$mqttReconnectStats.count})
+        {/if}
     </SpinnerButton>
 {/if}
