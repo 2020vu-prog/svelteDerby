@@ -24,6 +24,7 @@
         reRenderHotLoad,
         developerMode,
         mp3Playing,
+        mqttReconnectStats,
     } from "./stores.js";
     //import { mqtt } from "mqtt";
     import * as mqtt from "mqtt";
@@ -121,6 +122,74 @@
         }
         applyBtnClass();
     }
+    // mqttReconnectStats.count is scoped to the currently selected
+    // event -- reset it whenever orgId actually changes (including to/
+    // from empty), but leave it alone for reasons resetMqtt() gets
+    // called for other than that (disabling MQTT, waking from sleep,
+    // an archived event), since those aren't event changes.
+    function clearReconnectCountIfEventChanged() {
+        const orgId = $raceConfig.orgId || "";
+        if ($mqttReconnectStats.orgId !== orgId) {
+            mqttReconnectStats.set({ orgId, count: 0 });
+        }
+    }
+    // Mobile OS sleep can silently kill the MQTT socket without ever
+    // firing a close/error event on it. mqtt.js's `connected` flag only
+    // updates in response to that event, so after a silent kill it's
+    // stuck at a stale `true` -- checking it alone (an earlier version
+    // of this fix did exactly that) trusts the one signal that's
+    // unreliable in precisely the failure case this exists for, and
+    // skips reconnecting. `connected === false` IS trustworthy (mqtt.js
+    // wouldn't report that without a real event), so that case still
+    // reconnects immediately; a `true` after a meaningful background
+    // interval can't be trusted either way and is forced regardless.
+    let pageHiddenAtMs = null;
+    let lastForcedReconnectAtMs = 0;
+    const wakeReconnectThresholdMs = 15000;
+    // A single bfcache restore fires both pageshow (persisted) and a
+    // visibilitychange to "visible" -- without this, both independently
+    // call maybeReconnectAfterWake() for the same wake, double-resetting
+    // MQTT and double-counting the reconnect stat.
+    const wakeReconnectDebounceMs = 2000;
+    function handleVisibilityChange() {
+        if (document.visibilityState === "hidden") {
+            pageHiddenAtMs = Date.now();
+        } else if (document.visibilityState === "visible") {
+            const hiddenForMs = pageHiddenAtMs
+                ? Date.now() - pageHiddenAtMs
+                : 0;
+            pageHiddenAtMs = null;
+            maybeReconnectAfterWake(hiddenForMs);
+        }
+    }
+    function handlePageShow(event) {
+        // pageshow fires on every normal page load too, not just a
+        // bfcache restore -- event.persisted is what distinguishes
+        // them. Forcing a reconnect check on an ordinary load would
+        // race with the initial connection flow onMount already kicks
+        // off, producing a redundant connection and an inflated count.
+        if (!event.persisted) return;
+        // A bfcache restore freezes the whole JS context for an
+        // unbounded, unknown duration -- always treat it as long enough
+        // to force the check, same as a long background period.
+        maybeReconnectAfterWake(wakeReconnectThresholdMs);
+    }
+    function maybeReconnectAfterWake(hiddenForMs) {
+        const knownDisconnected = !mqClient || !mqClient.connected;
+        if (!knownDisconnected && hiddenForMs < wakeReconnectThresholdMs) {
+            return; // brief background; connected state is still trustworthy
+        }
+        const now = Date.now();
+        if (now - lastForcedReconnectAtMs < wakeReconnectDebounceMs) {
+            return; // already handled this wake via the other listener
+        }
+        lastForcedReconnectAtMs = now;
+        log.debug(
+            `HotLoad: forcing MQTT reconnect check after wake (hiddenForMs=${hiddenForMs}, knownDisconnected=${knownDisconnected})`
+        );
+        resetMqtt();
+        configChanged();
+    }
     function configChanged() {
         configChangeGeneration++;
         if (!configChangeRunning) drainConfigChanges();
@@ -144,6 +213,7 @@
     }
     async function applyConfigChanged(generation) {
         log.debug("configChanged : begin:", $raceConfig.orgId);
+        clearReconnectCountIfEventChanged();
         if (!$raceConfig.orgId) {
             resetMqtt();
             log.debug("configChanged : no org:  skip");
@@ -225,6 +295,10 @@
                 reconnectPeriod: 4000,
             });
             mqClient = client;
+            mqttReconnectStats.update((stats) => ({
+                ...stats,
+                count: stats.count + 1,
+            }));
             client.on("message", onMsgGeneric);
             client.on("connect", () => onConnect(client));
             client.on("disconnect", applyBtnClass);
@@ -784,8 +858,15 @@
     watchMqttSubscriptions();
     onMount(() => {
         onMountAsync();
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("pageshow", handlePageShow);
         return () => {
             log.debug("HotLoad unmount");
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange
+            );
+            window.removeEventListener("pageshow", handlePageShow);
             resetMqtt();
         };
     });
@@ -1068,5 +1149,8 @@
         btnClass={btnClass}
     >
         Refresh
+        {#if $developerMode}
+            ({$mqttReconnectStats.count})
+        {/if}
     </SpinnerButton>
 {/if}
