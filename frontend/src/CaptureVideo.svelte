@@ -44,8 +44,8 @@
     var nextSnum = 0; // 2 streams.  this will toggle b/t 0,1
     var timerHandle;
     var previewHideTimeout;
-    var recordSpinning = false;
-    var isRecording = false;
+    var recordingRequested = false;
+    var recordingActive = false;
     var captureSpinning = false;
     var captureDisabled = true;
     var remoteeSpinning = false;
@@ -74,7 +74,7 @@
     var recordTimeOverlay = false;
     var timerSelectMode = "normal";
     $: {
-        if (recordSpinning) {
+        if (recordingRequested) {
             timerSelectMode = "disabled";
         } else {
             timerSelectMode = "normal";
@@ -115,7 +115,7 @@
                 mr.stop();
             }
         });
-        isRecording = false;
+        recordingActive = false;
         log.debug(`${tag} onDestroy done`);
     });
     // stop both mic and camera
@@ -421,7 +421,7 @@
         showAdvanced = false;
         hidePreview = false;
         const snum = 0;
-        recordSpinning = true;
+        recordingRequested = true;
         // `ideal` (not a bare/exact value) so the browser picks the
         // closest resolution at the camera's own native aspect ratio
         // instead of stretching the frame to force an exact WxH the
@@ -459,6 +459,7 @@
             handleGotMedia(stream, snum);
         } catch (e) {
             console.error("navigator.getUserMedia error:", e);
+            recordingRequested = false;
             pushMessage({
                 text: e,
                 type: "error",
@@ -514,7 +515,7 @@
         canvasStream = canvas.captureStream(parseInt(frameRate, 10));
         recordStream(canvasStream, 0);
         recordStream(canvasStream, 1);
-        isRecording = true;
+        recordingActive = true;
 
         clearTimeout(previewHideTimeout);
         previewHideTimeout = setTimeout(
@@ -783,7 +784,7 @@
 
 <video id="rawGum0" playsinline autoplay muted style="display:none" />
 <canvas class="capture-preview" style={videoDisplay} id="gum0" />
-{#if hidePreview && isRecording}
+{#if hidePreview && recordingActive}
     <div class="recording-indicator" role="status" aria-live="polite">
         <span class="recording-dot" aria-hidden="true"></span>
         RECORDING
@@ -897,7 +898,7 @@
 {/key}
 
 <p />
-<SpinnerButton on:click={doStart} spinning={recordSpinning}>
+<SpinnerButton on:click={doStart} spinning={recordingRequested}>
     Record
 </SpinnerButton>
 <SpinnerButton
