@@ -43,7 +43,9 @@
     var uploadPending;
     var nextSnum = 0; // 2 streams.  this will toggle b/t 0,1
     var timerHandle;
-    var recordSpinning = false;
+    var previewHideTimeout;
+    var recordingRequested = false;
+    var recordingActive = false;
     var captureSpinning = false;
     var captureDisabled = true;
     var remoteeSpinning = false;
@@ -72,7 +74,7 @@
     var recordTimeOverlay = false;
     var timerSelectMode = "normal";
     $: {
-        if (recordSpinning) {
+        if (recordingRequested) {
             timerSelectMode = "disabled";
         } else {
             timerSelectMode = "normal";
@@ -92,6 +94,10 @@
             clearInterval(timerHandle);
             timerHandle = undefined;
         }
+        if (previewHideTimeout) {
+            clearTimeout(previewHideTimeout);
+            previewHideTimeout = undefined;
+        }
         if (canvasAnimationFrame) {
             cancelAnimationFrame(canvasAnimationFrame);
             canvasAnimationFrame = undefined;
@@ -109,6 +115,7 @@
                 mr.stop();
             }
         });
+        recordingActive = false;
         log.debug(`${tag} onDestroy done`);
     });
     // stop both mic and camera
@@ -414,7 +421,7 @@
         showAdvanced = false;
         hidePreview = false;
         const snum = 0;
-        recordSpinning = true;
+        recordingRequested = true;
         // `ideal` (not a bare/exact value) so the browser picks the
         // closest resolution at the camera's own native aspect ratio
         // instead of stretching the frame to force an exact WxH the
@@ -452,6 +459,7 @@
             handleGotMedia(stream, snum);
         } catch (e) {
             console.error("navigator.getUserMedia error:", e);
+            recordingRequested = false;
             pushMessage({
                 text: e,
                 type: "error",
@@ -507,6 +515,16 @@
         canvasStream = canvas.captureStream(parseInt(frameRate, 10));
         recordStream(canvasStream, 0);
         recordStream(canvasStream, 1);
+        recordingActive = true;
+
+        clearTimeout(previewHideTimeout);
+        previewHideTimeout = setTimeout(
+            () => {
+                hidePreview = true;
+                previewHideTimeout = undefined;
+            },
+            2 * 60 * 1000
+        );
 
         // 2 concurrent recording sessions.  end each at half desired length
         timerHandle = setInterval(
@@ -765,7 +783,13 @@
 <h1>Capture Video</h1>
 
 <video id="rawGum0" playsinline autoplay muted style="display:none" />
-<canvas style={videoDisplay} id="gum0" />
+<canvas class="capture-preview" style={videoDisplay} id="gum0" />
+{#if hidePreview && recordingActive}
+    <div class="recording-indicator" role="status" aria-live="polite">
+        <span class="recording-dot" aria-hidden="true"></span>
+        RECORDING
+    </div>
+{/if}
 <label>
     Hide Preview:
     <input class="big" type="checkbox" bind:checked={hidePreview} />
@@ -874,7 +898,7 @@
 {/key}
 
 <p />
-<SpinnerButton on:click={doStart} spinning={recordSpinning}>
+<SpinnerButton on:click={doStart} spinning={recordingRequested}>
     Record
 </SpinnerButton>
 <SpinnerButton
@@ -898,3 +922,35 @@
 <br />
 <br />
 <Walkup />
+
+<style>
+    .capture-preview {
+        display: block;
+        width: 100%;
+        max-width: 100vw;
+        height: auto;
+    }
+
+    .recording-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        margin: 1rem 0;
+        padding: 0.75rem 1rem;
+        border: 3px solid #b00020;
+        border-radius: 0.4rem;
+        background: #fff0f2;
+        color: #b00020;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+    }
+
+    .recording-dot {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: #d00020;
+    }
+</style>
