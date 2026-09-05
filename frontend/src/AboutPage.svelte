@@ -250,6 +250,22 @@
         <h2>Developer Info</h2>
         <hr />
         <div class="singularSettingDiv">
+            <h4>Developer Mode</h4>
+            <input
+                type="checkbox"
+                checked={$developerMode}
+                on:change={(e) => {
+                    $developerMode = e.target.checked;
+                    if (!$developerMode) devClickCount = 0;
+                }}
+            />
+            <h6>
+                Turn off developer mode. Re-enable by tapping the Version Info
+                build details below several times.
+            </h6>
+        </div>
+        <hr />
+        <div class="singularSettingDiv">
             <h4>Developer Logs</h4>
             <input type="checkbox" bind:checked={$developerLogging} />
             <h6>
