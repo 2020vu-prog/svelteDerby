@@ -50,11 +50,13 @@
     var calcSpinning = false;
     var remoteeDisabled = false;
     var isDestroying = false;
-    // "auto" defers to the camera's own native resolution (see
-    // resolveCaptureSize()) instead of forcing a fixed WxH -- avoids the
-    // aspect-ratio mismatch case entirely for the common case, since
-    // most camera sensors are natively 16:9, not one of the fixed
-    // options below.
+    // "auto" requests a bounded 16:9 ideal resolution (see doStart())
+    // instead of forcing one of the ~4:3 fixed options below, then reads
+    // back whatever the camera actually delivered (see
+    // resolveCaptureSize()) to size the canvas -- avoids the
+    // aspect-ratio mismatch case for the common case, since most camera
+    // sensors are natively 16:9, while still capping the request so a
+    // phone can't hand back an unbounded 1080p/4K stream.
     var resolution = "auto";
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
@@ -413,22 +415,31 @@
         hidePreview = false;
         const snum = 0;
         recordSpinning = true;
+        // `ideal` (not a bare/exact value) so the browser picks the
+        // closest resolution at the camera's own native aspect ratio
+        // instead of stretching the frame to force an exact WxH the
+        // sensor doesn't natively support. In "auto" mode the ideal
+        // target is a 16:9 box close in pixel count to the old 640x480
+        // default -- still bounded with `max`, since an unconstrained
+        // request can hand back 1080p/4K, and this component redraws
+        // every frame through a canvas into two concurrent
+        // MediaRecorders, which is enough load to drop frames or fail
+        // to capture at all on the mobile hardware used trackside.
+        const [idealWidth, idealHeight, maxWidth, maxHeight] =
+            resolution === "auto"
+                ? [854, 480, 1280, 720]
+                : [
+                      parseInt(getVideoWidth(), 10),
+                      parseInt(getVideoHeight(), 10),
+                      parseInt(getVideoWidth(), 10),
+                      parseInt(getVideoHeight(), 10),
+                  ];
         const constraints = {
             video: {
+                width: { ideal: idealWidth, max: maxWidth },
+                height: { ideal: idealHeight, max: maxHeight },
                 frameRate: { ideal: parseInt(frameRate, 10), max: 30 },
                 facingMode: "environment",
-                // Omitted entirely in "auto" mode -- letting the browser
-                // pick the camera's own native resolution. Otherwise
-                // `ideal` (not a bare/exact value) so the browser picks
-                // the closest resolution at the camera's own native
-                // aspect ratio instead of stretching the frame to force
-                // an exact WxH the sensor doesn't natively support.
-                ...(resolution !== "auto"
-                    ? {
-                          width: { ideal: parseInt(getVideoWidth(), 10) },
-                          height: { ideal: parseInt(getVideoHeight(), 10) },
-                      }
-                    : {}),
             },
         };
         log.debug("Using media constraints:", constraints);
