@@ -92,7 +92,7 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: "*"
-              - 
+              -
                 Sid: PassRole
                 Effect: Allow
                 Action:
@@ -103,7 +103,7 @@ Resources:
                 Effect: Allow
                 Action:
                   - "mediaconvert:*"
-                Resource: 
+                Resource:
                   - "*"
               -
                 Sid: InputBucket
@@ -111,6 +111,43 @@ Resources:
                 Action:
                   - "s3:*"
                 Resource: "*"
+
+  FfmpegLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-FfmpegLambdaRole"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}-FfmpegLambdaPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: Logging
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Sid: ReadPilotInput
+                Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "${WatchFolder.Arn}/ffmpeg-inputs/*"
+              - Sid: WritePilotOutput
+                Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "${MediaBucket.Arn}/ffmpeg/*"
+              - Sid: PublishFailedInvocation
+                Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref NotificationSns
   
   S3InvokeLambda:
     Type: AWS::Lambda::Permission
@@ -119,9 +156,20 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: s3.amazonaws.com
       SourceAccount: !Ref AWS::AccountId
+
+  S3InvokeFfmpegLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt LambdaFfmpegConvert.Arn
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
  
   WatchFolder:
     Type: AWS::S3::Bucket
+    DependsOn:
+      - S3InvokeLambda
+      - S3InvokeFfmpegLambda
     Properties:
       CorsConfiguration:
         CorsRules:
@@ -152,6 +200,15 @@ Resources:
                   -
                     Name: prefix
                     Value: inputs/
+          -
+            Function: !GetAtt LambdaFfmpegConvert.Arn
+            Event: "s3:ObjectCreated:*"
+            Filter:
+              S3Key:
+                Rules:
+                  -
+                    Name: prefix
+                    Value: ffmpeg-inputs/
     DeletionPolicy: Retain
 
   LambdaConvert:
@@ -177,6 +234,42 @@ Resources:
     Properties: 
       RetentionInDays: 7
       LogGroupName: !Join ["", ["/aws/lambda/", !Ref LambdaConvert]] 
+
+  LambdaFfmpegConvert:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-ffmpeg-convert
+      Description: Direct FFmpeg conversion pilot for ffmpeg-inputs/
+      Handler: ffmpeg_convert.handler
+      MemorySize: 4096
+      EphemeralStorage:
+        Size: 2048
+      Role: !GetAtt FfmpegLambdaRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaSrcBucket
+        S3Key: "vodTranscode/lambda.zip"
+      Environment:
+        Variables:
+          DestinationBucket: !Ref MediaBucket
+      Runtime: python3.12
+      Timeout: 900
+
+  LambdaFfmpegConvertLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 7
+      LogGroupName: !Join ["", ["/aws/lambda/", !Ref LambdaFfmpegConvert]]
+
+  FfmpegInvokeConfig:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref LambdaFfmpegConvert
+      Qualifier: "$LATEST"
+      MaximumEventAgeInSeconds: 21600
+      MaximumRetryAttempts: 2
+      DestinationConfig:
+        OnFailure:
+          Destination: !Ref NotificationSns
   MediaBucket:
     Properties:
       WebsiteConfiguration:
