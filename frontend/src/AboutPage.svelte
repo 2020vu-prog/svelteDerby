@@ -261,7 +261,7 @@
             />
             <h6>
                 Turn off developer mode. Re-enable by tapping the Version Info
-                build details below several times.
+                build details above several times.
             </h6>
         </div>
         <hr />
