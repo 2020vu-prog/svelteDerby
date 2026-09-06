@@ -84,4 +84,12 @@
     }
 </script>
 
-<!-- No markup: this component only relays events via document.dispatchEvent. -->
+<!--
+    This component only relays events via document.dispatchEvent and has
+    no real markup, but a fully empty template compiles to a degenerate
+    fragment that crashes svelte-hmr's dev-mode instrumentation
+    ("Cannot create property 'm' on boolean 'false'") under
+    webpack-dev-server hot reload. A trivial, invisible node is enough
+    to give Svelte a real fragment to instrument.
+-->
+<div style="display: none" />
