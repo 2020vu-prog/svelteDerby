@@ -6,14 +6,15 @@ PILLOW_VERSION := 12.2.0
 
 .PHONY: clean
 
-package.zip: motionDetect.py bin/ffmpeg bin/ffprobe vendor
+package.zip: motionDetect.py bin/ffmpeg bin/ffprobe vendor ../../../scripts/createDeterministicZip.sh
 	rm -f package.zip
 	rm -rf .package
 	mkdir -p .package
 	cp motionDetect.py .package/
 	cp -r bin .package/bin
 	cp -r vendor/. .package/
-	cd .package && zip -X -r ../package.zip . -x '*/__pycache__/*' -x '*/*.dist-info/*'
+	find .package -type d \( -name '__pycache__' -o -name '*.dist-info' \) -prune -exec rm -rf {} +
+	../../../scripts/createDeterministicZip.sh package.zip .package
 	rm -rf .package
 
 vendor:
