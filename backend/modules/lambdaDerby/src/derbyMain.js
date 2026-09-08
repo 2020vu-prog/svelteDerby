@@ -61,6 +61,7 @@ const AnnounceResults = require("./AnnounceResults");
 const ApiRaceStanding = require("./ApiRaceStanding");
 const LogUtils = require("./LogUtils");
 const DriverDelegationService = require("./DriverDelegationService");
+const ParticipantService = require("./ParticipantService");
 const { getShaCars, getSourceName } = require("./utils");
 const {
     decodeS3EventKey,
@@ -74,6 +75,7 @@ const archiveUtils = new ArchiveUtils(ddbUtils);
 const discordUtils = new DiscordUtils(ddbUtils);
 const logUtils = new LogUtils(ddbUtils);
 const driverDelegationService = new DriverDelegationService(ddbUtils);
+const participantService = new ParticipantService(ddbUtils);
 
 function newAnnounceResults() {
     return new AnnounceResults(ddbUtils);
@@ -1762,6 +1764,9 @@ function createApiRouter() {
         .use(registerCoreRoutes)
         .use((router) =>
             driverDelegationService.registerRoutes(router, { buildResponse })
+        )
+        .use((router) =>
+            participantService.registerRoutes(router, { buildResponse })
         );
 }
 
