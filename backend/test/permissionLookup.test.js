@@ -2,6 +2,7 @@ const {
     getNamedRoles,
     getRolePermissions,
     hasPermission,
+    hasServerRoutePath,
 } = require("../modules/lambdaDerby/src/shared/PermissionLookup.js");
 const RoleName = require("../modules/lambdaDerby/src/shared/RoleName.js");
 
@@ -24,6 +25,16 @@ test("power inherits the PA Info screen permission", () => {
 test("registration can view PA Info through its announcement permission", () => {
     expect(
         hasPermission([RoleName.REGISTRATION], "CanInitiateAnnouncement")
+    ).toBe(true);
+});
+
+test("registration can logically delete participants", () => {
+    expect(
+        hasServerRoutePath(
+            "Test",
+            [RoleName.REGISTRATION],
+            "/deleteParticipant"
+        )
     ).toBe(true);
 });
 

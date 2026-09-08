@@ -687,7 +687,11 @@
         refreshInProgressMq = false;
     };
     const applyHistToStore = (hist) => {
-        $driverMap = hist.Participant;
+        $driverMap = Object.fromEntries(
+            Object.entries(hist.Participant).filter(
+                ([, participant]) => !participant.del
+            )
+        );
 
         $nextOnBlockKey = getNextOnBlockKeyFromRP(hist.RacePhase);
         //const sortedStandings=Object.values(hist.RaceStanding).sort(sortBy('lastUpdate', true, parseInt));

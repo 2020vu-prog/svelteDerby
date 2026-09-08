@@ -29,6 +29,7 @@
     var mode = "Add";
     var submitDisabled = true;
     var submitSpinning = false;
+    var deleteSpinning = false;
     var speakSpinning = false;
     const canManageDriverJson = createPermissionStore(RoutePermission.POWER);
     let walkupLinkValid = true;
@@ -446,6 +447,37 @@
         }
     }
 
+    async function deleteParticipant() {
+        const number = driverForm.carNumber;
+        if (!window.confirm(`Delete driver [${number}]?`)) return;
+
+        deleteSpinning = true;
+        try {
+            const response = await $axios.post(
+                $raceConfig.baseUrl + "/deleteParticipant",
+                {
+                    orgId: $raceConfig.orgId,
+                    orgIz: $raceConfig.orgIz,
+                    number,
+                }
+            );
+            if (response.data.status !== "ok") {
+                throw new Error(response.data.error || "Delete failed");
+            }
+            pushMessage({
+                text: `Driver [${number}] Deleted.`,
+                type: "success",
+            });
+            pop();
+        } catch (error) {
+            deleteSpinning = false;
+            pushMessage({
+                text: "driver delete failed: " + error,
+                type: "error",
+            });
+        }
+    }
+
     const driverForm = { pType: undefined };
 
     const changeFocus = (carNumber, textboxIdentifier) => {
@@ -625,6 +657,15 @@
         >
             {mode}
         </SpinnerButton>
+        {#if mode === "Update"}
+            <SpinnerButton
+                btnClass="btn-danger"
+                on:click={deleteParticipant}
+                spinning={deleteSpinning}
+            >
+                Delete
+            </SpinnerButton>
+        {/if}
     </div>
     {#if mode === "Update"}
         <br />
