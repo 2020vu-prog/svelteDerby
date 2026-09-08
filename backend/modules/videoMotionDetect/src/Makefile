@@ -6,7 +6,7 @@ PILLOW_VERSION := 12.2.0
 
 .PHONY: clean
 
-package.zip: motionDetect.py bin/ffmpeg bin/ffprobe vendor
+package.zip: motionDetect.py bin/ffmpeg bin/ffprobe vendor ../../../scripts/createDeterministicZip.sh
 	rm -f package.zip
 	rm -rf .package
 	mkdir -p .package
