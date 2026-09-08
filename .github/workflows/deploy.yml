@@ -143,75 +143,15 @@ jobs:
 
       - name: Test and package Lambdas
         working-directory: backend
-        run: |
-          set -uo pipefail
-
-          log_dir="${RUNNER_TEMP}/lambda-build-logs"
-          mkdir -p "${log_dir}"
-
-          # Every lambda's test+package is independent (own directory, own
-          # dependency install, own mktemp'd work directory inside the
-          # shared zip-building scripts), so run all five concurrently
-          # instead of serializing several builds that each take real time
-          # (npm-pack/zip for the Node lambdas, pip install + zip for the
-          # Python ones). Output is captured per-lambda and printed after
-          # `wait` so a failure in one doesn't interleave with, or hide,
-          # the others.
-          (
-            set -e
-            cd modules/lambdaDynamo/src
-            npm ci
-            npm test
-            make package.zip
-          ) > "${log_dir}/lambdaDynamo.log" 2>&1 &
-          pid_lambdaDynamo=$!
-
-          (
-            set -e
-            cd modules/lambdaSqs/src
-            npm ci
-            npm test
-            make package.zip
-          ) > "${log_dir}/lambdaSqs.log" 2>&1 &
-          pid_lambdaSqs=$!
-
-          (
-            set -e
-            cd modules/lambdaDerby/src
-            npm ci
-            make package.zip
-          ) > "${log_dir}/lambdaDerby.log" 2>&1 &
-          pid_lambdaDerby=$!
-
-          (
-            set -e
-            cd modules/videoMotionDetect/src
-            make package.zip
-          ) > "${log_dir}/videoMotionDetect.log" 2>&1 &
-          pid_videoMotionDetect=$!
-
-          (
-            set -e
-            cd modules/vodTranscode/src
-            make lambda.zip
-          ) > "${log_dir}/vodTranscode.log" 2>&1 &
-          pid_vodTranscode=$!
-
-          status=0
-          for name in lambdaDynamo lambdaSqs lambdaDerby videoMotionDetect vodTranscode; do
-            pid_var="pid_${name}"
-            if wait "${!pid_var}"; then
-              result="succeeded"
-            else
-              result="FAILED"
-              status=1
-            fi
-            echo "::group::${name} (${result})"
-            cat "${log_dir}/${name}.log"
-            echo "::endgroup::"
-          done
-
-          exit "${status}"
+        # Each module dir's dependency install, test, and packaging are all
+        # expressed as Make prerequisites (see backend/Makefile and each
+        # module's own Makefile), and the five module dirs are independent
+        # of each other, so -j5 builds them concurrently instead of
+        # serializing several builds that each take real time (npm-pack/zip
+        # for the Node lambdas, pip install + zip for the Python ones).
+        # --output-sync=recurse groups each module's output into one block
+        # as it finishes, instead of interleaving five builds line-by-line.
+        run: make -j5 --output-sync=recurse lambdaPkgs
 
       - name: Test backend with Node 22
         working-directory: backend/test
