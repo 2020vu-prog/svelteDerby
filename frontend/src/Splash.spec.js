@@ -17,7 +17,7 @@ describe("Splash", () => {
         render(Splash);
 
         expect(
-            screen.getByText("RR1.US is the Official Timer App of NDR!"),
+            screen.getByText("RR1.US is the Official Timer App of NDR!")
         ).toBeInTheDocument();
     });
 });

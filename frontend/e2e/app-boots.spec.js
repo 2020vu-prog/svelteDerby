@@ -10,7 +10,15 @@ test("the app boots without a JS error", async ({ page }) => {
 
     await page.goto("/");
 
-    await expect(page).toHaveTitle("Derby App");
+    // <title>Derby App</title> is baked into the static index.ejs, so it
+    // proves nothing about the bundle -- it's still there verbatim even if
+    // bundle.js 404s, or if main.js's startApp() rejects (its config fetch
+    // failure is swallowed by a .catch(console.error), not thrown, so
+    // pageerror wouldn't catch it either). App.svelte's top-level
+    // `<div id="topnav">` only exists once App.svelte has actually mounted,
+    // and index.ejs's <body> is empty in the static HTML, so this is real
+    // proof Svelte mounted, not just that the page responded.
+    await expect(page.locator("#topnav")).toBeVisible();
     expect(pageErrors).toEqual([]);
 });
 
