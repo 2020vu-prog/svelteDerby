@@ -10,9 +10,17 @@ auto: lambdaPkgs tfauto
 # time. See .github/workflows/deploy.yml for the CI invocation.
 lambdaPkgs: $(SUBDIRS)
 
+# Keep each parallel submake readable in CI. Buffering preserves Make's
+# grouped output, while the prefix makes every line self-identifying when a
+# group is expanded or copied out of the Actions log.
 $(SUBDIRS):
-	$(MAKE) -C $@
-	echo $@
+	@module_name="$(notdir $(patsubst %/src/.,%,$@))"; \
+	log_file=$$(mktemp) || exit; \
+	trap 'rm -f "$$log_file"' EXIT HUP INT TERM; \
+	status=0; \
+	$(MAKE) -C $@ >"$$log_file" 2>&1 || status=$$?; \
+	sed "s|^|[$$module_name] |" "$$log_file"; \
+	exit "$$status"
 
 .PHONY: all $(SUBDIRS) tfplan lambdaPkgs auto tfauto
 

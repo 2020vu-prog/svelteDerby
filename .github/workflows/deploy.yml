@@ -150,7 +150,8 @@ jobs:
         # serializing several builds that each take real time (npm-pack/zip
         # for the Node lambdas, pip install + zip for the Python ones).
         # --output-sync=recurse groups each module's output into one block
-        # as it finishes, instead of interleaving five builds line-by-line.
+        # as it finishes. The root Makefile also prefixes every emitted line
+        # with the module name so copied and expanded logs retain context.
         run: make -j5 --output-sync=recurse lambdaPkgs
 
       - name: Test backend with Node 22
