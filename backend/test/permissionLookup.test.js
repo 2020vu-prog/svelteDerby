@@ -28,6 +28,12 @@ test("registration can view PA Info through its announcement permission", () => 
     ).toBe(true);
 });
 
+test("registration can manage Spotify", () => {
+    expect(hasPermission([RoleName.REGISTRATION], "CanManageSpotify")).toBe(
+        true
+    );
+});
+
 test("registration can logically delete participants", () => {
     expect(
         hasServerRoutePath(

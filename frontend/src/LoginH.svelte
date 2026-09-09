@@ -1,7 +1,6 @@
 <script lang="ts">
     import aws_exports from "./aws-config";
     import SpinnerButton from "./SpinnerButton.svelte";
-    import LoginSpotify from "./LoginSpotify.svelte";
     import { logout, sleep } from "./utils.js";
     import { beginCognitoLogin, cognitoLogout } from "./utilHosted.js";
     import {
@@ -82,9 +81,4 @@
     Click below to proceed to external (Amazon/AWS) login page.
     <br />
     <SpinnerButton on:click={clickedLogin}>Login</SpinnerButton>
-{/if}
-
-{#if $developerMode}
-    <br />
-    <LoginSpotify />
 {/if}
