@@ -2,6 +2,7 @@ const {
     getNamedRoles,
     getRolePermissions,
     hasPermission,
+    hasServerRoutePath,
 } = require("../modules/lambdaDerby/src/shared/PermissionLookup.js");
 const RoleName = require("../modules/lambdaDerby/src/shared/RoleName.js");
 
@@ -31,6 +32,16 @@ test("registration can manage Spotify", () => {
     expect(hasPermission([RoleName.REGISTRATION], "CanManageSpotify")).toBe(
         true
     );
+});
+
+test("registration can logically delete participants", () => {
+    expect(
+        hasServerRoutePath(
+            "Test",
+            [RoleName.REGISTRATION],
+            "/deleteParticipant"
+        )
+    ).toBe(true);
 });
 
 test("resolved permissions combine selected roles without duplicates", () => {

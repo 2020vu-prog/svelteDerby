@@ -43,23 +43,50 @@
     var uploadPending;
     var nextSnum = 0; // 2 streams.  this will toggle b/t 0,1
     var timerHandle;
-    var recordSpinning = false;
+    var previewHideTimeout;
+    var recordingRequested = false;
+    var recordingActive = false;
     var captureSpinning = false;
     var captureDisabled = true;
     var remoteeSpinning = false;
     var calcSpinning = false;
     var remoteeDisabled = false;
     var isDestroying = false;
-    var resolution = "640x480";
+    // "auto" requests a bounded 16:9 ideal resolution (see doStart())
+    // instead of forcing one of the ~4:3 fixed options below, then reads
+    // back whatever the camera actually delivered (see
+    // resolveCaptureSize()) to size the canvas -- avoids the
+    // aspect-ratio mismatch case for the common case, since most camera
+    // sensors are natively 16:9, while still capping the request so a
+    // phone can't hand back an unbounded 1080p/4K stream.
+    var resolution = "auto";
     var frameRate = "15";
     var videoBitsPerSecond = "1000000";
+    // How to fit the raw camera frame into the target resolution when
+    // its native aspect ratio doesn't match: "letterbox" scales down to
+    // fit entirely inside (adds bars, keeps full field of view),
+    // "cover" scales up to fill it (crops edges, no bars). Either way,
+    // the frame is scaled uniformly -- never stretched/distorted.
+    var frameFit = "letterbox";
+    // Empty = no deviceId constraint, browser picks per facingMode as
+    // before. Populated from enumerateDevices() -- labels (e.g. "Back
+    // Ultra Wide Camera") are only available once permission has been
+    // granted at least once in this browser/origin.
+    var videoDeviceId = "";
+    var videoDeviceOptions = [];
+    // Populated from the active track's getCapabilities() once
+    // recording starts -- zoom can't be known before a stream exists,
+    // and isn't supported by every browser/camera (mainly Chrome on
+    // Android; not available on iOS Safari at all).
+    var zoomCapabilities = null;
+    var zoomLevel = null;
     const tag = "CaptureVideo";
     var snipAgeSeconds = 300;
     var snipLengthSeconds = 6;
     var recordTimeOverlay = false;
     var timerSelectMode = "normal";
     $: {
-        if (recordSpinning) {
+        if (recordingRequested) {
             timerSelectMode = "disabled";
         } else {
             timerSelectMode = "normal";
@@ -72,12 +99,29 @@
                 type: "error",
             });
         }
+        refreshVideoDevices();
     });
+    // Device labels are blank until permission has been granted at
+    // least once, so this is also re-run after a stream is obtained
+    // (see handleGotMedia) to pick up real labels for next time.
+    async function refreshVideoDevices() {
+        if (!navigator.mediaDevices?.enumerateDevices) return;
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            videoDeviceOptions = devices.filter((d) => d.kind === "videoinput");
+        } catch (e) {
+            log.warn("enumerateDevices failed:", e);
+        }
+    }
     onDestroy(() => {
         isDestroying = true;
         if (timerHandle) {
             clearInterval(timerHandle);
             timerHandle = undefined;
+        }
+        if (previewHideTimeout) {
+            clearTimeout(previewHideTimeout);
+            previewHideTimeout = undefined;
         }
         if (canvasAnimationFrame) {
             cancelAnimationFrame(canvasAnimationFrame);
@@ -96,6 +140,7 @@
                 mr.stop();
             }
         });
+        recordingActive = false;
         log.debug(`${tag} onDestroy done`);
     });
     // stop both mic and camera
@@ -401,13 +446,39 @@
         showAdvanced = false;
         hidePreview = false;
         const snum = 0;
-        recordSpinning = true;
+        recordingRequested = true;
+        // `ideal` (not a bare/exact value) so the browser picks the
+        // closest resolution at the camera's own native aspect ratio
+        // instead of stretching the frame to force an exact WxH the
+        // sensor doesn't natively support. In "auto" mode the ideal
+        // target is a 16:9 box close in pixel count to the old 640x480
+        // default -- still bounded with `max`, since an unconstrained
+        // request can hand back 1080p/4K, and this component redraws
+        // every frame through a canvas into two concurrent
+        // MediaRecorders, which is enough load to drop frames or fail
+        // to capture at all on the mobile hardware used trackside.
+        const [idealWidth, idealHeight, maxWidth, maxHeight] =
+            resolution === "auto"
+                ? [854, 480, 1280, 720]
+                : [
+                      parseInt(getVideoWidth(), 10),
+                      parseInt(getVideoHeight(), 10),
+                      parseInt(getVideoWidth(), 10),
+                      parseInt(getVideoHeight(), 10),
+                  ];
         const constraints = {
             video: {
-                width: getVideoWidth(),
-                height: getVideoHeight(),
+                width: { ideal: idealWidth, max: maxWidth },
+                height: { ideal: idealHeight, max: maxHeight },
                 frameRate: { ideal: parseInt(frameRate, 10), max: 30 },
-                facingMode: "environment",
+                // A specific lens (deviceId) already implies which
+                // physical camera to use -- combining it with
+                // facingMode risks the two constraints conflicting on
+                // some browsers, so only fall back to facingMode when
+                // no explicit lens is chosen.
+                ...(videoDeviceId
+                    ? { deviceId: { exact: videoDeviceId } }
+                    : { facingMode: "environment" }),
             },
         };
         log.debug("Using media constraints:", constraints);
@@ -420,11 +491,71 @@
             handleGotMedia(stream, snum);
         } catch (e) {
             console.error("navigator.getUserMedia error:", e);
+            recordingRequested = false;
             pushMessage({
                 text: e,
                 type: "error",
             });
             //errorMsgElement.innerHTML = `navigator.getUserMedia error: ${ e.toString() }`;
+        }
+    }
+    // In "auto" mode, reads back whatever resolution the camera actually
+    // delivered (via the track's settings, populated as soon as
+    // getUserMedia resolves -- no need to wait for the video element to
+    // load) instead of a fixed dropdown value.
+    function resolveCaptureSize(stream) {
+        if (resolution !== "auto") {
+            return {
+                width: parseInt(getVideoWidth(), 10),
+                height: parseInt(getVideoHeight(), 10),
+            };
+        }
+        const settings = stream.getVideoTracks()[0]?.getSettings?.() || {};
+        if (settings.width && settings.height) {
+            return { width: settings.width, height: settings.height };
+        }
+        log.warn(
+            "Camera did not report its resolution; falling back to 640x480."
+        );
+        return { width: 640, height: 480 };
+    }
+    // Zoom is a track-level constraint (part of the Image Capture API
+    // extensions, not the base MediaTrackConstraints spec), so it can
+    // only be discovered/applied against an already-active track --
+    // there's no way to request a starting zoom level up front the way
+    // resolution/frameRate can.
+    function refreshZoomCapabilities(stream) {
+        const track = stream.getVideoTracks()[0];
+        const caps = track?.getCapabilities?.();
+        if (caps?.zoom) {
+            zoomCapabilities = caps.zoom;
+            zoomLevel = track.getSettings?.().zoom ?? caps.zoom.min;
+        } else {
+            zoomCapabilities = null;
+            zoomLevel = null;
+        }
+    }
+    async function setZoom(value) {
+        // zoomLevel is bind:value'd to the slider, so the thumb already
+        // reflects `value` before this runs -- don't gate that on the
+        // async applyConstraints() call below, or a rejected/unsupported
+        // value (some devices report a wider getCapabilities() range
+        // than they actually honor) snaps the slider back to the last
+        // applied value and looks like it's simply not responding.
+        const track = mainStream?.getVideoTracks()[0];
+        if (!track || !zoomCapabilities) return;
+        try {
+            await track.applyConstraints({ advanced: [{ zoom: value }] });
+        } catch (e) {
+            log.warn("applyConstraints zoom failed:", e);
+            const appliedZoom = track.getSettings?.().zoom;
+            if (typeof appliedZoom === "number") {
+                zoomLevel = appliedZoom;
+            }
+            pushMessage({
+                text: `Camera rejected zoom level ${value}x.`,
+                type: "error",
+            });
         }
     }
     var mainStream;
@@ -437,8 +568,7 @@
         mainStream = stream;
         const rawVideo = document.querySelector(`video#rawGum${snum}`);
         const canvas = document.querySelector(`canvas#gum${snum}`);
-        const width = parseInt(getVideoWidth(), 10);
-        const height = parseInt(getVideoHeight(), 10);
+        const { width, height } = resolveCaptureSize(stream);
 
         canvas.width = width;
         canvas.height = height;
@@ -456,6 +586,18 @@
         canvasStream = canvas.captureStream(parseInt(frameRate, 10));
         recordStream(canvasStream, 0);
         recordStream(canvasStream, 1);
+        recordingActive = true;
+        refreshZoomCapabilities(stream);
+        refreshVideoDevices(); // labels are reliably populated post-permission
+
+        clearTimeout(previewHideTimeout);
+        previewHideTimeout = setTimeout(
+            () => {
+                hidePreview = true;
+                previewHideTimeout = undefined;
+            },
+            2 * 60 * 1000
+        );
 
         // 2 concurrent recording sessions.  end each at half desired length
         timerHandle = setInterval(
@@ -474,11 +616,37 @@
         });
         return `${localTime} | ${now}`;
     }
+    // Draws `source` into a `canvasWidth`x`canvasHeight` box, scaled
+    // uniformly (never stretched) to either fully cover it (cropping
+    // overflow) or fit entirely inside it (letterboxed with bars).
+    function drawFittedFrame(ctx, source, canvasWidth, canvasHeight, mode) {
+        const srcWidth = source.videoWidth;
+        const srcHeight = source.videoHeight;
+        const scale =
+            mode === "cover"
+                ? Math.max(canvasWidth / srcWidth, canvasHeight / srcHeight)
+                : Math.min(canvasWidth / srcWidth, canvasHeight / srcHeight);
+        const drawWidth = srcWidth * scale;
+        const drawHeight = srcHeight * scale;
+        const offsetX = (canvasWidth - drawWidth) / 2;
+        const offsetY = (canvasHeight - drawHeight) / 2;
+
+        if (mode !== "cover") {
+            // Letterbox: paint the bars the scaled frame won't reach.
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+        ctx.drawImage(source, offsetX, offsetY, drawWidth, drawHeight);
+    }
     function drawTimestampedPreview(rawVideo, canvas, width, height) {
         const ctx = canvas.getContext("2d");
         const draw = () => {
-            if (rawVideo.readyState >= 2) {
-                ctx.drawImage(rawVideo, 0, 0, width, height);
+            if (
+                rawVideo.readyState >= 2 &&
+                rawVideo.videoWidth &&
+                rawVideo.videoHeight
+            ) {
+                drawFittedFrame(ctx, rawVideo, width, height, frameFit);
             } else {
                 ctx.fillStyle = "black";
                 ctx.fillRect(0, 0, width, height);
@@ -688,7 +856,27 @@
 <h1>Capture Video</h1>
 
 <video id="rawGum0" playsinline autoplay muted style="display:none" />
-<canvas style={videoDisplay} id="gum0" />
+<canvas class="capture-preview" style={videoDisplay} id="gum0" />
+{#if hidePreview && recordingActive}
+    <div class="recording-indicator" role="status" aria-live="polite">
+        <span class="recording-dot" aria-hidden="true"></span>
+        RECORDING
+    </div>
+{/if}
+{#if zoomCapabilities}
+    <label
+        >Zoom ({zoomLevel}x, range {zoomCapabilities.min}-{zoomCapabilities.max}
+        step {zoomCapabilities.step})
+        <input
+            type="range"
+            min={zoomCapabilities.min}
+            max={zoomCapabilities.max}
+            step={zoomCapabilities.step}
+            bind:value={zoomLevel}
+            on:input={() => setZoom(zoomLevel)}
+        />
+    </label>
+{/if}
 <label>
     Hide Preview:
     <input class="big" type="checkbox" bind:checked={hidePreview} />
@@ -710,10 +898,31 @@
     <label
         >Resolution
         <select bind:value={resolution}>
+            <option value="auto">Match Camera</option>
             <option>320x240</option>
             <option>640x480</option>
             <option>720x576</option>
             <option>1920x1080</option>
+        </select>
+    </label>
+
+    <label
+        >Lens
+        <select bind:value={videoDeviceId}>
+            <option value="">Default (environment)</option>
+            {#each videoDeviceOptions as device}
+                <option value={device.deviceId}>
+                    {device.label || `Camera ${device.deviceId.slice(0, 8)}`}
+                </option>
+            {/each}
+        </select>
+    </label>
+
+    <label
+        >Frame Fit
+        <select bind:value={frameFit}>
+            <option value="letterbox">Letterbox (show full frame)</option>
+            <option value="cover">Crop to fill (no bars)</option>
         </select>
     </label>
 
@@ -788,7 +997,7 @@
 {/key}
 
 <p />
-<SpinnerButton on:click={doStart} spinning={recordSpinning}>
+<SpinnerButton on:click={doStart} spinning={recordingRequested}>
     Record
 </SpinnerButton>
 <SpinnerButton
@@ -812,3 +1021,35 @@
 <br />
 <br />
 <Walkup />
+
+<style>
+    .capture-preview {
+        display: block;
+        width: 100%;
+        max-width: 100vw;
+        height: auto;
+    }
+
+    .recording-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        margin: 1rem 0;
+        padding: 0.75rem 1rem;
+        border: 3px solid #b00020;
+        border-radius: 0.4rem;
+        background: #fff0f2;
+        color: #b00020;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+    }
+
+    .recording-dot {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: #d00020;
+    }
+</style>

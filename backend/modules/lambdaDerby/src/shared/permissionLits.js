@@ -17,6 +17,7 @@ addPermission(RoutePermission.CAN_ADD_ORG_USER, [
 ]);
 addPermission(RoutePermission.CAN_ADD_PARTICIPANT, [
     "/addParticipant",
+    "/deleteParticipant",
     "/requestTts",
 ]);
 addPermission(RoutePermission.CAN_TIMER_CONFIG, [

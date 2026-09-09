@@ -133,27 +133,25 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/modules/lambdaDynamo/src/package-lock.json
+            backend/modules/lambdaSqs/src/package-lock.json
+            backend/modules/lambdaDerby/src/package-lock.json
+            backend/test/package-lock.json
+            frontend/package-lock.json
 
-      - name: Test and package Node 22 Lambdas
+      - name: Test and package Lambdas
         working-directory: backend
-        run: |
-          (
-            cd modules/lambdaDynamo/src
-            npm ci
-            npm test
-            make package.zip
-          )
-          (
-            cd modules/lambdaSqs/src
-            npm ci
-            npm test
-            make package.zip
-          )
-          (
-            cd modules/lambdaDerby/src
-            npm ci
-            make package.zip
-          )
+        # Each module dir's dependency install, test, and packaging are all
+        # expressed as Make prerequisites (see backend/Makefile and each
+        # module's own Makefile), and the five module dirs are independent
+        # of each other, so -j5 builds them concurrently instead of
+        # serializing several builds that each take real time (npm-pack/zip
+        # for the Node lambdas, pip install + zip for the Python ones).
+        # --output-sync=recurse groups each module's output into one block
+        # as it finishes, instead of interleaving five builds line-by-line.
+        run: make -j5 --output-sync=recurse lambdaPkgs
 
       - name: Test backend with Node 22
         working-directory: backend/test
@@ -165,7 +163,6 @@ jobs:
       - name: Plan backend
         working-directory: backend
         run: |
-          make lambdaPkgsNonNode
           terraform init -reconfigure -lockfile=readonly -backend-config="${TF_BACKEND_CONFIG}"
           git diff --exit-code
           terraform plan -out="${RUNNER_TEMP}/backend.tfplan"

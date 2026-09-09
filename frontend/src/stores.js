@@ -136,6 +136,13 @@ export const mqttMapData = writable({}); //subscription data.  keyed by topic.
 export const mqttTimerSubscribe = writable(false);
 export const mqttTimerTopic = persistable("pref:mqttTimerTopic", "");
 export const mqttEnabled = persistable("pref:mqttEnabled", true);
+// Monotonic count of MQTT (re)connections since orgId last changed.
+// Not a user preference (hence no "pref:" prefix) -- just persisted so
+// it survives a page reload instead of resetting every mount.
+export const mqttReconnectStats = persistable("mqttReconnectStats", {
+    orgId: "",
+    count: 0,
+});
 export const timerColumnMappings = persistable("pref:timerColumnMappings", [
     { virtualLane: 1, timerName: "", timerId: "", pinName: 1 },
     { virtualLane: 2, timerName: "", timerId: "", pinName: 2 },
