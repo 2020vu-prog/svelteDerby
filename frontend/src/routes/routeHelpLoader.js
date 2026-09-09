@@ -3,7 +3,7 @@ const {
     getVisibleHelpDescriptors,
 } = require("./routeHelp.js");
 
-// "lazy-once" bundles all 60 help docs (240KB uncompressed total) into one
+// "lazy-once" bundles all 60 help docs (~12KB uncompressed total) into one
 // chunk instead of one chunk per file -- still fetched only on first use, but
 // without 60 near-empty bundle.[hash].js files cluttering every deploy.
 const helpContext = require.context(
