@@ -95,10 +95,24 @@
             listM.push(...(await listMedia(prefixSeedList[i], i)));
         }
 
+        // Sort on the same effective time getMediaMMDDYYHHMMSS() displays
+        // (a video's embedded tgtTimeMs when present, else LastModified)
+        // -- sorting on LastModified alone put videos out of order
+        // relative to what their own displayed timestamp shows, since a
+        // video's tgtTimeMs (actual finish time) and its LastModified
+        // (whenever the file finished uploading/encoding) can drift
+        // apart by an uneven amount per clip.
         listM.sort(function (a, b) {
-            return b.LastModified.localeCompare(a.LastModified);
+            return getEffectiveTimeMs(b) - getEffectiveTimeMs(a);
         });
         return listM;
+    }
+    function getEffectiveTimeMs(mediaItem) {
+        const meta = extractS3VideoMeta(mediaItem.Key);
+        if (meta && meta.tgtTimeMs) {
+            return meta.tgtTimeMs;
+        }
+        return Date.parse(mediaItem.LastModified);
     }
     async function listMedia(prefixSeed, i) {
         if (!prefixSeed) {
@@ -166,14 +180,7 @@
         return `/${key}`;
     }
     function getMediaMMDDYYHHMMSS(mediaItem) {
-        log.debug("LMOD:", mediaItem.LastModified);
-        log.debug("LMOD parsed:", Date.parse(mediaItem.LastModified));
-        let d = Date.parse(mediaItem.LastModified);
-        const meta = extractS3VideoMeta(mediaItem.Key);
-        if (meta && meta.tgtTimeMs) {
-            d = meta.tgtTimeMs;
-        }
-
+        const d = getEffectiveTimeMs(mediaItem);
         return mmddyyFmt(d) + " " + hhmmssFmt(d);
     }
 
