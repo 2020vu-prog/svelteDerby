@@ -41,7 +41,7 @@ Crucially, Svelte 5 ships an official **legacy-compatibility mode**: existing Sv
 
 ### Scoping a hand-rolled sveltestrap replacement
 
-A grep across all 25 files for every named import from `sveltestrap` turns up 9 component names, not the 5 the original inventory named (it missed `CardFooter`, `ModalFooter`, `Collapse`, and `Table`). For each, here's what's actually used — props included — and how much real work replacing it is:
+A grep across all 25 files for every named import from `sveltestrap` turns up 18 distinct component names, not the 14 the "Current state" inventory above named (`Badge`, `Button`, `Card`/`CardBody`/`CardHeader`/`CardTitle`, `Form`/`FormGroup`/`FormText`, `Input`, `Label`, `Modal`/`ModalBody`/`ModalHeader`) — it missed `CardFooter`, `ModalFooter`, `Collapse`, and `Table`. For each, here's what's actually used — props included — and how much real work replacing it is:
 
 | Component(s) | Files using it | Props actually passed | Replacement effort |
 | --- | --- | --- | --- |
@@ -52,7 +52,8 @@ A grep across all 25 files for every named import from `sveltestrap` turns up 9 
 | `FormGroup`, `Label` | 4 files each | `check` (boolean, → `form-check`/`form-check-label`) | Trivial |
 | `Input` | 4 files, but ~15 of the ~19 total usage sites are in `TimerConfigElapsed.svelte` alone | polymorphic on `type`: text/number render `<input>`, `type="select"` renders `<select>` with slotted `<option>`s, `type="checkbox"` binds `checked` instead of `value` | The one component with real logic — a type-dispatch branch, but still well under 50 lines |
 | `Button` | 4 files | `color` (→ `btn-{color}`), `size` (→ `btn-{size}`), `disabled`, `on:click` | Trivial |
-| `Modal`, `ModalHeader`, `ModalBody`, `ModalFooter` | 5 files each | `isOpen`, `toggle` (callback), `fullscreen` (boolean, one file) | Needs care but isn't hard — zero `data-bs-`/`data-toggle` usage anywhere in the app (confirmed earlier) means there's no Bootstrap JS behavior to replicate, just a conditional `{#if isOpen}` panel plus a backdrop `<div>`, which is close to what sveltestrap's own Modal already does internally |
+| `Modal`, `ModalHeader`, `ModalBody` | 5 files each | `isOpen`, `toggle` (callback), `fullscreen` (boolean, one file) | Needs care but isn't hard — zero `data-bs-`/`data-toggle` usage anywhere in the app (confirmed earlier) means there's no Bootstrap JS behavior to replicate, just a conditional `{#if isOpen}` panel plus a backdrop `<div>`, which is close to what sveltestrap's own Modal already does internally |
+| `ModalFooter` | 4 files | none beyond default slot content | Trivial — same replacement component as the rest of the `Modal` family |
 | `Collapse` | 3 files | `isOpen`, `toggle` | Trivial — an `{#if isOpen}` or a CSS max-height transition |
 | `Form`, `FormText` | 2 files each | `FormText` takes `color="muted"` | Trivial |
 | `Table` | 1 file | `striped`, `bordered`, `size="sm"` (→ `table-striped table-bordered table-sm`) | Trivial |
