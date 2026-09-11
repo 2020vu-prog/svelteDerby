@@ -5,6 +5,9 @@ Description:
   Creates an S3 watchfolder and automated video conversion workflow  
 
 Parameters:
+  DeployEnvironment:
+    Description: Deployment environment used for resource tagging
+    Type: String
   LambdaSrcBucket:
     Description: s3 bucket with lambda src
     Type: String
@@ -252,6 +255,17 @@ Resources:
         Variables:
           DestinationBucket: !Ref MediaBucket
       Runtime: python3.12
+      Tags:
+        - Key: Application
+          Value: svelteDerby
+        - Key: Component
+          Value: vodTranscode
+        - Key: Processor
+          Value: ffmpeg
+        - Key: Environment
+          Value: !Ref DeployEnvironment
+        - Key: CostPilot
+          Value: ffmpeg-vs-mediaconvert
       Timeout: 900
 
   LambdaFfmpegConvertLogGroup:
