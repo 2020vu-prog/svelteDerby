@@ -230,6 +230,7 @@ Resources:
           DestinationBucket: !Ref MediaBucket
           MediaConvertRole: !GetAtt MediaConvertRole.Arn
           Application: !Sub "${AWS::StackName}"
+          DeployEnvironment: !Ref DeployEnvironment
       Runtime:  python3.12
       Timeout: 120
   LambdaConvertLogGroup:
