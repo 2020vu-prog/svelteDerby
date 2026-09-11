@@ -16,7 +16,10 @@ paths yet.
 
 The direct converter produces an MP4 with FFmpeg's native MPEG-4 video encoder
 and AAC audio encoder. It is a cost and operational pilot, not a replacement
-for the H.264 MediaConvert workflow. The bundled FFmpeg is compiled from pinned
-source with GPL and non-free components disabled. See
+for the H.264 MediaConvert workflow. The bundled `bin/ffmpeg` is not built by
+this module -- `make lambda.zip` copies the binary already built and committed
+by [`../videoMotionDetect`](../videoMotionDetect/README.md), which
+cross-compiles it for the Lambda runtime via Docker rather than on whatever
+host happens to run `make`. See
 [`src/THIRD_PARTY_LICENSES.md`](src/THIRD_PARTY_LICENSES.md) before changing
 the build or shipping the artifact.

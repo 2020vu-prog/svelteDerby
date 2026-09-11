@@ -1,21 +1,21 @@
 # Direct-transcode pilot third-party software
 
-`bin/ffmpeg` is built from FFmpeg 7.1.5, downloaded from:
+`bin/ffmpeg` is not built independently by this module. It's a copy of the
+FFmpeg binary already built and committed by
+[`videoMotionDetect`](../../videoMotionDetect/src/THIRD_PARTY_LICENSES.md),
+which cross-compiles it inside an `amazonlinux:2023` container (see that
+module's `build.sh`) to guarantee Lambda-runtime compatibility -- something
+this module's own prior build script, which compiled on whatever host ran
+`make`, did not guarantee. See that file for the pinned FFmpeg version,
+source URL, checksum, and the full configure command
+(`--disable-gpl --disable-nonfree`, LGPL-2.1-or-later; no GPL components
+such as `libx264` are enabled). The `mpeg4` and `aac` encoders this module
+needs are part of that build's default LGPL encoder set; neither module
+disables them.
 
-https://ffmpeg.org/releases/ffmpeg-7.1.5.tar.xz
-
-Its SHA-256 is:
-
-```
-de668509caf9e35e3cd162473441fdb29538c6d96ed080292b3cf9e6fc5d558f
-```
-
-`buildFfmpeg.sh` contains the complete configure command. It explicitly uses
-`--disable-gpl` and `--disable-nonfree`; no GPL components such as `libx264`
-are enabled. Consequently this FFmpeg build is under LGPL-2.1-or-later, not
-GPL. The FFmpeg source and licensing guidance are available at
-https://ffmpeg.org/legal.html.
-
-This file and the source URL must remain with any distribution of the Lambda
-artifact. If the build command or FFmpeg version changes, update this file and
-the checksum together.
+This file must remain with any distribution of this Lambda artifact,
+alongside `videoMotionDetect`'s `THIRD_PARTY_LICENSES.md`. If this module's
+FFmpeg needs ever diverge from `videoMotionDetect`'s (an encoder one needs
+that the other explicitly disables, or a version bump one module can't take
+yet), stop sharing the binary and give this module its own pinned build
+again rather than patching the shared one to satisfy both.
