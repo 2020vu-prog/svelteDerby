@@ -247,7 +247,7 @@ Resources:
       Role: !GetAtt FfmpegLambdaRole.Arn
       Code:
         S3Bucket: !Ref LambdaSrcBucket
-        S3Key: "vodTranscode/lambda.zip"
+        S3Key: !Ref LambdaSrcKey
       Environment:
         Variables:
           DestinationBucket: !Ref MediaBucket
