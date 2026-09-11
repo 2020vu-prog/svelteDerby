@@ -9,8 +9,10 @@ const routeRegistry = require("./routeCatalog.js");
 const { canAccessRoute } = require("./routeAccess.js");
 const {
     createRouteRegistry,
+    decodeRouteParams,
     getMenuItems,
     getRequiredPermission,
+    isRecognizedDeepLink,
     resolveRouteAction,
 } = require("./routeRegistry.js");
 const { MenuSection } = require("./routeDefinitions.js");
@@ -111,6 +113,40 @@ test("matches parameterized and optional routes", () => {
     });
 });
 
+test("decodes component route parameters at the router boundary", () => {
+    assert.deepEqual(
+        decodeRouteParams({
+            orgIz: "IL%3ACHI2",
+            label: "Race%20Day",
+            optional: null,
+            malformed: "%E0%A4%A",
+        }),
+        {
+            orgIz: "IL:CHI2",
+            label: "Race Day",
+            optional: null,
+            malformed: "%E0%A4%A",
+        }
+    );
+});
+
+test("preserves recognized non-root routes during cold startup", () => {
+    assert.equal(isRecognizedDeepLink(routeRegistry, "/"), false);
+    assert.equal(isRecognizedDeepLink(routeRegistry, "/not-a-route"), false);
+    assert.equal(
+        isRecognizedDeepLink(
+            routeRegistry,
+            "/driverDelegate/IL%3ACHI2/IL%3ACHI2.99bf5/token"
+        ),
+        true
+    );
+    assert.equal(
+        isRecognizedDeepLink(routeRegistry, "/as/IL%3ACHI2/Event.1"),
+        true
+    );
+    assert.equal(isRecognizedDeepLink(routeRegistry, "/loginH"), true);
+});
+
 test("resolves parameter-specific route permission", () => {
     assert.equal(
         getRequiredPermission(
@@ -144,6 +180,17 @@ test("route access follows named role permissions", () => {
         ),
         true
     );
+    assert.equal(
+        canAccessRoute(
+            routeRegistry.match("/spotify"),
+            context([RoleName.REGISTRATION])
+        ),
+        true
+    );
+    assert.equal(
+        canAccessRoute(routeRegistry.match("/spotify"), context([])),
+        false
+    );
 });
 
 test("anonymous users only receive general event menus", () => {
@@ -162,8 +209,9 @@ test("anonymous users only receive general event menus", () => {
             "Pending Races",
             "Charts",
             "Watch Different Event",
+            "My Drivers",
             "Preferences & Sharing",
-            "Logout [TestUser]",
+            "Logout [user@example.com]",
         ]
     );
 });
@@ -195,6 +243,7 @@ test("admin menus are derived from route permission", () => {
             "Org Users",
             "Manual Announcement",
             "PA Info",
+            "Spotify",
             "Capture Video",
             "Log Messages",
         ]

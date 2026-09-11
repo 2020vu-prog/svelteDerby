@@ -6,7 +6,9 @@
     import { safeGetAt } from "./utils.js";
     import { onMount } from "svelte";
     import { push } from "svelte-spa-router";
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
+    const entityFactory = new EntityFactory({});
     var orgUserList = [];
     onMount(async () => {
         orgUserList = await getOrgUsersAsList();
@@ -52,6 +54,8 @@
                 {item.dn || item.displayName || ""}
                 <br />
                 {JSON.stringify(item.roleList)}
+                <br />
+                Email hash: [{entityFactory.getHashFromEmail(item.SK)}]
             </div>
         </CardBody>
     </Card>

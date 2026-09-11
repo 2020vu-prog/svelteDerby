@@ -24,6 +24,7 @@
         reRenderHotLoad,
         developerMode,
         mp3Playing,
+        mqttReconnectStats,
     } from "./stores.js";
     //import { mqtt } from "mqtt";
     import * as mqtt from "mqtt";
@@ -57,6 +58,10 @@
     var refreshInProgressButton = false;
     var refreshInProgressMq = false;
     var refreshInProgressCca = false;
+    const mqttInitialConnectTimeoutMs = 5000;
+    let mqttInitialSnapshotComplete = false;
+    let configChangeGeneration = 0;
+    let configChangeRunning = false;
 
     var ecFromDexie = [];
     //TODO: these should happen consecutively.
@@ -117,8 +122,98 @@
         }
         applyBtnClass();
     }
-    async function configChanged() {
+    // mqttReconnectStats.count is scoped to the currently selected
+    // event -- reset it whenever orgId actually changes (including to/
+    // from empty), but leave it alone for reasons resetMqtt() gets
+    // called for other than that (disabling MQTT, waking from sleep,
+    // an archived event), since those aren't event changes.
+    function clearReconnectCountIfEventChanged() {
+        const orgId = $raceConfig.orgId || "";
+        if ($mqttReconnectStats.orgId !== orgId) {
+            mqttReconnectStats.set({ orgId, count: 0 });
+        }
+    }
+    // Mobile OS sleep can silently kill the MQTT socket without ever
+    // firing a close/error event on it. mqtt.js's `connected` flag only
+    // updates in response to that event, so after a silent kill it's
+    // stuck at a stale `true` -- checking it alone (an earlier version
+    // of this fix did exactly that) trusts the one signal that's
+    // unreliable in precisely the failure case this exists for, and
+    // skips reconnecting. `connected === false` IS trustworthy (mqtt.js
+    // wouldn't report that without a real event), so that case still
+    // reconnects immediately; a `true` after a meaningful background
+    // interval can't be trusted either way and is forced regardless.
+    let pageHiddenAtMs = null;
+    let lastForcedReconnectAtMs = 0;
+    const wakeReconnectThresholdMs = 15000;
+    // A single bfcache restore fires both pageshow (persisted) and a
+    // visibilitychange to "visible" -- without this, both independently
+    // call maybeReconnectAfterWake() for the same wake, double-resetting
+    // MQTT and double-counting the reconnect stat.
+    const wakeReconnectDebounceMs = 2000;
+    function handleVisibilityChange() {
+        if (document.visibilityState === "hidden") {
+            pageHiddenAtMs = Date.now();
+        } else if (document.visibilityState === "visible") {
+            const hiddenForMs = pageHiddenAtMs
+                ? Date.now() - pageHiddenAtMs
+                : 0;
+            pageHiddenAtMs = null;
+            maybeReconnectAfterWake(hiddenForMs);
+        }
+    }
+    function handlePageShow(event) {
+        // pageshow fires on every normal page load too, not just a
+        // bfcache restore -- event.persisted is what distinguishes
+        // them. Forcing a reconnect check on an ordinary load would
+        // race with the initial connection flow onMount already kicks
+        // off, producing a redundant connection and an inflated count.
+        if (!event.persisted) return;
+        // A bfcache restore freezes the whole JS context for an
+        // unbounded, unknown duration -- always treat it as long enough
+        // to force the check, same as a long background period.
+        maybeReconnectAfterWake(wakeReconnectThresholdMs);
+    }
+    function maybeReconnectAfterWake(hiddenForMs) {
+        const knownDisconnected = !mqClient || !mqClient.connected;
+        if (!knownDisconnected && hiddenForMs < wakeReconnectThresholdMs) {
+            return; // brief background; connected state is still trustworthy
+        }
+        const now = Date.now();
+        if (now - lastForcedReconnectAtMs < wakeReconnectDebounceMs) {
+            return; // already handled this wake via the other listener
+        }
+        lastForcedReconnectAtMs = now;
+        log.debug(
+            `HotLoad: forcing MQTT reconnect check after wake (hiddenForMs=${hiddenForMs}, knownDisconnected=${knownDisconnected})`
+        );
+        resetMqtt();
+        configChanged();
+    }
+    function configChanged() {
+        configChangeGeneration++;
+        if (!configChangeRunning) drainConfigChanges();
+    }
+    async function drainConfigChanges() {
+        configChangeRunning = true;
+        try {
+            let completedGeneration = 0;
+            while (completedGeneration < configChangeGeneration) {
+                const generation = configChangeGeneration;
+                try {
+                    await applyConfigChanged(generation);
+                } catch (err) {
+                    log.error("configChanged failed", err);
+                }
+                completedGeneration = generation;
+            }
+        } finally {
+            configChangeRunning = false;
+        }
+    }
+    async function applyConfigChanged(generation) {
         log.debug("configChanged : begin:", $raceConfig.orgId);
+        clearReconnectCountIfEventChanged();
         if (!$raceConfig.orgId) {
             resetMqtt();
             log.debug("configChanged : no org:  skip");
@@ -127,22 +222,53 @@
         if (isArchived()) {
             resetMqtt();
             log.debug("configChanged : isArchived!skip", $raceConfig.orgId);
-            doRefreshViaHttp();
+            await refreshAfterCurrent(generation);
             return;
         }
         if (!$mqttEnabled) {
             resetMqtt();
             log.debug("configChanged : not enabled:  skip", $mqttEnabled);
-            doRefreshViaHttp();
+            await refreshAfterCurrent(generation);
             return;
         }
         if (activeIotWatch.currentDistTopic !== getDistTopic()) {
             log.debug("configChanged : mqtt reset");
             resetMqtt(); //fall thru to re-connect
         }
-        // watchIot will call doRefreshViaHttp() onConnect
         log.debug("configChanged : fall through");
-        await watchIot("configChanged");
+        mqttInitialSnapshotComplete = false;
+        const mqttReady = watchIot("configChanged");
+        let usedHttpFallback = false;
+        try {
+            await Promise.race([
+                mqttReady,
+                sleep(mqttInitialConnectTimeoutMs).then(() => {
+                    throw new Error("MQTT initial subscription timed out");
+                }),
+            ]);
+        } catch (err) {
+            usedHttpFallback = true;
+            log.warn("configChanged: using HTTP fallback", err);
+        }
+        if (generation !== configChangeGeneration) return;
+
+        // Normal order is subscribe first, then take the HTTP snapshot. If
+        // MQTT is unavailable, the bounded fallback still permits navigation.
+        const refreshed = await refreshAfterCurrent(generation);
+        if (!refreshed || generation !== configChangeGeneration) return;
+        mqttInitialSnapshotComplete = true;
+
+        if (usedHttpFallback) {
+            // Once the queued subscription is confirmed, reconcile anything
+            // that could have changed during the fallback gap.
+            mqttReady
+                .then(() => {
+                    if (generation === configChangeGeneration) {
+                        return refreshAfterCurrent(generation);
+                    }
+                })
+                .catch((err) => log.warn("MQTT reconciliation failed", err));
+        }
     }
     async function watchIot(from) {
         applyBtnClass();
@@ -164,16 +290,21 @@
 
         if (activeIotWatch && !activeIotWatch.plugged) {
             await refreshPsUrl();
-            mqClient = mqtt.connect($mqttPsUrlMap.url, {
+            const client = mqtt.connect($mqttPsUrlMap.url, {
                 transformWsUrl: transformWsUrl,
                 reconnectPeriod: 4000,
             });
-            mqClient.on("message", onMsgGeneric);
-            mqClient.on("connect", onConnect);
-            mqClient.on("disconnect", applyBtnClass);
-            mqClient.on("close", applyBtnClass);
-            mqClient.on("offline", applyBtnClass);
-            mqClient.on("error", applyBtnClass);
+            mqClient = client;
+            mqttReconnectStats.update((stats) => ({
+                ...stats,
+                count: stats.count + 1,
+            }));
+            client.on("message", onMsgGeneric);
+            client.on("connect", () => onConnect(client));
+            client.on("disconnect", applyBtnClass);
+            client.on("close", applyBtnClass);
+            client.on("offline", applyBtnClass);
+            client.on("error", applyBtnClass);
 
             activeIotWatch.plugged = true; // first time only.
         }
@@ -182,7 +313,7 @@
 
         log.debug("watchIot: Subscribing to:", topic);
         //mqClient.subscribe(topic, {}, onSubscribed);
-        syncSubscription(true, topic, applyFromMqMsg);
+        await syncSubscription(true, topic, applyFromMqMsg);
         activeIotWatch.currentDistTopic = topic;
 
         /*
@@ -304,9 +435,22 @@
         log.debug("onSubscribed", err, JSON.stringify(granted));
     }
     const msgQ = [];
-    async function onConnect(topic, message) {
+    async function onConnect(client) {
+        // activeIotWatch.errors only ever gets cleared by resetMqtt() --
+        // without this, one subscribe failure (e.g. right at wake,
+        // before the radio has fully reassociated) leaves the button
+        // permanently red even after mqtt.js's own reconnectPeriod
+        // silently recovers the same client, since that path never
+        // calls resetMqtt().
+        if (client === mqClient && activeIotWatch.errors.length > 0) {
+            activeIotWatch.errors = [];
+        }
         applyBtnClass();
-        doRefreshViaHttp();
+        // Reconnects need a fresh snapshot. The initial snapshot is started by
+        // configChanged only after the subscription acknowledgement.
+        if (client === mqClient && mqttInitialSnapshotComplete) {
+            refreshAfterCurrent(configChangeGeneration);
+        }
     }
     async function onMsgGeneric(topic, message) {
         // message is Buffer
@@ -437,8 +581,11 @@
         });
         */
         await mqttSubLock.acquire();
-        await _syncSubscription(subEnabled, topicP, onMsgh);
-        await mqttSubLock.release();
+        try {
+            await _syncSubscription(subEnabled, topicP, onMsgh);
+        } finally {
+            mqttSubLock.release();
+        }
         log.debug(`${tag} done`);
     }
     async function _syncSubscription(subEnabled, topicP, onMsgh) {
@@ -456,10 +603,13 @@
                 log.debug(`${tag}: ${topicP} subscribe stand down`);
             } else {
                 log.debug(`${tag}: Subscribing ${topicP}`);
-                activeIotWatch.topic[topicP] = await mySubscribe(
-                    topicP,
-                    onMsgh
-                );
+                activeIotWatch.topic[topicP] = onMsgh;
+                try {
+                    await mySubscribe(topicP);
+                } catch (err) {
+                    delete activeIotWatch.topic[topicP];
+                    throw err;
+                }
             }
         } else {
             if (activeIotWatch.topic[topicP]) {
@@ -475,20 +625,13 @@
         }
         log.debug(`${tag} done`);
     }
-    async function mySubscribe(topicP, onMsgh) {
-        const tag = "tag:mySubscribe";
-        mqClient.subscribe(topicP, {}, onSubscribed);
-        return onMsgh;
-        return PubSub.subscribe(topicP).subscribe({
-            next: async (data) => {
-                log.debug(`${tag}: ${topicP} mqMessage received`, data);
-                log.debug(`${tag}: ${topicP} mqMessage value`, data.value);
-                await onMsgh(data.value, topicP);
-            },
-            error: (error) => {
-                console.error(`${tag}: ${topicP} AWS iot error:`, error);
-            },
-            close: () => log.debug(`${tag}: ${topicP}  AWS iot Done`),
+    async function mySubscribe(topicP) {
+        await new Promise((resolve, reject) => {
+            mqClient.subscribe(topicP, {}, (err, granted) => {
+                onSubscribed(err, granted);
+                if (err) reject(err);
+                else resolve(granted);
+            });
         });
     }
     // called when a message arrives
@@ -544,7 +687,11 @@
         refreshInProgressMq = false;
     };
     const applyHistToStore = (hist) => {
-        $driverMap = hist.Participant;
+        $driverMap = Object.fromEntries(
+            Object.entries(hist.Participant).filter(
+                ([, participant]) => !participant.del
+            )
+        );
 
         $nextOnBlockKey = getNextOnBlockKeyFromRP(hist.RacePhase);
         //const sortedStandings=Object.values(hist.RaceStanding).sort(sortBy('lastUpdate', true, parseInt));
@@ -724,8 +871,15 @@
     watchMqttSubscriptions();
     onMount(() => {
         onMountAsync();
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("pageshow", handlePageShow);
         return () => {
             log.debug("HotLoad unmount");
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange
+            );
+            window.removeEventListener("pageshow", handlePageShow);
             resetMqtt();
         };
     });
@@ -839,12 +993,18 @@
     function doRefreshPressed() {
         potentialDoubleClickReloadPage();
     }
-    const doRefreshViaHttp = async () => {
+    const doRefreshViaHttp = async (expectedGeneration) => {
         const tag = "doRefresh";
         log.debug(`${tag} begin`);
+        if (
+            expectedGeneration !== undefined &&
+            expectedGeneration !== configChangeGeneration
+        ) {
+            return false;
+        }
         if (refreshInProgressButton) {
             log.debug(`${tag} skipped, already working`);
-            return;
+            return false;
         }
         refreshInProgressButton = true;
         //await dbInit();
@@ -853,8 +1013,12 @@
         } else {
             log.debug("no selected race");
             refreshInProgressButton = false;
-            return;
+            return false;
         }
+
+        const refreshOrgId = $raceConfig.orgId;
+        const refreshOrgIz = $raceConfig.orgIz;
+        let staleResponse = false;
 
         if ($raceConfig.archived === "true") {
             await loadArchivedData();
@@ -870,20 +1034,40 @@
                 $raceConfig.orgIz;
             try {
                 const response = await $axios.get(url);
-                log.debug("history:" + response.data.length);
-                //log.debug("history:",response.data);
-                const pendingBulk = {};
-                await parseAndApply(response, true, pendingBulk);
-                await flushPendingBulk(pendingBulk);
-                ecFromDexie = await db.EventConfig.toArray();
+                if (
+                    refreshOrgId !== $raceConfig.orgId ||
+                    refreshOrgIz !== $raceConfig.orgIz ||
+                    (expectedGeneration !== undefined &&
+                        expectedGeneration !== configChangeGeneration)
+                ) {
+                    log.debug(`${tag} discarding stale response`);
+                    staleResponse = true;
+                } else {
+                    log.debug("history:" + response.data.length);
+                    //log.debug("history:",response.data);
+                    const pendingBulk = {};
+                    await parseAndApply(response, true, pendingBulk);
+                    await flushPendingBulk(pendingBulk);
+                    ecFromDexie = await db.EventConfig.toArray();
+                }
             } catch (err) {
                 log.debug(err);
             }
         }
         refreshInProgressButton = false;
+        if (staleResponse) return false;
         $recentRefreshMs = new Date().getTime();
         log.debug(`${tag} done ${$recentRefreshMs}`);
+        return true;
     };
+    async function refreshAfterCurrent(expectedGeneration) {
+        while (refreshInProgressButton) {
+            if (expectedGeneration !== configChangeGeneration) return false;
+            await sleep(50);
+        }
+        if (expectedGeneration !== configChangeGeneration) return false;
+        return doRefreshViaHttp(expectedGeneration);
+    }
     function isArchived(ttlSecondsUnusedSvelteTrigger) {
         log.debug(
             "isArchived passed ecFromDexie: ",
@@ -978,5 +1162,8 @@
         btnClass={btnClass}
     >
         Refresh
+        {#if $developerMode}
+            ({$mqttReconnectStats.count})
+        {/if}
     </SpinnerButton>
 {/if}

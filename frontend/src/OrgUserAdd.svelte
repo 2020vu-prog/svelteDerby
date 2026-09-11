@@ -8,9 +8,12 @@
 
     const {
         getNamedRoles,
+        getRolePermissions,
     } = require("../../backend/modules/lambdaDerby/src/shared/PermissionLookup.js");
+    const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let params = {};
+    const entityFactory = new EntityFactory({});
     var b64User = "";
     var mode = "Add";
     var selectedRoles = [];
@@ -28,6 +31,8 @@
         console.log("selected:", selectedRoles);
         userForm.roles = JSON.stringify(selectedRoles);
     }
+    $: resolvedPermissions = getRolePermissions(selectedRoles).sort();
+    $: emailHash = entityFactory.getHashFromEmail(userForm.email);
     onMount(async () => {
         b64User = params.b64User;
         log.debug(`OrgUserAdd tgtEmail: ${b64User}`);
@@ -137,3 +142,14 @@
         {mode}
     </SpinnerButton>
 </form>
+
+<h5>Resolved Permissions ({resolvedPermissions.length})</h5>
+<ul>
+    {#each resolvedPermissions as permission}
+        <li>{permission}</li>
+    {/each}
+</ul>
+
+{#if emailHash}
+    <p>Email hash: [{emailHash}]</p>
+{/if}

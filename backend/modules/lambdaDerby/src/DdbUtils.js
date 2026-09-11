@@ -5,7 +5,11 @@ const {
     BatchWriteItemCommand,
     QueryCommand,
 } = require("@aws-sdk/client-dynamodb");
-const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
+const {
+    DynamoDBDocumentClient,
+    PutCommand,
+    UpdateCommand,
+} = require("@aws-sdk/lib-dynamodb");
 const { SendMessageCommand } = require("@aws-sdk/client-sqs");
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const skipDeleteFilter = "attribute_not_exists(del) ";
@@ -861,6 +865,57 @@ class DdbUtils {
         }
         return { error: "Invalid Request" };
     }
+    /**
+     * Marks an item consumed once, and only once -- a virtual delete, not a
+     * real one: an `UpdateItemCommand` that sets `consumedAt`, guarded by
+     * `ConditionExpression: attribute_exists(PK) AND
+     * attribute_not_exists(consumedAt)`. The first caller to reach DynamoDB
+     * wins and gets `true`; anyone racing them (a slow retry, a second tap)
+     * hits `ConditionalCheckFailedException` and gets `false`, rather than
+     * both silently succeeding against an already-consumed item. Used to
+     * consume a one-time claim token exactly once.
+     *
+     * Deliberately an UpdateItem, not a DeleteItem: this Lambda's role has
+     * `dynamodb:UpdateItem` on this table already (it's used elsewhere for
+     * ordinary writes) but not `dynamodb:DeleteItem`, and granting that is
+     * an infra change with its own review, not something to bundle into an
+     * application bug fix. The record still disappears on its own once
+     * `TTL` sweeps it, same as an unconsumed, expired token already does --
+     * this just leaves it in place, tombstoned, until then.
+     *
+     * @param {string} pk
+     * @param {string} sk
+     * @param {string} [tableName]
+     * @returns {Promise<boolean>} true if this call consumed the item.
+     */
+    async ddbMarkSingleUseConsumed(
+        pk,
+        sk,
+        tableName = process.env.DynamoDbTable
+    ) {
+        try {
+            await this.ddocClient.send(
+                new UpdateCommand({
+                    TableName: tableName,
+                    Key: { PK: pk, SK: sk },
+                    UpdateExpression: "SET consumedAt = :consumedAt",
+                    ConditionExpression:
+                        "attribute_exists(PK) AND attribute_not_exists(consumedAt)",
+                    ExpressionAttributeValues: {
+                        ":consumedAt": Date.now(),
+                    },
+                })
+            );
+            return true;
+        } catch (err) {
+            if (err.name === "ConditionalCheckFailedException") {
+                return false;
+            }
+            log.debug("ddbMarkSingleUseConsumed failed: ", err, err.stack);
+            throw err;
+        }
+    }
+
     async requestCC(qsp, ccType = "CCA") {
         qsp.ccType = ccType;
         var params = {

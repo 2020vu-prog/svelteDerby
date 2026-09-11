@@ -1,6 +1,6 @@
 resource "aws_cognito_user_pool_client" "hosted_client" {
   access_token_validity                = 60
-  allowed_oauth_flows                  = ["implicit"]
+  allowed_oauth_flows                  = ["code"]
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes                 = ["email", "openid", "phone"]
   auth_session_validity                = 3

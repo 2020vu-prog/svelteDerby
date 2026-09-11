@@ -13,7 +13,7 @@
     import Annotate from "./Annotate.svelte";
     import CarFilter from "./CarFilter.svelte";
     import { onMount } from "svelte";
-    import { dateChangeLabel, getMainFull } from "./utils.js";
+    import { dateChangeLabel, getMainFull, escapeRegExp } from "./utils.js";
     import { location } from "svelte-spa-router";
     var mainFullPx = 300;
     var phaseList = [];
@@ -41,7 +41,7 @@
         if (!lclFilter) return true;
         if (nobKey === phase.classKey) return true; //Always show!
 
-        let re = new RegExp("^" + lclFilter);
+        let re = new RegExp("^" + escapeRegExp(lclFilter));
 
         return phase.carNumbers.filter((cn) => cn.match(re)).length > 0;
     };

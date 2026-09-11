@@ -12,6 +12,7 @@ const {
     getLatestCompletedStanding,
     getNextOnBlocksStatuses,
     getParticipant,
+    getSoloCarNumber,
 } = moduleUnderTest;
 
 const formatWinTime = (value) => (value === "Tied" ? value : `${value} ms`);
@@ -63,6 +64,15 @@ test("matches RacePhase prior A-phase status for blocks", () => {
         getNextOnBlocksStatuses(phase, 2, standings, formatWinTime),
         []
     );
+});
+
+test("finds the sole car regardless of which lane it's in", () => {
+    assert.equal(getSoloCarNumber({ carNumbers: ["772", ""] }), "772");
+    assert.equal(getSoloCarNumber({ carNumbers: ["", "772"] }), "772");
+    assert.equal(getSoloCarNumber({ carNumbers: ["101", "102"] }), undefined);
+    assert.equal(getSoloCarNumber({ carNumbers: ["", ""] }), undefined);
+    assert.equal(getSoloCarNumber({ carNumbers: [] }), undefined);
+    assert.equal(getSoloCarNumber(undefined), undefined);
 });
 
 test("matches RaceStanding overall and phase winner statuses", () => {

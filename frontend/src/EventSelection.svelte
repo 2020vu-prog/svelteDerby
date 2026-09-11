@@ -11,7 +11,6 @@
         clearOldStatusMessages,
         pushMessage,
         axios,
-        userEmail,
         recentRefreshMs,
     } from "./stores.js";
 
@@ -38,74 +37,48 @@
     $: {
         log.debug("EventSelection: bound eventMap: ", eventMap);
     }
-    $: {
-        //recheck auto select after login/eventmap populated!
-        if (mounted) potentialAutoSelect($userEmail);
-    }
     let previousActivate = false;
-    // headsup: caller does not await...
     async function activateNewest() {
         const tag = "activateNewest";
-        log.debug(`${tag} email: ${$userEmail}`);
-        if (!$userEmail) {
-            log.debug(`${tag} email bypass`);
-            //auto select requires auth :-(
-            pushMessage({
-                text: `AS: No Eligible user.`,
-            });
-            return;
-        }
-        // could be already loaded, but initial load
-        //  fails when anon user not logged in yet (no email)
-        // force reload here.  s/b cached & quick
-        await refreshOrgEvents();
-        const orgEvents = Object.values(eventMap);
-        if (orgEvents.length == 0) {
-            log.debug(`${tag} event bypass`);
-            pushMessage({
-                text: `AS: No Eligible map.`,
-            });
-            return;
-        }
-
-        //only one activation allowed!
         if (previousActivate) {
-            const msg = `AS: Skipping, previous runner: ${userEmail} ${previousActivate}`;
-            log.debug(`${tag} ${msg}`);
-            pushMessage({
-                text: msg,
-            });
+            log.debug(`${tag} skipping concurrent request`);
             return;
         }
-        previousActivate = $userEmail;
-
-        let selectedConfig = {
-            at: 0,
-        };
-        // did AS qr code request specific event?
-        if (params.orgId) {
-            for (const cfg of orgEvents) {
-                if (cfg.orgId === params.orgId) {
-                    selectedConfig = cfg;
+        previousActivate = true;
+        try {
+            // Retry a failed/empty lookup once, while retaining normal cache behavior.
+            for (let attempt = 0; attempt < 2; attempt++) {
+                if (attempt || Object.keys(eventMap).length === 0) {
+                    await refreshOrgEvents();
+                }
+                const orgEvents = Object.values(eventMap);
+                let selectedConfig = { at: 0 };
+                if (params.orgId) {
+                    selectedConfig = orgEvents.find(
+                        (cfg) => cfg.orgId === params.orgId
+                    );
+                } else {
+                    for (const cfg of orgEvents) {
+                        if (cfg.at > selectedConfig.at) selectedConfig = cfg;
+                    }
+                }
+                if (selectedConfig && selectedConfig.SK) {
+                    await doSelect(selectedConfig);
+                    return;
                 }
             }
-        } else {
-            // newest
-            for (const cfg of orgEvents) {
-                if (cfg.at > selectedConfig.at) {
-                    selectedConfig = cfg;
-                }
-            }
-        }
-
-        if (!selectedConfig.SK) {
             pushMessage({
                 text: `AS: No Eligible event.`,
             });
-            return;
+        } catch (err) {
+            log.error(`${tag} failed`, err);
+            pushMessage({
+                text: `Unable to select shared event.`,
+                type: "error",
+            });
+        } finally {
+            previousActivate = false;
         }
-
-        doSelect(selectedConfig);
     }
     const getOrgEventsAsList = (viewMode) => {
         populateSelectedEventMap(currentViewMode);
@@ -125,22 +98,19 @@
         log.debug("refreshOrgEvents:");
 
         const cacheKey = getCacheKey();
-        try {
-            const endPoint = "/listOrgEvents";
-            const req = {
-                orgIz: params.orgIz,
-                cache: cacheKey,
-            };
-            const response = await $axios.get($raceConfig.baseUrl + endPoint, {
-                params: req,
-            });
-            log.debug("refreshOrgEvents length:" + response.data.length);
-            log.debug("refreshOrgEvents:", response.data);
-            eventMap = response.data;
-            currentViewMode = "Active";
-        } catch (err) {
-            log.debug(err);
-        }
+        const endPoint = "/listOrgEvents";
+        const req = {
+            orgIz: params.orgIz,
+            cache: cacheKey,
+        };
+        const response = await $axios.get($raceConfig.baseUrl + endPoint, {
+            params: req,
+        });
+        log.debug("refreshOrgEvents length:" + response.data.length);
+        log.debug("refreshOrgEvents:", response.data);
+        eventMap = response.data;
+        currentViewMode = "Active";
+        return eventMap;
     };
 
     let mounted = false;
@@ -154,18 +124,10 @@
         }
 
         mounted = true;
-    });
-    function potentialAutoSelect() {
-        log.debug(`potentialAutoSelect begin ${$userEmail}`);
-        if (!mounted) return;
-        if (!$userEmail) return;
-        log.debug("potentialAutoSelect continue");
         if (isAutoSelectRequested()) {
-            // qr code 'autoSelect'!
-            log.debug("autoSelect after refreshOrgEvents from:", eventMap);
-            activateNewest();
+            await activateNewest();
         }
-    }
+    });
     function isAutoSelectRequested() {
         if (new URLSearchParams($querystring).get("as")) {
             // qr code 'autoSelect'!
@@ -179,6 +141,13 @@
     const requestClearStore = () => {
         $doRefreshBlocks = -1;
     };
+    // Optional continuation target (e.g. `/as/:orgIz/:orgId?then=/driverProfile/123`)
+    // used by flows -- like claiming a driver delegation -- that need this
+    // client's selected event switched before landing somewhere other than
+    // the default race list.
+    const getThenTarget = () => {
+        return new URLSearchParams($querystring).get("then") || "/RpList";
+    };
     const doSelect = async (config) => {
         log.debug("selected:", config);
         if (
@@ -188,7 +157,7 @@
             pushMessage({
                 text: `Event already active.`,
             });
-            replace("/RpList");
+            replace(getThenTarget());
             return;
         }
 
@@ -202,8 +171,8 @@
         config.title = getRaceName(config);
         log.debug("selecting config:", config);
 
-        $raceConfig = config;
         waitingForReloadBeginMs = new Date().getTime();
+        $raceConfig = config;
     };
 
     $: {
@@ -216,7 +185,7 @@
 
         $clearOldStatusMessages = true;
 
-        replace("/RpList");
+        replace(getThenTarget());
     }
     const getRaceName = (config) => {
         return config.name ? config.name : config.orgId;

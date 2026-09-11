@@ -112,7 +112,7 @@ const routeDefinitions = [
         component: "LoginH",
         permission: RoutePermission.PUBLIC,
         menu: generalMenu(
-            ({ userId }) => (userId ? `Logout [${userId}]` : "Login"),
+            ({ userEmail }) => (userEmail ? `Logout [${userEmail}]` : "Login"),
             80,
             {
                 requiresEvent: false,
@@ -156,6 +156,25 @@ const routeDefinitions = [
         id: "driverInfo",
         path: "/driverInfo/:number?",
         component: "DriverInfo",
+        permission: RoutePermission.ANONYMOUS,
+    },
+    {
+        id: "driverDelegate",
+        path: "/driverDelegate/:orgIz/:orgId/:token",
+        component: "DriverDelegate",
+        permission: RoutePermission.PUBLIC,
+    },
+    {
+        id: "driverProfile",
+        path: "/driverProfile",
+        component: "DriverProfileList",
+        permission: RoutePermission.ANONYMOUS,
+        menu: generalMenu("My Drivers", 65, { requiresEvent: true }),
+    },
+    {
+        id: "driverProfileEdit",
+        path: "/driverProfile/:number",
+        component: "DriverProfile",
         permission: RoutePermission.ANONYMOUS,
     },
     {
@@ -278,6 +297,13 @@ const routeDefinitions = [
         component: "PaInfo",
         permission: RoutePermission.CAN_INITIATE_ANNOUNCEMENT,
         menu: adminMenu("PA Info", 60),
+    },
+    {
+        id: "spotify",
+        path: "/spotify",
+        component: "Spotify",
+        permission: RoutePermission.CAN_MANAGE_SPOTIFY,
+        menu: adminMenu("Spotify", 65),
     },
     {
         id: "chartEdit",

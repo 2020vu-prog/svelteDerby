@@ -6,6 +6,7 @@
     import {
         theme,
         showBottomNav,
+        showHelpIcon,
         autoAnnounceResults,
         pendingSortAlgorithm,
         mediaFileType,
@@ -255,6 +256,16 @@
         <h6>
             This toggles whether the bottom toolbar is shown or hidden on
             <strong>all screens</strong>.
+        </h6>
+    </div>
+    <hr />
+
+    <div class="singularSettingDiv">
+        <h4>Help Icon</h4>
+        <input type="checkbox" bind:checked={$showHelpIcon} />
+        <h6>
+            This toggles whether the <strong>?</strong> help icon is shown on screens
+            that have help available.
         </h6>
     </div>
     <hr />

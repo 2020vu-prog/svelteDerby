@@ -11,6 +11,7 @@ const {
     getVisibleHelpDescriptors,
     parseHelpFileKey,
     resolveRouteHelpIds,
+    resolveRoutePermissionName,
 } = require("./routeHelp.js");
 const { createRouteHelpMarkdownRenderer } = require("./routeHelpMarkdown.js");
 const { routeDefinitions } = require("./routeDefinitions.js");
@@ -204,6 +205,30 @@ test("resolves distinct add-race help from the route mode", () => {
         }),
         ["RaceStandingAdd", "RaceStandingAdd.Blocks"]
     );
+});
+
+test("resolves the active route permission name at runtime", () => {
+    const definition = routeDefinitions.find(
+        (route) => route.id === "raceStandingAdd"
+    );
+
+    assert.equal(
+        resolveRoutePermissionName({
+            definition,
+            params: { type: "RaceStanding" },
+            path: "/raceStandingAdd/RaceStanding",
+        }),
+        "CanAddPending"
+    );
+    assert.equal(
+        resolveRoutePermissionName({
+            definition,
+            params: { type: "RacePhase" },
+            path: "/raceStandingAdd/RacePhase",
+        }),
+        "CanAddBlocks"
+    );
+    assert.equal(resolveRoutePermissionName(null), "");
 });
 
 test("all repository help filenames are valid", () => {

@@ -7,7 +7,7 @@ import uuid
 import boto3
 import datetime
 import random
-from urllib.parse import urlparse
+from urllib.parse import unquote_plus, urlparse
 import logging
 
 from botocore.client import ClientError
@@ -40,7 +40,10 @@ def handler(event, context):
 
     assetID = str(uuid.uuid4())
     sourceS3Bucket = event['Records'][0]['s3']['bucket']['name']
-    sourceS3Key = event['Records'][0]['s3']['object']['key']
+    # S3 event notifications URL-encode object keys and represent spaces as '+'.
+    # Decode the notification value before using it as an S3 key or MediaConvert
+    # path so event IDs containing characters such as ':' remain unchanged.
+    sourceS3Key = unquote_plus(event['Records'][0]['s3']['object']['key'])
     sourceS3 = 's3://'+ sourceS3Bucket + '/' + sourceS3Key
     destinationS3 = 's3://' + os.environ['DestinationBucket']
     mediaConvertRole = os.environ['MediaConvertRole']
@@ -172,4 +175,3 @@ def handler(event, context):
             'body': json.dumps(job, indent=4, sort_keys=True, default=str),
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
         }
-

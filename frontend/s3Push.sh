@@ -5,7 +5,7 @@ source ./loadDeployTargets.sh
 echo "###"
 echo "### push no-cache"
 echo "###"
-aws s3 sync $QUIET  \
+aws s3 sync $QUIET --no-progress \
 	--cache-control 'no-cache' \
 	--exclude *.*.css \
 	--exclude global*.css \
@@ -20,7 +20,7 @@ echo now sync remaining...
 echo "###"
 echo "### push cache 604800"
 echo "###"
-aws s3 sync $QUIET   \
+aws s3 sync $QUIET --no-progress \
 	--cache-control 'max-age=604800' \
 	./public/ s3://$DERBY_SPA_S3_BUCKET
 echo cloudfront endpoint: $DERBY_CLOUDFRONT

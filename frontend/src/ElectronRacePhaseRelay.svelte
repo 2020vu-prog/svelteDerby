@@ -1,0 +1,95 @@
+<script>
+    import log from "loglevel";
+    import { driverMap, racePhaseMap, nextOnBlockKey } from "./stores.js";
+    import { getCarNumber, getParticipant } from "./paInfo.js";
+
+    // Tracks which phase key we've already relayed, so a re-render of the
+    // same next-on-blocks phase (e.g. a timer result posting) doesn't
+    // re-fire the event -- only an actual change of what's loaded should.
+    let lastSentKey = "";
+
+    $: sendIfNewRacePhase($nextOnBlockKey, $racePhaseMap, $driverMap);
+
+    // "H"/"T"/"F"/"Y" phase types (hot/trial/fun/bye runs) have no numeric
+    // heat -- matches the fallback labels used in utils.js's
+    // fmtChartPosition, minus the bracket-name lookup this doesn't need.
+    function getHeatNumberOrLabel(racePhase) {
+        if (racePhase.bracketPos && racePhase.bracketPos.includes(":")) {
+            const [, heat] = racePhase.bracketPos.split(":");
+            return heat;
+        }
+        if (racePhase.pt && racePhase.pt.startsWith("H")) return "Hot Run";
+        if (racePhase.pt && racePhase.pt.startsWith("T")) return "Trial Run";
+        if (racePhase.pt && racePhase.pt.startsWith("F")) return "Fun Run";
+        if (racePhase.pt && racePhase.pt.startsWith("Y")) return "Bye Run";
+        return "Adhoc";
+    }
+
+    function laneInfo(racePhase, driverMapVal, lane) {
+        const carNumber = getCarNumber(racePhase, lane);
+        const participant = getParticipant(driverMapVal, carNumber);
+        return {
+            carNumber: carNumber ?? null,
+            driverName: (participant && participant.name) || "",
+        };
+    }
+
+    function sendIfNewRacePhase(key, racePhaseMapVal, driverMapVal) {
+        const racePhase =
+            typeof key === "string" && key ? racePhaseMapVal[key] : undefined;
+
+        if (!racePhase || !racePhase.carNumbers) {
+            // Nothing valid on the blocks -- nextOnBlockKey can be "", the
+            // sentinel string "N/A", or an empty object {} depending on how
+            // it was cleared, and none of those map to a real phase here.
+            // Reset the dedup marker so a later reload of the *same* phase
+            // (e.g. after correcting/removing results) isn't suppressed.
+            lastSentKey = "";
+            return;
+        }
+        if (key === lastSentKey) return;
+
+        const lane1 = laneInfo(racePhase, driverMapVal, 1);
+        const lane2 = laneInfo(racePhase, driverMapVal, 2);
+        if (lane1.carNumber == null && lane2.carNumber == null) {
+            lastSentKey = "";
+            return;
+        }
+
+        lastSentKey = key;
+
+        const payload = {
+            heatNumber: getHeatNumberOrLabel(racePhase),
+            phase: racePhase.phaseLiteral ?? null,
+            lane1,
+            lane2,
+        };
+        dispatchToElectron(payload);
+    }
+
+    function dispatchToElectron(payload) {
+        log.debug("racePhase relay: dispatching", payload);
+        // Dispatched on `document` (rather than a hook element looked up by
+        // id, as ElectronTimerRelay's udpTimerSpan does for the opposite
+        // direction) because electronDerby's preload script listens on
+        // `document` directly: it runs before this component has mounted
+        // anything, so a by-id element wouldn't exist yet for it to find.
+        // Outside the Electron shell this is simply a no-op -- nothing is
+        // listening, so the dispatch has no effect.
+        document.dispatchEvent(
+            new CustomEvent("racePhaseEntered", {
+                detail: JSON.stringify(payload),
+            })
+        );
+    }
+</script>
+
+<!--
+    This component only relays events via document.dispatchEvent and has
+    no real markup, but a fully empty template compiles to a degenerate
+    fragment that crashes svelte-hmr's dev-mode instrumentation
+    ("Cannot create property 'm' on boolean 'false'") under
+    webpack-dev-server hot reload. A trivial, invisible node is enough
+    to give Svelte a real fragment to instrument.
+-->
+<div style="display: none" />

@@ -1,47 +1,44 @@
-//import { idToken } from './lib/stores.js'
+import log from "loglevel";
 import { userJwtStore } from "./stores.js";
-export function setIdTokenFromCognitoCallback() {
-    ucode();
-    uatoken();
-    urlParse();
-    // console.log(`The current page is: ${$location}`, $location);
-    // console.log(`The current querystring is: ${$querystring}`, $querystring);
-    console.log(`The current url is: ${document.URL}`);
-    //replace('/mock')
-    //replace('/login')
-}
-export function ucode() {
-    const regexpSize = /code=([^#]*)/;
-    const match = document.URL.match(regexpSize);
-    if (match && match[1]) {
-        console.log(`Twiddle m ${match[1]}`);
-    }
-}
-export function uatoken() {
-    const regexpSize = /access_token=([^#]*)/;
-    const match = document.URL.match(regexpSize);
-    if (match && match[1]) {
-        console.log(`Twiddle at ${match[1]}`);
-    }
-}
-export function urlParse() {
-    const u = new URL(document.URL);
-    console.log(`Twiddle qu:`, u);
-    console.log(`Twiddle h ${u.hash}`);
-    let tokenHash = u.hash.replace("#", "");
+import {
+    cognitoUserManager,
+    beginCognitoLogin as signinRedirect,
+    completeCognitoLogin,
+    freshCognitoUser,
+} from "./utils/cognitoAuth.js";
 
-    const words = tokenHash.split("&");
-    console.log(`Twiddle words`, words);
-    for (const element of words) {
-        const [key, val] = element.split("=");
-        console.log(`elem K:`, decodeURIComponent(key));
-        console.log(`elem V:`, decodeURIComponent(val));
-        if (key === "id_token") {
-            localStorage.setItem("id_token", val);
+// Keeps userJwtStore in sync as oidc-client-ts's automaticSilentRenew mints
+// fresh tokens in the background -- this is what "extends login" past the
+// old id_token lifetime without the user re-authenticating.
+cognitoUserManager.events.addUserLoaded((user) =>
+    userJwtStore.set(user.id_token)
+);
+cognitoUserManager.events.addUserUnloaded(() => userJwtStore.set(""));
+cognitoUserManager.events.addSilentRenewError((error) =>
+    log.warn("Cognito silent token renewal failed", error)
+);
 
-            //$idToken = val
-            console.log(`id_token :`, val);
-            userJwtStore.set(val);
-        }
+export async function setIdTokenFromCognitoCallback() {
+    try {
+        const callbackUser = await completeCognitoLogin(
+            cognitoUserManager,
+            document.URL
+        );
+        const user =
+            callbackUser || (await freshCognitoUser(cognitoUserManager));
+        userJwtStore.set(user?.id_token || "");
+    } catch (error) {
+        log.warn("Cognito session restore failed", error);
+        userJwtStore.set("");
     }
+}
+
+export function beginCognitoLogin() {
+    return signinRedirect(cognitoUserManager);
+}
+
+export function cognitoLogout() {
+    cognitoUserManager
+        .removeUser()
+        .catch((error) => log.warn("Cognito local sign-out failed", error));
 }

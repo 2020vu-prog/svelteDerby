@@ -18,7 +18,7 @@
     } from "./stores.js";
 
     import { onMount } from "svelte";
-    import { push, replace } from "svelte-spa-router";
+    import { push, replace, location } from "svelte-spa-router";
     import {
         createPermissionStore,
         RoutePermission,
@@ -329,7 +329,7 @@
             Elapsed
         </span>
     {/if}
-    {#if window.location.href.includes("RsList/Pending") && $canAnnounce}
+    {#if $location.includes("RsList/Pending") && $canAnnounce}
         <span
             class="navbarItem"
             style="background-color: {$theme}"

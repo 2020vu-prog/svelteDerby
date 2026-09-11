@@ -24,11 +24,13 @@
         raceConfig,
         pushMessage,
         mediaFileType,
+        mediaFilter,
         videoHref,
     } from "./stores.js";
     import { tick } from "svelte";
     import { db } from "./eventDb.js";
     import MediaViewer from "./MediaViewer.svelte";
+    import CarFilter from "./CarFilter.svelte";
 
     export let params = {};
     var vtime = 1;
@@ -93,10 +95,24 @@
             listM.push(...(await listMedia(prefixSeedList[i], i)));
         }
 
+        // Sort on the same effective time getMediaMMDDYYHHMMSS() displays
+        // (a video's embedded tgtTimeMs when present, else LastModified)
+        // -- sorting on LastModified alone put videos out of order
+        // relative to what their own displayed timestamp shows, since a
+        // video's tgtTimeMs (actual finish time) and its LastModified
+        // (whenever the file finished uploading/encoding) can drift
+        // apart by an uneven amount per clip.
         listM.sort(function (a, b) {
-            return b.LastModified.localeCompare(a.LastModified);
+            return getEffectiveTimeMs(b) - getEffectiveTimeMs(a);
         });
         return listM;
+    }
+    function getEffectiveTimeMs(mediaItem) {
+        const meta = extractS3VideoMeta(mediaItem.Key);
+        if (meta && meta.tgtTimeMs) {
+            return meta.tgtTimeMs;
+        }
+        return Date.parse(mediaItem.LastModified);
     }
     async function listMedia(prefixSeed, i) {
         if (!prefixSeed) {
@@ -164,14 +180,7 @@
         return `/${key}`;
     }
     function getMediaMMDDYYHHMMSS(mediaItem) {
-        log.debug("LMOD:", mediaItem.LastModified);
-        log.debug("LMOD parsed:", Date.parse(mediaItem.LastModified));
-        let d = Date.parse(mediaItem.LastModified);
-        const meta = extractS3VideoMeta(mediaItem.Key);
-        if (meta && meta.tgtTimeMs) {
-            d = meta.tgtTimeMs;
-        }
-
+        const d = getEffectiveTimeMs(mediaItem);
         return mmddyyFmt(d) + " " + hhmmssFmt(d);
     }
 
@@ -188,17 +197,21 @@
             return key.replace(/.*-/, "");
         }
     }
-    function getMediaItems(mediaList) {
-        return mediaList.filter((item) => shouldDisplayMediaItem(item));
+    function getMediaItems(mediaList, mediaFileType, mediaFilter) {
+        return mediaList.filter((item) =>
+            shouldDisplayMediaItem(item, mediaFileType, mediaFilter)
+        );
     }
-    function shouldDisplayMediaItem(item) {
-        //return true;
-        if (!$mediaFileType) return true;
-
-        const lcType = $mediaFileType.toString().toLowerCase();
-
+    function shouldDisplayMediaItem(item, mediaFileType, mediaFilter) {
         const lcKey = item.Key.toLowerCase();
-        return lcKey.endsWith(lcType) || lcKey.endsWith("mp3");
+        if (mediaFileType) {
+            const lcType = mediaFileType.toString().toLowerCase();
+            if (!lcKey.endsWith(lcType) && !lcKey.endsWith("mp3")) {
+                return false;
+            }
+        }
+        const filter = mediaFilter.trim().toLowerCase();
+        return !filter || lcKey.includes(filter);
     }
     let animateDir = 0;
     let animateRequest = 0;
@@ -236,7 +249,9 @@
 </style>
 
 <div style="height: fill-parent">
-    <h3>Media List</h3>
+    <h3>
+        Media List <CarFilter filterStore={mediaFilter} defaultAlphanumeric />
+    </h3>
     {#if loadingMedia}
         <div
             style="margin: 0; position: absolute; top: 50%; left: 50%;
@@ -259,7 +274,7 @@
         {#if mediaList.length == 0}
             <h5>No media found.</h5>
         {:else}
-            {#each getMediaItems(mediaList) as mediaItem (mediaItem.Key)}
+            {#each getMediaItems(mediaList, $mediaFileType, $mediaFilter) as mediaItem (mediaItem.Key)}
                 <Card
                     class="mt-3 border border-info"
                     on:click={() => showMedia(mediaItem.Key)}

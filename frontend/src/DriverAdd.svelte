@@ -17,7 +17,8 @@
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import { stringify as csvStringify } from "csv-stringify/sync";
     import { parse as csvParse } from "csv-parse/sync";
-    import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
+    import WalkupLinkEditor from "./WalkupLinkEditor.svelte";
+    import QRCode from "qrcode";
 
     import Icon from "fa-svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -28,9 +29,17 @@
     var mode = "Add";
     var submitDisabled = true;
     var submitSpinning = false;
+    var deleteSpinning = false;
     var speakSpinning = false;
     const canManageDriverJson = createPermissionStore(RoutePermission.POWER);
-    let doPlay = false;
+    let walkupLinkValid = true;
+
+    let delegateSpinning = false;
+    let delegateQrSvg = "";
+    let delegateLink = "";
+    let delegateExpiresAt = 0;
+    let maintainerHashes = [];
+    let revokeSpinningHash = "";
 
     onMount(async () => {
         log.debug("mounted focus: ", params);
@@ -39,43 +48,132 @@
         document.getElementById("carNumber").focus();
         mounted = true;
         await refreshDataFromDb();
+        if (mode === "Update") {
+            await refreshMaintainers();
+        }
         syncAddButton();
     });
+
+    async function delegateWalkup() {
+        delegateSpinning = true;
+        try {
+            const response = await $axios.post(
+                $raceConfig.baseUrl + "/createDriverDelegation",
+                {
+                    orgId: $raceConfig.orgId,
+                    orgIz: $raceConfig.orgIz,
+                    number: driverForm.carNumber,
+                }
+            );
+            const { token, expiresAt } = response.data;
+            delegateExpiresAt = expiresAt;
+            delegateLink = `${window.location.origin}/#/driverDelegate/${$raceConfig.orgIz}/${$raceConfig.orgId}/${token}`;
+            delegateQrSvg = await QRCode.toString(delegateLink, {
+                type: "svg",
+            });
+        } catch (err) {
+            log.debug("delegateWalkup failed: " + err);
+            pushMessage({
+                text: "Unable to create delegation link.",
+                type: "error",
+            });
+        } finally {
+            delegateSpinning = false;
+        }
+    }
+
+    async function refreshMaintainers() {
+        const ptcpFromDexie = await db.Participant.get(
+            params.number.toString()
+        );
+        maintainerHashes = ptcpFromDexie
+            ? ptcpFromDexie.maintainerHashes || []
+            : [];
+    }
+
+    async function revokeMaintainer(hash) {
+        revokeSpinningHash = hash;
+        try {
+            await $axios.post($raceConfig.baseUrl + "/revokeDriverMaintainer", {
+                orgId: $raceConfig.orgId,
+                orgIz: $raceConfig.orgIz,
+                number: driverForm.carNumber,
+                hash,
+            });
+            pushMessage({ text: "Maintainer revoked.", type: "success" });
+            await refreshMaintainers();
+        } catch (err) {
+            log.debug("revokeMaintainer failed: " + err);
+            pushMessage({
+                text: "Unable to revoke maintainer.",
+                type: "error",
+            });
+        } finally {
+            revokeSpinningHash = "";
+        }
+    }
     const onFileSelected = (e) => {
-        //postDrivers(e.target.files[0])
-        let jsonFile = e.target.files[0];
+        let selectedFile = e.target.files[0];
+        // Reset so re-selecting the exact same file (e.g. after fixing and
+        // re-saving it) still fires this handler -- the browser doesn't
+        // emit `change` again otherwise, since the input's value is
+        // unchanged from its perspective.
+        e.target.value = "";
+        if (!selectedFile) return;
+
+        const isCsv = InputFileContentType === "csv";
+        const importType = isCsv ? "CSV" : "JSON";
         let reader = new FileReader();
-        reader.readAsBinaryString(jsonFile);
+        reader.onerror = () => {
+            log.error(`Driver ${importType} file read failed:`, reader.error);
+            pushMessage({
+                text: `Driver ${importType} upload failed: could not read the file.`,
+                type: "error",
+            });
+        };
         reader.onload = async (e) => {
-            //avatar = e.target.result
             log.debug("OFS:", e.target.result);
+            if (isCsv) csvUploadSpinning = true;
+            else jsonUploadSpinning = true;
             try {
                 await fmtAndPostDrivers(e.target.result);
             } catch (err) {
-                const importType =
-                    InputFileContentType === "application/csv" ? "CSV" : "JSON";
                 log.error(`Driver ${importType} upload failed:`, err);
                 pushMessage({
                     text: `Driver ${importType} upload failed: ${err.message || err}`,
                     type: "error",
                 });
+            } finally {
+                if (isCsv) csvUploadSpinning = false;
+                else jsonUploadSpinning = false;
             }
         };
+        // readAsText (not readAsBinaryString, which maps raw bytes 1:1 to
+        // char codes instead of decoding text): a CSV/JSON file exported
+        // from Excel/Sheets is commonly UTF-8 with a BOM, and can contain
+        // multi-byte characters in names -- readAsBinaryString mangles both.
+        reader.readAsText(selectedFile);
     };
     async function fmtAndPostDrivers(rawData) {
         log.debug("OFS fmtAndPostDrivers:", rawData);
-        if (InputFileContentType == "application/json") {
+        if (InputFileContentType == "json") {
             await fmtAndPostJson(rawData);
         }
-        if (InputFileContentType == "application/csv") {
+        if (InputFileContentType == "csv") {
             await fmtAndPostCsv(rawData);
         }
     }
     async function fmtAndPostCsv(rawData) {
         log.debug("fmtAndPostCsv:", rawData);
-        const records = csvParse(rawData, {
+        // Strip a leading UTF-8 BOM -- common in CSVs exported from
+        // Excel/Sheets. Left in place, it prepends to the first header
+        // cell (e.g. "\uFEFFCarNumber"), which then silently fails the
+        // exact-match lookup below and drops that column for every row.
+        const cleanedData = rawData.replace(/^\uFEFF/, "");
+        const records = csvParse(cleanedData, {
             columns: true,
             skip_empty_lines: true,
+            trim: true,
         });
         const xmap = getCsvXrefAsMap();
         const jrecList = [];
@@ -89,32 +187,68 @@
                 PK: "Test.4b117:PTCP",
             };
             for (const [fldName, fldValue] of Object.entries(crec)) {
-                drvr[xmap[fldName]] = fldValue;
+                const targetField = xmap[fldName];
+                if (!targetField) continue; // unrecognized column header
+                if (targetField === MAINTAINER_HASHES_FIELD) {
+                    drvr[targetField] = fldValue
+                        ? fldValue.split(";").filter(Boolean)
+                        : [];
+                } else {
+                    drvr[targetField] = fldValue;
+                }
             }
             if (drvr.name && drvr.number) {
                 jrecList.push(drvr);
             }
         });
         log.debug("fmtAndPostCsv j:", JSON.stringify(jrecList));
+
+        if (jrecList.length === 0) {
+            pushMessage({
+                text: `No valid driver rows found in the CSV. Check that the header row matches: ${csvXref[0].join(", ")}.`,
+                type: "error",
+            });
+            return;
+        }
+
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
             bulk: jrecList,
         };
 
-        postDrivers(req);
+        await postDrivers(req, {
+            importType: "CSV",
+            intendedCount: jrecList.length,
+        });
     }
     async function fmtAndPostJson(rawData) {
         const bulkObject = JSON.parse(rawData);
+        const bulk = Object.values(bulkObject);
+
+        if (bulk.length === 0) {
+            pushMessage({
+                text: "No driver records found in the JSON file.",
+                type: "error",
+            });
+            return;
+        }
+
         const req = {
             orgId: $raceConfig.orgId,
             orgIz: $raceConfig.orgIz,
-            bulk: Object.values(bulkObject),
+            bulk,
         };
 
-        postDrivers(req);
+        await postDrivers(req, {
+            importType: "JSON",
+            intendedCount: bulk.length,
+        });
     }
-    async function postDrivers(data) {
+    async function postDrivers(
+        data,
+        { importType = "Driver", intendedCount } = {}
+    ) {
         log.debug("OFS postDrivers:", data);
         log.debug("addBulk begin: ", data);
         try {
@@ -128,23 +262,57 @@
                     },
                 }
             );
+            // The backend silently drops individually-invalid rows rather
+            // than erroring, so a successful HTTP response doesn't mean
+            // every row was actually added -- surface the real count
+            // instead of unconditionally reporting success.
+            const addedCount =
+                response.data && typeof response.data.count === "number"
+                    ? response.data.count
+                    : intendedCount;
+            if (intendedCount !== undefined && addedCount < intendedCount) {
+                pushMessage({
+                    text:
+                        addedCount === 0
+                            ? `${importType} upload failed: none of the ${intendedCount} row(s) were valid.`
+                            : `${importType} upload: only ${addedCount} of ${intendedCount} row(s) were added; the rest were invalid and skipped.`,
+                    type: "error",
+                });
+                return;
+            }
             pushMessage({
-                text: `Driver json uploaded.`,
+                text: `${importType} upload: ${addedCount} driver(s) added.`,
                 type: "success",
             });
             pop();
         } catch (err) {
-            log.debug("addBulk failed: " + err);
+            log.debug(`${importType} addBulk failed: ` + err);
+            pushMessage({
+                text: `${importType} upload failed: ${err.message || err}`,
+                type: "error",
+            });
         }
     }
-    let InputFileContentType = "";
+    let InputFileContentType = ""; // "csv" | "json"
+    let csvUploadSpinning = false;
+    let jsonUploadSpinning = false;
+    // "application/csv" isn't a registered MIME type (the real one is
+    // "text/csv") and browsers inconsistently honor it when filtering the
+    // file picker -- pair it with the extension so both a MIME-aware and an
+    // extension-only picker filter correctly.
+    $: fileInputAccept =
+        InputFileContentType === "csv"
+            ? "text/csv,.csv"
+            : InputFileContentType === "json"
+              ? "application/json,.json"
+              : "";
     async function uploadDriverJson() {
-        InputFileContentType = "application/json";
+        InputFileContentType = "json";
         await tick();
         document.getElementById("driverJsonFileTag").click();
     }
     async function uploadDriverCsv() {
-        InputFileContentType = "application/csv";
+        InputFileContentType = "csv";
         await tick();
         document.getElementById("driverJsonFileTag").click();
     }
@@ -157,9 +325,23 @@
             "PhoneticType",
             "PhoneticName",
             "WalkupLink",
+            "MaintainerHashes",
         ],
-        ["number", "name", "spon", "notes", "pType", "pName", "wLink"],
+        [
+            "number",
+            "name",
+            "spon",
+            "notes",
+            "pType",
+            "pName",
+            "wLink",
+            "maintainerHashes",
+        ],
     ];
+    // The only non-scalar csvXref field: a semicolon-joined cell instead of
+    // a plain column value. csvStringify/csvParse both run with
+    // `quoted: true`, so an embedded ";" round-trips fine either way.
+    const MAINTAINER_HASHES_FIELD = "maintainerHashes";
     function getCsvXrefAsMap() {
         const rc = {};
         csvXref[0].forEach((literal, idx) => {
@@ -181,7 +363,13 @@
         mapToArray.forEach((drvr) => {
             console.log(JSON.stringify(drvr));
             const row = [];
-            csvXref[1].forEach((fld) => row.push(drvr[fld]));
+            csvXref[1].forEach((fld) => {
+                if (fld === MAINTAINER_HASHES_FIELD) {
+                    row.push(Array.from(drvr[fld] || []).join(";"));
+                } else {
+                    row.push(drvr[fld]);
+                }
+            });
 
             //rows.push([drvr.number,drvr.name,drvr.spon,drvr.notes])
             rows.push(row);
@@ -256,6 +444,37 @@
                 type: "error",
             });
             //log.debug("driverAdd failed: " + err)
+        }
+    }
+
+    async function deleteParticipant() {
+        const number = driverForm.carNumber;
+        if (!window.confirm(`Delete driver [${number}]?`)) return;
+
+        deleteSpinning = true;
+        try {
+            const response = await $axios.post(
+                $raceConfig.baseUrl + "/deleteParticipant",
+                {
+                    orgId: $raceConfig.orgId,
+                    orgIz: $raceConfig.orgIz,
+                    number,
+                }
+            );
+            if (response.data.status !== "ok") {
+                throw new Error(response.data.error || "Delete failed");
+            }
+            pushMessage({
+                text: `Driver [${number}] Deleted.`,
+                type: "success",
+            });
+            pop();
+        } catch (error) {
+            deleteSpinning = false;
+            pushMessage({
+                text: "driver delete failed: " + error,
+                type: "error",
+            });
         }
     }
 
@@ -423,35 +642,60 @@
             .
         </p>
     {/if}
-    <label>
-        <a target="_blank" href="https://open.spotify.com/">
-            Walk up Spotify link
-        </a>
-
-        <input
-            id="walkUp"
-            type="text"
-            bind:value={driverForm.walkupLink}
-            placeholder="Walkup Link"
-        />
-    </label>
-    <SpinnerButton on:click={requestSpeech} spinning={speakSpinning}>
-        Speak
-    </SpinnerButton>
-    <SpinnerButton
-        disabled={submitDisabled}
-        on:click={handleSubmit}
-        spinning={submitSpinning}
-    >
-        {mode}
-    </SpinnerButton>
-    {#if driverForm.walkupLink}
-        <SpinnerButton on:click={() => (doPlay = true)}>Play</SpinnerButton>
-    {/if}
-    {#if doPlay && driverForm.walkupLink}
-        {#key driverForm.walkupLink}
-            <SpotifyEmbedded autoPlay="false" href={driverForm.walkupLink} />
-        {/key}
+    <WalkupLinkEditor
+        bind:saveValue={driverForm.walkupLink}
+        on:validitychange={(event) => (walkupLinkValid = event.detail.valid)}
+    />
+    <div class="form-actions">
+        <SpinnerButton on:click={requestSpeech} spinning={speakSpinning}>
+            Speak
+        </SpinnerButton>
+        <SpinnerButton
+            disabled={submitDisabled || !walkupLinkValid}
+            on:click={handleSubmit}
+            spinning={submitSpinning}
+        >
+            {mode}
+        </SpinnerButton>
+        {#if mode === "Update"}
+            <SpinnerButton
+                btnClass="btn-danger"
+                on:click={deleteParticipant}
+                spinning={deleteSpinning}
+            >
+                Delete
+            </SpinnerButton>
+        {/if}
+    </div>
+    {#if mode === "Update"}
+        <br />
+        <br />
+        <h4>Delegate Walkup Maintenance</h4>
+        <SpinnerButton on:click={delegateWalkup} spinning={delegateSpinning}>
+            Generate QR Code
+        </SpinnerButton>
+        {#if delegateLink}
+            <p>
+                Valid until {new Date(delegateExpiresAt).toLocaleTimeString()}.
+                <br />
+                <a href={delegateLink}>{delegateLink}</a>
+            </p>
+            <div class="delegateQr">
+                {@html delegateQrSvg}
+            </div>
+        {/if}
+        <p>{maintainerHashes.length} active maintainer(s)</p>
+        {#each maintainerHashes as hash}
+            <div>
+                {hash}
+                <SpinnerButton
+                    spinning={revokeSpinningHash === hash}
+                    on:click={() => revokeMaintainer(hash)}
+                >
+                    Revoke
+                </SpinnerButton>
+            </div>
+        {/each}
     {/if}
     {#if $canManageDriverJson}
         <br />
@@ -460,11 +704,18 @@
         <br />
         <h4>Driver CSV</h4>
         <SpinnerButton on:click={downloadDriverCsv}>Download</SpinnerButton>
-        <SpinnerButton on:click={uploadDriverCsv}>Upload</SpinnerButton>
+        <SpinnerButton on:click={uploadDriverCsv} spinning={csvUploadSpinning}>
+            Upload
+        </SpinnerButton>
         <br />
         <h4>Driver json</h4>
         <SpinnerButton on:click={downloadDriverJson}>Download</SpinnerButton>
-        <SpinnerButton on:click={uploadDriverJson}>Upload</SpinnerButton>
+        <SpinnerButton
+            on:click={uploadDriverJson}
+            spinning={jsonUploadSpinning}
+        >
+            Upload
+        </SpinnerButton>
         <br />
 
         <!-- this is unstyled file input tag, so hide it!-->
@@ -472,10 +723,26 @@
             <input
                 id="driverJsonFileTag"
                 name="driverJsonFileTag"
-                accept={InputFileContentType}
+                accept={fileInputAccept}
                 type="file"
                 on:change={(e) => onFileSelected(e)}
             />
         </div>
     {/if}
 </form>
+
+<style>
+    .form-actions {
+        display: block;
+        margin-top: 0.5rem;
+    }
+    .delegateQr {
+        width: 200px;
+        max-width: 100%;
+    }
+    .delegateQr :global(svg) {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+</style>

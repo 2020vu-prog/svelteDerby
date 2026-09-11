@@ -22,6 +22,7 @@
     import { push, pop, location } from "svelte-spa-router";
     import { getMainFull, filterMatches } from "./utils.js";
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
+    import { faMusic } from "@fortawesome/free-solid-svg-icons/faMusic";
     import Icon from "fa-svelte";
     export let params = {};
     const driverRowHeight = 82;
@@ -47,18 +48,30 @@
         selectable = params.selectable;
     }
 
+    // Matches on car number (prefix, existing behavior) or driver name
+    // (substring, case-insensitive) so the filter works whether someone
+    // types a car number or a driver's name.
+    const driverMatches = (carNumber, driver, carFilter) => {
+        if (filterMatches(carNumber, carFilter)) return true;
+        const name = driver?.name;
+        return Boolean(
+            name &&
+            carFilter &&
+            name.toLowerCase().includes(carFilter.toLowerCase())
+        );
+    };
     const getCarNumbersAsList = (driverMap, carFilter) => {
         return Object.keys(driverMap)
-            .filter((carNumber) => filterMatches(carNumber, carFilter))
+            .filter((carNumber) =>
+                driverMatches(carNumber, driverMap[carNumber], carFilter)
+            )
             .slice(0, $uiPageSize);
     };
     $: {
         log.debug(`driver virtualList: start: ${start} end: ${end}`);
     }
     $: {
-        carNumberList = getCarNumbersAsList($driverMap, $carFilter).filter(
-            (cn) => filterMatches(cn, $carFilter)
-        );
+        carNumberList = getCarNumbersAsList($driverMap, $carFilter);
     }
 
     function carAndDriverOnClick(number) {
@@ -96,7 +109,7 @@
     <h4>
         Driver
         {#if selectable}Selection{:else}List{/if}
-        <CarFilter />
+        <CarFilter allowKeyboardToggle />
     </h4>
     {#if selectable}
         <SpinnerButton on:click={finishSelect}>
@@ -130,6 +143,11 @@
                     isWinner=""
                     phaseLetter=""
                 />
+                {#if $driverMap[item] && $driverMap[item].wLink}
+                    <span title="Walkup track set" style="margin-left: 8px">
+                        <Icon icon={faMusic} />
+                    </span>
+                {/if}
 
                 {#if selectable}
                     <span style="display: inline; float: right">

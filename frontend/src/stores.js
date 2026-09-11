@@ -10,6 +10,7 @@ import { persistable } from "./storedb.js";
 import { derived, writable, readable, get as getStore } from "svelte/store";
 import { buildVersion, getSpaLocation } from "./utils.js";
 import { replace } from "svelte-spa-router";
+import { cognitoUserManager, freshCognitoUser } from "./utils/cognitoAuth.js";
 
 function parseBool(val) {
     return val === true || val === "true";
@@ -47,6 +48,9 @@ export const userId = derived(userJwtStore, ($bearer) => {
 export const userEmail = derived(userJwtStore, ($bearer) => {
     return dtoken($bearer, "email");
 });
+export const userAuthTime = derived(userJwtStore, ($bearer) => {
+    return dtoken($bearer, "auth_time");
+});
 export const userExp = derived(userJwtStore, ($bearer) => {
     log.info("userExp: begin");
     return dtoken($bearer, "exp");
@@ -79,8 +83,10 @@ export const racePhaseMap = writable({});
 export const driverMap = writable({});
 export const orgMap = writable({});
 export const carFilter = writable("");
+export const mediaFilter = writable("");
 export const nextOnBlockKey = writable("");
 export const showBottomNav = persistable("pref:showBottomNav", true);
+export const showHelpIcon = persistable("pref:showHelpIcon", true);
 export const developerMode = persistable("pref:developerMode", false);
 export const developerLogging = persistable("pref:developerLogging");
 export const enableFractionalMs = persistable("pref:enableFractionalMs", false);
@@ -130,6 +136,13 @@ export const mqttMapData = writable({}); //subscription data.  keyed by topic.
 export const mqttTimerSubscribe = writable(false);
 export const mqttTimerTopic = persistable("pref:mqttTimerTopic", "");
 export const mqttEnabled = persistable("pref:mqttEnabled", true);
+// Monotonic count of MQTT (re)connections since orgId last changed.
+// Not a user preference (hence no "pref:" prefix) -- just persisted so
+// it survives a page reload instead of resetting every mount.
+export const mqttReconnectStats = persistable("mqttReconnectStats", {
+    orgId: "",
+    count: 0,
+});
 export const timerColumnMappings = persistable("pref:timerColumnMappings", [
     { virtualLane: 1, timerName: "", timerId: "", pinName: 1 },
     { virtualLane: 2, timerName: "", timerId: "", pinName: 2 },
@@ -193,6 +206,10 @@ export function setCacheKey(newKey) {
     prefs.disableCache = newKey;
     prefStore.set(prefs);
 }
+// Single-flight guard so concurrent 401s (e.g. a burst of requests on tab
+// wake) share one forced Cognito refresh instead of each starting their own.
+let pendingCognitoRefresh = null;
+
 // Add a request interceptor
 axiosCommon.interceptors.request.use(function (config) {
     //const token = store.getState().session.token;
@@ -223,8 +240,12 @@ axiosCommon.interceptors.response.use(
         if (response.data.error) {
             log.debug("AINT 200 with error:", response);
             if (response.data.error === "Unable to determine orgIz") {
-                log.debug("AINT current page is ", getSpaLocation());
-                if ("/orgSelection" !== getSpaLocation()) {
+                const spaLocation = getSpaLocation();
+                log.debug("AINT current page is ", spaLocation);
+                if (
+                    "/orgSelection" !== spaLocation &&
+                    !spaLocation.startsWith("/as/")
+                ) {
                     pushMessage({
                         text: "Please select event",
                         type: "error",
@@ -241,46 +262,40 @@ axiosCommon.interceptors.response.use(
         return response;
     },
     async function (error) {
-        return Promise.reject(error);
-        const axErrorKey = uuidv4();
-        console.log("AC:error0", error);
         const originalRequest = error.config;
-        let refreshTokenError, res;
-        if (error.response.status === 401 && !originalRequest._retry) {
-            userJwtStore.set(""); // whatever this was didn't work.
+        if (
+            error.response?.status === 401 &&
+            originalRequest &&
+            !originalRequest._retry
+        ) {
             originalRequest._retry = true;
-            console.log("AC:refreshing");
-            pushMessage({
-                text: "Renewing Credentials...",
-                key: axErrorKey,
-            });
-            const bt = await getRR1AuthTokenSlow(originalRequest);
-            console.log("AC:refreshed");
-            console.log(`AC: New Credentials... ${bt.length}`);
-
-            if (bt && bt.length > 0) {
-                pushMessage({
-                    text: `Renewed Credentials... ${bt.length}`,
-                    key: axErrorKey,
-                    type: "success",
-                });
-            } else {
-                pushMessage({
-                    text: `Renewal Failed. ${bt.length}`,
-                    key: axErrorKey,
-                });
+            try {
+                // A 401 can happen even on a token the client still
+                // considers valid -- e.g. automaticSilentRenew hasn't run
+                // yet because the tab was suspended/throttled. Force a real
+                // signinSilent() rather than trusting the local expiry
+                // check, and de-dupe concurrent 401s onto one attempt.
+                if (!pendingCognitoRefresh) {
+                    pendingCognitoRefresh = freshCognitoUser(
+                        cognitoUserManager,
+                        true
+                    ).finally(() => {
+                        pendingCognitoRefresh = null;
+                    });
+                }
+                await pendingCognitoRefresh;
+                // userJwtStore is already updated by cognitoUserManager's
+                // addUserLoaded listener (utilHosted.js) by the time
+                // signinSilent() resolves, so the retried request picks up
+                // the fresh token via the request interceptor above.
+                return axiosCommon.request(originalRequest);
+            } catch (refreshError) {
+                log.warn(
+                    "Cognito forced refresh after 401 failed",
+                    refreshError
+                );
             }
-            const retryPromise = axiosCommon.request(originalRequest);
-            console.log("AC:retry:", retryPromise);
-            return retryPromise;
-            return [null, await axiosCommon.request(originalRequest)];
-
-            if (refreshTokenError) {
-                return Promise.reject(refreshTokenError);
-            }
-            return Promise.resolve(res);
         }
-        console.log("AC:reject");
         return Promise.reject(error);
     }
 );

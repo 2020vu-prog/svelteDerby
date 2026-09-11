@@ -12,6 +12,7 @@
     import RouteHost from "./routes/RouteHost.svelte";
     import HotLoad from "./HotLoad.svelte";
     import ElectronTimerRelay from "./ElectronTimerRelay.svelte";
+    import ElectronRacePhaseRelay from "./ElectronRacePhaseRelay.svelte";
     import {
         raceConfig,
         theme,
@@ -36,10 +37,14 @@
     import { setIdTokenFromCognitoCallback } from "./utilHosted.js";
     import { urlParseSpotify } from "./utils/spotify";
     const { canAccessRoute } = require("./routes/routeAccess.js");
-    const { getMenuItems } = require("./routes/routeRegistry.js");
+    const {
+        getMenuItems,
+        isRecognizedDeepLink,
+    } = require("./routes/routeRegistry.js");
     const { MenuSection } = require("./routes/routeDefinitions.js");
 
     var isMounted = false;
+    let initialRouteHandled = false;
     let generalMenuMap = [];
     let adminMenuMap = [];
 
@@ -141,14 +146,15 @@
     onMount(async () => {
         log.debug("mounted app");
         setEnvTitle();
-        const orgIz = $raceConfig.orgIz;
+        const initialRoute = routeRegistry.match($location);
+        const orgIz = initialRoute?.params?.orgIz || $raceConfig.orgIz;
         await setIdTokenFromCognitoCallback();
         try {
             await urlParseSpotify();
         } catch (error) {
             log.error("Spotify callback failed", error);
         }
-        await refreshOrgRoles(orgIz);
+        if (orgIz) await refreshOrgRoles(orgIz);
         let msg = "Using public access";
         if ($userEmail) {
             msg = `Logged in: [${$userEmail}]`;
@@ -168,14 +174,26 @@
         }
     }
     $: {
-        // $userEmail required so bearer token is ready when calling apis
-        replaceRouteOnInitialLoad(isMounted, $userEmail);
+        replaceRouteOnInitialLoad(isMounted, $userEmail, $location);
     }
     async function replaceRouteOnInitialLoad() {
         const tag = "replaceRouteOnInitialLoad";
         const now = new Date().getTime();
-        if (!isMounted || !$userEmail) {
+        if (initialRouteHandled) return;
+        if (!isMounted) {
             console.log(`${tag} ignoring not mounted`, isMounted);
+            return;
+        }
+        // A cold start must not replace a recognized deep link after auth or
+        // IndexedDB state becomes ready. RouteHost handles that destination's
+        // own public/authenticated permission state.
+        if (isRecognizedDeepLink(routeRegistry, $location)) {
+            initialRouteHandled = true;
+            log.debug(`${tag} honoring deep link:`, $location);
+            replace($location);
+            return;
+        }
+        if (!$userEmail) {
             console.log(`${tag} ignoring not email`, $userEmail);
             return;
         }
@@ -185,24 +203,27 @@
             );
             return;
         }
+        initialRouteHandled = true;
         const cfg = await db.EventConfig.toArray();
         log.debug(`${tag} config:`, cfg);
         log.debug(`${tag} location:`, $location, " qs:", $querystring);
 
-        if (false) {
-        } else if ($location.startsWith("/as/")) {
-            log.debug(`${tag} honoring auto select:`, $location);
-            replace($location);
-        } else if ($location.startsWith("/loginH")) {
-            log.debug(`${tag} honoring auto select:`, $location);
-            replace($location);
+        if ($initialReloadRoute) {
+            // Set by flows like DriverDelegate.svelte before sending the
+            // user through Cognito hosted login, which always redirects
+            // back to "/" -- this is the only thing that survives that
+            // round trip. Must win even with no event ever loaded yet
+            // (cfg.length === 0), since a first-time visitor delegated
+            // walkup maintenance may never have opened this app before.
+            const target = $initialReloadRoute;
+            $initialReloadRoute = ""; // consume once; persisted, so it must not replay forever
+            if (cfg.length) {
+                await reloadEvent(cfg[0]);
+            }
+            replace(target);
         } else if (cfg.length) {
             await reloadEvent(cfg[0]);
-            if ($initialReloadRoute) {
-                replace($initialReloadRoute);
-            } else {
-                replace("/RpList");
-            }
+            replace("/RpList");
         } else {
             replace("/orgSelection");
         }
@@ -338,6 +359,7 @@
 />
 
 <ElectronTimerRelay />
+<ElectronRacePhaseRelay />
 
 <!-- Top Navigation Menu -->
 <div id="topnav" class="topnav" style="z-index: 20; ">

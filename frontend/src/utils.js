@@ -18,6 +18,7 @@ import {
 } from "./stores.js";
 import { get } from "svelte/store";
 import { localConfigDb } from "./eventDb.js";
+import { escapeRegExp } from "./regexEscape.js";
 import { location as spaLocation } from "svelte-spa-router";
 
 const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
@@ -514,9 +515,10 @@ export function downloadFile(filename, text) {
 
     document.body.removeChild(element);
 }
+export { escapeRegExp };
 export const filterMatches = (carNumber, lclFilter) => {
     if (!lclFilter) return true;
-    let re = new RegExp("^" + lclFilter);
+    let re = new RegExp("^" + escapeRegExp(lclFilter));
     return String(carNumber).match(re);
 };
 export async function augmentChartState(

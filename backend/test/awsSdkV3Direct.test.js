@@ -3,7 +3,26 @@ const TmpCache = require("../modules/lambdaDerby/src/tmpCache.js");
 const AnnounceResults = require("../modules/lambdaDerby/src/AnnounceResults.js");
 const ApiRaceStanding = require("../modules/lambdaDerby/src/ApiRaceStanding.js");
 const DiscordUtils = require("../modules/lambdaDerby/src/DiscordUtils.js");
-const { getAllKeys } = require("../modules/lambdaDerby/src/S3Utils.js");
+const {
+    decodeS3EventKey,
+    encodeS3CopySource,
+    getAllKeys,
+} = require("../modules/lambdaDerby/src/S3Utils.js");
+
+test("S3 event keys are decoded before use", () => {
+    expect(decodeS3EventKey("inputs/IL%3ACHI2.99bf5-video+one.webm")).toBe(
+        "inputs/IL:CHI2.99bf5-video one.webm"
+    );
+});
+
+test("S3 copy sources encode each key segment", () => {
+    expect(
+        encodeS3CopySource(
+            "watch-bucket",
+            "inputs/IL:CHI2.99bf5-video one#1.webm"
+        )
+    ).toBe("/watch-bucket/inputs/IL%3ACHI2.99bf5-video%20one%231.webm");
+});
 
 test("DdbUtils dispatches low-level DynamoDB queries with QueryCommand", async () => {
     const ddbClient = { send: jest.fn().mockResolvedValue({ Items: [] }) };

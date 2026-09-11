@@ -5,6 +5,7 @@
     import {
         spotifyActiveDeviceId,
         spotifyLookupTrack,
+        spotifyPause,
         spotifyPlay,
     } from "./utils/spotify.js";
     import { pushMessage, spotifySelectedDeviceId } from "./stores.js";
@@ -73,7 +74,9 @@
 
     //export let autoPlay=false;
     export const ppause = async () => {
-        console.log("SpotifyAPI pause disabled");
+        const targetDeviceId = await getWalkupDevice();
+        if (destroyed || !targetDeviceId) return;
+        await spotifyPause(targetDeviceId);
     };
 
     export const pplay = async () => {

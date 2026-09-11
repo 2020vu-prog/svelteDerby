@@ -141,6 +141,8 @@ locals {
     "mqtt_ps_key"         = data.aws_ssm_parameter.iot_access_key.value,
     "DeployEnvironment"   = var.DeployEnvironment,
     "oauth"               = {}
+
+    "video_motion_detect_url" = aws_lambda_function_url.video_motion_detect.function_url,
   })
 
 }

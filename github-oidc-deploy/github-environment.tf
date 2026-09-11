@@ -53,6 +53,7 @@ resource "local_file" "github_environment_script" {
     AWS_DEPLOY_ROLE_ARN=${aws_iam_role.github_deploy.arn}
     AWS_REGION=${var.AwsRegion}
     TF_VAR_DeployEnvironment=${var.DeployEnvironment}
+    TF_VAR_AppShortName=${var.AppShortName}
     TF_VAR_ManagedRolePermissionsBoundaryArn=${local.managed_role_permissions_boundary_arn}
     TF_VAR_AcmArn=${var.AcmArn}
     TF_VAR_DnsDomain=${var.DnsDomain}
