@@ -40,9 +40,10 @@ resource "aws_cloudformation_stack" "vodTranscodeStack" {
   capabilities  = ["CAPABILITY_NAMED_IAM"]
 
   parameters = {
-    NotifcationEmail = "2020vu+videoJobDone@gmail.com"
-    LambdaSrcBucket  = aws_s3_bucket.lambdaSrcBucket.id
-    LambdaSrcKey     = aws_s3_object.vod_src_file_upload.key
+    DeployEnvironment = var.DeployEnvironment
+    NotifcationEmail  = "2020vu+videoJobDone@gmail.com"
+    LambdaSrcBucket   = aws_s3_bucket.lambdaSrcBucket.id
+    LambdaSrcKey      = aws_s3_object.vod_src_file_upload.key
   }
   depends_on = [aws_s3_object.vod_src_file_upload]
 }
