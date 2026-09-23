@@ -3,6 +3,8 @@ const HEAT_HEIGHT = 58;
 const COLUMN_GAP = 104;
 const ROW_GAP = 24;
 const MARGIN = 36;
+const POSITIONED_HEAT_WIDTH = 228;
+const POSITIONED_HEAT_PADDING = 30;
 
 function compareHeatIds(left, right) {
     return (
@@ -25,6 +27,79 @@ function placementDestination(value) {
 
     const match = value.match(/^Place\s?(\d+)$/i);
     return match ? `Place${match[1]}` : undefined;
+}
+
+function numericPosition(position) {
+    if (!position) return undefined;
+
+    const x = Number(position.left);
+    const y = Number(position.top);
+    return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : undefined;
+}
+
+function buildPositionedLayout(heats, edges, imgPositions, imgSize) {
+    const heatLayout = {};
+    const slots = {};
+    const placements = {};
+    let right = 0;
+    let bottom = 0;
+
+    for (const heat of heats) {
+        const heatSlots = ["A", "B"]
+            .map((slot) => ({
+                slot,
+                position: numericPosition(imgPositions[`${heat.id}${slot}`]),
+            }))
+            .filter(({ position }) => position);
+        if (!heatSlots.length) continue;
+
+        const left = Math.min(...heatSlots.map(({ position }) => position.x));
+        const top = Math.min(...heatSlots.map(({ position }) => position.y));
+        const slotBottom = Math.max(
+            ...heatSlots.map(({ position }) => position.y)
+        );
+
+        heatLayout[heat.id] = {
+            ...heat,
+            x: left - 10,
+            y: top - POSITIONED_HEAT_PADDING,
+            width: POSITIONED_HEAT_WIDTH,
+            height: slotBottom - top + POSITIONED_HEAT_PADDING * 2,
+        };
+        for (const { slot, position } of heatSlots) {
+            slots[`${heat.id}${slot}`] = position;
+        }
+        right = Math.max(right, left + POSITIONED_HEAT_WIDTH);
+        bottom = Math.max(bottom, slotBottom + POSITIONED_HEAT_PADDING);
+    }
+
+    for (const [id, position] of Object.entries(imgPositions)) {
+        if (!/^Place\d+$/i.test(id)) continue;
+        const point = numericPosition(position);
+        if (!point) continue;
+
+        placements[id] = {
+            id,
+            x: point.x - 10,
+            y: point.y - POSITIONED_HEAT_PADDING,
+            width: POSITIONED_HEAT_WIDTH,
+            height: POSITIONED_HEAT_PADDING * 2,
+        };
+        right = Math.max(right, point.x + POSITIONED_HEAT_WIDTH);
+        bottom = Math.max(bottom, point.y + POSITIONED_HEAT_PADDING);
+    }
+
+    return {
+        heats: heatLayout,
+        edges,
+        placements,
+        positioned: true,
+        slots,
+        viewBox: {
+            width: Math.max(Number(imgSize?.width) || 0, right + MARGIN),
+            height: Math.max(Number(imgSize?.height) || 0, bottom + MARGIN),
+        },
+    };
 }
 
 function buildColumns(heats, edges) {
@@ -56,9 +131,13 @@ function buildColumns(heats, edges) {
 
 /**
  * Converts a chart's existing progression data into a generic SVG layout.
- * The result intentionally has no dependency on the legacy PNG or imgPositions.
+ * Authored slot positions provide the primary geometry; graph layout is a fallback.
  */
-export function buildSvgChartLayout(progress = {}) {
+export function buildSvgChartLayout(
+    progress = {},
+    imgPositions = {},
+    imgSize = {}
+) {
     const heats = Object.keys(progress)
         .map((id) => ({
             id: String(id),
@@ -103,6 +182,10 @@ export function buildSvgChartLayout(progress = {}) {
                 });
             }
         }
+    }
+
+    if (Object.keys(imgPositions).length) {
+        return buildPositionedLayout(heats, edges, imgPositions, imgSize);
     }
 
     const columns = buildColumns(heats, edges);
@@ -166,6 +249,26 @@ export function svgEdgePath(edge, layout) {
         ? layout.heats[edge.toHeat]
         : layout.placements[edge.placement];
     if (!source || !target) return "";
+
+    if (layout.positioned) {
+        const sourceSlots = ["A", "B"]
+            .map((slot) => layout.slots[`${edge.fromHeat}${slot}`])
+            .filter(Boolean);
+        const targetSlot = edge.toHeat
+            ? layout.slots[`${edge.toHeat}${edge.toSlot}`]
+            : undefined;
+        if (!sourceSlots.length) return "";
+
+        const startX = source.x + source.width;
+        const startY =
+            sourceSlots.reduce((total, slot) => total + slot.y, 0) /
+            sourceSlots.length;
+        const endX = targetSlot ? targetSlot.x - 8 : target.x;
+        const endY = targetSlot ? targetSlot.y : target.y + target.height / 2;
+        const bendX = startX + (endX - startX) / 2;
+
+        return `M ${startX} ${startY} H ${bendX} V ${endY} H ${endX}`;
+    }
 
     const startX = source.x + source.width;
     const startY = source.y + source.height / 2;

@@ -61,3 +61,27 @@ test("keeps every placement row inside the SVG viewBox", () => {
 
     assert.equal(layout.viewBox.height >= placementBottom, true);
 });
+
+test("uses the chart's authored slot positions when available", () => {
+    const layout = buildSvgChartLayout(
+        {
+            "01": { WinnerDest: "02A", LoserDest: "Place2" },
+            "02": { WinnerDest: "Place1", LoserDest: "Place3" },
+        },
+        {
+            "01A": { left: 40, top: 120 },
+            "01B": { left: 40, top: 220 },
+            "02A": { left: 400, top: 170 },
+            "02B": { left: 400, top: 270 },
+            Place1: { left: 700, top: 100 },
+            Place2: { left: 700, top: 180 },
+            Place3: { left: 700, top: 260 },
+        },
+        { width: 900, height: 500 }
+    );
+
+    assert.equal(layout.positioned, true);
+    assert.deepEqual(layout.slots["02A"], { x: 400, y: 170 });
+    assert.equal(layout.viewBox.width >= 900, true);
+    assert.equal(layout.viewBox.height, 500);
+});

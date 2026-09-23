@@ -6,7 +6,11 @@
     export let slotStates = {};
 
     const dispatch = createEventDispatcher();
-    $: layout = buildSvgChartLayout(chartJson.progress);
+    $: layout = buildSvgChartLayout(
+        chartJson.progress,
+        chartJson.imgPositions,
+        chartJson.imgSize
+    );
 
     function slotState(heatId, slot) {
         return slotStates[`${heatId}${slot}`] || {};
@@ -20,6 +24,24 @@
         const element = document.createElement("div");
         element.innerHTML = value;
         return element.textContent || "";
+    }
+
+    function slotX(heat, slot) {
+        return layout.slots?.[`${heat.id}${slot}`]
+            ? layout.slots[`${heat.id}${slot}`].x - heat.x
+            : 8;
+    }
+
+    function slotY(heat, slot) {
+        return layout.slots?.[`${heat.id}${slot}`]
+            ? layout.slots[`${heat.id}${slot}`].y - heat.y + 14
+            : slot === "A"
+              ? 31
+              : 51;
+    }
+
+    function slotHitboxY(heat, slot) {
+        return slotY(heat, slot) - 18;
     }
 
     function chooseSlot(heatId, slot) {
@@ -53,9 +75,13 @@
                 <rect width={heat.width} height={heat.height} />
                 <line
                     x1="0"
-                    y1={heat.height / 2}
+                    y1={layout.positioned
+                        ? (slotY(heat, "A") + slotY(heat, "B")) / 2
+                        : heat.height / 2}
                     x2={heat.width}
-                    y2={heat.height / 2}
+                    y2={layout.positioned
+                        ? (slotY(heat, "A") + slotY(heat, "B")) / 2
+                        : heat.height / 2}
                 />
                 <g
                     class="slot-target"
@@ -68,16 +94,18 @@
                 >
                     <rect
                         class="slot-hitbox"
+                        x={layout.positioned ? slotX(heat, "A") - 4 : 0}
+                        y={layout.positioned ? slotHitboxY(heat, "A") : 0}
                         width={heat.width}
-                        height={heat.height / 2}
+                        height={layout.positioned ? 24 : heat.height / 2}
                     />
                     <text class="heat-number" x="8" y="15">Heat {heat.id}</text>
                     <text
                         class={`slot ${slotState(heat.id, "A").bracketClass || ""}`}
-                        x="8"
-                        y="31"
+                        x={slotX(heat, "A")}
+                        y={slotY(heat, "A")}
                     >
-                        A{slotText(heat.id, "A")}
+                        {slotText(heat.id, "A")}
                     </text>
                 </g>
                 <g
@@ -91,16 +119,19 @@
                 >
                     <rect
                         class="slot-hitbox"
-                        y={heat.height / 2}
+                        x={layout.positioned ? slotX(heat, "B") - 4 : 0}
+                        y={layout.positioned
+                            ? slotHitboxY(heat, "B")
+                            : heat.height / 2}
                         width={heat.width}
-                        height={heat.height / 2}
+                        height={layout.positioned ? 24 : heat.height / 2}
                     />
                     <text
                         class={`slot ${slotState(heat.id, "B").bracketClass || ""}`}
-                        x="8"
-                        y="51"
+                        x={slotX(heat, "B")}
+                        y={slotY(heat, "B")}
                     >
-                        B{slotText(heat.id, "B")}
+                        {slotText(heat.id, "B")}
                     </text>
                 </g>
             </g>
