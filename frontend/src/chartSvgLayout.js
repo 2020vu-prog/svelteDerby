@@ -73,7 +73,7 @@ export function buildSvgChartLayout(progress = {}) {
     const placements = new Set();
 
     for (const heat of heats) {
-        const detail = progress[heat.id] || progress[heat.id.padStart(2, "0")];
+        const detail = progress[heat.id];
         for (const [result, destination] of [
             ["winner", detail?.WinnerDest],
             ["loser", detail?.LoserDest],

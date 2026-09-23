@@ -17,11 +17,12 @@
     onMount(async () => {
         $spinnerPanelBusy = true;
         try {
-            bracketMeta = await db.BracketMetaData.get(params.chartId);
-            if (!bracketMeta) {
+            const metadata = await db.BracketMetaData.get(params.chartId);
+            if (!metadata) {
                 loadError = "Chart metadata was not found.";
                 return;
             }
+            bracketMeta = metadata;
 
             chartJson = await getChartJson(bracketMeta);
             if (!chartJson) {
@@ -33,7 +34,12 @@
                 Object.keys(chartJson.progress).flatMap((heatId) =>
                     ["A", "B"].map(async (slot) => [
                         `${heatId}${slot}`,
-                        await augmentChartState(chartJson, params.chartId, heatId, slot),
+                        await augmentChartState(
+                            chartJson,
+                            params.chartId,
+                            heatId,
+                            slot
+                        ),
                     ])
                 )
             );
@@ -47,7 +53,9 @@
 
     function openChartPosition(event) {
         const { heatId, slot } = event.detail;
-        push(`/ChartPosition/${params.chartId}/${heatId}?clickedOn=${heatId}${slot}`);
+        push(
+            `/ChartPosition/${params.chartId}/${heatId}?clickedOn=${heatId}${slot}`
+        );
     }
 </script>
 
@@ -63,7 +71,11 @@
 {#if loadError}
     <p>{loadError}</p>
 {:else if chartJson}
-    <BracketSvg {chartJson} {slotStates} on:slotclick={openChartPosition} />
+    <BracketSvg
+        chartJson={chartJson}
+        slotStates={slotStates}
+        on:slotclick={openChartPosition}
+    />
 {:else}
     <p>Loading chart...</p>
 {/if}
