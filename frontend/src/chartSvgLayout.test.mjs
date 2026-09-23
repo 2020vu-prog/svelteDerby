@@ -44,3 +44,20 @@ test("supports conditional chart destinations without failing the layout", () =>
         2
     );
 });
+
+test("keeps every placement row inside the SVG viewBox", () => {
+    const layout = buildSvgChartLayout({
+        "01": { WinnerDest: "Place1", LoserDest: "Place2" },
+        "02": { WinnerDest: "Place3", LoserDest: "Place4" },
+        "03": { WinnerDest: "Place5", LoserDest: "Place6" },
+        "04": { WinnerDest: "Place7", LoserDest: "Place8" },
+    });
+
+    const placementBottom = Math.max(
+        ...Object.values(layout.placements).map(
+            (placement) => placement.y + placement.height
+        )
+    );
+
+    assert.equal(layout.viewBox.height >= placementBottom, true);
+});

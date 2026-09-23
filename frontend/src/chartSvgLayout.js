@@ -147,12 +147,14 @@ export function buildSvgChartLayout(progress = {}) {
             };
         });
 
+    const totalRows = Math.max(maxRows, placements.size);
     const viewBox = {
         width:
             MARGIN * 2 +
             (placements.size ? maxColumn + 2 : maxColumn + 1) * HEAT_WIDTH +
             (placements.size ? maxColumn + 1 : maxColumn) * COLUMN_GAP,
-        height: MARGIN * 2 + maxRows * HEAT_HEIGHT + (maxRows - 1) * ROW_GAP,
+        height:
+            MARGIN * 2 + totalRows * HEAT_HEIGHT + (totalRows - 1) * ROW_GAP,
     };
 
     return { heats: heatLayout, edges, placements: placementLayout, viewBox };
