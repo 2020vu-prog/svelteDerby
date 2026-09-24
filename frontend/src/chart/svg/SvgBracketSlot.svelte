@@ -1,7 +1,7 @@
 <script>
     import { onMount } from "svelte";
-    import { doRefreshBlocks } from "./stores.js";
-    import { augmentChartState } from "./utils.js";
+    import { doRefreshBlocks } from "../../stores.js";
+    import { augmentChartState } from "../../utils.js";
 
     export let chartJson;
     export let chartId;
