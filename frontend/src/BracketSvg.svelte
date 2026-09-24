@@ -1,10 +1,10 @@
 <script>
     import { createEventDispatcher } from "svelte";
     import { buildSvgChartLayout, svgEdgePath } from "./chartSvgLayout.js";
-    import { driverMap } from "./stores.js";
+    import SvgBracketSlot from "./SvgBracketSlot.svelte";
 
     export let chartJson = { progress: {} };
-    export let slotStates = {};
+    export let chartId = "";
 
     const dispatch = createEventDispatcher();
     $: layout = buildSvgChartLayout(
@@ -13,12 +13,8 @@
         chartJson.imgSize
     );
 
-    function slotState(heatId, slot) {
-        return slotStates[`${heatId}${slot}`] || {};
-    }
-
-    function slotText(heatId, slot) {
-        const value = slotState(heatId, slot).posHtml || "";
+    function slotText(state) {
+        const value = state.posHtml || "";
         if (typeof document === "undefined")
             return value.replace(/<[^>]*>/g, "");
 
@@ -27,14 +23,13 @@
         return element.textContent || "";
     }
 
-    function slotLabel(heatId, slot) {
-        const label = slotText(heatId, slot).replace(/^\s*-\s*/, "");
-        if (label) return label;
+    function slotLabel(state) {
+        return slotText(state).replace(/^\s*-\s*/, "");
+    }
 
-        const participant = slotState(heatId, slot).participant;
-        if (!participant) return "";
-
-        return `${participant} ${$driverMap[participant]?.name || ""}`.trim();
+    function slotAriaLabel(heatId, slot, state) {
+        const label = slotLabel(state);
+        return `Heat ${heatId}, position ${slot}${label ? `, ${label}` : ""}`;
     }
 
     function slotX(heat, slot) {
@@ -70,7 +65,8 @@
 <div class="svg-bracket" aria-label="SVG bracket prototype">
     <svg
         viewBox={`0 0 ${layout.viewBox.width} ${layout.viewBox.height}`}
-        role="img"
+        role="group"
+        aria-label="SVG bracket prototype"
     >
         <defs>
             <marker
@@ -111,52 +107,78 @@
                     class="slot-target"
                     role="button"
                     tabindex="0"
-                    aria-label={`Heat ${heat.id}, position A`}
                     on:click={() => chooseSlot(heat.id, "A")}
                     on:keydown={(event) =>
                         handleSlotKeydown(event, heat.id, "A")}
                 >
-                    <rect
-                        class="slot-hitbox"
-                        x={layout.positioned ? slotX(heat, "A") - 4 : 0}
-                        y={layout.positioned ? slotHitboxY(heat, "A") : 0}
-                        width={heat.width}
-                        height={layout.positioned ? 24 : heat.height / 2}
-                    />
-                    <text class="heat-number" x="8" y="15">Heat {heat.id}</text>
-                    <text
-                        class={`slot ${slotState(heat.id, "A").bracketClass || ""}`}
-                        x={slotX(heat, "A")}
-                        y={slotY(heat, "A")}
+                    <SvgBracketSlot
+                        chartJson={chartJson}
+                        chartId={chartId}
+                        heatId={heat.id}
+                        slot="A"
+                        let:state
                     >
-                        {slotLabel(heat.id, "A")}
-                    </text>
+                        <g aria-label={slotAriaLabel(heat.id, "A", state)}>
+                            <rect
+                                class="slot-hitbox"
+                                x={layout.positioned ? slotX(heat, "A") - 4 : 0}
+                                y={layout.positioned
+                                    ? slotHitboxY(heat, "A")
+                                    : 0}
+                                width={heat.width}
+                                height={layout.positioned
+                                    ? 24
+                                    : heat.height / 2}
+                            />
+                            <text class="heat-number" x="8" y="15"
+                                >Heat {heat.id}</text
+                            >
+                            <text
+                                class={`slot ${state.bracketClass || ""}`}
+                                x={slotX(heat, "A")}
+                                y={slotY(heat, "A")}
+                            >
+                                {slotLabel(state)}
+                            </text>
+                        </g>
+                    </SvgBracketSlot>
                 </g>
                 <g
                     class="slot-target"
                     role="button"
                     tabindex="0"
-                    aria-label={`Heat ${heat.id}, position B`}
                     on:click={() => chooseSlot(heat.id, "B")}
                     on:keydown={(event) =>
                         handleSlotKeydown(event, heat.id, "B")}
                 >
-                    <rect
-                        class="slot-hitbox"
-                        x={layout.positioned ? slotX(heat, "B") - 4 : 0}
-                        y={layout.positioned
-                            ? slotHitboxY(heat, "B")
-                            : heat.height / 2}
-                        width={heat.width}
-                        height={layout.positioned ? 24 : heat.height / 2}
-                    />
-                    <text
-                        class={`slot ${slotState(heat.id, "B").bracketClass || ""}`}
-                        x={slotX(heat, "B")}
-                        y={slotY(heat, "B")}
+                    <SvgBracketSlot
+                        chartJson={chartJson}
+                        chartId={chartId}
+                        heatId={heat.id}
+                        slot="B"
+                        let:state
                     >
-                        {slotLabel(heat.id, "B")}
-                    </text>
+                        <g aria-label={slotAriaLabel(heat.id, "B", state)}>
+                            <rect
+                                class="slot-hitbox"
+                                x={layout.positioned ? slotX(heat, "B") - 4 : 0}
+                                y={layout.positioned
+                                    ? slotHitboxY(heat, "B")
+                                    : heat.height / 2}
+                                width={heat.width}
+                                height={layout.positioned
+                                    ? 24
+                                    : heat.height / 2}
+                            />
+                            <text
+                                class={`slot ${state.bracketClass || ""}`}
+                                x={slotX(heat, "B")}
+                                y={slotY(heat, "B")}
+                            >
+                                {slotLabel(state)}
+                            </text>
+                        </g>
+                    </SvgBracketSlot>
                 </g>
             </g>
         {/each}

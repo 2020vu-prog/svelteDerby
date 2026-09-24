@@ -4,49 +4,14 @@
     import { db } from "./eventDb.js";
     import BracketSvg from "./BracketSvg.svelte";
     import ChartViewToggle from "./ChartViewToggle.svelte";
-    import { getChartJson, augmentChartState } from "./utils.js";
-    import { doRefreshBlocks, driverMap, spinnerPanelBusy } from "./stores.js";
+    import { getChartJson } from "./utils.js";
+    import { spinnerPanelBusy } from "./stores.js";
 
     export let params = {};
 
     let bracketMeta = {};
     let chartJson;
-    let slotStates = {};
     let loadError = "";
-    let slotRefreshKey = "";
-    let slotLoadVersion = 0;
-
-    async function refreshSlotStates() {
-        if (!chartJson) return;
-
-        const loadVersion = ++slotLoadVersion;
-        const entries = await Promise.all(
-            Object.keys(chartJson.progress).flatMap((heatId) =>
-                ["A", "B"].map(async (slot) => [
-                    `${heatId}${slot}`,
-                    await augmentChartState(
-                        chartJson,
-                        params.chartId,
-                        heatId,
-                        slot
-                    ),
-                ])
-            )
-        );
-        if (loadVersion === slotLoadVersion) {
-            slotStates = Object.fromEntries(entries);
-        }
-    }
-
-    $: {
-        const refreshKey = chartJson
-            ? `${$doRefreshBlocks}:${Object.keys($driverMap).length}`
-            : "";
-        if (refreshKey && refreshKey !== slotRefreshKey) {
-            slotRefreshKey = refreshKey;
-            refreshSlotStates();
-        }
-    }
 
     onMount(async () => {
         $spinnerPanelBusy = true;
@@ -92,7 +57,7 @@
 {:else if chartJson}
     <BracketSvg
         chartJson={chartJson}
-        slotStates={slotStates}
+        chartId={params.chartId}
         on:slotclick={openChartPosition}
     />
 {:else}
