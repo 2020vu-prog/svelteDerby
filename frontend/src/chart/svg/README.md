@@ -22,7 +22,10 @@ switcher as the third chart view.
 ## Layout Requirements
 
 - Render every heat as an enclosing frame with A and B positions inside it.
-- Use a normalized grid so heat and placement frames never overlap.
+- Normalize columns so heat and placement frames never overlap, while retaining
+  the authored vertical row positions.
+- When authored rows are too close, reduce the uniform frame height for that
+  column instead of moving the rows.
 - All heat frames in a visual column must have identical dimensions.
 - The SVG must use a responsive `viewBox` and remain usable at narrower widths.
 - Heat-position controls are keyboard accessible and open the same

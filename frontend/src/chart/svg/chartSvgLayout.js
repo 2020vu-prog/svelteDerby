@@ -89,59 +89,91 @@ function buildPositionedLayout(heats, edges, imgPositions) {
         }
     }
 
+    const placementPoints = Object.entries(imgPositions)
+        .filter(([id]) => /^Place\d+$/i.test(id))
+        .map(([id, position]) => ({ id, position: numericPosition(position) }))
+        .filter(({ position }) => position)
+        .sort(
+            (left, right) =>
+                Number(left.id.replace(/\D/g, "")) -
+                Number(right.id.replace(/\D/g, ""))
+        );
+    const sourceRows = [
+        ...positionedHeats.map((heat) => heat.sourceY),
+        ...placementPoints.map(({ position }) => position.y),
+    ];
+    const sourceTop = sourceRows.length ? Math.min(...sourceRows) : 0;
+
+    function frameHeight(items, sourceY) {
+        const rows = items.map(sourceY).sort((left, right) => left - right);
+        const closestGap = rows
+            .slice(1)
+            .reduce(
+                (gap, row, index) => Math.min(gap, row - rows[index]),
+                Infinity
+            );
+
+        return Math.max(
+            1,
+            Math.min(POSITIONED_HEAT_HEIGHT, closestGap - POSITIONED_ROW_GAP)
+        );
+    }
+
     columns.forEach((column, columnIndex) => {
+        const height = frameHeight(column.heats, (heat) => heat.sourceY);
         column.heats
             .sort((left, right) => left.sourceY - right.sourceY)
-            .forEach((heat, rowIndex) => {
+            .forEach((heat) => {
                 const x =
                     MARGIN +
                     columnIndex *
                         (POSITIONED_HEAT_WIDTH + POSITIONED_COLUMN_GAP);
-                const y =
-                    MARGIN +
-                    rowIndex * (POSITIONED_HEAT_HEIGHT + POSITIONED_ROW_GAP);
+                const y = MARGIN + heat.sourceY - sourceTop;
 
                 heatLayout[heat.id] = {
                     ...heat,
                     x,
                     y,
                     width: POSITIONED_HEAT_WIDTH,
-                    height: POSITIONED_HEAT_HEIGHT,
+                    height,
                 };
-                slots[`${heat.id}A`] = { x: x + 8, y: y + 24 };
-                slots[`${heat.id}B`] = { x: x + 8, y: y + 48 };
+                slots[`${heat.id}A`] = {
+                    x: x + 8,
+                    y: y + Math.max(1, Math.min(24, height / 3)),
+                };
+                slots[`${heat.id}B`] = {
+                    x: x + 8,
+                    y: y + Math.max(1, Math.min(48, height - 8)),
+                };
             });
     });
 
-    const placementIds = Object.keys(imgPositions)
-        .filter((id) => /^Place\d+$/i.test(id))
-        .sort(
-            (left, right) =>
-                Number(left.replace(/\D/g, "")) -
-                Number(right.replace(/\D/g, ""))
-        );
     const placementColumn = columns.length;
-    placementIds.forEach((id, rowIndex) => {
+    const placementHeight = frameHeight(
+        placementPoints,
+        ({ position }) => position.y
+    );
+    placementPoints.forEach(({ id, position }) => {
         placements[id] = {
             id,
             x:
                 MARGIN +
                 placementColumn *
                     (POSITIONED_HEAT_WIDTH + POSITIONED_COLUMN_GAP),
-            y:
-                MARGIN +
-                rowIndex * (POSITIONED_HEAT_HEIGHT + POSITIONED_ROW_GAP),
+            y: MARGIN + position.y - sourceTop,
             width: POSITIONED_HEAT_WIDTH,
-            height: POSITIONED_HEAT_HEIGHT,
+            height: placementHeight,
         };
     });
 
-    const rows = Math.max(
-        1,
-        placementIds.length,
-        ...columns.map((column) => column.heats.length)
+    const bottom = Math.max(
+        0,
+        ...Object.values(heatLayout).map((heat) => heat.y + heat.height),
+        ...Object.values(placements).map(
+            (placement) => placement.y + placement.height
+        )
     );
-    const columnCount = columns.length + (placementIds.length ? 1 : 0);
+    const columnCount = columns.length + (placementPoints.length ? 1 : 0);
 
     return {
         heats: heatLayout,
@@ -154,10 +186,7 @@ function buildPositionedLayout(heats, edges, imgPositions) {
                 MARGIN * 2 +
                 columnCount * POSITIONED_HEAT_WIDTH +
                 Math.max(0, columnCount - 1) * POSITIONED_COLUMN_GAP,
-            height:
-                MARGIN * 2 +
-                rows * POSITIONED_HEAT_HEIGHT +
-                Math.max(0, rows - 1) * POSITIONED_ROW_GAP,
+            height: bottom + MARGIN,
         },
     };
 }

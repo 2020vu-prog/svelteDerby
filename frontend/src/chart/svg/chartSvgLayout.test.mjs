@@ -82,6 +82,7 @@ test("uses authored positions to arrange a non-overlapping SVG grid", () => {
 
     assert.equal(layout.positioned, true);
     assert.equal(layout.heats["02"].x > layout.heats["01"].x, true);
+    assert.equal(layout.heats["02"].y - layout.heats["01"].y, 50);
     assert.deepEqual(layout.slots["02A"], {
         x: layout.heats["02"].x + 8,
         y: layout.heats["02"].y + 24,
