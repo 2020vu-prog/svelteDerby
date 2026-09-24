@@ -225,10 +225,14 @@
     text {
         fill: #172126;
         font-family: Arial, sans-serif;
-        font-size: 13px;
+        font-size: 22px;
+        paint-order: stroke;
+        stroke: #f8fbfc;
+        stroke-width: 3px;
+        stroke-linejoin: round;
     }
     .heat-number {
-        font-size: 11px;
+        font-size: 14px;
         font-weight: 700;
     }
     .slot.ready {
