@@ -29,6 +29,10 @@ function placementDestination(value) {
     return match ? `Place${match[1]}` : undefined;
 }
 
+function isChampionshipResetDestination(value) {
+    return typeof value === "string" && /^\(\s*[AB]WINS\?/i.test(value);
+}
+
 function numericPosition(position) {
     if (!position) return undefined;
 
@@ -150,6 +154,7 @@ export function buildSvgChartLayout(
     );
     const edges = [];
     const placements = new Set();
+    const optionalHeatIds = new Set();
 
     for (const heat of heats) {
         const detail = progress[heat.id];
@@ -157,6 +162,14 @@ export function buildSvgChartLayout(
             ["winner", detail?.WinnerDest],
             ["loser", detail?.LoserDest],
         ]) {
+            if (isChampionshipResetDestination(destination)) {
+                for (const target of parseDestination(destination)) {
+                    const heatId =
+                        heatIdByNumber.get(target.heat) || target.heat;
+                    if (heatIds.has(heatId)) optionalHeatIds.add(heatId);
+                }
+                continue;
+            }
             const heatDestinations = parseDestination(destination)
                 .map((target) => ({
                     ...target,
@@ -182,6 +195,10 @@ export function buildSvgChartLayout(
                 });
             }
         }
+    }
+
+    for (const heat of heats) {
+        heat.isOptional = optionalHeatIds.has(heat.id);
     }
 
     if (Object.keys(imgPositions).length) {

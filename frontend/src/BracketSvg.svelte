@@ -131,7 +131,9 @@
                                     : heat.height / 2}
                             />
                             <text class="heat-number" x="8" y="15"
-                                >Heat {heat.id}</text
+                                >Heat {heat.id}{heat.isOptional
+                                    ? " (If Required)"
+                                    : ""}</text
                             >
                             <text
                                 class={`slot ${state.bracketClass || ""}`}
