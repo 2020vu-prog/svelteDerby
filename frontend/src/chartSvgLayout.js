@@ -58,6 +58,9 @@ function buildPositionedLayout(heats, edges, imgPositions, imgSize) {
         if (!heatSlots.length) continue;
 
         const left = Math.min(...heatSlots.map(({ position }) => position.x));
+        const slotRight = Math.max(
+            ...heatSlots.map(({ position }) => position.x)
+        );
         const top = Math.min(...heatSlots.map(({ position }) => position.y));
         const slotBottom = Math.max(
             ...heatSlots.map(({ position }) => position.y)
@@ -67,13 +70,13 @@ function buildPositionedLayout(heats, edges, imgPositions, imgSize) {
             ...heat,
             x: left - 10,
             y: top - POSITIONED_HEAT_PADDING,
-            width: POSITIONED_HEAT_WIDTH,
+            width: slotRight - left + POSITIONED_HEAT_WIDTH,
             height: slotBottom - top + POSITIONED_HEAT_PADDING * 2,
         };
         for (const { slot, position } of heatSlots) {
             slots[`${heat.id}${slot}`] = position;
         }
-        right = Math.max(right, left + POSITIONED_HEAT_WIDTH);
+        right = Math.max(right, slotRight + POSITIONED_HEAT_WIDTH);
         bottom = Math.max(bottom, slotBottom + POSITIONED_HEAT_PADDING);
     }
 

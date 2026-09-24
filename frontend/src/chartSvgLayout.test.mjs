@@ -86,6 +86,18 @@ test("uses the chart's authored slot positions when available", () => {
     assert.equal(layout.viewBox.height, 500);
 });
 
+test("sizes positioned heat frames around horizontally separated slots", () => {
+    const layout = buildSvgChartLayout(
+        { 14: { WinnerDest: "Place1", LoserDest: "Place2" } },
+        {
+            "14A": { left: 490, top: 555 },
+            "14B": { left: 847, top: 592 },
+        }
+    );
+
+    assert.equal(layout.heats["14"].width, 527);
+});
+
 test("renders championship reset heats as optional without normal routes", () => {
     const layout = buildSvgChartLayout({
         14: {

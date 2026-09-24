@@ -92,8 +92,8 @@
 
         {#each Object.values(layout.heats) as heat}
             <g class="heat" transform={`translate(${heat.x} ${heat.y})`}>
+                <rect width={heat.width} height={heat.height} />
                 {#if !layout.positioned}
-                    <rect width={heat.width} height={heat.height} />
                     <line
                         x1="0"
                         y1={heat.height / 2}
@@ -118,7 +118,6 @@
                     >
                         <g aria-label={slotAriaLabel(heat.id, "A", state)}>
                             <rect
-                                class:positioned-slot={layout.positioned}
                                 class="slot-hitbox"
                                 x={layout.positioned ? slotX(heat, "A") - 4 : 0}
                                 y={layout.positioned
@@ -161,7 +160,6 @@
                     >
                         <g aria-label={slotAriaLabel(heat.id, "B", state)}>
                             <rect
-                                class:positioned-slot={layout.positioned}
                                 class="slot-hitbox"
                                 x={layout.positioned ? slotX(heat, "B") - 4 : 0}
                                 y={layout.positioned
@@ -241,11 +239,6 @@
     .slot-hitbox {
         fill: transparent;
         stroke: none;
-    }
-    .slot-hitbox.positioned-slot {
-        fill: #f8fbfc;
-        stroke: #31515d;
-        stroke-width: 2;
     }
     .heat line {
         stroke: #77909a;
