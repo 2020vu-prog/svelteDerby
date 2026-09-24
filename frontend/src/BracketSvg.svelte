@@ -73,25 +73,12 @@
             >
                 <path d="M 0 0 L 8 4 L 0 8 z" class="winner-arrow" />
             </marker>
-            <marker
-                id="loser-arrow"
-                viewBox="0 0 8 8"
-                refX="7"
-                refY="4"
-                markerWidth="6"
-                markerHeight="6"
-                orient="auto"
-            >
-                <path d="M 0 0 L 8 4 L 0 8 z" class="loser-arrow" />
-            </marker>
         </defs>
         <g class="connections">
-            {#each layout.edges.filter((edge) => edge.toHeat) as edge}
+            {#each layout.edges.filter((edge) => edge.toHeat && edge.result === "winner") as edge}
                 <path
-                    class:winner={edge.result === "winner"}
-                    class:loser={edge.result === "loser"}
                     d={svgEdgePath(edge, layout)}
-                    marker-end={`url(#${edge.result}-arrow)`}
+                    marker-end="url(#winner-arrow)"
                 />
             {/each}
         </g>
@@ -195,18 +182,11 @@
         stroke-width: 2.5;
     }
 
-    .connections path.winner {
+    .connections path {
         stroke: #007782;
-    }
-    .connections path.loser {
-        stroke: #aa4b00;
-        stroke-dasharray: 8 5;
     }
     .winner-arrow {
         fill: #007782;
-    }
-    .loser-arrow {
-        fill: #aa4b00;
     }
 
     .slot-target {
