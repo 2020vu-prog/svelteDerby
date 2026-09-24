@@ -3,7 +3,7 @@ const HEAT_HEIGHT = 58;
 const COLUMN_GAP = 104;
 const ROW_GAP = 24;
 const MARGIN = 36;
-const POSITIONED_HEAT_WIDTH = 228;
+const POSITIONED_HEAT_WIDTH = 170;
 const POSITIONED_HEAT_PADDING = 30;
 
 function compareHeatIds(left, right) {

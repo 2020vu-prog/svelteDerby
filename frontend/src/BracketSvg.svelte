@@ -61,11 +61,37 @@
         viewBox={`0 0 ${layout.viewBox.width} ${layout.viewBox.height}`}
         role="img"
     >
+        <defs>
+            <marker
+                id="winner-arrow"
+                viewBox="0 0 8 8"
+                refX="7"
+                refY="4"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto"
+            >
+                <path d="M 0 0 L 8 4 L 0 8 z" class="winner-arrow" />
+            </marker>
+            <marker
+                id="loser-arrow"
+                viewBox="0 0 8 8"
+                refX="7"
+                refY="4"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto"
+            >
+                <path d="M 0 0 L 8 4 L 0 8 z" class="loser-arrow" />
+            </marker>
+        </defs>
         <g class="connections">
             {#each layout.edges as edge}
                 <path
+                    class:winner={edge.result === "winner"}
                     class:loser={edge.result === "loser"}
                     d={svgEdgePath(edge, layout)}
+                    marker-end={`url(#${edge.result}-arrow)`}
                 />
             {/each}
         </g>
@@ -166,12 +192,21 @@
 
     .connections path {
         fill: none;
-        stroke: #68767d;
-        stroke-width: 2;
+        stroke-width: 2.5;
     }
 
+    .connections path.winner {
+        stroke: #007782;
+    }
     .connections path.loser {
-        stroke-dasharray: 6 4;
+        stroke: #aa4b00;
+        stroke-dasharray: 8 5;
+    }
+    .winner-arrow {
+        fill: #007782;
+    }
+    .loser-arrow {
+        fill: #aa4b00;
     }
 
     .slot-target {
@@ -183,19 +218,19 @@
     .slot-target:focus .slot-hitbox {
         fill: #e2f1f6;
     }
-    .heat rect,
-    .placement rect {
-        fill: #fff;
-        stroke: #263238;
-        stroke-width: 1.5;
+    .heat > rect,
+    .placement > rect {
+        fill: #f8fbfc;
+        stroke: #31515d;
+        stroke-width: 2;
     }
     .slot-hitbox {
         fill: transparent;
         stroke: none;
     }
     .heat line {
-        stroke: #263238;
-        stroke-width: 1;
+        stroke: #77909a;
+        stroke-width: 1.5;
     }
     text {
         fill: #172126;
