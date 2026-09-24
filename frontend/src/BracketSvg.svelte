@@ -26,6 +26,10 @@
         return element.textContent || "";
     }
 
+    function slotLabel(heatId, slot) {
+        return slotText(heatId, slot).replace(/^\s*-\s*/, "");
+    }
+
     function slotX(heat, slot) {
         return layout.slots?.[`${heat.id}${slot}`]
             ? layout.slots[`${heat.id}${slot}`].x - heat.x
@@ -118,7 +122,7 @@
                         x={slotX(heat, "A")}
                         y={slotY(heat, "A")}
                     >
-                        {slotText(heat.id, "A")}
+                        {slotLabel(heat.id, "A")}
                     </text>
                 </g>
                 <g
@@ -144,7 +148,7 @@
                         x={slotX(heat, "B")}
                         y={slotY(heat, "B")}
                     >
-                        {slotText(heat.id, "B")}
+                        {slotLabel(heat.id, "B")}
                     </text>
                 </g>
             </g>
