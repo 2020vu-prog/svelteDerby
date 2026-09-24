@@ -86,7 +86,7 @@
             </marker>
         </defs>
         <g class="connections">
-            {#each layout.edges as edge}
+            {#each layout.edges.filter((edge) => edge.toHeat) as edge}
                 <path
                     class:winner={edge.result === "winner"}
                     class:loser={edge.result === "loser"}
