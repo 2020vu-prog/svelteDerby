@@ -4,7 +4,10 @@ const COLUMN_GAP = 104;
 const ROW_GAP = 24;
 const MARGIN = 36;
 const POSITIONED_HEAT_WIDTH = 170;
-const POSITIONED_HEAT_PADDING = 30;
+const POSITIONED_HEAT_HEIGHT = 72;
+const POSITIONED_COLUMN_GAP = 24;
+const POSITIONED_ROW_GAP = 22;
+const POSITIONED_COLUMN_TOLERANCE = 72;
 
 function compareHeatIds(left, right) {
     return (
@@ -41,60 +44,104 @@ function numericPosition(position) {
     return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : undefined;
 }
 
-function buildPositionedLayout(heats, edges, imgPositions, imgSize) {
+function buildPositionedLayout(heats, edges, imgPositions) {
     const heatLayout = {};
     const slots = {};
     const placements = {};
-    let right = 0;
-    let bottom = 0;
+    const positionedHeats = heats
+        .map((heat) => {
+            const heatSlots = ["A", "B"]
+                .map((slot) => ({
+                    slot,
+                    position: numericPosition(
+                        imgPositions[`${heat.id}${slot}`]
+                    ),
+                }))
+                .filter(({ position }) => position);
+            if (!heatSlots.length) return undefined;
 
-    for (const heat of heats) {
-        const heatSlots = ["A", "B"]
-            .map((slot) => ({
-                slot,
-                position: numericPosition(imgPositions[`${heat.id}${slot}`]),
-            }))
-            .filter(({ position }) => position);
-        if (!heatSlots.length) continue;
-
-        const left = Math.min(...heatSlots.map(({ position }) => position.x));
-        const slotRight = Math.max(
-            ...heatSlots.map(({ position }) => position.x)
+            return {
+                ...heat,
+                sourceX: Math.min(
+                    ...heatSlots.map(({ position }) => position.x)
+                ),
+                sourceY: Math.min(
+                    ...heatSlots.map(({ position }) => position.y)
+                ),
+            };
+        })
+        .filter(Boolean)
+        .sort(
+            (left, right) =>
+                left.sourceX - right.sourceX || left.sourceY - right.sourceY
         );
-        const top = Math.min(...heatSlots.map(({ position }) => position.y));
-        const slotBottom = Math.max(
-            ...heatSlots.map(({ position }) => position.y)
-        );
 
-        heatLayout[heat.id] = {
-            ...heat,
-            x: left - 10,
-            y: top - POSITIONED_HEAT_PADDING,
-            width: slotRight - left + POSITIONED_HEAT_WIDTH,
-            height: slotBottom - top + POSITIONED_HEAT_PADDING * 2,
-        };
-        for (const { slot, position } of heatSlots) {
-            slots[`${heat.id}${slot}`] = position;
+    const columns = [];
+    for (const heat of positionedHeats) {
+        const column = columns[columns.length - 1];
+        if (
+            !column ||
+            heat.sourceX - column.sourceX > POSITIONED_COLUMN_TOLERANCE
+        ) {
+            columns.push({ sourceX: heat.sourceX, heats: [heat] });
+        } else {
+            column.heats.push(heat);
         }
-        right = Math.max(right, slotRight + POSITIONED_HEAT_WIDTH);
-        bottom = Math.max(bottom, slotBottom + POSITIONED_HEAT_PADDING);
     }
 
-    for (const [id, position] of Object.entries(imgPositions)) {
-        if (!/^Place\d+$/i.test(id)) continue;
-        const point = numericPosition(position);
-        if (!point) continue;
+    columns.forEach((column, columnIndex) => {
+        column.heats
+            .sort((left, right) => left.sourceY - right.sourceY)
+            .forEach((heat, rowIndex) => {
+                const x =
+                    MARGIN +
+                    columnIndex *
+                        (POSITIONED_HEAT_WIDTH + POSITIONED_COLUMN_GAP);
+                const y =
+                    MARGIN +
+                    rowIndex * (POSITIONED_HEAT_HEIGHT + POSITIONED_ROW_GAP);
 
+                heatLayout[heat.id] = {
+                    ...heat,
+                    x,
+                    y,
+                    width: POSITIONED_HEAT_WIDTH,
+                    height: POSITIONED_HEAT_HEIGHT,
+                };
+                slots[`${heat.id}A`] = { x: x + 8, y: y + 24 };
+                slots[`${heat.id}B`] = { x: x + 8, y: y + 48 };
+            });
+    });
+
+    const placementIds = Object.keys(imgPositions)
+        .filter((id) => /^Place\d+$/i.test(id))
+        .sort(
+            (left, right) =>
+                Number(left.replace(/\D/g, "")) -
+                Number(right.replace(/\D/g, ""))
+        );
+    const placementColumn = columns.length;
+    placementIds.forEach((id, rowIndex) => {
         placements[id] = {
             id,
-            x: point.x - 10,
-            y: point.y - POSITIONED_HEAT_PADDING,
+            x:
+                MARGIN +
+                placementColumn *
+                    (POSITIONED_HEAT_WIDTH + POSITIONED_COLUMN_GAP),
+            y:
+                MARGIN +
+                rowIndex * (POSITIONED_HEAT_HEIGHT + POSITIONED_ROW_GAP),
             width: POSITIONED_HEAT_WIDTH,
-            height: POSITIONED_HEAT_PADDING * 2,
+            height: POSITIONED_HEAT_HEIGHT,
         };
-        right = Math.max(right, point.x + POSITIONED_HEAT_WIDTH);
-        bottom = Math.max(bottom, point.y + POSITIONED_HEAT_PADDING);
-    }
+    });
+
+    const rows = Math.max(
+        1,
+        placementIds.length,
+        ...columns.map((column) => column.heats.length)
+    );
+    const columnCount = columns.length + (placementIds.length ? 1 : 0);
 
     return {
         heats: heatLayout,
@@ -103,8 +150,14 @@ function buildPositionedLayout(heats, edges, imgPositions, imgSize) {
         positioned: true,
         slots,
         viewBox: {
-            width: Math.max(Number(imgSize?.width) || 0, right + MARGIN),
-            height: Math.max(Number(imgSize?.height) || 0, bottom + MARGIN),
+            width:
+                MARGIN * 2 +
+                columnCount * POSITIONED_HEAT_WIDTH +
+                Math.max(0, columnCount - 1) * POSITIONED_COLUMN_GAP,
+            height:
+                MARGIN * 2 +
+                rows * POSITIONED_HEAT_HEIGHT +
+                Math.max(0, rows - 1) * POSITIONED_ROW_GAP,
         },
     };
 }
@@ -205,7 +258,7 @@ export function buildSvgChartLayout(
     }
 
     if (Object.keys(imgPositions).length) {
-        return buildPositionedLayout(heats, edges, imgPositions, imgSize);
+        return buildPositionedLayout(heats, edges, imgPositions);
     }
 
     const columns = buildColumns(heats, edges);

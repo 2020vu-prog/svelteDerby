@@ -62,7 +62,7 @@ test("keeps every placement row inside the SVG viewBox", () => {
     assert.equal(layout.viewBox.height >= placementBottom, true);
 });
 
-test("uses the chart's authored slot positions when available", () => {
+test("uses authored positions to arrange a non-overlapping SVG grid", () => {
     const layout = buildSvgChartLayout(
         {
             "01": { WinnerDest: "02A", LoserDest: "Place2" },
@@ -81,21 +81,79 @@ test("uses the chart's authored slot positions when available", () => {
     );
 
     assert.equal(layout.positioned, true);
-    assert.deepEqual(layout.slots["02A"], { x: 400, y: 170 });
-    assert.equal(layout.viewBox.width >= 900, true);
-    assert.equal(layout.viewBox.height, 500);
+    assert.equal(layout.heats["02"].x > layout.heats["01"].x, true);
+    assert.deepEqual(layout.slots["02A"], {
+        x: layout.heats["02"].x + 8,
+        y: layout.heats["02"].y + 24,
+    });
+    assert.equal(layout.viewBox.width < 900, true);
 });
 
-test("sizes positioned heat frames around horizontally separated slots", () => {
+test("uses the same box size for all heats in an authored column", () => {
     const layout = buildSvgChartLayout(
-        { 14: { WinnerDest: "Place1", LoserDest: "Place2" } },
+        {
+            14: { WinnerDest: "Place1", LoserDest: "Place2" },
+            15: { WinnerDest: "Place1", LoserDest: "Place2" },
+        },
         {
             "14A": { left: 490, top: 555 },
             "14B": { left: 847, top: 592 },
+            "15A": { left: 510, top: 700 },
+            "15B": { left: 510, top: 730 },
         }
     );
 
-    assert.equal(layout.heats["14"].width, 527);
+    assert.equal(layout.heats["14"].width, layout.heats["15"].width);
+    assert.equal(layout.heats["14"].height, layout.heats["15"].height);
+    assert.equal(
+        layout.heats["14"].y + layout.heats["14"].height < layout.heats["15"].y,
+        true
+    );
+});
+
+test("does not overlap positioned heat or placement boxes", () => {
+    const layout = buildSvgChartLayout(
+        {
+            1: { WinnerDest: "2A", LoserDest: "Place2" },
+            2: { WinnerDest: "Place1", LoserDest: "Place3" },
+            3: { WinnerDest: "Place4", LoserDest: "Place5" },
+        },
+        {
+            "1A": { left: 20, top: 10 },
+            "1B": { left: 20, top: 20 },
+            "2A": { left: 50, top: 30 },
+            "2B": { left: 50, top: 40 },
+            "3A": { left: 350, top: 10 },
+            "3B": { left: 350, top: 20 },
+            Place1: { left: 500, top: 10 },
+            Place2: { left: 500, top: 20 },
+            Place3: { left: 500, top: 30 },
+            Place4: { left: 500, top: 40 },
+            Place5: { left: 500, top: 50 },
+        }
+    );
+    const boxes = [
+        ...Object.values(layout.heats),
+        ...Object.values(layout.placements),
+    ];
+
+    for (let index = 0; index < boxes.length; index++) {
+        for (
+            let otherIndex = index + 1;
+            otherIndex < boxes.length;
+            otherIndex++
+        ) {
+            const box = boxes[index];
+            const other = boxes[otherIndex];
+            const overlaps =
+                box.x < other.x + other.width &&
+                other.x < box.x + box.width &&
+                box.y < other.y + other.height &&
+                other.y < box.y + box.height;
+
+            assert.equal(overlaps, false);
+        }
+    }
 });
 
 test("renders championship reset heats as optional without normal routes", () => {
