@@ -594,6 +594,7 @@ export async function augmentChartState(
     return {
         bracketClass,
         posHtml,
+        participant: position?.ptcp,
         isSeed,
         rsFromDexie,
     };

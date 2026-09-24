@@ -1,6 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
     import { buildSvgChartLayout, svgEdgePath } from "./chartSvgLayout.js";
+    import { driverMap } from "./stores.js";
 
     export let chartJson = { progress: {} };
     export let slotStates = {};
@@ -27,7 +28,13 @@
     }
 
     function slotLabel(heatId, slot) {
-        return slotText(heatId, slot).replace(/^\s*-\s*/, "");
+        const label = slotText(heatId, slot).replace(/^\s*-\s*/, "");
+        if (label) return label;
+
+        const participant = slotState(heatId, slot).participant;
+        if (!participant) return "";
+
+        return `${participant} ${$driverMap[participant]?.name || ""}`.trim();
     }
 
     function slotX(heat, slot) {
