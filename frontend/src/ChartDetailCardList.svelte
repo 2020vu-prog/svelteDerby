@@ -1,8 +1,8 @@
 <script>
     import "./Charts.css";
     import log from "loglevel";
-    import { push, pop, replace } from "svelte-spa-router";
     import ChartDetailCardHeats from "./ChartDetailCardHeats.svelte";
+    import ChartHeaderViewToggle from "./chart/ChartHeaderViewToggle.svelte";
     import CarFilter from "./CarFilter.svelte";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { onMount } from "svelte";
@@ -158,9 +158,6 @@
         shown = {};
         shown[round] = !shown[round];
     }
-    function gotoChartPdf() {
-        replace(`/ChartDetail/${params.chartId}`);
-    }
     let cur = "";
     async function tabClicked(tab) {
         $carFilter = "";
@@ -172,12 +169,12 @@
 </script>
 <style>
 </style>
-<h3 style="text-align:center;z-index: 9;">
-    <span on:click={gotoChartPdf}>
-        Chart Name: {bmdFromDexie.bracketName}
-    </span>
-    <CarFilter />
-</h3>
+<ChartHeaderViewToggle
+    chartId={params.chartId}
+    activeView="cards"
+    title={`Chart Name: ${bmdFromDexie.bracketName}`}
+/>
+<CarFilter />
 
 {#each Object.keys(roundMap) as tab}
     <!--

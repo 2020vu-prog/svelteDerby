@@ -1,8 +1,8 @@
 <script>
     import log from "loglevel";
 
-    import { push, pop, replace } from "svelte-spa-router";
     import ChartHotSpot from "./ChartHotSpot.svelte";
+    import ChartHeaderViewToggle from "./chart/ChartHeaderViewToggle.svelte";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import axios from "axios";
@@ -314,9 +314,6 @@
         }
         return number + ""; // always return a string
     }
-    function gotoChartCardList() {
-        replace(`/ChartDetailCardList/${params.chartId}`);
-    }
 </script>
 
 <style>
@@ -340,9 +337,11 @@
         </script>
     {/if}
 </svelte:head>
-<h3 style="text-align:center;z-index: 9;" on:click={gotoChartCardList}>
-    Chart Name: {bmdFromDexie.bracketName}
-</h3>
+<ChartHeaderViewToggle
+    chartId={params.chartId}
+    activeView="image"
+    title={`Chart Name: ${bmdFromDexie.bracketName}`}
+/>
 <div id="top" class="container" style="position: absolute; z-index: 8;">
     {#each Object.values(brackets2.imgPositions) as bracket, pos}
         <ChartHotSpot

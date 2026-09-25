@@ -3,6 +3,7 @@ import CaptureVideo from "../CaptureVideo.svelte";
 import ChartAdd from "../ChartAdd.svelte";
 import ChartDetail from "../ChartDetail.svelte";
 import ChartDetailCardList from "../ChartDetailCardList.svelte";
+import ChartSvgPrototype from "../chart/svg/ChartSvgPrototype.svelte";
 import ChartEdit from "../ChartEdit.svelte";
 import ChartFill from "../ChartFill.svelte";
 import ChartList from "../ChartList2.svelte";
@@ -58,6 +59,7 @@ export const routeComponents = {
     ChartAdd,
     ChartDetail,
     ChartDetailCardList,
+    ChartSvgPrototype,
     ChartEdit,
     ChartFill,
     ChartList,
