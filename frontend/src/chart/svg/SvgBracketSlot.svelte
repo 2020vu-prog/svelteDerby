@@ -31,4 +31,4 @@
     $: if (mounted) refreshDataFromDb($doRefreshBlocks);
 </script>
 
-<slot {state} />
+<slot state={state} />
