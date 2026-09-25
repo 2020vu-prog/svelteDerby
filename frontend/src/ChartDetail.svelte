@@ -337,11 +337,11 @@
         </script>
     {/if}
 </svelte:head>
-<h3 style="text-align:center;z-index: 9;">
-    <ChartViewToggle chartId={params.chartId} activeView="image">
-        Chart Name: {bmdFromDexie.bracketName}
-    </ChartViewToggle>
-</h3>
+<ChartViewToggle
+    chartId={params.chartId}
+    activeView="image"
+    title={`Chart Name: ${bmdFromDexie.bracketName}`}
+/>
 <div id="top" class="container" style="position: absolute; z-index: 8;">
     {#each Object.values(brackets2.imgPositions) as bracket, pos}
         <ChartHotSpot

@@ -169,12 +169,12 @@
 </script>
 <style>
 </style>
-<h3 style="text-align:center;z-index: 9;">
-    <ChartViewToggle chartId={params.chartId} activeView="cards">
-        Chart Name: {bmdFromDexie.bracketName}
-    </ChartViewToggle>
-    <CarFilter />
-</h3>
+<ChartViewToggle
+    chartId={params.chartId}
+    activeView="cards"
+    title={`Chart Name: ${bmdFromDexie.bracketName}`}
+/>
+<CarFilter />
 
 {#each Object.keys(roundMap) as tab}
     <!--

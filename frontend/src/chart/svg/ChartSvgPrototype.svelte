@@ -43,14 +43,11 @@
     }
 </script>
 
-<h3>
-    <ChartViewToggle chartId={params.chartId} activeView="svg">
-        SVG Chart Prototype
-    </ChartViewToggle>
-</h3>
-{#if bracketMeta.bracketName}
-    <p>{bracketMeta.bracketName}</p>
-{/if}
+<ChartViewToggle
+    chartId={params.chartId}
+    activeView="svg"
+    title={`Chart Name: ${bracketMeta.bracketName || "Loading..."}`}
+/>
 
 {#if loadError}
     <p>{loadError}</p>

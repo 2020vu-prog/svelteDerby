@@ -4,6 +4,7 @@
 
     export let chartId = "";
     export let activeView = "image";
+    export let title = "";
 
     const standardViews = [
         { id: "image", label: "Image", path: "/chartDetail" },
@@ -28,18 +29,24 @@
     }
 </script>
 
-<span
-    class="chart-view-toggle"
-    role="button"
-    tabindex="0"
-    aria-label="Switch chart view"
-    on:click={goToNextView}
-    on:keydown={handleKeydown}
->
-    <slot />
-</span>
+<h3 class="chart-title">
+    <span
+        class="chart-view-toggle"
+        role="button"
+        tabindex="0"
+        aria-label="Switch chart view"
+        on:click={goToNextView}
+        on:keydown={handleKeydown}
+    >
+        {title}
+    </span>
+</h3>
 
 <style>
+    .chart-title {
+        text-align: center;
+        z-index: 9;
+    }
     .chart-view-toggle {
         cursor: pointer;
     }
