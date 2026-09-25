@@ -1,6 +1,6 @@
 <script>
     import { replace } from "svelte-spa-router";
-    import { developerMode } from "./stores.js";
+    import { developerMode } from "../stores.js";
 
     export let chartId = "";
     export let activeView = "image";
