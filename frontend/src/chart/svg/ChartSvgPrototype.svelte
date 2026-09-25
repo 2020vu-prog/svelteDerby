@@ -3,7 +3,7 @@
     import { push } from "svelte-spa-router";
     import { db } from "../../eventDb.js";
     import BracketSvg from "./BracketSvg.svelte";
-    import ChartViewToggle from "../../ChartViewToggle.svelte";
+    import ChartViewToggle from "../ChartViewToggle.svelte";
     import { getChartJson } from "../../utils.js";
     import { spinnerPanelBusy } from "../../stores.js";
 

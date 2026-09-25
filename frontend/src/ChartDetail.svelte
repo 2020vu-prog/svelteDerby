@@ -2,7 +2,7 @@
     import log from "loglevel";
 
     import ChartHotSpot from "./ChartHotSpot.svelte";
-    import ChartViewToggle from "./ChartViewToggle.svelte";
+    import ChartViewToggle from "./chart/ChartViewToggle.svelte";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import axios from "axios";

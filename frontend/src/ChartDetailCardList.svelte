@@ -2,7 +2,7 @@
     import "./Charts.css";
     import log from "loglevel";
     import ChartDetailCardHeats from "./ChartDetailCardHeats.svelte";
-    import ChartViewToggle from "./ChartViewToggle.svelte";
+    import ChartViewToggle from "./chart/ChartViewToggle.svelte";
     import CarFilter from "./CarFilter.svelte";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { onMount } from "svelte";
