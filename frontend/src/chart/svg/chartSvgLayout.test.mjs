@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const source = readFileSync(
-    new URL("./chartSvgLayout.js", import.meta.url),
+    new URL("./ChartSvgLayout.js", import.meta.url),
     "utf8"
 );
 const moduleUnderTest = await import(

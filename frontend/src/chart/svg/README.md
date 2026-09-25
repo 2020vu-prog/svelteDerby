@@ -54,7 +54,7 @@ switcher as the third chart view.
 Run the focused layout suite after changing layout or progression behavior:
 
 ```sh
-node --test frontend/src/chart/svg/chartSvgLayout.test.mjs
+node --test frontend/src/chart/svg/ChartSvgLayout.test.mjs
 ```
 
 The tests cover reusable graph layout, conditional destinations, responsive

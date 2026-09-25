@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import { buildSvgChartLayout, svgEdgePath } from "./chartSvgLayout.js";
+    import { buildSvgChartLayout, svgEdgePath } from "./ChartSvgLayout.js";
     import SvgBracketSlot from "./SvgBracketSlot.svelte";
 
     export let chartJson = { progress: {} };
