@@ -12,23 +12,30 @@
     let mounted = false;
     let loadVersion = 0;
 
-    async function refreshDataFromDb() {
+    async function refreshDataFromDb(
+        nextChartJson,
+        nextChartId,
+        nextHeatId,
+        nextSlot
+    ) {
         const version = ++loadVersion;
         const nextState = await augmentChartState(
-            chartJson,
-            chartId,
-            heatId,
-            slot
+            nextChartJson,
+            nextChartId,
+            nextHeatId,
+            nextSlot
         );
         if (version === loadVersion) state = nextState;
     }
 
-    onMount(async () => {
+    onMount(() => {
         mounted = true;
-        await refreshDataFromDb();
     });
 
-    $: if (mounted) refreshDataFromDb($doRefreshBlocks);
+    $: if (mounted) {
+        $doRefreshBlocks;
+        refreshDataFromDb(chartJson, chartId, heatId, slot);
+    }
 </script>
 
 <slot state={state} />
