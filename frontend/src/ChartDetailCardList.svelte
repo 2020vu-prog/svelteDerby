@@ -2,7 +2,7 @@
     import "./Charts.css";
     import log from "loglevel";
     import ChartDetailCardHeats from "./ChartDetailCardHeats.svelte";
-    import ChartViewToggle from "./chart/ChartViewToggle.svelte";
+    import ChartHeaderViewToggle from "./chart/ChartHeaderViewToggle.svelte";
     import CarFilter from "./CarFilter.svelte";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { onMount } from "svelte";
@@ -169,7 +169,7 @@
 </script>
 <style>
 </style>
-<ChartViewToggle
+<ChartHeaderViewToggle
     chartId={params.chartId}
     activeView="cards"
     title={`Chart Name: ${bmdFromDexie.bracketName}`}

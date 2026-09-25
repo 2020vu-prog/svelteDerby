@@ -3,7 +3,7 @@
     import { push } from "svelte-spa-router";
     import { db } from "../../eventDb.js";
     import BracketSvg from "./BracketSvg.svelte";
-    import ChartViewToggle from "../ChartViewToggle.svelte";
+    import ChartHeaderViewToggle from "../ChartHeaderViewToggle.svelte";
     import { getChartJson } from "../../utils.js";
     import { spinnerPanelBusy } from "../../stores.js";
 
@@ -43,7 +43,7 @@
     }
 </script>
 
-<ChartViewToggle
+<ChartHeaderViewToggle
     chartId={params.chartId}
     activeView="svg"
     title={`Chart Name: ${bracketMeta.bracketName || "Loading..."}`}

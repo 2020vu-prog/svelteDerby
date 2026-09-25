@@ -2,7 +2,7 @@
     import log from "loglevel";
 
     import ChartHotSpot from "./ChartHotSpot.svelte";
-    import ChartViewToggle from "./chart/ChartViewToggle.svelte";
+    import ChartHeaderViewToggle from "./chart/ChartHeaderViewToggle.svelte";
     import { onMount } from "svelte";
     import { db } from "./eventDb.js";
     import axios from "axios";
@@ -337,7 +337,7 @@
         </script>
     {/if}
 </svelte:head>
-<ChartViewToggle
+<ChartHeaderViewToggle
     chartId={params.chartId}
     activeView="image"
     title={`Chart Name: ${bmdFromDexie.bracketName}`}
