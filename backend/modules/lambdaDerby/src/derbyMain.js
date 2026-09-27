@@ -1004,7 +1004,13 @@ const registerEventWithTimer = async (timerConfigJson) => {
 const updateEventConfig = async (json) => {
     log.debug("updateEventConfig: stub: " + JSON.stringify(json));
     json.PK = "EventConfig"; // force EventConfig
-    const eventConfig = await ddbUtils.getEventConfig(json.orgId); // should resolve from cache, no IO wait.
+    const eventConfig = await ddbUtils.getEventConfigByIds({
+        orgIz: json.orgIz,
+        orgId: json.orgId,
+    });
+    if (!eventConfig) {
+        return { statusCode: 404, error: "Event config not found" };
+    }
     eventConfig.paUri = json.paUri;
     eventConfig.pendingRule = json.pendingRule;
     eventConfig.lcl1 = json.lcl1;
