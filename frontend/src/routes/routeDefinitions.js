@@ -206,7 +206,9 @@ const routeDefinitions = [
         path: "/eventAdd/:orgIz/:mode",
         component: "EventAdd",
         permission: RoutePermission.POWER,
-        permissionOrgIz: ({ params }) => params.orgIz,
+        // Update edits the selected event; its URL uses "db" as a placeholder.
+        permissionOrgIz: ({ params, raceConfig }) =>
+            params.mode === "Update" ? raceConfig?.orgIz : params.orgIz,
     },
     {
         id: "history",
