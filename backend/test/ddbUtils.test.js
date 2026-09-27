@@ -142,6 +142,9 @@ describe("DdbUtils event config lookup", () => {
     test("loads and caches event config using explicit organization and event IDs", async () => {
         const ddbUtils = buildDdbUtils();
         ddbUtils.flushEventCache();
+        ddbUtils.expandEventKey = jest.fn(() => {
+            throw new Error("Explicit IDs must not use delimiter guessing");
+        });
         const eventKey = "IL:CHI2:IL:CHI2.2323d";
         const eventConfig = {
             orgIz: "IL:CHI2",
@@ -164,6 +167,7 @@ describe("DdbUtils event config lookup", () => {
                 orgId: eventConfig.orgId,
             })
         ).toEqual(eventConfig);
+        expect(ddbUtils.expandEventKey).not.toHaveBeenCalled();
         expect(ddbUtils.ddbQueryEventConfig).toHaveBeenCalledTimes(1);
         expect(ddbUtils.ddbQueryEventConfig).toHaveBeenCalledWith(eventKey);
         ddbUtils.flushEventCache();

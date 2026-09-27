@@ -91,11 +91,17 @@ class DdbUtils {
     // with both IDs should use this API rather than infer a key from colons.
     async getEventConfigByIds({ orgIz, orgId }, eventHeaders) {
         if (!orgIz || !orgId) return undefined;
-        return this.getEventConfig(`${orgIz}:${orgId}`, eventHeaders);
+        return this.#getEventConfigByKey(`${orgIz}:${orgId}`, eventHeaders);
     }
 
     async getEventConfig(eventKey, eventHeaders) {
-        eventKey = this.expandEventKey(eventKey);
+        return this.#getEventConfigByKey(
+            this.expandEventKey(eventKey),
+            eventHeaders
+        );
+    }
+
+    async #getEventConfigByKey(eventKey, eventHeaders) {
         this.potentialFlushStaleCache(eventKey, eventHeaders);
         if (configMap[eventKey]) {
             return configMap[eventKey];
