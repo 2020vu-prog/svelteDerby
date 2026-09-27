@@ -31,6 +31,8 @@
         $raceConfig
     );
 
+    $: updateBlocked = params.mode === "Update" && !updateTargetValid;
+
     var submitDisabled = true;
     var submitSpinning = false;
 
@@ -157,58 +159,58 @@
 
 <h3>{params.mode} Event</h3>
 
-{#if params.mode === "Update" && !updateTargetValid}
+{#if updateBlocked}
     <p>Select the event and reopen its edit page to load its settings.</p>
-{:else}
-    <form>
-        <label>
-            Name:
-            <input
-                id="name"
-                type="text"
-                bind:value={orgForm.name}
-                placeholder="Event Name"
-                on:keyup={() => {
-                    syncAddButton();
-                }}
-            />
-        </label>
-        <label>
-            PA Channel:
-            <input
-                type="text"
-                bind:value={orgForm.paUri}
-                placeholder="Zello Channel"
-                on:keyup={() => {
-                    syncAddButton();
-                }}
-            />
-        </label>
-        <label>
-            LowCarLane1:
-            <input
-                type="checkbox"
-                class="big"
-                id="lcl1"
-                on:change={syncAddButton()}
-                bind:checked={orgForm.lcl1}
-            />
-        </label>
-        <label>
-            Limit Pending 1 Race At a Time:
-            <input
-                type="checkbox"
-                class="big"
-                id="pending1Race"
-                bind:checked={orgForm.pending1Race}
-            />
-        </label>
-        <SpinnerButton
-            disabled={submitDisabled}
-            on:click={handleSubmit}
-            spinning={submitSpinning}
-        >
-            {params.mode}
-        </SpinnerButton>
-    </form>
 {/if}
+
+<form hidden={updateBlocked}>
+    <label>
+        Name:
+        <input
+            id="name"
+            type="text"
+            bind:value={orgForm.name}
+            placeholder="Event Name"
+            on:keyup={() => {
+                syncAddButton();
+            }}
+        />
+    </label>
+    <label>
+        PA Channel:
+        <input
+            type="text"
+            bind:value={orgForm.paUri}
+            placeholder="Zello Channel"
+            on:keyup={() => {
+                syncAddButton();
+            }}
+        />
+    </label>
+    <label>
+        LowCarLane1:
+        <input
+            type="checkbox"
+            class="big"
+            id="lcl1"
+            on:change={syncAddButton()}
+            bind:checked={orgForm.lcl1}
+        />
+    </label>
+    <label>
+        Limit Pending 1 Race At a Time:
+        <input
+            type="checkbox"
+            class="big"
+            id="pending1Race"
+            bind:checked={orgForm.pending1Race}
+        />
+    </label>
+    <SpinnerButton
+        disabled={submitDisabled}
+        on:click={handleSubmit}
+        spinning={submitSpinning}
+    >
+        {params.mode}
+    </SpinnerButton>
+</form>
