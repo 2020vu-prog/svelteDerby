@@ -294,6 +294,29 @@ test("event add action checks roles for the selected organization", () => {
     );
 });
 
+test("event update checks power for the URL organization", () => {
+    const match = routeRegistry.match("/eventAdd/TestOrg/Update");
+    assert.equal(canAccessRoute(match, context([RoleName.POWER])), true);
+    assert.equal(
+        canAccessRoute(match, context([RoleName.REGISTRATION])),
+        false
+    );
+    assert.equal(
+        canAccessRoute(
+            routeRegistry.match("/eventAdd/OtherOrg/Update"),
+            context([RoleName.POWER])
+        ),
+        false
+    );
+    assert.equal(
+        canAccessRoute(
+            routeRegistry.match("/eventAdd/db/Update"),
+            context([RoleName.POWER])
+        ),
+        false
+    );
+});
+
 test("direct event routes check the organization in the route", () => {
     const routeContext = context([RoleName.POWER], {
         roleMap: {

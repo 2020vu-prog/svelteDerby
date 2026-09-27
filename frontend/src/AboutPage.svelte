@@ -175,7 +175,9 @@
             {#if $canEditEvent}
                 <span
                     on:click={(event) => {
-                        push(`/eventAdd/db/Update`);
+                        push(
+                            `/eventAdd/${encodeURIComponent($raceConfig.orgIz)}/Update`
+                        );
                         event.stopPropagation();
                     }}
                 >

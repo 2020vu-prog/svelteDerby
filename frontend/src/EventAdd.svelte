@@ -11,6 +11,27 @@
     export let params = {};
 
     var mounted = false;
+    let loadedEvent = null;
+
+    function matchesSelectedEvent(
+        event,
+        routeParams = params,
+        config = $raceConfig
+    ) {
+        return Boolean(
+            event?.orgId &&
+            routeParams.orgIz === event.orgIz &&
+            event.orgIz === config.orgIz &&
+            event.orgId === config.orgId
+        );
+    }
+    $: updateTargetValid = matchesSelectedEvent(
+        loadedEvent,
+        params,
+        $raceConfig
+    );
+
+    $: updateBlocked = params.mode === "Update" && !updateTargetValid;
 
     var submitDisabled = true;
     var submitSpinning = false;
@@ -23,10 +44,15 @@
     }
     async function handleSubmit() {
         syncAddButton();
+        if (
+            submitDisabled ||
+            (isUpdateMode() && !matchesSelectedEvent(loadedEvent))
+        )
+            return;
 
         log.debug("Adding:" + JSON.stringify(orgForm), " to: ", $raceConfig);
         const orgU = uuidv4().substring(0, 5);
-        const orgIz = isUpdateMode() ? $raceConfig.orgIz : params.orgIz;
+        const orgIz = params.orgIz;
         if (!orgIz) {
             log.debug("Cannot add w/o org");
             return;
@@ -34,7 +60,7 @@
         var orgId = "";
         var postPath = "";
         if (isUpdateMode()) {
-            orgId = $raceConfig.orgId;
+            orgId = loadedEvent.orgId;
             postPath = "/updateEventConfig";
         } else {
             orgId = orgIz + "." + orgU;
@@ -91,14 +117,18 @@
     async function refreshDataFromDb(trigger) {
         if (params.mode !== "Update") return;
 
-        const eventKey = $raceConfig.orgIz + ":" + $raceConfig.orgId;
+        const target = { orgIz: params.orgIz, orgId: $raceConfig.orgId };
+        if (!matchesSelectedEvent(target)) return;
+        const eventKey = target.orgIz + ":" + target.orgId;
         log.debug("eventAdd: refreshDataFromDb key:", eventKey);
 
         const eventFromDexie = await db.EventConfig.get(eventKey);
 
         log.debug("eventAdd: refreshDataFromDb gave:", eventFromDexie);
 
+        if (!eventFromDexie || !matchesSelectedEvent(target)) return;
         updateBoundVars(eventFromDexie);
+        loadedEvent = target;
     }
 
     const updateBoundVars = async (eventFromDexie) => {
@@ -112,8 +142,8 @@
     };
     function syncAddButton() {
         if (isUpdateMode()) {
-            submitDisabled = false;
-            return; //bypass update disabled logic.
+            submitDisabled = !matchesSelectedEvent(loadedEvent);
+            return;
         }
         if (!mounted) {
             return;
@@ -129,7 +159,11 @@
 
 <h3>{params.mode} Event</h3>
 
-<form>
+{#if updateBlocked}
+    <p>Select the event and reopen its edit page to load its settings.</p>
+{/if}
+
+<form hidden={updateBlocked}>
     <label>
         Name:
         <input

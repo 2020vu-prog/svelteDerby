@@ -137,3 +137,35 @@ describe("DdbUtils unmarshalling", () => {
         });
     });
 });
+
+describe("DdbUtils event config lookup", () => {
+    test("loads and caches event config using explicit organization and event IDs", async () => {
+        const ddbUtils = buildDdbUtils();
+        ddbUtils.flushEventCache();
+        const eventKey = "IL:CHI2:IL:CHI2.2323d";
+        const eventConfig = {
+            orgIz: "IL:CHI2",
+            orgId: "IL:CHI2.2323d",
+            name: "Race",
+        };
+        ddbUtils.ddbQueryEventConfig = jest
+            .fn()
+            .mockResolvedValue({ [eventKey]: eventConfig });
+
+        expect(
+            await ddbUtils.getEventConfigByIds({
+                orgIz: eventConfig.orgIz,
+                orgId: eventConfig.orgId,
+            })
+        ).toEqual(eventConfig);
+        expect(
+            await ddbUtils.getEventConfigByIds({
+                orgIz: eventConfig.orgIz,
+                orgId: eventConfig.orgId,
+            })
+        ).toEqual(eventConfig);
+        expect(ddbUtils.ddbQueryEventConfig).toHaveBeenCalledTimes(1);
+        expect(ddbUtils.ddbQueryEventConfig).toHaveBeenCalledWith(eventKey);
+        ddbUtils.flushEventCache();
+    });
+});
