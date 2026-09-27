@@ -294,8 +294,8 @@ test("event add action checks roles for the selected organization", () => {
     );
 });
 
-test("event update checks power for the selected event organization", () => {
-    const match = routeRegistry.match("/eventAdd/db/Update");
+test("event update checks power for the URL organization", () => {
+    const match = routeRegistry.match("/eventAdd/TestOrg/Update");
     assert.equal(canAccessRoute(match, context([RoleName.POWER])), true);
     assert.equal(
         canAccessRoute(match, context([RoleName.REGISTRATION])),
@@ -303,15 +303,16 @@ test("event update checks power for the selected event organization", () => {
     );
     assert.equal(
         canAccessRoute(
-            match,
-            context([], {
-                roleMap: { "user@example.com": { db: [RoleName.POWER] } },
-            })
+            routeRegistry.match("/eventAdd/OtherOrg/Update"),
+            context([RoleName.POWER])
         ),
         false
     );
     assert.equal(
-        canAccessRoute(match, context([RoleName.POWER], { raceConfig: {} })),
+        canAccessRoute(
+            routeRegistry.match("/eventAdd/db/Update"),
+            context([RoleName.POWER])
+        ),
         false
     );
 });
