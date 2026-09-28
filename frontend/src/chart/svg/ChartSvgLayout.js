@@ -527,12 +527,6 @@ export function applySvgColumnVisibility(layout, hiddenColumnIds = []) {
     const bottom = boxes.length
         ? Math.max(...boxes.map((box) => box.y + box.height))
         : layout.margin || 0;
-    const width = columns.length
-        ? (layout.margin || 0) * 2 +
-          columns.reduce((total, column) => total + column.width, 0) +
-          (columns.length - 1) * (layout.columnGap || 0)
-        : (layout.margin || 0) * 2;
-
     return layoutSvgPlacements({
         ...layout,
         heats,
@@ -543,7 +537,7 @@ export function applySvgColumnVisibility(layout, hiddenColumnIds = []) {
         viewBox: {
             width: columns.length
                 ? nextX - (layout.columnGap || 0) + (layout.margin || 0)
-                : width,
+                : (layout.margin || 0) * 2,
             height: bottom + (layout.margin || 0),
         },
     });
