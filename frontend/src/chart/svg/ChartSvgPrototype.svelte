@@ -36,9 +36,9 @@
     });
 
     function openChartPosition(event) {
-        const { heatId, slot } = event.detail;
+        const { heatId, slot, clickedOn = `${heatId}${slot}` } = event.detail;
         push(
-            `/ChartPosition/${params.chartId}/${heatId}?clickedOn=${heatId}${slot}`
+            `/ChartPosition/${params.chartId}/${heatId}?clickedOn=${clickedOn}`
         );
     }
 </script>

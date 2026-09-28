@@ -3,6 +3,7 @@
     import log from "loglevel";
     import ChartDetailCardHeats from "./ChartDetailCardHeats.svelte";
     import ChartHeaderViewToggle from "./chart/ChartHeaderViewToggle.svelte";
+    import { getBracketSummaryClass } from "./chart/ChartStatus.js";
     import CarFilter from "./CarFilter.svelte";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { onMount } from "svelte";
@@ -101,17 +102,7 @@
     let shown = {};
 
     function getRoundClass(roundRecap, round) {
-        for (const bClass of [
-            "pendingSeed",
-            "ready",
-            "phaseOneComplete",
-            "complete",
-        ]) {
-            if (roundRecap[round][bClass]) {
-                return bClass;
-            }
-        }
-        return undefined;
+        return getBracketSummaryClass(roundRecap[round]);
     }
 
     const unPos = /^ - /i;

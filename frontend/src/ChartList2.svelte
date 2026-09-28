@@ -5,7 +5,7 @@
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import { faDice } from "@fortawesome/free-solid-svg-icons/faDice";
     import Icon from "fa-svelte";
-    import { theme } from "./stores.js";
+    import { developerMode, theme } from "./stores.js";
 
     import { driverMap, doRefreshBlocks } from "./stores.js";
     import { safeGetAt, getChartJson } from "./utils.js";
@@ -18,6 +18,7 @@
     } from "./routes/frontendPermissions.js";
     import { standingsMap } from "./stores.js";
     import SpinnerButton from "./SpinnerButton.svelte";
+    import { getSelectedChartView } from "./chart/ChartViewSelection.js";
 
     const canAddChart = createPermissionStore(RoutePermission.CAN_ADD_CHART);
 
@@ -42,8 +43,8 @@
     };
 
     const navToChartDetail = (bmd) => {
-        push("/ChartDetail/" + bmd.SK);
-        //push("/ChartDetailCardList/" + bmd.SK);
+        const view = getSelectedChartView($developerMode);
+        push(`${view.path}/${bmd.SK}`);
     };
     async function getSortedBmd() {
         bmdFromDexie = await updateBmds();
