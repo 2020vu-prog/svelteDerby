@@ -278,6 +278,12 @@ const routeDefinitions = [
         permission: RoutePermission.ANONYMOUS,
     },
     {
+        id: "chartSvgPrototype",
+        path: "/chartSvgPrototype/:chartId",
+        component: "ChartSvgPrototype",
+        permission: RoutePermission.ANONYMOUS,
+    },
+    {
         id: "chartPosition",
         path: "/chartPosition/:chartId/:chartPosition",
         component: "ChartPosition",

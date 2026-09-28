@@ -540,28 +540,19 @@ export async function augmentChartState(
         posHtml = "- SEED";
     }
 
-    if (
-        heatLetter &&
-        bpFromDexie &&
-        bpFromDexie.pos &&
-        bpFromDexie.pos[heatLetter] &&
-        (bpFromDexie.pos[heatLetter].status == "bye" ||
-            bpFromDexie.pos[heatLetter].ptcp)
-    ) {
-        if (bpFromDexie.pos[heatLetter].status == "ptcp") {
-            posHtml = ` - ${
-                bpFromDexie.pos[heatLetter].ptcp
-            } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}`;
-            if (bpFromDexie.pos[heatLetter].ptcp) {
+    const position = bpFromDexie?.pos?.[heatLetter];
+    const disposition = position?.disp || position?.status;
+    if (position && (disposition == "bye" || position.ptcp)) {
+        if (disposition == "ptcp") {
+            posHtml = ` - ${position.ptcp} ${getDriverName(position.ptcp)}`;
+            if (position.ptcp) {
                 bracketClass = "havePtcp";
             }
-        } else if (bpFromDexie.pos[heatLetter].status == "bye") {
+        } else if (disposition == "bye") {
             posHtml = ` - Bye`;
             bracketClass = "haveBye";
-        } else if (bpFromDexie.pos[heatLetter].status == "forfeit") {
-            posHtml = ` - ${
-                bpFromDexie.pos[heatLetter].ptcp
-            } ${getDriverName(bpFromDexie.pos[heatLetter].ptcp)}(F)`;
+        } else if (disposition == "forfeit") {
+            posHtml = ` - ${position.ptcp} ${getDriverName(position.ptcp)}(F)`;
             bracketClass = "haveForfeit";
         }
     } else {
