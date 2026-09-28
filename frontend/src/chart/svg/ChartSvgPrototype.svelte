@@ -45,7 +45,6 @@
 
 <ChartHeaderViewToggle
     chartId={params.chartId}
-    activeView="svg"
     title={`Chart Name: ${bracketMeta.bracketName || "Loading..."}`}
 />
 

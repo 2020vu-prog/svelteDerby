@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { buildSvgChartLayout, svgEdgePath } from "./ChartSvgLayout.js";
     import SvgBracketSlot from "./SvgBracketSlot.svelte";
 
@@ -7,11 +7,17 @@
     export let chartId = "";
 
     const dispatch = createEventDispatcher();
+    const ZOOM_LEVELS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8];
+    let zoomIndex = 0;
+    let chartViewport;
+    let fittedWidth;
+    $: zoom = ZOOM_LEVELS[zoomIndex];
     $: layout = buildSvgChartLayout(
         chartJson.progress,
         chartJson.imgPositions,
         chartJson.imgSize
     );
+    $: svgWidth = fittedWidth ? `${fittedWidth * zoom}px` : "100%";
 
     function slotText(state) {
         const value = state.posHtml || "";
@@ -40,7 +46,7 @@
 
     function slotY(heat, slot) {
         return layout.slots?.[`${heat.id}${slot}`]
-            ? layout.slots[`${heat.id}${slot}`].y - heat.y + 14
+            ? layout.slots[`${heat.id}${slot}`].y - heat.y
             : slot === "A"
               ? 31
               : 51;
@@ -60,11 +66,75 @@
             chooseSlot(heatId, slot);
         }
     }
+
+    function setZoomIndex(value) {
+        zoomIndex = Math.min(
+            ZOOM_LEVELS.length - 1,
+            Math.max(0, Number(value))
+        );
+    }
+
+    onMount(() => {
+        let fittedDevicePixelRatio = window.devicePixelRatio;
+
+        function fitToViewport() {
+            fittedWidth = chartViewport.clientWidth;
+        }
+
+        function handleResize() {
+            if (window.devicePixelRatio === fittedDevicePixelRatio) {
+                fitToViewport();
+            }
+        }
+
+        fitToViewport();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    });
 </script>
 
-<div class="svg-bracket" aria-label="SVG bracket prototype">
+<div class="zoom-controls" aria-label="Chart zoom controls">
+    <button
+        type="button"
+        title="Zoom out"
+        aria-label="Zoom out"
+        disabled={zoomIndex === 0}
+        on:click={() => setZoomIndex(zoomIndex - 1)}>−</button
+    >
+    <input
+        type="range"
+        min="0"
+        max={ZOOM_LEVELS.length - 1}
+        step="1"
+        value={zoomIndex}
+        aria-label="Chart zoom"
+        on:input={(event) => setZoomIndex(event.currentTarget.value)}
+    />
+    <button
+        type="button"
+        title="Zoom in"
+        aria-label="Zoom in"
+        disabled={zoomIndex === ZOOM_LEVELS.length - 1}
+        on:click={() => setZoomIndex(zoomIndex + 1)}>+</button
+    >
+    <button
+        type="button"
+        class="zoom-value"
+        title="Fit chart to width"
+        aria-label="Fit chart to width"
+        disabled={zoomIndex === 0}
+        on:click={() => setZoomIndex(0)}>{Math.round(zoom * 100)}%</button
+    >
+</div>
+
+<div
+    class="svg-bracket"
+    aria-label="SVG bracket prototype"
+    bind:this={chartViewport}
+>
     <svg
         viewBox={`0 0 ${layout.viewBox.width} ${layout.viewBox.height}`}
+        style={`width: ${svgWidth}`}
         role="group"
         aria-label="SVG bracket prototype"
     >
@@ -196,6 +266,39 @@
 </div>
 
 <style>
+    .zoom-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        margin: 0 0 6px;
+    }
+
+    .zoom-controls button {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 8px;
+        border: 1px solid #77909a;
+        border-radius: 4px;
+        background: #fff;
+        color: #172126;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .zoom-controls button:disabled {
+        color: #7b8589;
+        cursor: default;
+    }
+
+    .zoom-controls input {
+        width: 120px;
+    }
+
+    .zoom-controls .zoom-value {
+        min-width: 58px;
+    }
+
     .svg-bracket {
         max-width: 100%;
         overflow: auto;
@@ -205,8 +308,8 @@
 
     svg {
         display: block;
-        width: 100%;
         height: auto;
+        max-width: none;
     }
 
     .connections path {
@@ -230,7 +333,11 @@
     .slot-target:focus .slot-hitbox {
         fill: #e2f1f6;
     }
-    .heat > rect,
+    .heat > rect {
+        fill: #f8fbfc;
+        stroke: #31515d;
+        stroke-width: 5;
+    }
     .placement > rect {
         fill: #f8fbfc;
         stroke: #31515d;
@@ -257,16 +364,16 @@
         font-size: 14px;
         font-weight: 700;
     }
-    .slot.ready {
-        fill: #0b6b31;
+    .heat:has(.slot.complete) > rect {
+        stroke: #5b6468;
     }
-    .slot.complete {
-        fill: #5b6468;
+    .heat:has(.slot.phaseOneComplete) > rect {
+        stroke: #806000;
     }
-    .slot.pendingSeed {
-        fill: #b3261e;
+    .heat:has(.slot.ready) > rect {
+        stroke: #0b6b31;
     }
-    .slot.phaseOneComplete {
-        fill: #806000;
+    .heat:has(.slot.pendingSeed) > rect {
+        stroke: #b3261e;
     }
 </style>

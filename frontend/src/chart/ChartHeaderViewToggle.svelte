@@ -1,23 +1,36 @@
 <script>
     import { replace } from "svelte-spa-router";
     import { developerMode } from "../stores.js";
+    import { persistable } from "../storedb.js";
 
     export let chartId = "";
-    export let activeView = "image";
     export let title = "";
 
+    const chartViewSelectionCounter = persistable(
+        "pref:chartViewSelectionCounter",
+        0
+    );
     const standardViews = [
-        { id: "image", label: "Image", path: "/chartDetail" },
-        { id: "cards", label: "Cards", path: "/chartDetailCardList" },
+        { path: "/chartDetail" },
+        { path: "/chartDetailCardList" },
     ];
 
     $: views = $developerMode
-        ? [...standardViews, { id: "svg", path: "/chartSvgPrototype" }]
+        ? [...standardViews, { path: "/chartSvgPrototype" }]
         : standardViews;
 
+    function nextViewCounter() {
+        const counter =
+            Number.isSafeInteger($chartViewSelectionCounter) &&
+            $chartViewSelectionCounter >= 0
+                ? $chartViewSelectionCounter
+                : 0;
+        $chartViewSelectionCounter = counter + 1;
+        return $chartViewSelectionCounter;
+    }
+
     function goToNextView() {
-        const activeIndex = views.findIndex((view) => view.id === activeView);
-        const nextView = views[(activeIndex + 1) % views.length];
+        const nextView = views[nextViewCounter() % views.length];
         replace(`${nextView.path}/${chartId}`);
     }
 

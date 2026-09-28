@@ -339,7 +339,6 @@
 </svelte:head>
 <ChartHeaderViewToggle
     chartId={params.chartId}
-    activeView="image"
     title={`Chart Name: ${bmdFromDexie.bracketName}`}
 />
 <div id="top" class="container" style="position: absolute; z-index: 8;">

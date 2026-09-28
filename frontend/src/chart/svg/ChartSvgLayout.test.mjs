@@ -83,11 +83,34 @@ test("uses authored positions to arrange a non-overlapping SVG grid", () => {
     assert.equal(layout.positioned, true);
     assert.equal(layout.heats["02"].x > layout.heats["01"].x, true);
     assert.equal(layout.heats["02"].y - layout.heats["01"].y, 50);
-    assert.deepEqual(layout.slots["02A"], {
-        x: layout.heats["02"].x + 8,
-        y: layout.heats["02"].y + 24,
-    });
+    assert.equal(layout.slots["02A"].x, layout.heats["02"].x + 8);
+    assert.equal(layout.slots["02A"].y > layout.heats["02"].y, true);
+    assert.equal(
+        layout.slots["02B"].y <
+            layout.heats["02"].y + layout.heats["02"].height,
+        true
+    );
     assert.equal(layout.viewBox.width < 900, true);
+});
+
+test("centers heat frames on the midpoint of their authored slots", () => {
+    const layout = buildSvgChartLayout(
+        {
+            1: { WinnerDest: "2A", LoserDest: "OUT" },
+            2: { WinnerDest: "OUT", LoserDest: "OUT" },
+        },
+        {
+            "1A": { left: 20, top: 100 },
+            "1B": { left: 20, top: 200 },
+            "2A": { left: 20, top: 220 },
+            "2B": { left: 20, top: 300 },
+        }
+    );
+    const firstCenter = layout.heats["1"].y + layout.heats["1"].height / 2;
+    const secondCenter = layout.heats["2"].y + layout.heats["2"].height / 2;
+
+    assert.equal(secondCenter - firstCenter, 110);
+    assert.equal(layout.heats["1"].height, layout.heats["2"].height);
 });
 
 test("uses the same box size for all heats in an authored column", () => {
@@ -109,6 +132,39 @@ test("uses the same box size for all heats in an authored column", () => {
     assert.equal(
         layout.heats["14"].y + layout.heats["14"].height < layout.heats["15"].y,
         true
+    );
+});
+
+test("spaces primary columns evenly without adding a placement column", () => {
+    const layout = buildSvgChartLayout(
+        {
+            1: { WinnerDest: "2A", LoserDest: "OUT" },
+            2: { WinnerDest: "3A", LoserDest: "OUT" },
+            3: { WinnerDest: "Place1", LoserDest: "Place2" },
+        },
+        {
+            "1A": { left: 20, top: 100 },
+            "1B": { left: 20, top: 160 },
+            "2A": { left: 220, top: 100 },
+            "2B": { left: 220, top: 160 },
+            "3A": { left: 520, top: 100 },
+            "3B": { left: 520, top: 160 },
+            Place1: { left: 900, top: 100 },
+            Place2: { left: 900, top: 180 },
+        }
+    );
+    const columns = [layout.heats["1"], layout.heats["2"], layout.heats["3"]];
+    const gaps = columns.slice(1).map((column, index) => {
+        const previous = columns[index];
+        return column.x - (previous.x + previous.width);
+    });
+
+    assert.deepEqual(gaps, [12, 12]);
+    assert.equal(layout.placements.Place1.x, layout.heats["1"].x);
+    assert.equal(layout.placements.Place2.x, layout.heats["2"].x);
+    assert.equal(
+        layout.viewBox.width,
+        layout.heats["3"].x + layout.heats["3"].width + 36
     );
 });
 
@@ -171,4 +227,31 @@ test("renders championship reset heats as optional without normal routes", () =>
         layout.edges.some((edge) => edge.fromHeat === "14"),
         false
     );
+});
+
+test("does not add a column for a positioned championship reset heat", () => {
+    const layout = buildSvgChartLayout(
+        {
+            13: { WinnerDest: "OUT", LoserDest: "OUT" },
+            14: {
+                WinnerDest: "(AWINS?Place1:15B)",
+                LoserDest: "(AWINS?Place2:15A)",
+            },
+            15: { WinnerDest: "Place1", LoserDest: "Place2" },
+        },
+        {
+            "13A": { left: 500, top: 100 },
+            "13B": { left: 500, top: 180 },
+            "14A": { left: 100, top: 100 },
+            "14B": { left: 100, top: 180 },
+            "15A": { left: 510, top: 300 },
+            "15B": { left: 510, top: 380 },
+            Place1: { left: 900, top: 100 },
+            Place2: { left: 900, top: 180 },
+        }
+    );
+
+    assert.equal(layout.heats["15"].x, layout.heats["14"].x);
+    assert.equal(layout.placements.Place1.x, layout.heats["14"].x);
+    assert.equal(layout.viewBox.width, 424);
 });

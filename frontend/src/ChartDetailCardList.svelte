@@ -171,7 +171,6 @@
 </style>
 <ChartHeaderViewToggle
     chartId={params.chartId}
-    activeView="cards"
     title={`Chart Name: ${bmdFromDexie.bracketName}`}
 />
 <CarFilter />
