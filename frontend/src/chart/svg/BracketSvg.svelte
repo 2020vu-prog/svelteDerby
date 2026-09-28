@@ -1,6 +1,20 @@
 <script>
     import { createEventDispatcher, onMount } from "svelte";
-    import { buildSvgChartLayout, svgEdgePath } from "./ChartSvgLayout.js";
+    import { faEye } from "@fortawesome/free-solid-svg-icons/faEye";
+    import { faEyeSlash } from "@fortawesome/free-solid-svg-icons/faEyeSlash";
+    import {
+        applySvgColumnVisibility,
+        buildSvgChartLayout,
+        layoutSvgPlacements,
+        svgEdgePath,
+        svgSlotTextLayout,
+    } from "./ChartSvgLayout.js";
+    import {
+        getBracketSummaryClass,
+        getInitialHiddenColumnIds,
+    } from "../ChartStatus.js";
+    import { doRefreshBlocks } from "../../stores.js";
+    import { augmentChartState } from "../../utils.js";
     import SvgBracketSlot from "./SvgBracketSlot.svelte";
 
     export let chartJson = { progress: {} };
@@ -11,13 +25,43 @@
     let zoomIndex = 0;
     let chartViewport;
     let fittedWidth;
+    let hiddenColumnIds = new Set();
+    let visibilityChartId = chartId;
+    let mounted = false;
+    let statusLoadVersion = 0;
+    let columnStatuses = {};
+    let placementStates = {};
+    let visibilityInitializedFor = "";
     $: zoom = ZOOM_LEVELS[zoomIndex];
-    $: layout = buildSvgChartLayout(
+    $: baseLayout = buildSvgChartLayout(
         chartJson.progress,
         chartJson.imgPositions,
         chartJson.imgSize
     );
+    $: compactLayout = applySvgColumnVisibility(baseLayout, hiddenColumnIds);
+    $: placementLabels = Object.fromEntries(
+        Object.values(baseLayout.placements).map((placement) => [
+            placement.id,
+            placementLabel(placement, placementStates[placement.id] || {}),
+        ])
+    );
+    $: layout = layoutSvgPlacements(compactLayout, placementLabels);
+    $: heatAreaBottom = Math.max(
+        34,
+        ...Object.values(layout.heats).map((heat) => heat.y + heat.height)
+    );
     $: svgWidth = fittedWidth ? `${fittedWidth * zoom}px` : "100%";
+    $: if (chartId !== visibilityChartId) {
+        visibilityChartId = chartId;
+        hiddenColumnIds = new Set();
+        columnStatuses = {};
+        visibilityInitializedFor = "";
+        placementStates = {};
+    }
+    $: if (mounted) {
+        $doRefreshBlocks;
+        refreshColumnStatuses(chartJson, chartId, baseLayout);
+    }
 
     function slotText(state) {
         const value = state.posHtml || "";
@@ -36,6 +80,18 @@
     function slotAriaLabel(heatId, slot, state) {
         const label = slotLabel(state);
         return `Heat ${heatId}, position ${slot}${label ? `, ${label}` : ""}`;
+    }
+
+    function slotLayout(heat, state) {
+        return svgSlotTextLayout(slotLabel(state), heat.width);
+    }
+
+    function driverNameX(heat, slot, state) {
+        return (
+            slotX(heat, slot) +
+            slotLayout(heat, state).carNumber.length * 22 * 0.56 +
+            6
+        );
     }
 
     function slotX(heat, slot) {
@@ -60,11 +116,43 @@
         dispatch("slotclick", { heatId, slot });
     }
 
+    function choosePlacement(position) {
+        dispatch("slotclick", {
+            heatId: position,
+            slot: position,
+            clickedOn: position,
+        });
+    }
+
     function handleSlotKeydown(event, heatId, slot) {
         if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             chooseSlot(heatId, slot);
         }
+    }
+
+    function handlePlacementKeydown(event, position) {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            choosePlacement(position);
+        }
+    }
+
+    function placementLabel(placement, state) {
+        const place = placement.id.replace(/^(Place)(\d+)$/i, "$1 $2");
+        const participant = slotLabel(state);
+        return participant ? `${place} - ${participant}` : place;
+    }
+
+    function placementTextLayout(placement, state) {
+        return svgSlotTextLayout(
+            placementLabel(placement, state),
+            placement.width
+        );
+    }
+
+    function updatePlacementState(position, state) {
+        placementStates = { ...placementStates, [position]: state };
     }
 
     function setZoomIndex(value) {
@@ -74,7 +162,56 @@
         );
     }
 
+    function setColumnHidden(columnId, hidden) {
+        const next = new Set(hiddenColumnIds);
+        if (hidden) next.add(columnId);
+        else next.delete(columnId);
+        hiddenColumnIds = next;
+    }
+
+    async function refreshColumnStatuses(
+        nextChartJson,
+        nextChartId,
+        nextLayout
+    ) {
+        const version = ++statusLoadVersion;
+        const recapByColumn = {};
+        const heatStates = {};
+
+        await Promise.all(
+            Object.values(nextLayout.heats).flatMap((heat) =>
+                ["A", "B"].map(async (slot) => {
+                    const state = await augmentChartState(
+                        nextChartJson,
+                        nextChartId,
+                        heat.id,
+                        slot
+                    );
+                    recapByColumn[heat.columnId] ||= {};
+                    recapByColumn[heat.columnId][state.bracketClass] = true;
+                    heatStates[heat.id] ||= [];
+                    heatStates[heat.id].push(state);
+                })
+            )
+        );
+        if (version !== statusLoadVersion) return;
+
+        columnStatuses = Object.fromEntries(
+            nextLayout.columns.map((column) => [
+                column.id,
+                getBracketSummaryClass(recapByColumn[column.id]),
+            ])
+        );
+        if (visibilityInitializedFor !== nextChartId) {
+            hiddenColumnIds = new Set(
+                getInitialHiddenColumnIds(nextLayout, heatStates)
+            );
+            visibilityInitializedFor = nextChartId;
+        }
+    }
+
     onMount(() => {
+        mounted = true;
         let fittedDevicePixelRatio = window.devicePixelRatio;
 
         function fitToViewport() {
@@ -151,6 +288,42 @@
                 <path d="M 0 0 L 8 4 L 0 8 z" class="winner-arrow" />
             </marker>
         </defs>
+        <g class="column-controls" aria-label="Chart columns">
+            {#each layout.columns as column}
+                {#if column.hidden}
+                    <line
+                        class="hidden-column-placeholder"
+                        x1={column.x + column.width / 2}
+                        y1="34"
+                        x2={column.x + column.width / 2}
+                        y2={heatAreaBottom}
+                    />
+                {/if}
+                <g
+                    class={`column-control ${columnStatuses[column.id] || ""}`}
+                    role="button"
+                    tabindex="0"
+                    aria-label={`${column.hidden ? "Show" : "Hide"} ${column.label}`}
+                    transform={`translate(${column.x + column.width / 2 - 14} 6)`}
+                    on:click={() => setColumnHidden(column.id, !column.hidden)}
+                    on:keydown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setColumnHidden(column.id, !column.hidden);
+                        }
+                    }}
+                >
+                    <title
+                        >{column.hidden ? "Show" : "Hide"} {column.label}</title
+                    >
+                    <rect width="28" height="24" rx="4" />
+                    <path
+                        d={(column.hidden ? faEye : faEyeSlash).icon[4]}
+                        transform="translate(6 7) scale(0.03125)"
+                    />
+                </g>
+            {/each}
+        </g>
         <g class="connections">
             {#each layout.edges.filter((edge) => edge.toHeat && edge.result === "winner") as edge}
                 <path
@@ -207,8 +380,24 @@
                                 class={`slot ${state.bracketClass || ""}`}
                                 x={slotX(heat, "A")}
                                 y={slotY(heat, "A")}
+                                style={`font-size: ${slotLayout(heat, state).labelFontSize}px`}
                             >
-                                {slotLabel(state)}
+                                {#if slotLayout(heat, state).carNumber}
+                                    <tspan
+                                        >{slotLayout(heat, state)
+                                            .carNumber}</tspan
+                                    >
+                                    {#if slotLayout(heat, state).driverName}
+                                        <tspan
+                                            x={driverNameX(heat, "A", state)}
+                                            style={`font-size: ${slotLayout(heat, state).driverFontSize}px`}
+                                            >{slotLayout(heat, state)
+                                                .driverName}</tspan
+                                        >
+                                    {/if}
+                                {:else}
+                                    {slotLayout(heat, state).label}
+                                {/if}
                             </text>
                         </g>
                     </SvgBracketSlot>
@@ -244,8 +433,24 @@
                                 class={`slot ${state.bracketClass || ""}`}
                                 x={slotX(heat, "B")}
                                 y={slotY(heat, "B")}
+                                style={`font-size: ${slotLayout(heat, state).labelFontSize}px`}
                             >
-                                {slotLabel(state)}
+                                {#if slotLayout(heat, state).carNumber}
+                                    <tspan
+                                        >{slotLayout(heat, state)
+                                            .carNumber}</tspan
+                                    >
+                                    {#if slotLayout(heat, state).driverName}
+                                        <tspan
+                                            x={driverNameX(heat, "B", state)}
+                                            style={`font-size: ${slotLayout(heat, state).driverFontSize}px`}
+                                            >{slotLayout(heat, state)
+                                                .driverName}</tspan
+                                        >
+                                    {/if}
+                                {:else}
+                                    {slotLayout(heat, state).label}
+                                {/if}
                             </text>
                         </g>
                     </SvgBracketSlot>
@@ -256,10 +461,37 @@
         {#each Object.values(layout.placements) as placement}
             <g
                 class="placement"
+                role="button"
+                tabindex="0"
+                on:click={() => choosePlacement(placement.id)}
+                on:keydown={(event) =>
+                    handlePlacementKeydown(event, placement.id)}
                 transform={`translate(${placement.x} ${placement.y})`}
             >
-                <rect width={placement.width} height={placement.height} />
-                <text x="8" y="34">{placement.id}</text>
+                <SvgBracketSlot
+                    chartJson={chartJson}
+                    chartId={chartId}
+                    position={placement.id}
+                    on:statechange={(event) =>
+                        updatePlacementState(placement.id, event.detail)}
+                    let:state
+                >
+                    <g
+                        aria-label={`${placementLabel(placement, state)} placement`}
+                    >
+                        <rect
+                            width={placement.width}
+                            height={placement.height}
+                        />
+                        <text
+                            class={`slot ${state.bracketClass || ""}`}
+                            x="8"
+                            y="30"
+                            style={`font-size: ${placementTextLayout(placement, state).labelFontSize}px`}
+                            >{placementTextLayout(placement, state).label}</text
+                        >
+                    </g>
+                </SvgBracketSlot>
             </g>
         {/each}
     </svg>
@@ -317,6 +549,71 @@
         stroke-width: 2.5;
     }
 
+    .column-control {
+        cursor: pointer;
+    }
+
+    .column-control rect {
+        fill: #fff;
+        stroke: #77909a;
+        stroke-width: 1;
+    }
+
+    .column-control path {
+        fill: #31515d;
+    }
+
+    .column-control.ready path {
+        fill: green;
+    }
+
+    .column-control.ready rect {
+        stroke: green;
+        stroke-width: 2;
+    }
+
+    .column-control.pendingSeed path {
+        fill: red;
+    }
+
+    .column-control.pendingSeed rect {
+        stroke: red;
+        stroke-width: 2;
+    }
+
+    .column-control.complete path {
+        fill: gray;
+    }
+
+    .column-control.complete rect {
+        stroke: gray;
+        stroke-width: 2;
+    }
+
+    .column-control.phaseOneComplete path {
+        fill: yellow;
+    }
+
+    .column-control.phaseOneComplete rect {
+        stroke: yellow;
+        stroke-width: 2;
+    }
+
+    .column-control:focus {
+        outline: none;
+    }
+
+    .column-control:focus rect,
+    .column-control:hover rect {
+        fill: #e2f1f6;
+    }
+
+    .hidden-column-placeholder {
+        stroke: #77909a;
+        stroke-width: 2;
+        stroke-dasharray: 5 5;
+    }
+
     .connections path {
         stroke: #007782;
     }
@@ -338,7 +635,7 @@
         stroke: #31515d;
         stroke-width: 5;
     }
-    .placement > rect {
+    .placement rect {
         fill: #f8fbfc;
         stroke: #31515d;
         stroke-width: 2;
@@ -365,15 +662,15 @@
         font-weight: 700;
     }
     .heat:has(.slot.complete) > rect {
-        stroke: #5b6468;
+        stroke: gray;
     }
     .heat:has(.slot.phaseOneComplete) > rect {
-        stroke: #806000;
+        stroke: yellow;
     }
     .heat:has(.slot.ready) > rect {
-        stroke: #0b6b31;
+        stroke: green;
     }
     .heat:has(.slot.pendingSeed) > rect {
-        stroke: #b3261e;
+        stroke: red;
     }
 </style>

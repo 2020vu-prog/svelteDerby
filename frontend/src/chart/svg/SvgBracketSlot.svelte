@@ -1,16 +1,18 @@
 <script>
-    import { onMount } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { doRefreshBlocks } from "../../stores.js";
-    import { augmentChartState } from "../../utils.js";
+    import { augmentChartState, parseHeatPos } from "../../utils.js";
 
     export let chartJson;
     export let chartId;
-    export let heatId;
-    export let slot;
+    export let heatId = "";
+    export let slot = "";
+    export let position = "";
 
     let state = {};
     let mounted = false;
     let loadVersion = 0;
+    const dispatch = createEventDispatcher();
 
     async function refreshDataFromDb(
         nextChartJson,
@@ -25,16 +27,23 @@
             nextHeatId,
             nextSlot
         );
-        if (version === loadVersion) state = nextState;
+        if (version === loadVersion) {
+            state = nextState;
+            dispatch("statechange", nextState);
+        }
     }
 
     onMount(() => {
         mounted = true;
     });
 
+    $: [resolvedHeatId, resolvedSlot] = position
+        ? parseHeatPos(position)
+        : [heatId, slot];
+
     $: if (mounted) {
         $doRefreshBlocks;
-        refreshDataFromDb(chartJson, chartId, heatId, slot);
+        refreshDataFromDb(chartJson, chartId, resolvedHeatId, resolvedSlot);
     }
 </script>
 

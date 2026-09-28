@@ -2,22 +2,15 @@
     import { replace } from "svelte-spa-router";
     import { developerMode } from "../stores.js";
     import { persistable } from "../storedb.js";
+    import {
+        CHART_VIEW_SELECTION_KEY,
+        getSelectedChartView,
+    } from "./ChartViewSelection.js";
 
     export let chartId = "";
     export let title = "";
 
-    const chartViewSelectionCounter = persistable(
-        "pref:chartViewSelectionCounter",
-        0
-    );
-    const standardViews = [
-        { path: "/chartDetail" },
-        { path: "/chartDetailCardList" },
-    ];
-
-    $: views = $developerMode
-        ? [...standardViews, { path: "/chartSvgPrototype" }]
-        : standardViews;
+    const chartViewSelectionCounter = persistable(CHART_VIEW_SELECTION_KEY, 0);
 
     function nextViewCounter() {
         const counter =
@@ -30,7 +23,8 @@
     }
 
     function goToNextView() {
-        const nextView = views[nextViewCounter() % views.length];
+        nextViewCounter();
+        const nextView = getSelectedChartView($developerMode);
         replace(`${nextView.path}/${chartId}`);
     }
 

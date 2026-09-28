@@ -12,6 +12,10 @@ selection counter. Each activation selects `counter % eligibleViews`; callers
 do not identify their current view. Enabling developer mode changes the
 eligible view count from two to three.
 
+The chart list resolves that same persisted counter when opening a chart, so
+leaving a detail page and returning through the list preserves the selected
+image, card, or SVG view.
+
 ## Runtime Data
 
 - Chart JSON supplies `progress`, `imgPositions`, and `imgSize`.
@@ -51,6 +55,19 @@ Required` heat to the same column as the championship heat that creates it,
 - Provide slider and increment controls at 100%, 125%, 150%, 175%, 200%, 250%,
   300%, 350%, 400%, 500%, 600%, 700%, and 800%. Activating the displayed
   percentage resets the chart to its 100% fit width.
+- Give every column a keyboard-accessible visibility control at its top. A
+  hidden column becomes a narrow vertical separator with its show icon centered
+  above it. Removing or restoring a column recomputes column positions, routes,
+  and view-box bounds; it must not leave an empty column-sized gap.
+- Color both show and hide icons with the same aggregate status logic used by
+  the card-list round tabs. Summarize both slots of every heat in the column
+  using this precedence: `pendingSeed`, `ready`, `phaseOneComplete`, `complete`.
+  Hidden-column status must continue to refresh.
+- Initially hide columns with no participant car numbers and columns whose
+  required heats are all complete. If that hides the entire chart, retain the
+  championship column for a completed event or the seed-bearing columns for an
+  event that has not begun. User visibility changes take precedence after this
+  one-time initialization.
 - Heat-position controls are keyboard accessible and open the same
   `ChartPosition` route as the legacy chart.
 
@@ -70,6 +87,9 @@ Required` heat to the same column as the championship heat that creates it,
   than participant text; when slot states differ, use the renderer's explicit
   border-color precedence.
 - Driver labels must remain legible and should not be obscured by route lines.
+- Keep participant car numbers at the chart's standard font size. Scale only
+  the driver-name span to the heat's remaining width so the complete label stays
+  inside the frame. Scale non-participant route labels as a whole when needed.
 - The renderer must not depend on a chart-family-specific component or a
   chart-specific coordinate override.
 - Existing PNG and card chart views remain functional and unchanged.

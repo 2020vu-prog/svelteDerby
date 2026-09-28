@@ -8,6 +8,9 @@ const POSITIONED_HEAT_HEIGHT = 72;
 const POSITIONED_COLUMN_GAP = 12;
 const POSITIONED_ROW_GAP = 22;
 const POSITIONED_COLUMN_TOLERANCE = 72;
+const HIDDEN_COLUMN_WIDTH = 16;
+const PLACEMENT_MIN_WIDTH = 300;
+const PLACEMENT_HEIGHT = 44;
 
 function compareHeatIds(left, right) {
     return (
@@ -121,6 +124,7 @@ function buildPositionedLayout(heats, edges, imgPositions) {
     }
 
     function positionHeat(heat, columnIndex, height) {
+        const columnId = `column-${columnIndex + 1}`;
         const x =
             MARGIN +
             columnIndex * (POSITIONED_HEAT_WIDTH + POSITIONED_COLUMN_GAP);
@@ -135,6 +139,7 @@ function buildPositionedLayout(heats, edges, imgPositions) {
             y,
             width: POSITIONED_HEAT_WIDTH,
             height,
+            columnId,
         };
         slots[`${heat.id}A`] = {
             x: x + 8,
@@ -173,55 +178,45 @@ function buildPositionedLayout(heats, edges, imgPositions) {
         0,
         ...Object.values(heatLayout).map((heat) => heat.y + heat.height)
     );
-    const placementHeight = 44;
-    const placementColumnCount = Math.max(1, columns.length);
-    placementPoints.forEach(({ id }, index) => {
-        const columnIndex = index % placementColumnCount;
-        const row = Math.floor(index / placementColumnCount);
+    placementPoints.forEach(({ id }) => {
         placements[id] = {
             id,
-            x:
-                MARGIN +
-                columnIndex * (POSITIONED_HEAT_WIDTH + POSITIONED_COLUMN_GAP),
-            y:
-                heatBottom +
-                POSITIONED_ROW_GAP +
-                row * (placementHeight + POSITIONED_ROW_GAP),
-            width: POSITIONED_HEAT_WIDTH,
-            height: placementHeight,
+            x: MARGIN,
+            y: 0,
+            width: PLACEMENT_MIN_WIDTH,
+            height: PLACEMENT_HEIGHT,
         };
     });
 
-    const boxes = [...Object.values(heatLayout), ...Object.values(placements)];
+    const boxes = Object.values(heatLayout);
     const top = boxes.length ? Math.min(...boxes.map((box) => box.y)) : 0;
     const offsetY = MARGIN - top;
     for (const heat of Object.values(heatLayout)) heat.y += offsetY;
     for (const slot of Object.values(slots)) slot.y += offsetY;
-    for (const placement of Object.values(placements)) placement.y += offsetY;
-
-    const bottom = Math.max(
-        0,
-        ...Object.values(heatLayout).map((heat) => heat.y + heat.height),
-        ...Object.values(placements).map(
-            (placement) => placement.y + placement.height
-        )
-    );
     const columnCount = Math.max(1, columns.length);
 
-    return {
+    return layoutSvgPlacements({
         heats: heatLayout,
         edges,
         placements,
         positioned: true,
         slots,
+        columns: columns.map((column, index) => ({
+            id: `column-${index + 1}`,
+            label: `Column ${index + 1}`,
+            x: MARGIN + index * (POSITIONED_HEAT_WIDTH + POSITIONED_COLUMN_GAP),
+            width: POSITIONED_HEAT_WIDTH,
+        })),
+        columnGap: POSITIONED_COLUMN_GAP,
+        margin: MARGIN,
         viewBox: {
             width:
                 MARGIN * 2 +
                 columnCount * POSITIONED_HEAT_WIDTH +
                 Math.max(0, columnCount - 1) * POSITIONED_COLUMN_GAP,
-            height: bottom + MARGIN,
+            height: heatBottom + offsetY + MARGIN,
         },
-    };
+    });
 }
 
 function buildColumns(heats, edges) {
@@ -357,6 +352,7 @@ export function buildSvgChartLayout(
                 y: MARGIN + row * (HEAT_HEIGHT + ROW_GAP),
                 width: HEAT_WIDTH,
                 height: HEAT_HEIGHT,
+                columnId: `column-${column + 1}`,
             };
         });
     }
@@ -371,6 +367,7 @@ export function buildSvgChartLayout(
             y: auxiliaryTop + index * (HEAT_HEIGHT + ROW_GAP),
             width: HEAT_WIDTH,
             height: HEAT_HEIGHT,
+            columnId: sourceHeat?.columnId || `column-${maxColumn + 1}`,
         };
     });
     if (optionalHeats.length) {
@@ -384,15 +381,13 @@ export function buildSvgChartLayout(
                 Number(left.replace("Place", "")) -
                 Number(right.replace("Place", ""))
         )
-        .forEach((id, index) => {
-            const column = index % (maxColumn + 1);
-            const row = Math.floor(index / (maxColumn + 1));
+        .forEach((id) => {
             placementLayout[id] = {
                 id,
-                x: MARGIN + column * (HEAT_WIDTH + COLUMN_GAP),
-                y: auxiliaryTop + row * (HEAT_HEIGHT + ROW_GAP),
-                width: HEAT_WIDTH,
-                height: HEAT_HEIGHT,
+                x: MARGIN,
+                y: 0,
+                width: PLACEMENT_MIN_WIDTH,
+                height: PLACEMENT_HEIGHT,
             };
         });
 
@@ -409,7 +404,179 @@ export function buildSvgChartLayout(
         height: bottom + MARGIN,
     };
 
-    return { heats: heatLayout, edges, placements: placementLayout, viewBox };
+    return layoutSvgPlacements({
+        heats: heatLayout,
+        edges,
+        placements: placementLayout,
+        columns: Array.from({ length: maxColumn + 1 }, (_, index) => ({
+            id: `column-${index + 1}`,
+            label: `Column ${index + 1}`,
+            x: MARGIN + index * (HEAT_WIDTH + COLUMN_GAP),
+            width: HEAT_WIDTH,
+        })),
+        columnGap: COLUMN_GAP,
+        margin: MARGIN,
+        viewBox,
+    });
+}
+
+export function layoutSvgPlacements(layout, labels = {}) {
+    const margin = layout.margin || 0;
+    const placements = Object.values(layout.placements || {}).sort(
+        (left, right) =>
+            Number(left.id.replace(/\D/g, "")) -
+            Number(right.id.replace(/\D/g, ""))
+    );
+    const width = Math.max(
+        PLACEMENT_MIN_WIDTH,
+        ...placements.map((placement) => {
+            const label = labels[placement.id] || placement.id;
+            return Math.ceil(String(label).length * 22 * 0.56 + 16);
+        })
+    );
+    const heatBottom = Math.max(
+        margin,
+        ...Object.values(layout.heats || {}).map((heat) => heat.y + heat.height)
+    );
+    const placementLayout = Object.fromEntries(
+        placements.map((placement, index) => [
+            placement.id,
+            {
+                ...placement,
+                x: margin,
+                y: heatBottom + ROW_GAP + index * (PLACEMENT_HEIGHT + ROW_GAP),
+                width,
+                height: PLACEMENT_HEIGHT,
+            },
+        ])
+    );
+    const placementBottom = placements.length
+        ? Math.max(
+              ...Object.values(placementLayout).map(
+                  (placement) => placement.y + placement.height
+              )
+          )
+        : heatBottom;
+
+    return {
+        ...layout,
+        placements: placementLayout,
+        viewBox: {
+            width: Math.max(layout.viewBox.width, margin * 2 + width),
+            height: placementBottom + margin,
+        },
+    };
+}
+
+export function applySvgColumnVisibility(layout, hiddenColumnIds = []) {
+    const hidden = new Set(hiddenColumnIds);
+    let nextX = layout.margin || 0;
+    const columns = (layout.columns || []).map((column) => {
+        const isHidden = hidden.has(column.id);
+        const displayWidth = isHidden ? HIDDEN_COLUMN_WIDTH : column.width;
+        const displayedColumn = {
+            ...column,
+            x: nextX,
+            width: displayWidth,
+            contentWidth: column.width,
+            hidden: isHidden,
+        };
+        nextX += displayWidth + (layout.columnGap || 0);
+        return displayedColumn;
+    });
+    const columnX = new Map(
+        columns
+            .filter((column) => !column.hidden)
+            .map((column) => [column.id, column.x])
+    );
+    const moveBox = (box) => {
+        const x = columnX.get(box.columnId);
+        return x === undefined ? undefined : { ...box, x };
+    };
+    const heats = Object.fromEntries(
+        Object.entries(layout.heats)
+            .map(([id, heat]) => [id, moveBox(heat)])
+            .filter(([, heat]) => heat)
+    );
+    const placements = layout.placements;
+    const slots = layout.slots
+        ? Object.fromEntries(
+              Object.entries(layout.slots)
+                  .map(([id, slot]) => {
+                      const heat = heats[id.slice(0, -1)];
+                      const originalHeat = layout.heats[id.slice(0, -1)];
+                      return heat && originalHeat
+                          ? [
+                                id,
+                                {
+                                    ...slot,
+                                    x: slot.x + heat.x - originalHeat.x,
+                                },
+                            ]
+                          : undefined;
+                  })
+                  .filter(Boolean)
+          )
+        : undefined;
+    const edges = layout.edges.filter((edge) => {
+        const sourceVisible = Boolean(heats[edge.fromHeat]);
+        const targetVisible = edge.toHeat ? Boolean(heats[edge.toHeat]) : true;
+        return sourceVisible && targetVisible;
+    });
+    const boxes = Object.values(heats);
+    const bottom = boxes.length
+        ? Math.max(...boxes.map((box) => box.y + box.height))
+        : layout.margin || 0;
+    return layoutSvgPlacements({
+        ...layout,
+        heats,
+        placements,
+        slots,
+        edges,
+        columns,
+        viewBox: {
+            width: columns.length
+                ? nextX - (layout.columnGap || 0) + (layout.margin || 0)
+                : (layout.margin || 0) * 2,
+            height: bottom + (layout.margin || 0),
+        },
+    });
+}
+
+export function svgSlotFontSize(label, width, baseSize = 22) {
+    const availableWidth = Math.max(1, width - 16);
+    const estimatedWidth = String(label || "").length * baseSize * 0.56;
+    return estimatedWidth > availableWidth
+        ? (baseSize * availableWidth) / estimatedWidth
+        : baseSize;
+}
+
+export function svgSlotTextLayout(label, width, baseSize = 22) {
+    const value = String(label || "");
+    const participant = value.match(/^(\d+)(?:\s+(.*))?$/);
+    if (!participant) {
+        return {
+            label: value,
+            labelFontSize: svgSlotFontSize(value, width, baseSize),
+        };
+    }
+
+    const carNumber = participant[1];
+    const driverName = participant[2] || "";
+    const availableWidth = Math.max(
+        1,
+        width - 16 - carNumber.length * baseSize * 0.56 - (driverName ? 6 : 0)
+    );
+    return {
+        carNumber,
+        driverName,
+        labelFontSize: baseSize,
+        driverFontSize: svgSlotFontSize(
+            driverName,
+            availableWidth + 16,
+            baseSize
+        ),
+    };
 }
 
 export function svgEdgePath(edge, layout) {
