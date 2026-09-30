@@ -1,13 +1,13 @@
-#Round,HeatNumber,WinnerDest,LoserDest
-Left1,01,03A,07A
-Left1,02,04A,07B
-Left2,03,05A,06A
-Left2,04,05B,06B
-Left3,05,Place1,Place2
+#Round,HeatNumber,WinnerDest,LoserDest,Annotation
+Left1,01,03A,07A,
+Left1,02,04A,07B,
+Left2,03,05A,06A,
+Left2,04,05B,06B,
+Left3,05,Place1,Place2,Championship
 
 
-Runoff,07,Place5,Place6
-Runoff,06,Place3,Place4
+Runoff,07,Place5,Place6,Runoff 5/6
+Runoff,06,Place3,Place4,Runoff 3/4
 
 
 

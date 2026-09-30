@@ -1,46 +1,46 @@
-#Round,HeatNumber,WinnerDest,LoserDest
-Left1,01,17A,OUT
-Left1,02,17B,OUT
-Left1,03,18A,OUT
-Left1,04,18B,OUT
-Left1,05,19A,OUT
-Left1,06,19B,OUT
-Left1,07,20A,OUT
-Left1,08,20B,OUT
-Left1,09,21A,OUT
-Left1,10,21B,OUT
-Left1,11,22A,OUT
-Left1,12,22B,OUT
-Left1,13,23A,OUT
-Left1,14,23B,OUT
-Left1,15,24A,OUT
-Left1,16,24B,OUT
+#Round,HeatNumber,WinnerDest,LoserDest,Annotation
+Left1,01,17A,OUT,
+Left1,02,17B,OUT,
+Left1,03,18A,OUT,
+Left1,04,18B,OUT,
+Left1,05,19A,OUT,
+Left1,06,19B,OUT,
+Left1,07,20A,OUT,
+Left1,08,20B,OUT,
+Left1,09,21A,OUT,
+Left1,10,21B,OUT,
+Left1,11,22A,OUT,
+Left1,12,22B,OUT,
+Left1,13,23A,OUT,
+Left1,14,23B,OUT,
+Left1,15,24A,OUT,
+Left1,16,24B,OUT,
 
-Left2,17,25A,OUT
-Left2,18,25B,OUT
-Left2,19,26A,OUT
-Left2,20,26B,OUT
-Left2,21,27A,OUT
-Left2,22,27B,OUT
-Left2,23,28A,OUT
-Left2,24,28B,OUT
+Left2,17,25A,OUT,
+Left2,18,25B,OUT,
+Left2,19,26A,OUT,
+Left2,20,26B,OUT,
+Left2,21,27A,OUT,
+Left2,22,27B,OUT,
+Left2,23,28A,OUT,
+Left2,24,28B,OUT,
 
-Left3,25,29A,32A
-Left3,26,29B,32B
-Left3,27,30A,33A
-Left3,28,30B,33B
+Left3,25,29A,32A,
+Left3,26,29B,32B,
+Left3,27,30A,33A,
+Left3,28,30B,33B,
 
-Left4,29,31A,36A
-Left4,30,31B,36B
+Left4,29,31A,36A,
+Left4,30,31B,36B,
 
-Left5,31,Place1,Place2
+Left5,31,Place1,Place2,Championship
 
-Runoff,32,34A,35A
-Runoff,33,34B,35B
-Runoff,34,Place5,Place6
+Runoff,32,34A,35A,Runoff 5/6/7/8
+Runoff,33,34B,35B,Runoff 5/6/7/8
+Runoff,34,Place5,Place6,Runoff 5/6
 
-Runoff,35,Place7,Place8
-Runoff,36,Place3,Place4
+Runoff,35,Place7,Place8,Runoff 7/8
+Runoff,36,Place3,Place4,Runoff 3/4
 
 
 

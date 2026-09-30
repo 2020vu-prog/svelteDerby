@@ -88,43 +88,50 @@
 			"#Round": "Left1",
 			"HeatNumber": "01",
 			"WinnerDest": "04A",
-			"LoserDest": "03A"
+			"LoserDest": "03A",
+			"Annotation": ""
 		},
 		"02": {
 			"#Round": "Left1",
 			"HeatNumber": "02",
 			"WinnerDest": "04B",
-			"LoserDest": "03B"
+			"LoserDest": "03B",
+			"Annotation": ""
 		},
 		"03": {
 			"#Round": "Right2",
 			"HeatNumber": "03",
 			"WinnerDest": "05A",
-			"LoserDest": "Place4"
+			"LoserDest": "Place4",
+			"Annotation": ""
 		},
 		"04": {
 			"#Round": "Left3",
 			"HeatNumber": "04",
 			"WinnerDest": "06A",
-			"LoserDest": "05B"
+			"LoserDest": "05B",
+			"Annotation": ""
 		},
 		"05": {
 			"#Round": "Right4",
 			"HeatNumber": "05",
 			"WinnerDest": "06B",
-			"LoserDest": "Place3"
+			"LoserDest": "Place3",
+			"Annotation": ""
 		},
 		"06": {
 			"#Round": "Championship5",
 			"HeatNumber": "06",
 			"WinnerDest": "(AWINS?Place1:07A)",
-			"LoserDest": "(AWINS?Place2:07B)"
+			"LoserDest": "(AWINS?Place2:07B)",
+			"Annotation": "Championship"
 		},
 		"07": {
 			"#Round": "Championship5",
 			"HeatNumber": "07",
 			"WinnerDest": "Place1",
-			"LoserDest": "Place2"
+			"LoserDest": "Place2",
+			"Annotation": "Championship2"
 		}
 	}
 }

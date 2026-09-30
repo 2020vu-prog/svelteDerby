@@ -1,38 +1,38 @@
-#Round,HeatNumber,WinnerDest,LoserDest
-Left1,01,09A,OUT
-Left1,02,10A,OUT
-Left1,03,11A,OUT
-Left1,04,12A,OUT
-Left1,05,13A,OUT
-Left1,06,14A,OUT
-Left1,07,15A,OUT
-Left1,08,16A,OUT
+#Round,HeatNumber,WinnerDest,LoserDest,Annotation
+Left1,01,09A,OUT,
+Left1,02,10A,OUT,
+Left1,03,11A,OUT,
+Left1,04,12A,OUT,
+Left1,05,13A,OUT,
+Left1,06,14A,OUT,
+Left1,07,15A,OUT,
+Left1,08,16A,OUT,
 
-Left2,09,17A,OUT
-Left2,10,17B,OUT
-Left2,11,18A,OUT
-Left2,12,18B,OUT
-Left2,13,19A,OUT
-Left2,14,19B,OUT
-Left2,15,20A,OUT
-Left2,16,20B,OUT
+Left2,09,17A,OUT,
+Left2,10,17B,OUT,
+Left2,11,18A,OUT,
+Left2,12,18B,OUT,
+Left2,13,19A,OUT,
+Left2,14,19B,OUT,
+Left2,15,20A,OUT,
+Left2,16,20B,OUT,
 
-Left3,17,21A,24A
-Left3,18,21B,24B
-Left3,19,22A,25A
-Left3,20,22B,25B
+Left3,17,21A,24A,
+Left3,18,21B,24B,
+Left3,19,22A,25A,
+Left3,20,22B,25B,
 
-Left4,21,23A,28A
-Left4,22,23B,28B
+Left4,21,23A,28A,
+Left4,22,23B,28B,
 
-Left5,23,Place1,Place2
+Left5,23,Place1,Place2,Championship
 
-Runoff,24,26A,27A
-Runoff,25,26B,27B
-Runoff,26,Place5,Place6
+Runoff,24,26A,27A,Runoff 5/6/7/8
+Runoff,25,26B,27B,Runoff 5/6/7/8
+Runoff,26,Place5,Place6,Runoff 5/6
 
-Runoff,27,Place7,Place8
-Runoff,28,Place3,Place4
+Runoff,27,Place7,Place8,Runoff 7/8
+Runoff,28,Place3,Place4,Runoff 3/4
 
 
 Seed01,09B

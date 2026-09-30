@@ -256,151 +256,176 @@
 			"#Round": "Right3",
 			"HeatNumber": "10",
 			"WinnerDest": "13B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"11": {
 			"#Round": "Right3",
 			"HeatNumber": "11",
 			"WinnerDest": "14A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"12": {
 			"#Round": "Right3",
 			"HeatNumber": "12",
 			"WinnerDest": "14B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"13": {
 			"#Round": "Right4",
 			"HeatNumber": "13",
 			"WinnerDest": "17A",
-			"LoserDest": "501A"
+			"LoserDest": "501A",
+			"Annotation": ""
 		},
 		"14": {
 			"#Round": "Right4",
 			"HeatNumber": "14",
 			"WinnerDest": "18A",
-			"LoserDest": "501B"
+			"LoserDest": "501B",
+			"Annotation": ""
 		},
 		"15": {
 			"#Round": "Left5",
 			"HeatNumber": "15",
 			"WinnerDest": "20A",
-			"LoserDest": "17B"
+			"LoserDest": "17B",
+			"Annotation": ""
 		},
 		"16": {
 			"#Round": "Left5",
 			"HeatNumber": "16",
 			"WinnerDest": "20B",
-			"LoserDest": "18B"
+			"LoserDest": "18B",
+			"Annotation": ""
 		},
 		"17": {
 			"#Round": "Right6",
 			"HeatNumber": "17",
 			"WinnerDest": "19A",
-			"LoserDest": "502A"
+			"LoserDest": "502A",
+			"Annotation": ""
 		},
 		"18": {
 			"#Round": "Right6",
 			"HeatNumber": "18",
 			"WinnerDest": "19B",
-			"LoserDest": "502B"
+			"LoserDest": "502B",
+			"Annotation": ""
 		},
 		"19": {
 			"#Round": "Right7",
 			"HeatNumber": "19",
 			"WinnerDest": "21A",
-			"LoserDest": "Place4"
+			"LoserDest": "Place4",
+			"Annotation": ""
 		},
 		"20": {
 			"#Round": "Left8",
 			"HeatNumber": "20",
 			"WinnerDest": "22A",
-			"LoserDest": "21B"
+			"LoserDest": "21B",
+			"Annotation": ""
 		},
 		"21": {
 			"#Round": "Right9",
 			"HeatNumber": "21",
 			"WinnerDest": "22B",
-			"LoserDest": "Place3"
+			"LoserDest": "Place3",
+			"Annotation": ""
 		},
 		"22": {
 			"#Round": "Championship10",
 			"HeatNumber": "22",
 			"WinnerDest": "(AWINS?Place1:23B)",
-			"LoserDest": "(AWINS?Place2:23A)"
+			"LoserDest": "(AWINS?Place2:23A)",
+			"Annotation": "Championship"
 		},
 		"23": {
 			"#Round": "Championship10",
 			"HeatNumber": "23",
 			"WinnerDest": "Place1",
-			"LoserDest": "Place2"
+			"LoserDest": "Place2",
+			"Annotation": "Championship2"
 		},
 		"501": {
 			"#Round": "Runoff",
 			"HeatNumber": "501",
 			"WinnerDest": "Place7",
-			"LoserDest": "Place8"
+			"LoserDest": "Place8",
+			"Annotation": "Runoff 7/8"
 		},
 		"502": {
 			"#Round": "Runoff",
 			"HeatNumber": "502",
 			"WinnerDest": "Place5",
-			"LoserDest": "Place6"
+			"LoserDest": "Place6",
+			"Annotation": "Runoff 5/6"
 		},
 		"01": {
 			"#Round": "Left1",
 			"HeatNumber": "01",
 			"WinnerDest": "05A",
-			"LoserDest": "09A"
+			"LoserDest": "09A",
+			"Annotation": ""
 		},
 		"02": {
 			"#Round": "Left1",
 			"HeatNumber": "02",
 			"WinnerDest": "06A",
-			"LoserDest": "10A"
+			"LoserDest": "10A",
+			"Annotation": ""
 		},
 		"03": {
 			"#Round": "Left1",
 			"HeatNumber": "03",
 			"WinnerDest": "07A",
-			"LoserDest": "11A"
+			"LoserDest": "11A",
+			"Annotation": ""
 		},
 		"04": {
 			"#Round": "Left1",
 			"HeatNumber": "04",
 			"WinnerDest": "08A",
-			"LoserDest": "12A"
+			"LoserDest": "12A",
+			"Annotation": ""
 		},
 		"05": {
 			"#Round": "Left2",
 			"HeatNumber": "05",
 			"WinnerDest": "15A",
-			"LoserDest": "12B"
+			"LoserDest": "12B",
+			"Annotation": ""
 		},
 		"06": {
 			"#Round": "Left2",
 			"HeatNumber": "06",
 			"WinnerDest": "15B",
-			"LoserDest": "11B"
+			"LoserDest": "11B",
+			"Annotation": ""
 		},
 		"07": {
 			"#Round": "Left2",
 			"HeatNumber": "07",
 			"WinnerDest": "16A",
-			"LoserDest": "10B"
+			"LoserDest": "10B",
+			"Annotation": ""
 		},
 		"08": {
 			"#Round": "Left2",
 			"HeatNumber": "08",
 			"WinnerDest": "16B",
-			"LoserDest": "09B"
+			"LoserDest": "09B",
+			"Annotation": ""
 		},
 		"09": {
 			"#Round": "Right3",
 			"HeatNumber": "09",
 			"WinnerDest": "13A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		}
 	}
 }

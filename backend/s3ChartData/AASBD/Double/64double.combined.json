@@ -1141,775 +1141,904 @@
 			"#Round": "W1",
 			"HeatNumber": "10",
 			"WinnerDest": "53B",
-			"LoserDest": "37B"
+			"LoserDest": "37B",
+			"Annotation": ""
 		},
 		"11": {
 			"#Round": "W1",
 			"HeatNumber": "11",
 			"WinnerDest": "54A",
-			"LoserDest": "38A"
+			"LoserDest": "38A",
+			"Annotation": ""
 		},
 		"12": {
 			"#Round": "W1",
 			"HeatNumber": "12",
 			"WinnerDest": "54B",
-			"LoserDest": "38B"
+			"LoserDest": "38B",
+			"Annotation": ""
 		},
 		"13": {
 			"#Round": "W1",
 			"HeatNumber": "13",
 			"WinnerDest": "55A",
-			"LoserDest": "39A"
+			"LoserDest": "39A",
+			"Annotation": ""
 		},
 		"14": {
 			"#Round": "W1",
 			"HeatNumber": "14",
 			"WinnerDest": "55B",
-			"LoserDest": "39B"
+			"LoserDest": "39B",
+			"Annotation": ""
 		},
 		"15": {
 			"#Round": "W1",
 			"HeatNumber": "15",
 			"WinnerDest": "56A",
-			"LoserDest": "40A"
+			"LoserDest": "40A",
+			"Annotation": ""
 		},
 		"16": {
 			"#Round": "W1",
 			"HeatNumber": "16",
 			"WinnerDest": "56B",
-			"LoserDest": "40B"
+			"LoserDest": "40B",
+			"Annotation": ""
 		},
 		"17": {
 			"#Round": "W1",
 			"HeatNumber": "17",
 			"WinnerDest": "57A",
-			"LoserDest": "41A"
+			"LoserDest": "41A",
+			"Annotation": ""
 		},
 		"18": {
 			"#Round": "W1",
 			"HeatNumber": "18",
 			"WinnerDest": "57B",
-			"LoserDest": "41B"
+			"LoserDest": "41B",
+			"Annotation": ""
 		},
 		"19": {
 			"#Round": "W1",
 			"HeatNumber": "19",
 			"WinnerDest": "58A",
-			"LoserDest": "42A"
+			"LoserDest": "42A",
+			"Annotation": ""
 		},
 		"20": {
 			"#Round": "W1",
 			"HeatNumber": "20",
 			"WinnerDest": "58B",
-			"LoserDest": "42B"
+			"LoserDest": "42B",
+			"Annotation": ""
 		},
 		"21": {
 			"#Round": "W1",
 			"HeatNumber": "21",
 			"WinnerDest": "59A",
-			"LoserDest": "43A"
+			"LoserDest": "43A",
+			"Annotation": ""
 		},
 		"22": {
 			"#Round": "W1",
 			"HeatNumber": "22",
 			"WinnerDest": "59B",
-			"LoserDest": "43B"
+			"LoserDest": "43B",
+			"Annotation": ""
 		},
 		"23": {
 			"#Round": "W1",
 			"HeatNumber": "23",
 			"WinnerDest": "60A",
-			"LoserDest": "44A"
+			"LoserDest": "44A",
+			"Annotation": ""
 		},
 		"24": {
 			"#Round": "W1",
 			"HeatNumber": "24",
 			"WinnerDest": "60B",
-			"LoserDest": "44B"
+			"LoserDest": "44B",
+			"Annotation": ""
 		},
 		"25": {
 			"#Round": "W1",
 			"HeatNumber": "25",
 			"WinnerDest": "61A",
-			"LoserDest": "45A"
+			"LoserDest": "45A",
+			"Annotation": ""
 		},
 		"26": {
 			"#Round": "W1",
 			"HeatNumber": "26",
 			"WinnerDest": "61B",
-			"LoserDest": "45B"
+			"LoserDest": "45B",
+			"Annotation": ""
 		},
 		"27": {
 			"#Round": "W1",
 			"HeatNumber": "27",
 			"WinnerDest": "62A",
-			"LoserDest": "46A"
+			"LoserDest": "46A",
+			"Annotation": ""
 		},
 		"28": {
 			"#Round": "W1",
 			"HeatNumber": "28",
 			"WinnerDest": "62B",
-			"LoserDest": "46B"
+			"LoserDest": "46B",
+			"Annotation": ""
 		},
 		"29": {
 			"#Round": "W1",
 			"HeatNumber": "29",
 			"WinnerDest": "63A",
-			"LoserDest": "47A"
+			"LoserDest": "47A",
+			"Annotation": ""
 		},
 		"30": {
 			"#Round": "W1",
 			"HeatNumber": "30",
 			"WinnerDest": "63B",
-			"LoserDest": "47B"
+			"LoserDest": "47B",
+			"Annotation": ""
 		},
 		"31": {
 			"#Round": "W1",
 			"HeatNumber": "31",
 			"WinnerDest": "64A",
-			"LoserDest": "48A"
+			"LoserDest": "48A",
+			"Annotation": ""
 		},
 		"32": {
 			"#Round": "W1",
 			"HeatNumber": "32",
 			"WinnerDest": "64B",
-			"LoserDest": "48B"
+			"LoserDest": "48B",
+			"Annotation": ""
 		},
 		"33": {
 			"#Round": "L17",
 			"HeatNumber": "33",
 			"WinnerDest": "65A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"34": {
 			"#Round": "L17",
 			"HeatNumber": "34",
 			"WinnerDest": "66A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"35": {
 			"#Round": "L17",
 			"HeatNumber": "35",
 			"WinnerDest": "67A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"36": {
 			"#Round": "L17",
 			"HeatNumber": "36",
 			"WinnerDest": "68A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"37": {
 			"#Round": "L17",
 			"HeatNumber": "37",
 			"WinnerDest": "69A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"38": {
 			"#Round": "L17",
 			"HeatNumber": "38",
 			"WinnerDest": "70A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"39": {
 			"#Round": "L17",
 			"HeatNumber": "39",
 			"WinnerDest": "71A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"40": {
 			"#Round": "L17",
 			"HeatNumber": "40",
 			"WinnerDest": "72A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"41": {
 			"#Round": "L17",
 			"HeatNumber": "41",
 			"WinnerDest": "73A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"42": {
 			"#Round": "L17",
 			"HeatNumber": "42",
 			"WinnerDest": "74A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"43": {
 			"#Round": "L17",
 			"HeatNumber": "43",
 			"WinnerDest": "75A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"44": {
 			"#Round": "L17",
 			"HeatNumber": "44",
 			"WinnerDest": "76A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"45": {
 			"#Round": "L17",
 			"HeatNumber": "45",
 			"WinnerDest": "77A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"46": {
 			"#Round": "L17",
 			"HeatNumber": "46",
 			"WinnerDest": "78A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"47": {
 			"#Round": "L17",
 			"HeatNumber": "47",
 			"WinnerDest": "79A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"48": {
 			"#Round": "L17",
 			"HeatNumber": "48",
 			"WinnerDest": "80A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"49": {
 			"#Round": "W2",
 			"HeatNumber": "49",
 			"WinnerDest": "89A",
-			"LoserDest": "69B"
+			"LoserDest": "69B",
+			"Annotation": ""
 		},
 		"50": {
 			"#Round": "W2",
 			"HeatNumber": "50",
 			"WinnerDest": "89B",
-			"LoserDest": "70B"
+			"LoserDest": "70B",
+			"Annotation": ""
 		},
 		"51": {
 			"#Round": "W2",
 			"HeatNumber": "51",
 			"WinnerDest": "90A",
-			"LoserDest": "71B"
+			"LoserDest": "71B",
+			"Annotation": ""
 		},
 		"52": {
 			"#Round": "W2",
 			"HeatNumber": "52",
 			"WinnerDest": "90B",
-			"LoserDest": "72B"
+			"LoserDest": "72B",
+			"Annotation": ""
 		},
 		"53": {
 			"#Round": "W2",
 			"HeatNumber": "53",
 			"WinnerDest": "91A",
-			"LoserDest": "65B"
+			"LoserDest": "65B",
+			"Annotation": ""
 		},
 		"54": {
 			"#Round": "W2",
 			"HeatNumber": "54",
 			"WinnerDest": "91B",
-			"LoserDest": "66B"
+			"LoserDest": "66B",
+			"Annotation": ""
 		},
 		"55": {
 			"#Round": "W2",
 			"HeatNumber": "55",
 			"WinnerDest": "92A",
-			"LoserDest": "67B"
+			"LoserDest": "67B",
+			"Annotation": ""
 		},
 		"56": {
 			"#Round": "W2",
 			"HeatNumber": "56",
 			"WinnerDest": "92B",
-			"LoserDest": "68B"
+			"LoserDest": "68B",
+			"Annotation": ""
 		},
 		"57": {
 			"#Round": "W2",
 			"HeatNumber": "57",
 			"WinnerDest": "93A",
-			"LoserDest": "77B"
+			"LoserDest": "77B",
+			"Annotation": ""
 		},
 		"58": {
 			"#Round": "W2",
 			"HeatNumber": "58",
 			"WinnerDest": "93B",
-			"LoserDest": "78B"
+			"LoserDest": "78B",
+			"Annotation": ""
 		},
 		"59": {
 			"#Round": "W2",
 			"HeatNumber": "59",
 			"WinnerDest": "94A",
-			"LoserDest": "79B"
+			"LoserDest": "79B",
+			"Annotation": ""
 		},
 		"60": {
 			"#Round": "W2",
 			"HeatNumber": "60",
 			"WinnerDest": "94B",
-			"LoserDest": "80B"
+			"LoserDest": "80B",
+			"Annotation": ""
 		},
 		"61": {
 			"#Round": "W2",
 			"HeatNumber": "61",
 			"WinnerDest": "95A",
-			"LoserDest": "73B"
+			"LoserDest": "73B",
+			"Annotation": ""
 		},
 		"62": {
 			"#Round": "W2",
 			"HeatNumber": "62",
 			"WinnerDest": "95B",
-			"LoserDest": "74B"
+			"LoserDest": "74B",
+			"Annotation": ""
 		},
 		"63": {
 			"#Round": "W2",
 			"HeatNumber": "63",
 			"WinnerDest": "96A",
-			"LoserDest": "75B"
+			"LoserDest": "75B",
+			"Annotation": ""
 		},
 		"64": {
 			"#Round": "W2",
 			"HeatNumber": "64",
 			"WinnerDest": "96B",
-			"LoserDest": "76B"
+			"LoserDest": "76B",
+			"Annotation": ""
 		},
 		"65": {
 			"#Round": "L16",
 			"HeatNumber": "65",
 			"WinnerDest": "81A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"66": {
 			"#Round": "L16",
 			"HeatNumber": "66",
 			"WinnerDest": "81B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"67": {
 			"#Round": "L16",
 			"HeatNumber": "67",
 			"WinnerDest": "82A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"68": {
 			"#Round": "L16",
 			"HeatNumber": "68",
 			"WinnerDest": "82B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"69": {
 			"#Round": "L16",
 			"HeatNumber": "69",
 			"WinnerDest": "83A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"70": {
 			"#Round": "L16",
 			"HeatNumber": "70",
 			"WinnerDest": "83B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"71": {
 			"#Round": "L16",
 			"HeatNumber": "71",
 			"WinnerDest": "84A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"72": {
 			"#Round": "L16",
 			"HeatNumber": "72",
 			"WinnerDest": "84B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"73": {
 			"#Round": "L16",
 			"HeatNumber": "73",
 			"WinnerDest": "85A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"74": {
 			"#Round": "L16",
 			"HeatNumber": "74",
 			"WinnerDest": "85B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"75": {
 			"#Round": "L16",
 			"HeatNumber": "75",
 			"WinnerDest": "86A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"76": {
 			"#Round": "L16",
 			"HeatNumber": "76",
 			"WinnerDest": "86B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"77": {
 			"#Round": "L16",
 			"HeatNumber": "77",
 			"WinnerDest": "87A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"78": {
 			"#Round": "L16",
 			"HeatNumber": "78",
 			"WinnerDest": "87B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"79": {
 			"#Round": "L16",
 			"HeatNumber": "79",
 			"WinnerDest": "88A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"80": {
 			"#Round": "L16",
 			"HeatNumber": "80",
 			"WinnerDest": "88B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"81": {
 			"#Round": "L15",
 			"HeatNumber": "81",
 			"WinnerDest": "97A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"82": {
 			"#Round": "L15",
 			"HeatNumber": "82",
 			"WinnerDest": "98A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"83": {
 			"#Round": "L15",
 			"HeatNumber": "83",
 			"WinnerDest": "99A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"84": {
 			"#Round": "L15",
 			"HeatNumber": "84",
 			"WinnerDest": "100A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"85": {
 			"#Round": "L15",
 			"HeatNumber": "85",
 			"WinnerDest": "101A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"86": {
 			"#Round": "L15",
 			"HeatNumber": "86",
 			"WinnerDest": "102A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"87": {
 			"#Round": "L15",
 			"HeatNumber": "87",
 			"WinnerDest": "103A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"88": {
 			"#Round": "L15",
 			"HeatNumber": "88",
 			"WinnerDest": "104A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"89": {
 			"#Round": "W3",
 			"HeatNumber": "89",
 			"WinnerDest": "109A",
-			"LoserDest": "101B"
+			"LoserDest": "101B",
+			"Annotation": ""
 		},
 		"90": {
 			"#Round": "W3",
 			"HeatNumber": "90",
 			"WinnerDest": "109B",
-			"LoserDest": "102B"
+			"LoserDest": "102B",
+			"Annotation": ""
 		},
 		"91": {
 			"#Round": "W3",
 			"HeatNumber": "91",
 			"WinnerDest": "110A",
-			"LoserDest": "103B"
+			"LoserDest": "103B",
+			"Annotation": ""
 		},
 		"92": {
 			"#Round": "W3",
 			"HeatNumber": "92",
 			"WinnerDest": "110B",
-			"LoserDest": "104B"
+			"LoserDest": "104B",
+			"Annotation": ""
 		},
 		"93": {
 			"#Round": "W3",
 			"HeatNumber": "93",
 			"WinnerDest": "111A",
-			"LoserDest": "97B"
+			"LoserDest": "97B",
+			"Annotation": ""
 		},
 		"94": {
 			"#Round": "W3",
 			"HeatNumber": "94",
 			"WinnerDest": "111B",
-			"LoserDest": "98B"
+			"LoserDest": "98B",
+			"Annotation": ""
 		},
 		"95": {
 			"#Round": "W3",
 			"HeatNumber": "95",
 			"WinnerDest": "112A",
-			"LoserDest": "99B"
+			"LoserDest": "99B",
+			"Annotation": ""
 		},
 		"96": {
 			"#Round": "W3",
 			"HeatNumber": "96",
 			"WinnerDest": "112B",
-			"LoserDest": "100B"
+			"LoserDest": "100B",
+			"Annotation": ""
 		},
 		"97": {
 			"#Round": "L14",
 			"HeatNumber": "97",
 			"WinnerDest": "105A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"98": {
 			"#Round": "L14",
 			"HeatNumber": "98",
 			"WinnerDest": "105B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"99": {
 			"#Round": "L14",
 			"HeatNumber": "99",
 			"WinnerDest": "106A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"100": {
 			"#Round": "L14",
 			"HeatNumber": "100",
 			"WinnerDest": "106B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"101": {
 			"#Round": "L14",
 			"HeatNumber": "101",
 			"WinnerDest": "107A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"102": {
 			"#Round": "L14",
 			"HeatNumber": "102",
 			"WinnerDest": "107B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"103": {
 			"#Round": "L14",
 			"HeatNumber": "103",
 			"WinnerDest": "108A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"104": {
 			"#Round": "L14",
 			"HeatNumber": "104",
 			"WinnerDest": "108B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"105": {
 			"#Round": "L13",
 			"HeatNumber": "105",
 			"WinnerDest": "113A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"106": {
 			"#Round": "L13",
 			"HeatNumber": "106",
 			"WinnerDest": "114A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"107": {
 			"#Round": "L13",
 			"HeatNumber": "107",
 			"WinnerDest": "115A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"108": {
 			"#Round": "L13",
 			"HeatNumber": "108",
 			"WinnerDest": "116A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"109": {
 			"#Round": "W4",
 			"HeatNumber": "109",
 			"WinnerDest": "119A",
-			"LoserDest": "114B"
+			"LoserDest": "114B",
+			"Annotation": ""
 		},
 		"110": {
 			"#Round": "W4",
 			"HeatNumber": "110",
 			"WinnerDest": "119B",
-			"LoserDest": "113B"
+			"LoserDest": "113B",
+			"Annotation": ""
 		},
 		"111": {
 			"#Round": "W4",
 			"HeatNumber": "111",
 			"WinnerDest": "120A",
-			"LoserDest": "116B"
+			"LoserDest": "116B",
+			"Annotation": ""
 		},
 		"112": {
 			"#Round": "W4",
 			"HeatNumber": "112",
 			"WinnerDest": "120B",
-			"LoserDest": "115B"
+			"LoserDest": "115B",
+			"Annotation": ""
 		},
 		"113": {
 			"#Round": "L12",
 			"HeatNumber": "113",
 			"WinnerDest": "117A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"114": {
 			"#Round": "L12",
 			"HeatNumber": "114",
 			"WinnerDest": "117B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"115": {
 			"#Round": "L12",
 			"HeatNumber": "115",
 			"WinnerDest": "118A",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"116": {
 			"#Round": "L12",
 			"HeatNumber": "116",
 			"WinnerDest": "118B",
-			"LoserDest": "OUT"
+			"LoserDest": "OUT",
+			"Annotation": ""
 		},
 		"117": {
 			"#Round": "L11",
 			"HeatNumber": "117",
 			"WinnerDest": "121A",
-			"LoserDest": "501A"
+			"LoserDest": "501A",
+			"Annotation": ""
 		},
 		"118": {
 			"#Round": "L11",
 			"HeatNumber": "118",
 			"WinnerDest": "122A",
-			"LoserDest": "501B"
+			"LoserDest": "501B",
+			"Annotation": ""
 		},
 		"119": {
 			"#Round": "W5",
 			"HeatNumber": "119",
 			"WinnerDest": "124A",
-			"LoserDest": "122B"
+			"LoserDest": "122B",
+			"Annotation": ""
 		},
 		"120": {
 			"#Round": "W5",
 			"HeatNumber": "120",
 			"WinnerDest": "124B",
-			"LoserDest": "121B"
+			"LoserDest": "121B",
+			"Annotation": ""
 		},
 		"121": {
 			"#Round": "L10",
 			"HeatNumber": "121",
 			"WinnerDest": "123A",
-			"LoserDest": "502A"
+			"LoserDest": "502A",
+			"Annotation": ""
 		},
 		"122": {
 			"#Round": "L10",
 			"HeatNumber": "122",
 			"WinnerDest": "123B",
-			"LoserDest": "502B"
+			"LoserDest": "502B",
+			"Annotation": ""
 		},
 		"123": {
 			"#Round": "L09",
 			"HeatNumber": "123",
 			"WinnerDest": "125A",
-			"LoserDest": "Place4"
+			"LoserDest": "Place4",
+			"Annotation": ""
 		},
 		"124": {
 			"#Round": "W6",
 			"HeatNumber": "124",
 			"WinnerDest": "126A",
-			"LoserDest": "125B"
+			"LoserDest": "125B",
+			"Annotation": ""
 		},
 		"125": {
 			"#Round": "L08",
 			"HeatNumber": "125",
 			"WinnerDest": "126B",
-			"LoserDest": "Place3"
+			"LoserDest": "Place3",
+			"Annotation": ""
 		},
 		"126": {
 			"#Round": "Championship7",
 			"HeatNumber": "126",
 			"WinnerDest": "(AWINS?Place1:127B)",
-			"LoserDest": "(AWINS?Place2:127A)"
+			"LoserDest": "(AWINS?Place2:127A)",
+			"Annotation": "Championship"
 		},
 		"127": {
 			"#Round": "Championship7",
 			"HeatNumber": "127",
 			"WinnerDest": "Place1",
-			"LoserDest": "Place2"
+			"LoserDest": "Place2",
+			"Annotation": "Championship2"
 		},
 		"501": {
 			"#Round": "Runoff",
 			"HeatNumber": "501",
 			"WinnerDest": "Place7",
-			"LoserDest": "Place8"
+			"LoserDest": "Place8",
+			"Annotation": "Runoff 7/8"
 		},
 		"502": {
 			"#Round": "Runoff",
 			"HeatNumber": "502",
 			"WinnerDest": "Place5",
-			"LoserDest": "Place6"
+			"LoserDest": "Place6",
+			"Annotation": "Runoff 5/6"
 		},
 		"01": {
 			"#Round": "W1",
 			"HeatNumber": "01",
 			"WinnerDest": "49A",
-			"LoserDest": "33A"
+			"LoserDest": "33A",
+			"Annotation": ""
 		},
 		"02": {
 			"#Round": "W1",
 			"HeatNumber": "02",
 			"WinnerDest": "49B",
-			"LoserDest": "33B"
+			"LoserDest": "33B",
+			"Annotation": ""
 		},
 		"03": {
 			"#Round": "W1",
 			"HeatNumber": "03",
 			"WinnerDest": "50A",
-			"LoserDest": "34A"
+			"LoserDest": "34A",
+			"Annotation": ""
 		},
 		"04": {
 			"#Round": "W1",
 			"HeatNumber": "04",
 			"WinnerDest": "50B",
-			"LoserDest": "34B"
+			"LoserDest": "34B",
+			"Annotation": ""
 		},
 		"05": {
 			"#Round": "W1",
 			"HeatNumber": "05",
 			"WinnerDest": "51A",
-			"LoserDest": "35A"
+			"LoserDest": "35A",
+			"Annotation": ""
 		},
 		"06": {
 			"#Round": "W1",
 			"HeatNumber": "06",
 			"WinnerDest": "51B",
-			"LoserDest": "35B"
+			"LoserDest": "35B",
+			"Annotation": ""
 		},
 		"07": {
 			"#Round": "W1",
 			"HeatNumber": "07",
 			"WinnerDest": "52A",
-			"LoserDest": "36A"
+			"LoserDest": "36A",
+			"Annotation": ""
 		},
 		"08": {
 			"#Round": "W1",
 			"HeatNumber": "08",
 			"WinnerDest": "52B",
-			"LoserDest": "36B"
+			"LoserDest": "36B",
+			"Annotation": ""
 		},
 		"09": {
 			"#Round": "W1",
 			"HeatNumber": "09",
 			"WinnerDest": "53A",
-			"LoserDest": "37A"
+			"LoserDest": "37A",
+			"Annotation": ""
 		}
 	}
 }
