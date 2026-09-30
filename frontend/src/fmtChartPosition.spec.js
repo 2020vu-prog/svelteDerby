@@ -21,9 +21,9 @@ const chartJson = {
     imgPositions: {},
     progress: {
         "01": { HeatNumber: "01", Annotation: "" },
-        "14": { HeatNumber: "14", Annotation: "Championship" },
-        "15": { HeatNumber: "15", Annotation: "Championship2" },
-        "16": { HeatNumber: "16" },
+        14: { HeatNumber: "14", Annotation: "Championship" },
+        15: { HeatNumber: "15", Annotation: "Championship2" },
+        16: { HeatNumber: "16" },
     },
 };
 
