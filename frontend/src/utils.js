@@ -47,6 +47,22 @@ export async function getHistoryEntity(PK, SK, at) {
     log.debug("getHistoryEntity gave:", rc);
     return rc;
 }
+export async function getHeatAnnotation(bmd, heat) {
+    try {
+        const chartJson = await getChartJson(bmd);
+        const progress = chartJson?.progress;
+        if (!progress) return "";
+        const detail =
+            progress[heat] ||
+            Object.values(progress).find(
+                (d) => Number(d.HeatNumber) === Number(heat)
+            );
+        return detail?.Annotation || "";
+    } catch (err) {
+        log.debug("getHeatAnnotation failed: " + err);
+        return "";
+    }
+}
 export async function fmtChartPosition(RpRs) {
     const pendingNeeded = isPendingNeeded(RpRs);
     if (RpRs.bracketPos && RpRs.bracketPos.includes(":")) {
@@ -56,7 +72,12 @@ export async function fmtChartPosition(RpRs) {
         const bmd = await db.BracketMetaData.get(bmdKey);
         log.debug("found bmd:", bmd);
         if (bmd) {
-            return [`${bmd.bracketName} -- Heat: ${heat}`, pendingNeeded];
+            const annotation = await getHeatAnnotation(bmd, heat);
+            const suffix = annotation ? ` (${annotation})` : "";
+            return [
+                `${bmd.bracketName} -- Heat: ${heat}${suffix}`,
+                pendingNeeded,
+            ];
         }
     }
     if (RpRs.pt && RpRs.pt.startsWith("H")) {

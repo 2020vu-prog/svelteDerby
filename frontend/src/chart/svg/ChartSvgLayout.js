@@ -317,6 +317,7 @@ export function buildSvgChartLayout(
     for (const heat of heats) {
         heat.isOptional = optionalHeatIds.has(heat.id);
         heat.optionalSourceHeatId = optionalSourceHeatIds.get(heat.id);
+        heat.annotation = progress[heat.id]?.Annotation || "";
     }
 
     if (Object.keys(imgPositions).length) {

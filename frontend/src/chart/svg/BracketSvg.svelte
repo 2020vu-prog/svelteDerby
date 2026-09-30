@@ -372,7 +372,9 @@
                                     : heat.height / 2}
                             />
                             <text class="heat-number" x="8" y="15"
-                                >Heat {heat.id}{heat.isOptional
+                                >Heat {heat.id}{heat.annotation
+                                    ? ` (${heat.annotation})`
+                                    : ""}{heat.isOptional
                                     ? " (If Required)"
                                     : ""}</text
                             >
