@@ -64,6 +64,27 @@ done
 
 No output means the source JSON/PNG pairs are complete.
 
+## Bracket CSV Format
+
+Every `.csv` shares this header:
+
+```text
+#Round,HeatNumber,WinnerDest,LoserDest,Annotation
+```
+
+`Seed` rows keep their two-column form and carry no annotation. `Annotation` is
+empty for ordinary heats and is otherwise one of:
+
+- `Championship` - the winner is Place1 (in a double elimination, the first
+  championship heat, whose Place1 is conditional on `AWINS?`).
+- `Championship2` - the double-elimination "if necessary" heat forced by the
+  conditional in the `Championship` heat.
+- `Runoff 3/4` - winner Place3, loser Place4.
+- `Runoff 5/6` - winner Place5, loser Place6.
+- `Runoff 7/8` - winner Place7, loser Place8.
+- `Runoff 5/6/7/8` - winner advances to the `Runoff 5/6` heat and loser to the
+  `Runoff 7/8` heat.
+
 ## Overlay JSON Shape
 
 Overlay files use this structure:

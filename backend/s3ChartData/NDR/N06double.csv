@@ -1,22 +1,22 @@
-#Round,HeatNumber,WinnerDest,LoserDest
-Left1,01,03A,05A
-Left1,02,04A,05B
+#Round,HeatNumber,WinnerDest,LoserDest,Annotation
+Left1,01,03A,05A,
+Left1,02,04A,05B,
 
-Left2,03,08A,06A
-Left2,04,08B,06B
+Left2,03,08A,06A,
+Left2,04,08B,06B,
 
-Right3,05,07A,502A
-Right3,06,07B,502B
+Right3,05,07A,502A,
+Right3,06,07B,502B,
 
-Right4,07,09A,Place4
+Right4,07,09A,Place4,
 
-Left5,08,10A,09B
-Right6,09,10B,Place3
+Left5,08,10A,09B,
+Right6,09,10B,Place3,
 
-Championship7,10,(AWINS?Place1:11B),(AWINS?Place2:11A)
-Championship7,11,Place1,Place2
+Championship7,10,(AWINS?Place1:11B),(AWINS?Place2:11A),Championship
+Championship7,11,Place1,Place2,Championship2
 
-Runoff,502,Place5,Place6
+Runoff,502,Place5,Place6,Runoff 5/6
 
 Seed1,01A
 Seed2,02A
