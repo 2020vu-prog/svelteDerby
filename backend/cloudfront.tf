@@ -141,6 +141,14 @@ resource "aws_cloudfront_origin_access_identity" "svelte_oaid" {
 }
 
 resource "null_resource" "sync_s3_chart_data" {
+  # Re-run the sync whenever any chart asset or the sync script changes.
+  # Without this, the provisioner only runs when the resource is first created.
+  triggers = {
+    chart_data = sha1(join("", concat(
+      [filesha1("${path.module}/scripts/syncS3ChartData.sh")],
+      [for f in sort(fileset("${path.module}/s3ChartData", "**")) : "${f}:${filesha1("${path.module}/s3ChartData/${f}")}"]
+    )))
+  }
 
   provisioner "local-exec" {
     command     = "scripts/syncS3ChartData.sh"
