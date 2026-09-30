@@ -15,6 +15,7 @@ const {
     buildSvgChartLayout,
     layoutSvgPlacements,
     svgEdgePath,
+    svgHeatTitleLayout,
     svgSlotFontSize,
     svgSlotTextLayout,
 } = moduleUnderTest;
@@ -367,4 +368,40 @@ test("recomputes height when the tallest visible column is hidden", () => {
         compactLayout.viewBox.height < fullLayout.viewBox.height,
         true
     );
+});
+
+test("carries each heat's annotation into the layout", () => {
+    const layout = buildSvgChartLayout({
+        14: {
+            WinnerDest: "(AWINS?Place1:15B)",
+            LoserDest: "(AWINS?Place2:15A)",
+            Annotation: "Championship",
+        },
+        15: {
+            WinnerDest: "Place1",
+            LoserDest: "Place2",
+            Annotation: "Championship2",
+        },
+        16: { WinnerDest: "OUT", LoserDest: "OUT", Annotation: "" },
+    });
+
+    assert.equal(layout.heats["14"].annotation, "Championship");
+    assert.equal(layout.heats["15"].annotation, "Championship2");
+    assert.equal(layout.heats["16"].annotation, "");
+});
+
+test("shrinks heat titles to fit the positioned heat frame", () => {
+    const short = svgHeatTitleLayout("1", "", 170);
+    assert.equal(short.text, "Heat 1");
+    assert.equal(short.fontSize, 14);
+
+    const longest = svgHeatTitleLayout("127", "Runoff 5/6/7/8", 170);
+    assert.equal(longest.text, "Heat 127 (Runoff 5/6/7/8)");
+    assert.ok(longest.fontSize < 14);
+    assert.ok(
+        longest.text.length * longest.fontSize * 0.62 <= 170 - 16 + 0.001
+    );
+
+    const reset = svgHeatTitleLayout("127", "Championship2", 170);
+    assert.ok(reset.text.length * reset.fontSize * 0.62 <= 170 - 16 + 0.001);
 });

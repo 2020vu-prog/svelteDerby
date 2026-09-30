@@ -78,7 +78,8 @@ Required` heat to the same column as the championship heat that creates it,
 - Do not render loser or runoff lines/arrows.
 - In double elimination, a championship reset heat is conditional when a
   destination has an `AWINS?` or `BWINS?` condition. Mark that heat as
-  `If Required` and do not draw a normal route into it.
+  optional (`isOptional`) and do not draw a normal route into it. Its title
+  shows only the heat's CSV `Annotation`, not hard-coded "If Required" text.
 
 ## Visual Constraints
 

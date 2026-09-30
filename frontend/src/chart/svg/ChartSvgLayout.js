@@ -317,6 +317,7 @@ export function buildSvgChartLayout(
     for (const heat of heats) {
         heat.isOptional = optionalHeatIds.has(heat.id);
         heat.optionalSourceHeatId = optionalSourceHeatIds.get(heat.id);
+        heat.annotation = progress[heat.id]?.Annotation || "";
     }
 
     if (Object.keys(imgPositions).length) {
@@ -549,6 +550,22 @@ export function svgSlotFontSize(label, width, baseSize = 22) {
     return estimatedWidth > availableWidth
         ? (baseSize * availableWidth) / estimatedWidth
         : baseSize;
+}
+
+// Heat titles are bold, so they run wider per character than slot labels.
+const HEAT_TITLE_CHAR_WIDTH = 0.62;
+
+export function svgHeatTitleLayout(heatId, annotation, width, baseSize = 14) {
+    const text = `Heat ${heatId}${annotation ? ` (${annotation})` : ""}`;
+    const availableWidth = Math.max(1, width - 16);
+    const estimatedWidth = text.length * baseSize * HEAT_TITLE_CHAR_WIDTH;
+    return {
+        text,
+        fontSize:
+            estimatedWidth > availableWidth
+                ? (baseSize * availableWidth) / estimatedWidth
+                : baseSize,
+    };
 }
 
 export function svgSlotTextLayout(label, width, baseSize = 22) {

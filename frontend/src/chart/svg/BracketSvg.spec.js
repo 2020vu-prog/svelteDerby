@@ -99,3 +99,59 @@ it("populates placement slots from chart state", async () => {
         expect(view.getByText("Place 1 - 42 Ada Lovelace")).toBeInTheDocument()
     );
 });
+
+it("appends a heat's annotation in parentheses after the heat number", () => {
+    const view = render(BracketSvg, {
+        chartId: "chart-1",
+        chartJson: {
+            progress: {
+                1: { WinnerDest: "2A", LoserDest: "OUT", Annotation: "" },
+                2: {
+                    WinnerDest: "Place1",
+                    LoserDest: "OUT",
+                    Annotation: "Championship",
+                },
+            },
+            imgPositions: {
+                "1A": { left: 20, top: 100 },
+                "1B": { left: 20, top: 160 },
+                "2A": { left: 220, top: 100 },
+                "2B": { left: 220, top: 160 },
+                Place1: { left: 420, top: 100 },
+            },
+        },
+    });
+
+    expect(view.getByText("Heat 1")).toBeInTheDocument();
+    expect(view.getByText("Heat 2 (Championship)")).toBeInTheDocument();
+});
+
+it("shrinks long heat titles to fit the heat frame", () => {
+    const view = render(BracketSvg, {
+        chartId: "chart-1",
+        chartJson: {
+            progress: {
+                127: {
+                    WinnerDest: "Place1",
+                    LoserDest: "OUT",
+                    Annotation: "Runoff 5/6/7/8",
+                },
+            },
+            imgPositions: {
+                "127A": { left: 20, top: 100 },
+                "127B": { left: 20, top: 160 },
+                Place1: { left: 420, top: 100 },
+            },
+        },
+    });
+
+    const title = view.getByText("Heat 127 (Runoff 5/6/7/8)");
+    const fontSize = parseFloat(title.style.fontSize);
+    const frameWidth = Number(
+        view.container.querySelector(".heat rect").getAttribute("width")
+    );
+    expect(fontSize).toBeLessThan(14);
+    expect(title.textContent.length * fontSize * 0.62).toBeLessThanOrEqual(
+        frameWidth - 16 + 0.001
+    );
+});
