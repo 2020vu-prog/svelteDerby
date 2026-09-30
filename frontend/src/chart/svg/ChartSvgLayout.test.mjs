@@ -15,6 +15,7 @@ const {
     buildSvgChartLayout,
     layoutSvgPlacements,
     svgEdgePath,
+    svgHeatTitleLayout,
     svgSlotFontSize,
     svgSlotTextLayout,
 } = moduleUnderTest;
@@ -387,4 +388,20 @@ test("carries each heat's annotation into the layout", () => {
     assert.equal(layout.heats["14"].annotation, "Championship");
     assert.equal(layout.heats["15"].annotation, "Championship2");
     assert.equal(layout.heats["16"].annotation, "");
+});
+
+test("shrinks heat titles to fit the positioned heat frame", () => {
+    const short = svgHeatTitleLayout("1", "", 170);
+    assert.equal(short.text, "Heat 1");
+    assert.equal(short.fontSize, 14);
+
+    const longest = svgHeatTitleLayout("127", "Runoff 5/6/7/8", 170);
+    assert.equal(longest.text, "Heat 127 (Runoff 5/6/7/8)");
+    assert.ok(longest.fontSize < 14);
+    assert.ok(
+        longest.text.length * longest.fontSize * 0.62 <= 170 - 16 + 0.001
+    );
+
+    const reset = svgHeatTitleLayout("127", "Championship2", 170);
+    assert.ok(reset.text.length * reset.fontSize * 0.62 <= 170 - 16 + 0.001);
 });

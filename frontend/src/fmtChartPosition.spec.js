@@ -14,7 +14,7 @@ vi.mock("./eventDb.js", () => ({
     getUserPreference: vi.fn(() => null),
 }));
 
-import { fmtChartPosition } from "./utils.js";
+import { fmtChartPosition, getChartJson } from "./utils.js";
 
 const bmd = { SK: "bmd-1", bracketName: "Bracket A", jsonPath: "a.json" };
 const chartJson = {
@@ -58,5 +58,32 @@ describe("fmtChartPosition annotation", () => {
         const [label] = await fmtChartPosition({ bracketPos: "bmd-1:14" });
 
         expect(label).toBe("Bracket A -- Heat: 14");
+    });
+
+    it("shares one chart JSON load across concurrent calls", async () => {
+        bmdGet.mockResolvedValue(bmd);
+        bmdJsonGet.mockResolvedValue(chartJson);
+
+        const labels = await Promise.all(
+            ["01", "14", "15"].map((heat) =>
+                fmtChartPosition({ bracketPos: `bmd-1:${heat}` })
+            )
+        );
+
+        expect(labels.map(([label]) => label)).toEqual([
+            "Bracket A -- Heat: 01",
+            "Bracket A -- Heat: 14 (Championship)",
+            "Bracket A -- Heat: 15 (Championship2)",
+        ]);
+        expect(bmdJsonGet).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not reuse a finished load", async () => {
+        bmdJsonGet.mockResolvedValue(chartJson);
+
+        await getChartJson(bmd);
+        await getChartJson(bmd);
+
+        expect(bmdJsonGet).toHaveBeenCalledTimes(2);
     });
 });

@@ -552,6 +552,22 @@ export function svgSlotFontSize(label, width, baseSize = 22) {
         : baseSize;
 }
 
+// Heat titles are bold, so they run wider per character than slot labels.
+const HEAT_TITLE_CHAR_WIDTH = 0.62;
+
+export function svgHeatTitleLayout(heatId, annotation, width, baseSize = 14) {
+    const text = `Heat ${heatId}${annotation ? ` (${annotation})` : ""}`;
+    const availableWidth = Math.max(1, width - 16);
+    const estimatedWidth = text.length * baseSize * HEAT_TITLE_CHAR_WIDTH;
+    return {
+        text,
+        fontSize:
+            estimatedWidth > availableWidth
+                ? (baseSize * availableWidth) / estimatedWidth
+                : baseSize,
+    };
+}
+
 export function svgSlotTextLayout(label, width, baseSize = 22) {
     const value = String(label || "");
     const participant = value.match(/^(\d+)(?:\s+(.*))?$/);

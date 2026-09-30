@@ -330,7 +330,21 @@ export async function refreshOrgRoles(orgIz) {
     }
 }
 
-export async function getChartJson(bmdFromDexie) {
+// Concurrent callers for the same bracket (e.g. many RacePhase rows rendering
+// after a database reset) share one load instead of each fetching the JSON.
+const chartJsonLoads = new Map();
+export function getChartJson(bmdFromDexie) {
+    const key = bmdFromDexie.SK;
+    let load = chartJsonLoads.get(key);
+    if (!load) {
+        load = loadChartJson(bmdFromDexie).finally(() =>
+            chartJsonLoads.delete(key)
+        );
+        chartJsonLoads.set(key, load);
+    }
+    return load;
+}
+async function loadChartJson(bmdFromDexie) {
     const bmdJson = await db.BmdJson.get(bmdFromDexie.SK);
     log.debug("utils getChartJson cache:", bmdJson);
     if (bmdJson) {

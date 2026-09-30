@@ -7,6 +7,7 @@
         buildSvgChartLayout,
         layoutSvgPlacements,
         svgEdgePath,
+        svgHeatTitleLayout,
         svgSlotTextLayout,
     } from "./ChartSvgLayout.js";
     import {
@@ -80,6 +81,10 @@
     function slotAriaLabel(heatId, slot, state) {
         const label = slotLabel(state);
         return `Heat ${heatId}, position ${slot}${label ? `, ${label}` : ""}`;
+    }
+
+    function heatTitle(heat) {
+        return svgHeatTitleLayout(heat.id, heat.annotation, heat.width);
     }
 
     function slotLayout(heat, state) {
@@ -371,10 +376,12 @@
                                     ? 24
                                     : heat.height / 2}
                             />
-                            <text class="heat-number" x="8" y="15"
-                                >Heat {heat.id}{heat.annotation
-                                    ? ` (${heat.annotation})`
-                                    : ""}</text
+                            <text
+                                class="heat-number"
+                                x="8"
+                                y="15"
+                                style={`font-size: ${heatTitle(heat).fontSize}px`}
+                                >{heatTitle(heat).text}</text
                             >
                             <text
                                 class={`slot ${state.bracketClass || ""}`}
