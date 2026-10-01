@@ -64,10 +64,12 @@ it("marks hidden columns with an arrow toward the championship column and a flag
     expect(guideFor(3).getAttribute("d")).not.toBe(
         guideFor(1).getAttribute("d")
     );
-    expect(control(view, "Show Column 4").querySelector("title").textContent)
-        .toMatch(/Winners advance left/);
-    expect(control(view, "Show Column 3").querySelector("title").textContent)
-        .toMatch(/Championship/);
+    expect(
+        control(view, "Show Column 4").querySelector("title").textContent
+    ).toMatch(/Winners advance left/);
+    expect(
+        control(view, "Show Column 3").querySelector("title").textContent
+    ).toMatch(/Championship/);
 
     // Showing a column removes its guide.
     await fireEvent.click(view.getByRole("button", { name: "Show Column 4" }));
