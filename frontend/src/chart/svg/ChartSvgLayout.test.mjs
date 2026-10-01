@@ -18,6 +18,7 @@ const {
     svgChampionshipColumnId,
     svgColumnGuide,
     svgHeatTitleLayout,
+    svgLayoutWithRunoff,
     svgSlotFontSize,
     svgSlotTextLayout,
 } = moduleUnderTest;
@@ -636,5 +637,203 @@ test("compacts unpositioned charts the same way", () => {
     assert.equal(
         centerY(heats["3"]),
         (centerY(heats["1"]) + centerY(heats["2"])) / 2
+    );
+});
+
+// An 8-car single elimination bracket: heats 1-4 -> 5-6 -> 7 (championship),
+// with the 3rd-8th place runoffs (heats 8-12) fed only by losers.
+const runoffProgress = {
+    1: { WinnerDest: "5A", LoserDest: "8A" },
+    2: { WinnerDest: "5B", LoserDest: "8B" },
+    3: { WinnerDest: "6A", LoserDest: "9A" },
+    4: { WinnerDest: "6B", LoserDest: "9B" },
+    5: { WinnerDest: "7A", LoserDest: "11A" },
+    6: { WinnerDest: "7B", LoserDest: "11B" },
+    7: {
+        WinnerDest: "Place1",
+        LoserDest: "Place2",
+        Annotation: "Championship",
+    },
+    8: {
+        WinnerDest: "10A",
+        LoserDest: "12A",
+        Annotation: "Runoff 5/6/7/8",
+    },
+    9: {
+        WinnerDest: "10B",
+        LoserDest: "12B",
+        Annotation: "Runoff 5/6/7/8",
+    },
+    10: { WinnerDest: "Place5", LoserDest: "Place6", Annotation: "Runoff 5/6" },
+    11: { WinnerDest: "Place3", LoserDest: "Place4", Annotation: "Runoff 3/4" },
+    12: { WinnerDest: "Place7", LoserDest: "Place8", Annotation: "Runoff 7/8" },
+};
+const runoffIds = ["8", "9", "10", "11", "12"];
+
+function runoffLayout(progress = runoffProgress, hidden = []) {
+    const compact = applySvgColumnVisibility(
+        buildSvgChartLayout(progress),
+        hidden
+    );
+    return svgLayoutWithRunoff(layoutSvgPlacements(compact));
+}
+
+test("takes runoff heats out of the main columns", () => {
+    const base = buildSvgChartLayout(runoffProgress);
+
+    assert.deepEqual(Object.keys(base.heats).sort(), [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+    ]);
+    assert.equal(base.columns.length, 3);
+    assert.deepEqual(Object.keys(base.runoffBlock.heats).sort(), [
+        "10",
+        "11",
+        "12",
+        "8",
+        "9",
+    ]);
+});
+
+test("places the runoff section below the bracket, right of the placements", () => {
+    const layout = runoffLayout();
+    const runoff = ids(layout, runoffIds);
+    const main = ids(layout, ["1", "2", "3", "4", "5", "6", "7"]);
+    const placements = Object.values(layout.placements);
+
+    const mainBottom = Math.max(...main.map((heat) => heat.y + heat.height));
+    const placementsRight = Math.max(
+        ...placements.map((placement) => placement.x + placement.width)
+    );
+    assert.ok(runoff.every((heat) => heat.runoff));
+    assert.ok(runoff.every((heat) => heat.y >= mainBottom));
+    assert.ok(runoff.every((heat) => heat.x >= placementsRight));
+    assert.ok(
+        Math.min(...runoff.map((heat) => heat.y)) <=
+            Math.min(...placements.map((placement) => placement.y))
+    );
+    for (const heat of [...main, ...runoff]) {
+        assert.ok(heat.x + heat.width <= layout.viewBox.width);
+        assert.ok(heat.y + heat.height <= layout.viewBox.height);
+    }
+});
+
+function ids(layout, list) {
+    return list.map((id) => layout.heats[id]);
+}
+
+test("lays out the runoff section like a small bracket", () => {
+    const layout = runoffLayout();
+    const [semiA, semiB, final56, third, seventh] = ids(layout, runoffIds);
+
+    // Unfed heats stack in order; the 5th/6th final centers on its feeders.
+    assert.equal(semiB.y, semiA.y + semiA.height + 8);
+    assert.equal(
+        final56.y + final56.height / 2,
+        (semiA.y + semiA.height / 2 + semiB.y + semiB.height / 2) / 2
+    );
+    assert.ok(final56.x > semiA.x);
+    // Winner routes inside the section are kept.
+    assert.ok(
+        layout.edges.some(
+            (edge) => edge.fromHeat === "8" && edge.toHeat === "10"
+        )
+    );
+    // The runoffs fed only by losers stack under the semifinals, in order.
+    assert.equal(third.x, semiA.x);
+    assert.equal(third.y, semiB.y + semiB.height + 8);
+    assert.equal(seventh.y, third.y + third.height + 8);
+});
+
+test("keeps the runoff section out of column visibility", () => {
+    const base = buildSvgChartLayout(runoffProgress);
+    const hiddenAll = runoffLayout(
+        runoffProgress,
+        base.columns.map((column) => column.id)
+    );
+
+    for (const id of runoffIds) assert.ok(hiddenAll.heats[id]);
+    assert.equal(hiddenAll.heats["1"], undefined);
+    assert.ok(
+        hiddenAll.runoff.heats["8"].y > 0 &&
+            hiddenAll.runoff.heats["8"].x > hiddenAll.columns[0].x
+    );
+});
+
+test("does not accumulate runoff heats when the layout is placed again", () => {
+    const compact = applySvgColumnVisibility(
+        buildSvgChartLayout(runoffProgress),
+        []
+    );
+    const once = layoutSvgPlacements(compact);
+    const twice = layoutSvgPlacements(once);
+
+    assert.deepEqual(twice.runoff, once.runoff);
+    assert.deepEqual(twice.viewBox, once.viewBox);
+    assert.deepEqual(Object.keys(twice.heats), Object.keys(compact.heats));
+});
+
+test("finds runoff heats in chart JSON without annotations", () => {
+    const stripped = Object.fromEntries(
+        Object.entries(runoffProgress).map(([id, { Annotation, ...rest }]) => [
+            id,
+            rest,
+        ])
+    );
+    const base = buildSvgChartLayout(stripped);
+
+    assert.deepEqual(Object.keys(base.runoffBlock.heats).sort(), [
+        "10",
+        "11",
+        "12",
+        "8",
+        "9",
+    ]);
+    assert.equal(base.columns.length, 3);
+});
+
+test("a chart with no runoff heats has no runoff section", () => {
+    const base = buildSvgChartLayout(twoSidedProgress, twoSidedPositions);
+    const layout = layoutSvgPlacements(applySvgColumnVisibility(base, []));
+
+    assert.equal(base.runoffBlock, undefined);
+    assert.equal(layout.runoff, undefined);
+    assert.equal(svgLayoutWithRunoff(layout), layout);
+});
+
+test("moves positioned slots and routes with the runoff section", () => {
+    const columnX = { 1: 20, 2: 20, 3: 20, 4: 20, 5: 220, 6: 220, 7: 420 };
+    const positions = {};
+    Object.keys(runoffProgress).forEach((id, index) => {
+        const x = columnX[id] ?? 620 + (Number(id) > 9 ? 200 : 0);
+        positions[`${id}A`] = { left: x, top: 100 + index * 150 };
+        positions[`${id}B`] = { left: x, top: 160 + index * 150 };
+    });
+    const base = buildSvgChartLayout(runoffProgress, positions);
+    const layout = svgLayoutWithRunoff(
+        layoutSvgPlacements(applySvgColumnVisibility(base, []))
+    );
+
+    assert.equal(base.runoffBlock.heats["8"].runoff, undefined);
+    for (const id of runoffIds) {
+        const heat = layout.heats[id];
+        assert.ok(heat.runoff);
+        assert.ok(layout.slots[`${id}A`].y > heat.y);
+        assert.ok(layout.slots[`${id}A`].y < layout.slots[`${id}B`].y);
+        assert.ok(layout.slots[`${id}B`].y < heat.y + heat.height);
+        assert.equal(layout.slots[`${id}A`].x, heat.x + 8);
+    }
+    const edge = layout.edges.find(
+        (candidate) => candidate.fromHeat === "8" && candidate.toHeat === "10"
+    );
+    assert.ok(
+        svgEdgePath(edge, layout).endsWith(
+            `V ${layout.slots["10A"].y} H ${layout.slots["10A"].x - 8}`
+        )
     );
 });

@@ -48,8 +48,18 @@ image, card, or SVG view.
   - A conditional championship heat sits directly below the heat that creates
     it, in the same column.
   - Columns are placed in dependency order, so a column follows every
-    neighboring column that feeds it. Routes that skip over a column do not
-    count as feeders.
+    neighboring column that feeds it. A route that skips a column does not
+    count as a feeder.
+- Runoff heats (annotated `Runoff ...`, or for chart JSON without annotations,
+  heats that send both racers to Place3 or lower and the heats that feed only
+  those) are not part of the main bracket columns. They form a small separate
+  bracket at the bottom of the chart, to the right of the placement band and
+  level with its top, laid out with the same stacking and centering rules. The
+  column show/hide controls, their status colors, and their initial visibility
+  never include the runoff section, and it stays visible when every main column
+  is hidden. Hidden-column guide lines stop above it. The section is merged
+  into the rendered layout by `svgLayoutWithRunoff`; the base and compacted
+  layouts keep only the main heats.
 - Every heat frame has the same dimensions; slot text offsets are derived from
   that height.
 - Use one compact, uniform horizontal gutter between primary heat columns,
