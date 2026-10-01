@@ -3,12 +3,17 @@
     import { faEye } from "@fortawesome/free-solid-svg-icons/faEye";
     import { faEyeSlash } from "@fortawesome/free-solid-svg-icons/faEyeSlash";
     import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
+    import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
+    import { faArrowRight } from "@fortawesome/free-solid-svg-icons/faArrowRight";
+    import { faFlagCheckered } from "@fortawesome/free-solid-svg-icons/faFlagCheckered";
     import {
         applySvgColumnVisibility,
         buildSvgChartLayout,
         layoutSvgPlacements,
         svgEdgePath,
         svgHeatTitleLayout,
+        svgChampionshipColumnId,
+        svgColumnGuide,
         svgSlotTextLayout,
     } from "./ChartSvgLayout.js";
     import {
@@ -54,6 +59,7 @@
         chartJson.imgPositions,
         chartJson.imgSize
     );
+    $: championshipColumnId = svgChampionshipColumnId(baseLayout);
     $: compactLayout = applySvgColumnVisibility(baseLayout, hiddenColumnIds);
     $: placementLabels = Object.fromEntries(
         Object.values(baseLayout.placements).map((placement) => [
@@ -62,6 +68,20 @@
         ])
     );
     $: layout = layoutSvgPlacements(compactLayout, placementLabels);
+    // Hidden columns only: a flag for the championship column, else an arrow
+    // toward it.
+    $: columnGuides = Object.fromEntries(
+        layout.columns.map((column) => [
+            column.id,
+            column.hidden
+                ? svgColumnGuide(
+                      layout.columns,
+                      championshipColumnId,
+                      column.id
+                  )
+                : undefined,
+        ])
+    );
     $: heatAreaBottom = Math.max(
         34,
         ...Object.values(layout.heats).map((heat) => heat.y + heat.height)
@@ -110,6 +130,19 @@
 
     function heatTitle(heat) {
         return svgHeatTitleLayout(heat.id, heat.annotation, heat.width);
+    }
+
+    const GUIDE_ICONS = {
+        flag: { icon: faFlagCheckered, label: "Championship" },
+        left: { icon: faArrowLeft, label: "Winners advance left" },
+        right: { icon: faArrowRight, label: "Winners advance right" },
+    };
+
+    // Centers a 16px icon under the eye button (the button is 28 wide).
+    function guideTransform(icon) {
+        const [width, height] = icon;
+        const scale = 16 / Math.max(width, height);
+        return `translate(${(28 - width * scale) / 2} ${28 + (16 - height * scale) / 2}) scale(${scale})`;
     }
 
     function slotLayout(heat, state, withDriverNames = true) {
@@ -464,7 +497,7 @@
                         <line
                             class="hidden-column-placeholder"
                             x1={column.x + column.width / 2}
-                            y1="34"
+                            y1={columnGuides[column.id] ? 54 : 34}
                             x2={column.x + column.width / 2}
                             y2={heatAreaBottom}
                         />
@@ -486,13 +519,24 @@
                     >
                         <title
                             >{column.hidden ? "Show" : "Hide"}
-                            {column.label}</title
+                            {column.label}{columnGuides[column.id]
+                                ? ` (${GUIDE_ICONS[columnGuides[column.id]].label})`
+                                : ""}</title
                         >
                         <rect width="28" height="24" rx="4" />
                         <path
                             d={(column.hidden ? faEye : faEyeSlash).icon[4]}
                             transform="translate(6 7) scale(0.03125)"
                         />
+                        {#if columnGuides[column.id]}
+                            {@const guide =
+                                GUIDE_ICONS[columnGuides[column.id]]}
+                            <path
+                                class={`column-guide ${columnGuides[column.id]}`}
+                                d={guide.icon.icon[4]}
+                                transform={guideTransform(guide.icon.icon)}
+                            />
+                        {/if}
                     </g>
                 {/each}
             </g>
@@ -818,6 +862,10 @@
     }
 
     .column-control path {
+        fill: #31515d;
+    }
+
+    .column-control .column-guide {
         fill: #31515d;
     }
 
