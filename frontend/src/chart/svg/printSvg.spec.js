@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { buildPrintableSvg } from "./printSvg.js";
+import { PRINT_PAGE_CSS, buildPrintableSvg } from "./printSvg.js";
 import {
     chartHeaderHeight,
     chartHeaderLogo,
@@ -74,4 +74,9 @@ it("sizes the header bands and centers the chart name above the logo", () => {
     const long = chartHeaderTitle("A".repeat(80), 600);
     expect(long.fontSize).toBeLessThan(28);
     expect(80 * long.fontSize * 0.62).toBeLessThanOrEqual(600 - 24 + 0.001);
+});
+
+it("prints with a zero page margin so the browser adds no header or footer", () => {
+    expect(PRINT_PAGE_CSS).toMatch(/@page\s*{[^}]*margin:\s*0\s*;/);
+    expect(PRINT_PAGE_CSS).toMatch(/body\s*{[^}]*padding:\s*0\.4in/);
 });

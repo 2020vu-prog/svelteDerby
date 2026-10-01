@@ -1,7 +1,12 @@
-const PRINT_PAGE_CSS = `
-    @page { size: landscape; margin: 0.4in; }
+// Browsers print their own header/footer (document title, URL, page numbers)
+// inside the page margin, so the page margin is zero and the margin is
+// padding instead. Otherwise the chart name prints twice: once from the
+// browser header and once from the SVG header.
+export const PRINT_PAGE_CSS = `
+    @page { size: landscape; margin: 0; }
     html, body { margin: 0; background: #fff; }
-    svg { display: block; width: 100%; height: auto; max-height: 100vh; }
+    body { box-sizing: border-box; padding: 0.4in; }
+    svg { display: block; width: 100%; height: auto; max-height: calc(100vh - 0.8in); }
 `;
 
 function collectDocumentCss(doc) {
