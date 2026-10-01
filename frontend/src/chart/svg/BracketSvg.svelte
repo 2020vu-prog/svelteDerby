@@ -33,7 +33,7 @@
     let settingsElement;
     let settingsOpen = false;
     let showHeader = false;
-    let shortDriverNames = false;
+    let showDriverNames = true;
     let chartViewport;
     let fittedWidth;
     let hiddenColumnIds = new Set();
@@ -99,15 +99,15 @@
         return svgHeatTitleLayout(heat.id, heat.annotation, heat.width);
     }
 
-    function slotLayout(heat, state, shortNames = false) {
+    function slotLayout(heat, state, withDriverNames = true) {
         const textLayout = svgSlotTextLayout(slotLabel(state), heat.width);
-        return shortNames ? { ...textLayout, driverName: "" } : textLayout;
+        return withDriverNames ? textLayout : { ...textLayout, driverName: "" };
     }
 
     function driverNameX(heat, slot, state) {
         return (
             slotX(heat, slot) +
-            slotLayout(heat, state, shortDriverNames).carNumber.length *
+            slotLayout(heat, state, showDriverNames).carNumber.length *
                 22 *
                 0.56 +
             6
@@ -192,8 +192,8 @@
         settingsOpen = false;
     }
 
-    function toggleShortDriverNames() {
-        shortDriverNames = !shortDriverNames;
+    function toggleShowDriverNames() {
+        showDriverNames = !showDriverNames;
         settingsOpen = false;
     }
 
@@ -362,11 +362,11 @@
                 <button
                     type="button"
                     role="menuitemcheckbox"
-                    aria-checked={shortDriverNames}
-                    on:click={toggleShortDriverNames}
+                    aria-checked={showDriverNames}
+                    on:click={toggleShowDriverNames}
                 >
-                    <span class="check">{shortDriverNames ? "✓" : ""}</span>
-                    <span class="label">Short driver names</span>
+                    <span class="check">{showDriverNames ? "✓" : ""}</span>
+                    <span class="label">Show driver names</span>
                 </button>
             </div>
         {/if}
@@ -510,28 +510,28 @@
                                     class={`slot ${state.bracketClass || ""}`}
                                     x={slotX(heat, "A")}
                                     y={slotY(heat, "A")}
-                                    style={`font-size: ${slotLayout(heat, state, shortDriverNames).labelFontSize}px`}
+                                    style={`font-size: ${slotLayout(heat, state, showDriverNames).labelFontSize}px`}
                                 >
-                                    {#if slotLayout(heat, state, shortDriverNames).carNumber}
+                                    {#if slotLayout(heat, state, showDriverNames).carNumber}
                                         <tspan
                                             >{slotLayout(
                                                 heat,
                                                 state,
-                                                shortDriverNames
+                                                showDriverNames
                                             ).carNumber}</tspan
                                         >
-                                        {#if slotLayout(heat, state, shortDriverNames).driverName}
+                                        {#if slotLayout(heat, state, showDriverNames).driverName}
                                             <tspan
                                                 x={driverNameX(
                                                     heat,
                                                     "A",
                                                     state
                                                 )}
-                                                style={`font-size: ${slotLayout(heat, state, shortDriverNames).driverFontSize}px`}
+                                                style={`font-size: ${slotLayout(heat, state, showDriverNames).driverFontSize}px`}
                                                 >{slotLayout(
                                                     heat,
                                                     state,
-                                                    shortDriverNames
+                                                    showDriverNames
                                                 ).driverName}</tspan
                                             >
                                         {/if}
@@ -539,7 +539,7 @@
                                         {slotLayout(
                                             heat,
                                             state,
-                                            shortDriverNames
+                                            showDriverNames
                                         ).label}
                                     {/if}
                                 </text>
@@ -579,28 +579,28 @@
                                     class={`slot ${state.bracketClass || ""}`}
                                     x={slotX(heat, "B")}
                                     y={slotY(heat, "B")}
-                                    style={`font-size: ${slotLayout(heat, state, shortDriverNames).labelFontSize}px`}
+                                    style={`font-size: ${slotLayout(heat, state, showDriverNames).labelFontSize}px`}
                                 >
-                                    {#if slotLayout(heat, state, shortDriverNames).carNumber}
+                                    {#if slotLayout(heat, state, showDriverNames).carNumber}
                                         <tspan
                                             >{slotLayout(
                                                 heat,
                                                 state,
-                                                shortDriverNames
+                                                showDriverNames
                                             ).carNumber}</tspan
                                         >
-                                        {#if slotLayout(heat, state, shortDriverNames).driverName}
+                                        {#if slotLayout(heat, state, showDriverNames).driverName}
                                             <tspan
                                                 x={driverNameX(
                                                     heat,
                                                     "B",
                                                     state
                                                 )}
-                                                style={`font-size: ${slotLayout(heat, state, shortDriverNames).driverFontSize}px`}
+                                                style={`font-size: ${slotLayout(heat, state, showDriverNames).driverFontSize}px`}
                                                 >{slotLayout(
                                                     heat,
                                                     state,
-                                                    shortDriverNames
+                                                    showDriverNames
                                                 ).driverName}</tspan
                                             >
                                         {/if}
@@ -608,7 +608,7 @@
                                         {slotLayout(
                                             heat,
                                             state,
-                                            shortDriverNames
+                                            showDriverNames
                                         ).label}
                                     {/if}
                                 </text>

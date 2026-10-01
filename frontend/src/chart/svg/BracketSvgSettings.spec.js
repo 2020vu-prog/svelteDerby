@@ -9,8 +9,7 @@ vi.mock("../../utils.js", () => ({
     parseHeatPos: vi.fn((position) => [position, position]),
     augmentChartState: vi.fn((_chartJson, _chartId, heatId, slot) =>
         Promise.resolve({
-            posHtml:
-                heatId === "1" && slot === "A" ? " - 42 Ada Lovelace" : "",
+            posHtml: heatId === "1" && slot === "A" ? " - 42 Ada Lovelace" : "",
             bracketClass: "ready",
             rsFromDexie: {},
         })
@@ -51,9 +50,11 @@ it("opens the settings menu from the gear and closes it on Escape or outside cli
     expect(view.queryByRole("menu")).not.toBeInTheDocument();
     await openMenu(view);
     expect(
-        view.getAllByRole("menuitem").concat(view.getAllByRole("menuitemcheckbox"))
+        view
+            .getAllByRole("menuitem")
+            .concat(view.getAllByRole("menuitemcheckbox"))
             .map((item) => item.textContent.replace("✓", "").trim())
-    ).toEqual(["Show all", "Print", "Show header info", "Short driver names"]);
+    ).toEqual(["Show all", "Print", "Show header info", "Show driver names"]);
 
     await fireEvent.keyDown(window, { key: "Escape" });
     expect(view.queryByRole("menu")).not.toBeInTheDocument();
@@ -83,24 +84,27 @@ it("shows all hidden columns", async () => {
     expect(view.queryByRole("button", { name: /^Show Column/ })).toBeNull();
 });
 
-it("toggles driver names with the short driver names option", async () => {
+it("toggles driver names with the show driver names option", async () => {
     const view = render(BracketSvg, { chartId: "c", chartJson });
     await waitFor(() =>
         expect(view.getByText("Ada Lovelace")).toBeInTheDocument()
     );
 
     await openMenu(view);
+    expect(
+        view.getByRole("menuitemcheckbox", { name: /Show driver names/ })
+    ).toHaveAttribute("aria-checked", "true");
     await fireEvent.click(
-        view.getByRole("menuitemcheckbox", { name: /Short driver names/ })
+        view.getByRole("menuitemcheckbox", { name: /Show driver names/ })
     );
     expect(view.queryByText("Ada Lovelace")).not.toBeInTheDocument();
     expect(view.getByText("42")).toBeInTheDocument();
 
     await openMenu(view);
     const item = view.getByRole("menuitemcheckbox", {
-        name: /Short driver names/,
+        name: /Show driver names/,
     });
-    expect(item).toHaveAttribute("aria-checked", "true");
+    expect(item).toHaveAttribute("aria-checked", "false");
     await fireEvent.click(item);
     expect(view.getByText("Ada Lovelace")).toBeInTheDocument();
 });

@@ -19,7 +19,9 @@ it("builds a printable SVG without zoom sizing or column buttons", () => {
     expect(printable.hasAttribute("width")).toBe(false);
     expect(printable.getAttribute("viewBox")).toBe("0 0 10 10");
     expect(printable.querySelector(".column-control")).toBeNull();
-    expect(printable.querySelector(".hidden-column-placeholder")).not.toBeNull();
+    expect(
+        printable.querySelector(".hidden-column-placeholder")
+    ).not.toBeNull();
     expect(printable.querySelector("image").getAttribute("href")).toBe(
         "https://example.test/chart-logo-ndr.png"
     );
