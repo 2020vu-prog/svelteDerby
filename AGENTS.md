@@ -2,6 +2,7 @@
 
 - Do not be sycophantic.
 - Before committing or pushing changes, run Prettier on the JavaScript, MJS, and Svelte files you changed, using the repository configuration and Svelte plugin. Avoid formatting unrelated work.
+  - `./prettier.sh` builds its file list from `git ls-files`, so it skips files git does not track yet. `git add` new files before running `--write` or `--check`; otherwise they go unformatted and CI fails on them.
 - Before opening or updating a PR, run the checks defined in `.github/workflows/format.yml`. Read the workflow for the current commands and tool versions; do not rely only on targeted tests or `git diff --check`.
   - From the repository root: `./prettier.sh --check`.
   - From `frontend`: `npm test` and `npm run test:components`.
