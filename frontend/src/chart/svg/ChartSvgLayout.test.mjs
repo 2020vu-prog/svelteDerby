@@ -481,3 +481,160 @@ test("adds extra white space between columns only when asked", () => {
         assert.equal(spaced.heats[id].x, plain.heats[id].x + index * 30);
     }
 });
+
+// A double-elimination-shaped chart: seeds 1-2 feed heat 3 and seeds 4-5 feed
+// heat 6 from the other side; heats 3 and 6 feed the championship heat 7, and
+// heat 8 is the conditional second championship heat.
+const twoSidedProgress = {
+    1: { WinnerDest: "3A", LoserDest: "OUT" },
+    2: { WinnerDest: "3B", LoserDest: "OUT" },
+    3: { WinnerDest: "7A", LoserDest: "OUT" },
+    4: { WinnerDest: "6A", LoserDest: "OUT" },
+    5: { WinnerDest: "6B", LoserDest: "OUT" },
+    6: { WinnerDest: "7B", LoserDest: "OUT" },
+    7: {
+        WinnerDest: "(AWINS?Place1:8B)",
+        LoserDest: "(AWINS?Place2:8A)",
+        Annotation: "Championship",
+    },
+    8: { WinnerDest: "Place1", LoserDest: "Place2" },
+};
+const authoredRow = (x, top) => ({ left: x, top });
+// Authored rows are deliberately far apart; the layout must not keep them.
+const twoSidedPositions = {
+    "1A": authoredRow(20, 100),
+    "1B": authoredRow(20, 160),
+    "2A": authoredRow(20, 700),
+    "2B": authoredRow(20, 760),
+    "3A": authoredRow(220, 130),
+    "3B": authoredRow(220, 730),
+    "7A": authoredRow(420, 400),
+    "7B": authoredRow(420, 460),
+    "8A": authoredRow(420, 900),
+    "8B": authoredRow(420, 960),
+    "6A": authoredRow(620, 300),
+    "6B": authoredRow(620, 1400),
+    "4A": authoredRow(820, 100),
+    "4B": authoredRow(820, 160),
+    "5A": authoredRow(820, 1000),
+    "5B": authoredRow(820, 1100),
+    Place1: authoredRow(1000, 100),
+    Place2: authoredRow(1000, 160),
+};
+
+function twoSidedLayout(hidden = []) {
+    return applySvgColumnVisibility(
+        buildSvgChartLayout(twoSidedProgress, twoSidedPositions),
+        hidden
+    );
+}
+const centerY = (heat) => heat.y + heat.height / 2;
+
+test("stacks unfed heats tightly in their authored order", () => {
+    const { heats } = twoSidedLayout();
+
+    for (const [upper, lower] of [
+        ["1", "2"],
+        ["4", "5"],
+    ]) {
+        assert.equal(heats[lower].y, heats[upper].y + heats[upper].height + 8);
+    }
+    // The first column and the rightmost column both start at the top.
+    assert.equal(heats["1"].y, heats["4"].y);
+    assert.equal(heats["1"].height, heats["2"].height);
+});
+
+test("centers a heat between the two heats that feed it", () => {
+    const { heats } = twoSidedLayout();
+
+    assert.equal(
+        centerY(heats["3"]),
+        (centerY(heats["1"]) + centerY(heats["2"])) / 2
+    );
+    assert.equal(
+        centerY(heats["6"]),
+        (centerY(heats["4"]) + centerY(heats["5"])) / 2
+    );
+    // The championship heat is fed from both sides.
+    assert.equal(
+        centerY(heats["7"]),
+        (centerY(heats["3"]) + centerY(heats["6"])) / 2
+    );
+});
+
+test("keeps a conditional heat directly below its source heat", () => {
+    const { heats } = twoSidedLayout();
+
+    assert.equal(heats["8"].columnId, heats["7"].columnId);
+    assert.equal(heats["8"].y, heats["7"].y + heats["7"].height + 8);
+});
+
+test("moves slots with their heat and keeps routes attached", () => {
+    const layout = twoSidedLayout();
+    const { heats, slots } = layout;
+
+    for (const id of Object.keys(heats)) {
+        assert.ok(slots[`${id}A`].y > heats[id].y);
+        assert.ok(slots[`${id}A`].y < slots[`${id}B`].y);
+        assert.ok(slots[`${id}B`].y < heats[id].y + heats[id].height);
+    }
+    const edge = layout.edges.find(
+        (e) => e.fromHeat === "1" && e.toHeat === "3"
+    );
+    const path = svgEdgePath(edge, layout);
+    assert.ok(path.startsWith(`M ${heats["1"].x + heats["1"].width} `));
+    assert.ok(path.endsWith(`V ${slots["3A"].y} H ${slots["3A"].x - 8}`));
+});
+
+test("restarts the collapsed stack after a hidden column", () => {
+    const full = twoSidedLayout();
+    const hiddenFirst = twoSidedLayout(["column-1"]);
+    const { heats } = hiddenFirst;
+
+    // Heat 3 lost its feeders, so it is no longer centered between them.
+    assert.equal(heats["3"].y, 36);
+    // Its neighbor heat 7 follows the usual rule against the visible heats.
+    assert.equal(
+        centerY(heats["7"]),
+        (centerY(heats["3"]) + centerY(heats["6"])) / 2
+    );
+    assert.ok(hiddenFirst.viewBox.height <= full.viewBox.height);
+
+    const noRightSide = twoSidedLayout(["column-5"]);
+    assert.equal(noRightSide.heats["6"].y, 36);
+});
+
+test("never overlaps heats in a column, whatever is hidden", () => {
+    for (const hidden of [
+        [],
+        ["column-1"],
+        ["column-3"],
+        ["column-2", "column-4"],
+    ]) {
+        const heats = Object.values(twoSidedLayout(hidden).heats);
+        for (const a of heats) {
+            for (const b of heats) {
+                if (a.id < b.id && a.columnId === b.columnId) {
+                    assert.ok(a.y + a.height <= b.y || b.y + b.height <= a.y);
+                }
+            }
+        }
+    }
+});
+
+test("compacts unpositioned charts the same way", () => {
+    const { heats } = applySvgColumnVisibility(
+        buildSvgChartLayout({
+            1: { WinnerDest: "3A", LoserDest: "OUT" },
+            2: { WinnerDest: "3B", LoserDest: "OUT" },
+            3: { WinnerDest: "Place1", LoserDest: "OUT" },
+        }),
+        []
+    );
+
+    assert.equal(heats["2"].y, heats["1"].y + heats["1"].height + 8);
+    assert.equal(
+        centerY(heats["3"]),
+        (centerY(heats["1"]) + centerY(heats["2"])) / 2
+    );
+});

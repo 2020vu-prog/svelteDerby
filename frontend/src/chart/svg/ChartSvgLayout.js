@@ -8,6 +8,8 @@ const POSITIONED_HEAT_HEIGHT = 72;
 const POSITIONED_COLUMN_GAP = 12;
 const POSITIONED_ROW_GAP = 22;
 const POSITIONED_COLUMN_TOLERANCE = 72;
+// Vertical white space between neighboring heats in a collapsed stack.
+const COMPACT_ROW_GAP = 8;
 const HIDDEN_COLUMN_WIDTH = 16;
 const PLACEMENT_MIN_WIDTH = 300;
 const PLACEMENT_HEIGHT = 44;
@@ -45,6 +47,17 @@ function numericPosition(position) {
     const x = Number(position.left);
     const y = Number(position.top);
     return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : undefined;
+}
+
+// Where the A and B slot text sits inside a positioned heat frame of `height`.
+function positionedSlotOffsets(height) {
+    const slotAreaTop = Math.min(20, height * 0.32);
+    const slotAreaBottom = Math.max(slotAreaTop, height - 6);
+    const slotAreaHeight = slotAreaBottom - slotAreaTop;
+    return {
+        A: slotAreaTop + slotAreaHeight / 3,
+        B: slotAreaTop + (slotAreaHeight * 5) / 6,
+    };
 }
 
 function buildPositionedLayout(heats, edges, imgPositions) {
@@ -129,9 +142,7 @@ function buildPositionedLayout(heats, edges, imgPositions) {
             MARGIN +
             columnIndex * (POSITIONED_HEAT_WIDTH + POSITIONED_COLUMN_GAP);
         const y = heat.sourceCenterY - height / 2;
-        const slotAreaTop = Math.min(20, height * 0.32);
-        const slotAreaBottom = Math.max(slotAreaTop, height - 6);
-        const slotAreaHeight = slotAreaBottom - slotAreaTop;
+        const offsets = positionedSlotOffsets(height);
 
         heatLayout[heat.id] = {
             ...heat,
@@ -141,14 +152,8 @@ function buildPositionedLayout(heats, edges, imgPositions) {
             height,
             columnId,
         };
-        slots[`${heat.id}A`] = {
-            x: x + 8,
-            y: y + slotAreaTop + slotAreaHeight / 3,
-        };
-        slots[`${heat.id}B`] = {
-            x: x + 8,
-            y: y + slotAreaTop + (slotAreaHeight * 5) / 6,
-        };
+        slots[`${heat.id}A`] = { x: x + 8, y: y + offsets.A };
+        slots[`${heat.id}B`] = { x: x + 8, y: y + offsets.B };
     }
 
     columns.forEach((column, columnIndex) => {
@@ -499,6 +504,142 @@ export function svgColumnGuide(columns, championshipColumnId, columnId) {
     return index < target ? "right" : "left";
 }
 
+// Heats that feed `heat` with an arrow: winner routes from a visible heat in
+// the directly neighboring column. A hidden neighbor leaves the heat unfed.
+function adjacentFeeders(heat, edges, heats, columnIndex) {
+    return edges
+        .filter(
+            (edge) =>
+                edge.toHeat === heat.id &&
+                edge.result === "winner" &&
+                heats[edge.fromHeat] &&
+                Math.abs(
+                    columnIndex.get(heats[edge.fromHeat].columnId) -
+                        columnIndex.get(heat.columnId)
+                ) === 1
+        )
+        .map((edge) => heats[edge.fromHeat]);
+}
+
+// Columns in the order their heats can be placed: a column follows every
+// neighboring column that feeds it.
+function columnPlacementOrder(visibleColumns, edges, heats, columnIndex) {
+    const feeds = new Map(
+        visibleColumns.map((column) => [column.id, new Set()])
+    );
+    for (const edge of edges) {
+        const from = heats[edge.fromHeat];
+        const to = heats[edge.toHeat];
+        if (
+            edge.result === "winner" &&
+            from &&
+            to &&
+            Math.abs(
+                columnIndex.get(from.columnId) - columnIndex.get(to.columnId)
+            ) === 1
+        ) {
+            feeds.get(to.columnId).add(from.columnId);
+        }
+    }
+    const ordered = [];
+    const remaining = [...visibleColumns];
+    while (remaining.length) {
+        const next =
+            remaining.find((column) =>
+                [...feeds.get(column.id)].every((id) =>
+                    ordered.some((done) => done.id === id)
+                )
+            ) || remaining[0]; // Malformed (cyclic) data: fall back to order.
+        ordered.push(next);
+        remaining.splice(remaining.indexOf(next), 1);
+    }
+    return ordered;
+}
+
+// Compact vertical layout of the visible heats:
+// - heats with no arrow feeding them (the first column, and any column whose
+//   feeder column is hidden) stack tightly in their authored order;
+// - a heat fed by a neighboring column is centered on the heat or heats that
+//   feed it;
+// - a conditional (if necessary) heat sits directly below its source heat.
+// Returns the top y of each visible heat.
+function compactHeatTops(layout, heats, columns, height) {
+    const columnIndex = new Map(
+        columns.map((column, index) => [column.id, index])
+    );
+    const visibleColumns = columns.filter((column) => !column.hidden);
+    const tops = {};
+    const margin = layout.margin || 0;
+    const byAuthoredOrder = (left, right) =>
+        left.sourceCenterY !== undefined && right.sourceCenterY !== undefined
+            ? left.sourceCenterY - right.sourceCenterY
+            : compareHeatIds(left.id, right.id);
+
+    for (const column of columnPlacementOrder(
+        visibleColumns,
+        layout.edges,
+        heats,
+        columnIndex
+    )) {
+        const columnHeats = Object.values(heats).filter(
+            (heat) => heat.columnId === column.id
+        );
+        const primary = columnHeats
+            .filter((heat) => !heat.isOptional)
+            .sort(byAuthoredOrder);
+        let previousBottom;
+        for (const heat of primary) {
+            const feeders = adjacentFeeders(
+                heat,
+                layout.edges,
+                heats,
+                columnIndex
+            ).filter((feeder) => tops[feeder.id] !== undefined);
+            const lowest =
+                previousBottom === undefined
+                    ? margin
+                    : previousBottom + COMPACT_ROW_GAP;
+            const wanted = feeders.length
+                ? feeders.reduce(
+                      (total, feeder) => total + tops[feeder.id] + height / 2,
+                      0
+                  ) /
+                      feeders.length -
+                  height / 2
+                : lowest;
+            tops[heat.id] = Math.max(wanted, lowest);
+            previousBottom = tops[heat.id] + height;
+        }
+
+        // Conditional heats go right under their source heat; anything that
+        // would then overlap moves down.
+        const optional = columnHeats.filter((heat) => heat.isOptional);
+        if (optional.length) {
+            const placed = [...primary];
+            for (const heat of optional) {
+                const source = tops[heat.optionalSourceHeatId];
+                tops[heat.id] =
+                    source === undefined
+                        ? (previousBottom ?? margin - COMPACT_ROW_GAP) +
+                          COMPACT_ROW_GAP
+                        : source + height + COMPACT_ROW_GAP;
+                placed.push(heat);
+            }
+            let bottom;
+            for (const heat of placed.sort((a, b) => tops[a.id] - tops[b.id])) {
+                if (bottom !== undefined) {
+                    tops[heat.id] = Math.max(
+                        tops[heat.id],
+                        bottom + COMPACT_ROW_GAP
+                    );
+                }
+                bottom = tops[heat.id] + height;
+            }
+        }
+    }
+    return tops;
+}
+
 // `extraGap` widens every gap between columns (default: no extra space).
 export function applySvgColumnVisibility(
     layout,
@@ -559,6 +700,29 @@ export function applySvgColumnVisibility(
         const targetVisible = edge.toHeat ? Boolean(heats[edge.toHeat]) : true;
         return sourceVisible && targetVisible;
     });
+    const heatHeight = layout.positioned ? POSITIONED_HEAT_HEIGHT : HEAT_HEIGHT;
+    const tops = compactHeatTops(
+        { ...layout, edges },
+        heats,
+        columns,
+        heatHeight
+    );
+    const slotOffsets = layout.positioned
+        ? positionedSlotOffsets(heatHeight)
+        : undefined;
+    for (const [id, top] of Object.entries(tops)) {
+        heats[id] = { ...heats[id], y: top, height: heatHeight };
+        if (slots) {
+            for (const slot of ["A", "B"]) {
+                if (slots[`${id}${slot}`]) {
+                    slots[`${id}${slot}`] = {
+                        ...slots[`${id}${slot}`],
+                        y: top + slotOffsets[slot],
+                    };
+                }
+            }
+        }
+    }
     const boxes = Object.values(heats);
     const bottom = boxes.length
         ? Math.max(...boxes.map((box) => box.y + box.height))
