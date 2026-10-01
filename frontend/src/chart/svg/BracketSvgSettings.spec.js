@@ -235,41 +235,61 @@ it("prints the chart SVG with all columns and the header", async () => {
     ).toHaveAttribute("aria-checked", "true");
 });
 
-it("shows the chart name in the header, with or without a logo", async () => {
-    const withLogo = render(BracketSvg, {
+it("centers the logo and chart name above the chart", async () => {
+    const view = render(BracketSvg, {
         chartId: "c",
         chartJson,
         imgPath: "AASBD/Double/08double.png",
         chartName: "Junior Division",
     });
-    await openMenu(withLogo);
-    await fireEvent.click(
-        withLogo.getByRole("menuitemcheckbox", { name: /Show header info/ })
-    );
-    const title = withLogo.container.querySelector(".header-title");
-    expect(title.textContent).toBe("Junior Division");
-    expect(Number(title.getAttribute("x"))).toBeGreaterThan(
-        Number(
-            withLogo.container.querySelector(".header-logo").getAttribute("x")
-        )
-    );
-    cleanup();
+    const svg = view.getByRole("group", { name: "SVG bracket prototype" });
+    const [, , width, heightBefore] = svg
+        .getAttribute("viewBox")
+        .split(" ")
+        .map(Number);
 
-    const nameOnly = render(BracketSvg, {
+    await openMenu(view);
+    await fireEvent.click(
+        view.getByRole("menuitemcheckbox", { name: /Show header info/ })
+    );
+
+    const logo = view.container.querySelector(".header-logo");
+    const title = view.container.querySelector(".header-title");
+    expect(title.textContent).toBe("Junior Division");
+    expect(
+        Number(logo.getAttribute("x")) + Number(logo.getAttribute("width")) / 2
+    ).toBe(width / 2);
+    expect(Number(title.getAttribute("x"))).toBe(width / 2);
+    expect(title.getAttribute("text-anchor")).toBe("middle");
+    expect(Number(title.getAttribute("y"))).toBeGreaterThan(
+        Number(logo.getAttribute("y")) + Number(logo.getAttribute("height"))
+    );
+    expect(Number(svg.getAttribute("viewBox").split(" ")[3])).toBe(
+        heightBefore + 96 + 48
+    );
+});
+
+it("shows just the centered chart name when the chart has no logo", async () => {
+    const view = render(BracketSvg, {
         chartId: "c",
         chartJson,
         chartName: "Junior Division",
     });
-    const svg = nameOnly.getByRole("group", { name: "SVG bracket prototype" });
-    const heightBefore = Number(svg.getAttribute("viewBox").split(" ")[3]);
-    await openMenu(nameOnly);
+    const svg = view.getByRole("group", { name: "SVG bracket prototype" });
+    const [, , width, heightBefore] = svg
+        .getAttribute("viewBox")
+        .split(" ")
+        .map(Number);
+
+    await openMenu(view);
     await fireEvent.click(
-        nameOnly.getByRole("menuitemcheckbox", { name: /Show header info/ })
+        view.getByRole("menuitemcheckbox", { name: /Show header info/ })
     );
-    expect(nameOnly.container.querySelector(".header-logo")).toBeNull();
-    expect(nameOnly.container.querySelector(".header-title").textContent).toBe(
-        "Junior Division"
-    );
+
+    expect(view.container.querySelector(".header-logo")).toBeNull();
+    const title = view.container.querySelector(".header-title");
+    expect(title.textContent).toBe("Junior Division");
+    expect(Number(title.getAttribute("x"))).toBe(width / 2);
     expect(Number(svg.getAttribute("viewBox").split(" ")[3])).toBe(
         heightBefore + 48
     );

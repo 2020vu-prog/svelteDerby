@@ -5,6 +5,7 @@ import {
     chartHeaderLogo,
     chartHeaderTitle,
     HEADER_HEIGHT,
+    NAME_HEADER_HEIGHT,
 } from "./chartHeader.js";
 
 it("builds a printable SVG without zoom sizing or column buttons", () => {
@@ -35,33 +36,40 @@ it("builds a printable SVG without zoom sizing or column buttons", () => {
 });
 
 it("picks the header logo from the chart image path", () => {
-    expect(chartHeaderLogo("AASBD/Single/12single.png").src).toBe(
+    expect(chartHeaderLogo("AASBD/Single/12single.png", 100).src).toBe(
         "/chart-logo-aasbd.png"
     );
-    expect(chartHeaderLogo("NDR/N08double.png").src).toBe(
+    expect(chartHeaderLogo("NDR/N08double.png", 100).src).toBe(
         "/chart-logo-ndr.png"
     );
     expect(chartHeaderLogo("OTHER/x.png")).toBeUndefined();
     expect(chartHeaderLogo()).toBeUndefined();
-    const logo = chartHeaderLogo("NDR/N08double.png");
+    const logo = chartHeaderLogo("NDR/N08double.png", 100);
     expect(logo.height).toBeLessThanOrEqual(HEADER_HEIGHT);
 });
 
-it("sizes the header and fits the chart name beside the logo", () => {
-    const logo = chartHeaderLogo("NDR/N08double.png");
-    expect(chartHeaderHeight(logo, "Name")).toBe(HEADER_HEIGHT);
-    expect(chartHeaderHeight(undefined, "Name")).toBe(48);
-    expect(chartHeaderHeight(undefined, "")).toBe(0);
-    expect(chartHeaderTitle("", logo, 1000, HEADER_HEIGHT)).toBeUndefined();
+it("sizes the header bands and centers the logo and chart name", () => {
+    const logo = chartHeaderLogo("NDR/N08double.png", 1000);
+    expect(chartHeaderLogo("OTHER/x.png", 1000)).toBeUndefined();
+    expect(logo.x + logo.width / 2).toBe(500);
 
-    const title = chartHeaderTitle("Name", logo, 1000, HEADER_HEIGHT);
-    expect(title.x).toBeGreaterThan(logo.x + logo.width);
-    expect(title.y).toBe(HEADER_HEIGHT / 2);
-    expect(title.fontSize).toBe(28);
-
-    const long = chartHeaderTitle("A".repeat(80), logo, 600, HEADER_HEIGHT);
-    expect(long.fontSize).toBeLessThan(28);
-    expect(80 * long.fontSize * 0.62).toBeLessThanOrEqual(
-        600 - long.x - 12 + 0.001
+    expect(chartHeaderHeight(logo, "")).toBe(HEADER_HEIGHT);
+    expect(chartHeaderHeight(undefined, "Name")).toBe(NAME_HEADER_HEIGHT);
+    expect(chartHeaderHeight(logo, "Name")).toBe(
+        HEADER_HEIGHT + NAME_HEADER_HEIGHT
     );
+    expect(chartHeaderHeight(undefined, "")).toBe(0);
+    expect(chartHeaderTitle("", logo, 1000)).toBeUndefined();
+
+    const title = chartHeaderTitle("Name", logo, 1000);
+    expect(title.x).toBe(500);
+    expect(title.y).toBeGreaterThan(logo.y + logo.height);
+    expect(title.fontSize).toBe(28);
+    expect(chartHeaderTitle("Name", undefined, 1000).y).toBe(
+        NAME_HEADER_HEIGHT / 2
+    );
+
+    const long = chartHeaderTitle("A".repeat(80), logo, 600);
+    expect(long.fontSize).toBeLessThan(28);
+    expect(80 * long.fontSize * 0.62).toBeLessThanOrEqual(600 - 24 + 0.001);
 });

@@ -1,5 +1,6 @@
+// Header band heights: the logo band, and the chart name band below it.
 export const HEADER_HEIGHT = 96;
-export const NAME_ONLY_HEADER_HEIGHT = 48;
+export const NAME_HEADER_HEIGHT = 48;
 const LOGO_HEIGHT = 80;
 const LOGO_PADDING = 12;
 const TITLE_FONT_SIZE = 28;
@@ -20,35 +21,35 @@ const LOGOS = {
 };
 
 // Chart image paths are "<ORG>/...", e.g. "AASBD/Double/08double.png".
-export function chartHeaderLogo(imgPath = "") {
+// The logo is centered horizontally within viewWidth.
+export function chartHeaderLogo(imgPath = "", viewWidth = 0) {
     const logo = LOGOS[String(imgPath).split("/")[0].toUpperCase()];
     if (!logo) return undefined;
+    const width = Math.round((logo.width / logo.height) * LOGO_HEIGHT);
     return {
         src: logo.src,
         alt: logo.alt,
-        x: LOGO_PADDING,
+        x: (viewWidth - width) / 2,
         y: (HEADER_HEIGHT - LOGO_HEIGHT) / 2,
         height: LOGO_HEIGHT,
-        width: Math.round((logo.width / logo.height) * LOGO_HEIGHT),
+        width,
     };
 }
 
+// Logo band (when there is a logo) plus name band (when there is a name).
 export function chartHeaderHeight(logo, chartName) {
-    if (logo) return HEADER_HEIGHT;
-    return chartName ? NAME_ONLY_HEADER_HEIGHT : 0;
+    return (logo ? HEADER_HEIGHT : 0) + (chartName ? NAME_HEADER_HEIGHT : 0);
 }
 
-// The chart name sits beside the logo (or at the left edge without one),
-// shrunk to fit the chart width.
-export function chartHeaderTitle(chartName, logo, viewWidth, headerHeight) {
+// The chart name is centered on the page, below the logo, shrunk to fit.
+export function chartHeaderTitle(chartName, logo, viewWidth) {
     if (!chartName) return undefined;
-    const x = logo ? logo.x + logo.width + 16 : LOGO_PADDING;
-    const availableWidth = Math.max(1, viewWidth - x - LOGO_PADDING);
+    const availableWidth = Math.max(1, viewWidth - LOGO_PADDING * 2);
     const estimatedWidth = chartName.length * TITLE_FONT_SIZE * 0.62;
     return {
         text: chartName,
-        x,
-        y: headerHeight / 2,
+        x: viewWidth / 2,
+        y: (logo ? HEADER_HEIGHT : 0) + NAME_HEADER_HEIGHT / 2,
         fontSize:
             estimatedWidth > availableWidth
                 ? (TITLE_FONT_SIZE * availableWidth) / estimatedWidth

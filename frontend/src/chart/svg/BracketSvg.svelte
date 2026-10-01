@@ -69,14 +69,13 @@
         34,
         ...Object.values(layout.heats).map((heat) => heat.y + heat.height)
     );
-    $: headerLogo = chartHeaderLogo(imgPath);
+    $: headerLogo = chartHeaderLogo(imgPath, layout.viewBox.width);
     $: headerHeight = chartHeaderHeight(headerLogo, chartName);
     $: headerOffset = showHeader ? headerHeight : 0;
     $: headerTitle = chartHeaderTitle(
         chartName,
         headerLogo,
-        layout.viewBox.width,
-        headerHeight
+        layout.viewBox.width
     );
     $: svgWidth = fittedWidth ? `${fittedWidth * zoom}px` : "100%";
     $: if (chartId !== visibilityChartId) {
@@ -450,6 +449,7 @@
                     class="header-title"
                     x={headerTitle.x}
                     y={headerTitle.y}
+                    text-anchor="middle"
                     dominant-baseline="central"
                     style={`font-size: ${headerTitle.fontSize}px`}
                     >{headerTitle.text}</text
