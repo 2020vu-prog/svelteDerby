@@ -5,7 +5,7 @@
     import BracketSvg from "./BracketSvg.svelte";
     import ChartHeaderViewToggle from "../ChartHeaderViewToggle.svelte";
     import { getChartJson } from "../../utils.js";
-    import { spinnerPanelBusy } from "../../stores.js";
+    import { raceConfig, spinnerPanelBusy } from "../../stores.js";
 
     export let params = {};
 
@@ -56,6 +56,7 @@
         chartId={params.chartId}
         imgPath={bracketMeta.imgPath}
         chartName={bracketMeta.bracketName}
+        eventName={$raceConfig.name}
         on:slotclick={openChartPosition}
     />
 {:else}

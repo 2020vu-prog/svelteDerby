@@ -1,9 +1,8 @@
 import { expect, it } from "vitest";
 import { PRINT_PAGE_CSS, buildPrintableSvg } from "./printSvg.js";
 import {
-    chartHeaderHeight,
+    chartHeaderLayout,
     chartHeaderLogo,
-    chartHeaderTitle,
     HEADER_HEIGHT,
     NAME_HEADER_HEIGHT,
 } from "./chartHeader.js";
@@ -48,32 +47,58 @@ it("picks the header logo from the chart image path", () => {
     expect(logo.height).toBeLessThanOrEqual(HEADER_HEIGHT);
 });
 
-it("sizes the header bands and centers the chart name above the logo", () => {
-    const logo = chartHeaderLogo("NDR/N08double.png", 1000, "Name");
-    expect(chartHeaderLogo("OTHER/x.png", 1000)).toBeUndefined();
-    expect(logo.x + logo.width / 2).toBe(500);
+it("stacks the event name, chart name and logo, all centered", () => {
+    const header = chartHeaderLayout({
+        eventName: "Spring Rally",
+        chartName: "Junior Division",
+        imgPath: "NDR/N08double.png",
+        viewWidth: 1000,
+    });
 
-    expect(chartHeaderHeight(logo, "")).toBe(HEADER_HEIGHT);
-    expect(chartHeaderHeight(undefined, "Name")).toBe(NAME_HEADER_HEIGHT);
-    expect(chartHeaderHeight(logo, "Name")).toBe(
-        HEADER_HEIGHT + NAME_HEADER_HEIGHT
+    expect(header.eventTitle.text).toBe("Spring Rally");
+    expect(header.chartTitle.text).toBe("Junior Division");
+    expect(header.eventTitle.x).toBe(500);
+    expect(header.chartTitle.x).toBe(500);
+    expect(header.logo.x + header.logo.width / 2).toBe(500);
+    expect(header.eventTitle.y).toBeLessThan(header.chartTitle.y);
+    expect(header.chartTitle.y + NAME_HEADER_HEIGHT / 2).toBeLessThanOrEqual(
+        header.logo.y
     );
-    expect(chartHeaderHeight(undefined, "")).toBe(0);
-    expect(chartHeaderTitle("", 1000)).toBeUndefined();
+    expect(header.height).toBe(2 * NAME_HEADER_HEIGHT + HEADER_HEIGHT);
+});
 
-    const title = chartHeaderTitle("Name", 1000);
-    expect(title.x).toBe(500);
-    expect(title.y).toBe(NAME_HEADER_HEIGHT / 2);
-    expect(title.y).toBeLessThan(logo.y);
-    expect(title.fontSize).toBe(28);
-    // Without a name the logo starts at the top of the header.
-    expect(chartHeaderLogo("NDR/N08double.png", 1000).y).toBeLessThan(
+it("only reserves header bands that have content", () => {
+    const layout = (options) =>
+        chartHeaderLayout({ viewWidth: 1000, ...options });
+
+    expect(layout({}).height).toBe(0);
+    expect(layout({ imgPath: "x/y.png" }).logo).toBeUndefined();
+    expect(layout({ eventName: "E" }).height).toBe(NAME_HEADER_HEIGHT);
+    expect(layout({ chartName: "C" }).height).toBe(NAME_HEADER_HEIGHT);
+    expect(layout({ imgPath: "NDR/n.png" }).height).toBe(HEADER_HEIGHT);
+    // The chart name takes the top band when there is no event name.
+    expect(layout({ chartName: "C" }).chartTitle.y).toBe(
+        NAME_HEADER_HEIGHT / 2
+    );
+    expect(layout({ eventName: "E", chartName: "C" }).chartTitle.y).toBe(
+        NAME_HEADER_HEIGHT * 1.5
+    );
+    // Without names the logo starts at the top of the header.
+    expect(layout({ imgPath: "NDR/n.png" }).logo.y).toBeLessThan(
         NAME_HEADER_HEIGHT
     );
+});
 
-    const long = chartHeaderTitle("A".repeat(80), 600);
-    expect(long.fontSize).toBeLessThan(28);
-    expect(80 * long.fontSize * 0.62).toBeLessThanOrEqual(600 - 24 + 0.001);
+it("shrinks long header names to fit the page width", () => {
+    const { eventTitle } = chartHeaderLayout({
+        eventName: "A".repeat(80),
+        viewWidth: 600,
+    });
+
+    expect(eventTitle.fontSize).toBeLessThan(28);
+    expect(80 * eventTitle.fontSize * 0.62).toBeLessThanOrEqual(
+        600 - 24 + 0.001
+    );
 });
 
 it("prints with a zero page margin so the browser adds no header or footer", () => {

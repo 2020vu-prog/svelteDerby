@@ -204,6 +204,7 @@ it("prints the chart SVG with all columns and the header", async () => {
         chartJson,
         imgPath: "NDR/N04double.png",
         chartName: "Saturday Bracket",
+        eventName: "Spring Rally",
     });
     await waitFor(() =>
         expect(
@@ -225,6 +226,7 @@ it("prints the chart SVG with all columns and the header", async () => {
     expect(svg.querySelector(".header-title").textContent).toBe(
         "Saturday Bracket"
     );
+    expect(svg.querySelector(".header-event").textContent).toBe("Spring Rally");
     expect(view.queryByRole("button", { name: /^Show Column/ })).toBeNull();
     expect(view.queryByRole("menu")).not.toBeInTheDocument();
 
@@ -235,12 +237,13 @@ it("prints the chart SVG with all columns and the header", async () => {
     ).toHaveAttribute("aria-checked", "true");
 });
 
-it("centers the chart name above the logo", async () => {
+it("centers the event name above the chart name above the logo", async () => {
     const view = render(BracketSvg, {
         chartId: "c",
         chartJson,
         imgPath: "AASBD/Double/08double.png",
         chartName: "Junior Division",
+        eventName: "Spring Rally",
     });
     const svg = view.getByRole("group", { name: "SVG bracket prototype" });
     const [, , width, heightBefore] = svg
@@ -254,19 +257,44 @@ it("centers the chart name above the logo", async () => {
     );
 
     const logo = view.container.querySelector(".header-logo");
+    const event = view.container.querySelector(".header-event");
     const title = view.container.querySelector(".header-title");
+    expect(event.textContent).toBe("Spring Rally");
     expect(title.textContent).toBe("Junior Division");
     expect(
         Number(logo.getAttribute("x")) + Number(logo.getAttribute("width")) / 2
     ).toBe(width / 2);
-    expect(Number(title.getAttribute("x"))).toBe(width / 2);
-    expect(title.getAttribute("text-anchor")).toBe("middle");
-    expect(
-        Number(title.getAttribute("y")) + 14 // half the 28px title
-    ).toBeLessThanOrEqual(Number(logo.getAttribute("y")));
-    expect(Number(svg.getAttribute("viewBox").split(" ")[3])).toBe(
-        heightBefore + 96 + 48
+    for (const text of [event, title]) {
+        expect(Number(text.getAttribute("x"))).toBe(width / 2);
+        expect(text.getAttribute("text-anchor")).toBe("middle");
+    }
+    expect(Number(event.getAttribute("y"))).toBeLessThan(
+        Number(title.getAttribute("y"))
     );
+    expect(Number(title.getAttribute("y")) + 14).toBeLessThanOrEqual(
+        Number(logo.getAttribute("y"))
+    );
+    expect(Number(svg.getAttribute("viewBox").split(" ")[3])).toBe(
+        heightBefore + 96 + 48 + 48
+    );
+});
+
+it("shows only the event name when the chart has no logo or chart name", async () => {
+    const view = render(BracketSvg, {
+        chartId: "c",
+        chartJson,
+        eventName: "Spring Rally",
+    });
+    await openMenu(view);
+    await fireEvent.click(
+        view.getByRole("menuitemcheckbox", { name: /Show header info/ })
+    );
+
+    expect(view.container.querySelector(".header-event").textContent).toBe(
+        "Spring Rally"
+    );
+    expect(view.container.querySelector(".header-title")).toBeNull();
+    expect(view.container.querySelector(".header-logo")).toBeNull();
 });
 
 it("shows just the centered chart name when the chart has no logo", async () => {

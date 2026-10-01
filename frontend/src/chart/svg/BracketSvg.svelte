@@ -18,11 +18,7 @@
     import { doRefreshBlocks } from "../../stores.js";
     import { augmentChartState } from "../../utils.js";
     import SvgBracketSlot from "./SvgBracketSlot.svelte";
-    import {
-        chartHeaderHeight,
-        chartHeaderLogo,
-        chartHeaderTitle,
-    } from "./chartHeader.js";
+    import { chartHeaderLayout } from "./chartHeader.js";
     import { printSvgElement } from "./printSvg.js";
 
     export let chartJson = { progress: {} };
@@ -30,6 +26,7 @@
     // Chart image path ("AASBD/..." or "NDR/..."); picks the header logo.
     export let imgPath = "";
     export let chartName = "";
+    export let eventName = "";
 
     const dispatch = createEventDispatcher();
     const ZOOM_LEVELS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8];
@@ -69,10 +66,14 @@
         34,
         ...Object.values(layout.heats).map((heat) => heat.y + heat.height)
     );
-    $: headerLogo = chartHeaderLogo(imgPath, layout.viewBox.width, chartName);
-    $: headerHeight = chartHeaderHeight(headerLogo, chartName);
+    $: header = chartHeaderLayout({
+        eventName,
+        chartName,
+        imgPath,
+        viewWidth: layout.viewBox.width,
+    });
+    $: headerHeight = header.height;
     $: headerOffset = showHeader ? headerHeight : 0;
-    $: headerTitle = chartHeaderTitle(chartName, layout.viewBox.width);
     $: svgWidth = fittedWidth ? `${fittedWidth * zoom}px` : "100%";
     $: if (chartId !== visibilityChartId) {
         visibilityChartId = chartId;
@@ -220,7 +221,9 @@
         if (headerHeight) showHeader = true;
         await tick();
         if (svgElement) {
-            printSvgElement(svgElement, { title: chartName || "Chart" });
+            printSvgElement(svgElement, {
+                title: chartName || "Chart",
+            });
         }
     }
 
@@ -429,28 +432,30 @@
             </marker>
         </defs>
         {#if headerOffset}
-            {#if headerLogo}
+            {#if header.logo}
                 <image
                     class="header-logo"
-                    href={headerLogo.src}
-                    x={headerLogo.x}
-                    y={headerLogo.y}
-                    width={headerLogo.width}
-                    height={headerLogo.height}
-                    aria-label={headerLogo.alt}
+                    href={header.logo.src}
+                    x={header.logo.x}
+                    y={header.logo.y}
+                    width={header.logo.width}
+                    height={header.logo.height}
+                    aria-label={header.logo.alt}
                 />
             {/if}
-            {#if headerTitle}
-                <text
-                    class="header-title"
-                    x={headerTitle.x}
-                    y={headerTitle.y}
-                    text-anchor="middle"
-                    dominant-baseline="central"
-                    style={`font-size: ${headerTitle.fontSize}px`}
-                    >{headerTitle.text}</text
-                >
-            {/if}
+            {#each [["header-event", header.eventTitle], ["header-title", header.chartTitle]] as [titleClass, title]}
+                {#if title}
+                    <text
+                        class={titleClass}
+                        x={title.x}
+                        y={title.y}
+                        text-anchor="middle"
+                        dominant-baseline="central"
+                        style={`font-size: ${title.fontSize}px`}
+                        >{title.text}</text
+                    >
+                {/if}
+            {/each}
         {/if}
         <g transform={`translate(0 ${headerOffset})`}>
             <g class="column-controls" aria-label="Chart columns">
@@ -773,6 +778,7 @@
         background: #e8eef0;
     }
 
+    .header-event,
     .header-title {
         font-weight: 700;
         fill: #172126;
