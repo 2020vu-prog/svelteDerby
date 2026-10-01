@@ -48,8 +48,8 @@ it("picks the header logo from the chart image path", () => {
     expect(logo.height).toBeLessThanOrEqual(HEADER_HEIGHT);
 });
 
-it("sizes the header bands and centers the logo and chart name", () => {
-    const logo = chartHeaderLogo("NDR/N08double.png", 1000);
+it("sizes the header bands and centers the chart name above the logo", () => {
+    const logo = chartHeaderLogo("NDR/N08double.png", 1000, "Name");
     expect(chartHeaderLogo("OTHER/x.png", 1000)).toBeUndefined();
     expect(logo.x + logo.width / 2).toBe(500);
 
@@ -59,17 +59,19 @@ it("sizes the header bands and centers the logo and chart name", () => {
         HEADER_HEIGHT + NAME_HEADER_HEIGHT
     );
     expect(chartHeaderHeight(undefined, "")).toBe(0);
-    expect(chartHeaderTitle("", logo, 1000)).toBeUndefined();
+    expect(chartHeaderTitle("", 1000)).toBeUndefined();
 
-    const title = chartHeaderTitle("Name", logo, 1000);
+    const title = chartHeaderTitle("Name", 1000);
     expect(title.x).toBe(500);
-    expect(title.y).toBeGreaterThan(logo.y + logo.height);
+    expect(title.y).toBe(NAME_HEADER_HEIGHT / 2);
+    expect(title.y).toBeLessThan(logo.y);
     expect(title.fontSize).toBe(28);
-    expect(chartHeaderTitle("Name", undefined, 1000).y).toBe(
-        NAME_HEADER_HEIGHT / 2
+    // Without a name the logo starts at the top of the header.
+    expect(chartHeaderLogo("NDR/N08double.png", 1000).y).toBeLessThan(
+        NAME_HEADER_HEIGHT
     );
 
-    const long = chartHeaderTitle("A".repeat(80), logo, 600);
+    const long = chartHeaderTitle("A".repeat(80), 600);
     expect(long.fontSize).toBeLessThan(28);
     expect(80 * long.fontSize * 0.62).toBeLessThanOrEqual(600 - 24 + 0.001);
 });

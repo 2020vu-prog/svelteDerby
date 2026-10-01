@@ -235,7 +235,7 @@ it("prints the chart SVG with all columns and the header", async () => {
     ).toHaveAttribute("aria-checked", "true");
 });
 
-it("centers the logo and chart name above the chart", async () => {
+it("centers the chart name above the logo", async () => {
     const view = render(BracketSvg, {
         chartId: "c",
         chartJson,
@@ -261,9 +261,9 @@ it("centers the logo and chart name above the chart", async () => {
     ).toBe(width / 2);
     expect(Number(title.getAttribute("x"))).toBe(width / 2);
     expect(title.getAttribute("text-anchor")).toBe("middle");
-    expect(Number(title.getAttribute("y"))).toBeGreaterThan(
-        Number(logo.getAttribute("y")) + Number(logo.getAttribute("height"))
-    );
+    expect(
+        Number(title.getAttribute("y")) + 14 // half the 28px title
+    ).toBeLessThanOrEqual(Number(logo.getAttribute("y")));
     expect(Number(svg.getAttribute("viewBox").split(" ")[3])).toBe(
         heightBefore + 96 + 48
     );

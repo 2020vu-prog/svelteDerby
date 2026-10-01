@@ -21,8 +21,9 @@ const LOGOS = {
 };
 
 // Chart image paths are "<ORG>/...", e.g. "AASBD/Double/08double.png".
-// The logo is centered horizontally within viewWidth.
-export function chartHeaderLogo(imgPath = "", viewWidth = 0) {
+// The logo is centered horizontally within viewWidth, below the name band
+// when the chart has a name.
+export function chartHeaderLogo(imgPath = "", viewWidth = 0, chartName = "") {
     const logo = LOGOS[String(imgPath).split("/")[0].toUpperCase()];
     if (!logo) return undefined;
     const width = Math.round((logo.width / logo.height) * LOGO_HEIGHT);
@@ -30,26 +31,28 @@ export function chartHeaderLogo(imgPath = "", viewWidth = 0) {
         src: logo.src,
         alt: logo.alt,
         x: (viewWidth - width) / 2,
-        y: (HEADER_HEIGHT - LOGO_HEIGHT) / 2,
+        y:
+            (chartName ? NAME_HEADER_HEIGHT : 0) +
+            (HEADER_HEIGHT - LOGO_HEIGHT) / 2,
         height: LOGO_HEIGHT,
         width,
     };
 }
 
-// Logo band (when there is a logo) plus name band (when there is a name).
+// Name band (when there is a name) above the logo band (when there is a logo).
 export function chartHeaderHeight(logo, chartName) {
     return (logo ? HEADER_HEIGHT : 0) + (chartName ? NAME_HEADER_HEIGHT : 0);
 }
 
-// The chart name is centered on the page, below the logo, shrunk to fit.
-export function chartHeaderTitle(chartName, logo, viewWidth) {
+// The chart name is centered on the page, above the logo, shrunk to fit.
+export function chartHeaderTitle(chartName, viewWidth) {
     if (!chartName) return undefined;
     const availableWidth = Math.max(1, viewWidth - LOGO_PADDING * 2);
     const estimatedWidth = chartName.length * TITLE_FONT_SIZE * 0.62;
     return {
         text: chartName,
         x: viewWidth / 2,
-        y: (logo ? HEADER_HEIGHT : 0) + NAME_HEADER_HEIGHT / 2,
+        y: NAME_HEADER_HEIGHT / 2,
         fontSize:
             estimatedWidth > availableWidth
                 ? (TITLE_FONT_SIZE * availableWidth) / estimatedWidth
