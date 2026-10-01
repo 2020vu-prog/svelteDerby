@@ -11,7 +11,8 @@ vi.mock("../../utils.js", () => ({
         Promise.resolve({
             posHtml: heatId === "1" && slot === "A" ? " - 42 Ada Lovelace" : "",
             bracketClass: "ready",
-            rsFromDexie: {},
+            // No cars in heat 2's column, so it is hidden in the default view.
+            rsFromDexie: heatId === "2" ? undefined : {},
         })
     ),
 }));
@@ -48,12 +49,11 @@ it("opens the settings menu from the gear and closes it on Escape or outside cli
     const view = render(BracketSvg, { chartId: "c", chartJson });
 
     expect(view.queryByRole("menu")).not.toBeInTheDocument();
-    await openMenu(view);
+    const menu = await openMenu(view);
     expect(
-        view
-            .getAllByRole("menuitem")
-            .concat(view.getAllByRole("menuitemcheckbox"))
-            .map((item) => item.textContent.replace("✓", "").trim())
+        [...menu.querySelectorAll("[role^=menuitem]")].map((item) =>
+            item.textContent.replace("✓", "").trim()
+        )
     ).toEqual(["Show all", "Print", "Show header info", "Show driver names"]);
 
     await fireEvent.keyDown(window, { key: "Escape" });
@@ -64,24 +64,69 @@ it("opens the settings menu from the gear and closes it on Escape or outside cli
     expect(view.queryByRole("menu")).not.toBeInTheDocument();
 });
 
-it("shows all hidden columns", async () => {
+function showAllItem(view) {
+    return view.getByRole("menuitemcheckbox", { name: /Show all/ });
+}
+
+it("toggles show all and returns to the default view when turned off", async () => {
     const view = render(BracketSvg, { chartId: "c", chartJson });
-    const hide = view.getByRole("button", { name: "Hide Column 1" });
-    await waitFor(() => expect(hide).toHaveClass("ready"));
+    await waitFor(() =>
+        expect(
+            view.getByRole("button", { name: "Show Column 2" })
+        ).toBeInTheDocument()
+    );
+    expect(view.getByRole("button", { name: "Hide Column 1" })).toBeTruthy();
 
     await openMenu(view);
-    expect(view.getByRole("menuitem", { name: "Show all" })).toBeDisabled();
-    await fireEvent.keyDown(window, { key: "Escape" });
+    expect(showAllItem(view)).toHaveAttribute("aria-checked", "false");
+    await fireEvent.click(showAllItem(view));
 
-    await fireEvent.click(hide);
+    expect(view.queryByRole("menu")).not.toBeInTheDocument();
+    expect(view.getByRole("button", { name: "Hide Column 2" })).toBeTruthy();
+    expect(view.queryByRole("button", { name: /^Show Column/ })).toBeNull();
+
+    await openMenu(view);
+    expect(showAllItem(view)).toHaveAttribute("aria-checked", "true");
+    await fireEvent.click(showAllItem(view));
+
+    expect(view.getByRole("button", { name: "Show Column 2" })).toBeTruthy();
+    expect(view.getByRole("button", { name: "Hide Column 1" })).toBeTruthy();
+});
+
+it("discards manual column changes when show all is turned off", async () => {
+    const view = render(BracketSvg, { chartId: "c", chartJson });
+    await waitFor(() =>
+        expect(
+            view.getByRole("button", { name: "Show Column 2" })
+        ).toBeInTheDocument()
+    );
+
+    await fireEvent.click(view.getByRole("button", { name: "Hide Column 1" }));
     expect(view.getByRole("button", { name: "Show Column 1" })).toBeTruthy();
 
     await openMenu(view);
-    await fireEvent.click(view.getByRole("menuitem", { name: "Show all" }));
+    await fireEvent.click(showAllItem(view));
+    await openMenu(view);
+    await fireEvent.click(showAllItem(view));
 
-    expect(view.queryByRole("menu")).not.toBeInTheDocument();
     expect(view.getByRole("button", { name: "Hide Column 1" })).toBeTruthy();
-    expect(view.queryByRole("button", { name: /^Show Column/ })).toBeNull();
+    expect(view.getByRole("button", { name: "Show Column 2" })).toBeTruthy();
+});
+
+it("unchecks show all when a column is hidden afterwards", async () => {
+    const view = render(BracketSvg, { chartId: "c", chartJson });
+    await waitFor(() =>
+        expect(
+            view.getByRole("button", { name: "Show Column 2" })
+        ).toBeInTheDocument()
+    );
+
+    await openMenu(view);
+    await fireEvent.click(showAllItem(view));
+    await fireEvent.click(view.getByRole("button", { name: "Hide Column 1" }));
+
+    await openMenu(view);
+    expect(showAllItem(view)).toHaveAttribute("aria-checked", "false");
 });
 
 it("toggles driver names with the show driver names option", async () => {
@@ -153,15 +198,79 @@ it("uses the AASBD logo for AASBD charts and disables the option without a logo"
     ).toBeDisabled();
 });
 
-it("prints the chart SVG", async () => {
-    const view = render(BracketSvg, { chartId: "c", chartJson });
+it("prints the chart SVG with all columns and the header", async () => {
+    const view = render(BracketSvg, {
+        chartId: "c",
+        chartJson,
+        imgPath: "NDR/N04double.png",
+        chartName: "Saturday Bracket",
+    });
+    await waitFor(() =>
+        expect(
+            view.getByRole("button", { name: "Show Column 2" })
+        ).toBeInTheDocument()
+    );
 
     await openMenu(view);
     await fireEvent.click(view.getByRole("menuitem", { name: "Print" }));
 
-    expect(printSvgElement).toHaveBeenCalledTimes(1);
-    expect(printSvgElement.mock.calls[0][0]).toBe(
+    await waitFor(() => expect(printSvgElement).toHaveBeenCalledTimes(1));
+    const [svg, options] = printSvgElement.mock.calls[0];
+    expect(svg).toBe(
         view.getByRole("group", { name: "SVG bracket prototype" })
     );
+    expect(options.title).toBe("Saturday Bracket");
+    // The SVG handed to print already shows every column and the header.
+    expect(svg.querySelector(".header-logo")).not.toBeNull();
+    expect(svg.querySelector(".header-title").textContent).toBe(
+        "Saturday Bracket"
+    );
+    expect(view.queryByRole("button", { name: /^Show Column/ })).toBeNull();
     expect(view.queryByRole("menu")).not.toBeInTheDocument();
+
+    await openMenu(view);
+    expect(showAllItem(view)).toHaveAttribute("aria-checked", "true");
+    expect(
+        view.getByRole("menuitemcheckbox", { name: /Show header info/ })
+    ).toHaveAttribute("aria-checked", "true");
+});
+
+it("shows the chart name in the header, with or without a logo", async () => {
+    const withLogo = render(BracketSvg, {
+        chartId: "c",
+        chartJson,
+        imgPath: "AASBD/Double/08double.png",
+        chartName: "Junior Division",
+    });
+    await openMenu(withLogo);
+    await fireEvent.click(
+        withLogo.getByRole("menuitemcheckbox", { name: /Show header info/ })
+    );
+    const title = withLogo.container.querySelector(".header-title");
+    expect(title.textContent).toBe("Junior Division");
+    expect(Number(title.getAttribute("x"))).toBeGreaterThan(
+        Number(
+            withLogo.container.querySelector(".header-logo").getAttribute("x")
+        )
+    );
+    cleanup();
+
+    const nameOnly = render(BracketSvg, {
+        chartId: "c",
+        chartJson,
+        chartName: "Junior Division",
+    });
+    const svg = nameOnly.getByRole("group", { name: "SVG bracket prototype" });
+    const heightBefore = Number(svg.getAttribute("viewBox").split(" ")[3]);
+    await openMenu(nameOnly);
+    await fireEvent.click(
+        nameOnly.getByRole("menuitemcheckbox", { name: /Show header info/ })
+    );
+    expect(nameOnly.container.querySelector(".header-logo")).toBeNull();
+    expect(nameOnly.container.querySelector(".header-title").textContent).toBe(
+        "Junior Division"
+    );
+    expect(Number(svg.getAttribute("viewBox").split(" ")[3])).toBe(
+        heightBefore + 48
+    );
 });

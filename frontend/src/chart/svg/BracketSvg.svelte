@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher, onMount, tick } from "svelte";
     import { faEye } from "@fortawesome/free-solid-svg-icons/faEye";
     import { faEyeSlash } from "@fortawesome/free-solid-svg-icons/faEyeSlash";
     import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
@@ -18,13 +18,18 @@
     import { doRefreshBlocks } from "../../stores.js";
     import { augmentChartState } from "../../utils.js";
     import SvgBracketSlot from "./SvgBracketSlot.svelte";
-    import { HEADER_HEIGHT, chartHeaderLogo } from "./chartHeader.js";
+    import {
+        chartHeaderHeight,
+        chartHeaderLogo,
+        chartHeaderTitle,
+    } from "./chartHeader.js";
     import { printSvgElement } from "./printSvg.js";
 
     export let chartJson = { progress: {} };
     export let chartId = "";
     // Chart image path ("AASBD/..." or "NDR/..."); picks the header logo.
     export let imgPath = "";
+    export let chartName = "";
 
     const dispatch = createEventDispatcher();
     const ZOOM_LEVELS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8];
@@ -33,6 +38,9 @@
     let settingsElement;
     let settingsOpen = false;
     let showHeader = false;
+    let showAll = false;
+    // Columns hidden by the default view; restored when Show all is turned off.
+    let defaultHiddenColumnIds = new Set();
     let showDriverNames = true;
     let chartViewport;
     let fittedWidth;
@@ -62,11 +70,20 @@
         ...Object.values(layout.heats).map((heat) => heat.y + heat.height)
     );
     $: headerLogo = chartHeaderLogo(imgPath);
-    $: headerOffset = showHeader && headerLogo ? HEADER_HEIGHT : 0;
+    $: headerHeight = chartHeaderHeight(headerLogo, chartName);
+    $: headerOffset = showHeader ? headerHeight : 0;
+    $: headerTitle = chartHeaderTitle(
+        chartName,
+        headerLogo,
+        layout.viewBox.width,
+        headerHeight
+    );
     $: svgWidth = fittedWidth ? `${fittedWidth * zoom}px` : "100%";
     $: if (chartId !== visibilityChartId) {
         visibilityChartId = chartId;
         hiddenColumnIds = new Set();
+        defaultHiddenColumnIds = new Set();
+        showAll = false;
         columnStatuses = {};
         visibilityInitializedFor = "";
         placementStates = {};
@@ -182,8 +199,13 @@
         );
     }
 
-    function showAllColumns() {
-        hiddenColumnIds = new Set();
+    function setShowAll(on) {
+        showAll = on;
+        hiddenColumnIds = on ? new Set() : new Set(defaultHiddenColumnIds);
+    }
+
+    function toggleShowAll() {
+        setShowAll(!showAll);
         settingsOpen = false;
     }
 
@@ -197,9 +219,14 @@
         settingsOpen = false;
     }
 
-    function printChart() {
+    async function printChart() {
         settingsOpen = false;
-        if (svgElement) printSvgElement(svgElement, { title: "Chart" });
+        setShowAll(true);
+        if (headerHeight) showHeader = true;
+        await tick();
+        if (svgElement) {
+            printSvgElement(svgElement, { title: chartName || "Chart" });
+        }
     }
 
     function handleWindowClick(event) {
@@ -218,8 +245,10 @@
 
     function setColumnHidden(columnId, hidden) {
         const next = new Set(hiddenColumnIds);
-        if (hidden) next.add(columnId);
-        else next.delete(columnId);
+        if (hidden) {
+            next.add(columnId);
+            showAll = false;
+        } else next.delete(columnId);
         hiddenColumnIds = next;
     }
 
@@ -257,9 +286,12 @@
             ])
         );
         if (visibilityInitializedFor !== nextChartId) {
-            hiddenColumnIds = new Set(
+            defaultHiddenColumnIds = new Set(
                 getInitialHiddenColumnIds(nextLayout, heatStates)
             );
+            hiddenColumnIds = showAll
+                ? new Set()
+                : new Set(defaultHiddenColumnIds);
             visibilityInitializedFor = nextChartId;
         }
     }
@@ -339,10 +371,11 @@
             <div class="settings-menu" role="menu" aria-label="Chart settings">
                 <button
                     type="button"
-                    role="menuitem"
-                    disabled={hiddenColumnIds.size === 0}
-                    on:click={showAllColumns}
+                    role="menuitemcheckbox"
+                    aria-checked={showAll}
+                    on:click={toggleShowAll}
                 >
+                    <span class="check">{showAll ? "✓" : ""}</span>
                     <span class="label">Show all</span>
                 </button>
                 <button type="button" role="menuitem" on:click={printChart}>
@@ -352,8 +385,8 @@
                     type="button"
                     role="menuitemcheckbox"
                     aria-checked={showHeader}
-                    disabled={!headerLogo}
-                    title={headerLogo ? "" : "No logo for this chart"}
+                    disabled={!headerHeight}
+                    title={headerHeight ? "" : "No logo or chart name"}
                     on:click={toggleHeader}
                 >
                     <span class="check">{showHeader ? "✓" : ""}</span>
@@ -401,15 +434,27 @@
             </marker>
         </defs>
         {#if headerOffset}
-            <image
-                class="header-logo"
-                href={headerLogo.src}
-                x={headerLogo.x}
-                y={headerLogo.y}
-                width={headerLogo.width}
-                height={headerLogo.height}
-                aria-label={headerLogo.alt}
-            />
+            {#if headerLogo}
+                <image
+                    class="header-logo"
+                    href={headerLogo.src}
+                    x={headerLogo.x}
+                    y={headerLogo.y}
+                    width={headerLogo.width}
+                    height={headerLogo.height}
+                    aria-label={headerLogo.alt}
+                />
+            {/if}
+            {#if headerTitle}
+                <text
+                    class="header-title"
+                    x={headerTitle.x}
+                    y={headerTitle.y}
+                    dominant-baseline="central"
+                    style={`font-size: ${headerTitle.fontSize}px`}
+                    >{headerTitle.text}</text
+                >
+            {/if}
         {/if}
         <g transform={`translate(0 ${headerOffset})`}>
             <g class="column-controls" aria-label="Chart columns">
@@ -730,6 +775,11 @@
 
     .zoom-controls .settings-menu button:hover:not(:disabled) {
         background: #e8eef0;
+    }
+
+    .header-title {
+        font-weight: 700;
+        fill: #172126;
     }
 
     .settings-menu .check {

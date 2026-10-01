@@ -55,6 +55,7 @@
         chartJson={chartJson}
         chartId={params.chartId}
         imgPath={bracketMeta.imgPath}
+        chartName={bracketMeta.bracketName}
         on:slotclick={openChartPosition}
     />
 {:else}

@@ -1,6 +1,11 @@
 import { expect, it } from "vitest";
 import { buildPrintableSvg } from "./printSvg.js";
-import { chartHeaderLogo, HEADER_HEIGHT } from "./chartHeader.js";
+import {
+    chartHeaderHeight,
+    chartHeaderLogo,
+    chartHeaderTitle,
+    HEADER_HEIGHT,
+} from "./chartHeader.js";
 
 it("builds a printable SVG without zoom sizing or column buttons", () => {
     document.body.innerHTML = `
@@ -40,4 +45,23 @@ it("picks the header logo from the chart image path", () => {
     expect(chartHeaderLogo()).toBeUndefined();
     const logo = chartHeaderLogo("NDR/N08double.png");
     expect(logo.height).toBeLessThanOrEqual(HEADER_HEIGHT);
+});
+
+it("sizes the header and fits the chart name beside the logo", () => {
+    const logo = chartHeaderLogo("NDR/N08double.png");
+    expect(chartHeaderHeight(logo, "Name")).toBe(HEADER_HEIGHT);
+    expect(chartHeaderHeight(undefined, "Name")).toBe(48);
+    expect(chartHeaderHeight(undefined, "")).toBe(0);
+    expect(chartHeaderTitle("", logo, 1000, HEADER_HEIGHT)).toBeUndefined();
+
+    const title = chartHeaderTitle("Name", logo, 1000, HEADER_HEIGHT);
+    expect(title.x).toBeGreaterThan(logo.x + logo.width);
+    expect(title.y).toBe(HEADER_HEIGHT / 2);
+    expect(title.fontSize).toBe(28);
+
+    const long = chartHeaderTitle("A".repeat(80), logo, 600, HEADER_HEIGHT);
+    expect(long.fontSize).toBeLessThan(28);
+    expect(80 * long.fontSize * 0.62).toBeLessThanOrEqual(
+        600 - long.x - 12 + 0.001
+    );
 });
