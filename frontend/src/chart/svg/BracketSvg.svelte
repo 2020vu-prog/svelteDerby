@@ -2,6 +2,7 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { faEye } from "@fortawesome/free-solid-svg-icons/faEye";
     import { faEyeSlash } from "@fortawesome/free-solid-svg-icons/faEyeSlash";
+    import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
     import {
         applySvgColumnVisibility,
         buildSvgChartLayout,
@@ -17,13 +18,22 @@
     import { doRefreshBlocks } from "../../stores.js";
     import { augmentChartState } from "../../utils.js";
     import SvgBracketSlot from "./SvgBracketSlot.svelte";
+    import { HEADER_HEIGHT, chartHeaderLogo } from "./chartHeader.js";
+    import { printSvgElement } from "./printSvg.js";
 
     export let chartJson = { progress: {} };
     export let chartId = "";
+    // Chart image path ("AASBD/..." or "NDR/..."); picks the header logo.
+    export let imgPath = "";
 
     const dispatch = createEventDispatcher();
     const ZOOM_LEVELS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8];
     let zoomIndex = 0;
+    let svgElement;
+    let settingsElement;
+    let settingsOpen = false;
+    let showHeader = false;
+    let shortDriverNames = false;
     let chartViewport;
     let fittedWidth;
     let hiddenColumnIds = new Set();
@@ -51,6 +61,8 @@
         34,
         ...Object.values(layout.heats).map((heat) => heat.y + heat.height)
     );
+    $: headerLogo = chartHeaderLogo(imgPath);
+    $: headerOffset = showHeader && headerLogo ? HEADER_HEIGHT : 0;
     $: svgWidth = fittedWidth ? `${fittedWidth * zoom}px` : "100%";
     $: if (chartId !== visibilityChartId) {
         visibilityChartId = chartId;
@@ -87,14 +99,17 @@
         return svgHeatTitleLayout(heat.id, heat.annotation, heat.width);
     }
 
-    function slotLayout(heat, state) {
-        return svgSlotTextLayout(slotLabel(state), heat.width);
+    function slotLayout(heat, state, shortNames = false) {
+        const textLayout = svgSlotTextLayout(slotLabel(state), heat.width);
+        return shortNames ? { ...textLayout, driverName: "" } : textLayout;
     }
 
     function driverNameX(heat, slot, state) {
         return (
             slotX(heat, slot) +
-            slotLayout(heat, state).carNumber.length * 22 * 0.56 +
+            slotLayout(heat, state, shortDriverNames).carNumber.length *
+                22 *
+                0.56 +
             6
         );
     }
@@ -165,6 +180,40 @@
             ZOOM_LEVELS.length - 1,
             Math.max(0, Number(value))
         );
+    }
+
+    function showAllColumns() {
+        hiddenColumnIds = new Set();
+        settingsOpen = false;
+    }
+
+    function toggleHeader() {
+        showHeader = !showHeader;
+        settingsOpen = false;
+    }
+
+    function toggleShortDriverNames() {
+        shortDriverNames = !shortDriverNames;
+        settingsOpen = false;
+    }
+
+    function printChart() {
+        settingsOpen = false;
+        if (svgElement) printSvgElement(svgElement, { title: "Chart" });
+    }
+
+    function handleWindowClick(event) {
+        if (
+            settingsOpen &&
+            settingsElement &&
+            !settingsElement.contains(event.target)
+        ) {
+            settingsOpen = false;
+        }
+    }
+
+    function handleWindowKeydown(event) {
+        if (event.key === "Escape") settingsOpen = false;
     }
 
     function setColumnHidden(columnId, hidden) {
@@ -267,7 +316,64 @@
         disabled={zoomIndex === 0}
         on:click={() => setZoomIndex(0)}>{Math.round(zoom * 100)}%</button
     >
+    <div class="settings" bind:this={settingsElement}>
+        <button
+            type="button"
+            class="settings-button"
+            title="Chart settings"
+            aria-label="Chart settings"
+            aria-haspopup="menu"
+            aria-expanded={settingsOpen}
+            on:click={() => (settingsOpen = !settingsOpen)}
+        >
+            <svg
+                viewBox="0 0 512 512"
+                width="16"
+                height="16"
+                aria-hidden="true"
+            >
+                <path d={faCog.icon[4]} fill="currentColor" />
+            </svg>
+        </button>
+        {#if settingsOpen}
+            <div class="settings-menu" role="menu" aria-label="Chart settings">
+                <button
+                    type="button"
+                    role="menuitem"
+                    disabled={hiddenColumnIds.size === 0}
+                    on:click={showAllColumns}
+                >
+                    <span class="label">Show all</span>
+                </button>
+                <button type="button" role="menuitem" on:click={printChart}>
+                    <span class="label">Print</span>
+                </button>
+                <button
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={showHeader}
+                    disabled={!headerLogo}
+                    title={headerLogo ? "" : "No logo for this chart"}
+                    on:click={toggleHeader}
+                >
+                    <span class="check">{showHeader ? "✓" : ""}</span>
+                    <span class="label">Show header info</span>
+                </button>
+                <button
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={shortDriverNames}
+                    on:click={toggleShortDriverNames}
+                >
+                    <span class="check">{shortDriverNames ? "✓" : ""}</span>
+                    <span class="label">Short driver names</span>
+                </button>
+            </div>
+        {/if}
+    </div>
 </div>
+
+<svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeydown} />
 
 <div
     class="svg-bracket"
@@ -275,7 +381,8 @@
     bind:this={chartViewport}
 >
     <svg
-        viewBox={`0 0 ${layout.viewBox.width} ${layout.viewBox.height}`}
+        bind:this={svgElement}
+        viewBox={`0 0 ${layout.viewBox.width} ${layout.viewBox.height + headerOffset}`}
         style={`width: ${svgWidth}`}
         role="group"
         aria-label="SVG bracket prototype"
@@ -293,214 +400,262 @@
                 <path d="M 0 0 L 8 4 L 0 8 z" class="winner-arrow" />
             </marker>
         </defs>
-        <g class="column-controls" aria-label="Chart columns">
-            {#each layout.columns as column}
-                {#if column.hidden}
-                    <line
-                        class="hidden-column-placeholder"
-                        x1={column.x + column.width / 2}
-                        y1="34"
-                        x2={column.x + column.width / 2}
-                        y2={heatAreaBottom}
-                    />
-                {/if}
-                <g
-                    class={`column-control ${columnStatuses[column.id] || ""}`}
-                    role="button"
-                    tabindex="0"
-                    aria-label={`${column.hidden ? "Show" : "Hide"} ${column.label}`}
-                    transform={`translate(${column.x + column.width / 2 - 14} 6)`}
-                    on:click={() => setColumnHidden(column.id, !column.hidden)}
-                    on:keydown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            setColumnHidden(column.id, !column.hidden);
-                        }
-                    }}
-                >
-                    <title
-                        >{column.hidden ? "Show" : "Hide"} {column.label}</title
-                    >
-                    <rect width="28" height="24" rx="4" />
-                    <path
-                        d={(column.hidden ? faEye : faEyeSlash).icon[4]}
-                        transform="translate(6 7) scale(0.03125)"
-                    />
-                </g>
-            {/each}
-        </g>
-        <g class="connections">
-            {#each layout.edges.filter((edge) => edge.toHeat && edge.result === "winner") as edge}
-                <path
-                    d={svgEdgePath(edge, layout)}
-                    marker-end="url(#winner-arrow)"
-                />
-            {/each}
-        </g>
-
-        {#each Object.values(layout.heats) as heat}
-            <g class="heat" transform={`translate(${heat.x} ${heat.y})`}>
-                <rect width={heat.width} height={heat.height} />
-                {#if !layout.positioned}
-                    <line
-                        x1="0"
-                        y1={heat.height / 2}
-                        x2={heat.width}
-                        y2={heat.height / 2}
-                    />
-                {/if}
-                <g
-                    class="slot-target"
-                    role="button"
-                    tabindex="0"
-                    on:click={() => chooseSlot(heat.id, "A")}
-                    on:keydown={(event) =>
-                        handleSlotKeydown(event, heat.id, "A")}
-                >
-                    <SvgBracketSlot
-                        chartJson={chartJson}
-                        chartId={chartId}
-                        heatId={heat.id}
-                        slot="A"
-                        let:state
-                    >
-                        <g aria-label={slotAriaLabel(heat.id, "A", state)}>
-                            <rect
-                                class="slot-hitbox"
-                                x={layout.positioned ? slotX(heat, "A") - 4 : 0}
-                                y={layout.positioned
-                                    ? slotHitboxY(heat, "A")
-                                    : 0}
-                                width={heat.width}
-                                height={layout.positioned
-                                    ? 24
-                                    : heat.height / 2}
-                            />
-                            <text
-                                class="heat-number"
-                                x="8"
-                                y="15"
-                                style={`font-size: ${heatTitle(heat).fontSize}px`}
-                                >{heatTitle(heat).text}</text
-                            >
-                            <text
-                                class={`slot ${state.bracketClass || ""}`}
-                                x={slotX(heat, "A")}
-                                y={slotY(heat, "A")}
-                                style={`font-size: ${slotLayout(heat, state).labelFontSize}px`}
-                            >
-                                {#if slotLayout(heat, state).carNumber}
-                                    <tspan
-                                        >{slotLayout(heat, state)
-                                            .carNumber}</tspan
-                                    >
-                                    {#if slotLayout(heat, state).driverName}
-                                        <tspan
-                                            x={driverNameX(heat, "A", state)}
-                                            style={`font-size: ${slotLayout(heat, state).driverFontSize}px`}
-                                            >{slotLayout(heat, state)
-                                                .driverName}</tspan
-                                        >
-                                    {/if}
-                                {:else}
-                                    {slotLayout(heat, state).label}
-                                {/if}
-                            </text>
-                        </g>
-                    </SvgBracketSlot>
-                </g>
-                <g
-                    class="slot-target"
-                    role="button"
-                    tabindex="0"
-                    on:click={() => chooseSlot(heat.id, "B")}
-                    on:keydown={(event) =>
-                        handleSlotKeydown(event, heat.id, "B")}
-                >
-                    <SvgBracketSlot
-                        chartJson={chartJson}
-                        chartId={chartId}
-                        heatId={heat.id}
-                        slot="B"
-                        let:state
-                    >
-                        <g aria-label={slotAriaLabel(heat.id, "B", state)}>
-                            <rect
-                                class="slot-hitbox"
-                                x={layout.positioned ? slotX(heat, "B") - 4 : 0}
-                                y={layout.positioned
-                                    ? slotHitboxY(heat, "B")
-                                    : heat.height / 2}
-                                width={heat.width}
-                                height={layout.positioned
-                                    ? 24
-                                    : heat.height / 2}
-                            />
-                            <text
-                                class={`slot ${state.bracketClass || ""}`}
-                                x={slotX(heat, "B")}
-                                y={slotY(heat, "B")}
-                                style={`font-size: ${slotLayout(heat, state).labelFontSize}px`}
-                            >
-                                {#if slotLayout(heat, state).carNumber}
-                                    <tspan
-                                        >{slotLayout(heat, state)
-                                            .carNumber}</tspan
-                                    >
-                                    {#if slotLayout(heat, state).driverName}
-                                        <tspan
-                                            x={driverNameX(heat, "B", state)}
-                                            style={`font-size: ${slotLayout(heat, state).driverFontSize}px`}
-                                            >{slotLayout(heat, state)
-                                                .driverName}</tspan
-                                        >
-                                    {/if}
-                                {:else}
-                                    {slotLayout(heat, state).label}
-                                {/if}
-                            </text>
-                        </g>
-                    </SvgBracketSlot>
-                </g>
-            </g>
-        {/each}
-
-        {#each Object.values(layout.placements) as placement}
-            <g
-                class="placement"
-                role="button"
-                tabindex="0"
-                on:click={() => choosePlacement(placement.id)}
-                on:keydown={(event) =>
-                    handlePlacementKeydown(event, placement.id)}
-                transform={`translate(${placement.x} ${placement.y})`}
-            >
-                <SvgBracketSlot
-                    chartJson={chartJson}
-                    chartId={chartId}
-                    position={placement.id}
-                    on:statechange={(event) =>
-                        updatePlacementState(placement.id, event.detail)}
-                    let:state
-                >
-                    <g
-                        aria-label={`${placementLabel(placement, state)} placement`}
-                    >
-                        <rect
-                            width={placement.width}
-                            height={placement.height}
+        {#if headerOffset}
+            <image
+                class="header-logo"
+                href={headerLogo.src}
+                x={headerLogo.x}
+                y={headerLogo.y}
+                width={headerLogo.width}
+                height={headerLogo.height}
+                aria-label={headerLogo.alt}
+            />
+        {/if}
+        <g transform={`translate(0 ${headerOffset})`}>
+            <g class="column-controls" aria-label="Chart columns">
+                {#each layout.columns as column}
+                    {#if column.hidden}
+                        <line
+                            class="hidden-column-placeholder"
+                            x1={column.x + column.width / 2}
+                            y1="34"
+                            x2={column.x + column.width / 2}
+                            y2={heatAreaBottom}
                         />
-                        <text
-                            class={`slot ${state.bracketClass || ""}`}
-                            x="8"
-                            y="30"
-                            style={`font-size: ${placementTextLayout(placement, state).labelFontSize}px`}
-                            >{placementTextLayout(placement, state).label}</text
+                    {/if}
+                    <g
+                        class={`column-control ${columnStatuses[column.id] || ""}`}
+                        role="button"
+                        tabindex="0"
+                        aria-label={`${column.hidden ? "Show" : "Hide"} ${column.label}`}
+                        transform={`translate(${column.x + column.width / 2 - 14} 6)`}
+                        on:click={() =>
+                            setColumnHidden(column.id, !column.hidden)}
+                        on:keydown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                setColumnHidden(column.id, !column.hidden);
+                            }
+                        }}
+                    >
+                        <title
+                            >{column.hidden ? "Show" : "Hide"}
+                            {column.label}</title
                         >
+                        <rect width="28" height="24" rx="4" />
+                        <path
+                            d={(column.hidden ? faEye : faEyeSlash).icon[4]}
+                            transform="translate(6 7) scale(0.03125)"
+                        />
                     </g>
-                </SvgBracketSlot>
+                {/each}
             </g>
-        {/each}
+            <g class="connections">
+                {#each layout.edges.filter((edge) => edge.toHeat && edge.result === "winner") as edge}
+                    <path
+                        d={svgEdgePath(edge, layout)}
+                        marker-end="url(#winner-arrow)"
+                    />
+                {/each}
+            </g>
+
+            {#each Object.values(layout.heats) as heat}
+                <g class="heat" transform={`translate(${heat.x} ${heat.y})`}>
+                    <rect width={heat.width} height={heat.height} />
+                    {#if !layout.positioned}
+                        <line
+                            x1="0"
+                            y1={heat.height / 2}
+                            x2={heat.width}
+                            y2={heat.height / 2}
+                        />
+                    {/if}
+                    <g
+                        class="slot-target"
+                        role="button"
+                        tabindex="0"
+                        on:click={() => chooseSlot(heat.id, "A")}
+                        on:keydown={(event) =>
+                            handleSlotKeydown(event, heat.id, "A")}
+                    >
+                        <SvgBracketSlot
+                            chartJson={chartJson}
+                            chartId={chartId}
+                            heatId={heat.id}
+                            slot="A"
+                            let:state
+                        >
+                            <g aria-label={slotAriaLabel(heat.id, "A", state)}>
+                                <rect
+                                    class="slot-hitbox"
+                                    x={layout.positioned
+                                        ? slotX(heat, "A") - 4
+                                        : 0}
+                                    y={layout.positioned
+                                        ? slotHitboxY(heat, "A")
+                                        : 0}
+                                    width={heat.width}
+                                    height={layout.positioned
+                                        ? 24
+                                        : heat.height / 2}
+                                />
+                                <text
+                                    class="heat-number"
+                                    x="8"
+                                    y="15"
+                                    style={`font-size: ${heatTitle(heat).fontSize}px`}
+                                    >{heatTitle(heat).text}</text
+                                >
+                                <text
+                                    class={`slot ${state.bracketClass || ""}`}
+                                    x={slotX(heat, "A")}
+                                    y={slotY(heat, "A")}
+                                    style={`font-size: ${slotLayout(heat, state, shortDriverNames).labelFontSize}px`}
+                                >
+                                    {#if slotLayout(heat, state, shortDriverNames).carNumber}
+                                        <tspan
+                                            >{slotLayout(
+                                                heat,
+                                                state,
+                                                shortDriverNames
+                                            ).carNumber}</tspan
+                                        >
+                                        {#if slotLayout(heat, state, shortDriverNames).driverName}
+                                            <tspan
+                                                x={driverNameX(
+                                                    heat,
+                                                    "A",
+                                                    state
+                                                )}
+                                                style={`font-size: ${slotLayout(heat, state, shortDriverNames).driverFontSize}px`}
+                                                >{slotLayout(
+                                                    heat,
+                                                    state,
+                                                    shortDriverNames
+                                                ).driverName}</tspan
+                                            >
+                                        {/if}
+                                    {:else}
+                                        {slotLayout(
+                                            heat,
+                                            state,
+                                            shortDriverNames
+                                        ).label}
+                                    {/if}
+                                </text>
+                            </g>
+                        </SvgBracketSlot>
+                    </g>
+                    <g
+                        class="slot-target"
+                        role="button"
+                        tabindex="0"
+                        on:click={() => chooseSlot(heat.id, "B")}
+                        on:keydown={(event) =>
+                            handleSlotKeydown(event, heat.id, "B")}
+                    >
+                        <SvgBracketSlot
+                            chartJson={chartJson}
+                            chartId={chartId}
+                            heatId={heat.id}
+                            slot="B"
+                            let:state
+                        >
+                            <g aria-label={slotAriaLabel(heat.id, "B", state)}>
+                                <rect
+                                    class="slot-hitbox"
+                                    x={layout.positioned
+                                        ? slotX(heat, "B") - 4
+                                        : 0}
+                                    y={layout.positioned
+                                        ? slotHitboxY(heat, "B")
+                                        : heat.height / 2}
+                                    width={heat.width}
+                                    height={layout.positioned
+                                        ? 24
+                                        : heat.height / 2}
+                                />
+                                <text
+                                    class={`slot ${state.bracketClass || ""}`}
+                                    x={slotX(heat, "B")}
+                                    y={slotY(heat, "B")}
+                                    style={`font-size: ${slotLayout(heat, state, shortDriverNames).labelFontSize}px`}
+                                >
+                                    {#if slotLayout(heat, state, shortDriverNames).carNumber}
+                                        <tspan
+                                            >{slotLayout(
+                                                heat,
+                                                state,
+                                                shortDriverNames
+                                            ).carNumber}</tspan
+                                        >
+                                        {#if slotLayout(heat, state, shortDriverNames).driverName}
+                                            <tspan
+                                                x={driverNameX(
+                                                    heat,
+                                                    "B",
+                                                    state
+                                                )}
+                                                style={`font-size: ${slotLayout(heat, state, shortDriverNames).driverFontSize}px`}
+                                                >{slotLayout(
+                                                    heat,
+                                                    state,
+                                                    shortDriverNames
+                                                ).driverName}</tspan
+                                            >
+                                        {/if}
+                                    {:else}
+                                        {slotLayout(
+                                            heat,
+                                            state,
+                                            shortDriverNames
+                                        ).label}
+                                    {/if}
+                                </text>
+                            </g>
+                        </SvgBracketSlot>
+                    </g>
+                </g>
+            {/each}
+
+            {#each Object.values(layout.placements) as placement}
+                <g
+                    class="placement"
+                    role="button"
+                    tabindex="0"
+                    on:click={() => choosePlacement(placement.id)}
+                    on:keydown={(event) =>
+                        handlePlacementKeydown(event, placement.id)}
+                    transform={`translate(${placement.x} ${placement.y})`}
+                >
+                    <SvgBracketSlot
+                        chartJson={chartJson}
+                        chartId={chartId}
+                        position={placement.id}
+                        on:statechange={(event) =>
+                            updatePlacementState(placement.id, event.detail)}
+                        let:state
+                    >
+                        <g
+                            aria-label={`${placementLabel(placement, state)} placement`}
+                        >
+                            <rect
+                                width={placement.width}
+                                height={placement.height}
+                            />
+                            <text
+                                class={`slot ${state.bracketClass || ""}`}
+                                x="8"
+                                y="30"
+                                style={`font-size: ${placementTextLayout(placement, state).labelFontSize}px`}
+                                >{placementTextLayout(placement, state)
+                                    .label}</text
+                            >
+                        </g>
+                    </SvgBracketSlot>
+                </g>
+            {/each}
+        </g>
     </svg>
 </div>
 
@@ -536,6 +691,50 @@
 
     .zoom-controls .zoom-value {
         min-width: 58px;
+    }
+
+    .zoom-controls .settings {
+        position: relative;
+    }
+
+    .zoom-controls .settings-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .settings-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        min-width: 190px;
+        margin-top: 4px;
+        padding: 4px 0;
+        border: 1px solid #77909a;
+        border-radius: 4px;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .zoom-controls .settings-menu button {
+        height: auto;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 0;
+        text-align: left;
+        font-weight: 400;
+    }
+
+    .zoom-controls .settings-menu button:hover:not(:disabled) {
+        background: #e8eef0;
+    }
+
+    .settings-menu .check {
+        display: inline-block;
+        width: 1.25em;
     }
 
     .svg-bracket {

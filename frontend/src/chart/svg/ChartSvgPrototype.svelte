@@ -54,6 +54,7 @@
     <BracketSvg
         chartJson={chartJson}
         chartId={params.chartId}
+        imgPath={bracketMeta.imgPath}
         on:slotclick={openChartPosition}
     />
 {:else}
