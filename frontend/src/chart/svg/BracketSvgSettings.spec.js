@@ -54,7 +54,12 @@ it("opens the settings menu from the gear and closes it on Escape or outside cli
         [...menu.querySelectorAll("[role^=menuitem]")].map((item) =>
             item.textContent.replace("✓", "").trim()
         )
-    ).toEqual(["Show all", "Print", "Show header info", "Show driver names"]);
+    ).toEqual([
+        "Show all columns",
+        "Print",
+        "Show header info",
+        "Show driver names",
+    ]);
 
     await fireEvent.keyDown(window, { key: "Escape" });
     expect(view.queryByRole("menu")).not.toBeInTheDocument();
@@ -65,7 +70,7 @@ it("opens the settings menu from the gear and closes it on Escape or outside cli
 });
 
 function showAllItem(view) {
-    return view.getByRole("menuitemcheckbox", { name: /Show all/ });
+    return view.getByRole("menuitemcheckbox", { name: /Show all columns/ });
 }
 
 it("toggles show all and returns to the default view when turned off", async () => {
@@ -321,4 +326,56 @@ it("shows just the centered chart name when the chart has no logo", async () => 
     expect(Number(svg.getAttribute("viewBox").split(" ")[3])).toBe(
         heightBefore + 48
     );
+});
+
+it("increases and resets the white space between columns", async () => {
+    const view = render(BracketSvg, { chartId: "c", chartJson });
+    // Distance between the first two column buttons grows with the spacing.
+    const columnDistance = () => {
+        const [first, second] = [
+            ...view.container.querySelectorAll(".column-control"),
+        ].map((el) =>
+            Number(
+                el.getAttribute("transform").match(/translate\(([-\d.]+)/)[1]
+            )
+        );
+        return second - first;
+    };
+    // Wait for the default view (column 2 hidden) to settle before measuring.
+    await waitFor(() =>
+        expect(
+            view.getByRole("button", { name: "Show Column 2" })
+        ).toBeInTheDocument()
+    );
+    const distance0 = columnDistance();
+
+    const menu = await openMenu(view);
+    const increase = view.getByRole("button", {
+        name: "Increase column spacing",
+    });
+    const decrease = view.getByRole("button", {
+        name: "Decrease column spacing",
+    });
+    expect(menu).toHaveTextContent("Column spacing");
+    expect(menu).toHaveTextContent("Default");
+    expect(decrease).toBeDisabled();
+
+    await fireEvent.click(increase);
+    // The menu stays open while adjusting.
+    expect(view.getByRole("menu")).toBeInTheDocument();
+    expect(columnDistance()).toBe(distance0 + 24);
+    expect(view.getByRole("menu")).toHaveTextContent("1");
+
+    await fireEvent.click(increase);
+    expect(columnDistance()).toBe(distance0 + 48);
+
+    await fireEvent.click(decrease);
+    await fireEvent.click(decrease);
+    expect(columnDistance()).toBe(distance0);
+    expect(view.getByRole("menu")).toHaveTextContent("Default");
+    expect(decrease).toBeDisabled();
+
+    for (let i = 0; i < 12; i++) await fireEvent.click(increase);
+    expect(increase).toBeDisabled();
+    expect(columnDistance()).toBe(distance0 + 10 * 24);
 });

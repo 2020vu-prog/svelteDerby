@@ -34,6 +34,9 @@
     export let eventName = "";
 
     const dispatch = createEventDispatcher();
+    // Each step of column spacing adds this much white space between columns.
+    const COLUMN_SPACING_STEP = 24;
+    const MAX_COLUMN_SPACING_STEPS = 10;
     const ZOOM_LEVELS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8];
     let zoomIndex = 0;
     let svgElement;
@@ -41,7 +44,8 @@
     let settingsOpen = false;
     let showHeader = false;
     let showAll = false;
-    // Columns hidden by the default view; restored when Show all is turned off.
+    let columnSpacingSteps = 0;
+    // Columns hidden by the default view; restored when Show all columns is turned off.
     let defaultHiddenColumnIds = new Set();
     let showDriverNames = true;
     let chartViewport;
@@ -60,7 +64,11 @@
         chartJson.imgSize
     );
     $: championshipColumnId = svgChampionshipColumnId(baseLayout);
-    $: compactLayout = applySvgColumnVisibility(baseLayout, hiddenColumnIds);
+    $: compactLayout = applySvgColumnVisibility(
+        baseLayout,
+        hiddenColumnIds,
+        columnSpacingSteps * COLUMN_SPACING_STEP
+    );
     $: placementLabels = Object.fromEntries(
         Object.values(baseLayout.placements).map((placement) => [
             placement.id,
@@ -238,6 +246,13 @@
         settingsOpen = false;
     }
 
+    function setColumnSpacingSteps(steps) {
+        columnSpacingSteps = Math.min(
+            MAX_COLUMN_SPACING_STEPS,
+            Math.max(0, steps)
+        );
+    }
+
     function toggleHeader() {
         showHeader = !showHeader;
         settingsOpen = false;
@@ -407,7 +422,7 @@
                     on:click={toggleShowAll}
                 >
                     <span class="check">{showAll ? "✓" : ""}</span>
-                    <span class="label">Show all</span>
+                    <span class="label">Show all columns</span>
                 </button>
                 <button type="button" role="menuitem" on:click={printChart}>
                     <span class="label">Print</span>
@@ -432,6 +447,35 @@
                     <span class="check">{showDriverNames ? "✓" : ""}</span>
                     <span class="label">Show driver names</span>
                 </button>
+                <div
+                    class="spacing-row"
+                    role="group"
+                    aria-label="Column spacing"
+                >
+                    <span class="label">Column spacing</span>
+                    <button
+                        type="button"
+                        class="spacing-button"
+                        aria-label="Decrease column spacing"
+                        disabled={columnSpacingSteps === 0}
+                        on:click={() =>
+                            setColumnSpacingSteps(columnSpacingSteps - 1)}
+                        >−</button
+                    >
+                    <span class="spacing-value" aria-live="polite"
+                        >{columnSpacingSteps || "Default"}</span
+                    >
+                    <button
+                        type="button"
+                        class="spacing-button"
+                        aria-label="Increase column spacing"
+                        disabled={columnSpacingSteps ===
+                            MAX_COLUMN_SPACING_STEPS}
+                        on:click={() =>
+                            setColumnSpacingSteps(columnSpacingSteps + 1)}
+                        >+</button
+                    >
+                </div>
             </div>
         {/if}
     </div>
@@ -826,6 +870,32 @@
     .header-title {
         font-weight: 700;
         fill: #172126;
+    }
+
+    .settings-menu .spacing-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+    }
+
+    .settings-menu .spacing-row .label {
+        flex: 1;
+    }
+
+    .zoom-controls .settings-menu .spacing-row button {
+        min-width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 1px solid #77909a;
+        border-radius: 4px;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .settings-menu .spacing-value {
+        min-width: 3.5em;
+        text-align: center;
     }
 
     .settings-menu .check {

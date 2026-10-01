@@ -499,7 +499,12 @@ export function svgColumnGuide(columns, championshipColumnId, columnId) {
     return index < target ? "right" : "left";
 }
 
-export function applySvgColumnVisibility(layout, hiddenColumnIds = []) {
+// `extraGap` widens every gap between columns (default: no extra space).
+export function applySvgColumnVisibility(
+    layout,
+    hiddenColumnIds = [],
+    extraGap = 0
+) {
     const hidden = new Set(hiddenColumnIds);
     let nextX = layout.margin || 0;
     const columns = (layout.columns || []).map((column) => {
@@ -512,7 +517,7 @@ export function applySvgColumnVisibility(layout, hiddenColumnIds = []) {
             contentWidth: column.width,
             hidden: isHidden,
         };
-        nextX += displayWidth + (layout.columnGap || 0);
+        nextX += displayWidth + (layout.columnGap || 0) + extraGap;
         return displayedColumn;
     });
     const columnX = new Map(
@@ -567,7 +572,10 @@ export function applySvgColumnVisibility(layout, hiddenColumnIds = []) {
         columns,
         viewBox: {
             width: columns.length
-                ? nextX - (layout.columnGap || 0) + (layout.margin || 0)
+                ? nextX -
+                  (layout.columnGap || 0) -
+                  extraGap +
+                  (layout.margin || 0)
                 : (layout.margin || 0) * 2,
             height: bottom + (layout.margin || 0),
         },

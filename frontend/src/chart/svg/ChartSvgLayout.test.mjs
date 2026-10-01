@@ -459,3 +459,25 @@ test("finds the championship column without annotations", () => {
     assert.equal(svgChampionshipColumnId(buildSvgChartLayout({})), undefined);
     assert.equal(svgColumnGuide([{ id: "a" }], undefined, "a"), undefined);
 });
+
+test("adds extra white space between columns only when asked", () => {
+    const layout = buildSvgChartLayout(guideProgress);
+    const plain = applySvgColumnVisibility(layout, []);
+    const same = applySvgColumnVisibility(layout, [], 0);
+    const spaced = applySvgColumnVisibility(layout, [], 30);
+    const count = plain.columns.length;
+
+    assert.deepEqual(same.columns, plain.columns);
+    assert.equal(same.viewBox.width, plain.viewBox.width);
+    spaced.columns.forEach((column, index) => {
+        assert.equal(column.x, plain.columns[index].x + index * 30);
+        assert.equal(column.width, plain.columns[index].width);
+    });
+    assert.equal(spaced.viewBox.width, plain.viewBox.width + (count - 1) * 30);
+    for (const id of Object.keys(plain.heats)) {
+        const index = plain.columns.findIndex(
+            (column) => column.id === plain.heats[id].columnId
+        );
+        assert.equal(spaced.heats[id].x, plain.heats[id].x + index * 30);
+    }
+});
