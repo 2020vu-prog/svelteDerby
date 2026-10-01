@@ -15,6 +15,8 @@ const {
     buildSvgChartLayout,
     layoutSvgPlacements,
     svgEdgePath,
+    svgChampionshipColumnId,
+    svgColumnGuide,
     svgHeatTitleLayout,
     svgSlotFontSize,
     svgSlotTextLayout,
@@ -404,4 +406,56 @@ test("shrinks heat titles to fit the positioned heat frame", () => {
 
     const reset = svgHeatTitleLayout("127", "Championship2", 170);
     assert.ok(reset.text.length * reset.fontSize * 0.62 <= 170 - 16 + 0.001);
+});
+
+const guideProgress = {
+    1: { WinnerDest: "2A", LoserDest: "OUT" },
+    2: { WinnerDest: "3A", LoserDest: "OUT" },
+    3: {
+        WinnerDest: "Place1",
+        LoserDest: "4A",
+        Annotation: "Championship",
+    },
+    4: { WinnerDest: "Place3", LoserDest: "OUT" },
+};
+
+test("finds the championship column and points other columns toward it", () => {
+    const layout = buildSvgChartLayout(guideProgress);
+    const championship = svgChampionshipColumnId(layout);
+
+    assert.equal(championship, layout.heats["3"].columnId);
+    assert.deepEqual(
+        ["1", "2", "3", "4"].map((id) =>
+            svgColumnGuide(
+                layout.columns,
+                championship,
+                layout.heats[id].columnId
+            )
+        ),
+        ["right", "right", "flag", "left"]
+    );
+});
+
+test("finds the championship column without annotations", () => {
+    const conditional = buildSvgChartLayout({
+        1: { WinnerDest: "2A", LoserDest: "OUT" },
+        2: {
+            WinnerDest: "(AWINS?Place1:3B)",
+            LoserDest: "(AWINS?Place2:3A)",
+        },
+        3: { WinnerDest: "Place1", LoserDest: "Place2" },
+    });
+    assert.equal(
+        svgChampionshipColumnId(conditional),
+        conditional.heats["2"].columnId
+    );
+
+    const single = buildSvgChartLayout({
+        1: { WinnerDest: "2A", LoserDest: "OUT" },
+        2: { WinnerDest: "Place1", LoserDest: "Place2" },
+    });
+    assert.equal(svgChampionshipColumnId(single), single.heats["2"].columnId);
+
+    assert.equal(svgChampionshipColumnId(buildSvgChartLayout({})), undefined);
+    assert.equal(svgColumnGuide([{ id: "a" }], undefined, "a"), undefined);
 });

@@ -469,6 +469,36 @@ export function layoutSvgPlacements(layout, labels = {}) {
     };
 }
 
+// The column holding the championship heat: the heat annotated "Championship",
+// else the heat that feeds a championship reset heat, else the heat whose
+// winner takes Place1.
+export function svgChampionshipColumnId(layout) {
+    const heats = Object.values(layout.heats || {});
+    const heatId =
+        heats.find((heat) => heat.annotation === "Championship")?.id ??
+        heats.find((heat) => heat.optionalSourceHeatId)?.optionalSourceHeatId ??
+        (layout.edges || []).find(
+            (edge) =>
+                edge.fromHeat &&
+                edge.placement === "Place1" &&
+                edge.result === "winner"
+        )?.fromHeat;
+    return layout.heats?.[heatId]?.columnId;
+}
+
+// What to show under a hidden column's eye icon: a "flag" for the
+// championship column, otherwise the direction ("left" or "right") winners
+// advance toward it.
+export function svgColumnGuide(columns, championshipColumnId, columnId) {
+    const target = columns.findIndex(
+        (column) => column.id === championshipColumnId
+    );
+    const index = columns.findIndex((column) => column.id === columnId);
+    if (target < 0 || index < 0) return undefined;
+    if (index === target) return "flag";
+    return index < target ? "right" : "left";
+}
+
 export function applySvgColumnVisibility(layout, hiddenColumnIds = []) {
     const hidden = new Set(hiddenColumnIds);
     let nextX = layout.margin || 0;
