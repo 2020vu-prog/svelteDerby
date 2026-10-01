@@ -41,7 +41,7 @@
     let settingsOpen = false;
     let showHeader = false;
     let showAll = false;
-    // Columns hidden by the default view; restored when Show all is turned off.
+    // Columns hidden by the default view; restored when Show all columns is turned off.
     let defaultHiddenColumnIds = new Set();
     let showDriverNames = true;
     let chartViewport;
@@ -407,7 +407,7 @@
                     on:click={toggleShowAll}
                 >
                     <span class="check">{showAll ? "✓" : ""}</span>
-                    <span class="label">Show all</span>
+                    <span class="label">Show all columns</span>
                 </button>
                 <button type="button" role="menuitem" on:click={printChart}>
                     <span class="label">Print</span>

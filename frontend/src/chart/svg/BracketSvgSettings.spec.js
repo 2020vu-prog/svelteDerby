@@ -54,7 +54,12 @@ it("opens the settings menu from the gear and closes it on Escape or outside cli
         [...menu.querySelectorAll("[role^=menuitem]")].map((item) =>
             item.textContent.replace("✓", "").trim()
         )
-    ).toEqual(["Show all", "Print", "Show header info", "Show driver names"]);
+    ).toEqual([
+        "Show all columns",
+        "Print",
+        "Show header info",
+        "Show driver names",
+    ]);
 
     await fireEvent.keyDown(window, { key: "Escape" });
     expect(view.queryByRole("menu")).not.toBeInTheDocument();
@@ -65,7 +70,7 @@ it("opens the settings menu from the gear and closes it on Escape or outside cli
 });
 
 function showAllItem(view) {
-    return view.getByRole("menuitemcheckbox", { name: /Show all/ });
+    return view.getByRole("menuitemcheckbox", { name: /Show all columns/ });
 }
 
 it("toggles show all and returns to the default view when turned off", async () => {
