@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildChartTree, containsChart } from "#src/chartTree.js";
+import {
+    buildChartTree,
+    containsChart,
+} from "#src/chart/chartTree/chartTree.js";
 
 const listing = (...keys) => keys.map((Key) => ({ Key }));
 

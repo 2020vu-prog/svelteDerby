@@ -1,8 +1,8 @@
 import { render, fireEvent, cleanup } from "@testing-library/svelte";
 import { afterEach, expect, it } from "vitest";
 
-import ChartTree from "#src/ChartTree.svelte";
-import { buildChartTree } from "#src/chartTree.js";
+import ChartTree from "#src/chart/chartTree/ChartTree.svelte";
+import { buildChartTree } from "#src/chart/chartTree/chartTree.js";
 
 afterEach(cleanup);
 

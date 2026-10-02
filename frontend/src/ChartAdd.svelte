@@ -6,8 +6,8 @@
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "#src/eventDb.js";
-    import ChartTree from "#src/ChartTree.svelte";
-    import { buildChartTree } from "#src/chartTree.js";
+    import ChartTree from "#src/chart/chartTree/ChartTree.svelte";
+    import { buildChartTree } from "#src/chart/chartTree/chartTree.js";
     import {
         getCacheKey,
         getChartCacheKey,

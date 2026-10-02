@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import { containsChart } from "#src/chartTree.js";
+    import { containsChart } from "#src/chart/chartTree/chartTree.js";
 
     // Nodes from buildChartTree. Folders are native <details> elements and
     // charts are radio buttons sharing one group name, so expanding, keyboard
