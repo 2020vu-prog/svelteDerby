@@ -9,19 +9,17 @@
         doRefreshBlocks,
         mqttTimerTopic,
         initialReloadRoute,
-    } from "./stores.js";
-    import { getTimerPbConfig } from "./utils.js";
+    } from "#src/stores.js";
+    import { getTimerPbConfig } from "#src/utils.js";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { push, replace, querystring, pop } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
-    import TimerPbHealth from "./TimerPbHealth.svelte";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import TimerSelection from "./TimerSelection.svelte";
+    import { db } from "#src/eventDb.js";
+    import TimerPbHealth from "#src/TimerPbHealth.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import TimerSelection from "#src/TimerSelection.svelte";
     import { Form, FormGroup, FormText, Input, Label } from "sveltestrap";
     import { Base64 } from "js-base64";
-
-    //    import PrefFormInput from "./PrefFormInput.svelte";
 
     var bar2 = true;
     var activeTimerList = [];

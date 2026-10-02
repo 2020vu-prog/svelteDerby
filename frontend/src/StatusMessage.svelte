@@ -6,7 +6,7 @@
         statusMessageList,
         raceConfig,
         clearOldStatusMessages,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import { onMount } from "svelte";
 
     let messages = [];

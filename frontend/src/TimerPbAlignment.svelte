@@ -10,7 +10,7 @@
     } from "@rr1.us/timer_protobuf/calcFinishPb.js";
     import { Card, CardBody, CardHeader } from "sveltestrap";
     import { Base64 } from "js-base64";
-    import TimerPbHealth from "./TimerPbHealth.svelte";
+    import TimerPbHealth from "#src/TimerPbHealth.svelte";
     import {
         axios,
         timerState,
@@ -19,11 +19,11 @@
         raceConfig,
         pushMessage,
         doRefreshBlocks,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import { end, toSeconds, parse } from "iso8601-duration";
-    import TimerPbCard from "./TimerPbCard.svelte";
-    import TimerHistoryAge from "./TimerHistoryAge.svelte";
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import TimerPbCard from "#src/TimerPbCard.svelte";
+    import TimerHistoryAge from "#src/TimerHistoryAge.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
 
     import { onMount, onDestroy, tick } from "svelte";
     import {
@@ -33,7 +33,7 @@
         getTimerPinActiveMS,
         MqttGetTopic,
         protobufLongToNumber,
-    } from "./utils.js";
+    } from "#src/utils.js";
     import {
         Collapse,
         Modal,

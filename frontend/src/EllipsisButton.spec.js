@@ -1,6 +1,6 @@
 import { render, fireEvent } from "@testing-library/svelte";
 import { describe, it, expect } from "vitest";
-import EllipsisButton from "./EllipsisButton.svelte";
+import EllipsisButton from "#src/EllipsisButton.svelte";
 
 // Risk pattern: createEventDispatcher(). Svelte 5 idioms replace this with
 // callback props (see Phase 4 in docs/SvelteUpgradeProposal.md) -- this test

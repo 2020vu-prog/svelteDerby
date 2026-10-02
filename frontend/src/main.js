@@ -1,12 +1,12 @@
 import axios from "axios";
-import { initializeAwsConfig } from "./aws-config";
+import { initializeAwsConfig } from "#src/aws-config";
 
 async function startApp() {
     const response = await axios.get("/app/getAwsConfig", {
         params: { cache: "[AIV]{date}[/AIV]" },
     });
     initializeAwsConfig(response.data);
-    const { default: App } = await import("./App.svelte");
+    const { default: App } = await import("#src/App.svelte");
 
     return new App({
         target: document.body,

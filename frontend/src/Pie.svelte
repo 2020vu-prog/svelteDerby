@@ -1,5 +1,5 @@
 <script>
-    import { theme } from "./stores.js";
+    import { theme } from "#src/stores.js";
     export let size = 200;
     export let percent = 0;
     export let bgColor = "lightgrey";

@@ -1,6 +1,6 @@
 <script>
-    import { spotifySelectedDeviceId } from "./stores.js";
-    import { spotifySelectableDevices } from "./utils/spotify.js";
+    import { spotifySelectedDeviceId } from "#src/stores.js";
+    import { spotifySelectableDevices } from "#src/utils/spotify.js";
 
     export let readOnly = false;
     let devicesPromise;

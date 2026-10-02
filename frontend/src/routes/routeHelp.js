@@ -1,8 +1,8 @@
 "use strict";
 
-const { hasNamedPermission } = require("./routeAccess.js");
-const { getRequiredPermission } = require("./routeRegistry.js");
-const { RoutePermission } = require("./routePermission.js");
+const { hasNamedPermission } = require("#src/routes/routeAccess.js");
+const { getRequiredPermission } = require("#src/routes/routeRegistry.js");
+const { RoutePermission } = require("#src/routes/routePermission.js");
 
 const HELP_FILE_PATTERN =
     /^\.\/([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*)\.help(?:\.([A-Z][A-Z0-9_]*))?\.md$/;
@@ -71,7 +71,7 @@ function createHelpCatalog(keys) {
  *
  * @param {ReturnType<typeof createHelpCatalog>} catalog
  * @param {string|string[]} helpIds
- * @param {import("./routeRegistry.js").RouteContext} [context]
+ * @param {import("#src/routes/routeRegistry.js").RouteContext} [context]
  * @returns {ReturnType<typeof createHelpCatalog>}
  */
 function getVisibleHelpDescriptors(catalog, helpIds, context = {}) {
@@ -93,8 +93,8 @@ function getVisibleHelpDescriptors(catalog, helpIds, context = {}) {
  * permission and action resolvers. Returning no identifier leaves only the
  * shared component help active.
  *
- * @param {import("./routeRegistry.js").RouteMatch|null} match
- * @param {import("./routeRegistry.js").RouteContext} [context]
+ * @param {import("#src/routes/routeRegistry.js").RouteMatch|null} match
+ * @param {import("#src/routes/routeRegistry.js").RouteContext} [context]
  * @returns {string[]}
  */
 function resolveRouteHelpIds(match, context = {}) {
@@ -127,8 +127,8 @@ function resolveRouteHelpIds(match, context = {}) {
  * Resolves the permission name for the routed component currently receiving
  * help. Function-valued permissions receive the active route parameters.
  *
- * @param {import("./routeRegistry.js").RouteMatch|null} match
- * @param {import("./routeRegistry.js").RouteContext} [context]
+ * @param {import("#src/routes/routeRegistry.js").RouteMatch|null} match
+ * @param {import("#src/routes/routeRegistry.js").RouteContext} [context]
  * @returns {string}
  */
 function resolveRoutePermissionName(match, context = {}) {

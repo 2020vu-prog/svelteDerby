@@ -3,7 +3,7 @@
     import Icon from "fa-svelte";
     import { createEventDispatcher } from "svelte";
     import { push } from "svelte-spa-router";
-    import { theme } from "./stores.js";
+    import { theme } from "#src/stores.js";
 
     $: {
         document.documentElement.style.setProperty("--themeFromJS", $theme);

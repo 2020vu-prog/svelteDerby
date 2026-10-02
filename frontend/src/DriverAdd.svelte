@@ -3,21 +3,24 @@
 
     import { tick } from "svelte";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { driverMap, axios, raceConfig, pushMessage } from "./stores.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import { driverMap, axios, raceConfig, pushMessage } from "#src/stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
-    import { participantValid, participantFocusCompletion } from "./utils.js";
-    import { downloadFile } from "./utils.js";
+    import { db } from "#src/eventDb.js";
+    import {
+        participantValid,
+        participantFocusCompletion,
+    } from "#src/utils.js";
+    import { downloadFile } from "#src/utils.js";
     import {
         createPermissionStore,
         RoutePermission,
-    } from "./routes/frontendPermissions.js";
+    } from "#src/routes/frontendPermissions.js";
     import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
     import { stringify as csvStringify } from "csv-stringify/sync";
     import { parse as csvParse } from "csv-parse/sync";
-    import WalkupLinkEditor from "./WalkupLinkEditor.svelte";
+    import WalkupLinkEditor from "#src/WalkupLinkEditor.svelte";
     import QRCode from "qrcode";
 
     import Icon from "fa-svelte";

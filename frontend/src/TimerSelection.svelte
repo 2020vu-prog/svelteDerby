@@ -1,9 +1,9 @@
 <script>
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
-    import { sleep, secondsToHHMMSS } from "./utils.js";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { axios, raceConfig, pushMessage } from "./stores.js";
+    import { sleep, secondsToHHMMSS } from "#src/utils.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import { axios, raceConfig, pushMessage } from "#src/stores.js";
     import { onMount } from "svelte";
     import { createEventDispatcher } from "svelte";
     const { v4: uuidv4 } = require("uuid");

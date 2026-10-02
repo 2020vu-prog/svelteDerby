@@ -1,5 +1,5 @@
 <script>
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
 
     export let entity = {};
 

@@ -5,9 +5,9 @@
         fmtPinTime,
         getTimerPinActiveMS,
         protobufLongToNumber,
-    } from "./utils.js";
-    import Annotate from "./Annotate.svelte";
-    import { nextOnBlockKey, pushMessage, racePhaseMap } from "./stores.js";
+    } from "#src/utils.js";
+    import Annotate from "#src/Annotate.svelte";
+    import { nextOnBlockKey, pushMessage, racePhaseMap } from "#src/stores.js";
     import { push } from "svelte-spa-router";
     export let timerPbConfig = {};
     export let cdBlock = [];

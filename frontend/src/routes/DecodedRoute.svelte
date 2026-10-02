@@ -1,5 +1,5 @@
 <script>
-    const { decodeRouteParams } = require("./routeRegistry.js");
+    const { decodeRouteParams } = require("#src/routes/routeRegistry.js");
 
     export let component;
     export let params = {};

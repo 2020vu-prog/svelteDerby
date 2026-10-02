@@ -2,17 +2,17 @@ import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { afterEach, expect, it, vi } from "vitest";
 import { writable } from "svelte/store";
 
-vi.mock("../../stores.js", () => ({
+vi.mock("#src/stores.js", () => ({
     doRefreshBlocks: writable(0),
 }));
-vi.mock("../../utils.js", () => ({
+vi.mock("#src/utils.js", () => ({
     parseHeatPos: vi.fn((position) => [position, position]),
     augmentChartState: vi.fn(() =>
         Promise.resolve({ posHtml: "", bracketClass: "ready", rsFromDexie: {} })
     ),
 }));
 
-import BracketSvg from "./BracketSvg.svelte";
+import BracketSvg from "#src/chart/svg/BracketSvg.svelte";
 
 afterEach(cleanup);
 

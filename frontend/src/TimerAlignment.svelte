@@ -8,8 +8,8 @@
         raceConfig,
         pushMessage,
         doRefreshBlocks,
-    } from "./stores.js";
-    import SpinnerButton from "./SpinnerButton.svelte";
+    } from "#src/stores.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
     import { onMount, onDestroy } from "svelte";
     var laneStatusList = {
         lane1: {

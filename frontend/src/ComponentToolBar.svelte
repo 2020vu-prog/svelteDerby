@@ -9,23 +9,23 @@
         ModalHeader,
     } from "sveltestrap";
 
-    import { theme, driverMap } from "./stores.js";
+    import { theme, driverMap } from "#src/stores.js";
     import {
         axios,
         raceConfig,
         pushMessage,
         nextOnBlockKey,
-    } from "./stores.js";
+    } from "#src/stores.js";
 
     import { onMount } from "svelte";
     import { push, replace, location } from "svelte-spa-router";
     import {
         createPermissionStore,
         RoutePermission,
-    } from "./routes/frontendPermissions.js";
+    } from "#src/routes/frontendPermissions.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
 
     export let dbName;
     export let dbKey;

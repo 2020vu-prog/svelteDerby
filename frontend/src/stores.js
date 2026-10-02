@@ -6,11 +6,14 @@ const axiosCommon = axiosXyz.create();
 const jwt = require("jsonwebtoken");
 const semver = require("semver");
 const { v4: uuidv4 } = require("uuid");
-import { persistable } from "./storedb.js";
+import { persistable } from "#src/storedb.js";
 import { derived, writable, readable, get as getStore } from "svelte/store";
-import { buildVersion, getSpaLocation } from "./utils.js";
+import { buildVersion, getSpaLocation } from "#src/utils.js";
 import { replace } from "svelte-spa-router";
-import { cognitoUserManager, freshCognitoUser } from "./utils/cognitoAuth.js";
+import {
+    cognitoUserManager,
+    freshCognitoUser,
+} from "#src/utils/cognitoAuth.js";
 
 function parseBool(val) {
     return val === true || val === "true";
@@ -187,7 +190,7 @@ export const axios = derived(
 );
 
 export function getChartCacheKey() {
-    return require("./config/doNotEditChartKey.json").chartKey;
+    return require("#src/config/doNotEditChartKey.json").chartKey;
 }
 export function getCacheKey() {
     var prefs = getStore(prefStore);

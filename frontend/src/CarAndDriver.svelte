@@ -1,11 +1,11 @@
 <script>
     import log from "loglevel";
 
-    import { driverMap } from "./stores.js";
+    import { driverMap } from "#src/stores.js";
     import {
         createPermissionStore,
         RoutePermission,
-    } from "./routes/frontendPermissions.js";
+    } from "#src/routes/frontendPermissions.js";
     import { push, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
 

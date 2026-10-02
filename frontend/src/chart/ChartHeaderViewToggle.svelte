@@ -1,11 +1,11 @@
 <script>
     import { replace } from "svelte-spa-router";
-    import { developerMode } from "../stores.js";
-    import { persistable } from "../storedb.js";
+    import { developerMode } from "#src/stores.js";
+    import { persistable } from "#src/storedb.js";
     import {
         CHART_VIEW_SELECTION_KEY,
         getSelectedChartView,
-    } from "./ChartViewSelection.js";
+    } from "#src/chart/ChartViewSelection.js";
 
     export let chartId = "";
     export let title = "";

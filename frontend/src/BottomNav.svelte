@@ -8,9 +8,9 @@
      */
     import log from "loglevel";
 
-    import { showBottomNav, selectedToolbarList, theme } from "./stores.js";
+    import { showBottomNav, selectedToolbarList, theme } from "#src/stores.js";
     import { location } from "svelte-spa-router";
-    import StatusMessage from "./StatusMessage.svelte";
+    import StatusMessage from "#src/StatusMessage.svelte";
 
     import { onMount } from "svelte";
     let mounted = false;

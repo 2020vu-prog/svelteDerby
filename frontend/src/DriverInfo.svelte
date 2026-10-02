@@ -1,16 +1,16 @@
 <script>
     export let params = {};
-    import CarAndDriver from "./CarAndDriver.svelte";
-    import { safeGetAt } from "./utils.js";
-    import { driverMap, racePhaseMap, standingsMap } from "./stores.js";
+    import CarAndDriver from "#src/CarAndDriver.svelte";
+    import { safeGetAt } from "#src/utils.js";
+    import { driverMap, racePhaseMap, standingsMap } from "#src/stores.js";
 
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     import { onMount } from "svelte";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     import { spring } from "svelte/motion";
-    import Pie from "./Pie.svelte";
+    import Pie from "#src/Pie.svelte";
 
     var racePhaseList = Object.values($racePhaseMap);
     racePhaseList = racePhaseList.filter((a) => {

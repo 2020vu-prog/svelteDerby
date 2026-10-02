@@ -5,20 +5,20 @@
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import { faDice } from "@fortawesome/free-solid-svg-icons/faDice";
     import Icon from "fa-svelte";
-    import { developerMode, theme } from "./stores.js";
+    import { developerMode, theme } from "#src/stores.js";
 
-    import { driverMap, doRefreshBlocks } from "./stores.js";
-    import { safeGetAt, getChartJson } from "./utils.js";
-    import { db } from "./eventDb.js";
+    import { driverMap, doRefreshBlocks } from "#src/stores.js";
+    import { safeGetAt, getChartJson } from "#src/utils.js";
+    import { db } from "#src/eventDb.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
     import {
         createPermissionStore,
         RoutePermission,
-    } from "./routes/frontendPermissions.js";
-    import { standingsMap } from "./stores.js";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { getSelectedChartView } from "./chart/ChartViewSelection.js";
+    } from "#src/routes/frontendPermissions.js";
+    import { standingsMap } from "#src/stores.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import { getSelectedChartView } from "#src/chart/ChartViewSelection.js";
 
     const canAddChart = createPermissionStore(RoutePermission.CAN_ADD_CHART);
 

@@ -4,14 +4,14 @@
     import {
         createPermissionStore,
         RoutePermission,
-    } from "./routes/frontendPermissions.js";
+    } from "#src/routes/frontendPermissions.js";
     import { createEventDispatcher } from "svelte";
 
     import {
         chartClickLoggerId,
         chartClickLoggerShow,
         theme,
-    } from "./stores.js";
+    } from "#src/stores.js";
     const canConfigureTimer = createPermissionStore(
         RoutePermission.CAN_TIMER_CONFIG
     );

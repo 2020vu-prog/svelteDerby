@@ -1,6 +1,6 @@
 <script>
-    import { spinnerPanelBusy } from "./stores.js";
-    import CirclesSvg from "./CirclesSvg.svelte";
+    import { spinnerPanelBusy } from "#src/stores.js";
+    import CirclesSvg from "#src/CirclesSvg.svelte";
     const screenW = window.screen.width;
     const screenH = window.screen.height;
     const spinXY = Math.min(screenH, screenW);

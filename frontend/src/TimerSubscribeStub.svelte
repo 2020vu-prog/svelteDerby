@@ -5,14 +5,14 @@
     import { Base64 } from "js-base64";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     import { createEventDispatcher } from "svelte";
     import {
         getTimerPbConfig,
         MqttMapSubscription,
         MqttGetTopic,
-    } from "./utils.js";
-    import { mqttMapData } from "./stores.js";
+    } from "#src/utils.js";
+    import { mqttMapData } from "#src/stores.js";
     export let timerId = "";
     export let verbose = "truthyString";
     let timerTopic = "";

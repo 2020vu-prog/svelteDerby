@@ -9,7 +9,7 @@
         developerLogging,
         enableFractionalMs,
         pushMessage,
-    } from "./stores.js";
+    } from "#src/stores.js";
     $: {
         document.documentElement.style.setProperty(
             `--themeFromJS`,
@@ -24,13 +24,18 @@
         buildGitHash,
         buildGitDirty,
         formatBuildEpoch,
-    } from "./utils.js";
+    } from "#src/utils.js";
 
     import { onMount } from "svelte";
-    import { getCacheKey, setCacheKey, axios, raceConfig } from "./stores.js";
-    import { db, localConfigDb } from "./eventDb.js";
-    import BottomNav from "./BottomNav.svelte";
-    import OrgName from "./OrgName.svelte";
+    import {
+        getCacheKey,
+        setCacheKey,
+        axios,
+        raceConfig,
+    } from "#src/stores.js";
+    import { db, localConfigDb } from "#src/eventDb.js";
+    import BottomNav from "#src/BottomNav.svelte";
+    import OrgName from "#src/OrgName.svelte";
 
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
@@ -38,7 +43,7 @@
     import {
         createPermissionStore,
         RoutePermission,
-    } from "./routes/frontendPermissions.js";
+    } from "#src/routes/frontendPermissions.js";
 
     let mounted = false;
     const canUseManualTimer = createPermissionStore(

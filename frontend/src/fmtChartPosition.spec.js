@@ -4,7 +4,7 @@ const { bmdGet, bmdJsonGet } = vi.hoisted(() => ({
     bmdGet: vi.fn(),
     bmdJsonGet: vi.fn(),
 }));
-vi.mock("./eventDb.js", () => ({
+vi.mock("#src/eventDb.js", () => ({
     db: {
         BracketMetaData: { get: bmdGet },
         BmdJson: { get: bmdJsonGet, put: vi.fn(), delete: vi.fn() },
@@ -14,7 +14,7 @@ vi.mock("./eventDb.js", () => ({
     getUserPreference: vi.fn(() => null),
 }));
 
-import { fmtChartPosition, getChartJson } from "./utils.js";
+import { fmtChartPosition, getChartJson } from "#src/utils.js";
 
 const bmd = { SK: "bmd-1", bracketName: "Bracket A", jsonPath: "a.json" };
 const chartJson = {

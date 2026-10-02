@@ -10,14 +10,14 @@
     import { faVolumeUp } from "@fortawesome/free-solid-svg-icons/faVolumeUp";
     import Icon from "fa-svelte";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { doRefreshBlocks } from "./stores.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import { doRefreshBlocks } from "#src/stores.js";
     import {
         hhmmssFmt,
         mmddyyFmt,
         sleep,
         extractS3VideoMeta,
-    } from "./utils.js";
+    } from "#src/utils.js";
     import { onMount } from "svelte";
     import {
         axios,
@@ -26,11 +26,11 @@
         mediaFileType,
         mediaFilter,
         videoHref,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import { tick } from "svelte";
-    import { db } from "./eventDb.js";
-    import MediaViewer from "./MediaViewer.svelte";
-    import CarFilter from "./CarFilter.svelte";
+    import { db } from "#src/eventDb.js";
+    import MediaViewer from "#src/MediaViewer.svelte";
+    import CarFilter from "#src/CarFilter.svelte";
 
     export let params = {};
     var vtime = 1;

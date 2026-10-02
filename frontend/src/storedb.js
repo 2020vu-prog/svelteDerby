@@ -1,5 +1,5 @@
 import { writable, readable, get as getStore } from "svelte/store";
-import { putUserPreference, getUserPreference } from "./eventDb.js";
+import { putUserPreference, getUserPreference } from "#src/eventDb.js";
 export function persistable(key, defaultValue) {
     let currentValue = defaultValue;
     const { subscribe, set, update } = writable(defaultValue);

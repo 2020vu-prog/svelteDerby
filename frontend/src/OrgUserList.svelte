@@ -2,8 +2,8 @@
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import VirtualList from "@sveltejs/svelte-virtual-list";
-    import { uiPageSize, axios, raceConfig } from "./stores.js";
-    import { safeGetAt } from "./utils.js";
+    import { uiPageSize, axios, raceConfig } from "#src/stores.js";
+    import { safeGetAt } from "#src/utils.js";
     import { onMount } from "svelte";
     import { push } from "svelte-spa-router";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");

@@ -7,8 +7,8 @@
         spotifyLookupTrack,
         spotifyPause,
         spotifyPlay,
-    } from "./utils/spotify.js";
-    import { pushMessage, spotifySelectedDeviceId } from "./stores.js";
+    } from "#src/utils/spotify.js";
+    import { pushMessage, spotifySelectedDeviceId } from "#src/stores.js";
     export let href;
     let deviceId = $spotifySelectedDeviceId || undefined;
     let deviceLookup;

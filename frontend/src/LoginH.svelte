@@ -1,8 +1,8 @@
 <script lang="ts">
-    import aws_exports from "./aws-config";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { logout, sleep } from "./utils.js";
-    import { beginCognitoLogin, cognitoLogout } from "./utilHosted.js";
+    import aws_exports from "#src/aws-config";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import { logout, sleep } from "#src/utils.js";
+    import { beginCognitoLogin, cognitoLogout } from "#src/utilHosted.js";
     import {
         developerMode,
         nowDate,
@@ -10,7 +10,7 @@
         userAuthTime,
         userEmail,
         userId,
-    } from "./stores.js";
+    } from "#src/stores.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     interface CognitoHostedConfig {

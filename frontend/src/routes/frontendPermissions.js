@@ -1,8 +1,8 @@
 import { derived } from "svelte/store";
-import { raceConfig, roleMap, userEmail } from "../stores.js";
+import { raceConfig, roleMap, userEmail } from "#src/stores.js";
 
-const { hasNamedPermission } = require("./routeAccess.js");
-const { RoutePermission } = require("./routePermission.js");
+const { hasNamedPermission } = require("#src/routes/routeAccess.js");
+const { RoutePermission } = require("#src/routes/routePermission.js");
 
 /**
  * Shared permission definitions for frontend route and component access.

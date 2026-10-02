@@ -1,11 +1,11 @@
 <script>
     import log from "loglevel";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { axios, raceConfig, pushMessage } from "./stores.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import { axios, raceConfig, pushMessage } from "#src/stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let params = {};

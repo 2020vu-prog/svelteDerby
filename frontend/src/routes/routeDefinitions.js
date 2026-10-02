@@ -1,6 +1,6 @@
 "use strict";
 
-const { RoutePermission } = require("./routePermission.js");
+const { RoutePermission } = require("#src/routes/routePermission.js");
 
 const MenuSection = Object.freeze({ ADMIN: "admin", GENERAL: "general" });
 const RouteAction = Object.freeze({ MATERIAL_ADD: "materialAdd" });
@@ -8,7 +8,7 @@ const RouteAction = Object.freeze({ MATERIAL_ADD: "materialAdd" });
 /**
  * Creates metadata for a general-navigation menu entry.
  *
- * @param {string|function(import("./routeRegistry.js").RouteContext): string} label
+ * @param {string|function(import("#src/routes/routeRegistry.js").RouteContext): string} label
  * @param {number} order
  * @param {object} [options]
  * @returns {object}
@@ -23,7 +23,7 @@ const generalMenu = (label, order, options = {}) => ({
 /**
  * Creates metadata for an administrative-navigation menu entry.
  *
- * @param {string|function(import("./routeRegistry.js").RouteContext): string} label
+ * @param {string|function(import("#src/routes/routeRegistry.js").RouteContext): string} label
  * @param {number} order
  * @param {object} [options]
  * @returns {object}
@@ -42,10 +42,10 @@ const adminMenu = (label, order, options = {}) => ({
  * parameters. The resolved target is matched separately so RouteHost can
  * enforce the destination route's permission before displaying the button.
  *
- * @param {string|function(import("./routeRegistry.js").RouteContext): string} target
+ * @param {string|function(import("#src/routes/routeRegistry.js").RouteContext): string} target
  * @param {object} [options]
- * @param {function(import("./routeRegistry.js").RouteContext): boolean} [options.visible]
- * @param {string|function(import("./routeRegistry.js").RouteContext): string} [options.orgIz]
+ * @param {function(import("#src/routes/routeRegistry.js").RouteContext): boolean} [options.visible]
+ * @param {string|function(import("#src/routes/routeRegistry.js").RouteContext): string} [options.orgIz]
  * @returns {object}
  */
 const materialAdd = (target, options = {}) => ({
@@ -58,7 +58,7 @@ const materialAdd = (target, options = {}) => ({
  * Declarative source of truth for application routes, route permissions,
  * navigation entries, and contextual page actions.
  *
- * @type {import("./routeRegistry.js").RouteDefinition[]}
+ * @type {import("#src/routes/routeRegistry.js").RouteDefinition[]}
  */
 const routeDefinitions = [
     {

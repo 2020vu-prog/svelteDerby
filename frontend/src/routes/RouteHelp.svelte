@@ -1,15 +1,18 @@
 <script>
     import { tick } from "svelte";
-    import { theme, showHelpIcon } from "../stores.js";
-    import { loadHelpMarkdown, resolveVisibleHelp } from "./routeHelpLoader.js";
+    import { theme, showHelpIcon } from "#src/stores.js";
+    import {
+        loadHelpMarkdown,
+        resolveVisibleHelp,
+    } from "#src/routes/routeHelpLoader.js";
     const {
         resolveRouteHelpIds,
         resolveRoutePermissionName,
-    } = require("./routeHelp.js");
+    } = require("#src/routes/routeHelp.js");
 
-    /** @type {import("./routeRegistry.js").RouteMatch|null} */
+    /** @type {import("#src/routes/routeRegistry.js").RouteMatch|null} */
     export let currentMatch = null;
-    /** @type {import("./routeRegistry.js").RouteContext} */
+    /** @type {import("#src/routes/routeRegistry.js").RouteContext} */
     export let context = {};
 
     let isOpen = false;
@@ -91,7 +94,7 @@
     async function getMarkdownRenderer() {
         if (!markdownPromise) {
             markdownPromise = import(
-                /* webpackChunkName: "route-help-markdown" */ "./routeHelpMarkdown.js"
+                /* webpackChunkName: "route-help-markdown" */ "#src/routes/routeHelpMarkdown.js"
             ).then(({ createRouteHelpMarkdownRenderer }) =>
                 createRouteHelpMarkdownRenderer()
             );

@@ -1,8 +1,8 @@
 <script>
     import log from "loglevel";
-    import Walkup from "./Walkup.svelte";
+    import Walkup from "#src/Walkup.svelte";
     import { onMount, onDestroy } from "svelte";
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
     import {
         pushMessage,
         getAxiosNew,
@@ -14,13 +14,13 @@
         videoClientTimeFixedMs,
         videoClientTimeAdjustmentMs,
         videoClientTimeAdjustmentMarginMs,
-    } from "./stores.js";
+    } from "#src/stores.js";
 
-    import { sleep, hhmmssFmt, secondsToHHMMSS } from "./utils.js";
+    import { sleep, hhmmssFmt, secondsToHHMMSS } from "#src/utils.js";
 
     const { v4: uuidv4 } = require("uuid");
-    import TimerSelectByName from "./TimerSelectByName.svelte";
-    import MqttSubscribeStub from "./MqttSubscribeStub.svelte";
+    import TimerSelectByName from "#src/TimerSelectByName.svelte";
+    import MqttSubscribeStub from "#src/MqttSubscribeStub.svelte";
     var timerId = "";
     var timerName = "";
     var timerTopic = "";

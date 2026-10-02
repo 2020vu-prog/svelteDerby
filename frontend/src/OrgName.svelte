@@ -1,6 +1,6 @@
 <script>
     import log from "loglevel";
-    import { getOrgName, refreshOrgMap, orgMap } from "./stores.js";
+    import { getOrgName, refreshOrgMap, orgMap } from "#src/stores.js";
     export let orgIz;
 
     import { onMount } from "svelte";

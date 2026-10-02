@@ -12,20 +12,20 @@
         pushMessage,
         axios,
         recentRefreshMs,
-    } from "./stores.js";
+    } from "#src/stores.js";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
 
-    import OrgName from "./OrgName.svelte";
+    import OrgName from "#src/OrgName.svelte";
     import { onMount, tick } from "svelte";
     import {
         location as ssrLocation,
         replace,
         querystring,
     } from "svelte-spa-router";
-    import { dbReset } from "./eventDb.js";
+    import { dbReset } from "#src/eventDb.js";
 
-    import { refreshOrgRoles } from "./utils.js";
+    import { refreshOrgRoles } from "#src/utils.js";
 
     export let params = {};
 

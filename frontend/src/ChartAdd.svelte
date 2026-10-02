@@ -1,17 +1,17 @@
 <script>
     import log from "loglevel";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { raceConfig, axios } from "./stores.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import { raceConfig, axios } from "#src/stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     import {
         getCacheKey,
         getChartCacheKey,
         theme,
         doRefreshBlocks,
-    } from "./stores.js";
+    } from "#src/stores.js";
 
     $: {
         document.documentElement.style.setProperty(

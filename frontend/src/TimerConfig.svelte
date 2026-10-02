@@ -7,12 +7,12 @@
         pushMessage,
         doRefreshBlocks,
         mqttTimerTopic,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import { push, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import TimerSelection from "./TimerSelection.svelte";
+    import { db } from "#src/eventDb.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import TimerSelection from "#src/TimerSelection.svelte";
 
     var activeTimerList = [];
     var tcFromDexie = {};

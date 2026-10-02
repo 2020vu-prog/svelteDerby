@@ -6,13 +6,13 @@ const {
 const {
     getPermissionOrgIz,
     getRequiredPermission,
-} = require("./routeRegistry.js");
-const { RoutePermission } = require("./routePermission.js");
+} = require("#src/routes/routeRegistry.js");
+const { RoutePermission } = require("#src/routes/routePermission.js");
 
 /**
  * Returns the current user's roles for an organization.
  *
- * @param {import("./routeRegistry.js").RouteContext} context
+ * @param {import("#src/routes/routeRegistry.js").RouteContext} context
  * @param {string} [orgIzOverride] Organization to use instead of the selected event's organization.
  * @returns {string[]}
  */
@@ -27,8 +27,8 @@ function getRoleList(context, orgIzOverride) {
  * Public routes have no required permission. Protected routes are checked
  * against roles for the route-specific organization, when one is defined.
  *
- * @param {import("./routeRegistry.js").RouteMatch|null} match
- * @param {import("./routeRegistry.js").RouteContext} [context]
+ * @param {import("#src/routes/routeRegistry.js").RouteMatch|null} match
+ * @param {import("#src/routes/routeRegistry.js").RouteContext} [context]
  * @returns {boolean}
  */
 function canAccessRoute(match, context = {}) {
@@ -46,7 +46,7 @@ function canAccessRoute(match, context = {}) {
  * Checks a named frontend capability without requiring a route match.
  *
  * @param {string} permission
- * @param {import("./routeRegistry.js").RouteContext} [context]
+ * @param {import("#src/routes/routeRegistry.js").RouteContext} [context]
  * @returns {boolean}
  */
 function hasNamedPermission(permission, context = {}) {

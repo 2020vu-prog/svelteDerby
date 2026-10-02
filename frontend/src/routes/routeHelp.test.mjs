@@ -5,16 +5,18 @@ import test from "node:test";
 
 const require = createRequire(import.meta.url);
 const RoleName = require("../../../backend/modules/lambdaDerby/src/shared/RoleName.js");
-const { RoutePermission } = require("./routePermission.js");
+const { RoutePermission } = require("#src/routes/routePermission.js");
 const {
     createHelpCatalog,
     getVisibleHelpDescriptors,
     parseHelpFileKey,
     resolveRouteHelpIds,
     resolveRoutePermissionName,
-} = require("./routeHelp.js");
-const { createRouteHelpMarkdownRenderer } = require("./routeHelpMarkdown.js");
-const { routeDefinitions } = require("./routeDefinitions.js");
+} = require("#src/routes/routeHelp.js");
+const {
+    createRouteHelpMarkdownRenderer,
+} = require("#src/routes/routeHelpMarkdown.js");
+const { routeDefinitions } = require("#src/routes/routeDefinitions.js");
 
 function context(roleList = [], userEmail = "user@example.com") {
     return {

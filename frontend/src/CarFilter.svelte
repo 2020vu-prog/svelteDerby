@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
 
-    import { carFilter } from "./stores.js";
+    import { carFilter } from "#src/stores.js";
     import Icon from "fa-svelte";
     import { faFilter } from "@fortawesome/free-solid-svg-icons/faFilter";
     import { faBackspace } from "@fortawesome/free-solid-svg-icons/faBackspace";

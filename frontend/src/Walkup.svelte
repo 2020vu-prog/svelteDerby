@@ -11,15 +11,15 @@
         mp3Playing,
         spotifyLoggedIn,
         spotifySelectedDeviceId,
-    } from "./stores.js";
-    import { persistable } from "./storedb.js";
+    } from "#src/stores.js";
+    import { persistable } from "#src/storedb.js";
     import { onMount, onDestroy } from "svelte";
-    import { db } from "./eventDb.js";
-    import { sleep } from "./utils.js";
-    import { getSoloCarNumber } from "./paInfo.js";
-    import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
-    import SpotifyApi from "./SpotifyApi.svelte";
-    import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
+    import { db } from "#src/eventDb.js";
+    import { sleep } from "#src/utils.js";
+    import { getSoloCarNumber } from "#src/paInfo.js";
+    import SpotifyEmbedded from "#src/SpotifyEmbedded.svelte";
+    import SpotifyApi from "#src/SpotifyApi.svelte";
+    import SpotifyDeviceSelection from "#src/SpotifyDeviceSelection.svelte";
     import {
         sanitizeTrack,
         spotifyActiveDeviceId,
@@ -27,7 +27,7 @@
         spotifyLookupTrack,
         spotifyPause,
         spotifyRestorePlaybackState,
-    } from "./utils/spotify.js";
+    } from "#src/utils/spotify.js";
     //let href='https://open.spotify.com/track/2DnJjbjNTV9Nd5NOa1KGba?si=07ae100fdc0e4f49'
     let requestedHref = "";
     let playingHref = "";

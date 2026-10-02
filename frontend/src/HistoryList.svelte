@@ -3,12 +3,12 @@
 
     import Dexie from "dexie";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
-    import Annotate from "./Annotate.svelte";
-    import RacePhase from "./RacePhase.svelte";
-    import RaceStanding from "./RaceStanding.svelte";
-    import HistoryBracketPos from "./HistoryBracketPos.svelte";
-    import { dateChangeLabel } from "./utils.js";
+    import { db } from "#src/eventDb.js";
+    import Annotate from "#src/Annotate.svelte";
+    import RacePhase from "#src/RacePhase.svelte";
+    import RaceStanding from "#src/RaceStanding.svelte";
+    import HistoryBracketPos from "#src/HistoryBracketPos.svelte";
+    import { dateChangeLabel } from "#src/utils.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let params = {};
