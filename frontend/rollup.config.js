@@ -4,8 +4,28 @@ import commonjs from "@rollup/plugin-commonjs";
 import livereload from "rollup-plugin-livereload";
 import { terser } from "rollup-plugin-terser";
 import json from "@rollup/plugin-json";
+import { existsSync } from "fs";
+import { resolve as resolvePath } from "path";
 
 const production = !process.env.ROLLUP_WATCH;
+
+function srcAlias() {
+    return {
+        name: "src-alias",
+        resolveId(source) {
+            if (!source.startsWith("#src/")) return null;
+
+            const target = resolvePath("src", source.slice("#src/".length));
+            return [
+                target,
+                `${target}.js`,
+                `${target}.mjs`,
+                `${target}.svelte`,
+                resolvePath(target, "index.js"),
+            ].find(existsSync);
+        },
+    };
+}
 
 export default {
     input: "src/main.js",
@@ -16,6 +36,7 @@ export default {
         file: "public/build/bundle.js",
     },
     plugins: [
+        srcAlias(),
         svelte({
             // enable run-time checks when not in production
             dev: !production,

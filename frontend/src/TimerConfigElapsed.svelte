@@ -21,8 +21,6 @@
     import { Form, FormGroup, FormText, Input, Label } from "sveltestrap";
     import { Base64 } from "js-base64";
 
-    //    import PrefFormInput from "#src/PrefFormInput.svelte";
-
     var bar2 = true;
     var activeTimerList = [];
     var tcFromDexie = {};
