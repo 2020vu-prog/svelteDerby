@@ -6,6 +6,8 @@
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     import { db } from "#src/eventDb.js";
+    import ChartTree from "#src/ChartTree.svelte";
+    import { buildChartTree } from "#src/chartTree.js";
     import {
         getCacheKey,
         getChartCacheKey,
@@ -38,10 +40,9 @@
         bmdFromDexie = await db.BracketMetaData.toArray();
     };
 
-    var jsReady = false;
-    var treeReady = false;
     var mounted = false;
     var s3ChartTypes = false;
+    var chartListError = false;
     var chartAddForm = {};
 
     var submitDisabled = true;
@@ -76,77 +77,17 @@
     $: {
         syncAddButton(chartAddForm.chartName);
     }
-    const jqLoaded = () => {
-        log.debug("jqloaded");
-        jsReady = true;
-        const jsTreeUrl =
-            "https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js";
-        jQuery.getScript(jsTreeUrl, jsTreeLoaded);
-        tryBuild();
-    };
-    const jsTreeLoaded = () => {
-        log.debug("jstreeloaded");
-        treeReady = true;
-        tryBuild();
-    };
     onMount(async () => {
         mounted = true;
         getChartDataFromServer();
-        tryBuild();
         presetBracketNameSelections();
     });
-    const tryBuild = () => {
-        if (treeReady && mounted && jsReady && s3ChartTypes) {
-            log.debug("GO");
-            //  window.$(function () { window.$('#jstree_demo_div').jstree(); });
-            /*
-            const testData = {
-              core: {
-                data: [
-                  { id: "aasbd", parent: "#", text: "AASBD" },
-                  { id: "ndr", parent: "#", text: "NDR" },
-                  { id: "ndr/Doubles", parent: "ndr", text: "Doubles" },
-                  { id: "ndrDouble6", parent: "ndr/Doubles", text: "6 Car" },
-                  { id: "ndr/Singles", parent: "ndr", text: "Singles" },
-                  { id: "aasbd/Doubles", parent: "aasbd", text: "Doubles" },
-                  { id: "aasbd/Singles", parent: "aasbd", text: "Singles" }
-                ]
-              }
-            };
-            */
-            const testData2 = { core: { data: [] } };
-            var keyList = getKeys(s3ChartTypes["Contents"]);
-            testData2.core.data = keyList;
-            window.$("#jstree_demo_div").jstree(testData2);
-            window
-                .$("#jstree_demo_div")
-                .on("changed.jstree", function (e, data) {
-                    log.debug(data.selected);
-                    if (data.node.children.length > 0) {
-                        window
-                            .$("#jstree_demo_div")
-                            .jstree(true)
-                            .deselect_node(data.node);
-                        window
-                            .$("#jstree_demo_div")
-                            .jstree(true)
-                            .toggle_node(data.node);
-                        chartSelected = "Chart Selected: ";
-                    }
-                    chartSelected = "Chart Selected: " + String(data.selected);
-                    if (
-                        data.selected &&
-                        data.selected[0] &&
-                        data.selected[0].includes(".")
-                    ) {
-                        chartAddForm.bracketSelected = data.selected[0];
-                    } else {
-                        chartAddForm.bracketSelected = "";
-                    }
-                    syncAddButton();
-                });
-        }
-    };
+    $: chartTree = buildChartTree(s3ChartTypes ? s3ChartTypes["Contents"] : []);
+    function handleChartSelect(event) {
+        chartAddForm.bracketSelected = event.detail;
+        chartSelected = "Chart Selected: " + event.detail;
+        syncAddButton();
+    }
     async function handleSubmit() {
         log.debug("Adding:" + JSON.stringify(chartAddForm));
 
@@ -199,59 +140,12 @@
             .then((response) => {
                 log.debug("listChartTypes:" + response.data);
                 s3ChartTypes = response.data;
-                tryBuild();
             })
             .catch((err) => {
                 log.debug(err);
+                chartListError = true;
             });
     };
-    const getKeys = (json) => {
-        const children = [];
-        const parents = {};
-        json.forEach(function (item) {
-            var simpleKey = item.Key.replace("data/brackets/", "");
-            log.debug("simpleKey:", simpleKey);
-            if (!/.png/i.test(simpleKey)) {
-                return;
-            }
-            var structureArray = simpleKey.split("/");
-            var child = "";
-
-            //for (var i=structureArray.length-1;i>-1;i--) {}
-            while (structureArray.length > 0) {
-                if (!child) {
-                    child = formatItem(structureArray);
-                    children.push(child);
-                } else {
-                    const parent = formatItem(structureArray);
-                    parents[parent.id] = parent;
-                }
-                structureArray.pop();
-            }
-        });
-        const rc = [...Object.values(parents), ...children];
-        rc.sort((a, b) => {
-            return a.id.length - b.id.length;
-        });
-        log.debug(rc);
-        return rc;
-    };
-    const formatItem = (structureArray) => {
-        const treeItem = {};
-        treeItem.id = structureArray.join("/");
-        treeItem.text = structureArray[structureArray.length - 1];
-        if (structureArray.length > 1) {
-            const tempParents = [...structureArray];
-            tempParents.pop(); // just want the parents.
-            treeItem.parent = tempParents.join("/");
-        } else {
-            treeItem.parent = "#";
-        }
-        log.debug("format item ", structureArray, " gave: ", treeItem);
-
-        return treeItem;
-    };
-
     function presetBracketNameSelections() {
         var d = new Date();
         if (d.getDay() == 6) {
@@ -271,6 +165,15 @@
 <style>
     :root {
         --themeFromJS: "black";
+    }
+
+    .chart-picker {
+        border: 0;
+        padding: 0;
+    }
+
+    .chart-picker legend {
+        font-size: 1rem;
     }
 
     .switch-toggle {
@@ -299,26 +202,24 @@
     }
 </style>
 
-<svelte:head>
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"
-        on:load={jqLoaded}
-    >
-    </script>
-</svelte:head>
-<link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css"
-/>
-
 <h3>Add Chart</h3>
 <form>
     <h4>Chart File</h4>
 
-    <label>
-        Select a Chart:
-        <div id="jstree_demo_div" />
-    </label>
+    <fieldset class="chart-picker">
+        <legend>Select a Chart:</legend>
+        {#if s3ChartTypes}
+            <ChartTree
+                nodes={chartTree}
+                selected={chartAddForm.bracketSelected || ""}
+                on:select={handleChartSelect}
+            />
+        {:else if chartListError}
+            <p role="alert">Unable to load the list of charts.</p>
+        {:else}
+            <p>Loading charts...</p>
+        {/if}
+    </fieldset>
     <p>{chartSelected}</p>
 
     <hr />
