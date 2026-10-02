@@ -9,11 +9,11 @@
         Badge,
     } from "sveltestrap";
 
-    import CarAndDriver from "./CarAndDriver.svelte";
-    import CarAndDriverVertical from "./CarAndDriverVertical.svelte";
-    import ByLine from "./ByLine.svelte";
-    import ComponentToolbar from "./ComponentToolBar.svelte";
-    import EllipsisButton from "./EllipsisButton.svelte";
+    import CarAndDriver from "#src/CarAndDriver.svelte";
+    import CarAndDriverVertical from "#src/CarAndDriverVertical.svelte";
+    import ByLine from "#src/ByLine.svelte";
+    import ComponentToolbar from "#src/ComponentToolBar.svelte";
+    import EllipsisButton from "#src/EllipsisButton.svelte";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
     import {
@@ -21,7 +21,7 @@
         driverMap,
         nextOnBlockKey,
         standingsMap,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import {
         safeGetAt,
         fmtChartPosition,
@@ -31,7 +31,7 @@
         isPendingNeeded,
         getRaceTypeEmoji,
         formatWinTime,
-    } from "./utils.js";
+    } from "#src/utils.js";
     export let compressedLayout;
     export let refreshTime;
     export let phaseKey;

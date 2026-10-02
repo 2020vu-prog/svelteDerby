@@ -1,13 +1,13 @@
 <script>
-    import "./Charts.css";
+    import "#src/Charts.css";
     import log from "loglevel";
 
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
-    import { parseHeatPos, augmentChartState } from "./utils.js";
-    import { doRefreshBlocks, driverMap } from "./stores.js";
-    import { pannable } from "./pannable.js";
+    import { db } from "#src/eventDb.js";
+    import { parseHeatPos, augmentChartState } from "#src/utils.js";
+    import { doRefreshBlocks, driverMap } from "#src/stores.js";
+    import { pannable } from "#src/pannable.js";
     import { createEventDispatcher } from "svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 

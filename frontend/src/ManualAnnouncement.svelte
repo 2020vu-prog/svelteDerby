@@ -1,8 +1,8 @@
 <script>
     import log from "loglevel";
 
-    import Walkup from "./Walkup.svelte";
-    import { raceConfig, pushMessage, driverMap, axios } from "./stores.js";
+    import Walkup from "#src/Walkup.svelte";
+    import { raceConfig, pushMessage, driverMap, axios } from "#src/stores.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
     async function doAnnounce() {

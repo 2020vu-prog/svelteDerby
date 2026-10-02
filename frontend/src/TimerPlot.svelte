@@ -17,9 +17,9 @@
     import { querystring } from "svelte-spa-router";
     import { parse, toSeconds } from "iso8601-duration";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
-    import { axios, raceConfig, pushMessage } from "./stores.js";
-    import { getTimerPbConfig, protobufLongToNumber } from "./utils.js";
-    import TimerHistoryAge from "./TimerHistoryAge.svelte";
+    import { axios, raceConfig, pushMessage } from "#src/stores.js";
+    import { getTimerPbConfig, protobufLongToNumber } from "#src/utils.js";
+    import TimerHistoryAge from "#src/TimerHistoryAge.svelte";
 
     export let points = [];
     export let height = 320;

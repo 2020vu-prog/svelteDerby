@@ -2,10 +2,10 @@ import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { afterEach, expect, it, vi } from "vitest";
 import { writable } from "svelte/store";
 
-vi.mock("../../stores.js", () => ({
+vi.mock("#src/stores.js", () => ({
     doRefreshBlocks: writable(0),
 }));
-vi.mock("../../utils.js", () => ({
+vi.mock("#src/utils.js", () => ({
     parseHeatPos: vi.fn((position) => [position, position]),
     getHeatResultParts: vi.fn(() => []),
     augmentChartState: vi.fn((_chartJson, _chartId, heatId, slot) =>
@@ -17,10 +17,10 @@ vi.mock("../../utils.js", () => ({
         })
     ),
 }));
-vi.mock("./printSvg.js", () => ({ printSvgElement: vi.fn() }));
+vi.mock("#src/chart/svg/printSvg.js", () => ({ printSvgElement: vi.fn() }));
 
-import BracketSvg from "./BracketSvg.svelte";
-import { printSvgElement } from "./printSvg.js";
+import BracketSvg from "#src/chart/svg/BracketSvg.svelte";
+import { printSvgElement } from "#src/chart/svg/printSvg.js";
 
 afterEach(() => {
     cleanup();

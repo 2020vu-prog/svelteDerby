@@ -1,5 +1,5 @@
 <script>
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
     import log from "loglevel";
     import {
         carouselList,
@@ -7,12 +7,12 @@
         customToolbarList,
         getDefaultToolbarList,
         pushMessage,
-    } from "./stores.js";
-    import { safeGetAt, sleep } from "./utils.js";
+    } from "#src/stores.js";
+    import { safeGetAt, sleep } from "#src/utils.js";
     import { onMount } from "svelte";
     import { replace, push, pop, location } from "svelte-spa-router";
     export let params = {};
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     import { tick } from "svelte";
 
     var wip = [];

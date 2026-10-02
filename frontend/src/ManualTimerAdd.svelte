@@ -1,18 +1,18 @@
 <script>
     import log from "loglevel";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
     import {
         axios,
         raceConfig,
         pushMessage,
         driverMap,
         enableFractionalMs,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import { onMount } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
-    import { db } from "./eventDb.js";
-    import { fmtChartPosition } from "./utils.js";
+    import { db } from "#src/eventDb.js";
+    import { fmtChartPosition } from "#src/utils.js";
 
     export let params = {};
 

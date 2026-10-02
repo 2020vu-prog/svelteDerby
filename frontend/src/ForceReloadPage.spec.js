@@ -1,6 +1,6 @@
 import { render, waitFor } from "@testing-library/svelte";
 import { describe, it, expect } from "vitest";
-import ForceReloadPage from "./ForceReloadPage.svelte";
+import ForceReloadPage from "#src/ForceReloadPage.svelte";
 
 // Risk pattern: svelte-spa-router's push/pop/replace, the load-bearing
 // routing layer touched by 53 of 94 files (see docs/SvelteUpgradeProposal.md).

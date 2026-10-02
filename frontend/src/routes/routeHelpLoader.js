@@ -1,7 +1,7 @@
 const {
     createHelpCatalog,
     getVisibleHelpDescriptors,
-} = require("./routeHelp.js");
+} = require("#src/routes/routeHelp.js");
 
 // "lazy-once" bundles all 60 help docs (~12KB uncompressed total) into one
 // chunk instead of one chunk per file -- still fetched only on first use, but
@@ -18,7 +18,7 @@ const helpCatalog = createHelpCatalog(helpContext.keys());
  * Resolves the authorized help documents for a routed component.
  *
  * @param {string[]} helpIds
- * @param {import("./routeRegistry.js").RouteContext} context
+ * @param {import("#src/routes/routeRegistry.js").RouteContext} context
  * @returns {ReturnType<typeof createHelpCatalog>}
  */
 export function resolveVisibleHelp(helpIds, context) {

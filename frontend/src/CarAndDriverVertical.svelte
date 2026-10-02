@@ -2,7 +2,7 @@
     import log from "loglevel";
     import { push, pop, replace } from "svelte-spa-router";
 
-    import { driverMap } from "./stores.js";
+    import { driverMap } from "#src/stores.js";
     import { onMount } from "svelte";
 
     export let number;

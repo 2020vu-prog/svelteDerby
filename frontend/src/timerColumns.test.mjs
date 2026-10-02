@@ -8,7 +8,7 @@ const {
     getConfiguredMappings,
     getMappingConflicts,
     timerDataListToBlockedEvents,
-} = require("./timerColumns.js");
+} = require("#src/timerColumns.js");
 
 const mappings = [
     { virtualLane: 1, timerId: "timer-a", pinName: 1 },

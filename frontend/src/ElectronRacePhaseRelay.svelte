@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
-    import { driverMap, racePhaseMap, nextOnBlockKey } from "./stores.js";
-    import { getCarNumber, getParticipant } from "./paInfo.js";
+    import { driverMap, racePhaseMap, nextOnBlockKey } from "#src/stores.js";
+    import { getCarNumber, getParticipant } from "#src/paInfo.js";
 
     // Tracks which phase key we've already relayed, so a re-render of the
     // same next-on-blocks phase (e.g. a timer result posting) doesn't

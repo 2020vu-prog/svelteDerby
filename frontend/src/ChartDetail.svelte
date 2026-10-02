@@ -1,19 +1,19 @@
 <script>
     import log from "loglevel";
 
-    import ChartHotSpot from "./ChartHotSpot.svelte";
-    import ChartHeaderViewToggle from "./chart/ChartHeaderViewToggle.svelte";
+    import ChartHotSpot from "#src/ChartHotSpot.svelte";
+    import ChartHeaderViewToggle from "#src/chart/ChartHeaderViewToggle.svelte";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     import axios from "axios";
-    import ChartClickLogger from "./ChartClickLogger.svelte";
+    import ChartClickLogger from "#src/ChartClickLogger.svelte";
     import {
         chartClickLoggerId,
         chartClickLoggerShow,
         getChartCacheKey,
         spinnerPanelBusy,
-    } from "./stores.js";
-    import { parseHeatPos, sleep, getChartJson } from "./utils.js";
+    } from "#src/stores.js";
+    import { parseHeatPos, sleep, getChartJson } from "#src/utils.js";
 
     export let params = {};
     const loggedImgPositions = {};

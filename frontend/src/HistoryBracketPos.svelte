@@ -1,8 +1,8 @@
 <script>
     import log from "loglevel";
     import { onMount } from "svelte";
-    import { hhmmssFmt } from "./utils.js";
-    import ByLine from "./ByLine.svelte";
+    import { hhmmssFmt } from "#src/utils.js";
+    import ByLine from "#src/ByLine.svelte";
     import {
         Card,
         CardBody,
@@ -11,7 +11,7 @@
         CardFooter,
         Badge,
     } from "sveltestrap";
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     export let bp;
     export let index;
     let bmdFromDexie = {};

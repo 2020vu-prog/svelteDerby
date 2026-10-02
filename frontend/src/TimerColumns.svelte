@@ -5,25 +5,25 @@
     import { onDestroy, onMount } from "svelte";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
 
-    import Annotate from "./Annotate.svelte";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
-    import { db } from "./eventDb.js";
+    import Annotate from "#src/Annotate.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import TimerSubscribeStub from "#src/TimerSubscribeStub.svelte";
+    import { db } from "#src/eventDb.js";
     import {
         axios,
         pushMessage,
         raceConfig,
         timerColumnMappings,
         timerColumnsDuration,
-    } from "./stores.js";
-    import { getTimerPbConfig } from "./utils.js";
+    } from "#src/stores.js";
+    import { getTimerPbConfig } from "#src/utils.js";
 
     const {
         buildTimerColumnRaces,
         getConfiguredMappings,
         getMappingConflicts,
         timerDataListToBlockedEvents,
-    } = require("./timerColumns.js");
+    } = require("#src/timerColumns.js");
 
     const MIN_COLUMNS = 2;
     const MAX_COLUMNS = 4;

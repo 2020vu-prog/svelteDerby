@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/svelte";
 import { describe, it, expect, beforeEach } from "vitest";
-import Splash from "./Splash.svelte";
+import Splash from "#src/Splash.svelte";
 
 // Risk pattern: a sveltestrap component (Modal/ModalHeader/ModalBody). The
 // dead `sveltestrap` package is being replaced by `@sveltestrap/sveltestrap`

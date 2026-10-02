@@ -1,4 +1,4 @@
-import { getUserPreference } from "../eventDb.js";
+import { getUserPreference } from "#src/eventDb.js";
 
 export const CHART_VIEW_SELECTION_KEY = "pref:chartViewSelectionCounter";
 

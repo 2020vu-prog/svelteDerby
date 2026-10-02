@@ -1,8 +1,8 @@
 <script>
     import log from "loglevel";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import AuditBlocks from "./AuditBlocks.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import AuditBlocks from "#src/AuditBlocks.svelte";
     import {
         raceConfig,
         driverMap,
@@ -10,14 +10,14 @@
         nextOnBlockKey,
         axios,
         defaultPhaseType,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import { onMount, tick } from "svelte";
     import { push, pop, replace } from "svelte-spa-router";
     import {
         participantValid,
         participantFocusCompletion,
         getRaceTypeEmoji,
-    } from "./utils.js";
+    } from "#src/utils.js";
 
     export let params = {};
     const mode = params.type;

@@ -1,5 +1,5 @@
 <script>
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import {
@@ -8,14 +8,14 @@
         customToolbarList,
         getDefaultToolbarList,
         pushMessage,
-    } from "./stores.js";
-    import { safeGetAt, sleep } from "./utils.js";
+    } from "#src/stores.js";
+    import { safeGetAt, sleep } from "#src/utils.js";
     import { onMount } from "svelte";
     import { push, pop, location } from "svelte-spa-router";
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
     export let params = {};
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     import { tick } from "svelte";
 
     var wip = [];

@@ -2,7 +2,7 @@ import log from "loglevel";
 import axios from "axios";
 import { Base64 } from "js-base64";
 import { tutorial as Timer } from "@rr1.us/timer_protobuf";
-import { db } from "./eventDb.js";
+import { db } from "#src/eventDb.js";
 import {
     userEmail as userEmailStore,
     userJwtStore,
@@ -15,10 +15,10 @@ import {
     mqttMapSubscribe as mqttMapSubscribeStore,
     nowDate,
     timeFormat,
-} from "./stores.js";
+} from "#src/stores.js";
 import { get } from "svelte/store";
-import { localConfigDb } from "./eventDb.js";
-import { escapeRegExp } from "./regexEscape.js";
+import { localConfigDb } from "#src/eventDb.js";
+import { escapeRegExp } from "#src/regexEscape.js";
 import { location as spaLocation } from "svelte-spa-router";
 
 const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");

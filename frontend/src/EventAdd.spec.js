@@ -2,14 +2,14 @@ import { render, fireEvent, waitFor, cleanup } from "@testing-library/svelte";
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
 import { writable } from "svelte/store";
 
-vi.mock("./stores.js", () => ({
+vi.mock("#src/stores.js", () => ({
     raceConfig: writable({}),
     axios: writable({ post: vi.fn().mockResolvedValue({}) }),
     theme: writable("blue"),
     setCacheKey: vi.fn(),
     pushMessage: vi.fn(),
 }));
-vi.mock("./eventDb.js", () => ({
+vi.mock("#src/eventDb.js", () => ({
     db: { EventConfig: { get: vi.fn() } },
 }));
 vi.mock("svelte-spa-router", () => ({
@@ -18,10 +18,10 @@ vi.mock("svelte-spa-router", () => ({
     replace: vi.fn(),
 }));
 
-import EventAdd from "./EventAdd.svelte";
-import { raceConfig, axios } from "./stores.js";
+import EventAdd from "#src/EventAdd.svelte";
+import { raceConfig, axios } from "#src/stores.js";
 import { get } from "svelte/store";
-import { db } from "./eventDb.js";
+import { db } from "#src/eventDb.js";
 
 const selected = { orgIz: "Test Org", orgId: "event1", baseUrl: "/api" };
 const settings = { name: "Race", lcl1: "true", pendingRule: "1Race" };

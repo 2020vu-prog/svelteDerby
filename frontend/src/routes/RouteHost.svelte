@@ -4,19 +4,19 @@
      * rejects unauthorized routes, and displays permitted route actions.
      */
     import Router, { location } from "svelte-spa-router";
-    import MaterialAdd from "../MaterialAdd.svelte";
-    import RouteHelp from "./RouteHelp.svelte";
-    import { raceConfig, roleMap, userEmail, userId } from "../stores.js";
-    import PermissionDenied from "./PermissionDenied.svelte";
-    import { routeRegistry, routerMap } from "./routeRuntime.js";
+    import MaterialAdd from "#src/MaterialAdd.svelte";
+    import RouteHelp from "#src/routes/RouteHelp.svelte";
+    import { raceConfig, roleMap, userEmail, userId } from "#src/stores.js";
+    import PermissionDenied from "#src/routes/PermissionDenied.svelte";
+    import { routeRegistry, routerMap } from "#src/routes/routeRuntime.js";
 
-    const { canAccessRoute } = require("./routeAccess.js");
+    const { canAccessRoute } = require("#src/routes/routeAccess.js");
     const {
         getRequiredPermission,
         resolveRouteAction,
-    } = require("./routeRegistry.js");
-    const { RouteAction } = require("./routeDefinitions.js");
-    const { RoutePermission } = require("./routePermission.js");
+    } = require("#src/routes/routeRegistry.js");
+    const { RouteAction } = require("#src/routes/routeDefinitions.js");
+    const { RoutePermission } = require("#src/routes/routePermission.js");
 
     /** Whether App has finished loading the current user's role assignments. */
     export let authorizationReady = false;

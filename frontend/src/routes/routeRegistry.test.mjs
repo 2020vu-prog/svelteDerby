@@ -3,10 +3,10 @@ import { createRequire } from "node:module";
 import test from "node:test";
 
 const require = createRequire(import.meta.url);
-const { RoutePermission } = require("./routePermission.js");
+const { RoutePermission } = require("#src/routes/routePermission.js");
 const RoleName = require("../../../backend/modules/lambdaDerby/src/shared/RoleName.js");
-const routeRegistry = require("./routeCatalog.js");
-const { canAccessRoute } = require("./routeAccess.js");
+const routeRegistry = require("#src/routes/routeCatalog.js");
+const { canAccessRoute } = require("#src/routes/routeAccess.js");
 const {
     createRouteRegistry,
     decodeRouteParams,
@@ -14,8 +14,8 @@ const {
     getRequiredPermission,
     isRecognizedDeepLink,
     resolveRouteAction,
-} = require("./routeRegistry.js");
-const { MenuSection } = require("./routeDefinitions.js");
+} = require("#src/routes/routeRegistry.js");
+const { MenuSection } = require("#src/routes/routeDefinitions.js");
 const {
     permissionMap2,
 } = require("../../../backend/modules/lambdaDerby/src/shared/permissionLits.js");
@@ -25,7 +25,7 @@ const {
  *
  * @param {string[]} [roleList]
  * @param {object} [overrides]
- * @returns {import("./routeRegistry.js").RouteContext}
+ * @returns {import("#src/routes/routeRegistry.js").RouteContext}
  */
 function context(roleList = [], overrides = {}) {
     return {

@@ -1,7 +1,7 @@
 <script>
     import { spring } from "svelte/motion";
 
-    import Pie from "./Pie.svelte";
+    import Pie from "#src/Pie.svelte";
 
     export let piePercent = 0;
     export let pieTitle = "Pie Progress";

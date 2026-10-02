@@ -1,23 +1,26 @@
 <script>
     import log from "loglevel";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import RaceStanding from "./RaceStanding.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import RaceStanding from "#src/RaceStanding.svelte";
     import {
         raceConfig,
         driverMap,
         doRefreshBlocks,
         pushMessage,
         axios,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
-    import { participantValid, participantFocusCompletion } from "./utils.js";
+    import { db } from "#src/eventDb.js";
+    import {
+        participantValid,
+        participantFocusCompletion,
+    } from "#src/utils.js";
     import {
         createPermissionStore,
         RoutePermission,
-    } from "./routes/frontendPermissions.js";
+    } from "#src/routes/frontendPermissions.js";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 

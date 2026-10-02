@@ -1,11 +1,11 @@
 import log from "loglevel";
-import { userJwtStore } from "./stores.js";
+import { userJwtStore } from "#src/stores.js";
 import {
     cognitoUserManager,
     beginCognitoLogin as signinRedirect,
     completeCognitoLogin,
     freshCognitoUser,
-} from "./utils/cognitoAuth.js";
+} from "#src/utils/cognitoAuth.js";
 
 // Keeps userJwtStore in sync as oidc-client-ts's automaticSilentRenew mints
 // fresh tokens in the background -- this is what "extends login" past the

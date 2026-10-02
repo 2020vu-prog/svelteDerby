@@ -1,6 +1,6 @@
 <script>
-    import LoginSpotify from "./LoginSpotify.svelte";
-    import Walkup from "./Walkup.svelte";
+    import LoginSpotify from "#src/LoginSpotify.svelte";
+    import Walkup from "#src/Walkup.svelte";
 </script>
 
 <h3>Spotify Walk-up Music</h3>

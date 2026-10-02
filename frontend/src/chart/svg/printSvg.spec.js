@@ -1,11 +1,11 @@
 import { expect, it } from "vitest";
-import { PRINT_PAGE_CSS, buildPrintableSvg } from "./printSvg.js";
+import { PRINT_PAGE_CSS, buildPrintableSvg } from "#src/chart/svg/printSvg.js";
 import {
     chartHeaderLayout,
     chartHeaderLogo,
     HEADER_HEIGHT,
     NAME_HEADER_HEIGHT,
-} from "./chartHeader.js";
+} from "#src/chart/svg/chartHeader.js";
 
 it("builds a printable SVG without zoom sizing or column buttons", () => {
     document.body.innerHTML = `

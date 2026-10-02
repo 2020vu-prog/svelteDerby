@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { onDestroy } from "svelte";
     import log from "loglevel";
-    import { spotifyApiReady } from "./stores.js";
+    import { spotifyApiReady } from "#src/stores.js";
     let isMounted = false;
     let gController = "";
     let iframeElement;

@@ -1,9 +1,9 @@
 <script>
     import { push, pop, replace } from "svelte-spa-router";
     import { Form, FormGroup, FormText, Input, Label } from "sveltestrap";
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
 
-    import { axios, raceConfig, pushMessage, userEmail } from "./stores.js";
+    import { axios, raceConfig, pushMessage, userEmail } from "#src/stores.js";
     import { onMount } from "svelte";
     import QRCode from "qrcode";
 

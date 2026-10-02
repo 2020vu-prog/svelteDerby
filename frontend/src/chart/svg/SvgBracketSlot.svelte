@@ -1,7 +1,7 @@
 <script>
     import { createEventDispatcher, onMount } from "svelte";
-    import { doRefreshBlocks } from "../../stores.js";
-    import { augmentChartState, parseHeatPos } from "../../utils.js";
+    import { doRefreshBlocks } from "#src/stores.js";
+    import { augmentChartState, parseHeatPos } from "#src/utils.js";
 
     export let chartJson;
     export let chartId;

@@ -2,7 +2,7 @@
 
 const regexparamModule = require("regexparam");
 const regexparam = regexparamModule.default || regexparamModule;
-const { RoutePermission } = require("./routePermission.js");
+const { RoutePermission } = require("#src/routes/routePermission.js");
 
 /**
  * Runtime state available when resolving permissions, menus, and actions.

@@ -2,17 +2,17 @@
     import log from "loglevel";
     const { v4: uuidv4 } = require("uuid");
 
-    import aws_exports from "./aws-config";
+    import aws_exports from "#src/aws-config";
     import { location, replace } from "svelte-spa-router";
     import { querystring } from "svelte-spa-router";
 
-    import SpinnerPanel from "./SpinnerPanel.svelte";
-    import Splash from "./Splash.svelte";
-    import BottomNav from "./BottomNav.svelte";
-    import RouteHost from "./routes/RouteHost.svelte";
-    import HotLoad from "./HotLoad.svelte";
-    import ElectronTimerRelay from "./ElectronTimerRelay.svelte";
-    import ElectronRacePhaseRelay from "./ElectronRacePhaseRelay.svelte";
+    import SpinnerPanel from "#src/SpinnerPanel.svelte";
+    import Splash from "#src/Splash.svelte";
+    import BottomNav from "#src/BottomNav.svelte";
+    import RouteHost from "#src/routes/RouteHost.svelte";
+    import HotLoad from "#src/HotLoad.svelte";
+    import ElectronTimerRelay from "#src/ElectronTimerRelay.svelte";
+    import ElectronRacePhaseRelay from "#src/ElectronRacePhaseRelay.svelte";
     import {
         raceConfig,
         theme,
@@ -29,19 +29,19 @@
         reRenderHotLoad,
         userExpCountDownSecs,
         userJwtStore,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import { onMount } from "svelte";
-    import { db, localConfigDb } from "./eventDb.js";
-    import { sleep, refreshOrgRoles } from "./utils.js";
-    import { routeRegistry } from "./routes/routeRuntime.js";
-    import { setIdTokenFromCognitoCallback } from "./utilHosted.js";
-    import { urlParseSpotify } from "./utils/spotify";
-    const { canAccessRoute } = require("./routes/routeAccess.js");
+    import { db, localConfigDb } from "#src/eventDb.js";
+    import { sleep, refreshOrgRoles } from "#src/utils.js";
+    import { routeRegistry } from "#src/routes/routeRuntime.js";
+    import { setIdTokenFromCognitoCallback } from "#src/utilHosted.js";
+    import { urlParseSpotify } from "#src/utils/spotify";
+    const { canAccessRoute } = require("#src/routes/routeAccess.js");
     const {
         getMenuItems,
         isRecognizedDeepLink,
-    } = require("./routes/routeRegistry.js");
-    const { MenuSection } = require("./routes/routeDefinitions.js");
+    } = require("#src/routes/routeRegistry.js");
+    const { MenuSection } = require("#src/routes/routeDefinitions.js");
 
     var isMounted = false;
     let initialRouteHandled = false;

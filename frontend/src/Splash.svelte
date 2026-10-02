@@ -2,7 +2,7 @@
     import log from "loglevel";
     import { Modal, ModalHeader, ModalBody } from "sveltestrap";
     import { onMount } from "svelte";
-    import { lastSplash } from "./stores.js";
+    import { lastSplash } from "#src/stores.js";
     import { end, toSeconds, parse } from "iso8601-duration";
 
     function overDue() {

@@ -8,12 +8,12 @@
         doRefreshBlocks,
         uiPageSize,
         initialReloadRoute,
-    } from "./stores.js";
-    import RacePhase from "./RacePhase.svelte";
-    import Annotate from "./Annotate.svelte";
-    import CarFilter from "./CarFilter.svelte";
+    } from "#src/stores.js";
+    import RacePhase from "#src/RacePhase.svelte";
+    import Annotate from "#src/Annotate.svelte";
+    import CarFilter from "#src/CarFilter.svelte";
     import { onMount } from "svelte";
-    import { dateChangeLabel, getMainFull, escapeRegExp } from "./utils.js";
+    import { dateChangeLabel, getMainFull, escapeRegExp } from "#src/utils.js";
     import { location } from "svelte-spa-router";
     var mainFullPx = 300;
     var phaseList = [];

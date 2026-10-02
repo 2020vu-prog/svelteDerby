@@ -1,5 +1,5 @@
 <script>
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import VirtualList from "@sveltejs/svelte-virtual-list";
@@ -10,17 +10,17 @@
         uiPageSize,
         selectedDriverMap,
         selectedDriverList,
-    } from "./stores.js";
-    import CarAndDriver from "./CarAndDriver.svelte";
-    import CarFilter from "./CarFilter.svelte";
-    import { safeGetAt } from "./utils.js";
+    } from "#src/stores.js";
+    import CarAndDriver from "#src/CarAndDriver.svelte";
+    import CarFilter from "#src/CarFilter.svelte";
+    import { safeGetAt } from "#src/utils.js";
     import {
         createPermissionStore,
         RoutePermission,
-    } from "./routes/frontendPermissions.js";
+    } from "#src/routes/frontendPermissions.js";
     import { onMount } from "svelte";
     import { push, pop, location } from "svelte-spa-router";
-    import { getMainFull, filterMatches } from "./utils.js";
+    import { getMainFull, filterMatches } from "#src/utils.js";
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import { faMusic } from "@fortawesome/free-solid-svg-icons/faMusic";
     import Icon from "fa-svelte";

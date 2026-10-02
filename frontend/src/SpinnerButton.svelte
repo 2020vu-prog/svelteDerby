@@ -2,11 +2,11 @@
     import log from "loglevel";
 
     import { createEventDispatcher } from "svelte";
-    import { theme } from "./stores.js";
+    import { theme } from "#src/stores.js";
     import { onMount } from "svelte";
-    import { longpress } from "./utilActions.js";
+    import { longpress } from "#src/utilActions.js";
 
-    import CirclesSvg from "./CirclesSvg.svelte";
+    import CirclesSvg from "#src/CirclesSvg.svelte";
     export let disabled = false;
     export let spinning = false;
     export let focused = false;

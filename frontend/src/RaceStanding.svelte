@@ -9,18 +9,18 @@
         CardFooter,
         Badge,
     } from "sveltestrap";
-    import ByLine from "./ByLine.svelte";
-    import CarAndDriver from "./CarAndDriver.svelte";
-    import EllipsisButton from "./EllipsisButton.svelte";
-    import ComponentToolbar from "./ComponentToolBar.svelte";
-    import { standingsMap, driverMap } from "./stores.js";
+    import ByLine from "#src/ByLine.svelte";
+    import CarAndDriver from "#src/CarAndDriver.svelte";
+    import EllipsisButton from "#src/EllipsisButton.svelte";
+    import ComponentToolbar from "#src/ComponentToolBar.svelte";
+    import { standingsMap, driverMap } from "#src/stores.js";
     import {
         safeGetAt,
         fmtChartPosition,
         getBracketLink,
         hhmmssFmt,
         formatWinTime,
-    } from "./utils.js";
+    } from "#src/utils.js";
     import { onMount } from "svelte";
     import { push, replace } from "svelte-spa-router";
     export let standing;

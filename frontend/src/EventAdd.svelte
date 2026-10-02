@@ -1,12 +1,17 @@
 <script>
     import log from "loglevel";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { axios, raceConfig, setCacheKey, pushMessage } from "./stores.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import {
+        axios,
+        raceConfig,
+        setCacheKey,
+        pushMessage,
+    } from "#src/stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
     const { v4: uuidv4 } = require("uuid");
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
 
     export let params = {};
 

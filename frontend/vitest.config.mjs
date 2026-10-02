@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
+import { fileURLToPath, URL } from "node:url";
 
 // Component-level tests for .svelte files. Kept separate from the frontend/src/**/*.test.mjs
 // suite (`npm test`, plain `node --test`) because node's runner can't compile Svelte
@@ -23,6 +24,9 @@ export default defineConfig({
     // Forcing the "browser" condition, same as the real webpack/browser build,
     // keeps every import on one shared instance.
     resolve: {
+        alias: {
+            "#src": fileURLToPath(new URL("./src", import.meta.url)),
+        },
         conditions: ["browser"],
     },
     test: {

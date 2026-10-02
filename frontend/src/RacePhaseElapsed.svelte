@@ -9,11 +9,11 @@
         Badge,
         Table,
     } from "sveltestrap";
-    import { recalcLaneData } from "./utilsElapsed.js";
-    import { fmtPinTime } from "./utils.js";
+    import { recalcLaneData } from "#src/utilsElapsed.js";
+    import { fmtPinTime } from "#src/utils.js";
     import { onMount } from "svelte";
-    import { sleep } from "./utils.js";
-    import { pushMessage, raceConfig, axios } from "./stores";
+    import { sleep } from "#src/utils.js";
+    import { pushMessage, raceConfig, axios } from "#src/stores";
 
     export let params = {};
     let sampleDemoData = true;

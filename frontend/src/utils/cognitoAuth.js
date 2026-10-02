@@ -1,5 +1,5 @@
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
-import aws_exports from "../aws-config";
+import aws_exports from "#src/aws-config";
 
 const COGNITO_URL_STATE = "cognito";
 

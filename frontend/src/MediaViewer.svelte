@@ -1,9 +1,9 @@
 <script>
     import log from "loglevel";
     import axios from "axios";
-    import aws_exports from "./aws-config";
-    import { videoHref, developerMode } from "./stores.js";
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import aws_exports from "#src/aws-config";
+    import { videoHref, developerMode } from "#src/stores.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
     import Icon from "fa-svelte";
     import { faBackward } from "@fortawesome/free-solid-svg-icons/faBackward";
     import { faForward } from "@fortawesome/free-solid-svg-icons/faForward";
@@ -12,7 +12,7 @@
         extractS3VideoMeta,
         hhmmssFmt,
         mmddyyFmt,
-    } from "./utils.js";
+    } from "#src/utils.js";
     import { tick } from "svelte";
     import { onMount } from "svelte";
     //https://svelte.dev/examples/media-elements

@@ -1,6 +1,6 @@
 <script>
     import log from "loglevel";
-    import WarningSvg from "./svg/warningSvg.svelte";
+    import WarningSvg from "#src/svg/warningSvg.svelte";
     export let msgs = [];
     let showDebug = false;
 

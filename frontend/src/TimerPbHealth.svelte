@@ -11,15 +11,15 @@
     } from "sveltestrap";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
-    import { pushMessage, raceConfig, axios } from "./stores";
+    import { pushMessage, raceConfig, axios } from "#src/stores";
     import {
         getTimerPbConfig,
         MqttIsClientEsp32,
         secondsToHHMMSS,
         protobufLongToNumber,
-    } from "./utils.js";
-    import TimerSubscribeStub from "./TimerSubscribeStub.svelte";
-    import LogList from "./LogList.svelte";
+    } from "#src/utils.js";
+    import TimerSubscribeStub from "#src/TimerSubscribeStub.svelte";
+    import LogList from "#src/LogList.svelte";
 
     export let timerName;
     export let timerId;

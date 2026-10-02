@@ -1,7 +1,7 @@
 <script>
-    import "./Charts.css";
+    import "#src/Charts.css";
     import { push, pop, replace } from "svelte-spa-router";
-    import { carFilter } from "./stores";
+    import { carFilter } from "#src/stores";
     export let heats = {};
     export let chartId = "";
     function getState(heat, letter) {

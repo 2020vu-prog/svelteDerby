@@ -1,9 +1,9 @@
 <script>
     import log from "loglevel";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
-    import OrgName from "./OrgName.svelte";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { raceConfig } from "./stores.js";
+    import OrgName from "#src/OrgName.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import { raceConfig } from "#src/stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import {
         getCacheKey,
@@ -12,7 +12,7 @@
         getOrgName,
         orgMap,
         refreshOrgMap,
-    } from "./stores.js";
+    } from "#src/stores.js";
 
     let loadingOrgs = true;
     let orgLoadRequest = 0;

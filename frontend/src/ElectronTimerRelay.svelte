@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
     import { onMount } from "svelte";
-    import { axios, pushMessage, raceConfig } from "./stores.js";
+    import { axios, pushMessage, raceConfig } from "#src/stores.js";
 
     onMount(async () => {
         installTimerHook();

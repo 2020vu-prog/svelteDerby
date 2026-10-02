@@ -1,8 +1,12 @@
 <script>
     import log from "loglevel";
-    import LogList from "./LogList.svelte";
-    import { nextOnBlockKey, standingsMap, doRefreshBlocks } from "./stores.js";
-    import { isPendingNeededForType, getEntityFactory } from "./utils.js";
+    import LogList from "#src/LogList.svelte";
+    import {
+        nextOnBlockKey,
+        standingsMap,
+        doRefreshBlocks,
+    } from "#src/stores.js";
+    import { isPendingNeededForType, getEntityFactory } from "#src/utils.js";
     import EntityFactory from "../../backend/modules/lambdaDerby/src/shared/EntityFactory.js";
     export let carNumberForm = {};
 

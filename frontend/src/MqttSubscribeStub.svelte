@@ -4,10 +4,10 @@
     const { v4: uuidv4 } = require("uuid");
     import { Base64 } from "js-base64";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     import { createEventDispatcher } from "svelte";
-    import { MqttMapSubscription } from "./utils.js";
-    import { mqttMapData } from "./stores.js";
+    import { MqttMapSubscription } from "#src/utils.js";
+    import { mqttMapData } from "#src/stores.js";
     export let mqTopic = "";
     export let verbose = "truthyString";
     const dispatch = createEventDispatcher();

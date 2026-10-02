@@ -2,14 +2,14 @@
     import log from "loglevel";
     import { replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
     import {
         axios,
         raceConfig,
         pushMessage,
         userEmail,
         initialReloadRoute,
-    } from "./stores.js";
+    } from "#src/stores.js";
 
     export let params = {};
 

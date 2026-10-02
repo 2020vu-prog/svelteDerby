@@ -2,8 +2,8 @@
     import log from "loglevel";
     import { onMount } from "svelte";
     import { Button } from "sveltestrap";
-    import ByLine from "./ByLine.svelte";
-    import { db } from "./eventDb.js";
+    import ByLine from "#src/ByLine.svelte";
+    import { db } from "#src/eventDb.js";
 
     let logMessages = [];
     let loading = true;

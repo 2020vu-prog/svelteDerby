@@ -8,7 +8,7 @@ import {
     spotifyPremiumRequired,
     spotifyRefreshToken,
     spotifySelectedDeviceId,
-} from "../stores.js";
+} from "#src/stores.js";
 
 const SS = "cc79096dfc214db2bf5f51556ba6ef31";
 const SID = "6c096d4f69414adab02c33e9ebefab0e";

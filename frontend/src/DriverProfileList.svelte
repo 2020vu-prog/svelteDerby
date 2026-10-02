@@ -1,6 +1,6 @@
 <script>
     import { push, replace } from "svelte-spa-router";
-    import { driverMap, userEmail, raceConfig } from "./stores.js";
+    import { driverMap, userEmail, raceConfig } from "#src/stores.js";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 

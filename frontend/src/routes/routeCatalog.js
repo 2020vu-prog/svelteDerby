@@ -1,10 +1,10 @@
 "use strict";
 
-const { routeDefinitions } = require("./routeDefinitions.js");
-const { createRouteRegistry } = require("./routeRegistry.js");
+const { routeDefinitions } = require("#src/routes/routeDefinitions.js");
+const { createRouteRegistry } = require("#src/routes/routeRegistry.js");
 
 /**
  * Application route catalog compiled and validated independently of Svelte.
- * @type {import("./routeRegistry.js").RouteRegistry}
+ * @type {import("#src/routes/routeRegistry.js").RouteRegistry}
  */
 module.exports = createRouteRegistry(routeDefinitions);

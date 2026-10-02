@@ -1,13 +1,13 @@
 <script>
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import SpotifyEmbedded from "./SpotifyEmbedded.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import SpotifyEmbedded from "#src/SpotifyEmbedded.svelte";
     import { createEventDispatcher } from "svelte";
     import Icon from "fa-svelte";
     import { faBackspace } from "@fortawesome/free-solid-svg-icons/faBackspace";
     import {
         isValidSpotifyTrack,
         spotifyTrackId,
-    } from "./utils/spotifyLink.js";
+    } from "#src/utils/spotifyLink.js";
 
     export let saveValue = "";
 

@@ -1,11 +1,11 @@
 <script>
     import log from "loglevel";
-    import { recalcLaneData } from "./utilsElapsed.js";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { db, localConfigDb } from "./eventDb.js";
+    import { recalcLaneData } from "#src/utilsElapsed.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import { db, localConfigDb } from "#src/eventDb.js";
     import { tick } from "svelte";
-    import { racePhaseMap, raceConfig } from "./stores";
-    import { downloadFile } from "./utils.js";
+    import { racePhaseMap, raceConfig } from "#src/stores";
+    import { downloadFile } from "#src/utils.js";
     import { stringify as csvStringify } from "csv-stringify/sync";
 
     const onFileSelected = (e) => {

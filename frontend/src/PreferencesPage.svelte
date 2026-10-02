@@ -16,7 +16,7 @@
         mqttPsUrlMap,
         developerMode,
         timeFormat,
-    } from "./stores.js";
+    } from "#src/stores.js";
 
     $: {
         document.documentElement.style.setProperty(
@@ -25,13 +25,13 @@
         );
     }
 
-    import { formatWinTime } from "./utils.js";
+    import { formatWinTime } from "#src/utils.js";
     import { Badge } from "sveltestrap";
 
     import { onMount } from "svelte";
-    import { getCacheKey, setCacheKey } from "./stores.js";
-    import { db, localConfigDb } from "./eventDb.js";
-    import BottomNav from "./BottomNav.svelte";
+    import { getCacheKey, setCacheKey } from "#src/stores.js";
+    import { db, localConfigDb } from "#src/eventDb.js";
+    import BottomNav from "#src/BottomNav.svelte";
     import { push } from "svelte-spa-router";
 
     let disableCache = false;

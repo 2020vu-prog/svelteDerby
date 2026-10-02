@@ -4,22 +4,22 @@
         nextOnBlockKey,
         racePhaseMap,
         standingsMap,
-    } from "./stores.js";
-    import PaInfoDriverCard from "./PaInfoDriverCard.svelte";
+    } from "#src/stores.js";
+    import PaInfoDriverCard from "#src/PaInfoDriverCard.svelte";
     import {
         formatWinTime,
         fmtChartPosition,
         getRaceTypeEmoji,
         hhmmssFmt,
         isPendingNeeded,
-    } from "./utils.js";
+    } from "#src/utils.js";
     import {
         getCarNumber,
         getCompletedRaceStatuses,
         getLatestCompletedStanding,
         getNextOnBlocksStatuses,
         getParticipant,
-    } from "./paInfo.js";
+    } from "#src/paInfo.js";
 
     let nextRaceLabel = "";
     let completedRaceLabel = "";

@@ -7,17 +7,17 @@ const preferenceValues = vi.hoisted(() => new Map());
 vi.mock("svelte-spa-router", () => ({
     replace: vi.fn(),
 }));
-vi.mock("../stores.js", () => ({
+vi.mock("#src/stores.js", () => ({
     developerMode: writable(false),
 }));
-vi.mock("../eventDb.js", () => ({
+vi.mock("#src/eventDb.js", () => ({
     getUserPreference: vi.fn((key) => preferenceValues.get(key) ?? null),
     putUserPreference: vi.fn((key, value) => preferenceValues.set(key, value)),
 }));
 
 import { replace } from "svelte-spa-router";
-import { developerMode } from "../stores.js";
-import ChartHeaderViewToggle from "./ChartHeaderViewToggle.svelte";
+import { developerMode } from "#src/stores.js";
+import ChartHeaderViewToggle from "#src/chart/ChartHeaderViewToggle.svelte";
 
 beforeEach(() => {
     preferenceValues.clear();

@@ -130,6 +130,7 @@ module.exports = (cloudfrontTarget) => {
         },
         resolve: {
             alias: {
+                "#src": path.resolve(__dirname, "src"),
                 "process/browser": require.resolve("process/browser.js"),
                 svelte: path.resolve("node_modules", "svelte"),
             },

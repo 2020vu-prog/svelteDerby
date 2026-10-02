@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
 
-    import { axios, raceConfig } from "./stores.js";
+    import { axios, raceConfig } from "#src/stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
 

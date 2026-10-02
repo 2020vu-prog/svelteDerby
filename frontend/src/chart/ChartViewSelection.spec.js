@@ -2,11 +2,11 @@ import { beforeEach, expect, it, vi } from "vitest";
 
 let selectionCounter;
 
-vi.mock("../eventDb.js", () => ({
+vi.mock("#src/eventDb.js", () => ({
     getUserPreference: vi.fn(() => selectionCounter),
 }));
 
-import { getSelectedChartView } from "./ChartViewSelection.js";
+import { getSelectedChartView } from "#src/chart/ChartViewSelection.js";
 
 beforeEach(() => {
     selectionCounter = undefined;

@@ -1,8 +1,8 @@
-import { routeComponents } from "./routeComponents.js";
-import DecodedRoute from "./DecodedRoute.svelte";
+import { routeComponents } from "#src/routes/routeComponents.js";
+import DecodedRoute from "#src/routes/DecodedRoute.svelte";
 
 /** Validated route metadata used by both Svelte rendering and UI policy. */
-export const routeRegistry = require("./routeCatalog.js");
+export const routeRegistry = require("#src/routes/routeCatalog.js");
 
 /**
  * Adapts svelte-spa-router's raw path captures before they reach a screen.

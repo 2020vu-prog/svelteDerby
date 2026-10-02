@@ -10,17 +10,17 @@
         doRefreshBlocks,
         pendingSortAlgorithm,
         uiPageSize,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import VirtualList from "@sveltejs/svelte-virtual-list";
 
-    import RaceStanding from "./RaceStanding.svelte";
-    import RacePhase from "./RacePhase.svelte";
-    import Annotate from "./Annotate.svelte";
-    import CarFilter from "./CarFilter.svelte";
+    import RaceStanding from "#src/RaceStanding.svelte";
+    import RacePhase from "#src/RacePhase.svelte";
+    import Annotate from "#src/Annotate.svelte";
+    import CarFilter from "#src/CarFilter.svelte";
     import { onMount } from "svelte";
     export let params = {};
     import { location, replace, push } from "svelte-spa-router";
-    import { dateChangeLabel, getMainFull, escapeRegExp } from "./utils.js";
+    import { dateChangeLabel, getMainFull, escapeRegExp } from "#src/utils.js";
     var mainFullPx = 300;
 
     var mounted = false;

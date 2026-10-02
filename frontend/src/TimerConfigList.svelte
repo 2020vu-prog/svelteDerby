@@ -2,15 +2,15 @@
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { Base64 } from "js-base64";
-    import EllipsisButton from "./EllipsisButton.svelte";
+    import EllipsisButton from "#src/EllipsisButton.svelte";
     import log from "loglevel";
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     import { onMount } from "svelte";
     import { push, pop, replace, location } from "svelte-spa-router";
-    import { initialReloadRoute } from "./stores.js";
-    import { doRefreshBlocks } from "./stores.js";
-    import TimerPbHealth from "./TimerPbHealth.svelte";
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import { initialReloadRoute } from "#src/stores.js";
+    import { doRefreshBlocks } from "#src/stores.js";
+    import TimerPbHealth from "#src/TimerPbHealth.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
 
     var tcFromDexie = [{ timerName: "Initializing..." }];
     onMount(async () => {

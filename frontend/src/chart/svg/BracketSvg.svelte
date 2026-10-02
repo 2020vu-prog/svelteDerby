@@ -18,16 +18,16 @@
         svgSlotFontSize,
         svgColumnGuide,
         svgSlotTextLayout,
-    } from "./ChartSvgLayout.js";
+    } from "#src/chart/svg/ChartSvgLayout.js";
     import {
         getBracketSummaryClass,
         getInitialHiddenColumnIds,
-    } from "../ChartStatus.js";
-    import { doRefreshBlocks } from "../../stores.js";
-    import { augmentChartState, getHeatResultParts } from "../../utils.js";
-    import SvgBracketSlot from "./SvgBracketSlot.svelte";
-    import { chartHeaderLayout } from "./chartHeader.js";
-    import { printSvgElement } from "./printSvg.js";
+    } from "#src/chart/ChartStatus.js";
+    import { doRefreshBlocks } from "#src/stores.js";
+    import { augmentChartState, getHeatResultParts } from "#src/utils.js";
+    import SvgBracketSlot from "#src/chart/svg/SvgBracketSlot.svelte";
+    import { chartHeaderLayout } from "#src/chart/svg/chartHeader.js";
+    import { printSvgElement } from "#src/chart/svg/printSvg.js";
 
     export let chartJson = { progress: {} };
     export let chartId = "";

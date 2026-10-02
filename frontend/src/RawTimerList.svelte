@@ -1,16 +1,16 @@
 <script>
     import log from "loglevel";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
 
-    import { axios, raceConfig, pushMessage } from "./stores.js";
+    import { axios, raceConfig, pushMessage } from "#src/stores.js";
     import { push, pop, replace } from "svelte-spa-router";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
-    import RawTimerLane from "./RawTimerLane.svelte";
+    import { db } from "#src/eventDb.js";
+    import RawTimerLane from "#src/RawTimerLane.svelte";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
-    import CalcFinish from "./calcFinish.js";
+    import CalcFinish from "#src/calcFinish.js";
 
     export let params = {};
     const entityFactory = new EntityFactory({});
@@ -29,11 +29,11 @@
         //testJson();
     });
     function testJson() {
-        winnerDeltas = require("./config/winnerTest.json");
+        winnerDeltas = require("#src/config/winnerTest.json");
         log.debug("testJson winnerDeltas:", winnerDeltas);
     }
     function testJson4Valid() {
-        winnerDeltas = require("./config/winnerTest4Valid.json");
+        winnerDeltas = require("#src/config/winnerTest4Valid.json");
 
         log.debug("testJson4Valid winnerDeltas:", winnerDeltas);
     }

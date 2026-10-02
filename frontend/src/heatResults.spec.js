@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./eventDb.js", () => ({
+vi.mock("#src/eventDb.js", () => ({
     db: {},
     localConfigDb: {},
     putUserPreference: vi.fn(),
     getUserPreference: vi.fn(() => null),
 }));
 
-import { formatWinTime, getHeatResultParts } from "./utils.js";
+import { formatWinTime, getHeatResultParts } from "#src/utils.js";
 import EntityFactory from "../../backend/modules/lambdaDerby/src/shared/EntityFactory.js";
 
 afterEach(() => vi.clearAllMocks());

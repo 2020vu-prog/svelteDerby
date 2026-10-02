@@ -1,16 +1,16 @@
 <script lang="ts">
-    import aws_exports from "./aws-config";
+    import aws_exports from "#src/aws-config";
     import { onMount } from "svelte";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import SpotifyDeviceSelection from "./SpotifyDeviceSelection.svelte";
-    import { logout, sleep } from "./utils.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import SpotifyDeviceSelection from "#src/SpotifyDeviceSelection.svelte";
+    import { logout, sleep } from "#src/utils.js";
     import {
         spotifyMe,
         getSpotifyPKCE,
         logoutSpotify,
         spotifyPremiumRequiredMessage,
-    } from "./utils/spotify.js";
-    import { spotifyLoggedIn, spotifyPremiumRequired } from "./stores.js";
+    } from "#src/utils/spotify.js";
+    import { spotifyLoggedIn, spotifyPremiumRequired } from "#src/stores.js";
     export let spinning = false;
     async function loginPKCE() {
         spinning = true;

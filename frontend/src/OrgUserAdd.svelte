@@ -1,9 +1,9 @@
 <script>
     import log from "loglevel";
     import { onMount } from "svelte";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import { axios, raceConfig, pushMessage, userEmail } from "./stores.js";
-    import { refreshOrgRoles } from "./utils.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import { axios, raceConfig, pushMessage, userEmail } from "#src/stores.js";
+    import { refreshOrgRoles } from "#src/utils.js";
     import { push, pop, replace } from "svelte-spa-router";
 
     const {

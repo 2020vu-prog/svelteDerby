@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
 
-    import SpinnerButton from "./SpinnerButton.svelte";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
     import axiosVanilla from "axios";
     import {
         driverMap,
@@ -25,15 +25,15 @@
         developerMode,
         mp3Playing,
         mqttReconnectStats,
-    } from "./stores.js";
+    } from "#src/stores.js";
     //import { mqtt } from "mqtt";
     import * as mqtt from "mqtt";
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     import { onMount } from "svelte";
     import { onDestroy } from "svelte";
     import { tick } from "svelte";
 
-    import aws_exports from "./aws-config";
+    import aws_exports from "#src/aws-config";
     import { exclude_internal_props } from "svelte/internal";
     //var mqSem = require("semaphore")(1);
     import { Lock } from "semaphore-async-await";

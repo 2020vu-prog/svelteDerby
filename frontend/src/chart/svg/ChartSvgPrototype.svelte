@@ -1,11 +1,11 @@
 <script>
     import { onMount } from "svelte";
     import { push } from "svelte-spa-router";
-    import { db } from "../../eventDb.js";
-    import BracketSvg from "./BracketSvg.svelte";
-    import ChartHeaderViewToggle from "../ChartHeaderViewToggle.svelte";
-    import { getChartJson } from "../../utils.js";
-    import { raceConfig, spinnerPanelBusy } from "../../stores.js";
+    import { db } from "#src/eventDb.js";
+    import BracketSvg from "#src/chart/svg/BracketSvg.svelte";
+    import ChartHeaderViewToggle from "#src/chart/ChartHeaderViewToggle.svelte";
+    import { getChartJson } from "#src/utils.js";
+    import { raceConfig, spinnerPanelBusy } from "#src/stores.js";
 
     export let params = {};
 

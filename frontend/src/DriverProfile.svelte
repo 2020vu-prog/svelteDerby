@@ -6,9 +6,9 @@
         pushMessage,
         userEmail,
         driverMap,
-    } from "./stores.js";
-    import SpinnerButton from "./SpinnerButton.svelte";
-    import WalkupLinkEditor from "./WalkupLinkEditor.svelte";
+    } from "#src/stores.js";
+    import SpinnerButton from "#src/SpinnerButton.svelte";
+    import WalkupLinkEditor from "#src/WalkupLinkEditor.svelte";
 
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 

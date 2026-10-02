@@ -1,26 +1,26 @@
 <script>
-    import "./Charts.css";
+    import "#src/Charts.css";
     import log from "loglevel";
-    import ChartDetailCardHeats from "./ChartDetailCardHeats.svelte";
-    import ChartHeaderViewToggle from "./chart/ChartHeaderViewToggle.svelte";
-    import { getBracketSummaryClass } from "./chart/ChartStatus.js";
-    import CarFilter from "./CarFilter.svelte";
+    import ChartDetailCardHeats from "#src/ChartDetailCardHeats.svelte";
+    import ChartHeaderViewToggle from "#src/chart/ChartHeaderViewToggle.svelte";
+    import { getBracketSummaryClass } from "#src/chart/ChartStatus.js";
+    import CarFilter from "#src/CarFilter.svelte";
     import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
     import { onMount } from "svelte";
-    import { db } from "./eventDb.js";
+    import { db } from "#src/eventDb.js";
     import {
         carFilter,
         getChartCacheKey,
         driverMap,
         spinnerPanelBusy,
         pushMessage,
-    } from "./stores.js";
+    } from "#src/stores.js";
     import {
         augmentChartState,
         sleep,
         getChartJson,
         filterMatches,
-    } from "./utils.js";
+    } from "#src/utils.js";
     import { tick } from "svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 

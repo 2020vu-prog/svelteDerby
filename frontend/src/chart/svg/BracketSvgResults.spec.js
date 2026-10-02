@@ -2,10 +2,10 @@ import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { afterEach, expect, it, vi } from "vitest";
 import { writable } from "svelte/store";
 
-vi.mock("../../stores.js", () => ({
+vi.mock("#src/stores.js", () => ({
     doRefreshBlocks: writable(0),
 }));
-vi.mock("../../utils.js", () => ({
+vi.mock("#src/utils.js", () => ({
     parseHeatPos: vi.fn((position) => [position, position]),
     augmentChartState: vi.fn((_chartJson, _chartId, heatId, slot) =>
         Promise.resolve({
@@ -24,10 +24,10 @@ vi.mock("../../utils.js", () => ({
             : ["B: 1000 ms"];
     }),
 }));
-vi.mock("./printSvg.js", () => ({ printSvgElement: vi.fn() }));
+vi.mock("#src/chart/svg/printSvg.js", () => ({ printSvgElement: vi.fn() }));
 
-import BracketSvg from "./BracketSvg.svelte";
-import { getHeatResultParts } from "../../utils.js";
+import BracketSvg from "#src/chart/svg/BracketSvg.svelte";
+import { getHeatResultParts } from "#src/utils.js";
 
 afterEach(() => {
     cleanup();
@@ -117,7 +117,7 @@ it("shows each car's results under its slot and makes room for them", async () =
 });
 
 it("turns heat results on when printing", async () => {
-    const { printSvgElement } = await import("./printSvg.js");
+    const { printSvgElement } = await import("#src/chart/svg/printSvg.js");
     const view = render(BracketSvg, { chartId: "c", chartJson });
     await waitFor(() => expect(view.getByText("Heat 1")).toBeInTheDocument());
 
