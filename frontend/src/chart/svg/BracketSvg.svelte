@@ -10,6 +10,7 @@
         applySvgColumnVisibility,
         buildSvgChartLayout,
         layoutSvgPlacements,
+        svgLayoutWithRunoff,
         svgEdgePath,
         svgHeatTitleLayout,
         svgChampionshipColumnId,
@@ -75,7 +76,9 @@
             placementLabel(placement, placementStates[placement.id] || {}),
         ])
     );
-    $: layout = layoutSvgPlacements(compactLayout, placementLabels);
+    $: layout = svgLayoutWithRunoff(
+        layoutSvgPlacements(compactLayout, placementLabels)
+    );
     // Hidden columns only: a flag for the championship column, else an arrow
     // toward it.
     $: columnGuides = Object.fromEntries(
@@ -92,7 +95,10 @@
     );
     $: heatAreaBottom = Math.max(
         34,
-        ...Object.values(layout.heats).map((heat) => heat.y + heat.height)
+        // Hidden-column guides span the main columns, not the runoff section.
+        ...Object.values(layout.heats)
+            .filter((heat) => !heat.runoff)
+            .map((heat) => heat.y + heat.height)
     );
     $: header = chartHeaderLayout({
         eventName,

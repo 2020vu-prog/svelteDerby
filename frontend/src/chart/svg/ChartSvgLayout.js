@@ -8,6 +8,10 @@ const POSITIONED_HEAT_HEIGHT = 72;
 const POSITIONED_COLUMN_GAP = 12;
 const POSITIONED_ROW_GAP = 22;
 const POSITIONED_COLUMN_TOLERANCE = 72;
+// Vertical white space between neighboring heats in a collapsed stack.
+const COMPACT_ROW_GAP = 8;
+// White space between the placement band and the runoff section beside it.
+const RUNOFF_GAP = 48;
 const HIDDEN_COLUMN_WIDTH = 16;
 const PLACEMENT_MIN_WIDTH = 300;
 const PLACEMENT_HEIGHT = 44;
@@ -39,6 +43,49 @@ function isChampionshipResetDestination(value) {
     return typeof value === "string" && /^\(\s*[AB]WINS\?/i.test(value);
 }
 
+function placementRank(value) {
+    const match = typeof value === "string" && value.match(/^Place\s?(\d+)$/i);
+    return match ? Number(match[1]) : undefined;
+}
+
+// Runoff heats decide the lower places (3rd and below). They are the heats
+// annotated "Runoff ..."; for chart JSON without annotations, heats that send
+// both racers to Place3 or lower, and heats whose every destination heat is
+// itself a runoff heat (the 5th-8th semifinals).
+function findRunoffHeatIds(heats, progress, heatIdByNumber) {
+    const runoff = new Set();
+    for (const heat of heats) {
+        const detail = progress[heat.id] || {};
+        if (/^runoff/i.test(detail.Annotation || "")) runoff.add(heat.id);
+        else if (
+            placementRank(detail.WinnerDest) >= 3 &&
+            placementRank(detail.LoserDest) >= 3
+        ) {
+            runoff.add(heat.id);
+        }
+    }
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const heat of heats) {
+            if (runoff.has(heat.id)) continue;
+            const detail = progress[heat.id] || {};
+            const targets = [detail.WinnerDest, detail.LoserDest].flatMap(
+                (destination) =>
+                    parseDestination(destination).map(
+                        (target) =>
+                            heatIdByNumber.get(target.heat) || target.heat
+                    )
+            );
+            if (targets.length && targets.every((id) => runoff.has(id))) {
+                runoff.add(heat.id);
+                changed = true;
+            }
+        }
+    }
+    return runoff;
+}
+
 function numericPosition(position) {
     if (!position) return undefined;
 
@@ -47,7 +94,18 @@ function numericPosition(position) {
     return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : undefined;
 }
 
-function buildPositionedLayout(heats, edges, imgPositions) {
+// Where the A and B slot text sits inside a positioned heat frame of `height`.
+function positionedSlotOffsets(height) {
+    const slotAreaTop = Math.min(20, height * 0.32);
+    const slotAreaBottom = Math.max(slotAreaTop, height - 6);
+    const slotAreaHeight = slotAreaBottom - slotAreaTop;
+    return {
+        A: slotAreaTop + slotAreaHeight / 3,
+        B: slotAreaTop + (slotAreaHeight * 5) / 6,
+    };
+}
+
+function buildPositionedLayout(heats, edges, imgPositions, runoffBlock) {
     const heatLayout = {};
     const slots = {};
     const placements = {};
@@ -129,9 +187,7 @@ function buildPositionedLayout(heats, edges, imgPositions) {
             MARGIN +
             columnIndex * (POSITIONED_HEAT_WIDTH + POSITIONED_COLUMN_GAP);
         const y = heat.sourceCenterY - height / 2;
-        const slotAreaTop = Math.min(20, height * 0.32);
-        const slotAreaBottom = Math.max(slotAreaTop, height - 6);
-        const slotAreaHeight = slotAreaBottom - slotAreaTop;
+        const offsets = positionedSlotOffsets(height);
 
         heatLayout[heat.id] = {
             ...heat,
@@ -141,14 +197,8 @@ function buildPositionedLayout(heats, edges, imgPositions) {
             height,
             columnId,
         };
-        slots[`${heat.id}A`] = {
-            x: x + 8,
-            y: y + slotAreaTop + slotAreaHeight / 3,
-        };
-        slots[`${heat.id}B`] = {
-            x: x + 8,
-            y: y + slotAreaTop + (slotAreaHeight * 5) / 6,
-        };
+        slots[`${heat.id}A`] = { x: x + 8, y: y + offsets.A };
+        slots[`${heat.id}B`] = { x: x + 8, y: y + offsets.B };
     }
 
     columns.forEach((column, columnIndex) => {
@@ -199,6 +249,7 @@ function buildPositionedLayout(heats, edges, imgPositions) {
         heats: heatLayout,
         edges,
         placements,
+        runoffBlock,
         positioned: true,
         slots,
         columns: columns.map((column, index) => ({
@@ -255,7 +306,7 @@ export function buildSvgChartLayout(
     imgPositions = {},
     imgSize = {}
 ) {
-    const heats = Object.keys(progress)
+    let heats = Object.keys(progress)
         .map((id) => ({
             id: String(id),
             round: progress[id]["#Round"] || "Unassigned",
@@ -265,7 +316,7 @@ export function buildSvgChartLayout(
     const heatIdByNumber = new Map(
         heats.map((heat) => [String(Number(heat.id)), heat.id])
     );
-    const edges = [];
+    let edges = [];
     const placements = new Set();
     const optionalHeatIds = new Set();
     const optionalSourceHeatIds = new Map();
@@ -320,8 +371,30 @@ export function buildSvgChartLayout(
         heat.annotation = progress[heat.id]?.Annotation || "";
     }
 
-    if (Object.keys(imgPositions).length) {
-        return buildPositionedLayout(heats, edges, imgPositions);
+    // Runoff heats leave the main bracket columns and form their own section.
+    const runoffIds = findRunoffHeatIds(heats, progress, heatIdByNumber);
+    const positioned = Object.keys(imgPositions).length > 0;
+    const runoffBlock = buildRunoffBlock(
+        heats.filter((heat) => runoffIds.has(heat.id)),
+        edges.filter(
+            (edge) =>
+                edge.toHeat &&
+                edge.result === "winner" &&
+                runoffIds.has(edge.fromHeat) &&
+                runoffIds.has(edge.toHeat)
+        ),
+        positioned,
+        imgPositions
+    );
+    heats = heats.filter((heat) => !runoffIds.has(heat.id));
+    edges = edges.filter(
+        (edge) =>
+            !runoffIds.has(edge.fromHeat) &&
+            (!edge.toHeat || !runoffIds.has(edge.toHeat))
+    );
+
+    if (positioned) {
+        return buildPositionedLayout(heats, edges, imgPositions, runoffBlock);
     }
 
     const primaryHeats = heats.filter((heat) => !heat.isOptional);
@@ -409,6 +482,7 @@ export function buildSvgChartLayout(
         heats: heatLayout,
         edges,
         placements: placementLayout,
+        runoffBlock,
         columns: Array.from({ length: maxColumn + 1 }, (_, index) => ({
             id: `column-${index + 1}`,
             label: `Column ${index + 1}`,
@@ -459,13 +533,68 @@ export function layoutSvgPlacements(layout, labels = {}) {
           )
         : heatBottom;
 
+    // The runoff section sits at the bottom, to the right of the placements.
+    const block = layout.runoffBlock;
+    const runoff = block
+        ? positionRunoffBlock(
+              block,
+              margin + (placements.length ? width + RUNOFF_GAP : 0),
+              heatBottom + ROW_GAP
+          )
+        : undefined;
+
     return {
         ...layout,
         placements: placementLayout,
+        runoff,
         viewBox: {
-            width: Math.max(layout.viewBox.width, margin * 2 + width),
-            height: placementBottom + margin,
+            width: Math.max(
+                layout.viewBox.width,
+                margin * 2 + width,
+                runoff ? runoff.x + block.width + margin : 0
+            ),
+            height:
+                Math.max(placementBottom, runoff ? runoff.bottom : 0) + margin,
         },
+    };
+}
+
+function positionRunoffBlock(block, x, y) {
+    return {
+        x,
+        y,
+        bottom: y + block.height,
+        heats: Object.fromEntries(
+            Object.entries(block.heats).map(([id, heat]) => [
+                id,
+                { ...heat, x: x + heat.x, y: y + heat.y, runoff: true },
+            ])
+        ),
+        slots: block.slots
+            ? Object.fromEntries(
+                  Object.entries(block.slots).map(([id, slot]) => [
+                      id,
+                      { x: x + slot.x, y: y + slot.y },
+                  ])
+              )
+            : undefined,
+        edges: block.edges,
+    };
+}
+
+// The layout with its runoff section merged into the heats, slots, and routes
+// so it renders like the rest of the chart. Kept separate from the layout
+// itself so the main columns, and their visibility, never include it.
+export function svgLayoutWithRunoff(layout) {
+    if (!layout.runoff) return layout;
+
+    return {
+        ...layout,
+        heats: { ...layout.heats, ...layout.runoff.heats },
+        slots: layout.runoff.slots
+            ? { ...layout.slots, ...layout.runoff.slots }
+            : layout.slots,
+        edges: [...layout.edges, ...layout.runoff.edges],
     };
 }
 
@@ -497,6 +626,199 @@ export function svgColumnGuide(columns, championshipColumnId, columnId) {
     if (target < 0 || index < 0) return undefined;
     if (index === target) return "flag";
     return index < target ? "right" : "left";
+}
+
+// The runoff heats as a small separate bracket, laid out from (0, 0): heats
+// are stacked and centered on their feeders with the same rules as the main
+// columns, but they never take part in the main column visibility controls.
+function buildRunoffBlock(heats, edges, positioned, imgPositions) {
+    if (!heats.length) return undefined;
+
+    const width = positioned ? POSITIONED_HEAT_WIDTH : HEAT_WIDTH;
+    const height = positioned ? POSITIONED_HEAT_HEIGHT : HEAT_HEIGHT;
+    const gap = positioned ? POSITIONED_COLUMN_GAP : COLUMN_GAP;
+    const authoredY = (heat) => {
+        const ys = ["A", "B"]
+            .map((slot) => numericPosition(imgPositions?.[`${heat.id}${slot}`]))
+            .filter(Boolean)
+            .map((position) => position.y);
+        return ys.length
+            ? ys.reduce((total, y) => total + y, 0) / ys.length
+            : undefined;
+    };
+    const columnOf = buildColumns(heats, edges);
+    const columnCount = Math.max(...Object.values(columnOf)) + 1;
+    const columns = Array.from({ length: columnCount }, (_, index) => ({
+        id: `runoff-${index + 1}`,
+        hidden: false,
+    }));
+    const placed = Object.fromEntries(
+        heats.map((heat) => [
+            heat.id,
+            {
+                ...heat,
+                sourceCenterY: authoredY(heat),
+                columnId: `runoff-${columnOf[heat.id] + 1}`,
+            },
+        ])
+    );
+    const tops = compactHeatTops({ edges, margin: 0 }, placed, columns, height);
+    const offsets = positioned ? positionedSlotOffsets(height) : undefined;
+    const blockHeats = {};
+    const slots = {};
+    for (const heat of Object.values(placed)) {
+        const x = columnOf[heat.id] * (width + gap);
+        blockHeats[heat.id] = { ...heat, x, y: tops[heat.id], width, height };
+        if (positioned) {
+            slots[`${heat.id}A`] = { x: x + 8, y: tops[heat.id] + offsets.A };
+            slots[`${heat.id}B`] = { x: x + 8, y: tops[heat.id] + offsets.B };
+        }
+    }
+    return {
+        heats: blockHeats,
+        slots: positioned ? slots : undefined,
+        edges: edges.map((edge) => ({ ...edge })),
+        width: columnCount * width + (columnCount - 1) * gap,
+        height: Math.max(
+            ...Object.values(blockHeats).map((heat) => heat.y + heat.height)
+        ),
+    };
+}
+
+// Heats that feed `heat` with an arrow: winner routes from a visible heat in
+// the directly neighboring column. A hidden neighbor leaves the heat unfed.
+function adjacentFeeders(heat, edges, heats, columnIndex) {
+    return edges
+        .filter(
+            (edge) =>
+                edge.toHeat === heat.id &&
+                edge.result === "winner" &&
+                heats[edge.fromHeat] &&
+                Math.abs(
+                    columnIndex.get(heats[edge.fromHeat].columnId) -
+                        columnIndex.get(heat.columnId)
+                ) === 1
+        )
+        .map((edge) => heats[edge.fromHeat]);
+}
+
+// Columns in the order their heats can be placed: a column follows every
+// neighboring column that feeds it.
+function columnPlacementOrder(visibleColumns, edges, heats, columnIndex) {
+    const feeds = new Map(
+        visibleColumns.map((column) => [column.id, new Set()])
+    );
+    for (const edge of edges) {
+        const from = heats[edge.fromHeat];
+        const to = heats[edge.toHeat];
+        if (
+            edge.result === "winner" &&
+            from &&
+            to &&
+            Math.abs(
+                columnIndex.get(from.columnId) - columnIndex.get(to.columnId)
+            ) === 1
+        ) {
+            feeds.get(to.columnId).add(from.columnId);
+        }
+    }
+    const ordered = [];
+    const remaining = [...visibleColumns];
+    while (remaining.length) {
+        const next =
+            remaining.find((column) =>
+                [...feeds.get(column.id)].every((id) =>
+                    ordered.some((done) => done.id === id)
+                )
+            ) || remaining[0]; // Malformed (cyclic) data: fall back to order.
+        ordered.push(next);
+        remaining.splice(remaining.indexOf(next), 1);
+    }
+    return ordered;
+}
+
+// Compact vertical layout of the visible heats:
+// - heats with no arrow feeding them (the first column, and any column whose
+//   feeder column is hidden) stack tightly in their authored order;
+// - a heat fed by a neighboring column is centered on the heat or heats that
+//   feed it;
+// - a conditional (if necessary) heat sits directly below its source heat.
+// Returns the top y of each visible heat.
+function compactHeatTops(layout, heats, columns, height) {
+    const columnIndex = new Map(
+        columns.map((column, index) => [column.id, index])
+    );
+    const visibleColumns = columns.filter((column) => !column.hidden);
+    const tops = {};
+    const margin = layout.margin || 0;
+    const byAuthoredOrder = (left, right) =>
+        left.sourceCenterY !== undefined && right.sourceCenterY !== undefined
+            ? left.sourceCenterY - right.sourceCenterY
+            : compareHeatIds(left.id, right.id);
+
+    for (const column of columnPlacementOrder(
+        visibleColumns,
+        layout.edges,
+        heats,
+        columnIndex
+    )) {
+        const columnHeats = Object.values(heats).filter(
+            (heat) => heat.columnId === column.id
+        );
+        const primary = columnHeats
+            .filter((heat) => !heat.isOptional)
+            .sort(byAuthoredOrder);
+        let previousBottom;
+        for (const heat of primary) {
+            const feeders = adjacentFeeders(
+                heat,
+                layout.edges,
+                heats,
+                columnIndex
+            ).filter((feeder) => tops[feeder.id] !== undefined);
+            const lowest =
+                previousBottom === undefined
+                    ? margin
+                    : previousBottom + COMPACT_ROW_GAP;
+            const wanted = feeders.length
+                ? feeders.reduce(
+                      (total, feeder) => total + tops[feeder.id] + height / 2,
+                      0
+                  ) /
+                      feeders.length -
+                  height / 2
+                : lowest;
+            tops[heat.id] = Math.max(wanted, lowest);
+            previousBottom = tops[heat.id] + height;
+        }
+
+        // Conditional heats go right under their source heat; anything that
+        // would then overlap moves down.
+        const optional = columnHeats.filter((heat) => heat.isOptional);
+        if (optional.length) {
+            const placed = [...primary];
+            for (const heat of optional) {
+                const source = tops[heat.optionalSourceHeatId];
+                tops[heat.id] =
+                    source === undefined
+                        ? (previousBottom ?? margin - COMPACT_ROW_GAP) +
+                          COMPACT_ROW_GAP
+                        : source + height + COMPACT_ROW_GAP;
+                placed.push(heat);
+            }
+            let bottom;
+            for (const heat of placed.sort((a, b) => tops[a.id] - tops[b.id])) {
+                if (bottom !== undefined) {
+                    tops[heat.id] = Math.max(
+                        tops[heat.id],
+                        bottom + COMPACT_ROW_GAP
+                    );
+                }
+                bottom = tops[heat.id] + height;
+            }
+        }
+    }
+    return tops;
 }
 
 // `extraGap` widens every gap between columns (default: no extra space).
@@ -559,6 +881,29 @@ export function applySvgColumnVisibility(
         const targetVisible = edge.toHeat ? Boolean(heats[edge.toHeat]) : true;
         return sourceVisible && targetVisible;
     });
+    const heatHeight = layout.positioned ? POSITIONED_HEAT_HEIGHT : HEAT_HEIGHT;
+    const tops = compactHeatTops(
+        { ...layout, edges },
+        heats,
+        columns,
+        heatHeight
+    );
+    const slotOffsets = layout.positioned
+        ? positionedSlotOffsets(heatHeight)
+        : undefined;
+    for (const [id, top] of Object.entries(tops)) {
+        heats[id] = { ...heats[id], y: top, height: heatHeight };
+        if (slots) {
+            for (const slot of ["A", "B"]) {
+                if (slots[`${id}${slot}`]) {
+                    slots[`${id}${slot}`] = {
+                        ...slots[`${id}${slot}`],
+                        y: top + slotOffsets[slot],
+                    };
+                }
+            }
+        }
+    }
     const boxes = Object.values(heats);
     const bottom = boxes.length
         ? Math.max(...boxes.map((box) => box.y + box.height))

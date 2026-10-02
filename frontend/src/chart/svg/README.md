@@ -28,19 +28,40 @@ image, card, or SVG view.
 - Slot state must refresh when chart JSON, chart ID, heat ID, slot, or the
   shared refresh store changes; a reused slot component must not retain the
   previous heat's participant.
-- The renderer uses authored image-position data only to infer visual ordering.
-  It does not reproduce the PNG's irregular coordinates exactly.
+- The renderer uses authored image-position data only to infer columns and the
+  top-to-bottom order of heats within a column. It does not reproduce the PNG's
+  coordinates; vertical positions are computed (see Layout Requirements).
 
 ## Layout Requirements
 
 - Render every heat as an enclosing frame with A and B positions inside it.
-- Normalize columns so heat and placement frames never overlap, while retaining
-  the authored vertical row positions.
-- Treat the midpoint between a heat's authored A and B positions as its row
-  center. Frame sizing and slot text offsets must not move that center.
-- When authored rows are too close, reduce the uniform frame height for that
-  column instead of moving the rows.
-- All heat frames in a visual column must have identical dimensions.
+- Heat and placement frames never overlap.
+- Vertical layout is compact and recomputed from the visible columns whenever
+  column visibility changes. A heat is fed when a winner route arrives from a
+  visible heat in the directly neighboring column.
+  - Heats with no feeding heat (the first column, the outermost column of the
+    other side of a double elimination, and any column whose neighboring feeder
+    column is hidden) stack tightly in their authored order with a small gap.
+  - A fed heat is vertically centered on the heat or heats that feed it: the
+    midpoint of two feeders, or level with a single feeder. If an earlier heat
+    in the same column is in the way, it moves down just enough to clear it.
+  - A conditional championship heat sits directly below the heat that creates
+    it, in the same column.
+  - Columns are placed in dependency order, so a column follows every
+    neighboring column that feeds it. A route that skips a column does not
+    count as a feeder.
+- Runoff heats (annotated `Runoff ...`, or for chart JSON without annotations,
+  heats that send both racers to Place3 or lower and the heats that feed only
+  those) are not part of the main bracket columns. They form a small separate
+  bracket at the bottom of the chart, to the right of the placement band and
+  level with its top, laid out with the same stacking and centering rules. The
+  column show/hide controls, their status colors, and their initial visibility
+  never include the runoff section, and it stays visible when every main column
+  is hidden. Hidden-column guide lines stop above it. The section is merged
+  into the rendered layout by `svgLayoutWithRunoff`; the base and compacted
+  layouts keep only the main heats.
+- Every heat frame has the same dimensions; slot text offsets are derived from
+  that height.
 - Use one compact, uniform horizontal gutter between primary heat columns,
   including sparse transition columns.
 - Only primary heat columns determine chart width. Attach each conditional `If
@@ -115,6 +136,6 @@ node --test frontend/src/chart/svg/ChartSvgLayout.test.mjs
 ```
 
 The tests cover reusable graph layout, conditional destinations, responsive
-view-box bounds, authored row centers, normalized positioned grids,
+view-box bounds, compact stacking, feeder centering, normalized positioned grids,
 same-column sizing, compact uniform gutters, box overlap, placement bands, and
 championship reset heats anchored to their source championship column.
