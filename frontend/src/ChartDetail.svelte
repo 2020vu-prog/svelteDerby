@@ -20,13 +20,8 @@
     var showChartClickLogger = false;
     var bmdFromDexie = {};
     var bracketImgSrc = "";
-    var mounted = false;
-    var imageLoaded = false;
-    var jsReady = false;
     onMount(async () => {
         $spinnerPanelBusy = true;
-        mounted = true;
-        tryBuild();
         await refreshDataFromDb();
         $spinnerPanelBusy = false;
     });
@@ -105,13 +100,19 @@
         );
         bumpPos();
     }
+    // Clicking the chart image while editing records the position of the
+    // selected heat slot. Does nothing unless the click logger is showing.
     function logClickPosition(event) {
-        if (!$chartClickLoggerId) {
+        if (!$chartClickLoggerShow || !$chartClickLoggerId) {
             //don't do anything when empty... enables panMove
             return;
         }
         const [px, py] = iim(event);
 
+        const x = event.pageX - thisChartImage.offsetLeft;
+        const y = event.pageY - thisChartImage.offsetTop;
+        log.debug("X Coordinate: " + x + " Y Coordinate: " + y);
+        logClickXY(x, y);
         // imgSize();
     }
     var thisChartImage;
@@ -206,8 +207,6 @@
     const imgLoadComplete = () => {
         log.debug(`imgLoadComplete: `);
         checkAndActivateScroll();
-        imageLoaded = true;
-        tryBuild();
     };
 
     const getUrlVars = () => {
@@ -260,22 +259,6 @@
         log.debug("CD: copyJson: ", JSON.stringify(bracketClone));
         navigator.clipboard.writeText(JSON.stringify(bracketClone));
     }
-    const jqLoaded = () => {
-        log.debug("jqloaded");
-        jsReady = true;
-        tryBuild();
-    };
-    const tryBuild = () => {
-        if (mounted && jsReady && imageLoaded) {
-            log.debug("GO");
-            jQuery("#bracketImage").on("click", function (event) {
-                var x = event.pageX - this.offsetLeft;
-                var y = event.pageY - this.offsetTop;
-                log.debug("jquery X Coordinate: " + x + " Y Coordinate: " + y);
-                logClickXY(x, y);
-            });
-        }
-    };
     var key;
     var keyCode;
     var np = 0;
@@ -327,16 +310,6 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<svelte:head>
-    <!-- skip jquery load unless editing chart-->
-    {#if $chartClickLoggerShow}
-        <script
-            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"
-            on:load={jqLoaded}
-        >
-        </script>
-    {/if}
-</svelte:head>
 <ChartHeaderViewToggle
     chartId={params.chartId}
     title={`Chart Name: ${bmdFromDexie.bracketName}`}
