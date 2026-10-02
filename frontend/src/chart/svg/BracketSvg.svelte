@@ -14,6 +14,8 @@
         svgEdgePath,
         svgHeatTitleLayout,
         svgChampionshipColumnId,
+        svgHeatRowOffsets,
+        svgSlotFontSize,
         svgColumnGuide,
         svgSlotTextLayout,
     } from "./ChartSvgLayout.js";
@@ -22,7 +24,7 @@
         getInitialHiddenColumnIds,
     } from "../ChartStatus.js";
     import { doRefreshBlocks } from "../../stores.js";
-    import { augmentChartState } from "../../utils.js";
+    import { augmentChartState, getHeatResultParts } from "../../utils.js";
     import SvgBracketSlot from "./SvgBracketSlot.svelte";
     import { chartHeaderLayout } from "./chartHeader.js";
     import { printSvgElement } from "./printSvg.js";
@@ -49,6 +51,7 @@
     // Columns hidden by the default view; restored when Show all columns is turned off.
     let defaultHiddenColumnIds = new Set();
     let showDriverNames = true;
+    let showResults = false;
     let chartViewport;
     let fittedWidth;
     let hiddenColumnIds = new Set();
@@ -68,7 +71,8 @@
     $: compactLayout = applySvgColumnVisibility(
         baseLayout,
         hiddenColumnIds,
-        columnSpacingSteps * COLUMN_SPACING_STEP
+        columnSpacingSteps * COLUMN_SPACING_STEP,
+        showResults
     );
     $: placementLabels = Object.fromEntries(
         Object.values(baseLayout.placements).map((placement) => [
@@ -183,9 +187,13 @@
     function slotY(heat, slot) {
         return layout.slots?.[`${heat.id}${slot}`]
             ? layout.slots[`${heat.id}${slot}`].y - heat.y
-            : slot === "A"
-              ? 31
-              : 51;
+            : svgHeatRowOffsets(false, showResults)[slot];
+    }
+
+    // The result labels ("Overall: ...", "A: ...", "B: ...") for the car in
+    // this position, as RaceStanding shows them.
+    function resultText(state) {
+        return getHeatResultParts(state.standing, state.ptcp).join("   ");
     }
 
     function slotHitboxY(heat, slot) {
@@ -264,6 +272,11 @@
         settingsOpen = false;
     }
 
+    function toggleShowResults() {
+        showResults = !showResults;
+        settingsOpen = false;
+    }
+
     function toggleShowDriverNames() {
         showDriverNames = !showDriverNames;
         settingsOpen = false;
@@ -272,6 +285,7 @@
     async function printChart() {
         settingsOpen = false;
         setShowAll(true);
+        showResults = true;
         if (headerHeight) showHeader = true;
         await tick();
         if (svgElement) {
@@ -452,6 +466,15 @@
                 >
                     <span class="check">{showDriverNames ? "✓" : ""}</span>
                     <span class="label">Show driver names</span>
+                </button>
+                <button
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={showResults}
+                    on:click={toggleShowResults}
+                >
+                    <span class="check">{showResults ? "✓" : ""}</span>
+                    <span class="label">Show heat results</span>
                 </button>
                 <div
                     class="spacing-row"
@@ -683,6 +706,15 @@
                                         ).label}
                                     {/if}
                                 </text>
+                                {#if showResults && resultText(state)}
+                                    <text
+                                        class="heat-result"
+                                        x={slotX(heat, "A")}
+                                        y={slotY(heat, "A") + 15}
+                                        style={`font-size: ${svgSlotFontSize(resultText(state), heat.width, 12)}px`}
+                                        >{resultText(state)}</text
+                                    >
+                                {/if}
                             </g>
                         </SvgBracketSlot>
                     </g>
@@ -752,6 +784,15 @@
                                         ).label}
                                     {/if}
                                 </text>
+                                {#if showResults && resultText(state)}
+                                    <text
+                                        class="heat-result"
+                                        x={slotX(heat, "B")}
+                                        y={slotY(heat, "B") + 15}
+                                        style={`font-size: ${svgSlotFontSize(resultText(state), heat.width, 12)}px`}
+                                        >{resultText(state)}</text
+                                    >
+                                {/if}
                             </g>
                         </SvgBracketSlot>
                     </g>
@@ -870,6 +911,11 @@
 
     .zoom-controls .settings-menu button:hover:not(:disabled) {
         background: #e8eef0;
+    }
+
+    .heat-result {
+        fill: #31515d;
+        font-weight: 600;
     }
 
     .header-event,

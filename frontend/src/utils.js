@@ -631,7 +631,43 @@ export async function augmentChartState(
         posHtml,
         isSeed,
         rsFromDexie,
+        // The race standing entity for this heat and the car in this position;
+        // used to show heat results.
+        standing: rsFromDexie
+            ? new EntityFactory({}).build(rsFromDexie)
+            : undefined,
+        ptcp: position?.ptcp,
     };
+}
+
+// The result labels for one car of a heat, matching RaceStanding.svelte: a
+// "Called" tag while there are no results, then "Overall", "A" (phase one) and
+// "B" (phase two) win times for the phases that car won.
+export function getHeatResultParts(standing, carNumber) {
+    if (!standing || carNumber === undefined || carNumber === null) return [];
+
+    const lane =
+        (standing.carNumbers || []).findIndex(
+            (number) => String(number) === String(carNumber)
+        ) + 1;
+    if (!lane) return [];
+
+    const parts = [];
+    if (!standing.hasResults() && standing.tags?.[lane - 1]?.called) {
+        parts.push("Called");
+    }
+    for (const [phase, label] of [
+        [0, "Overall"],
+        [1, "A"],
+        [2, "B"],
+    ]) {
+        if (standing.isWinner(lane, phase)) {
+            parts.push(
+                `${label}: ${formatWinTime(standing.getWinTime(lane, phase))}`
+            );
+        }
+    }
+    return parts;
 }
 const getDriverName = (number) => {
     const driverMap = get(driverMapStore);

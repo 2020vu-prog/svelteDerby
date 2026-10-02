@@ -17,6 +17,7 @@ const {
     svgEdgePath,
     svgChampionshipColumnId,
     svgColumnGuide,
+    svgHeatRowOffsets,
     svgHeatTitleLayout,
     svgLayoutWithRunoff,
     svgSlotFontSize,
@@ -836,4 +837,80 @@ test("moves positioned slots and routes with the runoff section", () => {
             `V ${layout.slots["10A"].y} H ${layout.slots["10A"].x - 8}`
         )
     );
+});
+
+test("makes heat frames taller when heat results are shown", () => {
+    const heightOf = (layout) => layout.heats["1"].height;
+    for (const [progress, positions] of [
+        [twoSidedProgress, twoSidedPositions],
+        [twoSidedProgress, {}],
+    ]) {
+        const base = buildSvgChartLayout(progress, positions);
+        const plain = applySvgColumnVisibility(base, []);
+        const withResults = applySvgColumnVisibility(base, [], 0, true);
+
+        assert.ok(heightOf(withResults) > heightOf(plain));
+        assert.ok(withResults.viewBox.height > plain.viewBox.height);
+        // Every heat in a column still has the same size, and none overlap.
+        const heats = Object.values(withResults.heats);
+        assert.ok(heats.every((heat) => heat.height === heightOf(withResults)));
+        for (const a of heats) {
+            for (const b of heats) {
+                if (a.id < b.id && a.columnId === b.columnId) {
+                    assert.ok(a.y + a.height <= b.y || b.y + b.height <= a.y);
+                }
+            }
+        }
+        // Centering still holds with the taller frames.
+        const { heats: h } = withResults;
+        assert.equal(centerY(h["3"]), (centerY(h["1"]) + centerY(h["2"])) / 2);
+    }
+});
+
+test("leaves room for a result row under each slot", () => {
+    const layout = applySvgColumnVisibility(
+        buildSvgChartLayout(twoSidedProgress, twoSidedPositions),
+        [],
+        0,
+        true
+    );
+    const { A, B, resultA, resultB } = svgHeatRowOffsets(true, true);
+
+    for (const heat of Object.values(layout.heats)) {
+        assert.equal(layout.slots[`${heat.id}A`].y, heat.y + A);
+        assert.equal(layout.slots[`${heat.id}B`].y, heat.y + B);
+        assert.ok(A < resultA && resultA < B && B < resultB);
+        assert.ok(resultB < heat.height);
+    }
+    // Unpositioned frames have their own row offsets.
+    const flat = svgHeatRowOffsets(false, true);
+    assert.ok(flat.A < flat.resultA && flat.resultA < flat.B);
+    assert.deepEqual(svgHeatRowOffsets(false), { A: 31, B: 51 });
+});
+
+test("sizes the runoff section for heat results too", () => {
+    const layoutFor = (showResults) =>
+        layoutSvgPlacements(
+            applySvgColumnVisibility(
+                buildSvgChartLayout(runoffProgress),
+                [],
+                0,
+                showResults
+            )
+        );
+    const plain = layoutFor(false);
+    const withResults = layoutFor(true);
+
+    assert.ok(
+        withResults.runoff.heats["8"].height > plain.runoff.heats["8"].height
+    );
+    assert.ok(withResults.viewBox.height > plain.viewBox.height);
+    const heats = Object.values(withResults.runoff.heats);
+    for (const a of heats) {
+        for (const b of heats) {
+            if (a.id < b.id && a.columnId === b.columnId) {
+                assert.ok(a.y + a.height <= b.y || b.y + b.height <= a.y);
+            }
+        }
+    }
 });

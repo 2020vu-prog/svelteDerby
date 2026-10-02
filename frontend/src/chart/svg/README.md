@@ -60,6 +60,12 @@ image, card, or SVG view.
   is hidden. Hidden-column guide lines stop above it. The section is merged
   into the rendered layout by `svgLayoutWithRunoff`; the base and compacted
   layouts keep only the main heats.
+- The settings menu's "Show heat results" option (off by default; Print turns
+  it on) adds a result row under each slot with the same labels and times as
+  `RaceStanding.svelte`: a "Called" tag until there are results, then
+  "Overall", "A", and "B" win times for the phases that car won
+  (`getHeatResultParts`). Frames are taller while it is on, in every column and
+  in the runoff section, so rows never overlap.
 - Every heat frame has the same dimensions; slot text offsets are derived from
   that height.
 - Use one compact, uniform horizontal gutter between primary heat columns,

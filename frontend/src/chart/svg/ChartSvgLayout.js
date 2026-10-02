@@ -5,6 +5,9 @@ const ROW_GAP = 24;
 const MARGIN = 36;
 const POSITIONED_HEAT_WIDTH = 170;
 const POSITIONED_HEAT_HEIGHT = 72;
+// Taller frames leave a row under each slot for the heat results.
+const POSITIONED_HEAT_HEIGHT_WITH_RESULTS = 102;
+const HEAT_HEIGHT_WITH_RESULTS = 94;
 const POSITIONED_COLUMN_GAP = 12;
 const POSITIONED_ROW_GAP = 22;
 const POSITIONED_COLUMN_TOLERANCE = 72;
@@ -94,6 +97,28 @@ function numericPosition(position) {
     return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : undefined;
 }
 
+// Where the A and B slot text (and, with results, the result rows under them)
+// sits inside a heat frame.
+export function svgHeatRowOffsets(positioned, withResults = false) {
+    if (positioned) {
+        return withResults
+            ? { A: 38, B: 76, resultA: 53, resultB: 91 }
+            : positionedSlotOffsets(POSITIONED_HEAT_HEIGHT);
+    }
+    return withResults
+        ? { A: 31, B: 67, resultA: 46, resultB: 82 }
+        : { A: 31, B: 51 };
+}
+
+function svgHeatHeight(positioned, withResults = false) {
+    if (positioned) {
+        return withResults
+            ? POSITIONED_HEAT_HEIGHT_WITH_RESULTS
+            : POSITIONED_HEAT_HEIGHT;
+    }
+    return withResults ? HEAT_HEIGHT_WITH_RESULTS : HEAT_HEIGHT;
+}
+
 // Where the A and B slot text sits inside a positioned heat frame of `height`.
 function positionedSlotOffsets(height) {
     const slotAreaTop = Math.min(20, height * 0.32);
@@ -105,7 +130,13 @@ function positionedSlotOffsets(height) {
     };
 }
 
-function buildPositionedLayout(heats, edges, imgPositions, runoffBlock) {
+function buildPositionedLayout(
+    heats,
+    edges,
+    imgPositions,
+    runoffBlock,
+    runoffInput
+) {
     const heatLayout = {};
     const slots = {};
     const placements = {};
@@ -250,6 +281,7 @@ function buildPositionedLayout(heats, edges, imgPositions, runoffBlock) {
         edges,
         placements,
         runoffBlock,
+        runoffInput,
         positioned: true,
         slots,
         columns: columns.map((column, index) => ({
@@ -374,7 +406,7 @@ export function buildSvgChartLayout(
     // Runoff heats leave the main bracket columns and form their own section.
     const runoffIds = findRunoffHeatIds(heats, progress, heatIdByNumber);
     const positioned = Object.keys(imgPositions).length > 0;
-    const runoffBlock = buildRunoffBlock(
+    const runoffInput = [
         heats.filter((heat) => runoffIds.has(heat.id)),
         edges.filter(
             (edge) =>
@@ -384,8 +416,9 @@ export function buildSvgChartLayout(
                 runoffIds.has(edge.toHeat)
         ),
         positioned,
-        imgPositions
-    );
+        imgPositions,
+    ];
+    const runoffBlock = buildRunoffBlock(...runoffInput);
     heats = heats.filter((heat) => !runoffIds.has(heat.id));
     edges = edges.filter(
         (edge) =>
@@ -394,7 +427,13 @@ export function buildSvgChartLayout(
     );
 
     if (positioned) {
-        return buildPositionedLayout(heats, edges, imgPositions, runoffBlock);
+        return buildPositionedLayout(
+            heats,
+            edges,
+            imgPositions,
+            runoffBlock,
+            runoffInput
+        );
     }
 
     const primaryHeats = heats.filter((heat) => !heat.isOptional);
@@ -483,6 +522,7 @@ export function buildSvgChartLayout(
         edges,
         placements: placementLayout,
         runoffBlock,
+        runoffInput,
         columns: Array.from({ length: maxColumn + 1 }, (_, index) => ({
             id: `column-${index + 1}`,
             label: `Column ${index + 1}`,
@@ -534,7 +574,10 @@ export function layoutSvgPlacements(layout, labels = {}) {
         : heatBottom;
 
     // The runoff section sits at the bottom, to the right of the placements.
-    const block = layout.runoffBlock;
+    const block =
+        layout.resultRows && layout.runoffInput
+            ? buildRunoffBlock(...layout.runoffInput, true)
+            : layout.runoffBlock;
     const runoff = block
         ? positionRunoffBlock(
               block,
@@ -631,11 +674,17 @@ export function svgColumnGuide(columns, championshipColumnId, columnId) {
 // The runoff heats as a small separate bracket, laid out from (0, 0): heats
 // are stacked and centered on their feeders with the same rules as the main
 // columns, but they never take part in the main column visibility controls.
-function buildRunoffBlock(heats, edges, positioned, imgPositions) {
+function buildRunoffBlock(
+    heats,
+    edges,
+    positioned,
+    imgPositions,
+    withResults = false
+) {
     if (!heats.length) return undefined;
 
     const width = positioned ? POSITIONED_HEAT_WIDTH : HEAT_WIDTH;
-    const height = positioned ? POSITIONED_HEAT_HEIGHT : HEAT_HEIGHT;
+    const height = svgHeatHeight(positioned, withResults);
     const gap = positioned ? POSITIONED_COLUMN_GAP : COLUMN_GAP;
     const authoredY = (heat) => {
         const ys = ["A", "B"]
@@ -663,7 +712,9 @@ function buildRunoffBlock(heats, edges, positioned, imgPositions) {
         ])
     );
     const tops = compactHeatTops({ edges, margin: 0 }, placed, columns, height);
-    const offsets = positioned ? positionedSlotOffsets(height) : undefined;
+    const offsets = positioned
+        ? svgHeatRowOffsets(true, withResults)
+        : undefined;
     const blockHeats = {};
     const slots = {};
     for (const heat of Object.values(placed)) {
@@ -825,7 +876,8 @@ function compactHeatTops(layout, heats, columns, height) {
 export function applySvgColumnVisibility(
     layout,
     hiddenColumnIds = [],
-    extraGap = 0
+    extraGap = 0,
+    showResults = false
 ) {
     const hidden = new Set(hiddenColumnIds);
     let nextX = layout.margin || 0;
@@ -881,7 +933,7 @@ export function applySvgColumnVisibility(
         const targetVisible = edge.toHeat ? Boolean(heats[edge.toHeat]) : true;
         return sourceVisible && targetVisible;
     });
-    const heatHeight = layout.positioned ? POSITIONED_HEAT_HEIGHT : HEAT_HEIGHT;
+    const heatHeight = svgHeatHeight(layout.positioned, showResults);
     const tops = compactHeatTops(
         { ...layout, edges },
         heats,
@@ -889,7 +941,7 @@ export function applySvgColumnVisibility(
         heatHeight
     );
     const slotOffsets = layout.positioned
-        ? positionedSlotOffsets(heatHeight)
+        ? svgHeatRowOffsets(true, showResults)
         : undefined;
     for (const [id, top] of Object.entries(tops)) {
         heats[id] = { ...heats[id], y: top, height: heatHeight };
@@ -910,6 +962,7 @@ export function applySvgColumnVisibility(
         : layout.margin || 0;
     return layoutSvgPlacements({
         ...layout,
+        resultRows: showResults,
         heats,
         placements,
         slots,
