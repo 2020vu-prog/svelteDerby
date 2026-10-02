@@ -7,6 +7,7 @@ vi.mock("../../stores.js", () => ({
 }));
 vi.mock("../../utils.js", () => ({
     parseHeatPos: vi.fn((position) => [position, position]),
+    getHeatResultParts: vi.fn(() => []),
     augmentChartState: vi.fn((_chartJson, _chartId, heatId, slot) =>
         Promise.resolve({
             posHtml: heatId === "1" && slot === "A" ? " - 42 Ada Lovelace" : "",
@@ -59,6 +60,7 @@ it("opens the settings menu from the gear and closes it on Escape or outside cli
         "Print",
         "Show header info",
         "Show driver names",
+        "Show heat results",
     ]);
 
     await fireEvent.keyDown(window, { key: "Escape" });
