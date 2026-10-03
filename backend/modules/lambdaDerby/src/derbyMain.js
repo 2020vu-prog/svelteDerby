@@ -9,13 +9,11 @@ const jwtVerifier = CognitoJwtVerifier.create({
     //tokenUse: "access",
     clientId: awsCognitoSettings.aws_user_pools_hosted_client_id,
 });
-const crypto = require("crypto");
 const path = require("path");
 //const timer_protobuf_1 = require("timer_protobuf");
 //    const timerConfig = new timer_protobuf_1.tutorial.TimerConfig();
 //    console.log("tbp:",timer_protobuf_1.tutorial.TimerConfig.decode);
 
-const { Base64 } = require("js-base64");
 //const { CalcFinish, RawFacade, PbUtils } = require("@rr1.us/timer_protobuf/calcFinishPb");
 
 const log = require("loglevel");
@@ -57,6 +55,7 @@ const ParticipantService = require("./ParticipantService");
 const IotService = require("./IotService");
 const S3MediaService = require("./S3MediaService");
 const RaceProgressionService = require("./RaceProgressionService");
+const TimerConfigService = require("./TimerConfigService");
 const { getShaCars, getSourceName } = require("./utils");
 const { decodeS3EventKey, encodeS3CopySource } = require("./S3Utils");
 const requestContext = require("./RequestContext");
@@ -78,6 +77,7 @@ const raceProgressionService = new RaceProgressionService({
     iotService,
     requestContext,
 });
+const timerConfigService = new TimerConfigService(ddbUtils);
 
 function newAnnounceResults() {
     return new AnnounceResults(ddbUtils);
@@ -115,146 +115,6 @@ const addOrgConfig = async (json) => {
         ddbUtils.addSingle(json)
     );
 };
-const getSanitizedTimers = async () => {
-    const timers = await getActiveTimers();
-    timers.forEach(doNotPublishUuid);
-    return timers;
-};
-
-async function queryTimerPbHistory(qsp) {
-    log.debug(`queryTimerPbHistory qsp ${qsp} `);
-    if (!qsp.timerName) {
-        return { error: "Missing timerName" };
-    }
-    if (!qsp.loIso) {
-        const lowMS = 1000 * 3600 * 0.1;
-        const loIso = new Date(new Date().getTime() - lowMS).toISOString();
-        qsp.loIso = loIso;
-    }
-    if (!qsp.hiIso) {
-        const hiIso = new Date().toISOString();
-        qsp.hiIso = hiIso;
-    }
-    return await ddbUtils.ddbQueryTimerPbHistory(
-        qsp.timerName,
-        qsp.loIso,
-        qsp.hiIso
-    );
-}
-async function queryTimerHistoryByOrgId(qsp) {
-    const [activeTimers, timerConfig] = await Promise.all([
-        getActiveTimers(),
-        ddbUtils.getTimerConfigByOrgId(qsp.orgId),
-    ]);
-    if (!timerConfig) {
-        return { error: "queryTimerHistoryByOrgId Missing timerConfig" };
-    }
-    var selectedTimerUuid = undefined;
-    activeTimers.forEach((timer) => {
-        if (timer.sha === timerConfig.sha) selectedTimerUuid = timer.uuid;
-    });
-    log.debug(
-        `queryTimerHistoryByOrgId selectedTimerUuid ${selectedTimerUuid} `
-    );
-    if (!selectedTimerUuid) {
-        return { error: "Missing selectedTimerUuid" };
-    }
-    return await ddbUtils.ddbQueryTimerHistoryByUuid(selectedTimerUuid);
-}
-async function getActiveTimers() {
-    const timers = await ddbUtils.ddbQueryPkAll(
-        "registered",
-        process.env.TimerDbTable
-    );
-    timers.forEach(registeredTimerSha);
-
-    return timers;
-}
-async function getActivePbTimers() {
-    const timers = await ddbUtils.ddbQueryPkAll(
-        "TimerList:",
-        process.env.TimerProtobufDbTable
-    );
-
-    return timers;
-}
-
-const registeredTimerSha = (timer) => {
-    const sha = crypto.createHash("sha256").update(timer.uuid).digest("hex");
-    //timer.sha = sha.substring(0, 6);
-    timer.sha = sha;
-};
-const doNotPublishUuid = (timer) => {
-    delete timer.uuid;
-};
-const addTimerPbConfig = async (json) => {
-    if (!json.orgIz) {
-        return { error: "Missing orgIz" };
-    }
-    if (!json.orgId) {
-        return { error: "Missing orgId" };
-    }
-    if (!json.pb) {
-        return { error: "Missing protobuf" };
-    }
-    const eventKey = getEventKey(json);
-
-    const [cfg, oldTimerPbMain] = await Promise.all([
-        ddbUtils.getEventConfig(eventKey),
-        ddbUtils.ddbQueryPkSk(
-            `${json.orgId}:TimerPbConfig`,
-            `${json.timerName}`
-        ),
-    ]);
-    if (!cfg) {
-        return {
-            status: "error",
-            error: "No Event config found.",
-        };
-    }
-
-    log.debug("addTimerPbConfig oldTimerPbMain:", oldTimerPbMain);
-    if (oldTimerPbMain && oldTimerPbMain.at != json.at) {
-        return {
-            status: "error",
-            error: "Update request ignored due to stale data.  Refresh your Browser.",
-        };
-    }
-    //let decoded = timer_protobuf_1.tutorial.TimerConfig.decode(bdata)
-    //let decoded = timer_protobuf.Timer.TimerConfig.decode(bdata);
-    //   log.debug("addTimerPbConfig: decoded:", decoded);
-    json.PK = ":TimerPbConfig"; // force
-    log.debug("addTimerPbConfig:", json);
-
-    const pbJson = {
-        PK: `T:${json.timerMqttClientId}`,
-        SK: `9999:${eventKey}`, // short iso year, sort to last!
-        data: Base64.toUint8Array(json.pb),
-        TTL: cfg.TTL,
-    };
-    const plist = [];
-    plist.push(ddbUtils.addSingle(json));
-    plist.push(ddbUtils.ddbPut(pbJson, process.env.TimerProtobufDbTable));
-    if (oldTimerPbMain && oldTimerPbMain.SK !== json.timerName) {
-        //if timerMqttClientID changes, the OLD timer needs deleted (logical)
-        //  from p2.  this is b/c of key change.   p1 key is unchanged...
-        const pbDelete = {
-            PK: `T:${json.timerName}`, // should be mqtt client id
-            SK: `9999:${eventKey}`, // short iso year, sort to last!
-            pb: "",
-            TTL: 1,
-        };
-        log.debug("addTimerPbConfig deleting:", pbDelete);
-        log.debug(
-            "addTimerPbConfig TODO: need to get old mqttClient from OldTimerPbMain"
-        );
-        //plist.push(ddbUtils.ddbPut(pbJson, process.env.TimerProtobufDbTable))
-    }
-    const rc = await Promise.all(plist);
-    log.debug("addTimerPbConfig gave:", rc);
-
-    return rc[0];
-};
 const addNewEventPushSns = async (orgId, json) => {
     const AddEventSnsArn = process.env.AddEventSnsArn;
     const environ = process.env.DeployEnvironment;
@@ -282,74 +142,6 @@ const addNewEventPushSns = async (orgId, json) => {
     }
 };
 
-const addTimerConfig = async (json, initialLoad) => {
-    if (!json.orgIz) {
-        return { error: "Missing orgIz" };
-    }
-    if (!json.orgId) {
-        return { error: "Missing orgId" };
-    }
-    var prevTC = {};
-    if (!initialLoad) {
-        const prevTC = await ddbUtils.ddbQueryPkSk(
-            `${json.orgId}:TimerConfig`,
-            "TimerConfig"
-        );
-        if (!prevTC) {
-            return { error: "Missing Prev TimerConfig" };
-        }
-
-        // merge prior config to allow partial update.
-        json = Object.assign(prevTC, json);
-    }
-
-    json.PK = ":TimerConfig"; // force
-    if (!json.clearMS) {
-        json.clearMS = 3001;
-    }
-    if (!json.maxCarLenMS) {
-        json.maxCarLenMS = 601;
-    }
-    if (!json.minCarLenMS) {
-        json.minCarLenMS = 301;
-    }
-    if (!json.maxPerfCount) {
-        json.maxPerfCount = 1;
-    }
-    if (!json.lanes) {
-        json.lanes = ["lane1", "lane2"];
-    }
-    if (json.sha) {
-        log.debug("addTimerConfig: applying selected timer sha:", json.sha);
-        await registerEventWithTimer(json);
-    } else {
-        log.debug("addTimerConfig: no sha found.");
-    }
-    return await ddbUtils.addSingle(json);
-};
-const registerEventWithTimer = async (timerConfigJson) => {
-    //
-    const selectedSha = timerConfigJson.sha;
-    log.debug("registerEventWithTimer: ", timerConfigJson);
-    const timers = await getActiveTimers();
-    const selectedTimers = timers.filter((timer) => timer.sha === selectedSha);
-    if (selectedTimers.length == 0) {
-        log.debug("registerEventWithTimer: sha not found: ", selectedSha);
-        return;
-    }
-    const selectedTimer = selectedTimers[0];
-
-    log.debug("registerEventWithTimer: selectedTimer: ", selectedTimer);
-    const timerTableTc = Object.assign({}, timerConfigJson);
-    timerTableTc.PK = selectedTimer.uuid;
-    timerTableTc.SK = `^${timerConfigJson.orgId}`;
-    timerConfigJson.sha = timerTableTc.sha; // save on original --flows back to derbyMain Ddb
-
-    delete timerTableTc.sha;
-    log.debug("registerEventWithTimer: registration: ", timerTableTc);
-
-    await ddbUtils.ddbPut(timerTableTc, process.env.TimerDbTable);
-};
 const updateEventConfig = async (json) => {
     log.debug("updateEventConfig: stub: " + JSON.stringify(json));
     json.PK = "EventConfig"; // force EventConfig
@@ -431,7 +223,7 @@ const addEventConfig = async (event) => {
     eventRC.userDisplayNameResult = userDisplayNameResult;
 
     await addNewEventPushSns(json.orgId, json);
-    await addTimerConfig(json, true); // TODO: revisit default TimerConfig?
+    await timerConfigService.addTimerConfig(json, true); // TODO: revisit default TimerConfig?
     return eventRC;
 };
 
@@ -530,21 +322,24 @@ const routeMap = {
         permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
-            return buildResponse(await getSanitizedTimers());
+            return buildResponse(await timerConfigService.getSanitizedTimers());
         },
     },
     "/getActivePbTimers": {
         permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
-            return buildResponse(await getActivePbTimers());
+            return buildResponse(await timerConfigService.getActivePbTimers());
         },
     },
     "/timerConfig": {
         permission: RoutePermission.CAN_TIMER_CONFIG,
         h: async (event) => {
             return buildResponse(
-                await addTimerConfig(JSON.parse(event.body), false)
+                await timerConfigService.addTimerConfig(
+                    JSON.parse(event.body),
+                    false
+                )
             );
         },
     },
@@ -552,7 +347,10 @@ const routeMap = {
         permission: RoutePermission.CAN_TIMER_CONFIG,
         h: async (event) => {
             return buildResponse(
-                await addTimerPbConfig(JSON.parse(event.body), false)
+                await timerConfigService.addTimerPbConfig(
+                    JSON.parse(event.body),
+                    false
+                )
             );
         },
     },
@@ -729,7 +527,7 @@ const routeMap = {
         permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
-            var qr = await queryTimerHistoryByOrgId(
+            var qr = await timerConfigService.queryTimerHistoryByOrgId(
                 event.queryStringParameters
             );
             return buildResponse(qr);
@@ -739,7 +537,9 @@ const routeMap = {
         permission: RoutePermission.CAN_TIMER_CONFIG,
         allowFrozen: true,
         h: async (event) => {
-            var qr = await queryTimerPbHistory(event.queryStringParameters);
+            var qr = await timerConfigService.queryTimerPbHistory(
+                event.queryStringParameters
+            );
             return buildResponse(qr);
         },
     },
