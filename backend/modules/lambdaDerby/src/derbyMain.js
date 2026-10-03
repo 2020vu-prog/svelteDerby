@@ -33,14 +33,7 @@ const {
     noopAsync,
 } = require("./eventRequestUtils.js");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const {
-    AttachPrincipalPolicyCommand,
-    IoTClient,
-} = require("@aws-sdk/client-iot");
-const {
-    IoTDataPlaneClient,
-    PublishCommand: IotPublishCommand,
-} = require("@aws-sdk/client-iot-data-plane");
+const { IoTClient } = require("@aws-sdk/client-iot");
 const {
     CopyObjectCommand,
     ListObjectsV2Command,
@@ -70,6 +63,7 @@ const ApiRaceStanding = require("./ApiRaceStanding");
 const LogUtils = require("./LogUtils");
 const DriverDelegationService = require("./DriverDelegationService");
 const ParticipantService = require("./ParticipantService");
+const IotService = require("./IotService");
 const { getShaCars, getSourceName } = require("./utils");
 const {
     decodeS3EventKey,
@@ -84,6 +78,7 @@ const discordUtils = new DiscordUtils(ddbUtils);
 const logUtils = new LogUtils(ddbUtils);
 const driverDelegationService = new DriverDelegationService(ddbUtils);
 const participantService = new ParticipantService(ddbUtils);
+const iotService = new IotService(iotClient, ddbUtils);
 
 function newAnnounceResults() {
     return new AnnounceResults(ddbUtils);
@@ -125,19 +120,6 @@ async function s3QueryMediaPrefix(queryStringParameters) {
     log.debug("s3QueryMediaPrefix: ", params, allKeys);
     return allKeys;
 }
-const attachPrincipalPolicy = async (policyName, principal) => {
-    try {
-        const data = await iotClient.send(
-            new AttachPrincipalPolicyCommand({
-                policyName: policyName,
-                principal: principal,
-            })
-        );
-        log.debug("attachPrincipalPolicy Data", data);
-    } catch (err) {
-        log.debug("attachPrincipalPolicy Error", err);
-    }
-};
 
 function frozenOrArchived(config) {
     log.debug("function frozenOrArchived passed ", config);
@@ -202,7 +184,7 @@ const applyFinishTime = async (json) => {
     }
 
     const rpUpdatePromise = ddbUtils.addSingle(tgtRp);
-    const iotVideoRequestPromise = requestIotVideoUploadByRP(tgtRp);
+    const iotVideoRequestPromise = iotService.requestIotVideoUploadByRP(tgtRp);
 
     const [rsFoundList, rpUpdate, iotVideoResult] = await Promise.all([
         rsPromise,
@@ -267,56 +249,6 @@ const applyFinishTime = async (json) => {
         status: "ok",
     };
 };
-function getLowestPhrMillis(rp) {
-    const lowest = Math.min(rp.phr);
-    return Math.floor(lowest / 1000); // micros->millis
-}
-let iotdata = "";
-async function requestIotVideoUploadByRP(tgtRp) {
-    let tgtTimeMs = getLowestPhrMillis(tgtRp);
-    if (!tgtTimeMs) {
-        // allow capture to proceed.... helpful for testing...
-        tgtTimeMs = Date.now();
-        //return;
-    }
-    const timerName = "Finish"; //finish timer
-    const vr = {
-        orgId: tgtRp.orgId,
-        orgIz: tgtRp.orgIz,
-        tgtTimeMs: tgtTimeMs,
-        timerName,
-        prefix: `RP-${tgtRp.SK}`,
-    };
-    await requestIotVideoUploadRaw(vr);
-}
-async function requestIotVideoUploadRaw(videoRequest) {
-    if (!iotdata) {
-        // first time
-        iotdata = new IoTDataPlaneClient({
-            endpoint: `https://${process.env.IotEndpoint}`,
-        });
-    }
-    const payload = {
-        ...videoRequest,
-        issuedMs: Date.now(),
-    };
-    const params = {
-        topic: `derby/${videoRequest.orgId}/video/${videoRequest.timerName}`,
-        payload: JSON.stringify(payload),
-        qos: 0,
-    };
-    try {
-        log.debug("requestIotVideoUpload request:", params);
-        var data = await iotdata.send(new IotPublishCommand(params));
-        log.debug("requestIotVideoUpload Success.", params);
-        return { status: "ok", detail: "Published" };
-    } catch (err) {
-        log.debug("requestIotVideoUpload Error.", err);
-        log.debug(err, err.stack); // an error occurred
-        return { error: err };
-    }
-}
-
 // srcRs / bracketPos can be null.  Not both.
 const advanceChartPos = async (srcRs, bracketPos) => {
     log.debug("BEGIN: advanceChartPos");
@@ -1108,60 +1040,6 @@ async function addParticipant2(json) {
     return await ddbUtils.addSingle(json);
 }
 
-async function iotDefaultPri(event) {
-    let backendPri = 5;
-
-    const environ = process.env.DeployEnvironment;
-    if (environ.search(/test/i) >= 0) {
-        backendPri = 100;
-    }
-    if (environ.search(/stage/i) >= 0) {
-        backendPri = 200;
-    }
-    if (environ.search(/go-derby-prod/i) >= 0) {
-        backendPri = 500;
-    }
-    return backendPri;
-}
-async function iotOverridePri(event) {
-    const discoverOvrd = await ddbUtils.ddbQueryRawPkSk(
-        `DiscoverTimerOverride`,
-        event.headers["x-rr1-timer"],
-        process.env.TimerProtobufDbArn
-    );
-    log.debug("iotOverridePri: ddbRC:", discoverOvrd);
-
-    if (
-        discoverOvrd &&
-        discoverOvrd.Items.length &&
-        discoverOvrd.Items[0].pri
-    ) {
-        log.debug("iotOverridePri: using:", discoverOvrd.Items[0].pri);
-        return discoverOvrd.Items[0].pri.N;
-    }
-    return 0;
-}
-async function iotDiscover(event, apiProps) {
-    const backendPri = Math.max(
-        await iotDefaultPri(event),
-        await iotOverridePri(event)
-    );
-
-    return {
-        priority: backendPri,
-        backends: [
-            "go.rr1.us",
-            "cf.test.rr1.us",
-            "test.rr1.us",
-            "stage.rr1.us",
-            "cf.www.rr1.us",
-            "c.comicNotARealDomainButKKindOfLongish",
-        ],
-        authUrl: `${process.env.IotPiAccessUrl}iot/auth`,
-        bundleUrl: "https://cf.test.rr1.us/gpsRelay.tar.zst",
-    };
-    //authUrl: "https://xcfoeorhj5s4ubgaawz2rv45re0nxyqh.lambda-url.us-east-2.on.aws/iot/auth",
-}
 async function getOrgRoles(event, apiProps) {
     log.debug("getOrgRoles: apiEmail:", apiProps);
     log.debug("getOrgRoles: qsEmail:", event.queryStringParameters);
@@ -1197,7 +1075,7 @@ const routeMap = {
         allowMissingOrgId: true,
         allowMissingOrgIz: true,
         h: async (event, apiProps) => {
-            return buildResponse(await iotDiscover(event, apiProps));
+            return buildResponse(await iotService.iotDiscover(event, apiProps));
         },
     },
     "/getOrgRoles": {
@@ -1498,7 +1376,10 @@ const routeMap = {
             }
 
             const policyName = "SubToAnyTopic"; // should be pre-existing from terraform
-            const data = await attachPrincipalPolicy(policyName, qsp.principal);
+            const data = await iotService.attachPrincipalPolicy(
+                policyName,
+                qsp.principal
+            );
             return buildResponse(data);
         },
     },
@@ -1516,7 +1397,7 @@ const routeMap = {
                 prefix: `${qsp.tgtTimeMs}-TestRemote`,
             };
 
-            await requestIotVideoUploadRaw(vr);
+            await iotService.requestIotVideoUploadRaw(vr);
             return buildResponse({ requested: qsp.timerName });
         },
     },
