@@ -59,6 +59,14 @@ function waitForImages(svg, timeoutMs = 3000) {
     ]);
 }
 
+export function suggestPrintTitle(doc, title) {
+    const originalTitle = doc.title;
+    doc.title = title;
+    return () => {
+        doc.title = originalTitle;
+    };
+}
+
 export async function printSvgElement(svg, { title = "Chart" } = {}) {
     const doc = svg.ownerDocument;
     const printable = buildPrintableSvg(svg, doc.location.href);
@@ -79,7 +87,11 @@ export async function printSvgElement(svg, { title = "Chart" } = {}) {
     frameDoc.body.appendChild(frameDoc.importNode(printable, true));
 
     await waitForImages(printable);
-    const cleanup = () => frame.remove();
+    const restoreTitle = suggestPrintTitle(doc, title);
+    const cleanup = () => {
+        restoreTitle();
+        frame.remove();
+    };
     frame.contentWindow.addEventListener("afterprint", cleanup);
     frame.contentWindow.focus();
     frame.contentWindow.print();

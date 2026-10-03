@@ -1,5 +1,9 @@
 import { expect, it } from "vitest";
-import { PRINT_PAGE_CSS, buildPrintableSvg } from "#src/chart/svg/printSvg.js";
+import {
+    PRINT_PAGE_CSS,
+    buildPrintableSvg,
+    suggestPrintTitle,
+} from "#src/chart/svg/printSvg.js";
 import {
     chartHeaderLayout,
     chartHeaderLogo,
@@ -104,4 +108,14 @@ it("shrinks long header names to fit the page width", () => {
 it("prints with a zero page margin so the browser adds no header or footer", () => {
     expect(PRINT_PAGE_CSS).toMatch(/@page\s*{[^}]*margin:\s*0\s*;/);
     expect(PRINT_PAGE_CSS).toMatch(/body\s*{[^}]*padding:\s*0\.4in/);
+});
+
+it("temporarily uses the chart name as the suggested PDF filename", () => {
+    document.title = "Derby App";
+
+    const restore = suggestPrintTitle(document, "Saturday Double Stock");
+    expect(document.title).toBe("Saturday Double Stock");
+
+    restore();
+    expect(document.title).toBe("Derby App");
 });
