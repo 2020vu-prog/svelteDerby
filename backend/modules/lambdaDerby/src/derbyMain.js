@@ -34,13 +34,7 @@ const {
 } = require("./eventRequestUtils.js");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { IoTClient } = require("@aws-sdk/client-iot");
-const {
-    CopyObjectCommand,
-    ListObjectsV2Command,
-    PutObjectCommand,
-    S3Client,
-} = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { CopyObjectCommand, S3Client } = require("@aws-sdk/client-s3");
 const {
     PublishCommand: SnsPublishCommand,
     SNSClient,
@@ -64,12 +58,9 @@ const LogUtils = require("./LogUtils");
 const DriverDelegationService = require("./DriverDelegationService");
 const ParticipantService = require("./ParticipantService");
 const IotService = require("./IotService");
+const S3MediaService = require("./S3MediaService");
 const { getShaCars, getSourceName } = require("./utils");
-const {
-    decodeS3EventKey,
-    encodeS3CopySource,
-    getAllKeys,
-} = require("./S3Utils");
+const { decodeS3EventKey, encodeS3CopySource } = require("./S3Utils");
 const requestContext = require("./RequestContext");
 
 const ddbUtils = new DdbUtils(ddbClient, sqsClient);
@@ -79,6 +70,7 @@ const logUtils = new LogUtils(ddbUtils);
 const driverDelegationService = new DriverDelegationService(ddbUtils);
 const participantService = new ParticipantService(ddbUtils);
 const iotService = new IotService(iotClient, ddbUtils);
+const s3MediaService = new S3MediaService(s3Client);
 
 function newAnnounceResults() {
     return new AnnounceResults(ddbUtils);
@@ -94,32 +86,6 @@ function newApiRaceStanding() {
 }
 
 log.setLevel(log.levels.TRACE);
-
-const s3QueryChartTypes = async () => {
-    var params = {
-        Bucket: process.env.ChartS3BucketName,
-        Prefix: "data/brackets",
-    };
-    try {
-        const data = await s3Client.send(new ListObjectsV2Command(params));
-        return data;
-    } catch (err) {
-        log.debug("s3 list Error", err);
-        return { error: "s3 list buckets Failed" };
-    }
-};
-async function s3QueryMediaPrefix(queryStringParameters) {
-    const prefix = queryStringParameters.prefix
-        ? queryStringParameters.prefix
-        : "";
-    const params = {
-        Bucket: process.env.DstBucket,
-        Prefix: `media/${prefix}`,
-    };
-    const allKeys = await getAllKeys(s3Client, params);
-    log.debug("s3QueryMediaPrefix: ", params, allKeys);
-    return allKeys;
-}
 
 function frozenOrArchived(config) {
     log.debug("function frozenOrArchived passed ", config);
@@ -1309,7 +1275,9 @@ const routeMap = {
         permission: RoutePermission.ANONYMOUS,
         allowFrozen: true,
         h: async (event) => {
-            var qr = await s3QueryMediaPrefix(event.queryStringParameters);
+            var qr = await s3MediaService.s3QueryMediaPrefix(
+                event.queryStringParameters
+            );
             const cacheControl = "max-age=" + 15;
             return buildResponse(qr, cacheControl);
         },
@@ -1318,7 +1286,7 @@ const routeMap = {
         permission: RoutePermission.CAN_ADD_CHART,
         allowFrozen: true,
         h: async (event) => {
-            var chartTypes = await s3QueryChartTypes();
+            var chartTypes = await s3MediaService.s3QueryChartTypes();
             const cacheControl = "max-age=" + 3600 * 24 * 7;
             return buildResponse(chartTypes, cacheControl);
         },
@@ -1425,32 +1393,9 @@ const routeMap = {
             }
 
             const orgId = getOrgId(event);
-            var bucket = "";
-            var key = "";
-            if (process.env.s3VideoWatch && true) {
-                bucket = process.env.s3VideoWatch;
-                key = `inputs/${orgId}-${qsp.key}`; // watch bucket won't see sub dirs :-(
-            } else {
-                bucket = process.env.DstBucket;
-                key = `media/${orgId}/${qsp.key}`;
-            }
-            const mimeType = "video/webm";
-            var params = {
-                Bucket: bucket,
-                Key: key,
-                ContentType: mimeType,
-            };
-            var signedUrl = await getSignedUrl(
-                s3Client,
-                new PutObjectCommand(params),
-                { expiresIn: 600 } // allow for slow video upload
+            return buildResponse(
+                await s3MediaService.requestS3PutObjectUrl(orgId, qsp)
             );
-            log.debug("For params:", params, " The signed URL is", signedUrl);
-
-            return buildResponse({
-                signedUrl: signedUrl,
-                issuedMs: Date.now(),
-            });
         },
     },
     "/manageDiscord": {
