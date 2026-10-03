@@ -12,7 +12,7 @@ const { getAllKeys } = require("./S3Utils");
  * S3 operations behind the media and chart-list routes of the derbyMain
  * Lambda: listing chart types and media keys, and issuing presigned upload
  * URLs. Extracted from derbyMain.js (step 3 of
- * docs/TODO/DerbyMainRefactorProposal.md); the method bodies are unchanged
+ * docs/ARCHIVE/DerbyMainRefactorProposal.md); the method bodies are unchanged
  * apart from reaching the S3 client through `this`.
  */
 class S3MediaService {
