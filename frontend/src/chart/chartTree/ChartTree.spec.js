@@ -99,3 +99,30 @@ it("leaves folders the user opened alone when another chart is chosen", async ()
     await view.component.$set({ selected: "AASBD/Single/12single.png" });
     expect(openFolders(view)).toEqual(["AASBD", "Double", "Single"]);
 });
+
+it("indents each level of folders under its parent", () => {
+    const view = render(ChartTree, {
+        nodes,
+        selected: "AASBD/Double/08double.png",
+    });
+
+    const lists = [...view.container.querySelectorAll("ul.chart-tree")];
+    const depthOf = (list) => {
+        let depth = 0;
+        for (let up = list.parentElement; up; up = up.parentElement) {
+            if (up.matches("ul.chart-tree")) depth++;
+        }
+        return depth;
+    };
+    const indent = (list) => parseFloat(list.style.marginLeft) || 0;
+
+    // The top level is flush left; every nested list sits one step further in.
+    expect(lists.length).toBeGreaterThan(2);
+    for (const list of lists) {
+        expect(indent(list)).toBe(depthOf(list) ? 1.25 : 0);
+    }
+    expect(Math.max(...lists.map(depthOf))).toBeGreaterThanOrEqual(2);
+    // So a chart is indented under its folder, which is under its parent.
+    const chart = view.getByLabelText("08double.png").closest("ul.chart-tree");
+    expect(depthOf(chart)).toBe(2);
+});
