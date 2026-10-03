@@ -58,6 +58,8 @@
     let visibilityChartId = chartId;
     let mounted = false;
     let statusLoadVersion = 0;
+    let pendingSlotLoads = 0;
+    let slotLoadWaiters = [];
     let columnStatuses = {};
     let placementStates = {};
     let visibilityInitializedFor = "";
@@ -282,11 +284,29 @@
         settingsOpen = false;
     }
 
+    function handleSlotLoadStart() {
+        pendingSlotLoads += 1;
+    }
+
+    function handleSlotLoadEnd() {
+        pendingSlotLoads = Math.max(0, pendingSlotLoads - 1);
+        if (!pendingSlotLoads) {
+            slotLoadWaiters.splice(0).forEach((resolve) => resolve());
+        }
+    }
+
+    function waitForSlotLoads() {
+        if (!pendingSlotLoads) return Promise.resolve();
+        return new Promise((resolve) => slotLoadWaiters.push(resolve));
+    }
+
     async function printChart() {
         settingsOpen = false;
         setShowAll(true);
         showResults = true;
         if (headerHeight) showHeader = true;
+        await tick();
+        await waitForSlotLoads();
         await tick();
         if (svgElement) {
             printSvgElement(svgElement, {
@@ -646,6 +666,8 @@
                             chartId={chartId}
                             heatId={heat.id}
                             slot="A"
+                            on:stateloadstart={handleSlotLoadStart}
+                            on:stateloadend={handleSlotLoadEnd}
                             let:state
                         >
                             <g aria-label={slotAriaLabel(heat.id, "A", state)}>
@@ -731,6 +753,8 @@
                             chartId={chartId}
                             heatId={heat.id}
                             slot="B"
+                            on:stateloadstart={handleSlotLoadStart}
+                            on:stateloadend={handleSlotLoadEnd}
                             let:state
                         >
                             <g aria-label={slotAriaLabel(heat.id, "B", state)}>
@@ -813,6 +837,8 @@
                         chartJson={chartJson}
                         chartId={chartId}
                         position={placement.id}
+                        on:stateloadstart={handleSlotLoadStart}
+                        on:stateloadend={handleSlotLoadEnd}
                         on:statechange={(event) =>
                             updatePlacementState(placement.id, event.detail)}
                         let:state

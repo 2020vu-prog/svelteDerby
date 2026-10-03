@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { afterEach, expect, it, vi } from "vitest";
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 
 vi.mock("#src/stores.js", () => ({
     doRefreshBlocks: writable(0),
@@ -21,6 +21,8 @@ vi.mock("#src/chart/svg/printSvg.js", () => ({ printSvgElement: vi.fn() }));
 
 import BracketSvg from "#src/chart/svg/BracketSvg.svelte";
 import { printSvgElement } from "#src/chart/svg/printSvg.js";
+import { doRefreshBlocks } from "#src/stores.js";
+import { augmentChartState } from "#src/utils.js";
 
 afterEach(() => {
     cleanup();
@@ -242,6 +244,40 @@ it("prints the chart SVG with all columns and the header", async () => {
     expect(
         view.getByRole("menuitemcheckbox", { name: /Show header info/ })
     ).toHaveAttribute("aria-checked", "true");
+});
+
+it("waits for slot statuses before printing", async () => {
+    const view = render(BracketSvg, { chartId: "c", chartJson });
+    await waitFor(() => expect(view.getByText("42")).toBeInTheDocument());
+
+    const originalImplementation = augmentChartState.getMockImplementation();
+    const pending = [];
+    augmentChartState.mockImplementation(
+        (_chartJson, _chartId, heatId, slot) =>
+            new Promise((resolve) =>
+                pending.push(() =>
+                    resolve({
+                        bracketClass: "pendingSeed",
+                        posHtml: `${heatId}${slot}`,
+                    })
+                )
+            )
+    );
+    doRefreshBlocks.set(get(doRefreshBlocks) + 1);
+    await waitFor(() => expect(pending.length).toBeGreaterThan(0));
+
+    await openMenu(view);
+    await fireEvent.click(view.getByRole("menuitem", { name: "Print" }));
+    expect(printSvgElement).not.toHaveBeenCalled();
+
+    pending.splice(0).forEach((resolve) => resolve());
+    await waitFor(() => expect(printSvgElement).toHaveBeenCalledTimes(1));
+    expect(
+        printSvgElement.mock.calls[0][0].querySelector(
+            ".heat .slot.pendingSeed"
+        )
+    ).not.toBeNull();
+    augmentChartState.mockImplementation(originalImplementation);
 });
 
 it("centers the event name above the chart name above the logo", async () => {
