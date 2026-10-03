@@ -16,7 +16,7 @@ Notes from step 1 that apply to the rest:
 - Line numbers and counts below are from 2026-08-22. The file is about 2,200 lines now and the clusters have drifted, so locate functions by name.
 - `npm run test:unit` in `backend/test` is an explicit list of test files, so a new test file must be added to that script.
 - `backend/test` pins Node 22 and npm 10 (`engine-strict`); install and run it with that toolchain.
-- The backend Jest suite still does not run on pull requests (it runs inside `deploy.yml` after a merge to `test.rr1.us`). Wiring it into a PR check is the next-best use of the safety net this refactor leans on.
+- The backend Jest suite (`npm run test:unit` in `backend/test`) now also runs on pull requests, in `format.yml` (added 2026-10-03), so each extraction PR is checked by it before merge; it still runs in `deploy.yml` after a merge. The deployed integration suite is not run in CI (it needs AWS credentials).
 
 ## The good news first
 
