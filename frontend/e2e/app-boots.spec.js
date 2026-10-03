@@ -26,4 +26,4 @@ test("the app boots without a JS error", async ({ page }) => {
 // login, event selection, race timing/announcing, walkup-track playback --
 // need a real test account and fixture data to drive. Fill these in as
 // separate spec files once test credentials exist; see the "Phase 0" section
-// of docs/SvelteUpgradeProposal.md for the flow list this is meant to cover.
+// of docs/TODO/SvelteUpgradeProposal.md for the flow list this is meant to cover.

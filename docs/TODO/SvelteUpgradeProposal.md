@@ -1,0 +1,195 @@
+# Proposal: upgrading Svelte to the latest version
+
+Date: 2026-08-27 (re-audited 2026-10-02; see "Audit update")
+
+Touches (potentially): all 103 `frontend/src/**/*.svelte` files, `frontend/package.json`, `frontend/webpack.config*.js`, `frontend/src/main.js`, `frontend/src/index.ejs`, `frontend/src/routes/*` (the router-registry layer), and every one of the 25 files that import `sveltestrap`.
+
+## Audit update (2026-10-02)
+
+Re-audited against the repo, the npm registry, `npm audit`, the router's release notes, and a compile-only spike. **Verdict: still relevant, and the approach still holds**: land Svelte 5 in legacy-compat mode first, replace `sveltestrap` with local components, move the router, defer the rune rewrite. Sections changed by the audit are marked *(updated 2026-10-02)*; everything else is the original text.
+
+- **Facts that changed:** file and usage counts, the test infrastructure (16 Vitest specs, 12 rendering components, and a Playwright boot test now exist), jQuery (almost gone from the app), and current versions (Svelte 5.57.1).
+- **The router phase is smaller than first estimated.** About 16 files use the router's `location`/`querystring` stores; `push`/`pop`/`replace` keep their API in v5. But it has two traps the first version missed: automatic URL-param decoding (the app already decodes), and the route adapter that subclasses a component. See the router section.
+- **Compile-only spike.** All 103 components were compiled with the Svelte 5.57.1 and Svelte 4.2.20 compilers, with no app changes. Svelte 5 compiles 102 of 103; the one failure is `onclick=""` on labels in `ChartAdd.svelte` (13 occurrences), which is a compile error because Svelte 5 event attributes must be expressions. (Under Svelte 4, `LoginH.svelte` failed only because the spike had no TypeScript preprocessor; the other 102 compiled.) This is syntax-level evidence for the legacy-compat bet, not a runtime test, so Phase 1 is still needed.
+- **Two upgrades are available now, on Svelte 3/4** (new Phase 0b): router 2.2.0 to 4.0.2, and the Svelte 3 to 4 hop, which unlocks newer Vite, Vitest, `@sveltejs/vite-plugin-svelte`, and `@sveltestrap/sveltestrap` 7.
+- **Security:** `npm audit` flags Svelte 3.59.2 with 7 advisories. None looks exploitable in this client-only app, but Svelte 3 will never be patched. See "What `npm audit` says".
+
+## What this is, in one paragraph
+
+The app is pinned to Svelte 3.59.2, built with webpack + `svelte-loader` pinned to a git commit of the official repo (9 commits past its last npm release, 3.2.4; not Vite/SvelteKit), and leans on two third-party Svelte packages that did not age well: `sveltestrap` (Bootstrap components for Svelte, the unscoped npm package is archived and dead) and `svelte-spa-router` at a very old 2.2.0. Getting to current Svelte (5.57.1 as of 2026-10-02, no Svelte 6 yet) is not just a `package.json` bump — both of those dependencies need real migration work of their own before or alongside the framework version, and the router migration, though smaller than first estimated, still touches the 16 files that use the router's `location`/`querystring` stores plus the app's route-adapter layer (53 files in all reference the router). This proposal inventories exactly what's coupled to what, and lays out a phased path that gets the framework upgraded with minimal app-code churn first, deferring the large, low-urgency work (rewriting components to use runes) to an incremental, file-at-a-time follow-on — the same "one extraction per PR" discipline `DerbyMainRefactorProposal.md` already established for `derbyMain.js`.
+
+## Current state, as it actually is (not as declared)
+
+- **Svelte: `^3.59.2`** (`frontend/package.json`). Genuine Svelte 3, not 4.
+- **`svelte-spa-router: ^2.2.0`** *(updated 2026-10-02)*, referenced by **53** `src/` files (51 actually import it; the rest are test mocks and comments) out of 103 `.svelte` files plus the `.js` modules. Of those, **16** import the `location` or `querystring` stores (`App`, `BottomNav`, `ComponentToolBar`, `DriverList`, `EventSelection`, `ForceLoad`, `RacePhaseList`, `RaceStandingList`, `RouteSelection`, `TimerConfigElapsed`, `TimerConfigList`, `TimerPbAlignment`, `TimerPbAlignmentWipTypescriptProbs`, `TimerPlot`, `routes/RouteHost`, and `utils.js`); the rest only call `push`/`replace`/`pop`. `<Router routes={...}>` is used plainly in `RouteHost.svelte`, and the one route-event use is `on:routeEvent` forwarded in `routes/DecodedRoute.svelte`. This is the load-bearing routing layer underneath `frontend/src/routes/routeDefinitions.js` → `routeRegistry.js` → `routeComponents.js` → `routeAccess.js`, with `routeRuntime.js` and `DecodedRoute.svelte` adapting the router's raw route params before they reach a screen.
+- **`sveltestrap: ^3.14.1`**, imported in **25 of 94** files, using `Badge`, `Button`, `Card`/`CardBody`/`CardHeader`/`CardTitle`, `Form`/`FormGroup`/`FormText`, `Input`, `Label`, `Modal`/`ModalBody`/`ModalHeader`.
+- **`bootstrap: ^4.6.0`** is declared as an npm dependency but appears to be dead weight: no `.scss` files exist, nothing in `webpack.config*.js` or any `src/**` file references it, and there's no `import`/`require` of it anywhere. The Bootstrap that actually renders comes from a CDN `<link>` **pinned to 4.5.2** in `frontend/src/index.ejs` (the real `HtmlWebpackPlugin` template — the `public/index_derbyTest_*.html` files are stale leftovers, not part of the live build). CSS only; no Bootstrap JS bundle, no jQuery, no Popper — confirmed by zero `data-toggle`/`data-bs-`/`data-dismiss` attributes anywhere in `src/`. Whatever interactivity Bootstrap-flavored widgets need (the `Modal` family in particular) is implemented natively by `sveltestrap`, not by Bootstrap's own JS.
+- ~~Unrelated but adjacent: `ChartDetail.svelte` and `ChartAdd.svelte` each load jQuery from a CDN.~~ *(updated 2026-10-02)* `ChartAdd.svelte` no longer loads jQuery (the jsTree picker was replaced by a native tree in #153), and the click handler in `ChartDetail.svelte` no longer needs it in #154. Once #154 merges, jQuery is gone from the app, so the "no Bootstrap JS" finding above really does mean no jQuery anywhere.
+- **`createEventDispatcher`** is used in **14 files** *(updated 2026-10-02)* — every one of these needs to become a callback prop under Svelte 5 idioms eventually.
+- **`svelte:component`**: **1** usage, in `routes/DecodedRoute.svelte` *(updated 2026-10-02)*. **Named slots** (`slot="..."`): still none. Default/slot-prop use is in 3 files (`SpinnerButton`, `SvgBracketSlot`, and `BracketSvg`, which consumes `let:state`); slots and snippets remain a small part of the rewrite. One new deprecated construct to know about: `<svelte:self>` in `chart/chartTree/ChartTree.svelte` (still works in Svelte 5; recursion by importing the component is the new idiom).
+- **`lang="ts"`** appears in only **3** `.svelte` files — a small surface for the TypeScript-specific Svelte 5 gotchas (generics on components, `$props()` typing).
+- **`frontend/src/main.js`** mounts the app with the old `new App({ target, props })` constructor API, which Svelte 5 replaces with `mount(App, { target, props })`.
+- **Frontend automated tests: logic, component, and a boot smoke test** *(updated 2026-10-02)*. [#119](https://github.com/2020vu-prog/svelteDerby/pull/119) added a `node --test` suite for standalone logic modules (now 8 files, wired to `npm test` and CI). Since then the Phase 0 scaffolding landed: **16 Vitest spec files** (`npm run test:components`, also in CI), of which 12 render real `.svelte` components with `@testing-library/svelte`, and a **Playwright** config with one e2e test that proves the app boots and mounts (`npm run test:e2e`). That closes the "no component ever rendered in a test" gap, including the three smoke tests Phase 0 asked for: `Splash.spec.js` (a `sveltestrap` modal), `ForceReloadPage.spec.js` (router navigation), and `EllipsisButton.spec.js` (`createEventDispatcher`). It is still a small slice of 103 components, nothing yet covers the router's `location`/`querystring` stores or the route adapter (`DecodedRoute`/`routeRuntime`), and the e2e suite does not cover login, event selection, race timing/announcing, or walkup playback (they need a test account and fixture data). Phase 0 below lists what is done and what remains.
+- The app is a **pure client-side SPA** (hash-based routing via `svelte-spa-router`, no SSR, no SvelteKit). That's a meaningful advantage for this specific migration: several of the most-cited Svelte 5 migration traps — `$effect` not running during SSR, hydration mismatches between server- and client-rendered output — simply don't apply here, because there is no server render to mismatch against.
+
+## What "latest Svelte" actually means right now
+
+Svelte 5 is the current major version (released October 2024; latest published release is 5.57.1 on 2026-09-18, and there is no Svelte 6 yet). The breaking changes that matter most for this app:
+
+- **Runes replace implicit reactivity**: `export let x` → `let { x } = $props()`; `$: y = f(x)` → `let y = $derived(f(x))` or `$effect(() => {...})`; plain `let count = 0` that Svelte 3 auto-tracked becomes `let count = $state(0)` when you want the same tracking.
+- **Events are plain properties**: `on:click={fn}` becomes `onclick={fn}`; `createEventDispatcher()` is gone in idiomatic Svelte 5 in favor of components accepting callback props directly.
+- **Slots become snippets**: `<slot>` / `slot="name"` become `{@render children?.()}` and named snippet props. (Low-impact here, per the inventory above.)
+- **Component instantiation**: `new Component({ target })` → `mount(Component, { target })`; the result no longer exposes `$set`/`$on`/`$destroy`.
+- **`bind:` requires opt-in**: a child component prop is one-way by default now; two-way binding needs an explicit `$bindable()` on the child's side. This is the single most common source of silent behavior change during migration, per real-world migration reports, because plenty of existing `bind:` usage across a codebase turns out to have been binding to something that was really only ever read one-way.
+- **CSS scoping changes**: the scoping hash mechanism changes, and `:is()`/`:has()`/`:where()` selectors — previously an unintentional "escape the component" trick in Svelte 4 — are now scoped by default. Any CSS relying on that old behavior needs an explicit `:global(...)`.
+
+Crucially, Svelte 5 ships an official **legacy-compatibility mode**: existing Svelte 3/4-style components (`export let`, `$:`, `on:`, `createEventDispatcher`, slots, `svelte/store`) keep working unchanged, side by side with rune-based components, in the same app. That's the lever this proposal is built around — it decouples "get the framework and toolchain onto Svelte 5" from "rewrite 94 components to use runes," which are really two separate projects with very different urgency.
+
+Legacy mode is deprecated but has no announced removal date *(updated 2026-10-02)*: Svelte's docs say the Svelte 3/4 features are supported for now and will eventually be removed. That keeps "defer the rune rewrite" defensible, but it is debt with no deadline, so new code should avoid adding to it (see Phase 4).
+
+## The two dependencies that actually gate this, and why they're not optional
+
+**`sveltestrap` is dead and must be replaced regardless of Svelte version.** The unscoped `sveltestrap` package on npm was archived in April 2025 and never had solid Svelte 4 support, let alone 5. Its maintained successor lives under a different npm scope, **`@sveltestrap/sveltestrap`** (currently v7.1.0), which targets **Bootstrap 5** and declares Svelte `^4.0.0 || ^5.0.0` as its peer range — notably, it does **not** support Svelte 3, so this alone forces at least a Svelte 3→4 step before or alongside adopting it. It's maintained but slow-moving (its latest release, 7.1.0, was published 2025-02-04, about 20 months before the 2026-10-02 audit) — stable, not actively developed. Its v7 release notes call out a breaking rename (`children` prop → `content`) as part of its own Svelte 5 work, which is exactly the kind of thing to grep for across the 25 files that use it. As covered in the open questions below, the recommendation is to drop it rather than adopt the fork — see the scoping breakdown immediately following.
+
+### Scoping a hand-rolled sveltestrap replacement
+
+A grep across all 25 files for every named import from `sveltestrap` turns up 18 distinct component names, not the 14 the "Current state" inventory above named (`Badge`, `Button`, `Card`/`CardBody`/`CardHeader`/`CardTitle`, `Form`/`FormGroup`/`FormText`, `Input`, `Label`, `Modal`/`ModalBody`/`ModalHeader`) — it missed `CardFooter`, `ModalFooter`, `Collapse`, and `Table`. For each, here's what's actually used — props included — and how much real work replacing it is:
+
+| Component(s) | Files using it | Props actually passed | Replacement effort |
+| --- | --- | --- | --- |
+| `Card`, `CardBody`, `CardHeader` | 18 files each | `class`/`style` passed straight through; occasional `color="info"` | Trivial — plain `<div class="card ...">` wrappers |
+| `CardTitle` | 15 files | `class`/`style`, occasional `color` | Trivial |
+| `Badge` | 16 files | `pill` (boolean), `class` | Trivial — one `<span class="badge ...">` wrapper |
+| `CardFooter` | 4 files | `style` | Trivial |
+| `FormGroup`, `Label` | 4 files each | `check` (boolean, → `form-check`/`form-check-label`) | Trivial |
+| `Input` | 4 files, but ~15 of the ~19 total usage sites are in `TimerConfigElapsed.svelte` alone | polymorphic on `type`: text/number render `<input>`, `type="select"` renders `<select>` with slotted `<option>`s, `type="checkbox"` binds `checked` instead of `value` | The one component with real logic — a type-dispatch branch, but still well under 50 lines |
+| `Button` | 4 files | `color` (→ `btn-{color}`), `size` (→ `btn-{size}`), `disabled`, `on:click` | Trivial |
+| `Modal`, `ModalHeader`, `ModalBody` | 5 files each | `isOpen`, `toggle` (callback), `fullscreen` (boolean, one file) | Needs care but isn't hard — zero `data-bs-`/`data-toggle` usage anywhere in the app (confirmed earlier) means there's no Bootstrap JS behavior to replicate, just a conditional `{#if isOpen}` panel plus a backdrop `<div>`, which is close to what sveltestrap's own Modal already does internally |
+| `ModalFooter` | 4 files | none beyond default slot content | Trivial — same replacement component as the rest of the `Modal` family |
+| `Collapse` | 3 files | `isOpen`, `toggle` | Trivial — an `{#if isOpen}` or a CSS max-height transition |
+| `Form`, `FormText` | 2 files each | `FormText` takes `color="muted"` | Trivial |
+| `Table` | 1 file | `striped`, `bordered`, `size="sm"` (→ `table-striped table-bordered table-sm`) | Trivial |
+
+That's roughly 8 small replacement components (`Card` and its sub-parts can share one file). Only `Input` and `Modal` are more than a class-mapping wrapper around plain Bootstrap 5 markup, and neither is large. The Bootstrap-5-class-rename risk called out below applies identically whether these are hand-rolled or come from `@sveltestrap/sveltestrap` — it's inherent to the CDN pin bump, not to this choice.
+
+**`svelte-spa-router` needs two version steps, and the second is smaller than first thought** *(updated 2026-10-02)*. The first, **2.2.0 → 4.0.2, works on Svelte 3 and 4 and can be done today**: 3.x auto-decodes URL params (see the trap below) and 4.x moved `wrap` to `svelte-spa-router/wrap` (this app does not use `wrap`). The second, **→ 5.x** (peer dependency `svelte ^5.0.0`, so it needs Svelte 5 installed first), is described in its release notes as: "require Svelte 5, remove stores in favor of new router object, remove events in favor of callback props". `push`, `pop`, `replace`, and `link` keep their API, so the large majority of this app's call sites do not change. What does change here: the 16 files listed above move from the `location`/`querystring` stores to the router object (`router.location`, `router.querystring`, `router.loc`), and the single `on:routeEvent` forward in `DecodedRoute.svelte` becomes a callback prop.
+
+Two traps the first version of this proposal missed:
+
+1. **Double decoding.** Router 3.x and later decode URL params automatically. This app already decodes them itself, in `routes/routeRegistry.js` (`decodeRouteParams`, applied through `DecodedRoute.svelte`) and in a direct `decodeURIComponent` in `EventSelection.svelte`, because router 2.x hands back raw captures. After the 3.x bump the app would decode twice, and a value that still contains a `%XX` sequence after the first decode would be silently corrupted. The fix is to remove the app-side decoding in the same change that bumps the router; the existing `routeRegistry` tests are the place to pin it.
+2. **The route adapter subclasses a compiled component.** `routes/routeRuntime.js` builds each route's component with `class extends DecodedRoute { constructor(options) { super({...options, props: {...options.props, component}}) } }`, and `main.js` uses `new App({target})`. Svelte 5 components are functions rather than classes, so this adapter very likely needs a rewrite when Svelte 5 lands (this is an inference, not yet verified; Phase 1's spike will show it). The adapter already lives in one place, so the rewrite is contained.
+
+Two community forks (`@keenmate/svelte-spa-router`, built on runes from scratch; `mateothegreat/svelte5-router`) exist from the period when the original project looked abandoned. The original has since shipped its own Svelte 5 releases (5.0.0 in 2026-03, 5.1.1 in 2026-06), so the official package should be the default unless a fork's extra features (nested routers, route guards) turn out to solve something this app's hand-rolled `routeAccess.js` permission layer currently does the hard way.
+
+**The Bootstrap CDN pin has to move in lockstep with `@sveltestrap/sveltestrap`**, from 4.5.2 to a Bootstrap 5.3.x link in `frontend/src/index.ejs`, since the new component library renders Bootstrap-5-shaped markup/classes. Given zero `data-toggle`/`data-bs-` usage was found, there's no Bootstrap-JS-widget migration needed — this is a CSS-class-and-markup-shape risk (Bootstrap 5 renamed and dropped some utility classes), verifiable with a visual smoke pass over the 25 affected files, not a JS-behavior risk.
+
+**The webpack toolchain itself is fine, with one real trade-off.** `svelte-preprocess` 6.x and `svelte-loader` both declare Svelte 5 support, so there's no forced migration off webpack to Vite. The one confirmed cost: **`svelte-loader` does not support Hot Module Reloading under Svelte 5** (its README says so) — local dev will need a full page reload after every change instead of HMR, for as long as this app stays on webpack. That is an acceptable, scoped trade-off; migrating to Vite/SvelteKit to get HMR back is a real, separate project (re-implementing the `.ejs` templating, the `workbox-webpack-plugin` PWA/service-worker setup, `mini-css-extract-plugin`, etc.) that this proposal deliberately does not bundle in, for the same "resist the urge to also fix things beyond scope" reason `DerbyMainRefactorProposal.md` already called out. *(updated 2026-10-02)* Two things to weigh when revisiting that after Phase 3: `svelte-loader` is slow-moving (the pinned commit is 9 past its last npm release, and the repo's latest commit on its default branch is from 2025-12), and the test toolchain is already on Vite, so a Vite build for the app would share more than it did when this was written.
+
+**Test-toolchain versions are coupled to the Svelte major** *(updated 2026-10-02)*. The app uses `@sveltejs/vite-plugin-svelte` 2.5.3 (Vite 4, Vitest 0.34), which supports Svelte 3 and 4. The 3.x plugin needs Vite 5 and Svelte 4 or 5; 4.x needs Vite 5 and Svelte 5; 5.x needs Vite 6. So none of Vite, Vitest, or the plugin can move while the app is on Svelte 3. `@testing-library/svelte` 5.x already supports Svelte 3, 4, and 5. `svelte-preprocess` 6.x supports Svelte 5, but Svelte 5 compiles TypeScript type annotations natively, so with only 3 `lang="ts"` files the preprocessor may become unnecessary.
+
+## What `npm audit` says *(updated 2026-10-02)*
+
+- **Svelte 3.59.2 is flagged with 7 advisories, none of which looks exploitable here.** Six affect server-side rendering (this app has no SSR). The seventh, DOM clobbering of Svelte's internal state, requires attribute spreading on a `<form>` combined with a user-controllable `name`; the app has no spread attributes in any template. The real issue is structural: Svelte 3 will never receive patches, so any future advisory stays open, and `npm audit` keeps reporting these.
+- **Dev-only:** Vitest is flagged critical (an arbitrary file read when its UI server is running, which this project does not use) and Vite high. Both are held back by the Svelte 3 plugin pin above.
+- **Runtime dependencies unrelated to Svelte:** `npm audit --omit=dev` reports 10 findings (6 moderate, 4 high), including `axios`, `csv-parse`, `uuid`, and `markdown-it`. They are independent of this upgrade and can be fixed in their own PRs.
+
+## Proposed phasing
+
+**Phase 0 — Safety net, before touching any version number.** *(partly done; updated 2026-10-02)* Component tests and an e2e harness now exist, so the bar is no longer "nothing renders in a test", but every phase below is still verified largely by hand until the remaining gaps close. Run alongside the existing `node --test` suite:
+
+- **Component tests** (`@testing-library/svelte` + Vitest, since `node --test` can't compile `.svelte` files the way the existing `.mjs` suite assumes). **Done in part:** 16 Vitest specs exist and run in CI, including smoke tests for a `sveltestrap` `Modal` (`Splash`), router navigation (`ForceReloadPage`), and `createEventDispatcher` (`EllipsisButton`). **Remaining:** one test reading the router stores (`location`/`querystring`), and one through the route adapter (`DecodedRoute`/`routeRuntime`), including a route param that needs decoding. That gives Phase 1's diagnostic spike and Phase 2's dependency swaps something to run instead of a visual pass.
+- **E2E smoke tests** (Playwright) against a running dev build. **Done in part:** one test proves the app boots and mounts. **Remaining:** the highest-stakes flows: login, event selection, race timing/announcing, and the walkup-track playback path this session's own recent work touched. Higher-leverage than the component tests for this migration specifically, since it exercises router + sveltestrap + real user flows together in one pass.
+
+Do all of this work on a long-lived branch, and follow the existing `test.rr1.us` → `stage.rr1.us` → `go.rr1.us` promotion path — land and soak on `test.rr1.us` first, soak again on `stage.rr1.us`, and only then promote to `go.rr1.us` (production) — this app runs live in-person events, so "looks fine in a local dev build" isn't sufficient confidence on its own. Note the Vitest/`@testing-library/svelte`/`@sveltejs/vite-plugin-svelte` versions Phase 0 lands with are necessarily pinned to what supports Svelte 3 today; they'll need their own version bump in lockstep with Phase 3's `svelte` bump, the same way `sveltestrap` and `svelte-spa-router` do.
+
+**Phase 0b — Upgrades available on Svelte 3/4 today, before any Svelte 5 work.** *(new, 2026-10-02)* These de-risk the later phases and can ship independently:
+
+- **Router 2.2.0 → 4.0.2** (supports Svelte 3 and 4). Remove the app-side param decoding (`routeRegistry.decodeRouteParams` / `DecodedRoute`, and the direct `decodeURIComponent` in `EventSelection.svelte`) in the same PR, and pin the behavior with the existing `routeRegistry` tests. Do the later 4.x → 5.x move with the Svelte 5 landing.
+- **Svelte 3 → 4**, which answers the open question about staging. The compile-only spike found no blocker (all components compile under 4.2.20; the one failure was a missing TypeScript preprocessor in the spike, not an app problem). The hop unlocks `@sveltejs/vite-plugin-svelte` 3.x with Vite 5 and newer Vitest (clearing the Vite and Vitest audit findings), `@testing-library/svelte` 5.x, and `@sveltestrap/sveltestrap` 7 (peer `^4 || ^5`). Verify with the existing component specs and the e2e boot test, and soak on `test.rr1.us`.
+- Independent of Svelte: bump the runtime dependencies flagged by `npm audit --omit=dev` in their own PRs.
+
+**Phase 1 — Diagnostic spike (throwaway, isolated branch).** Bump only what's required to get *something* building under Svelte 5 — `svelte` itself, `svelte-loader`, `svelte-preprocess`, `prettier-plugin-svelte` — and update `main.js` to `mount()`. Deliberately leave `sveltestrap@3.14.1` and `svelte-spa-router@2.2.0` untouched. This combination is not expected to be a valid long-term state (the router's own peer dependency says as much), but it's the cheapest possible way to find out what specifically breaks when the existing, unmodified Svelte-3-style component source runs under the Svelte 5 compiler and runtime, and to validate — before committing real effort — whether the legacy-compatibility promise actually holds for *this* app's code, separate from the two known-incompatible dependencies. The compile-only spike already predicts the first failures: the 13 `onclick=""` attributes in `ChartAdd.svelte` (compile error in Svelte 5), the `new App({target})` call in `main.js`, and the `class extends DecodedRoute` adapter in `routes/routeRuntime.js`. Throw this branch away once it's answered the question.
+
+**Phase 2 — Replace the two dead-weight dependencies, targeting Svelte 5 as the landing point.** These are independent of each other and can run as parallel workstreams:
+- *Bootstrap/sveltestrap*: swap to `@sveltestrap/sveltestrap`, bump the CDN link in `index.ejs` to Bootstrap 5.3.x, drop the vestigial `bootstrap` npm dependency, grep the 25 affected files for the `children`→`content` rename and any other v7 breaking changes, and do a visual pass over the affected screens. Smaller and more contained than the router work — good to land first to build confidence in the pattern.
+- *svelte-spa-router*  *(updated 2026-10-02)*: move from 4.0.2 (Phase 0b) to the official v5.x line: migrate the 16 store-importing files to the router object, turn the `on:routeEvent` forward into a callback prop, and rewrite the route adapter (`routes/DecodedRoute.svelte` and `routes/routeRuntime.js`) so it no longer subclasses a component. The adapter already centralizes the router-facing logic, so this is one contained rewrite rather than a change at every call site, and `push`/`pop`/`replace` call sites stay as they are. Still compare the official v5 API against the two community forks specifically against what `routeAccess.js`'s permission gating needs, rather than defaulting to the official package without checking, but with the work smaller than first estimated that comparison can be quick.
+
+**Phase 3 — Land Svelte 5 for real.** With both dependencies now Svelte-5-native, bump `svelte` itself, confirm the toolchain versions, and ship. At this point the entire app runs on Svelte 5 with every first-party component still in its original Svelte-3-style syntax via legacy-compat mode — functionally unchanged, zero user-visible difference intended. This is the actual milestone: soak on `stage.rr1.us`, then promote.
+
+**Phase 4 — Incremental rune migration (ongoing, no deadline).** Only after Phase 3 ships. Migrate components to runes opportunistically — when a file is already being touched for unrelated work, convert it in the same PR, exactly like the one-extraction-per-PR discipline already in use for `derbyMain.js`. Prioritize the 10 `createEventDispatcher` files and the 3 TypeScript files first, since those have the clearest Svelte 5 idioms to move to (callback props; the `Component` type). Use `npx sv migrate svelte-5`'s single-file mode as a first draft only, not an authoritative rewrite — real-world reports of this tool are consistent that it sometimes can't tell `$derived` from `$effect`, over-applies `$bindable()` to props that were only ever meant to be one-way, and that at least one team hit a real performance regression trusting the bulk migration blindly. Every generated diff needs a human read before merging.
+
+**Until then, keep new code from adding legacy debt** *(updated 2026-10-02)*: prefer callback props over `createEventDispatcher`, and avoid `<svelte:self>` (import the component recursively once on Svelte 5). Callback props work on Svelte 3 and 4 as well, so this costs nothing now and removes work from this phase. Also deal with the empty `onclick=""` attributes in `ChartAdd.svelte` now: they are a compile error under Svelte 5. They look like a known iOS Safari trick for making labels tappable, so replace them with an explicit no-op handler (`onclick={() => {}}`) or remove them, and check the Naming Style/Day/Time/Division toggles on an iOS device either way.
+
+## Running two frontends concurrently, for Phases 0–3
+
+"Parallel migration" here actually covers two different problems, worth separating because they have different solutions:
+
+- **Infra-level parallel** — you and testers can reach either version, but a given user session isn't switching mid-stream. This is what Phase 1's throwaway spike and Phase 3's soak need.
+- **Session-level parallel** — two operators' tablets, at the *same* live event, each pinned to a different frontend version at the same time. Only needed if rollout requires specific trusted people dogfooding the new frontend across real events before a full cutover.
+
+Both are tractable here for a reason the rest of this proposal doesn't lean on: this app is a pure client-side SPA with **hash-based routing** (`svelte-spa-router`), so there is no history-mode fallback/rewrite rule to configure anywhere — a second build hosted at a sub-path is just another set of static files, not a routing problem. The backend API also isn't changing as part of this migration, so both versions can safely share one backend the entire time.
+
+**Option 1 — new sibling deploy target.** Add a fourth Terraform-managed environment (alongside `derbyTest`/`derbyStage`/`go-derby-prod` in `frontend/webpack.config.js`), e.g. `derbySvelte5`, with its own S3 bucket/CloudFront distribution and SSM params under `/deploy/derbySvelte5/frontend/*`. `loadDeployTargets.sh` and `s3Push.sh` need zero changes — they already key off `TF_VAR_DeployEnvironment`. Gives a real subdomain hitting the same backend. Cheapest option; right fit for Phase 1's spike and Phase 3's soak.
+
+**Option 2 — same-origin path split (`/` vs `/next/`).** Serve both bundles from one CloudFront distribution/bucket, old at `/`, new at `/next/*`. Same-origin means `localStorage`/session state is shared automatically. Gets you session-level parallel: two tablets at one event, one on each path. Needs the service worker's scope narrowed or disabled per build during the parallel window (today it registers at scope `/`, gated on `location.hostname === 'sw.derby.rr1.us'`, in `frontend/src/index.ejs`).
+
+**Option 3 — single-URL toggle with persistent opt-in.** Builds on Option 2's dual-build output, but adds a same-origin redirect so users only ever type one URL. Elaborated below.
+
+**Option 4 — per-route split via the router registry.** Have `routeDefinitions.js` → `routeRegistry.js` → `routeComponents.js` choose old-vs-new implementation per route. This is module-federation territory (two webpack builds sharing one runtime) — more machinery than needed, since Svelte 5's legacy-compat mode already lets old (`export let`, `on:`) and new (runes) components coexist in **one** build, which is exactly what Phase 4 already relies on. Skip this one.
+
+**Recommendation:** Option 1 for Phases 0–3 — it costs nothing beyond one more SSM-parameterized environment matching infra that already exists. Reach for Option 2 or 3 only if rollout specifically needs live-event operators split across versions simultaneously; otherwise it's added complexity for a capability Phase 4's legacy-compat mode makes unnecessary once Svelte 5 has actually landed.
+
+### Option 3, elaborated: how the toggle actually works
+
+Two Svelte runtimes can't safely coexist inside one already-mounted page (CSS-scoping collisions, service-worker scope fights), so this still needs two self-contained builds like Option 2 — the difference is a thin redirect layer on top so it feels like one URL.
+
+**Build side.** Give the new-Svelte build its own output path and HTML file (`output.path` → `public/next`, a second `HtmlWebpackPlugin({ filename: "./next/index.html" })`), and a distinct entry/chunk name (`bundle-next` vs `bundle`) so the two builds stay obviously separate even though contenthash already prevents literal filename collisions. Because `s3Push.sh` already syncs `./public/` recursively, anything under `public/next/` ships for free.
+
+**Toggle side.** Ahead of `startApp()` in `frontend/src/main.js` (and the mirror-image check in the `next` build's own entry point, or a small shared module both import):
+
+```js
+function syncFrontendVersion() {
+    const params = new URLSearchParams(location.search);
+    if (params.has("frontend")) {
+        localStorage.setItem("frontendVersion", params.get("frontend"));
+    }
+    const wantsNext = localStorage.getItem("frontendVersion") === "next";
+    const onNext = location.pathname.startsWith("/next/");
+
+    if (wantsNext && !onNext) {
+        location.replace("/next/" + location.hash);
+        return true; // redirecting — caller should not mount the app
+    }
+    if (!wantsNext && onNext) {
+        location.replace("/" + location.hash);
+        return true;
+    }
+    return false;
+}
+
+if (!syncFrontendVersion()) {
+    startApp().catch((error) => console.error("Unable to load deployment configuration", error));
+}
+```
+
+The `!onNext`/`!wantsNext` guards matter — without them this ping-pongs forever. `location.hash` survives the redirect, so a bookmarked or QR-coded deep link into a specific screen keeps working; it just costs one extra client-side hop the first time the flag changes. `https://test.rr1.us/?frontend=next` sets the flag and bounces once to `/next/`; every later visit loads `/next/` directly. `?frontend=legacy` flips it back, no redeploy needed, reversible per device.
+
+Tradeoffs: auth carries over for free within one tab (same-origin `localStorage`/`sessionStorage` survive `location.replace()`), but a link opened in a fresh tab only carries over if the token lives in `localStorage` — worth confirming before relying on this. It's opt-in, not a traffic split — no server is involved, so there's no way to randomly assign a percentage of sessions. For a live-events tool where the goal is specific trusted people dogfooding the new frontend rather than random users landing on it, that's the right shape, not a limitation.
+
+### Where the `next` bundle's source lives
+
+Not a new directory alongside `frontend/src` — a second `package.json`/`node_modules` living next to the first doesn't work cleanly, since Svelte 3 and Svelte 5 (plus their incompatible `sveltestrap`/`svelte-spa-router` majors) can't share one dependency install. The right place is **the same path, `frontend/src`, on a different branch** — a `svelte5`/`next` branch, matching the existing branch-per-environment pattern (`test.rr1.us`, `stage.rr1.us`, `go.rr1.us`) that `.github/workflows/deploy.yml` already resolves to a GitHub Environment and `TF_VAR_DeployEnvironment`. This is also exactly what Phase 1's "isolated branch" already assumes.
+
+Producing two outputs from two branches into one `public/` tree needs two separate checkouts and installs, not one checkout with two `src` folders, since `npm ci` resolves one dependency tree per directory:
+
+- **Locally**: `git worktree add ../svelteDerby-next svelte5` gives a second working copy — its own `frontend/src`, own `node_modules`, own build — without touching the primary checkout. Build there, copy its `public/` output into the main checkout's `public/next/`, then run `s3Push.sh` once from the main tree.
+- **In CI**: `deploy.yml` currently does a single `actions/checkout` of a single ref. Supporting this means adding a second checkout of the `svelte5` branch into a second path, a second `npm ci && npm run build` outputting to `public/next/`, merged in before the existing `s3Push.sh` step — a real, if small, workflow change, not something that falls out for free.
+
+This is scaffolding for Phases 0–3, not a permanent architecture. Once Phase 3 lands — `svelte5` merges into the mainline branches, one `package.json` again — there's only one `frontend/src`, and the dual-checkout/dual-build setup gets deleted. Phase 4's rune conversions then happen file-by-file inside that single tree, since legacy-compat mode is what makes a second branch unnecessary from that point on.
+
+## Open questions worth deciding explicitly, not by default
+
+- **Recommendation: drop `sveltestrap` entirely instead of adopting `@sveltestrap/sveltestrap`.** The 25-file touch cost happens either way — swapping to the maintained fork still means re-verifying every one of those files against Bootstrap 5's renamed/dropped classes, same as hand-writing markup would. Given that, owning ~8 small local components permanently removes a third-party dependency that's already gone 18 months without a release, rather than re-betting the *next* Svelte version bump on someone else's cadence. The real cost isn't the file count, it's writing and testing those ~8 components — see "Scoping a hand-rolled sveltestrap replacement" above. The tradeoff worth naming: you also lose whatever accessibility/focus-trapping polish `@sveltestrap/sveltestrap` already has, and would need to replicate or accept the gap.
+- Official `svelte-spa-router` v5, or one of the two community forks — decide based on fit with `routeAccess.js`'s existing permission-gating needs, not by default. *(updated 2026-10-02: the official package shipped Svelte 5 releases and the migration is smaller than first estimated, so the official package is the likely answer.)*
+- ~~Confirm whether to stage the Svelte bump as 3 → 4 → 5 versus one direct hop to 5.~~ *(resolved 2026-10-02)* Stage it: the 3 → 4 hop is cheap, shows no compile blockers, and is the only way to unblock the newer Vite/Vitest/plugin, the router work, and `@sveltestrap/sveltestrap` 7 while still on a supported toolchain. See Phase 0b.
+- Frontend coverage is partial today (16 Vitest specs, 12 of them rendering components, and one e2e boot test; the flows that matter at a live event are not covered). How much of the remaining Phase 0 investment happens before this project starts versus alongside it is still a real scoping/timeline decision, not just a nice-to-have footnote.

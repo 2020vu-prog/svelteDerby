@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import ForceReloadPage from "#src/ForceReloadPage.svelte";
 
 // Risk pattern: svelte-spa-router's push/pop/replace, the load-bearing
-// routing layer touched by 53 of 94 files (see docs/SvelteUpgradeProposal.md).
+// routing layer touched by 53 of 94 files (see docs/TODO/SvelteUpgradeProposal.md).
 // ForceReloadPage's whole job is to call pop() on mount -- this test pins
 // that it actually navigates the browser back, so the router's v2 -> v5
 // migration (a real rewrite, not a version bump) can be checked automatically

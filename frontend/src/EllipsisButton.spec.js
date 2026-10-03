@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import EllipsisButton from "#src/EllipsisButton.svelte";
 
 // Risk pattern: createEventDispatcher(). Svelte 5 idioms replace this with
-// callback props (see Phase 4 in docs/SvelteUpgradeProposal.md) -- this test
+// callback props (see Phase 4 in docs/TODO/SvelteUpgradeProposal.md) -- this test
 // pins today's dispatch-based behavior so that migration can be verified
 // automatically instead of by hand.
 describe("EllipsisButton", () => {
