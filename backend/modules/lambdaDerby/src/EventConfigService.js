@@ -11,7 +11,7 @@ class EventConfigService {
         requestContext,
         timerConfigService,
         newAnnounceResults,
-        refreshUserDisplayNamesFromOrgPerm,
+        orgUserService,
     }) {
         this.ddbUtils = ddbUtils;
         this.snsClient = snsClient;
@@ -19,8 +19,7 @@ class EventConfigService {
         this.requestContext = requestContext;
         this.timerConfigService = timerConfigService;
         this.newAnnounceResults = newAnnounceResults;
-        this.refreshUserDisplayNamesFromOrgPerm =
-            refreshUserDisplayNamesFromOrgPerm;
+        this.orgUserService = orgUserService;
     }
 
     async addOrgConfig(json) {
@@ -85,7 +84,7 @@ class EventConfigService {
         this.ddbUtils.flushEventCache(); //TODO: flush event cache in other instances of lambda...
         const eventConfigResult = await this.ddbUtils.addSingle(eventConfig);
         const userDisplayNameResult =
-            await this.refreshUserDisplayNamesFromOrgPerm({
+            await this.orgUserService.refreshUserDisplayNamesFromOrgPerm({
                 orgIz: eventConfig.orgIz || json.orgIz,
                 orgId: eventConfig.orgId || json.orgId,
             });
@@ -146,7 +145,7 @@ class EventConfigService {
             },
         });
         const userDisplayNameResult =
-            await this.refreshUserDisplayNamesFromOrgPerm({
+            await this.orgUserService.refreshUserDisplayNamesFromOrgPerm({
                 orgIz: json.orgIz,
                 orgId: json.orgId,
             });

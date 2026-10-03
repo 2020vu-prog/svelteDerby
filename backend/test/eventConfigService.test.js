@@ -53,7 +53,7 @@ function build(overrides = {}) {
         requestContext,
         timerConfigService,
         newAnnounceResults: () => announce,
-        refreshUserDisplayNamesFromOrgPerm,
+        orgUserService: { refreshUserDisplayNamesFromOrgPerm },
     });
     return {
         service,
