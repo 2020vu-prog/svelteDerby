@@ -54,6 +54,7 @@ const S3MediaService = require("./S3MediaService");
 const RaceProgressionService = require("./RaceProgressionService");
 const TimerConfigService = require("./TimerConfigService");
 const EventConfigService = require("./EventConfigService");
+const OrgUserService = require("./OrgUserService");
 const { getShaCars } = require("./utils");
 const { decodeS3EventKey, encodeS3CopySource } = require("./S3Utils");
 const requestContext = require("./RequestContext");
@@ -76,6 +77,7 @@ const raceProgressionService = new RaceProgressionService({
     requestContext,
 });
 const timerConfigService = new TimerConfigService(ddbUtils);
+const orgUserService = new OrgUserService({ ddbUtils, requestContext });
 const eventConfigService = new EventConfigService({
     ddbUtils,
     snsClient,
@@ -83,7 +85,7 @@ const eventConfigService = new EventConfigService({
     requestContext,
     timerConfigService,
     newAnnounceResults,
-    refreshUserDisplayNamesFromOrgPerm,
+    orgUserService,
 });
 
 function newAnnounceResults() {
@@ -110,33 +112,6 @@ function frozenOrArchived(config) {
     return configEntity.checkIfFrozenOrArchived()["status"];
 }
 
-async function getOrgRoles(event, apiProps) {
-    log.debug("getOrgRoles: apiEmail:", apiProps);
-    log.debug("getOrgRoles: qsEmail:", event.queryStringParameters);
-    if (
-        event &&
-        event.queryStringParameters &&
-        event.queryStringParameters.userEmail &&
-        apiProps &&
-        apiProps.email
-    ) {
-        if (
-            apiProps.email.toLowerCase() ===
-            event.queryStringParameters.userEmail.toLowerCase()
-        ) {
-            return {
-                roleList: apiProps.roleList,
-                email: apiProps.email.toLowerCase(),
-            };
-        }
-    }
-    return {
-        // no roles on error
-        roleList: [],
-        email: apiProps.email.toLowerCase(),
-    };
-    return { statusCode: 403, error: "email not aligned" };
-}
 const routeMap = {
     "/iot/discover": {
         permission: RoutePermission.ANONYMOUS,
@@ -154,7 +129,9 @@ const routeMap = {
         allowMissingTtl: true,
         allowMissingOrgId: true,
         h: async (event, apiProps) => {
-            return buildResponse(await getOrgRoles(event, apiProps));
+            return buildResponse(
+                await orgUserService.getOrgRoles(event, apiProps)
+            );
         },
     },
     "/addEventConfig": {
@@ -219,7 +196,9 @@ const routeMap = {
         allowMissingTtl: true,
         allowMissingOrgId: true,
         h: async (event, apiProps) => {
-            return buildResponse(await listOrgUser(event, apiProps));
+            return buildResponse(
+                await orgUserService.listOrgUser(event, apiProps)
+            );
         },
     },
     "/addOrgUser": {
@@ -229,7 +208,10 @@ const routeMap = {
         allowMissingOrgId: true,
         h: async (event, apiProps) => {
             return buildResponse(
-                await addOrgUser(JSON.parse(event.body), apiProps)
+                await orgUserService.addOrgUser(
+                    JSON.parse(event.body),
+                    apiProps
+                )
             );
         },
     },
@@ -659,7 +641,7 @@ async function loadApiRequestContext(event, principal) {
     const orgIz = getOrgIz(event);
     const config = await ddbUtils.getEventConfig(eventKey, event.headers);
     const defaultTTL = await getTtl(config);
-    const roleList = await getUserRoles(orgIz, principal.email);
+    const roleList = await orgUserService.getUserRoles(orgIz, principal.email);
 
     requestContext.setEntityFactory(
         new EntityFactory({
@@ -928,121 +910,6 @@ async function getApplyableNextOnBlocks(
 }
 async function apiGatewayHandler(event) {
     return apiRouter.dispatch(event);
-}
-async function listOrgUser(event, apiProps) {
-    const rolesByOrg = await ddbUtils.ddbQueryOrgPerms({
-        orgIz: apiProps.orgIz,
-    });
-    return rolesByOrg;
-}
-async function addOrgUser(json, apiProps) {
-    log.debug("addOrgUser: " + JSON.stringify(json));
-
-    if (json.email) {
-        json.email = json.email.trim();
-    }
-    const orgId = json.orgId || apiProps.orgId;
-    const displayName = json.displayName || json.dn;
-    if (json.email && json.orgIz && json.roleList && orgId && displayName) {
-        json.PK = json.orgIz + ":OrgPerm"; // force OrgPerm
-        json.SK = json.email;
-        const tmpEntityFactory = requestContext.getEntityFactory().copyWith({
-            orgIz: json.orgIz,
-            orgId: undefined,
-            TTL: undefined,
-        });
-        requestContext.setEntityFactory(tmpEntityFactory);
-
-        const orgPermResult = await ddbUtils.addSingle(json);
-        const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm({
-            orgIz: json.orgIz,
-            orgId,
-        });
-
-        return {
-            status:
-                orgPermResult.status === "ok" &&
-                userDisplayNameResult.status === "ok"
-                    ? "ok"
-                    : "error",
-            orgPermResult,
-            userDisplayNameResult,
-        };
-    } else {
-        return { error: "missing field(s)" };
-    }
-}
-async function refreshUserDisplayNamesFromOrgPerm(json) {
-    log.debug("refreshUserDisplayNamesFromOrgPerm: " + JSON.stringify(json));
-
-    const orgIz = json.orgIz;
-    const orgId = json.orgId;
-    if (!orgIz || !orgId) {
-        return { error: "missing field(s)" };
-    }
-
-    const orgIzList = orgIz === "" ? [""] : ["", orgIz];
-    const orgPermGroups = await Promise.all(
-        orgIzList.map((orgIzForQuery) =>
-            ddbUtils.ddbQueryOrgPerms({ orgIz: orgIzForQuery })
-        )
-    );
-    for (const orgPermGroup of orgPermGroups) {
-        if (!Array.isArray(orgPermGroup)) {
-            return orgPermGroup;
-        }
-    }
-    const orgPerms = orgPermGroups.flat();
-
-    const bulk = [];
-    let skipped = 0;
-    for (const orgPerm of orgPerms) {
-        const displayName = orgPerm.displayName || orgPerm.dn;
-        if (!orgPerm.SK || !displayName) {
-            skipped += 1;
-            continue;
-        }
-
-        bulk.push({
-            PK: "UserDisplayName",
-            orgId,
-            SK: requestContext.getEntityFactory().getHashFromEmail(orgPerm.SK),
-            displayName,
-        });
-    }
-    const bulkResult = bulk.length
-        ? await ddbUtils.addBulk({ bulk })
-        : { status: "ok", count: 0 };
-
-    return {
-        status: bulkResult.status,
-        created: bulkResult.count,
-        skipped,
-        total: orgPerms.length,
-        bulkResult,
-    };
-}
-async function getUserRoles(orgIz, email) {
-    const roleList = [];
-    const orgPerms = await getUserRolesForOrgIz(orgIz, email);
-    const globalPerms = await getUserRolesForOrgIz("", email);
-    roleList.push(...orgPerms, ...globalPerms);
-    return [...new Set(roleList)];
-}
-async function getUserRolesForOrgIz(orgIz, email) {
-    var rolesByUser = await ddbUtils.ddbQueryOrgPerms({ orgIz: orgIz });
-    log.debug(`rolesByUser event [${orgIz}:${email}]`, rolesByUser);
-
-    if (!email || !rolesByUser || !rolesByUser.length) {
-        return [];
-    }
-    rolesByUser = rolesByUser.filter(
-        (ouser) => ouser.SK.toLowerCase() === email.toLowerCase()
-    );
-    if (rolesByUser && rolesByUser.length > 0 && rolesByUser[0].roleList) {
-        return rolesByUser[0].roleList;
-    }
-    return [];
 }
 function lowercaseHeaders(event) {
     var headerKeys = Object.keys(event.headers);
