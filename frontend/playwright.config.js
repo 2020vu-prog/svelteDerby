@@ -6,7 +6,7 @@ const { defineConfig, devices } = require("@playwright/test");
 // to boot it locally, so these tests target a real deployed environment
 // rather than an auto-started local server. Point PLAYWRIGHT_BASE_URL at
 // whichever environment you're soaking (test.rr1.us / stage.rr1.us), per
-// Phase 0 in docs/SvelteUpgradeProposal.md.
+// Phase 0 in docs/TODO/SvelteUpgradeProposal.md.
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "https://test.rr1.us";
 
 module.exports = defineConfig({

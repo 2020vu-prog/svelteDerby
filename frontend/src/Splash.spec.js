@@ -5,7 +5,7 @@ import Splash from "#src/Splash.svelte";
 // Risk pattern: a sveltestrap component (Modal/ModalHeader/ModalBody). The
 // dead `sveltestrap` package is being replaced by `@sveltestrap/sveltestrap`
 // (see "The two dependencies that actually gate this" in
-// docs/SvelteUpgradeProposal.md) -- this test pins that the modal actually
+// docs/TODO/SvelteUpgradeProposal.md) -- this test pins that the modal actually
 // renders its content, so that swap can be verified automatically instead of
 // by a visual pass over the 25 affected files.
 describe("Splash", () => {
