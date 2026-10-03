@@ -10,7 +10,6 @@ const nodeModules = path.resolve(__dirname, "node_modules");
 const runId = randomUUID().substring(0, 5);
 const orgId = `Test.${runId}`;
 const mqttTopic = `derby/${orgId}/dist`;
-const expectedMqttMessageCount = 57;
 
 function runJest(env) {
     return new Promise((resolve, reject) => {
@@ -90,9 +89,30 @@ async function validateMqttMessages(collector) {
             `Missing MQTT messages: ${missing.map(({ name }) => name).join(", ")}`
         );
     }
-    if (collector.messages.length !== expectedMqttMessageCount) {
-        console.warn(
-            `Expected ${expectedMqttMessageCount} MQTT messages, received ${collector.messages.length}. See ${collector.logFilePath}`
+
+    const eventConfigCount = collector.messages.filter(
+        (message) => message.payload.PK === "EventConfig"
+    ).length;
+    const displayNameCounts = new Map();
+    for (const message of collector.messages) {
+        if (message.payload.PK === `${orgId}:UserDisplayName`) {
+            displayNameCounts.set(
+                message.payload.SK,
+                (displayNameCounts.get(message.payload.SK) || 0) + 1
+            );
+        }
+    }
+    if (displayNameCounts.size === 0) {
+        throw new Error("No user display-name MQTT messages received");
+    }
+    const incompleteDisplayNames = [...displayNameCounts.entries()].filter(
+        ([, count]) => count !== eventConfigCount
+    );
+    if (incompleteDisplayNames.length > 0) {
+        throw new Error(
+            `Expected each user display name after all ${eventConfigCount} event configuration writes; counts: ${incompleteDisplayNames
+                .map(([userHash, count]) => `${userHash}=${count}`)
+                .join(", ")}`
         );
     }
 }
