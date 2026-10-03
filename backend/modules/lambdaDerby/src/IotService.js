@@ -10,7 +10,7 @@ const {
 /**
  * IoT operations for the derbyMain Lambda: attaching device policies,
  * publishing video-upload requests, and answering /iot/discover. Extracted
- * from derbyMain.js (step 2 of docs/TODO/DerbyMainRefactorProposal.md); the
+ * from derbyMain.js (step 2 of docs/ARCHIVE/DerbyMainRefactorProposal.md); the
  * method bodies are unchanged apart from reaching their collaborators through
  * `this`.
  */

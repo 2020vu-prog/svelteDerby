@@ -13,7 +13,7 @@ const {
  * Race progression for the derbyMain Lambda: adding pending races and race
  * phases, applying finish times, and advancing winners and losers through
  * bracket charts. Extracted from derbyMain.js (step 4 of
- * docs/TODO/DerbyMainRefactorProposal.md); the method bodies are unchanged
+ * docs/ARCHIVE/DerbyMainRefactorProposal.md); the method bodies are unchanged
  * apart from reaching their collaborators through `this`.
  */
 class RaceProgressionService {

@@ -5,7 +5,7 @@
  * out of a Lambda request, with no AWS or other dependencies. Backend only,
  * so it lives beside the other Lambda helpers rather than in shared/, which
  * holds the modules the frontend imports. Extracted verbatim from
- * derbyMain.js (step 1 of docs/TODO/DerbyMainRefactorProposal.md); behavior is
+ * derbyMain.js (step 1 of docs/ARCHIVE/DerbyMainRefactorProposal.md); behavior is
  * intentionally unchanged, including the quirks the tests pin.
  */
 

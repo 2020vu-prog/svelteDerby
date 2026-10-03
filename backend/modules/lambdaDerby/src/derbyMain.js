@@ -32,7 +32,7 @@ const { IoTClient } = require("@aws-sdk/client-iot");
 const { S3Client } = require("@aws-sdk/client-s3");
 const { SNSClient } = require("@aws-sdk/client-sns");
 const { SQSClient } = require("@aws-sdk/client-sqs");
-const { GetParameterCommand, SSMClient } = require("@aws-sdk/client-ssm");
+const { SSMClient } = require("@aws-sdk/client-ssm");
 
 const ddbClient = new DynamoDBClient({ region: process.env.AwsRegion });
 const sqsClient = new SQSClient({ region: process.env.AwsRegion });
@@ -56,8 +56,15 @@ const EventConfigService = require("./EventConfigService");
 const OrgUserService = require("./OrgUserService");
 const SnsFinishTimeIngestion = require("./SnsFinishTimeIngestion");
 const LambdaEventDispatch = require("./LambdaEventDispatch");
+const { createResponseHelpers } = require("./response");
 const { getShaCars } = require("./utils");
 const requestContext = require("./RequestContext");
+
+const { buildResponse, getDerbyMainVersionInfo } = createResponseHelpers({
+    ssmClient,
+    clientMinimumVersion,
+    derbyMainVersion,
+});
 
 const ddbUtils = new DdbUtils(ddbClient, sqsClient);
 const archiveUtils = new ArchiveUtils(ddbUtils);
@@ -531,47 +538,6 @@ const routeMap = {
         },
     },
 };
-
-function buildResponse(jsonObj, cacheControl = "no-cache") {
-    if (!jsonObj) {
-        jsonObj = {};
-    }
-    return {
-        statusCode: jsonObj.statusCode ? jsonObj.statusCode : 200,
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-            "Cache-Control": cacheControl,
-            "x-client-minimum": clientMinimumVersion,
-            "x-derby-main-version": derbyMainVersion,
-        },
-        body: JSON.stringify(jsonObj),
-    };
-}
-
-async function getDerbyMainVersionInfo() {
-    const parameterName = `/deploy/${process.env.DeployEnvironment}/git-breadcrumb`;
-    const gitBreadcrumbParameterResponse = await ssmClient.send(
-        new GetParameterCommand({ Name: parameterName })
-    );
-    const gitBreadcrumb = gitBreadcrumbParameterResponse.Parameter.Value;
-    try {
-        const { buildTime } = JSON.parse(gitBreadcrumb);
-        const buildTimeMs = Number(buildTime);
-        const monitorTestEndTimeMs = buildTimeMs + 10 * 60 * 1000;
-        const nowMs = Date.now();
-        if (nowMs >= buildTimeMs && nowMs <= monitorTestEndTimeMs) {
-            log.error(
-                "ERROR CloudWatch monitor test from getDerbyMainVersionInfo"
-            );
-        }
-    } catch (err) {
-        log.warn("Unable to parse git breadcrumb buildTime");
-    }
-    return {
-        version: derbyMainVersion,
-        gitBreadcrumb,
-    };
-}
 
 function registerPublicRoutes(router) {
     router.register("/testArchive", {
