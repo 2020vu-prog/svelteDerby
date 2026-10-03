@@ -21,10 +21,14 @@ vi.mock("#src/chart/svg/printSvg.js", () => ({ printSvgElement: vi.fn() }));
 
 import BracketSvg from "#src/chart/svg/BracketSvg.svelte";
 import { printSvgElement } from "#src/chart/svg/printSvg.js";
+import { augmentChartState } from "#src/utils.js";
+
+const defaultAugmentChartState = augmentChartState.getMockImplementation();
 
 afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    augmentChartState.mockImplementation(defaultAugmentChartState);
 });
 
 const chartJson = {
@@ -242,6 +246,40 @@ it("prints the chart SVG with all columns and the header", async () => {
     expect(
         view.getByRole("menuitemcheckbox", { name: /Show header info/ })
     ).toHaveAttribute("aria-checked", "true");
+});
+
+it("waits for newly shown column statuses before printing", async () => {
+    const view = render(BracketSvg, { chartId: "c", chartJson });
+    await waitFor(() =>
+        expect(
+            view.getByRole("button", { name: "Show Column 2" })
+        ).toBeInTheDocument()
+    );
+
+    const pending = [];
+    augmentChartState.mockImplementation(
+        (_chartJson, _chartId, heatId, slot) =>
+            new Promise((resolve) =>
+                pending.push(() =>
+                    resolve({
+                        bracketClass: "pendingSeed",
+                        posHtml: `${heatId}${slot}`,
+                    })
+                )
+            )
+    );
+
+    await openMenu(view);
+    await fireEvent.click(view.getByRole("menuitem", { name: "Print" }));
+    await waitFor(() => expect(pending).toHaveLength(2));
+    expect(printSvgElement).not.toHaveBeenCalled();
+
+    pending.splice(0).forEach((resolve) => resolve());
+    await waitFor(() => expect(printSvgElement).toHaveBeenCalledTimes(1));
+    const heat2 = [...view.container.querySelectorAll(".heat")].find(
+        (heat) => heat.querySelector(".heat-number")?.textContent === "Heat 2"
+    );
+    expect(heat2.querySelectorAll(".slot.pendingSeed")).toHaveLength(2);
 });
 
 it("centers the event name above the chart name above the logo", async () => {

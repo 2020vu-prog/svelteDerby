@@ -40,6 +40,7 @@
     // Each step of column spacing adds this much white space between columns.
     const COLUMN_SPACING_STEP = 24;
     const MAX_COLUMN_SPACING_STEPS = 10;
+    const PRINT_STATUS_WAIT_MS = 3000;
     const ZOOM_LEVELS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8];
     let zoomIndex = 0;
     let svgElement;
@@ -58,6 +59,8 @@
     let visibilityChartId = chartId;
     let mounted = false;
     let statusLoadVersion = 0;
+    let pendingSlotLoads = 0;
+    let slotLoadWaiters = [];
     let columnStatuses = {};
     let placementStates = {};
     let visibilityInitializedFor = "";
@@ -282,11 +285,40 @@
         settingsOpen = false;
     }
 
+    function handleSlotLoadStart() {
+        pendingSlotLoads += 1;
+    }
+
+    function handleSlotLoadEnd() {
+        pendingSlotLoads = Math.max(0, pendingSlotLoads - 1);
+        if (!pendingSlotLoads) {
+            slotLoadWaiters.splice(0).forEach((resolve) => resolve());
+        }
+    }
+
+    function waitForSlotLoads(timeoutMs = PRINT_STATUS_WAIT_MS) {
+        if (!pendingSlotLoads) return Promise.resolve();
+        return new Promise((resolve) => {
+            let timeout;
+            const finish = () => {
+                clearTimeout(timeout);
+                slotLoadWaiters = slotLoadWaiters.filter(
+                    (waiter) => waiter !== finish
+                );
+                resolve();
+            };
+            slotLoadWaiters.push(finish);
+            timeout = setTimeout(finish, timeoutMs);
+        });
+    }
+
     async function printChart() {
         settingsOpen = false;
         setShowAll(true);
         showResults = true;
         if (headerHeight) showHeader = true;
+        await tick();
+        await waitForSlotLoads();
         await tick();
         if (svgElement) {
             printSvgElement(svgElement, {
@@ -646,6 +678,8 @@
                             chartId={chartId}
                             heatId={heat.id}
                             slot="A"
+                            on:stateloadstart={handleSlotLoadStart}
+                            on:stateloadend={handleSlotLoadEnd}
                             let:state
                         >
                             <g aria-label={slotAriaLabel(heat.id, "A", state)}>
@@ -731,6 +765,8 @@
                             chartId={chartId}
                             heatId={heat.id}
                             slot="B"
+                            on:stateloadstart={handleSlotLoadStart}
+                            on:stateloadend={handleSlotLoadEnd}
                             let:state
                         >
                             <g aria-label={slotAriaLabel(heat.id, "B", state)}>
@@ -813,6 +849,8 @@
                         chartJson={chartJson}
                         chartId={chartId}
                         position={placement.id}
+                        on:stateloadstart={handleSlotLoadStart}
+                        on:stateloadend={handleSlotLoadEnd}
                         on:statechange={(event) =>
                             updatePlacementState(placement.id, event.detail)}
                         let:state

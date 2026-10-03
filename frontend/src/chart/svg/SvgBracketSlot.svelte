@@ -21,15 +21,20 @@
         nextSlot
     ) {
         const version = ++loadVersion;
-        const nextState = await augmentChartState(
-            nextChartJson,
-            nextChartId,
-            nextHeatId,
-            nextSlot
-        );
-        if (version === loadVersion) {
-            state = nextState;
-            dispatch("statechange", nextState);
+        dispatch("stateloadstart");
+        try {
+            const nextState = await augmentChartState(
+                nextChartJson,
+                nextChartId,
+                nextHeatId,
+                nextSlot
+            );
+            if (version === loadVersion) {
+                state = nextState;
+                dispatch("statechange", nextState);
+            }
+        } finally {
+            dispatch("stateloadend");
         }
     }
 
