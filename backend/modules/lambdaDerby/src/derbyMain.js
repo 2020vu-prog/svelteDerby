@@ -24,6 +24,14 @@ const EntityFactory = require("./shared/EntityFactory.js");
 const { hasPermission } = require("./shared/PermissionLookup.js");
 const ApiRouter = require("./ApiRouter.js");
 const RoutePermission = require("./shared/RoutePermission.js");
+const {
+    getOrgId,
+    getOrgIz,
+    getEventKey,
+    getTtl,
+    stringIsTrue,
+    noopAsync,
+} = require("./eventRequestUtils.js");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
     AttachPrincipalPolicyCommand,
@@ -131,13 +139,6 @@ const attachPrincipalPolicy = async (policyName, principal) => {
     }
 };
 
-const getTtl = async (config) => {
-    if (config) {
-        return config.TTL;
-    }
-    return null;
-    //return Math.round((new Date().getTime() / 1000) + config.ttlIncrement);
-};
 function frozenOrArchived(config) {
     log.debug("function frozenOrArchived passed ", config);
     if (!config) {
@@ -180,13 +181,6 @@ const addPending2 = async (event) => {
         log.debug("addPending2: unsorted: ", json.cn);
     }
     return await ddbUtils.addSingle(json);
-};
-const stringIsTrue = (stringValue) => {
-    return stringValue.toLowerCase() == "true" ? true : false;
-};
-
-const noopAsync = async (json) => {
-    return []; // empty list will cause rsUpdate to stand down
 };
 const applyFinishTime = async (json) => {
     log.debug("applyFinishTime 413: " + JSON.stringify(json));
@@ -1114,33 +1108,6 @@ async function addParticipant2(json) {
     return await ddbUtils.addSingle(json);
 }
 
-const getOrgId = (event) => {
-    if (event.body) {
-        return JSON.parse(event.body).orgId;
-    }
-    if (event.queryStringParameters) {
-        return event.queryStringParameters.orgId;
-    }
-    if (event.orgId) {
-        return event.orgId;
-    }
-    return null;
-};
-const getOrgIz = (event) => {
-    if (event.body) {
-        return JSON.parse(event.body).orgIz;
-    }
-    if (event.queryStringParameters) {
-        return event.queryStringParameters.orgIz;
-    }
-    if (event.orgIz) {
-        return event.orgIz;
-    }
-    return null;
-};
-const getEventKey = (event) => {
-    return getOrgIz(event) + ":" + getOrgId(event);
-};
 async function iotDefaultPri(event) {
     let backendPri = 5;
 
