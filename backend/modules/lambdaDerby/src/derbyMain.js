@@ -9,7 +9,6 @@ const jwtVerifier = CognitoJwtVerifier.create({
     //tokenUse: "access",
     clientId: awsCognitoSettings.aws_user_pools_hosted_client_id,
 });
-const path = require("path");
 //const timer_protobuf_1 = require("timer_protobuf");
 //    const timerConfig = new timer_protobuf_1.tutorial.TimerConfig();
 //    console.log("tbp:",timer_protobuf_1.tutorial.TimerConfig.decode);
@@ -30,7 +29,7 @@ const {
 } = require("./eventRequestUtils.js");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { IoTClient } = require("@aws-sdk/client-iot");
-const { CopyObjectCommand, S3Client } = require("@aws-sdk/client-s3");
+const { S3Client } = require("@aws-sdk/client-s3");
 const { SNSClient } = require("@aws-sdk/client-sns");
 const { SQSClient } = require("@aws-sdk/client-sqs");
 const { GetParameterCommand, SSMClient } = require("@aws-sdk/client-ssm");
@@ -56,8 +55,8 @@ const TimerConfigService = require("./TimerConfigService");
 const EventConfigService = require("./EventConfigService");
 const OrgUserService = require("./OrgUserService");
 const SnsFinishTimeIngestion = require("./SnsFinishTimeIngestion");
+const LambdaEventDispatch = require("./LambdaEventDispatch");
 const { getShaCars } = require("./utils");
-const { decodeS3EventKey, encodeS3CopySource } = require("./S3Utils");
 const requestContext = require("./RequestContext");
 
 const ddbUtils = new DdbUtils(ddbClient, sqsClient);
@@ -692,138 +691,19 @@ function createApiRouter() {
 }
 
 const apiRouter = createApiRouter();
-
-async function apiGatewayHandler(event) {
-    return apiRouter.dispatch(event);
-}
-function lowercaseHeaders(event) {
-    var headerKeys = Object.keys(event.headers);
-
-    headerKeys.forEach((headerKey) => {
-        if (headerKey !== headerKey.toLowerCase()) {
-            event.headers[headerKey.toLowerCase()] = event.headers[headerKey];
-        }
-    });
-}
-async function lambdaHandler(event) {
-    log.debug("Received event:", JSON.stringify(event, null, 4));
-    if (event && event.path) {
-        // api gateway format v1
-        lowercaseHeaders(event);
-        //log.debug("Modified event:", JSON.stringify(event, null, 4));
-        const response = await apiGatewayHandler(event);
-        return response;
-    }
-    if (event && event.rawPath) {
-        // api gateway format v2 (lambda function url!)
-        event.path = event.rawPath;
-        const response = await apiGatewayHandler(event);
-        return response;
-    }
-
-    if (event.source == "aws.events") {
-        log.debug("handling archive rulefrom cron0");
-        await archiveUtils.processExpiringEventConfig();
-        return;
-    }
-
-    if (event.Records[0].Sns) {
-        var snsMessage = event.Records[0].Sns.Message;
-        const snsMessageJson = JSON.parse(snsMessage);
-        log.debug(
-            "snsTopic: ",
-            snsMessageJson.snsTopicArn,
-            " snsMessageJson:  ",
-            snsMessageJson
-        );
-
-        log.debug("sns message: : ", snsMessageJson);
-        // ugly workaround for cron events not invoking lambda directly
-        //   12/2020 pressing polly sns topic back into use to deliver the cron event for archival
-        if (snsMessageJson && snsMessageJson.source === "aws.events") {
-            log.debug("handling archive poll from cron1");
-            await archiveUtils.processExpiringEventConfig();
-
-            return;
-        }
-
-        log.debug("sns topic: : ", snsMessageJson.snsTopicArn);
-        log.debug("sns polly arn: : ", process.env.PollyCompleteSnsArn);
-        if (snsMessageJson.snsTopicArn === process.env.PollyCompleteSnsArn) {
-            log.debug("polly finished: ", snsMessageJson);
-            await newAnnounceResults().propagateIotFromSns(snsMessageJson);
-            return "Polly Success";
-        }
-        const snsTimestamp = event.Records[0].Sns.Timestamp;
-        try {
-            if (false) {
-            } else if (snsMessageJson.recordType === "protobufFinishBlock") {
-                await snsFinishTimeIngestion.snsApplyPbTimerHandler(
-                    snsMessageJson,
-                    snsTimestamp
-                );
-            } else if (snsMessageJson.recordType === "protobufLogMessage") {
-                await snsFinishTimeIngestion.snsApplyPbLogMessage(
-                    snsMessageJson,
-                    snsTimestamp
-                );
-            } else {
-                await snsFinishTimeIngestion.snsApplyTimerHandler(
-                    snsMessageJson,
-                    snsTimestamp
-                );
-            }
-            return "Success";
-        } catch (err) {
-            log.debug("snsApplyFinishError Error : ", err);
-            return "SNS Error";
-        }
-    }
-    if (event.Records[0].s3) {
-        const s3Event = event.Records[0].s3;
-        log.debug("s3 trigger:", s3Event);
-
-        const sourceKey = decodeS3EventKey(s3Event.object.key);
-        var basefile = path.basename(sourceKey);
-        const tgtFile = basefile.replace("-", "/");
-        const s3CopyParams = {
-            CopySource: encodeS3CopySource(s3Event.bucket.name, sourceKey),
-            Key: `media/${tgtFile}`,
-            Bucket: process.env.DstBucket,
-        };
-        log.debug("s3 mp4 copyParams:", s3CopyParams);
-        const s3copyDone = await s3Client.send(
-            new CopyObjectCommand(s3CopyParams)
-        );
-        log.debug("s3 mp4 copyDone:", s3copyDone);
-
-        const webmSrcKey = `inputs/${basefile}`.replace(".mp4", ".webm");
-        const webmTgtKey = tgtFile.replace(".mp4", ".webm");
-        const s3CopyParamsWebm = {
-            CopySource: encodeS3CopySource(
-                process.env.s3VideoWatch,
-                webmSrcKey
-            ),
-            Key: `media/${webmTgtKey}`,
-            Bucket: process.env.DstBucket,
-        };
-        log.debug("s3 webm copyParams:", s3CopyParamsWebm);
-        const s3copyDoneWebm = await s3Client.send(
-            new CopyObjectCommand(s3CopyParamsWebm)
-        );
-        log.debug("s3 webm copyDone:", s3copyDoneWebm);
-        return "s3 success";
-    }
-
-    log.debug("unknown event: ", event);
-    return "Error";
-}
+const lambdaEventDispatch = new LambdaEventDispatch({
+    apiRouter,
+    archiveUtils,
+    newAnnounceResults,
+    snsFinishTimeIngestion,
+    s3Client,
+});
 
 exports.handler = async function (event) {
     return requestContext.run(async () => {
         requestContext.reset();
         try {
-            return await lambdaHandler(event);
+            return await lambdaEventDispatch.dispatch(event);
         } finally {
             requestContext.reset();
         }
