@@ -8,6 +8,8 @@
     export let nodes = [];
     export let selected = "";
     export let name = "chartTree";
+    // How many folders deep this list is; each level is indented one step.
+    export let depth = 0;
 
     const dispatch = createEventDispatcher();
 
@@ -19,7 +21,7 @@
     }
 </script>
 
-<ul class="chart-tree">
+<ul class="chart-tree" style:margin-left={depth ? "1.25rem" : "0"}>
     {#each nodes as node (node.id)}
         <li>
             {#if node.children}
@@ -29,6 +31,7 @@
                         nodes={node.children}
                         selected={selected}
                         name={name}
+                        depth={depth + 1}
                         on:select
                     />
                 </details>
@@ -53,10 +56,6 @@
         margin: 0;
         padding-left: 0;
         list-style: none;
-    }
-
-    details > :global(ul) {
-        padding-left: 1.25rem;
     }
 
     summary {
