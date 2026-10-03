@@ -9,6 +9,6 @@
   - From the repository root: `terraform fmt -check -recursive .`.
   - From `backend`: `terraform init -backend=false -lockfile=readonly`.
 - Install the dependencies required by the workflow when needed, including the backend lambdaDerby dependencies used by frontend route tests.
-- Integration-test credentials are already available in `backend/test/.env.local`. Run the integration suite from `backend/test` with `npm run integration`; do not record or expose the credential values.
+- Integration-test credentials are already available in `backend/test/.env.local`. Run the integration suite from `backend/test` with `npm run integration`; do not record or expose the credential values. `DERBY_CLOUDFRONT` must target the test environment because the suite writes throwaway `Test.<runId>` data to the deployed stack.
 - Fix failures caused by your changes before pushing. If a check is blocked or fails for an unrelated reason, report the exact check and reason; do not claim it passed.
 - After pushing, check the PR's CI results and address any failures before reporting that CI passes.

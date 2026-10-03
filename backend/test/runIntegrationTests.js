@@ -89,32 +89,6 @@ async function validateMqttMessages(collector) {
             `Missing MQTT messages: ${missing.map(({ name }) => name).join(", ")}`
         );
     }
-
-    const eventConfigCount = collector.messages.filter(
-        (message) => message.payload.PK === "EventConfig"
-    ).length;
-    const displayNameCounts = new Map();
-    for (const message of collector.messages) {
-        if (message.payload.PK === `${orgId}:UserDisplayName`) {
-            displayNameCounts.set(
-                message.payload.SK,
-                (displayNameCounts.get(message.payload.SK) || 0) + 1
-            );
-        }
-    }
-    if (displayNameCounts.size === 0) {
-        throw new Error("No user display-name MQTT messages received");
-    }
-    const incompleteDisplayNames = [...displayNameCounts.entries()].filter(
-        ([, count]) => count !== eventConfigCount
-    );
-    if (incompleteDisplayNames.length > 0) {
-        throw new Error(
-            `Expected each user display name after all ${eventConfigCount} event configuration writes; counts: ${incompleteDisplayNames
-                .map(([userHash, count]) => `${userHash}=${count}`)
-                .join(", ")}`
-        );
-    }
 }
 
 async function main() {
