@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte";
 import { afterEach, expect, it, vi } from "vitest";
-import { get, writable } from "svelte/store";
+import { writable } from "svelte/store";
 
 vi.mock("#src/stores.js", () => ({
     doRefreshBlocks: writable(0),
@@ -21,12 +21,14 @@ vi.mock("#src/chart/svg/printSvg.js", () => ({ printSvgElement: vi.fn() }));
 
 import BracketSvg from "#src/chart/svg/BracketSvg.svelte";
 import { printSvgElement } from "#src/chart/svg/printSvg.js";
-import { doRefreshBlocks } from "#src/stores.js";
 import { augmentChartState } from "#src/utils.js";
+
+const defaultAugmentChartState = augmentChartState.getMockImplementation();
 
 afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    augmentChartState.mockImplementation(defaultAugmentChartState);
 });
 
 const chartJson = {
@@ -246,11 +248,14 @@ it("prints the chart SVG with all columns and the header", async () => {
     ).toHaveAttribute("aria-checked", "true");
 });
 
-it("waits for slot statuses before printing", async () => {
+it("waits for newly shown column statuses before printing", async () => {
     const view = render(BracketSvg, { chartId: "c", chartJson });
-    await waitFor(() => expect(view.getByText("42")).toBeInTheDocument());
+    await waitFor(() =>
+        expect(
+            view.getByRole("button", { name: "Show Column 2" })
+        ).toBeInTheDocument()
+    );
 
-    const originalImplementation = augmentChartState.getMockImplementation();
     const pending = [];
     augmentChartState.mockImplementation(
         (_chartJson, _chartId, heatId, slot) =>
@@ -263,21 +268,18 @@ it("waits for slot statuses before printing", async () => {
                 )
             )
     );
-    doRefreshBlocks.set(get(doRefreshBlocks) + 1);
-    await waitFor(() => expect(pending.length).toBeGreaterThan(0));
 
     await openMenu(view);
     await fireEvent.click(view.getByRole("menuitem", { name: "Print" }));
+    await waitFor(() => expect(pending).toHaveLength(2));
     expect(printSvgElement).not.toHaveBeenCalled();
 
     pending.splice(0).forEach((resolve) => resolve());
     await waitFor(() => expect(printSvgElement).toHaveBeenCalledTimes(1));
-    expect(
-        printSvgElement.mock.calls[0][0].querySelector(
-            ".heat .slot.pendingSeed"
-        )
-    ).not.toBeNull();
-    augmentChartState.mockImplementation(originalImplementation);
+    const heat2 = [...view.container.querySelectorAll(".heat")].find(
+        (heat) => heat.querySelector(".heat-number")?.textContent === "Heat 2"
+    );
+    expect(heat2.querySelectorAll(".slot.pendingSeed")).toHaveLength(2);
 });
 
 it("centers the event name above the chart name above the logo", async () => {

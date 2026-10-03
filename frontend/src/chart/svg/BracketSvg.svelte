@@ -40,6 +40,7 @@
     // Each step of column spacing adds this much white space between columns.
     const COLUMN_SPACING_STEP = 24;
     const MAX_COLUMN_SPACING_STEPS = 10;
+    const PRINT_STATUS_WAIT_MS = 3000;
     const ZOOM_LEVELS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8];
     let zoomIndex = 0;
     let svgElement;
@@ -295,9 +296,20 @@
         }
     }
 
-    function waitForSlotLoads() {
+    function waitForSlotLoads(timeoutMs = PRINT_STATUS_WAIT_MS) {
         if (!pendingSlotLoads) return Promise.resolve();
-        return new Promise((resolve) => slotLoadWaiters.push(resolve));
+        return new Promise((resolve) => {
+            let timeout;
+            const finish = () => {
+                clearTimeout(timeout);
+                slotLoadWaiters = slotLoadWaiters.filter(
+                    (waiter) => waiter !== finish
+                );
+                resolve();
+            };
+            slotLoadWaiters.push(finish);
+            timeout = setTimeout(finish, timeoutMs);
+        });
     }
 
     async function printChart() {
