@@ -31,10 +31,7 @@ const {
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { IoTClient } = require("@aws-sdk/client-iot");
 const { CopyObjectCommand, S3Client } = require("@aws-sdk/client-s3");
-const {
-    PublishCommand: SnsPublishCommand,
-    SNSClient,
-} = require("@aws-sdk/client-sns");
+const { SNSClient } = require("@aws-sdk/client-sns");
 const { SQSClient } = require("@aws-sdk/client-sqs");
 const { GetParameterCommand, SSMClient } = require("@aws-sdk/client-ssm");
 
@@ -56,7 +53,8 @@ const IotService = require("./IotService");
 const S3MediaService = require("./S3MediaService");
 const RaceProgressionService = require("./RaceProgressionService");
 const TimerConfigService = require("./TimerConfigService");
-const { getShaCars, getSourceName } = require("./utils");
+const EventConfigService = require("./EventConfigService");
+const { getShaCars } = require("./utils");
 const { decodeS3EventKey, encodeS3CopySource } = require("./S3Utils");
 const requestContext = require("./RequestContext");
 
@@ -78,6 +76,15 @@ const raceProgressionService = new RaceProgressionService({
     requestContext,
 });
 const timerConfigService = new TimerConfigService(ddbUtils);
+const eventConfigService = new EventConfigService({
+    ddbUtils,
+    snsClient,
+    logUtils,
+    requestContext,
+    timerConfigService,
+    newAnnounceResults,
+    refreshUserDisplayNamesFromOrgPerm,
+});
 
 function newAnnounceResults() {
     return new AnnounceResults(ddbUtils);
@@ -101,158 +108,6 @@ function frozenOrArchived(config) {
     }
     const configEntity = requestContext.getEntityFactory().build(config);
     return configEntity.checkIfFrozenOrArchived()["status"];
-}
-
-const addOrgConfig = async (json) => {
-    log.debug("addOrgConfig: " + JSON.stringify(json));
-    json.PK = "OrgConfig"; // force
-    json.SK = json.orgIz; // force
-    const orgConfigEntityFactory = requestContext.getEntityFactory().copyWith({
-        orgIz: json.orgIz,
-    });
-
-    return await requestContext.withEntityFactory(orgConfigEntityFactory, () =>
-        ddbUtils.addSingle(json)
-    );
-};
-const addNewEventPushSns = async (orgId, json) => {
-    const AddEventSnsArn = process.env.AddEventSnsArn;
-    const environ = process.env.DeployEnvironment;
-    var params = {
-        Message: `new event for org: ${json.orgIz}\nName: ${json.name}`,
-        TopicArn: AddEventSnsArn,
-        Subject: `RR1 [${environ}] new event`,
-
-        MessageAttributes: {
-            orgId: {
-                DataType: "String",
-                StringValue: orgId,
-            },
-        },
-    };
-
-    try {
-        console.log("SNS json    AddEventSnsArn:", json);
-        console.log("SNS sending AddEventSnsArn:", params);
-        //console.log("SNS module1 AddEventSnsArn:", snsModule);
-        const sent = await snsClient.send(new SnsPublishCommand(params));
-        console.log("AddEventSnsArn send Success", sent);
-    } catch (err) {
-        console.log("AddEventSnsArn send Error", err);
-    }
-};
-
-const updateEventConfig = async (json) => {
-    log.debug("updateEventConfig: stub: " + JSON.stringify(json));
-    json.PK = "EventConfig"; // force EventConfig
-    const eventConfig = await ddbUtils.getEventConfigByIds({
-        orgIz: json.orgIz,
-        orgId: json.orgId,
-    });
-    if (!eventConfig) {
-        return { statusCode: 404, error: "Event config not found" };
-    }
-    eventConfig.paUri = json.paUri;
-    eventConfig.pendingRule = json.pendingRule;
-    eventConfig.lcl1 = json.lcl1;
-    eventConfig.name = json.name;
-
-    ddbUtils.flushEventCache(); //TODO: flush event cache in other instances of lambda...
-    const eventConfigResult = await ddbUtils.addSingle(eventConfig);
-    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm({
-        orgIz: eventConfig.orgIz || json.orgIz,
-        orgId: eventConfig.orgId || json.orgId,
-    });
-    eventConfigResult.userDisplayNameResult = userDisplayNameResult;
-    return eventConfigResult;
-};
-const addEventConfig = async (event) => {
-    const json = JSON.parse(event.body);
-
-    log.debug("addEventConfig: " + JSON.stringify(json));
-
-    const orgConfig = await ddbUtils.ddbQueryPkSk(`OrgConfig`, json.orgIz);
-
-    json.PK = "EventConfig"; // force
-    json.SK = json.orgIz + ":" + json.orgId; // force
-
-    if (!json.paUri) {
-        json.paUri = orgConfig.paUri;
-    } else {
-        log.debug("addEventConfig: using api paUri: ");
-    }
-
-    log.debug(
-        "addEventConfig: paUri: " +
-            JSON.stringify(json) +
-            ` orgConfig: ${JSON.stringify(orgConfig)} `
-    );
-    // use prior ttl if found (API cannot change ttl of in progress event!)
-    if (!orgConfig.defaultTTL) {
-        orgConfig.defaultTTL = 3600 * 24 * 1;
-    }
-
-    const nowEpochSeconds = Math.round(new Date().getTime() / 1000);
-    const newTtl = nowEpochSeconds + orgConfig.defaultTTL;
-
-    json.TTL = newTtl;
-
-    const eventConfigEntityFactory = requestContext
-        .getEntityFactory()
-        .copyWith({
-            orgId: json.orgId,
-            TTL: json.TTL,
-        });
-    requestContext.setEntityFactory(eventConfigEntityFactory);
-    const eventRC = await ddbUtils.addSingle(json);
-    await logUtils.persistLogMessage({
-        orgId: json.orgId,
-        message: `Added event: ${json.name || json.orgId}`,
-        level: "debug",
-        source: getSourceName(),
-        detail: {
-            orgIz: json.orgIz,
-            orgId: json.orgId,
-            name: json.name,
-        },
-    });
-    const userDisplayNameResult = await refreshUserDisplayNamesFromOrgPerm({
-        orgIz: json.orgIz,
-        orgId: json.orgId,
-    });
-    eventRC.userDisplayNameResult = userDisplayNameResult;
-
-    await addNewEventPushSns(json.orgId, json);
-    await timerConfigService.addTimerConfig(json, true); // TODO: revisit default TimerConfig?
-    return eventRC;
-};
-
-async function addParticipant2(json) {
-    log.debug("addParticipant2: " + JSON.stringify(json));
-    json.PK = ":PTCP"; // force Participant
-    if (json.maintainerHashes === undefined && json.number != null) {
-        // addSingle is a full-record PutItem -- there's no partial-attribute
-        // update for entity records, so any field missing from `json` is
-        // permanently erased from what's stored. Ordinary staff edits (the
-        // single-driver Update form) never carry maintainerHashes in their
-        // payload, so without this, saving a routine name/sponsor/notes
-        // change would silently wipe out every QR-code delegation grant on
-        // that driver. Preserve the existing value whenever the caller
-        // doesn't explicitly supply one, same read-modify-write convention
-        // DriverDelegationService uses for this same field.
-        const existing = await ddbUtils.ddbQueryPkSk(
-            `${json.orgId}:PTCP`,
-            String(json.number)
-        );
-        if (existing && existing.maintainerHashes) {
-            json.maintainerHashes = existing.maintainerHashes;
-        }
-    }
-    const paTask = await newAnnounceResults().submitToPolly(
-        "added driver: " + json.name,
-        json.orgId
-    );
-    return await ddbUtils.addSingle(json);
 }
 
 async function getOrgRoles(event, apiProps) {
@@ -307,14 +162,18 @@ const routeMap = {
         allowFrozen: true, // not really allowing frozen, but skip edit.  race not yet existent.
         allowMissingTtl: true,
         h: async (event) => {
-            return buildResponse(await addEventConfig(event));
+            return buildResponse(
+                await eventConfigService.addEventConfig(event)
+            );
         },
     },
     "/updateEventConfig": {
         permission: RoutePermission.POWER,
         h: async (event) => {
             return buildResponse(
-                await updateEventConfig(JSON.parse(event.body))
+                await eventConfigService.updateEventConfig(
+                    JSON.parse(event.body)
+                )
             );
         },
     },
@@ -377,7 +236,9 @@ const routeMap = {
     "/addParticipant": {
         permission: RoutePermission.CAN_ADD_PARTICIPANT,
         h: async (event) => {
-            return buildResponse(await addParticipant2(JSON.parse(event.body)));
+            return buildResponse(
+                await eventConfigService.addParticipant2(JSON.parse(event.body))
+            );
         },
     },
     "/addPending": {
