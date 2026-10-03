@@ -25,6 +25,7 @@ jobs:
           cache-dependency-path: |
             frontend/package-lock.json
             backend/modules/lambdaDerby/src/package-lock.json
+            backend/test/package-lock.json
 
       - name: Install frontend formatting tools
         working-directory: frontend
@@ -47,6 +48,19 @@ jobs:
       - name: Run frontend component tests
         working-directory: frontend
         run: npm run test:components
+
+      # The backend unit suite only reads backend/modules/lambdaDerby/src
+      # (installed above) and needs no AWS credentials or network access. The
+      # deployed integration suite is separate and is not run here.
+      - name: Install backend test dependencies
+        working-directory: backend/test
+        run: npm ci
+
+      - name: Run backend unit tests
+        working-directory: backend/test
+        run: |
+          npm run test:unit -- --silent
+          git diff --exit-code
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1

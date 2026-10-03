@@ -6,6 +6,7 @@
 - Before opening or updating a PR, run the checks defined in `.github/workflows/format.yml`. Read the workflow for the current commands and tool versions; do not rely only on targeted tests or `git diff --check`.
   - From the repository root: `./prettier.sh --check`.
   - From `frontend`: `npm test` and `npm run test:components`.
+  - From `backend/test`: `npm ci`, then `npm run test:unit` (Node 22 and npm 10; no AWS credentials needed).
   - From the repository root: `terraform fmt -check -recursive .`.
   - From `backend`: `terraform init -backend=false -lockfile=readonly`.
 - Install the dependencies required by the workflow when needed, including the backend lambdaDerby dependencies used by frontend route tests.
