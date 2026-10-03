@@ -212,6 +212,17 @@ test("requestS3PutObjectUrl returns a signed upload URL", async () => {
     expect(data.issuedMs).toBeGreaterThan(0);
 });
 
+test("requestS3PutObjectUrl reports a missing key when there is no query string", async () => {
+    // orgId travels in the body, so the request reaches the handler with no
+    // query string at all; this used to fail with a 502.
+    const data = await postData(`${CF}/requestS3PutObjectUrl`, {
+        orgIz,
+        orgId,
+    });
+
+    expect(data.error).toMatch(/missing key/i);
+});
+
 test("requestMqttSubPermission validates principal before policy attach", async () => {
     const data = await getData(
         `${CF}/requestMqttSubPermission?orgIz=${orgIz}&orgId=${orgId}`
