@@ -3,6 +3,18 @@
 Date: 2026-08-22
 File: `backend/modules/lambdaDerby/src/derbyMain.js` (2,205 lines)
 
+## Progress
+
+- **Step 1, `eventRequestUtils.js`: done** (2026-10-03). `getOrgId`, `getOrgIz`, `getEventKey`, `getTtl`, `stringIsTrue`, and `noopAsync` moved verbatim out of `derbyMain.js`, which now imports them. They are covered by `backend/test/eventRequestUtils.test.js`, which pins their current behavior, quirks included. Verified by a differential run of the original functions against the extracted ones (87 identical results, including inputs that throw), a source comparison, a mutation check, `npm pack` including the new file, and `derbyMain.js` still loading.
+- Steps 2 to 10: not started.
+
+Notes from step 1 that apply to the rest:
+- The proposal first named `shared/eventRequestUtils.js`, but `shared/` holds the modules the frontend imports (`EntityFactory`, the permission modules). Backend-only helpers belong in the `src` root, so the module lives at `src/eventRequestUtils.js`; the remaining new modules are in the root as listed.
+- Line numbers and counts below are from 2026-08-22. The file is about 2,200 lines now and the clusters have drifted, so locate functions by name.
+- `npm run test:unit` in `backend/test` is an explicit list of test files, so a new test file must be added to that script.
+- `backend/test` pins Node 22 and npm 10 (`engine-strict`); install and run it with that toolchain.
+- The backend Jest suite still does not run on pull requests (it runs inside `deploy.yml` after a merge to `test.rr1.us`). Wiring it into a PR check is the next-best use of the safety net this refactor leans on.
+
 ## The good news first
 
 This is a lower-risk refactor than the line count suggests, for two reasons visible in the code itself.
@@ -40,7 +52,7 @@ The two largest, most tangled clusters — race progression (~530 lines) and SNS
 
 Each new file follows the existing convention: a class, constructor-injected with the already-built singletons (`ddbUtils`, `s3Client`, etc.) rather than constructing its own clients. `derbyMain.js` becomes the composition root that builds all of them once, the same way it already does for `AnnounceResults`.
 
-**1. `shared/eventRequestUtils.js`** — `getOrgId`, `getOrgIz`, `getEventKey`, `getTtl`, `stringIsTrue`, `noopAsync`. Pure functions, no AWS deps, used by nearly everything else. Extract this one first — it has no dependencies of its own, so it's the safest place to prove the extraction pattern before touching anything stateful.
+**1. `eventRequestUtils.js`** — `getOrgId`, `getOrgIz`, `getEventKey`, `getTtl`, `stringIsTrue`, `noopAsync`. Pure functions, no AWS deps, used by nearly everything else. Extract this one first — it has no dependencies of its own, so it's the safest place to prove the extraction pattern before touching anything stateful.
 
 **2. `IotService.js`** — `attachPrincipalPolicy`, `requestIotVideoUploadRaw`, `requestIotVideoUploadByRP`, `getLowestPhrMillis`, `iotDefaultPri`, `iotOverridePri`, `iotDiscover`. Note: the lazily-initialized `let iotdata = ""` module-level variable (line 272) needs to become an instance field on this class, not stay as a bare module-scope `let` — right now it's the kind of shared mutable state that gets confusing once it's not the only thing in the file.
 
