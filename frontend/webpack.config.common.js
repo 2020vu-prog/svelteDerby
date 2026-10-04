@@ -132,7 +132,11 @@ module.exports = (cloudfrontTarget) => {
             alias: {
                 "#src": path.resolve(__dirname, "src"),
                 "process/browser": require.resolve("process/browser.js"),
-                svelte: path.resolve("node_modules", "svelte"),
+                // One copy of the Svelte runtime for the app and every .svelte
+                // package. Svelte 4 keeps its runtime under src/runtime (the
+                // package root no longer has internal/, store/, etc.), so the
+                // alias points there, as svelte-loader's docs recommend.
+                svelte: path.resolve("node_modules", "svelte/src/runtime"),
             },
             extensions: [".mjs", ".js", ".svelte"],
             mainFields: ["svelte", "browser", "module", "main"],
