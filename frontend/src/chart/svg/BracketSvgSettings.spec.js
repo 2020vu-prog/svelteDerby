@@ -282,6 +282,12 @@ it("waits for newly shown column statuses before printing", async () => {
     expect(heat2.querySelectorAll(".slot.pendingSeed")).toHaveLength(2);
 });
 
+// The chart hides its default columns once their statuses have loaded, which
+// narrows the viewBox shortly after mount. Read the viewBox at the point of
+// use, never once right after render, or the result depends on whether that
+// asynchronous load has finished yet.
+const viewBoxOf = (svg) => svg.getAttribute("viewBox").split(" ").map(Number);
+
 it("centers the event name above the chart name above the logo", async () => {
     const view = render(BracketSvg, {
         chartId: "c",
@@ -291,15 +297,13 @@ it("centers the event name above the chart name above the logo", async () => {
         eventName: "Spring Rally",
     });
     const svg = view.getByRole("group", { name: "SVG bracket prototype" });
-    const [, , width, heightBefore] = svg
-        .getAttribute("viewBox")
-        .split(" ")
-        .map(Number);
 
     await openMenu(view);
+    const heightBefore = viewBoxOf(svg)[3];
     await fireEvent.click(
         view.getByRole("menuitemcheckbox", { name: /Show header info/ })
     );
+    const width = viewBoxOf(svg)[2];
 
     const logo = view.container.querySelector(".header-logo");
     const event = view.container.querySelector(".header-event");
@@ -349,15 +353,13 @@ it("shows just the centered chart name when the chart has no logo", async () => 
         chartName: "Junior Division",
     });
     const svg = view.getByRole("group", { name: "SVG bracket prototype" });
-    const [, , width, heightBefore] = svg
-        .getAttribute("viewBox")
-        .split(" ")
-        .map(Number);
 
     await openMenu(view);
+    const heightBefore = viewBoxOf(svg)[3];
     await fireEvent.click(
         view.getByRole("menuitemcheckbox", { name: /Show header info/ })
     );
+    const width = viewBoxOf(svg)[2];
 
     expect(view.container.querySelector(".header-logo")).toBeNull();
     const title = view.container.querySelector(".header-title");
