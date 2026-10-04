@@ -1,27 +1,11 @@
 import { routeComponents } from "#src/routes/routeComponents.js";
-import DecodedRoute from "#src/routes/DecodedRoute.svelte";
 
 /** Validated route metadata used by both Svelte rendering and UI policy. */
 export const routeRegistry = require("#src/routes/routeCatalog.js");
 
 /**
- * Adapts svelte-spa-router's raw path captures before they reach a screen.
- * Keeping this at the rendering boundary prevents every routed component from
- * needing its own decodeURIComponent calls.
- */
-function withDecodedParams(component) {
-    return class extends DecodedRoute {
-        constructor(options) {
-            super({
-                ...options,
-                props: { ...options.props, component },
-            });
-        }
-    };
-}
-
-/**
- * Component map in the shape expected by svelte-spa-router.
+ * Component map in the shape expected by svelte-spa-router, which decodes
+ * the URL parameters it hands to each screen.
  * Construction fails fast when a definition names an unknown component.
  */
 export const routerMap = Object.fromEntries(
@@ -32,6 +16,6 @@ export const routerMap = Object.fromEntries(
                 `Route ${definition.id} references unknown component ${definition.component}`
             );
         }
-        return [definition.path, withDecodedParams(component)];
+        return [definition.path, component];
     })
 );

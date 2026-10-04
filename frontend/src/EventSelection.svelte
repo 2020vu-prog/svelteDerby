@@ -230,7 +230,7 @@
 <div>
     <h4>
         EventSelection for
-        <OrgName orgIz={decodeURIComponent(params.orgIz)} />
+        <OrgName orgIz={params.orgIz} />
     </h4>
 
     <p />

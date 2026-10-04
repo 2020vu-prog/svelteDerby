@@ -1,7 +1,9 @@
 "use strict";
 
-const regexparamModule = require("regexparam");
-const regexparam = regexparamModule.default || regexparamModule;
+// Same regexparam major as svelte-spa-router 3.x+ (which this app resolves to
+// this copy: webpack tries the top-level node_modules first), so the registry
+// and the router compile route patterns identically.
+const { parse: regexparam } = require("regexparam");
 const { RoutePermission } = require("#src/routes/routePermission.js");
 
 /**
@@ -74,7 +76,11 @@ function assertDefinition(definition) {
 }
 
 /**
- * Decodes one URL parameter while preserving malformed input for the screen.
+ * Decodes one URL parameter while preserving malformed input. This is for the
+ * registry's own matching of the raw `location` store value (policy and
+ * navigation decisions); the screens themselves receive params that
+ * svelte-spa-router 3.x and later has already decoded, so nothing decodes
+ * them again.
  *
  * @param {string|null|undefined} value
  * @returns {RoutePermission|undefined}
@@ -86,23 +92,6 @@ function decodeRouteParam(value) {
     } catch (error) {
         return value;
     }
-}
-
-/**
- * Decodes every parameter supplied by svelte-spa-router. That router exposes
- * raw URL path captures, so components otherwise receive values such as
- * `IL%3ACHI2` even though application and database keys use `IL:CHI2`.
- *
- * @param {Object<string, string|null>} [params]
- * @returns {Object<string, string|null>}
- */
-function decodeRouteParams(params = {}) {
-    return Object.fromEntries(
-        Object.entries(params).map(([key, value]) => [
-            key,
-            decodeRouteParam(value),
-        ])
-    );
 }
 
 /**
@@ -296,7 +285,6 @@ function resolveRouteAction(match, context = {}) {
 
 module.exports = {
     createRouteRegistry,
-    decodeRouteParams,
     getMenuItems,
     getPermissionOrgIz,
     getRequiredPermission,
