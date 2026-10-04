@@ -230,3 +230,14 @@ test("requestMqttSubPermission validates principal before policy attach", async 
 
     expect(data.error).toMatch(/missing principal/i);
 });
+
+test("requestMqttSubPermission reports a missing principal when there is no query string", async () => {
+    // orgId travels in the body, so there is no query string at all; this
+    // used to fail with a 502.
+    const data = await postData(`${CF}/requestMqttSubPermission`, {
+        orgIz,
+        orgId,
+    });
+
+    expect(data.error).toMatch(/missing principal/i);
+});
