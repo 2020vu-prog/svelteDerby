@@ -459,10 +459,7 @@ const routeMap = {
     "/requestMqttSubPermission": {
         permission: RoutePermission.ANONYMOUS,
         h: async (event) => {
-            const qsp = event.queryStringParameters;
-            if (!qsp) {
-                qsp = {};
-            }
+            const qsp = event.queryStringParameters || {};
             if (!qsp.principal) {
                 log.debug(
                     "/requestMqttSubPermission : Unknown or missing principal"
@@ -510,10 +507,7 @@ const routeMap = {
     "/requestS3PutObjectUrl": {
         permission: RoutePermission.CAN_CAPTURE_VIDEO,
         h: async (event) => {
-            const qsp = event.queryStringParameters;
-            if (!qsp) {
-                qsp = {};
-            }
+            const qsp = event.queryStringParameters || {};
             if (!qsp.key) {
                 log.debug("/requestS3PutObjectUrl : Unknown or missing key");
                 const qr = { error: "Unknown or missing key" };
@@ -529,10 +523,7 @@ const routeMap = {
     "/manageDiscord": {
         permission: RoutePermission.CAN_MANAGE_DISCORD,
         h: async (event) => {
-            const qsp = event.queryStringParameters;
-            if (!qsp) {
-                qsp = {};
-            }
+            const qsp = event.queryStringParameters || {};
             const orgId = getOrgId(event);
             await discordUtils.launchEc2Bot(orgId);
         },
