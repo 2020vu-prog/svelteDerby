@@ -22,8 +22,10 @@ test("the app boots without a JS error", async ({ page }) => {
     expect(pageErrors).toEqual([]);
 });
 
-// TODO(Phase 0): the flows that actually matter for a live event --
-// login, event selection, race timing/announcing, walkup-track playback --
-// need a real test account and fixture data to drive. Fill these in as
-// separate spec files once test credentials exist; see the "Phase 0" section
-// of docs/TODO/SvelteUpgradeProposal.md for the flow list this is meant to cover.
+// The flows that need a signed-in test user live in their own specs, driven
+// through the real hosted login page (see e2e/support/):
+//   login-and-event-selection.spec.js  signing in, choosing an event
+//   race-timing.spec.js                putting cars on the blocks, timing both
+//                                      phases, announcing
+//   chart-bracket.spec.js              viewing a chart, bracket advancement
+// Walkup-track playback is still not covered.
