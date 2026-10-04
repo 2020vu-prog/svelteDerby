@@ -33,3 +33,4 @@ build/
 frontend/public/manifest.json
 /frontend/playwright-report/
 /frontend/test-results/
+frontend/e2e/.auth/
