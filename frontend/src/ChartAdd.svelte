@@ -125,6 +125,9 @@
             chartAddForm.bracketSelected && chartAddForm.chartName
         );
     }
+    // A click listener on a <label> is the iOS Safari trick that makes it tappable. An empty
+    // `onclick=""` is a compile error in Svelte 5, so attach a real no-op listener instead.
+    const noop = () => {};
     // embedded script link: https://www.nielsvandermolen.com/external-javascript-sveltejs/
     const getChartDataFromServer = async () => {
         const cacheKey = getCacheKey();
@@ -240,7 +243,7 @@
             bind:group={namingToolEnabled}
             value={true}
         />
-        <label for="automated" onclick="">Automated</label>
+        <label for="automated" on:click={noop}>Automated</label>
 
         <input
             id="manual"
@@ -249,7 +252,7 @@
             bind:group={namingToolEnabled}
             value={false}
         />
-        <label for="manual" onclick="">Manual</label>
+        <label for="manual" on:click={noop}>Manual</label>
     </div>
     <br />
     <br />
@@ -268,7 +271,7 @@
                 bind:group={day}
                 value="Sat"
             />
-            <label for="sat" onclick="">Sat</label>
+            <label for="sat" on:click={noop}>Sat</label>
 
             <input
                 id="sun"
@@ -277,7 +280,7 @@
                 bind:group={day}
                 value="Sun"
             />
-            <label for="sun" onclick="">Sun</label>
+            <label for="sun" on:click={noop}>Sun</label>
         </div>
         <br />
         <br />
@@ -295,7 +298,7 @@
                 bind:group={time}
                 value="AM"
             />
-            <label for="am" onclick="">AM</label>
+            <label for="am" on:click={noop}>AM</label>
 
             <input
                 id="pm"
@@ -304,7 +307,7 @@
                 bind:group={time}
                 value="PM"
             />
-            <label for="pm" onclick="">PM</label>
+            <label for="pm" on:click={noop}>PM</label>
 
             <input
                 id="double"
@@ -313,7 +316,7 @@
                 bind:group={time}
                 value="Double"
             />
-            <label for="double" onclick="">Double</label>
+            <label for="double" on:click={noop}>Double</label>
 
             <input
                 id="single"
@@ -322,7 +325,7 @@
                 bind:group={time}
                 value="Single"
             />
-            <label for="single" onclick="">Single</label>
+            <label for="single" on:click={noop}>Single</label>
         </div>
         <br />
         <br />
@@ -339,7 +342,7 @@
                 bind:group={division}
                 value="Stock"
             />
-            <label for="stock" onclick="">Stock</label>
+            <label for="stock" on:click={noop}>Stock</label>
 
             <input
                 id="ss"
@@ -348,7 +351,7 @@
                 bind:group={division}
                 value="SS"
             />
-            <label for="ss" onclick="">SS</label>
+            <label for="ss" on:click={noop}>SS</label>
 
             <input
                 id="masters"
@@ -357,7 +360,7 @@
                 bind:group={division}
                 value="Masters"
             />
-            <label for="masters" onclick="">Masters</label>
+            <label for="masters" on:click={noop}>Masters</label>
 
             <input
                 id="legacy"
@@ -366,7 +369,7 @@
                 bind:group={division}
                 value="Legacy"
             />
-            <label for="legacy" onclick="">Legacy</label>
+            <label for="legacy" on:click={noop}>Legacy</label>
 
             <input
                 id="wrap"
@@ -375,7 +378,7 @@
                 bind:group={division}
                 value="Wrap"
             />
-            <label for="wrap" onclick="">Wrap</label>
+            <label for="wrap" on:click={noop}>Wrap</label>
         </div>
         <br />
     {/if}
