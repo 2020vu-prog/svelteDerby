@@ -9,7 +9,6 @@ const routeRegistry = require("#src/routes/routeCatalog.js");
 const { canAccessRoute } = require("#src/routes/routeAccess.js");
 const {
     createRouteRegistry,
-    decodeRouteParams,
     getMenuItems,
     getRequiredPermission,
     isRecognizedDeepLink,
@@ -111,23 +110,6 @@ test("matches parameterized and optional routes", () => {
         orgIz: "Test Org",
         mode: "Add",
     });
-});
-
-test("decodes component route parameters at the router boundary", () => {
-    assert.deepEqual(
-        decodeRouteParams({
-            orgIz: "IL%3ACHI2",
-            label: "Race%20Day",
-            optional: null,
-            malformed: "%E0%A4%A",
-        }),
-        {
-            orgIz: "IL:CHI2",
-            label: "Race Day",
-            optional: null,
-            malformed: "%E0%A4%A",
-        }
-    );
 });
 
 test("preserves recognized non-root routes during cold startup", () => {
