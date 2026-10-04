@@ -9,7 +9,6 @@ const { defineConfig, devices } = require("@playwright/test");
 // Phase 0 in docs/TODO/SvelteUpgradeProposal.md.
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "https://test.rr1.us";
 
-const fs = require("fs");
 const globalSetup = require.resolve("./e2e/global-setup.js");
 const { stateFile } = require("./e2e/global-setup.js");
 
@@ -37,8 +36,12 @@ module.exports = defineConfig({
             name: "chromium",
             use: {
                 ...devices["Desktop Chrome"],
-                // Absent without credentials; logged-in specs skip themselves.
-                storageState: fs.existsSync(stateFile) ? stateFile : undefined,
+                // Always this path: global setup writes the signed-in state
+                // there, or an empty one without credentials (the logged-in
+                // specs then skip themselves). Not decided here by whether
+                // the file exists, because this config is read before
+                // global setup runs.
+                storageState: stateFile,
             },
         },
     ],
