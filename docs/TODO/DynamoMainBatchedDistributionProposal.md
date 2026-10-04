@@ -20,6 +20,25 @@ Consequently, a ten-record Lambda invocation can perform ten `DerbyDist` writes 
 
 `dynamoMain.js` is not the only writer into the legacy `DP = <orgId>` partition. `backend/modules/lambdaSqs/src/ccaMain.js` writes `DP = orgId, DS = <epoch-microseconds>` items directly to `DerbyDist` during bulk/CCA reloads (`putS3`, `addBulk`/`flushBulkRequests`), and has its own independent `ddbQueryRaceHistory()` reader of the same partition. Any migration plan for this partition has to account for that second producer, not just `dynamoMain.js`.
 
+## Observed first-load gap (2026-10-04)
+
+The current pipeline has a visible symptom that the sequence design below should be judged against: a record written a few seconds before a client opens the event can be missing from that client's first load, and in the cases measured the live feed did not fill it in.
+
+**How it was found.** The new Playwright flows (`frontend/e2e/`, see `SvelteUpgradeProposal.md`) create an event and its drivers through the API, then open the event in the browser. The "drivers are available once the event is selected" test failed intermittently: typing a car number on the Add Blocks form showed "Unknown Racer" instead of the driver's name, for the full 15-second wait.
+
+**What was measured** (against `test.rr1.us`, 3 drivers created per event, then the event opened right away):
+
+- 4 failures in 55 runs (1 of 15, then 3 of 40), about 7%. Those runs were 3 or 4 at a time; 4 runs on their own all passed, which is too few to say whether parallel load matters.
+- In every failing run the app's own `GET /getRaceHistory?orgId=...&orgIz=...` returned HTTP 200 with **zero** participants. The response headers were `x-cache: Miss from cloudfront` and `cache-control: max-age=7`, so it was not a stale CDN copy. In the runs that did not fail the same request returned all 3.
+- The same URL requested again moments later, and a cache-busted copy, returned all 3 participants in every failing run. The data was written and readable shortly after; it was just not in the table that request read.
+- The page text in the failing runs showed nothing from the live feed either (no driver names), for the 15 seconds the test waited.
+
+**Why the first read can miss.** `getRaceHistory` does not read `DerbyMain`; it queries `DerbyDist` (`DistDbTable`, `DP = orgId`, `DS BETWEEN loMicros AND hiMicros`) in `DdbUtils.ddbQueryRaceHistory`. A record only reaches that table after it passes through the stream and the `dynamoMain` Lambda described above (up to a two-second batching window, plus Lambda start-up and the per-record `PutItem` writes), so a read shortly after a write can precede the distribution write. That is expected from the pipeline's design and not a defect in a single step.
+
+**What was not established.** The runs did not capture whether the browser's MQTT subscription was active when the record was published, so it is not known why the live feed did not supply the missing drivers. The candidates, all consistent with the symptom, are: the subscription had not yet been confirmed when the record was published (`HotLoad.svelte` waits up to `mqttInitialConnectTimeoutMs` = 5 seconds, then takes the HTTP snapshot anyway and reconciles once the subscription is confirmed), the record was published before the subscription but after the snapshot's read was already decided, or the message arrived and was dropped on the way into the store. Instrumenting `HotLoad` (subscription-confirmed time, each message received, each snapshot's entity count) on a failing run is the first step before relying on any of the explanations below.
+
+**Why this matters for this proposal.** The sequence design makes a *detected* gap recoverable: a client that sees `sequence > lastSequence + 1` replays over HTTP. It does not by itself cover the case seen here, where the missing record is the *latest* one, because with nothing newer arriving there is no later envelope to reveal the gap. Closing it needs one more rule in "Client changes" below.
+
 ## Proposed envelope
 
 Group valid stream records by `orgId`, preserving their order within the received Lambda batch. Create one envelope for each group:
@@ -115,6 +134,8 @@ HTTP distribution loading must similarly flatten legacy records and v2 envelopes
 
 The HTTP snapshot response must include, per organization, the v2 `sequence` of the newest envelope reflected in that snapshot, and the client must seed `lastSequence` from that value before subscribing to live MQTT envelopes — not default it to `0`/undefined. Without an explicit seed, a client's first live envelope after a snapshot (e.g. `sequence = 4821` for an established org) would always satisfy `sequence > lastSequence + 1` and trigger replay, and if the replay path doesn't set `lastSequence` either, this repeats on every subsequent envelope.
 
+**Closing the first-load gap.** Once the HTTP snapshot carries the newest reflected `sequence`, a client can also detect a missing *latest* envelope without waiting for a newer one: after the live subscription is confirmed, ask the backend for the organization's current head sequence (a small read of the counter, or a `head` field on a cheap endpoint) and replay over HTTP if it is greater than `lastSequence`. Do this once after the subscription is confirmed and again if the head read races a write (a bounded retry after the two-second batching window plus margin), not on a timer for the life of the page. Legacy-format organizations have no counter to compare, so for them the existing reconcile-after-subscription refresh stays the only protection and the first-load gap remains until they are switched to v2.
+
 Old cached clients cannot parse an envelope. Gate backend emission with a deployment variable or feature flag until the compatible frontend is deployed and the chosen stale-client policy is satisfied.
 
 ## Code scope
@@ -181,3 +202,4 @@ Old cached clients cannot parse an envelope. Gate backend emission with a deploy
 - `ccaMain.js` does not write to the legacy partition for an organization once that organization is switched to v2.
 - Existing cached clients are protected by the rollout gate.
 - Automated tests cover transaction conflicts, retries, duplicate delivery, gaps, and mixed-format replay.
+- A client that opens an organization immediately after a record was written shows that record without a manual refresh. The Playwright flows' `waitForHistory` setup step (in `frontend/e2e/support/fixture.js`) exists only to work around this gap; once it is closed, an e2e that opens the event with no wait, run in parallel at least 40 times with no failure, is the check, and the wait can be removed.
