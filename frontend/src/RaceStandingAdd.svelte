@@ -247,7 +247,7 @@
                 </option>
             {/each}
         </select>
-        <p />
+        <p></p>
     {/if}
     <label>
         <input

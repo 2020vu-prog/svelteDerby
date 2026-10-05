@@ -221,11 +221,11 @@
             >
                 Fill Chart With [{$selectedDriverList.length}] Drivers
             </SpinnerButton>
-            <p />
+            <p></p>
             Selected: {$selectedDriverList.join(", ")}
         {/if}
     {:else}
-        <p />
+        <p></p>
         Chart already loaded.
     {/if}
 

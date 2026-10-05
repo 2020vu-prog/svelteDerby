@@ -87,6 +87,9 @@
                 </div>
             </div>
         </div>
-        <div class="modal-backdrop show" transition:fade={{ duration: 150 }} />
+        <div
+            class="modal-backdrop show"
+            transition:fade={{ duration: 150 }}
+        ></div>
     </div>
 {/if}

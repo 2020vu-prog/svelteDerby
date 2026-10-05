@@ -276,7 +276,7 @@
     {/if}
 
     {#if mediaList}
-        <p />
+        <p></p>
         {#if mediaList.length == 0}
             <h5>No media found.</h5>
         {:else}
