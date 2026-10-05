@@ -26,7 +26,9 @@
     onMount(async () => {
         let ignoreHeat = "";
         checkAndApplyURLParams();
-        await getCarNumbersFromRP();
+        if (!(await getCarNumbersFromRP())) {
+            return; // no race on the blocks; the user was sent back
+        }
         log.debug("ManualTimeAdd rpd pn:", rpFromDexie);
         [ignoreHeat, pendingNeeded] = await fmtChartPosition(rpFromDexie);
         //log.debug("ManualTimeAdd pn:", pendingNeeded);
@@ -149,10 +151,11 @@
                 type: "error",
             });
             pop();
-            return;
+            return false;
         }
         carNumber1 = rpFromDexie.cn[0];
         carNumber2 = rpFromDexie.cn[1];
+        return true;
     }
 </script>
 

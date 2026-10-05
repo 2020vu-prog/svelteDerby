@@ -677,7 +677,7 @@
                             chartJson={chartJson}
                             chartId={chartId}
                             heatId={heat.id}
-                            slot="A"
+                            slotId="A"
                             on:stateloadstart={handleSlotLoadStart}
                             on:stateloadend={handleSlotLoadEnd}
                             let:state
@@ -764,7 +764,7 @@
                             chartJson={chartJson}
                             chartId={chartId}
                             heatId={heat.id}
-                            slot="B"
+                            slotId="B"
                             on:stateloadstart={handleSlotLoadStart}
                             on:stateloadend={handleSlotLoadEnd}
                             let:state

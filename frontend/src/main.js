@@ -1,4 +1,5 @@
 import axios from "axios";
+import { mount } from "svelte";
 import { initializeAwsConfig } from "#src/aws-config";
 
 async function startApp() {
@@ -8,7 +9,7 @@ async function startApp() {
     initializeAwsConfig(response.data);
     const { default: App } = await import("#src/App.svelte");
 
-    return new App({
+    return mount(App, {
         target: document.body,
         props: {
             name: "world",
