@@ -14,10 +14,8 @@
         <button
             type="button"
             on:click={toggle}
-            class="close"
+            class="btn-close"
             aria-label="Close"
-        >
-            <span aria-hidden="true">&times;</span>
-        </button>
+        ></button>
     {/if}
 </div>

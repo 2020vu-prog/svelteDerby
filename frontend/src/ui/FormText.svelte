@@ -8,7 +8,11 @@
 
 <small
     {...$$restProps}
-    class={cx(className, "form-text", color && `text-${color}`)}
+    class={cx(
+        className,
+        "form-text",
+        color && (color === "muted" ? "text-body-secondary" : `text-${color}`)
+    )}
 >
     <slot />
 </small>

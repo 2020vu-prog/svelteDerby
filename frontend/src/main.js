@@ -1,4 +1,5 @@
 import axios from "axios";
+import "#src/bootstrap4-look.css";
 import { mount } from "svelte";
 import { initializeAwsConfig } from "#src/aws-config";
 

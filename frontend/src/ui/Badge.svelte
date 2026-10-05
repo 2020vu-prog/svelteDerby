@@ -9,7 +9,7 @@
 
 <span
     {...$$restProps}
-    class={cx(className, "badge", `badge-${color}`, pill && "badge-pill")}
+    class={cx(className, "badge", `text-bg-${color}`, pill && "rounded-pill")}
 >
     <slot />
 </span>

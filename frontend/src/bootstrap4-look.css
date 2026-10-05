@@ -1,0 +1,244 @@
+/*
+ * Keeps the look the app had on Bootstrap 4.5 now that it loads Bootstrap 5.3.
+ * Bootstrap 5 changed the palette (a brighter info cyan, a darker success green,
+ * a new primary blue), tightened card padding, softened borders and rounded the
+ * corners more. These are the values Bootstrap 4.5 used, expressed in Bootstrap
+ * 5's variables, so the colors people recognize at an event stay the same. Drop
+ * rules from here to adopt Bootstrap 5's own look, one at a time.
+ */
+
+:root {
+    --bs-primary: #007bff;
+    --bs-primary-rgb: 0, 123, 255;
+    --bs-success: #28a745;
+    --bs-success-rgb: 40, 167, 69;
+    --bs-info: #17a2b8;
+    --bs-info-rgb: 23, 162, 184;
+    --bs-link-color: #007bff;
+    --bs-link-color-rgb: 0, 123, 255;
+    --bs-link-hover-color: #0056b3;
+    --bs-link-hover-color-rgb: 0, 86, 179;
+    --bs-border-radius: 0.25rem;
+}
+
+/* Bootstrap 4 `hr`: a 1px top border at 10% black, no opacity or fixed height. */
+hr {
+    height: 0;
+    color: inherit;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    opacity: 1;
+}
+
+hr:not([size]) {
+    height: 0;
+}
+
+/* Cards: Bootstrap 4 spacing, border and corner radius. */
+.card {
+    --bs-card-spacer-y: 1.25rem;
+    --bs-card-spacer-x: 1.25rem;
+    --bs-card-title-spacer-y: 0.75rem;
+    --bs-card-border-color: rgba(0, 0, 0, 0.125);
+    --bs-card-border-radius: 0.25rem;
+    --bs-card-inner-border-radius: calc(0.25rem - 1px);
+    --bs-card-cap-padding-y: 0.75rem;
+    --bs-card-cap-padding-x: 1.25rem;
+}
+
+/* Buttons: Bootstrap 4 corner radius, and its colors for the variants in use. */
+.btn {
+    --bs-btn-border-radius: 0.25rem;
+}
+
+.btn-primary {
+    --bs-btn-bg: #007bff;
+    --bs-btn-border-color: #007bff;
+    --bs-btn-hover-bg: #0069d9;
+    --bs-btn-hover-border-color: #0062cc;
+    --bs-btn-focus-shadow-rgb: 38, 143, 255;
+    --bs-btn-active-bg: #0062cc;
+    --bs-btn-active-border-color: #005cbf;
+    --bs-btn-disabled-bg: #007bff;
+    --bs-btn-disabled-border-color: #007bff;
+}
+
+.btn-secondary {
+    --bs-btn-hover-bg: #5a6268;
+    --bs-btn-hover-border-color: #545b62;
+    --bs-btn-focus-shadow-rgb: 130, 138, 145;
+    --bs-btn-active-bg: #545b62;
+    --bs-btn-active-border-color: #4e555b;
+}
+
+.btn-success {
+    --bs-btn-bg: #28a745;
+    --bs-btn-border-color: #28a745;
+    --bs-btn-hover-bg: #218838;
+    --bs-btn-hover-border-color: #1e7e34;
+    --bs-btn-focus-shadow-rgb: 72, 180, 97;
+    --bs-btn-active-bg: #1e7e34;
+    --bs-btn-active-border-color: #1c7430;
+    --bs-btn-disabled-bg: #28a745;
+    --bs-btn-disabled-border-color: #28a745;
+}
+
+.btn-info {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #17a2b8;
+    --bs-btn-border-color: #17a2b8;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #138496;
+    --bs-btn-hover-border-color: #117a8b;
+    --bs-btn-focus-shadow-rgb: 58, 176, 195;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #117a8b;
+    --bs-btn-active-border-color: #10707f;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #17a2b8;
+    --bs-btn-disabled-border-color: #17a2b8;
+}
+
+.btn-warning {
+    --bs-btn-hover-bg: #e0a800;
+    --bs-btn-hover-border-color: #d39e00;
+    --bs-btn-focus-shadow-rgb: 222, 170, 12;
+    --bs-btn-active-bg: #d39e00;
+    --bs-btn-active-border-color: #c69500;
+}
+
+.btn-danger {
+    --bs-btn-hover-bg: #c82333;
+    --bs-btn-hover-border-color: #bd2130;
+    --bs-btn-focus-shadow-rgb: 225, 83, 97;
+    --bs-btn-active-bg: #bd2130;
+    --bs-btn-active-border-color: #b21f2d;
+}
+
+.btn-light {
+    --bs-btn-hover-bg: #e2e6ea;
+    --bs-btn-hover-border-color: #dae0e5;
+    --bs-btn-active-bg: #dae0e5;
+    --bs-btn-active-border-color: #d3d9df;
+}
+
+/* Form controls: Bootstrap 4 corner radius and border color. */
+.form-control,
+.form-select {
+    --bs-border-color: #ced4da;
+    border-radius: 0.25rem;
+}
+
+/*
+ * Checkboxes and helper text. Bootstrap 4 laid a `.form-check-input` out
+ * absolutely inside `.form-check` and left it as the browser's own checkbox, and
+ * the app's `input.big[type="checkbox"]` (`transform: scale(2)`) and the
+ * `<br />` workarounds in forms such as TimerConfigElapsed rely on that.
+ * Bootstrap 5 floats a restyled checkbox instead, which re-wraps the text
+ * around it.
+ */
+.form-check {
+    position: relative;
+    min-height: 0;
+    margin-bottom: 0;
+    padding-left: 1.25rem;
+}
+
+.form-check .form-check-input {
+    float: none;
+    position: absolute;
+    margin-top: 0.3rem;
+    margin-left: -1.25rem;
+}
+
+.form-check-input,
+.form-check-input:checked,
+.form-check-input:checked[type="checkbox"],
+.form-check-input:focus {
+    appearance: auto;
+    width: auto;
+    height: auto;
+    border: 0;
+    background: none;
+    box-shadow: none;
+}
+
+/* `.form-text` was a block at 80% in Bootstrap 4; in 5 it is inline text. */
+.form-text {
+    display: block;
+    font-size: 80%;
+}
+
+.form-text.text-body-secondary {
+    color: #6c757d !important;
+}
+
+/*
+ * Reboot: Bootstrap 5 dropped `label`'s bottom margin, narrowed `ul` and `ol`
+ * indent from the browser's 40px to 2rem, and made `small` 87.5% instead of 80%.
+ */
+label {
+    margin-bottom: 0.5rem;
+}
+
+ol,
+ul {
+    padding-left: 40px;
+}
+
+small {
+    font-size: 80%;
+}
+
+/* Tables and list groups: Bootstrap 4 cell and item padding. */
+.table > :not(caption) > * > * {
+    padding: 0.75rem;
+}
+
+.table-sm > :not(caption) > * > * {
+    padding: 0.3rem;
+}
+
+.list-group {
+    --bs-list-group-item-padding-y: 0.75rem;
+    --bs-list-group-item-padding-x: 1.25rem;
+    --bs-list-group-border-color: rgba(0, 0, 0, 0.125);
+    --bs-list-group-border-radius: 0.25rem;
+}
+
+/* Grid gutter: 30px in Bootstrap 4, 1.5rem (24px) in 5. */
+.container,
+.container-fluid,
+.container-sm,
+.container-md,
+.container-lg,
+.container-xl,
+.container-xxl,
+.row {
+    --bs-gutter-x: 30px;
+}
+
+/* `legend` was a block that sits on the fieldset border; in 5 it is floated. */
+legend {
+    float: none;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    line-height: inherit;
+    white-space: normal;
+}
+
+legend + * {
+    clear: none;
+}
+
+.form-check-label {
+    margin-bottom: 0;
+}
+
+.table > thead > tr > * {
+    border-bottom-width: 2px;
+    vertical-align: bottom;
+}

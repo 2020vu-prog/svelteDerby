@@ -8,17 +8,17 @@ import {
 import { describe, it, expect, afterEach } from "vitest";
 import Harness from "./TestHarness.svelte";
 
-// The ui components replace sveltestrap 3 and must keep rendering the same
-// Bootstrap 4 markup, so these pin its classes and behavior.
+// The ui components replace sveltestrap 3 and render
+// Bootstrap 5 markup, so these pin its classes and behavior.
 afterEach(cleanup);
 
-describe("ui components render sveltestrap's Bootstrap 4 markup", () => {
+describe("ui components render Bootstrap 5 markup", () => {
     it("badge, button and card parts", () => {
         render(Harness);
         const badge = screen.getByText("badge");
         expect(badge.tagName).toBe("SPAN");
         expect(badge.className).toBe(
-            "bigText badge badge-secondary badge-pill"
+            "bigText badge text-bg-secondary rounded-pill"
         );
         expect(badge.getAttribute("style")).toMatch(/^background: red;?$/);
 
@@ -53,12 +53,14 @@ describe("ui components render sveltestrap's Bootstrap 4 markup", () => {
     it("form group, label, form text and table", () => {
         render(Harness);
         expect(screen.getByText("help").tagName).toBe("SMALL");
-        expect(screen.getByText("help").className).toBe("form-text text-muted");
+        expect(screen.getByText("help").className).toBe(
+            "form-text text-body-secondary"
+        );
         const checkLabel = screen.getByText("Gps").closest("label");
         expect(checkLabel.className).toBe("form-check-label");
         expect(checkLabel.getAttribute("for")).toBe("gps");
         expect(checkLabel.parentElement.className).toBe("form-check");
-        expect(screen.getByText("Name").closest(".form-group")).not.toBeNull();
+        expect(screen.getByText("Name").closest(".mb-3")).not.toBeNull();
         const table = screen.getByText("cell").closest("table");
         expect(table.className).toBe(
             "table table-sm table-bordered table-striped"
@@ -83,7 +85,7 @@ describe("Input", () => {
         expect(state.seq).toBe(8);
 
         const select = container.querySelector("select");
-        expect(select.className).toBe("form-control");
+        expect(select.className).toBe("form-select");
         expect(select.value).toBe("b");
         await fireEvent.change(select, { target: { value: "a" } });
         expect(state.flavor).toBe("a");
@@ -110,7 +112,7 @@ describe("Collapse", () => {
 });
 
 describe("Modal", () => {
-    it("renders nothing while closed and the Bootstrap 4 structure while open", async () => {
+    it("renders nothing while closed and the Bootstrap 5 structure while open", async () => {
         const { rerender } = render(Harness);
         expect(screen.queryByText("Modal title")).toBeNull();
         expect(document.body.classList.contains("modal-open")).toBe(false);
@@ -119,6 +121,9 @@ describe("Modal", () => {
         const title = screen.getByText("Modal title");
         expect(title.className).toBe("modal-title");
         expect(title.parentElement.className).toBe("modal-header");
+        const close = screen.getByLabelText("Close");
+        expect(close.className).toBe("btn-close");
+        expect(close.parentElement).toBe(title.parentElement);
         expect(screen.getByText("modal body").className).toBe("modal-body");
         expect(screen.getByText("modal footer").className).toBe("modal-footer");
         const modal = screen.getByRole("dialog");
