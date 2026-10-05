@@ -17,7 +17,7 @@ export default defineConfig({
     ],
     // Vitest resolves modules under Node/SSR conditions by default, which can
     // hand a component's compiled output a *different* svelte/internal module
-    // instance than the one other imports (svelte-spa-router, sveltestrap,
+    // instance than the one other imports (svelte-spa-router,
     // @testing-library/svelte) resolve to. That split-brain state is silent
     // -- no error -- it just means onMount/lifecycle hooks never fire, because
     // `current_component` lives in the instance the component didn't get.

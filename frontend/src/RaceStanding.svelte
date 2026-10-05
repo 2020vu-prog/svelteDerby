@@ -8,7 +8,7 @@
         CardTitle,
         CardFooter,
         Badge,
-    } from "sveltestrap";
+    } from "#src/ui/index.js";
     import ByLine from "#src/ByLine.svelte";
     import CarAndDriver from "#src/CarAndDriver.svelte";
     import EllipsisButton from "#src/EllipsisButton.svelte";

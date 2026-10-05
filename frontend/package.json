@@ -55,10 +55,7 @@
         "test:e2e": "playwright test"
     },
     "overrides": {
-        "websocket-driver": "0.7.5",
-        "sveltestrap": {
-            "svelte": "$svelte"
-        }
+        "websocket-driver": "0.7.5"
     },
     "dependencies": {
         "@fortawesome/free-solid-svg-icons": "^5.13.0",
@@ -88,7 +85,6 @@
         "string_decoder": "^1.3.0",
         "svelte-infinite-scroll": "^2.0.1",
         "svelte-spa-router": "^4.0.2",
-        "sveltestrap": "^3.14.1",
         "uuid": "^8.1.0"
     }
 }

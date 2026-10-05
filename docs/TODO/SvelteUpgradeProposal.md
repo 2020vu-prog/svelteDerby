@@ -159,6 +159,15 @@ The Phase 1 diagnostic spike: Svelte 5.57.1 on top of the Svelte 4 build, with `
 
 **Not covered by the spike:** `svelte-spa-router` 5.x and the move from the `location`/`querystring` stores to the router object (Phase 2); whether every `bind:` still behaves, which is only visible in the signed-in flows; and the iOS check from #179.
 
+## sveltestrap replacement notes *(2026-10-04)*
+
+`sveltestrap` is gone: the 18 components the app used are now local, in `frontend/src/ui/` (imported through `#src/ui/index.js`), and the `sveltestrap` dependency and its Svelte peer override are removed. Phase 2 is split in two on purpose: this step keeps the **Bootstrap 4.5.2** CDN link and renders the same Bootstrap 4 markup and classes sveltestrap 3 did, so it should change nothing on screen, and the Bootstrap 5.3 bump (CDN link, `bootstrap` npm dependency, class renames) is its own follow-up where any visual change has exactly one cause.
+
+- **Only the props the app passes are supported**, found by parsing every tag use across the 25 files rather than from the earlier grep. `Input` handles exactly `text`, `number`, `select` and `checkbox` (each its own branch, since `bind:value` and `bind:checked` need a static `type`) and logs an error for anything else. Props that sveltestrap passed through to the DOM unchanged (`style`, a stray `color` on `CardBody`/`CardTitle`, `fullscreen` on `Modal`) still pass through via `$$restProps`, so the rendered HTML is the same; `fullscreen` and the `color` attributes did nothing in Bootstrap 4 and can be dropped when the Bootstrap 5 bump touches those lines.
+- **`Modal` keeps the behavior that mattered**: `modal-open` on `<body>` while any modal is open, Escape and a backdrop click call `toggle`, and a drag that starts inside the dialog does not close it. It drops sveltestrap's focus management, scrollbar-padding compensation and the unused options. That is the accessibility gap the earlier recommendation named; the header close button and `role="dialog"`, `aria-modal` are kept.
+- **Svelte 5 safe**: the components use `<slot />`, `$$restProps` and `on:` forwarding, all supported in Svelte 5 legacy mode, and `Splash.spec.js` (which failed under Svelte 5 with sveltestrap) is the check that the slot content renders.
+- **How it was verified**: `src/ui/ui.spec.js` pins the classes each component renders, two-way binding on all four input types, click forwarding, `Collapse` open and closed, and the `Modal` open, close, Escape, backdrop and `modal-open` behavior; the full component suite, `npm test`, and the production build pass; and the splash modal was checked in a browser against the dev server. Not verified: the 25 files' screens one by one, or the signed-in e2e flows, which is why this belongs on `test.rr1.us` for a visual pass before `stage.rr1.us`.
+
 ## Running two frontends concurrently, for Phases 0–3
 
 "Parallel migration" here actually covers two different problems, worth separating because they have different solutions:

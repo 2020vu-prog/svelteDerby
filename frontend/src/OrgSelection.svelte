@@ -1,6 +1,12 @@
 <script>
     import log from "loglevel";
-    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        Badge,
+    } from "#src/ui/index.js";
     import OrgName from "#src/OrgName.svelte";
     import SpinnerButton from "#src/SpinnerButton.svelte";
     import { raceConfig } from "#src/stores.js";

@@ -7,7 +7,7 @@
         ModalBody,
         ModalFooter,
         ModalHeader,
-    } from "sveltestrap";
+    } from "#src/ui/index.js";
 
     import { theme, driverMap } from "#src/stores.js";
     import {

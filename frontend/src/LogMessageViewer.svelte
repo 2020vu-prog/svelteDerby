@@ -1,7 +1,7 @@
 <script>
     import log from "loglevel";
     import { onMount } from "svelte";
-    import { Button } from "sveltestrap";
+    import { Button } from "#src/ui/index.js";
     import ByLine from "#src/ByLine.svelte";
     import { db } from "#src/eventDb.js";
 

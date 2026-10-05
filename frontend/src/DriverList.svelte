@@ -1,7 +1,13 @@
 <script>
     import SpinnerButton from "#src/SpinnerButton.svelte";
     import log from "loglevel";
-    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        Badge,
+    } from "#src/ui/index.js";
     import VirtualList from "@sveltejs/svelte-virtual-list";
     import {
         driverMap,

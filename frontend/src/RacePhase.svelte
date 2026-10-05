@@ -7,7 +7,7 @@
         CardTitle,
         CardFooter,
         Badge,
-    } from "sveltestrap";
+    } from "#src/ui/index.js";
 
     import CarAndDriver from "#src/CarAndDriver.svelte";
     import CarAndDriverVertical from "#src/CarAndDriverVertical.svelte";

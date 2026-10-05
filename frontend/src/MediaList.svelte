@@ -1,7 +1,13 @@
 <script>
     import log from "loglevel";
 
-    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        Badge,
+    } from "#src/ui/index.js";
 
     import { push, pop, replace } from "svelte-spa-router";
     import { faBackward } from "@fortawesome/free-solid-svg-icons/faBackward";

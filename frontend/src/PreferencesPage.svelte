@@ -26,7 +26,7 @@
     }
 
     import { formatWinTime } from "#src/utils.js";
-    import { Badge } from "sveltestrap";
+    import { Badge } from "#src/ui/index.js";
 
     import { onMount } from "svelte";
     import { getCacheKey, setCacheKey } from "#src/stores.js";

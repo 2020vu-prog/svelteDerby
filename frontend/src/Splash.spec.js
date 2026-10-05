@@ -2,12 +2,9 @@ import { render, screen } from "@testing-library/svelte";
 import { describe, it, expect, beforeEach } from "vitest";
 import Splash from "#src/Splash.svelte";
 
-// Risk pattern: a sveltestrap component (Modal/ModalHeader/ModalBody). The
-// dead `sveltestrap` package is being replaced by `@sveltestrap/sveltestrap`
-// (see "The two dependencies that actually gate this" in
-// docs/TODO/SvelteUpgradeProposal.md) -- this test pins that the modal actually
-// renders its content, so that swap can be verified automatically instead of
-// by a visual pass over the 25 affected files.
+// Pins that the modal (ui/Modal, ModalHeader, ModalBody) actually renders its
+// content. It caught `sveltestrap` printing slot content as text under Svelte 5
+// (see "Svelte 5 spike notes" in docs/TODO/SvelteUpgradeProposal.md).
 describe("Splash", () => {
     beforeEach(() => {
         localStorage.clear();

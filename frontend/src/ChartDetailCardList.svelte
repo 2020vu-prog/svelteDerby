@@ -5,7 +5,13 @@
     import ChartHeaderViewToggle from "#src/chart/ChartHeaderViewToggle.svelte";
     import { getBracketSummaryClass } from "#src/chart/ChartStatus.js";
     import CarFilter from "#src/CarFilter.svelte";
-    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        Badge,
+    } from "#src/ui/index.js";
     import { onMount } from "svelte";
     import { db } from "#src/eventDb.js";
     import {

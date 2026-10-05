@@ -8,7 +8,7 @@
         ModalBody,
         ModalFooter,
         ModalHeader,
-    } from "sveltestrap";
+    } from "#src/ui/index.js";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
     import { pushMessage, raceConfig, axios } from "#src/stores";

@@ -1,5 +1,11 @@
 <script>
-    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        Badge,
+    } from "#src/ui/index.js";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { Base64 } from "js-base64";
     import EllipsisButton from "#src/EllipsisButton.svelte";
