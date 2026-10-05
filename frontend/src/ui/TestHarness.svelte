@@ -45,9 +45,15 @@
 </script>
 
 <Badge pill class="bigText" style="background: red">badge</Badge>
-<Button color="primary" size="sm" on:click={() => clicks.push("button")}>go</Button>
+<Button color="primary" size="sm" on:click={() => clicks.push("button")}
+    >go</Button
+>
 <Button disabled>off</Button>
-<Card class="mt-3 border border-info" style="color: red" on:click={() => clicks.push("card")}>
+<Card
+    class="mt-3 border border-info"
+    style="color: red"
+    on:click={() => clicks.push("card")}
+>
     <CardHeader class="bg-info text-white">header</CardHeader>
     <CardBody>
         <CardTitle>title</CardTitle>

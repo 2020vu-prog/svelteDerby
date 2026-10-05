@@ -22,7 +22,7 @@
         {...$$restProps}
         type="text"
         class={cx(className, "form-control")}
-        bind:value
+        bind:value={value}
         placeholder={placeholder}
         disabled={disabled}
         on:input
@@ -35,7 +35,7 @@
         {...$$restProps}
         type="number"
         class={cx(className, "form-control")}
-        bind:value
+        bind:value={value}
         placeholder={placeholder}
         disabled={disabled}
         on:input
@@ -47,7 +47,7 @@
     <select
         {...$$restProps}
         class={cx(className, "form-control")}
-        bind:value
+        bind:value={value}
         disabled={disabled}
         on:change
         on:blur
@@ -60,7 +60,7 @@
         {...$$restProps}
         type="checkbox"
         class={cx(className, "form-check-input")}
-        bind:checked
+        bind:checked={checked}
         disabled={disabled}
         on:change
         on:blur

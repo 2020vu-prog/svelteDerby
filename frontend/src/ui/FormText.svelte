@@ -6,6 +6,9 @@
     export let color = "muted";
 </script>
 
-<small {...$$restProps} class={cx(className, "form-text", color && `text-${color}`)}>
+<small
+    {...$$restProps}
+    class={cx(className, "form-text", color && `text-${color}`)}
+>
     <slot />
 </small>

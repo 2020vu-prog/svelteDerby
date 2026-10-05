@@ -8,6 +8,10 @@
     export { fore as for };
 </script>
 
-<label {...$$restProps} class={cx(className, check && "form-check-label")} for={fore}>
+<label
+    {...$$restProps}
+    class={cx(className, check && "form-check-label")}
+    for={fore}
+>
     <slot />
 </label>

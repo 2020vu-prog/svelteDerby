@@ -11,7 +11,12 @@
         <slot />
     </h5>
     {#if typeof toggle === "function"}
-        <button type="button" on:click={toggle} class="close" aria-label="Close">
+        <button
+            type="button"
+            on:click={toggle}
+            class="close"
+            aria-label="Close"
+        >
             <span aria-hidden="true">&times;</span>
         </button>
     {/if}
