@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte";
 import { describe, it, expect, vi } from "vitest";
-import Router from "svelte-spa-router";
+import Router, { router } from "svelte-spa-router";
 import { routerMap } from "#src/routes/routeRuntime.js";
 
 // Every routed screen is replaced by a probe that prints the params it was
@@ -17,8 +17,17 @@ vi.mock("#src/routes/routeComponents.js", async () => {
 // what a screen receives from the real router through routeRuntime's map, so a
 // second decoding layer, which would corrupt any value that still contains a
 // "%XX" sequence after the first decode, cannot be reintroduced unnoticed.
-async function renderAt(hash, props = {}) {
+// The router reads the hash into its state when its module loads and then on
+// each `hashchange`, which fires asynchronously. Rendering before it has caught
+// up would first mount the screen for the previous location, and then replace it.
+async function moveTo(hash) {
     window.location.hash = hash;
+    const path = hash.slice(1).split("?")[0] || "/";
+    await waitFor(() => expect(router.location).toBe(path));
+}
+
+async function renderAt(hash, props = {}) {
+    await moveTo(hash);
     const view = render(Router, { routes: routerMap, ...props });
     const probe = await screen.findByTestId("probe");
     const shown = probe.dataset.params;
@@ -77,15 +86,14 @@ describe("route params", () => {
         expect(params).toBeUndefined();
     });
 
-    it("the router forwards a routeEvent raised by a screen to its listener", async () => {
-        window.location.hash = "#/loginH";
-        const { component } = render(Router, { routes: routerMap });
+    it("the router hands screens an onRouteEvent callback they can call", async () => {
+        await moveTo("#/loginH");
         const heard = vi.fn();
-        component.$on("routeEvent", heard);
+        render(Router, { routes: routerMap, onRouteEvent: heard });
 
         await fireEvent.click(await screen.findByText("raise"));
 
         await waitFor(() => expect(heard).toHaveBeenCalledTimes(1));
-        expect(heard.mock.calls[0][0].detail).toEqual({ from: "probe" });
+        expect(heard.mock.calls[0][0]).toEqual({ from: "probe" });
     });
 });

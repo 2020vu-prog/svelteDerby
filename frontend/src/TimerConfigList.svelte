@@ -12,7 +12,8 @@
     import log from "loglevel";
     import { db } from "#src/eventDb.js";
     import { onMount } from "svelte";
-    import { push, pop, replace, location } from "svelte-spa-router";
+    import { push, pop, replace } from "svelte-spa-router";
+    import { location } from "#src/routes/routerStores.js";
     import { initialReloadRoute } from "#src/stores.js";
     import { doRefreshBlocks } from "#src/stores.js";
     import TimerPbHealth from "#src/TimerPbHealth.svelte";

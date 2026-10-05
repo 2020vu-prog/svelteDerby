@@ -44,7 +44,8 @@
         Label,
         Input,
     } from "#src/ui/index.js";
-    import { push, querystring } from "svelte-spa-router";
+    import { push } from "svelte-spa-router";
+    import { querystring } from "#src/routes/routerStores.js";
     const { v4: uuidv4 } = require("uuid");
 
     const searchParams = new URLSearchParams($querystring);

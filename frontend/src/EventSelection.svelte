@@ -24,11 +24,11 @@
 
     import OrgName from "#src/OrgName.svelte";
     import { onMount, tick } from "svelte";
+    import { replace } from "svelte-spa-router";
     import {
         location as ssrLocation,
-        replace,
         querystring,
-    } from "svelte-spa-router";
+    } from "#src/routes/routerStores.js";
     import { dbReset } from "#src/eventDb.js";
 
     import { refreshOrgRoles } from "#src/utils.js";

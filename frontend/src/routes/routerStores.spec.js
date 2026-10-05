@@ -1,7 +1,8 @@
 import { waitFor } from "@testing-library/svelte";
 import { get } from "svelte/store";
 import { describe, it, expect } from "vitest";
-import { location, push, querystring, replace } from "svelte-spa-router";
+import { push, replace } from "svelte-spa-router";
+import { location, querystring } from "#src/routes/routerStores.js";
 
 // Contract tests for the parts of svelte-spa-router that 16 app files read
 // directly (the `location` and `querystring` stores) plus push/replace.
@@ -75,5 +76,21 @@ describe("svelte-spa-router navigation", () => {
         // going back skips "/two" because it was replaced
         window.history.back();
         await waitFor(() => expect(get(location)).toBe("/one"));
+    });
+});
+
+describe("stores read the current hash for every new subscriber", () => {
+    it("a later subscriber sees the present location, not the last one an earlier subscriber saw", async () => {
+        await navigate("#/first");
+        const stop = location.subscribe(() => {});
+        await waitFor(() => expect(get(location)).toBe("/first"));
+        stop();
+
+        await navigate("#/second");
+        await navigate("");
+
+        // back at the root, where the stores started: nothing may be remembered
+        expect(get(location)).toBe("/");
+        expect(get(querystring)).toBe("");
     });
 });

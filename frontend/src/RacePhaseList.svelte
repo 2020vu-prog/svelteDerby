@@ -14,7 +14,7 @@
     import CarFilter from "#src/CarFilter.svelte";
     import { onMount } from "svelte";
     import { dateChangeLabel, getMainFull, escapeRegExp } from "#src/utils.js";
-    import { location } from "svelte-spa-router";
+    import { location } from "#src/routes/routerStores.js";
     var mainFullPx = 300;
     var phaseList = [];
     var start;

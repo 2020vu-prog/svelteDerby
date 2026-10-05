@@ -25,7 +25,8 @@
         RoutePermission,
     } from "#src/routes/frontendPermissions.js";
     import { onMount } from "svelte";
-    import { push, pop, location } from "svelte-spa-router";
+    import { push, pop } from "svelte-spa-router";
+    import { location } from "#src/routes/routerStores.js";
     import { getMainFull, filterMatches } from "#src/utils.js";
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import { faMusic } from "@fortawesome/free-solid-svg-icons/faMusic";
