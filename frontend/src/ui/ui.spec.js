@@ -18,9 +18,12 @@ describe("ui components render Bootstrap 5 markup", () => {
         const badge = screen.getByText("badge");
         expect(badge.tagName).toBe("SPAN");
         expect(badge.className).toBe(
-            "bigText badge text-bg-secondary rounded-pill"
+            "bigText badge ui-badge-secondary rounded-pill"
         );
         expect(badge.getAttribute("style")).toMatch(/^background: red;?$/);
+        // Bootstrap 5's text-bg-* and bg-* set the background with !important and
+        // would override that inline color (the race badges rely on it).
+        expect(badge.className).not.toMatch(/text-bg-|(^| )bg-/);
 
         const go = screen.getByText("go");
         expect(go.tagName).toBe("BUTTON");

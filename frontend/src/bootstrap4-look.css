@@ -154,6 +154,7 @@ hr:not([size]) {
 .form-check-input:checked,
 .form-check-input:checked[type="checkbox"],
 .form-check-input:focus {
+    outline: revert;
     appearance: auto;
     width: auto;
     height: auto;
