@@ -46,7 +46,7 @@
 {:else if type === "select"}
     <select
         {...$$restProps}
-        class={cx(className, "form-control")}
+        class={cx(className, "form-select")}
         bind:value={value}
         disabled={disabled}
         on:change

@@ -6,9 +6,6 @@
     export let check = false;
 </script>
 
-<div
-    {...$$restProps}
-    class={cx(className, check ? "form-check" : "form-group")}
->
+<div {...$$restProps} class={cx(className, check ? "form-check" : "mb-3")}>
     <slot />
 </div>

@@ -1,5 +1,5 @@
 // Local replacements for the sveltestrap components this app used. They render
-// the same Bootstrap 4 markup and classes, and only the props the app passes are
+// Bootstrap 5 markup and classes, and only the props the app passes are
 // supported.
 export { default as Badge } from "./Badge.svelte";
 export { default as Button } from "./Button.svelte";
