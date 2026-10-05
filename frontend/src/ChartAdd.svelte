@@ -240,7 +240,7 @@
             bind:group={namingToolEnabled}
             value={true}
         />
-        <label for="automated" onclick="">Automated</label>
+        <label for="automated">Automated</label>
 
         <input
             id="manual"
@@ -249,7 +249,7 @@
             bind:group={namingToolEnabled}
             value={false}
         />
-        <label for="manual" onclick="">Manual</label>
+        <label for="manual">Manual</label>
     </div>
     <br />
     <br />
@@ -268,7 +268,7 @@
                 bind:group={day}
                 value="Sat"
             />
-            <label for="sat" onclick="">Sat</label>
+            <label for="sat">Sat</label>
 
             <input
                 id="sun"
@@ -277,7 +277,7 @@
                 bind:group={day}
                 value="Sun"
             />
-            <label for="sun" onclick="">Sun</label>
+            <label for="sun">Sun</label>
         </div>
         <br />
         <br />
@@ -295,7 +295,7 @@
                 bind:group={time}
                 value="AM"
             />
-            <label for="am" onclick="">AM</label>
+            <label for="am">AM</label>
 
             <input
                 id="pm"
@@ -304,7 +304,7 @@
                 bind:group={time}
                 value="PM"
             />
-            <label for="pm" onclick="">PM</label>
+            <label for="pm">PM</label>
 
             <input
                 id="double"
@@ -313,7 +313,7 @@
                 bind:group={time}
                 value="Double"
             />
-            <label for="double" onclick="">Double</label>
+            <label for="double">Double</label>
 
             <input
                 id="single"
@@ -322,7 +322,7 @@
                 bind:group={time}
                 value="Single"
             />
-            <label for="single" onclick="">Single</label>
+            <label for="single">Single</label>
         </div>
         <br />
         <br />
@@ -339,7 +339,7 @@
                 bind:group={division}
                 value="Stock"
             />
-            <label for="stock" onclick="">Stock</label>
+            <label for="stock">Stock</label>
 
             <input
                 id="ss"
@@ -348,7 +348,7 @@
                 bind:group={division}
                 value="SS"
             />
-            <label for="ss" onclick="">SS</label>
+            <label for="ss">SS</label>
 
             <input
                 id="masters"
@@ -357,7 +357,7 @@
                 bind:group={division}
                 value="Masters"
             />
-            <label for="masters" onclick="">Masters</label>
+            <label for="masters">Masters</label>
 
             <input
                 id="legacy"
@@ -366,7 +366,7 @@
                 bind:group={division}
                 value="Legacy"
             />
-            <label for="legacy" onclick="">Legacy</label>
+            <label for="legacy">Legacy</label>
 
             <input
                 id="wrap"
@@ -375,7 +375,7 @@
                 bind:group={division}
                 value="Wrap"
             />
-            <label for="wrap" onclick="">Wrap</label>
+            <label for="wrap">Wrap</label>
         </div>
         <br />
     {/if}
