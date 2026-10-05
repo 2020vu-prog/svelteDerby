@@ -18,7 +18,7 @@
     import TimerPbHealth from "#src/TimerPbHealth.svelte";
     import SpinnerButton from "#src/SpinnerButton.svelte";
     import TimerSelection from "#src/TimerSelection.svelte";
-    import { Form, FormGroup, FormText, Input, Label } from "sveltestrap";
+    import { Form, FormGroup, FormText, Input, Label } from "#src/ui/index.js";
     import { Base64 } from "js-base64";
 
     var bar2 = true;

@@ -8,7 +8,7 @@
         ModalBody,
         ModalFooter,
         ModalHeader,
-    } from "sveltestrap";
+    } from "#src/ui/index.js";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
     import { pushMessage, raceConfig, axios } from "#src/stores";
@@ -367,7 +367,7 @@
             <img alt="spinner" src="data/circles.svg" width="25px" />
         {/if}
     </Button>
-    <Collapse isOpen={open} toggle={toggle}>
+    <Collapse isOpen={open}>
         <LogList msgs={msgs} />
     </Collapse>
 </div>

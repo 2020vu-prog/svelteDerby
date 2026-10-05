@@ -1,6 +1,6 @@
 <script>
     import log from "loglevel";
-    import { Modal, ModalHeader, ModalBody } from "sveltestrap";
+    import { Modal, ModalHeader, ModalBody } from "#src/ui/index.js";
     import { onMount } from "svelte";
     import { lastSplash } from "#src/stores.js";
     import { end, toSeconds, parse } from "iso8601-duration";

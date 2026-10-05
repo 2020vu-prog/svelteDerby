@@ -1,6 +1,12 @@
 <script>
     import log from "loglevel";
-    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        Badge,
+    } from "#src/ui/index.js";
     import { sleep, secondsToHHMMSS } from "#src/utils.js";
     import SpinnerButton from "#src/SpinnerButton.svelte";
     import { axios, raceConfig, pushMessage } from "#src/stores.js";

@@ -7,7 +7,7 @@
         ModalBody,
         ModalFooter,
         ModalHeader,
-    } from "sveltestrap";
+    } from "#src/ui/index.js";
 
     import { theme, driverMap } from "#src/stores.js";
     import {
@@ -235,7 +235,7 @@
 </style>
 
 <div style="color:black">
-    <Modal isOpen={modalOpen} toggle={modalToggle} fullscreen>
+    <Modal isOpen={modalOpen} toggle={modalToggle}>
         {#if modalType === "deleteConfirmation"}
             <ModalHeader toggle={modalToggle}>Confirm delete?</ModalHeader>
             <ModalBody>

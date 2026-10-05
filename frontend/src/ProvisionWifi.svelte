@@ -1,6 +1,6 @@
 <script>
     import { push, pop, replace } from "svelte-spa-router";
-    import { Form, FormGroup, FormText, Input, Label } from "sveltestrap";
+    import { Form, FormGroup, FormText, Input, Label } from "#src/ui/index.js";
     import SpinnerButton from "#src/SpinnerButton.svelte";
 
     import { axios, raceConfig, pushMessage, userEmail } from "#src/stores.js";

@@ -8,7 +8,7 @@
         RawFacade,
         PbUtils,
     } from "@rr1.us/timer_protobuf/calcFinishPb.js";
-    import { Card, CardBody, CardHeader } from "sveltestrap";
+    import { Card, CardBody, CardHeader } from "#src/ui/index.js";
     import { Base64 } from "js-base64";
     import TimerPbHealth from "#src/TimerPbHealth.svelte";
     import {
@@ -43,7 +43,7 @@
         FormGroup,
         Label,
         Input,
-    } from "sveltestrap";
+    } from "#src/ui/index.js";
     import { push, querystring } from "svelte-spa-router";
     const { v4: uuidv4 } = require("uuid");
 

@@ -10,7 +10,7 @@
         CardTitle,
         CardFooter,
         Badge,
-    } from "sveltestrap";
+    } from "#src/ui/index.js";
     import { db } from "#src/eventDb.js";
     export let bp;
     export let index;

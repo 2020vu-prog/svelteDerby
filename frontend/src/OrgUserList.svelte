@@ -1,6 +1,12 @@
 <script>
     import log from "loglevel";
-    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        Badge,
+    } from "#src/ui/index.js";
     import VirtualList from "@sveltejs/svelte-virtual-list";
     import { uiPageSize, axios, raceConfig } from "#src/stores.js";
     import { safeGetAt } from "#src/utils.js";

@@ -1,6 +1,12 @@
 <script>
     import log from "loglevel";
-    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        Badge,
+    } from "#src/ui/index.js";
 
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import { faDice } from "@fortawesome/free-solid-svg-icons/faDice";

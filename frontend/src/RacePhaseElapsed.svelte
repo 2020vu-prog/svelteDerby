@@ -8,7 +8,7 @@
         CardFooter,
         Badge,
         Table,
-    } from "sveltestrap";
+    } from "#src/ui/index.js";
     import { recalcLaneData } from "#src/utilsElapsed.js";
     import { fmtPinTime } from "#src/utils.js";
     import { onMount } from "svelte";

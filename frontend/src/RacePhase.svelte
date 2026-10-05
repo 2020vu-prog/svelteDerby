@@ -7,7 +7,7 @@
         CardTitle,
         CardFooter,
         Badge,
-    } from "sveltestrap";
+    } from "#src/ui/index.js";
 
     import CarAndDriver from "#src/CarAndDriver.svelte";
     import CarAndDriverVertical from "#src/CarAndDriverVertical.svelte";
@@ -204,10 +204,7 @@
                     class="bg-info text-white"
                     style="padding: 2px; border: 0; border-radius: 0"
                 >
-                    <CardTitle
-                        color="info"
-                        style="align-items: center; padding: 0px 2px"
-                    >
+                    <CardTitle style="align-items: center; padding: 0px 2px">
                         <span on:click={gotoBracket}>{chartPosition}</span>
                         <span
                             class="spanRight"
@@ -227,10 +224,7 @@
                         </span>
                     </CardTitle>
                 </CardHeader>
-                <CardBody
-                    color="info"
-                    style={bgColor == "Gray" ? "padding: 0px" : ""}
-                >
+                <CardBody style={bgColor == "Gray" ? "padding: 0px" : ""}>
                     <ul class="list-group">
                         <li class="list-group-item">
                             <CarAndDriver
@@ -317,7 +311,7 @@
                 style="background: {bgColor}"
                 on:click={() => (compressedLayout = false)}
             >
-                <CardBody color="info" style="padding: 10px !important">
+                <CardBody style="padding: 10px !important">
                     <ul class="list-group">
                         <li
                             class="list-group-item"

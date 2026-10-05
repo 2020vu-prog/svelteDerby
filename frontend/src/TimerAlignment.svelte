@@ -1,6 +1,6 @@
 <script>
     import log from "loglevel";
-    import { Card, CardBody, CardHeader } from "sveltestrap";
+    import { Card, CardBody, CardHeader } from "#src/ui/index.js";
 
     import {
         mqttTimerSubscribe,

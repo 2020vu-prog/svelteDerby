@@ -16,7 +16,13 @@
     import { db } from "#src/eventDb.js";
     import { getChartJson, sleep } from "#src/utils.js";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
-    import { Card, CardBody, CardHeader, CardTitle, Badge } from "sveltestrap";
+    import {
+        Card,
+        CardBody,
+        CardHeader,
+        CardTitle,
+        Badge,
+    } from "#src/ui/index.js";
     import PieProgress from "#src/PieProgress.svelte";
     export let params = {};
     var chartId = undefined;
