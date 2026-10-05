@@ -66,7 +66,7 @@
             size="7"
             bind:value={$chartClickLoggerId}
         />
-        <p />
+        <p></p>
         <button on:click={copyJson}>Copy Json</button>
     </span>
 {/if}

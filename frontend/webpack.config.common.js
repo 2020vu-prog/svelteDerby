@@ -186,14 +186,7 @@ module.exports = (cloudfrontTarget) => {
                             onwarn: (warning, handleWarning) => {
                                 // Svelte 4 reported "A11y: ..."; Svelte 5 uses codes
                                 // like `a11y_click_events_have_key_events`.
-                                // Self-closing non-void tags (`<p />`) are fixed in
-                                // their own change; drop that code from this list
-                                // once it merges.
-                                const ignored =
-                                    String(warning.code).startsWith("a11y") ||
-                                    warning.code ===
-                                        "element_invalid_self_closing_tag";
-                                if (!ignored) {
+                                if (!String(warning.code).startsWith("a11y")) {
                                     handleWarning(warning);
                                 }
                             },

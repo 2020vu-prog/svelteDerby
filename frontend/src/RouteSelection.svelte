@@ -171,7 +171,7 @@
     {#if isCarousel()}
         <SpinnerButton on:click={showCarousel}>Show</SpinnerButton>
     {/if}
-    <p />
+    <p></p>
 </div>
 
 {#each wip as item, index (item.path)}

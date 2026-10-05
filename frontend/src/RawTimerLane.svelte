@@ -27,7 +27,7 @@
     }
 </style>
 
-<p />
+<p></p>
 {lane} CarLength: {getCarLenMillis()}
 {#if getLaneError()}
     <p class="errorMessage">Error: {getLaneError()}</p>
