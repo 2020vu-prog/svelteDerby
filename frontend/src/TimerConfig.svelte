@@ -104,9 +104,7 @@
         }
         submitSpinning = false;
     }
-    async function handleTimerSelection(timerEvent) {
-        log.debug("handleTimerSelection e:", timerEvent);
-        var timer = timerEvent.detail;
+    async function handleTimerSelection(timer) {
         log.debug("handleTimerSelection timer:", timer);
         loginForm.sha = timer.sha;
         $mqttTimerTopic = timer.hostname;
@@ -163,7 +161,7 @@
     <br />
     <TimerSelection
         isProtobuf=""
-        on:timerSelected={handleTimerSelection}
+        onTimerSelected={handleTimerSelection}
         activeTimerKey={activeTimerSha}
     />
 

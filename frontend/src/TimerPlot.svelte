@@ -491,7 +491,7 @@
         bind:beginAgeDuration={historyBeginAgeDuration}
         bind:endAgeDuration={historyEndAgeDuration}
         spinning={loading || chartLoading}
-        on:refresh={loadCpuTempHistory}
+        onRefresh={loadCpuTempHistory}
     />
 </div>
 

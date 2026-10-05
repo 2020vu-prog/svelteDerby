@@ -829,15 +829,15 @@
             calcSpinning = false;
         }
     }
-    function handleTimerSelect(event) {
-        log.debug("handleTimerSelect got event:", event.detail);
-        if (event.detail.decoded) {
+    function handleTimerSelect(selection) {
+        log.debug("handleTimerSelect got event:", selection);
+        if (selection.decoded) {
             log.debug(
                 "handleTimerSelect got id:",
-                event.detail.decoded.timerMqttClientId
+                selection.decoded.timerMqttClientId
             );
-            timerId = event.detail.decoded.timerMqttClientId;
-            timerName = event.detail.text;
+            timerId = selection.decoded.timerMqttClientId;
+            timerName = selection.text;
             timerTopic = `derby/${$raceConfig.orgId}/video/${timerName}`;
             log.debug("handleTimerSelect set:", timerId);
         }
@@ -982,7 +982,7 @@
 </label>
 <label>Linked Timer</label>
 <TimerSelectByName
-    on:select={handleTimerSelect}
+    onSelect={handleTimerSelect}
     preSelect="Finish"
     mode={timerSelectMode}
 />

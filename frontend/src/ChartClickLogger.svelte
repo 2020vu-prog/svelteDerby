@@ -5,7 +5,6 @@
         createPermissionStore,
         RoutePermission,
     } from "#src/routes/frontendPermissions.js";
-    import { createEventDispatcher } from "svelte";
 
     import {
         chartClickLoggerId,
@@ -15,7 +14,7 @@
     const canConfigureTimer = createPermissionStore(
         RoutePermission.CAN_TIMER_CONFIG
     );
-    const dispatch = createEventDispatcher();
+    export let onCopyJson = () => {};
     const toggleEdit = async () => {
         log.debug("toggle:", editMode);
     };
@@ -26,7 +25,7 @@
         }
     }
     function copyJson() {
-        dispatch("copyJson", {});
+        onCopyJson();
     }
 </script>
 

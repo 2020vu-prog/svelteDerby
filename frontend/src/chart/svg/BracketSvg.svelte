@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher, onMount, tick } from "svelte";
+    import { onMount, tick } from "svelte";
     import { faEye } from "@fortawesome/free-solid-svg-icons/faEye";
     import { faEyeSlash } from "@fortawesome/free-solid-svg-icons/faEyeSlash";
     import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
@@ -36,7 +36,8 @@
     export let chartName = "";
     export let eventName = "";
 
-    const dispatch = createEventDispatcher();
+    // Called with { heatId, slot, clickedOn? } when a slot or placement is chosen.
+    export let onSlotClick = () => {};
     // Each step of column spacing adds this much white space between columns.
     const COLUMN_SPACING_STEP = 24;
     const MAX_COLUMN_SPACING_STEPS = 10;
@@ -204,11 +205,11 @@
     }
 
     function chooseSlot(heatId, slot) {
-        dispatch("slotclick", { heatId, slot });
+        onSlotClick({ heatId, slot });
     }
 
     function choosePlacement(position) {
-        dispatch("slotclick", {
+        onSlotClick({
             heatId: position,
             slot: position,
             clickedOn: position,
@@ -678,8 +679,8 @@
                             chartId={chartId}
                             heatId={heat.id}
                             slotId="A"
-                            on:stateloadstart={handleSlotLoadStart}
-                            on:stateloadend={handleSlotLoadEnd}
+                            onStateLoadStart={handleSlotLoadStart}
+                            onStateLoadEnd={handleSlotLoadEnd}
                             let:state
                         >
                             <g aria-label={slotAriaLabel(heat.id, "A", state)}>
@@ -765,8 +766,8 @@
                             chartId={chartId}
                             heatId={heat.id}
                             slotId="B"
-                            on:stateloadstart={handleSlotLoadStart}
-                            on:stateloadend={handleSlotLoadEnd}
+                            onStateLoadStart={handleSlotLoadStart}
+                            onStateLoadEnd={handleSlotLoadEnd}
                             let:state
                         >
                             <g aria-label={slotAriaLabel(heat.id, "B", state)}>
@@ -849,10 +850,10 @@
                         chartJson={chartJson}
                         chartId={chartId}
                         position={placement.id}
-                        on:stateloadstart={handleSlotLoadStart}
-                        on:stateloadend={handleSlotLoadEnd}
-                        on:statechange={(event) =>
-                            updatePlacementState(placement.id, event.detail)}
+                        onStateLoadStart={handleSlotLoadStart}
+                        onStateLoadEnd={handleSlotLoadEnd}
+                        onStateChange={(state) =>
+                            updatePlacementState(placement.id, state)}
                         let:state
                     >
                         <g

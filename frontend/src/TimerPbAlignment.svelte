@@ -568,7 +568,7 @@
                     bind:beginAgeDuration={historyBeginAgeDuration}
                     bind:endAgeDuration={historyEndAgeDuration}
                     spinning={historySpinning}
-                    on:refresh={getTimerHistoryFromApi}
+                    onRefresh={getTimerHistoryFromApi}
                 />
             </div>
             <div class="alignmentControl plotControl">

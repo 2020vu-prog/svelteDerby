@@ -7,11 +7,7 @@ import { fileURLToPath, URL } from "node:url";
 // components. Test files here use the *.spec.js suffix specifically so `node --test`'s
 // default file discovery (*.test.js/.mjs/.cjs) never picks them up.
 export default defineConfig({
-    plugins: [
-        svelte({
-            compilerOptions: { compatibility: { componentApi: 4 } },
-        }),
-    ],
+    plugins: [svelte()],
     // Vitest resolves modules under Node/SSR conditions by default, which can
     // hand a component's compiled output a *different* svelte/internal module
     // instance than the one other imports (svelte-spa-router,

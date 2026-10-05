@@ -3,13 +3,14 @@
 
     import { onMount } from "svelte";
     import { db } from "#src/eventDb.js";
-    import { createEventDispatcher } from "svelte";
     import { getTimerPbConfig } from "#src/utils.js";
     let tcList = [];
     let selectedTc = "";
     export let preSelect = "";
     export let mode = "normal";
-    const dispatch = createEventDispatcher();
+    // Called with { text, SK, decoded } for the chosen timer, including the
+    // initial selection once the list has loaded.
+    export let onSelect = () => {};
 
     onMount(async () => {
         selectedTc = preSelect;
@@ -26,7 +27,7 @@
         var timerPbConfig = {};
         [timerPbConfig] = await getTimerPbConfig(selectedTc);
         log.debug("TimerSelectByName: record:", timerPbConfig);
-        dispatch("select", {
+        onSelect({
             text: selectedTc,
             SK: selectedTc,
             decoded: timerPbConfig,

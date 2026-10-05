@@ -341,5 +341,5 @@
         />
     {/if}
 
-    <ChartClickLogger on:copyJson={copyJson} />
+    <ChartClickLogger onCopyJson={copyJson} />
 </div>

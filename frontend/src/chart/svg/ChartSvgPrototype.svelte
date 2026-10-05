@@ -35,8 +35,8 @@
         }
     });
 
-    function openChartPosition(event) {
-        const { heatId, slot, clickedOn = `${heatId}${slot}` } = event.detail;
+    function openChartPosition(detail) {
+        const { heatId, slot, clickedOn = `${heatId}${slot}` } = detail;
         push(
             `/ChartPosition/${params.chartId}/${heatId}?clickedOn=${clickedOn}`
         );
@@ -57,7 +57,7 @@
         imgPath={bracketMeta.imgPath}
         chartName={bracketMeta.bracketName}
         eventName={$raceConfig.name}
-        on:slotclick={openChartPosition}
+        onSlotClick={openChartPosition}
     />
 {:else}
     <p>Loading chart...</p>

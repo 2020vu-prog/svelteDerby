@@ -2,12 +2,11 @@
     import { faEllipsisV } from "@fortawesome/free-solid-svg-icons/faEllipsisV";
     import Icon from "fa-svelte";
 
-    import { createEventDispatcher } from "svelte";
-
-    const dispatch = createEventDispatcher();
+    // Called with { text } when the icon is clicked.
+    export let onMessage = () => {};
 
     const didClick = () => {
-        dispatch("message", {
+        onMessage({
             text: "Info!",
         });
     };

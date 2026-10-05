@@ -1,5 +1,4 @@
 <script>
-    import { createEventDispatcher } from "svelte";
     import { containsChart } from "#src/chart/chartTree/chartTree.js";
 
     // Nodes from buildChartTree. Folders are native <details> elements and
@@ -11,7 +10,8 @@
     // How many folders deep this list is; each level is indented one step.
     export let depth = 0;
 
-    const dispatch = createEventDispatcher();
+    // Called with the id of the chart the user picks.
+    export let onSelect = () => {};
 
     // Which folders are open, by id. Choosing a chart opens the folders that
     // hold it; folders the user opened or closed themselves are left alone.
@@ -32,7 +32,7 @@
                         selected={selected}
                         name={name}
                         depth={depth + 1}
-                        on:select
+                        onSelect={onSelect}
                     />
                 </details>
             {:else}
@@ -42,7 +42,7 @@
                         name={name}
                         value={node.id}
                         checked={node.id === selected}
-                        on:change={() => dispatch("select", node.id)}
+                        on:change={() => onSelect(node.id)}
                     />
                     {node.name}
                 </label>

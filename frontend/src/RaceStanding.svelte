@@ -69,8 +69,8 @@
     const shouldRender = (raceStanding) => {
         return !raceStanding.del;
     };
-    function toggleToolbar(event) {
-        log.debug("info event: ", event.detail.text);
+    function toggleToolbar(message) {
+        log.debug("info event: ", message.text);
         showToolbar = !showToolbar;
     }
     const gotoBracket = () => {
@@ -100,7 +100,7 @@
                     >
                     {#if !isHistory()}
                         <EllipsisButton
-                            on:message={toggleToolbar}
+                            onMessage={toggleToolbar}
                             dbName="RaceStanding"
                             dbKey={standing.classKey}
                         />

@@ -83,9 +83,9 @@
         presetBracketNameSelections();
     });
     $: chartTree = buildChartTree(s3ChartTypes ? s3ChartTypes["Contents"] : []);
-    function handleChartSelect(event) {
-        chartAddForm.bracketSelected = event.detail;
-        chartSelected = "Chart Selected: " + event.detail;
+    function handleChartSelect(chartId) {
+        chartAddForm.bracketSelected = chartId;
+        chartSelected = "Chart Selected: " + chartId;
         syncAddButton();
     }
     async function handleSubmit() {
@@ -212,7 +212,7 @@
             <ChartTree
                 nodes={chartTree}
                 selected={chartAddForm.bracketSelected || ""}
-                on:select={handleChartSelect}
+                onSelect={handleChartSelect}
             />
         {:else if chartListError}
             <p role="alert">Unable to load the list of charts.</p>
