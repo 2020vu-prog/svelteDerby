@@ -192,7 +192,7 @@
 <div>
     <h4>Raw Timer List</h4>
 
-    <p></p>
+    <p />
 
     <!-- TODO: add keyed each block -->
     {#each winnerDeltas.reverse() as winnerDelta}
@@ -216,7 +216,7 @@
                     lane="Lane2"
                     laneJson={JSON.stringify(winnerDelta.lanes.lane2)}
                 />
-                <p></p>
+                <p />
                 {#await shouldAllowApply(winnerDelta)}
                     <p>Loading</p>
                 {:then rc}

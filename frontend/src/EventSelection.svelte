@@ -239,7 +239,7 @@
         <OrgName orgIz={params.orgIz} />
     </h4>
 
-    <p></p>
+    <p />
     {#if waitingForReloadBeginMs}
         <h4>
             Loading Event... Please Wait

@@ -97,7 +97,7 @@
     <div
         class="bottomNavScrollPlaceholder"
         style="height: {placeholderHeight};"
-    ></div>
+    />
 {/if}
 <div class="footer">
     <StatusMessage />

@@ -75,14 +75,14 @@
 <h4>Race Timers</h4>
 First Timer added will be finish line timer. Subsequent additions may be used to report
 elapsed time split(s).
-<p></p>
+<p />
 {#each getSortedTc(tcFromDexie) as tc (tc.at)}
     <Card class="mtj-3 border border-info">
         <CardHeader class="bg-info text-white">
             <CardTitle>
                 <span on:keyup={() => {}} on:click={() => navToTcDetail(tc)}>
                     {tc.sortKey}
-                    <nbsp></nbsp>
+                    <nbsp />
                     {annotat(tc)}
                 </span>
                 <span class="spanRight">
@@ -95,7 +95,7 @@ elapsed time split(s).
         </CardHeader>
     </Card>
 {/each}
-<p></p>
+<p />
 <SpinnerButton on:click={provisionWifi}>
     Setup Timer WiFi Instructions
 </SpinnerButton>

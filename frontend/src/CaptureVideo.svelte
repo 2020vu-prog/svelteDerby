@@ -855,8 +855,8 @@
 
 <h1>Capture Video</h1>
 
-<video id="rawGum0" playsinline autoplay muted style="display:none"></video>
-<canvas class="capture-preview" style={videoDisplay} id="gum0"></canvas>
+<video id="rawGum0" playsinline autoplay muted style="display:none" />
+<canvas class="capture-preview" style={videoDisplay} id="gum0" />
 {#if hidePreview && recordingActive}
     <div class="recording-indicator" role="status" aria-live="polite">
         <span class="recording-dot" aria-hidden="true"></span>
@@ -996,7 +996,7 @@
     />
 {/key}
 
-<p></p>
+<p />
 <SpinnerButton on:click={doStart} spinning={recordingRequested}>
     Record
 </SpinnerButton>

@@ -606,7 +606,8 @@
         <textarea
             id="carNotes"
             bind:value={driverForm.carNotes}
-            placeholder="Driver Notes"></textarea>
+            placeholder="Driver Notes"
+        />
     </label>
     <label>
         Phonetic Name Type:

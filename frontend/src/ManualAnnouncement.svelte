@@ -71,7 +71,8 @@
         id="announcement"
         name="announcement"
         bind:value={announceText}
-        style="width: 100%;"></textarea>
+        style="width: 100%;"
+    />
     <br />
     <br />
     <input type="button" value="Announce" on:click={doAnnounce} />

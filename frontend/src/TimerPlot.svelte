@@ -504,15 +504,15 @@
 {/if}
 
 <div class="chartShell" style={`height: ${height}px;`}>
-    <canvas bind:this={chartCanvas} aria-label={title}></canvas>
+    <canvas bind:this={chartCanvas} aria-label={title} />
 </div>
 <div class="chartLegend">
     <span class="legendItem">
-        <span class="lineSample"></span>
+        <span class="lineSample" />
         {selectedMetric.label} ({selectedMetric.unit})
     </span>
     <span class="legendItem">
-        <span class="rebootSample"></span>
+        <span class="rebootSample" />
         Reboot
     </span>
     <span>Samples: {numericPoints.length}</span>
