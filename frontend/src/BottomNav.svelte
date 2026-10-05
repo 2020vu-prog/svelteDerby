@@ -9,7 +9,7 @@
     import log from "loglevel";
 
     import { showBottomNav, selectedToolbarList, theme } from "#src/stores.js";
-    import { location } from "svelte-spa-router";
+    import { location } from "#src/routes/routerStores.js";
     import StatusMessage from "#src/StatusMessage.svelte";
 
     import { onMount } from "svelte";

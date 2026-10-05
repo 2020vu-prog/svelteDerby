@@ -17,7 +17,8 @@
     } from "#src/stores.js";
     import { safeGetAt, sleep } from "#src/utils.js";
     import { onMount } from "svelte";
-    import { push, pop, location } from "svelte-spa-router";
+    import { push, pop } from "svelte-spa-router";
+    import { location } from "#src/routes/routerStores.js";
     import { faEdit } from "@fortawesome/free-solid-svg-icons/faEdit";
     import Icon from "fa-svelte";
     export let params = {};

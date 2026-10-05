@@ -19,7 +19,7 @@ import {
 import { get } from "svelte/store";
 import { localConfigDb } from "#src/eventDb.js";
 import { escapeRegExp } from "#src/regexEscape.js";
-import { location as spaLocation } from "svelte-spa-router";
+import { location as spaLocation } from "#src/routes/routerStores.js";
 
 const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 

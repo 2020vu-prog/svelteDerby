@@ -10,7 +10,8 @@
     } from "#src/stores.js";
     import { safeGetAt, sleep } from "#src/utils.js";
     import { onMount } from "svelte";
-    import { replace, push, pop, location } from "svelte-spa-router";
+    import { replace, push, pop } from "svelte-spa-router";
+    import { location } from "#src/routes/routerStores.js";
     export let params = {};
     import { db } from "#src/eventDb.js";
     import { tick } from "svelte";

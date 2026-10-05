@@ -12,7 +12,8 @@
     } from "#src/stores.js";
     import { getTimerPbConfig } from "#src/utils.js";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
-    import { push, replace, querystring, pop } from "svelte-spa-router";
+    import { push, replace, pop } from "svelte-spa-router";
+    import { querystring } from "#src/routes/routerStores.js";
     import { onMount } from "svelte";
     import { db } from "#src/eventDb.js";
     import TimerPbHealth from "#src/TimerPbHealth.svelte";

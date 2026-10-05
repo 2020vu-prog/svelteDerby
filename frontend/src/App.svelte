@@ -3,8 +3,9 @@
     const { v4: uuidv4 } = require("uuid");
 
     import aws_exports from "#src/aws-config";
-    import { location, replace } from "svelte-spa-router";
-    import { querystring } from "svelte-spa-router";
+    import { replace } from "svelte-spa-router";
+    import { location } from "#src/routes/routerStores.js";
+    import { querystring } from "#src/routes/routerStores.js";
 
     import SpinnerPanel from "#src/SpinnerPanel.svelte";
     import Splash from "#src/Splash.svelte";

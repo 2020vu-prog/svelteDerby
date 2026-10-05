@@ -3,7 +3,8 @@
      * Central route renderer. It delays protected routes until roles load,
      * rejects unauthorized routes, and displays permitted route actions.
      */
-    import Router, { location } from "svelte-spa-router";
+    import Router from "svelte-spa-router";
+    import { location } from "#src/routes/routerStores.js";
     import MaterialAdd from "#src/MaterialAdd.svelte";
     import RouteHelp from "#src/routes/RouteHelp.svelte";
     import { raceConfig, roleMap, userEmail, userId } from "#src/stores.js";

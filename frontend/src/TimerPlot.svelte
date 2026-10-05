@@ -14,7 +14,7 @@
 <script>
     import log from "loglevel";
     import { onDestroy, onMount } from "svelte";
-    import { querystring } from "svelte-spa-router";
+    import { querystring } from "#src/routes/routerStores.js";
     import { parse, toSeconds } from "iso8601-duration";
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { axios, raceConfig, pushMessage } from "#src/stores.js";

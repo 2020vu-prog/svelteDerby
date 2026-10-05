@@ -177,6 +177,10 @@ module.exports = (cloudfrontTarget) => {
             maxEntrypointSize: 1024 * 1024,
         },
         module: {
+            // An import that names something its module does not export is
+            // otherwise only a warning and becomes `undefined` at run time (as
+            // `location` did when svelte-spa-router 5 dropped it).
+            parser: { javascript: { exportsPresence: "error" } },
             rules: [
                 {
                     test: /\.svelte$/,

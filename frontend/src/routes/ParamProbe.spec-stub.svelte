@@ -1,15 +1,11 @@
 <script>
     // Stand-in for a routed screen in routeRuntime.spec.js: shows the params
-    // it was handed and can raise a routeEvent, as real screens may.
-    import { createEventDispatcher } from "svelte";
-
+    // it was handed and can call the onRouteEvent callback the router gives
+    // every screen (svelte-spa-router 5.x; 4.x used a `routeEvent` DOM event).
     export let params;
-
-    const dispatch = createEventDispatcher();
+    export let onRouteEvent = () => {};
 </script>
 
 <div data-testid="probe" data-params={JSON.stringify(params)}>
-    <button on:click={() => dispatch("routeEvent", { from: "probe" })}>
-        raise
-    </button>
+    <button on:click={() => onRouteEvent({ from: "probe" })}> raise </button>
 </div>

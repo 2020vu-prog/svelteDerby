@@ -18,7 +18,8 @@
     } from "#src/stores.js";
 
     import { onMount } from "svelte";
-    import { push, replace, location } from "svelte-spa-router";
+    import { push, replace } from "svelte-spa-router";
+    import { location } from "#src/routes/routerStores.js";
     import {
         createPermissionStore,
         RoutePermission,
