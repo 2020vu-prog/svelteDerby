@@ -34,7 +34,6 @@
     import { tick } from "svelte";
 
     import aws_exports from "#src/aws-config";
-    import { exclude_internal_props } from "svelte/internal";
     //var mqSem = require("semaphore")(1);
     import { Lock } from "semaphore-async-await";
     const mqttSubLock = new Lock(1);

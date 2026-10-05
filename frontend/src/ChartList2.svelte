@@ -222,7 +222,7 @@
 
 <div>
     <h4>Chart List</h4>
-    <p />
+    <p></p>
     {#each bmdFromDexie as bmd (bmd.at)}
         {#if shouldDisplay(bmd)}
             <Card class="mt-3 border border-info">

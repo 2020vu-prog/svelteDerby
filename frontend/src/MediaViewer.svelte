@@ -212,7 +212,7 @@
 {/if}
 <div>
     <video
-        src={$videoHref}
+        src={$videoHref || undefined}
         on:mousemove={handleMove}
         on:touchmove|preventDefault={handleMove}
         on:mousedown={handleMousedown}
@@ -226,7 +226,7 @@
     </video>
 
     <div class="controls" style="opacity: {duration && showControls ? 1 : 0}">
-        <progress value={getProgress(time, duration)} />
+        <progress value={getProgress(time, duration)}></progress>
 
         <div class="info">
             <span class="time overlay">{format(time)}</span>

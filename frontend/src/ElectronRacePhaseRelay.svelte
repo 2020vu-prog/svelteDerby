@@ -92,4 +92,4 @@
     webpack-dev-server hot reload. A trivial, invisible node is enough
     to give Svelte a real fragment to instrument.
 -->
-<div style="display: none" />
+<div style="display: none"></div>

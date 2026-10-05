@@ -73,7 +73,7 @@
 
 <div>
     <h4>Organization List</h4>
-    <p />
+    <p></p>
 
     {#if loadingOrgs}
         <SpinnerButton disabled={true} spinning={true}>

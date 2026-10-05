@@ -49,7 +49,7 @@
 
 <h4>Org User List</h4>
 
-<p />
+<p></p>
 
 {#each orgUserList as item (item.at)}
     <Card class="mt-3 border border-info" on:click={() => editOrgUser(item)}>

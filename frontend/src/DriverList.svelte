@@ -126,7 +126,7 @@
         </SpinnerButton>
     {/if}
 
-    <p />
+    <p></p>
 </div>
 
 <VirtualList

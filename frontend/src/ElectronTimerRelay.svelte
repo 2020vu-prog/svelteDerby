@@ -81,4 +81,4 @@
     }
 </script>
 
-<span id="udpTimerSpan" />
+<span id="udpTimerSpan"></span>

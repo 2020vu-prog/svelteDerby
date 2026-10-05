@@ -6,7 +6,7 @@
     export let chartJson;
     export let chartId;
     export let heatId = "";
-    export let slot = "";
+    export let slotId = "";
     export let position = "";
 
     let state = {};
@@ -44,7 +44,7 @@
 
     $: [resolvedHeatId, resolvedSlot] = position
         ? parseHeatPos(position)
-        : [heatId, slot];
+        : [heatId, slotId];
 
     $: if (mounted) {
         $doRefreshBlocks;
