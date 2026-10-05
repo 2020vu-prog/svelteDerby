@@ -367,7 +367,7 @@
             <img alt="spinner" src="data/circles.svg" width="25px" />
         {/if}
     </Button>
-    <Collapse isOpen={open} toggle={toggle}>
+    <Collapse isOpen={open}>
         <LogList msgs={msgs} />
     </Collapse>
 </div>

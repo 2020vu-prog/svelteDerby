@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, cleanup } from "@testing-library/svelte";
+import {
+    render,
+    screen,
+    fireEvent,
+    cleanup,
+    waitFor,
+} from "@testing-library/svelte";
 import { describe, it, expect, afterEach } from "vitest";
 import Harness from "./TestHarness.svelte";
 
@@ -156,5 +162,39 @@ describe("Modal", () => {
         expect(document.body.classList.contains("modal-open")).toBe(true);
         await rerender({ modalOpen: false });
         expect(document.body.classList.contains("modal-open")).toBe(false);
+    });
+
+    it("moves focus into the dialog and returns it to the opener after closing", async () => {
+        const state = {};
+        const { rerender } = render(Harness, { state });
+        const opener = screen.getByText("opener");
+        opener.focus();
+        expect(opener).toHaveFocus();
+
+        await rerender({ modalOpen: true });
+        expect(screen.getByRole("dialog")).toHaveFocus();
+
+        // the focused close button disappears with the modal; focus must not
+        // fall back to <body>
+        await fireEvent.click(screen.getByLabelText("Close"));
+        // the fade-out is slower under jsdom than its 300ms duration
+        await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull(), {
+            timeout: 4000,
+        });
+        expect(opener).toHaveFocus();
+    });
+
+    it("returns focus to the opener when the whole component is removed while open", async () => {
+        const { rerender, unmount } = render(Harness, { modalOpen: false });
+        const opener = screen.getByText("opener");
+        opener.focus();
+        await rerender({ modalOpen: true });
+        expect(screen.getByRole("dialog")).toHaveFocus();
+        unmount();
+        expect(document.body.classList.contains("modal-open")).toBe(false);
+        expect(
+            document.activeElement === opener ||
+                document.activeElement === document.body
+        ).toBe(true);
     });
 });

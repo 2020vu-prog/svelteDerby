@@ -286,7 +286,6 @@
                     on:click={() => showMedia(mediaItem.Key)}
                 >
                     <CardTitle
-                        color="info"
                         class="bg-info text-white"
                         style="text-align: center;"
                     >

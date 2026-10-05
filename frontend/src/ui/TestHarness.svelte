@@ -44,6 +44,7 @@
     };
 </script>
 
+<button id="opener">opener</button>
 <Badge pill class="bigText" style="background: red">badge</Badge>
 <Button color="primary" size="sm" on:click={() => clicks.push("button")}
     >go</Button

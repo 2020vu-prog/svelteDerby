@@ -20,8 +20,28 @@
         counted = open;
         openCount = Math.max(0, openCount + (open ? 1 : -1));
         document.body.classList.toggle("modal-open", openCount > 0);
+        if (open) {
+            trigger = document.activeElement;
+        }
     }
-    onDestroy(() => setCounted(false));
+
+    // Keyboard users keep their place: remember what had focus when the modal
+    // opened, move focus into the dialog, and give it back once the modal is gone
+    // (after the fade-out, or straight away if the whole component is removed).
+    let trigger = null;
+    function focusDialog(node) {
+        node.focus();
+    }
+    function restoreFocus() {
+        if (trigger && typeof trigger.focus === "function") {
+            trigger.focus();
+        }
+        trigger = null;
+    }
+    onDestroy(() => {
+        setCounted(false);
+        restoreFocus();
+    });
 
     let mouseDownTarget;
     function handleBackdropMouseDown(event) {
@@ -54,7 +74,10 @@
             class="modal show d-block"
             role="dialog"
             aria-modal="true"
+            tabindex="-1"
+            use:focusDialog
             transition:fade={{ duration: 300 }}
+            on:outroend={restoreFocus}
             on:mousedown={handleBackdropMouseDown}
             on:click={handleBackdropClick}
         >
