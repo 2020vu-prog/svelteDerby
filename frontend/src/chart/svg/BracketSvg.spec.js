@@ -155,3 +155,52 @@ it("shrinks long heat titles to fit the heat frame", () => {
         frameWidth - 16 + 0.001
     );
 });
+
+const slotChart = {
+    progress: {
+        1: { WinnerDest: "2A", LoserDest: "OUT" },
+        2: { WinnerDest: "Place1", LoserDest: "OUT" },
+    },
+    imgPositions: {
+        "1A": { left: 20, top: 100 },
+        "1B": { left: 20, top: 160 },
+        "2A": { left: 220, top: 100 },
+        "2B": { left: 220, top: 160 },
+        Place1: { left: 420, top: 100 },
+    },
+};
+
+it("calls onSlotClick with the heat and slot that was chosen, by click or keyboard", async () => {
+    const onSlotClick = vi.fn();
+    const view = render(BracketSvg, {
+        chartId: "chart-1",
+        chartJson: slotChart,
+        onSlotClick,
+    });
+    const targets = view.container.querySelectorAll(".slot-target");
+
+    await fireEvent.click(targets[0]);
+    expect(onSlotClick).toHaveBeenLastCalledWith({ heatId: "1", slot: "A" });
+
+    await fireEvent.keyDown(targets[1], { key: "Enter" });
+    expect(onSlotClick).toHaveBeenLastCalledWith({ heatId: "1", slot: "B" });
+    expect(onSlotClick).toHaveBeenCalledTimes(2);
+});
+
+it("calls onSlotClick with the placement when a placement is chosen", async () => {
+    const onSlotClick = vi.fn();
+    const view = render(BracketSvg, {
+        chartId: "chart-1",
+        chartJson: slotChart,
+        onSlotClick,
+    });
+
+    await fireEvent.click(view.container.querySelector(".placement"));
+
+    expect(onSlotClick).toHaveBeenCalledTimes(1);
+    expect(onSlotClick).toHaveBeenCalledWith({
+        heatId: "Place1",
+        slot: "Place1",
+        clickedOn: "Place1",
+    });
+});

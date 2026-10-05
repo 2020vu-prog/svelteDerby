@@ -1,12 +1,11 @@
 <script>
-    import { createEventDispatcher } from "svelte";
     import SpinnerButton from "#src/SpinnerButton.svelte";
 
     export let beginAgeDuration = "PT20M";
     export let endAgeDuration = "PT0S";
     export let spinning = false;
 
-    const dispatch = createEventDispatcher();
+    export let onRefresh = () => {};
     let showAge = false;
 </script>
 
@@ -36,7 +35,7 @@
         </label>
         <SpinnerButton
             on:click={() => {
-                dispatch("refresh");
+                onRefresh();
             }}
             spinning={spinning}
         >

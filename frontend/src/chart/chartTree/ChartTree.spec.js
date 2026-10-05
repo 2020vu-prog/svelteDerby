@@ -1,5 +1,5 @@
 import { render, fireEvent, cleanup } from "@testing-library/svelte";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 
 import ChartTree from "#src/chart/chartTree/ChartTree.svelte";
 import { buildChartTree } from "#src/chart/chartTree/chartTree.js";
@@ -42,8 +42,10 @@ it("lists folders collapsed, with every chart a radio button in one group", () =
 
 it("announces the chart the user picks", async () => {
     const picks = [];
-    const view = render(ChartTree, { nodes });
-    view.component.$on("select", (event) => picks.push(event.detail));
+    const view = render(ChartTree, {
+        nodes,
+        onSelect: (chartId) => picks.push(chartId),
+    });
 
     await fireEvent.click(view.getByLabelText("12single.png"));
     await fireEvent.click(view.getByLabelText("N04double.png"));
@@ -61,7 +63,7 @@ it("checks the selected chart and opens only the folders that hold it", async ()
     expect(view.getByLabelText("12single.png")).not.toBeChecked();
     expect(openFolders(view)).toEqual(["AASBD", "Double"]);
 
-    await view.component.$set({ selected: "NDR/N04double.png" });
+    await view.rerender({ selected: "NDR/N04double.png" });
     expect(view.getByLabelText("N04double.png")).toBeChecked();
     expect(view.getByLabelText("08double.png")).not.toBeChecked();
     expect(openFolders(view)).toContain("NDR");
@@ -89,14 +91,14 @@ it("leaves folders the user opened alone when another chart is chosen", async ()
     // The user opens NDR by hand (the browser fires "toggle").
     ndr.open = true;
     await fireEvent(ndr, new Event("toggle"));
-    await view.component.$set({ selected: "AASBD/Double/08double.png" });
+    await view.rerender({ selected: "AASBD/Double/08double.png" });
 
     expect(openFolders(view)).toEqual(["AASBD", "Double", "NDR"]);
 
     // Closing one by hand sticks as well, until a chart inside it is chosen.
     ndr.open = false;
     await fireEvent(ndr, new Event("toggle"));
-    await view.component.$set({ selected: "AASBD/Single/12single.png" });
+    await view.rerender({ selected: "AASBD/Single/12single.png" });
     expect(openFolders(view)).toEqual(["AASBD", "Double", "Single"]);
 });
 

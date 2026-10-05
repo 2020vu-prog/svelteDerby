@@ -1,7 +1,6 @@
 <script>
     import { faEllipsisV } from "@fortawesome/free-solid-svg-icons/faEllipsisV";
     import Icon from "fa-svelte";
-    import { createEventDispatcher } from "svelte";
     import { push } from "svelte-spa-router";
     import { theme } from "#src/stores.js";
 
@@ -13,7 +12,8 @@
     export let menu = [];
     export let style = "";
 
-    const dispatch = createEventDispatcher();
+    // Called with the menu item that was chosen.
+    export let onMenu = () => {};
     let menuOpen = false;
 
     $: hasMenu = Array.isArray(menu) && menu.length > 0;
@@ -28,7 +28,7 @@
 
     function handleMenu(item) {
         menuOpen = false;
-        dispatch("menu", item);
+        onMenu(item);
 
         if (item.disabled) {
             return;

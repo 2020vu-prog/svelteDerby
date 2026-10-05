@@ -153,8 +153,8 @@
         }
         return !racePhase.del;
     };
-    function toggleToolbar(event) {
-        log.debug("info event: ", event.detail.text);
+    function toggleToolbar(message) {
+        log.debug("info event: ", message.text);
         showToolbar = !showToolbar;
     }
 
@@ -216,7 +216,7 @@
                             >
                             {#if !isHistory()}
                                 <EllipsisButton
-                                    on:message={toggleToolbar}
+                                    onMessage={toggleToolbar}
                                     dbName="RacePhase"
                                     dbKey={phaseKey}
                                 />

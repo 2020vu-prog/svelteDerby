@@ -317,9 +317,7 @@
         }
         submitSpinning = false;
     }
-    async function handleTimerSelection(timerEvent) {
-        log.debug("handleTimerSelection e:", timerEvent);
-        var timer = timerEvent.detail;
+    async function handleTimerSelection(timer) {
         log.debug("handleTimerSelection timer:", timer);
         pbForm.timerMqttClientId = timer.clientId;
         //TODO: amplify issues with binary data :-(
@@ -533,7 +531,7 @@
     {/if}
     <TimerSelection
         isProtobuf="true"
-        on:timerSelected={handleTimerSelection}
+        onTimerSelected={handleTimerSelection}
         activeTimerKey={pbForm.timerMqttClientId}
     />
 

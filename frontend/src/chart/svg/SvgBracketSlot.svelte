@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher, onMount } from "svelte";
+    import { onMount } from "svelte";
     import { doRefreshBlocks } from "#src/stores.js";
     import { augmentChartState, parseHeatPos } from "#src/utils.js";
 
@@ -12,7 +12,10 @@
     let state = {};
     let mounted = false;
     let loadVersion = 0;
-    const dispatch = createEventDispatcher();
+    export let onStateLoadStart = () => {};
+    export let onStateLoadEnd = () => {};
+    // Called with the freshly loaded slot state.
+    export let onStateChange = () => {};
 
     async function refreshDataFromDb(
         nextChartJson,
@@ -21,7 +24,7 @@
         nextSlot
     ) {
         const version = ++loadVersion;
-        dispatch("stateloadstart");
+        onStateLoadStart();
         try {
             const nextState = await augmentChartState(
                 nextChartJson,
@@ -31,10 +34,10 @@
             );
             if (version === loadVersion) {
                 state = nextState;
-                dispatch("statechange", nextState);
+                onStateChange(nextState);
             }
         } finally {
-            dispatch("stateloadend");
+            onStateLoadEnd();
         }
     }
 

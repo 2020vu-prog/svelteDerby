@@ -11,11 +11,11 @@
     import SpinnerButton from "#src/SpinnerButton.svelte";
     import { axios, raceConfig, pushMessage } from "#src/stores.js";
     import { onMount } from "svelte";
-    import { createEventDispatcher } from "svelte";
     const { v4: uuidv4 } = require("uuid");
     //    import { Jumper } from 'svelte-loading-spinners';
 
-    const dispatch = createEventDispatcher();
+    // Called with the timer record that was chosen.
+    export let onTimerSelected = () => {};
     export let activeTimerKey;
     export let isProtobuf;
 
@@ -93,7 +93,7 @@
     }
     async function clickActivateHost(timer) {
         log.debug("clickActivateHost dispatching.");
-        dispatch("timerSelected", timer);
+        onTimerSelected(timer);
     }
 
     const timerMatchCheck = (timerToCheck) => {
