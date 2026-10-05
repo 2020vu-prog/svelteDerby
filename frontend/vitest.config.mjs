@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
-import sveltePreprocess from "svelte-preprocess";
 import { fileURLToPath, URL } from "node:url";
 
 // Component-level tests for .svelte files. Kept separate from the frontend/src/**/*.test.mjs
@@ -10,9 +9,7 @@ import { fileURLToPath, URL } from "node:url";
 export default defineConfig({
     plugins: [
         svelte({
-            preprocess: sveltePreprocess({
-                typescript: true,
-            }),
+            compilerOptions: { compatibility: { componentApi: 4 } },
         }),
     ],
     // Vitest resolves modules under Node/SSR conditions by default, which can

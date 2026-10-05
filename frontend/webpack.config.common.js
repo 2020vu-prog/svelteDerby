@@ -4,7 +4,6 @@ const webpack = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WorkboxWebpackPlugin = require("workbox-webpack-plugin");
-const sveltePreprocess = require("svelte-preprocess");
 const packageJson = require("./package.json");
 const { execSync } = require("child_process");
 
@@ -132,11 +131,8 @@ module.exports = (cloudfrontTarget) => {
             alias: {
                 "#src": path.resolve(__dirname, "src"),
                 "process/browser": require.resolve("process/browser.js"),
-                // One copy of the Svelte runtime for the app and every .svelte
-                // package. Svelte 4 keeps its runtime under src/runtime (the
-                // package root no longer has internal/, store/, etc.), so the
-                // alias points there, as svelte-loader's docs recommend.
-                svelte: path.resolve("node_modules", "svelte/src/runtime"),
+                // Spike: Svelte 5 resolves its runtime through package exports, so the
+                // Svelte 4 alias to src/runtime is gone.
             },
             extensions: [".mjs", ".js", ".svelte"],
             mainFields: ["svelte", "browser", "module", "main"],
@@ -187,16 +183,22 @@ module.exports = (cloudfrontTarget) => {
                     use: {
                         loader: "svelte-loader",
                         options: {
-                            preprocess: sveltePreprocess({
-                                typescript: true,
-                            }),
                             onwarn: (warning, handleWarning) => {
-                                if (!warning.toString().includes("A11y")) {
+                                // Svelte 4 reported "A11y: ..."; Svelte 5 uses codes
+                                // like `a11y_click_events_have_key_events`.
+                                // Self-closing non-void tags (`<p />`) are fixed in
+                                // their own change; drop that code from this list
+                                // once it merges.
+                                const ignored =
+                                    String(warning.code).startsWith("a11y") ||
+                                    warning.code ===
+                                        "element_invalid_self_closing_tag";
+                                if (!ignored) {
                                     handleWarning(warning);
                                 }
                             },
                             emitCss: true,
-                            hotReload: true,
+                            hotReload: false, // svelte-loader has no HMR under Svelte 5
                         },
                     },
                 },

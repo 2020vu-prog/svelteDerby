@@ -212,7 +212,7 @@
 {/if}
 <div>
     <video
-        src={$videoHref}
+        src={$videoHref || undefined}
         on:mousemove={handleMove}
         on:touchmove|preventDefault={handleMove}
         on:mousedown={handleMousedown}
