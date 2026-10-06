@@ -118,12 +118,12 @@
     }
 </script>
 
-<SpinnerButton on:click={uploadFinishBlockJson}
+<SpinnerButton onClick={uploadFinishBlockJson}
     >Upload FinishBlocks</SpinnerButton
 >
-<SpinnerButton on:click={downloadElapsed}>Download Elapsed</SpinnerButton>
+<SpinnerButton onClick={downloadElapsed}>Download Elapsed</SpinnerButton>
 <br />
-<SpinnerButton on:click={downloadPhases}>Download Phases</SpinnerButton>
+<SpinnerButton onClick={downloadPhases}>Download Phases</SpinnerButton>
 
 <!-- this is unstyled file input tag, so hide it!-->
 <div style="height: 0px;width:0px; overflow:hidden;">

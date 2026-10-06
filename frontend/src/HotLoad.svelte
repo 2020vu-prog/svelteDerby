@@ -1153,8 +1153,8 @@
     </SpinnerButton>
 {:else}
     <SpinnerButton
-        on:click={doRefreshClicked}
-        on:press={doRefreshPressed}
+        onClick={doRefreshClicked}
+        onPress={doRefreshPressed}
         spinning={refreshInProgressButton ||
             refreshInProgressMq ||
             refreshInProgressCca}

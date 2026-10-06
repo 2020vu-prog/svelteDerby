@@ -83,7 +83,7 @@
         <input type="checkbox" class="big" bind:checked={chartForm.hidden} />
     </label>
 
-    <SpinnerButton on:click={handleSubmit} spinning={submitSpinning}>
+    <SpinnerButton onClick={handleSubmit} spinning={submitSpinning}>
         Update
     </SpinnerButton>
 </form>

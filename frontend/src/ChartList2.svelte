@@ -313,7 +313,7 @@
 <br />
 
 {#if $canAddChart}
-    <SpinnerButton on:click={() => (currentViewMode = getInactiveMode())}>
+    <SpinnerButton onClick={() => (currentViewMode = getInactiveMode())}>
         View {getInactiveMode(currentViewMode)} Charts
     </SpinnerButton>
 {/if}

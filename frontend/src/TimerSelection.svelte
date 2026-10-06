@@ -226,7 +226,7 @@
             </Card>
         {/if}
     {/each}
-    <SpinnerButton on:click={() => (currentViewMode = getInactiveMode())}>
+    <SpinnerButton onClick={() => (currentViewMode = getInactiveMode())}>
         View {getInactiveMode(currentViewMode)} Timers
     </SpinnerButton>
 

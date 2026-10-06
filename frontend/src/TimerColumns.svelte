@@ -358,7 +358,7 @@
             History duration
             <input bind:value={duration} placeholder="PT20M" />
         </label>
-        <SpinnerButton on:click={refreshHistory} spinning={loadingHistory}>
+        <SpinnerButton onClick={refreshHistory} spinning={loadingHistory}>
             Load History
         </SpinnerButton>
     </div>

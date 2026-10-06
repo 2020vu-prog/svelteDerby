@@ -1,7 +1,6 @@
 <script>
     import log from "loglevel";
 
-    import { createEventDispatcher } from "svelte";
     import { theme } from "#src/stores.js";
     import { onMount } from "svelte";
     import { longpress } from "#src/utilActions.js";
@@ -11,6 +10,11 @@
     export let spinning = false;
     export let focused = false;
     export let btnClass = "";
+    // Called with the click event. Optional: an undefined callback is ignored,
+    // as an `on:click` with no handler was.
+    export let onClick = () => {};
+    // Called when the button is held down (a long press).
+    export let onPress = () => {};
     var thisButton;
     var mounted = false;
     onMount(async () => {
@@ -25,13 +29,12 @@
         }
     }
 
-    const dispatch = createEventDispatcher();
     function doPress() {
         log.debug("SpinnerButton: longpress.");
-        dispatch("press");
+        onPress?.();
     }
-    function doClick() {
-        dispatch("click");
+    function doClick(event) {
+        onClick?.(event);
     }
     function getThemeCss(theme, btnClass) {
         if (btnClass) {

@@ -222,7 +222,7 @@
                 {:then rc}
                     {#if rc}
                         <SpinnerButton
-                            on:click={() => pushToManualTimer(winnerDelta)}
+                            onClick={() => pushToManualTimer(winnerDelta)}
                         >
                             Apply
                         </SpinnerButton>

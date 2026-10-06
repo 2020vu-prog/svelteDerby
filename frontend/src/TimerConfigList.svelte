@@ -97,6 +97,6 @@ elapsed time split(s).
     </Card>
 {/each}
 <p></p>
-<SpinnerButton on:click={provisionWifi}>
+<SpinnerButton onClick={provisionWifi}>
     Setup Timer WiFi Instructions
 </SpinnerButton>

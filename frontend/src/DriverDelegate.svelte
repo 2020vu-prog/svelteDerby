@@ -108,9 +108,9 @@
     <p>Claim access to maintain driver #{previewNumber}'s walkup track.</p>
     {#if !$userEmail}
         <p>You'll need to log in first.</p>
-        <SpinnerButton on:click={goLogin}>Log in to claim</SpinnerButton>
+        <SpinnerButton onClick={goLogin}>Log in to claim</SpinnerButton>
     {:else}
-        <SpinnerButton spinning={claimSpinning} on:click={claim}>
+        <SpinnerButton spinning={claimSpinning} onClick={claim}>
             Claim
         </SpinnerButton>
     {/if}

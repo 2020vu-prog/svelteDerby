@@ -44,6 +44,16 @@ function componentTags(source) {
 }
 
 function importedComponent(source, name, fromFile) {
+    // the local UI components are imported by name from a barrel file
+    for (const named of source.matchAll(
+        /import\s*\{([^}]*)\}\s*from\s*["']#src\/ui\/index\.js["']/g
+    )) {
+        for (const item of named[1].split(",")) {
+            const [original, local = original] = item.trim().split(/\s+as\s+/);
+            if (local === name)
+                return path.join(srcDir, "ui", `${original}.svelte`);
+        }
+    }
     const re = new RegExp(
         `import\\s+${name}\\s+from\\s+["']([^"']+\\.svelte)["']`
     );
@@ -95,6 +105,47 @@ test("every callback prop passed to a component is one that component declares",
     assert.ok(
         checked > 10,
         `only ${checked} callback props were found; the scan is broken`
+    );
+    assert.deepEqual(problems, []);
+});
+
+// The same silent failure the other way round: an `on:event` on a component only
+// does anything if that component dispatches the event or forwards it with a bare
+// `on:event`. After a component moves to callback props, a leftover `on:click`
+// on it is never called.
+test("every on:event listener on a component is one that component can deliver", () => {
+    const problems = [];
+    let checked = 0;
+    for (const file of svelteFiles(srcDir)) {
+        const source = fs.readFileSync(file, "utf8");
+        for (const { name, attrs } of componentTags(source)) {
+            const events = [...attrs.matchAll(/(?:^|\s)on:([\w-]+)/g)].map(
+                (m) => m[1]
+            );
+            if (!events.length) continue;
+            const target = importedComponent(source, name, file);
+            if (!target || !fs.existsSync(target)) continue;
+            const targetSource = fs.readFileSync(target, "utf8");
+            for (const event of events) {
+                checked++;
+                const dispatches = new RegExp(
+                    `dispatch\\(\\s*["']${event}["']`
+                ).test(targetSource);
+                // a bare `on:event`, with or without modifiers, forwards it
+                const forwards = new RegExp(
+                    `on:${event}(\\|[\\w|]+)?(?=[\\s/>])`
+                ).test(targetSource);
+                if (!dispatches && !forwards) {
+                    problems.push(
+                        `${path.relative(srcDir, file)}: <${name} on:${event}=...> but ${path.relative(srcDir, target)} neither dispatches nor forwards "${event}"`
+                    );
+                }
+            }
+        }
+    }
+    assert.ok(
+        checked > 0,
+        "no on:event listeners on components were found; the scan is broken"
     );
     assert.deepEqual(problems, []);
 });

@@ -75,10 +75,10 @@
         Logged in: {loginAge($userAuthTime, $nowDate)}
         <br />
     {/if}
-    <SpinnerButton on:click={clickedLogout}>Logout</SpinnerButton>
+    <SpinnerButton onClick={clickedLogout}>Logout</SpinnerButton>
 {:else}
     <br />
     Click below to proceed to external (Amazon/AWS) login page.
     <br />
-    <SpinnerButton on:click={clickedLogin}>Login</SpinnerButton>
+    <SpinnerButton onClick={clickedLogin}>Login</SpinnerButton>
 {/if}

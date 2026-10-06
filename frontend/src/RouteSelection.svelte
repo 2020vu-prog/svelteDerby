@@ -164,13 +164,13 @@
 
 <div id="dlTitle">
     <h4>{getTitle()}</h4>
-    <SpinnerButton on:click={clearSelect}>Clear Selection</SpinnerButton>
+    <SpinnerButton onClick={clearSelect}>Clear Selection</SpinnerButton>
 
     {#if isNavMode()}
-        <SpinnerButton on:click={finishSelect}>Done</SpinnerButton>
+        <SpinnerButton onClick={finishSelect}>Done</SpinnerButton>
     {/if}
     {#if isCarousel()}
-        <SpinnerButton on:click={showCarousel}>Show</SpinnerButton>
+        <SpinnerButton onClick={showCarousel}>Show</SpinnerButton>
     {/if}
     <p></p>
 </div>

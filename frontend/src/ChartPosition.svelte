@@ -308,12 +308,12 @@
     <br />
     <br />
 
-    <SpinnerButton on:click={pushHistory}>History</SpinnerButton>
+    <SpinnerButton onClick={pushHistory}>History</SpinnerButton>
 
     {#if $canEditChartPosition}
         <SpinnerButton
             disabled={submitDisabled}
-            on:click={handleSubmit}
+            onClick={handleSubmit}
             spinning={submitSpinning}
         >
             Update

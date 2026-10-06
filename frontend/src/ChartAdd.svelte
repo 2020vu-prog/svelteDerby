@@ -399,7 +399,7 @@
     <br />
     <SpinnerButton
         disabled={submitDisabled}
-        on:click={handleSubmit}
+        onClick={handleSubmit}
         spinning={submitSpinning}
     >
         Add
