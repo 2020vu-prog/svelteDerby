@@ -26,7 +26,11 @@ function heatHasCarNumber(states = []) {
     );
 }
 
-export function getInitialHiddenColumnIds(layout, heatStates = {}) {
+export function getInitialHiddenColumnIds(
+    layout,
+    heatStates = {},
+    championshipColumnId
+) {
     const heats = Object.values(layout.heats);
     const requiredHeats = heats.filter((heat) => !heat.isOptional);
     const hidden = new Set();
@@ -71,7 +75,8 @@ export function getInitialHiddenColumnIds(layout, heatStates = {}) {
             );
             return heatColumn > latestColumn ? heat : latest;
         }, undefined);
-        if (championshipHeat) fallbackColumns = [championshipHeat.columnId];
+        const columnId = championshipColumnId ?? championshipHeat?.columnId;
+        if (columnId) fallbackColumns = [columnId];
     } else if (!raceBegun) {
         fallbackColumns = layout.columns
             .filter((column) =>

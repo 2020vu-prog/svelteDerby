@@ -88,3 +88,30 @@ test("shows the championship column when a completed chart would be hidden", () 
         ["column-1"]
     );
 });
+
+test("shows the championship instead of a challenger column to its right", () => {
+    const doubleLayout = {
+        columns: [{ id: "seed" }, { id: "championship" }, { id: "challenger" }],
+        heats: {
+            1: { id: "1", columnId: "seed" },
+            13: { id: "13", columnId: "challenger" },
+            14: { id: "14", columnId: "championship" },
+            15: { id: "15", columnId: "championship", isOptional: true },
+        },
+    };
+    for (const resetClass of ["", "complete"]) {
+        assert.deepEqual(
+            getInitialHiddenColumnIds(
+                doubleLayout,
+                {
+                    1: states("complete", { rsFromDexie: {} }),
+                    13: states("complete", { rsFromDexie: {} }),
+                    14: states("complete", { rsFromDexie: {} }),
+                    15: states(resetClass),
+                },
+                "championship"
+            ),
+            ["seed", "challenger"]
+        );
+    }
+});

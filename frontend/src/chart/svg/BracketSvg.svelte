@@ -386,7 +386,11 @@
         );
         if (visibilityInitializedFor !== nextChartId) {
             defaultHiddenColumnIds = new Set(
-                getInitialHiddenColumnIds(nextLayout, heatStates)
+                getInitialHiddenColumnIds(
+                    nextLayout,
+                    heatStates,
+                    svgChampionshipColumnId(nextLayout)
+                )
             );
             hiddenColumnIds = showAll
                 ? new Set()
