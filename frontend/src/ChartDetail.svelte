@@ -220,12 +220,12 @@
         return vars;
     };
 
-    function hotMoved(event, posKey) {
-        log.debug("hotMoved:" + event + " posKey:" + posKey);
-        log.debug("hotMoved top:" + event.detail.top);
-        log.debug("hotMoved left:" + event.detail.left);
-        brackets2.imgPositions[posKey].top = event.detail.top;
-        brackets2.imgPositions[posKey].left = event.detail.left;
+    function hotMoved(moved, posKey) {
+        log.debug("hotMoved:" + moved + " posKey:" + posKey);
+        log.debug("hotMoved top:" + moved.top);
+        log.debug("hotMoved left:" + moved.left);
+        brackets2.imgPositions[posKey].top = moved.top;
+        brackets2.imgPositions[posKey].left = moved.left;
     }
     /** works on laptop, but not phone
     const checkAndActivateScroll = () => {
@@ -324,8 +324,8 @@
             left={bracket.left}
             top={bracket.top}
             chartId={params.chartId}
-            on:hotMove={(e) =>
-                hotMoved(e, Object.keys(brackets2.imgPositions)[pos])}
+            onHotMove={(detail) =>
+                hotMoved(detail, Object.keys(brackets2.imgPositions)[pos])}
             isPannable={$chartClickLoggerShow}
         />
     {/each}

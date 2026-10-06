@@ -8,7 +8,6 @@
     import { parseHeatPos, augmentChartState } from "#src/utils.js";
     import { doRefreshBlocks, driverMap } from "#src/stores.js";
     import { pannable } from "#src/pannable.js";
-    import { createEventDispatcher } from "svelte";
     const EntityFactory = require("../../backend/modules/lambdaDerby/src/shared/EntityFactory.js");
 
     export let left;
@@ -18,7 +17,8 @@
     export let chartId;
     export let isPannable;
     export let chartJson;
-    const dispatch = createEventDispatcher();
+    // Called with { top, left } when a drag of the hot spot ends.
+    export let onHotMove = () => {};
 
     let scaledTop;
     let scaledLeft;
@@ -74,8 +74,7 @@
     }
     function handlePanEnd(event) {
         log.debug("chs panEnd : " + event);
-        // note syntax difference b/t node.dispatch() and createEventDispatcher()
-        dispatch("hotMove", {
+        onHotMove({
             top: top,
             left: left,
         });

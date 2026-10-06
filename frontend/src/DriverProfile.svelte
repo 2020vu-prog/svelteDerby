@@ -84,7 +84,7 @@
     <h3>#{ptcp.number} {ptcp.name} -- Walkup Track</h3>
     <WalkupLinkEditor
         bind:saveValue={wLink}
-        on:validitychange={(event) => (wLinkValid = event.detail.valid)}
+        onValidityChange={(detail) => (wLinkValid = detail.valid)}
     />
     <div class="form-actions">
         <SpinnerButton

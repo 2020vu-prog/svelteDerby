@@ -6,7 +6,6 @@
     import { tutorial as Timer } from "@rr1.us/timer_protobuf";
     import { onMount } from "svelte";
     import { db } from "#src/eventDb.js";
-    import { createEventDispatcher } from "svelte";
     import {
         getTimerPbConfig,
         MqttMapSubscription,
@@ -16,7 +15,10 @@
     export let timerId = "";
     export let verbose = "truthyString";
     let timerTopic = "";
-    const dispatch = createEventDispatcher();
+    // Called with each decoded TimerDataList that arrives for the timer.
+    export let onTimerDataList = () => {};
+    // Called with a key when a lane is blocked and a video capture is due.
+    export let onVideoKey = () => {};
     if (timerId) {
         timerTopic = MqttGetTopic(timerId);
         log.debug("handleTimerSelect MqttMapSubscription:", timerId);
@@ -48,7 +50,7 @@
             const tdlBinary = Base64.toUint8Array(msg.b64);
             const tdl = Timer.TimerDataList.decode(tdlBinary);
             log.debug(`syncPbState. tdl:`, tdl);
-            dispatch("timerDataList", tdl);
+            onTimerDataList(tdl);
             vCap(tdl);
         }
     }
@@ -72,7 +74,7 @@
                         if (!shouldThrottle()) {
                             log.debug("stub td triggering:", timerKey);
                             //$mqttTriggerVideoCapture = timerKey;
-                            dispatch("videoKey", timerKey);
+                            onVideoKey(timerKey);
                         }
                     }
                 }

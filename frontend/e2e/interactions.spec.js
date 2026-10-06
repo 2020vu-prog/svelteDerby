@@ -5,7 +5,7 @@ const { openTab, selectEvent } = require("./support/ui");
 
 // Interactions where a child component hands a value to its parent through a
 // callback prop (a chart slot click, the ellipsis button on a race card, choosing
-// a timer). The other flows do not reach them, and the route sweep only loads the
+// a timer, the walkup link's validity, dragging a chart hot spot). The other flows do not reach them, and the route sweep only loads the
 // screens, so a callback that is not wired up would go unnoticed.
 test.skip(
     !loadCredentials(),
@@ -99,4 +99,65 @@ test("a timer chosen on the timer config screen is saved with the config, and th
             page.getByRole("button", { name: "Simulate [Finish] Capture" })
         ).toBeVisible({ timeout: 4000 });
     }).toPass({ timeout: 45000 });
+});
+
+test("the Add driver button is disabled while the walkup link is not a Spotify track", async ({
+    page,
+    request,
+}) => {
+    await page.goto("/");
+    const fixture = await createEventFixture(page, request);
+    await selectEvent(page, fixture.eventName);
+
+    await page.goto("/#/driverAdd");
+    // typed, not filled: the form validates on key presses
+    await page.getByPlaceholder("Car Number").pressSequentially("321");
+    await page.getByPlaceholder("Driver Name").pressSequentially("Walkup Test");
+    const add = page.getByRole("button", { name: "Add" }).first();
+    await expect(add).toBeEnabled();
+
+    const link = page.getByPlaceholder(/open\.spotify\.com\/track/);
+    await link.fill("not a spotify link");
+    await expect(add).toBeDisabled();
+
+    await link.fill("https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC");
+    await expect(add).toBeEnabled();
+});
+
+test("dragging a hot spot in chart edit mode changes the position that Copy Json copies", async ({
+    page,
+    request,
+    context,
+}) => {
+    await page.goto("/");
+    const fixture = await createEventFixture(page, request, { chart: true });
+    await selectEvent(page, fixture.eventName);
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+
+    await page.goto(`/#/chartDetail/${fixture.chartId}`);
+    // the "E" button turns on edit mode, which makes the hot spots draggable
+    await page.locator(".fab").click();
+    const copied = async () => {
+        await page.getByRole("button", { name: "Copy Json" }).click();
+        return JSON.parse(
+            await page.evaluate(() => navigator.clipboard.readText())
+        );
+    };
+    const spot = page.locator("#myDIV").first();
+    await expect(spot).toBeVisible({ timeout: 20000 });
+    const key = (await spot.innerText()).trim().split(/\s+/)[0];
+    const before = (await copied()).imgPositions[key];
+
+    // the first hot spot can be below the visible part of the page
+    await spot.scrollIntoViewIfNeeded();
+    const box = await spot.boundingBox();
+    await page.mouse.move(box.x + 5, box.y + 5);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 25, box.y + 15, { steps: 4 });
+    await page.mouse.up();
+
+    // the hot spot adds the drag distance, in pixels, to its chart position
+    const after = (await copied()).imgPositions[key];
+    expect(after.left).toBe(before.left + 20);
+    expect(after.top).toBe(before.top + 10);
 });

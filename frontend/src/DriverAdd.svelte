@@ -646,7 +646,7 @@
     {/if}
     <WalkupLinkEditor
         bind:saveValue={driverForm.walkupLink}
-        on:validitychange={(event) => (walkupLinkValid = event.detail.valid)}
+        onValidityChange={(detail) => (walkupLinkValid = detail.valid)}
     />
     <div class="form-actions">
         <SpinnerButton on:click={requestSpeech} spinning={speakSpinning}>

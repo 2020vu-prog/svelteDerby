@@ -384,7 +384,7 @@
     <TimerSubscribeStub
         timerId={timerId}
         verbose={false}
-        on:timerDataList={(event) => handleLiveTimerData(timerId, event.detail)}
+        onTimerDataList={(tdl) => handleLiveTimerData(timerId, tdl)}
     />
 {/each}
 

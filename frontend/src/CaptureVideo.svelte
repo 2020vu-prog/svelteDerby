@@ -990,8 +990,8 @@
 {#key timerTopic}
     <MqttSubscribeStub
         mqTopic={timerTopic}
-        on:mqMessage={(e) => {
-            handleRemoteRequest(e.detail);
+        onMqMessage={(msg) => {
+            handleRemoteRequest(msg);
         }}
     />
 {/key}

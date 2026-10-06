@@ -356,8 +356,8 @@
         <TimerSubscribeStub
             timerId={timerId}
             verbose=""
-            on:timerDataList={(e) => {
-                showHealth(e.detail);
+            onTimerDataList={(tdl) => {
+                showHealth(tdl);
             }}
         />
     {/key}
