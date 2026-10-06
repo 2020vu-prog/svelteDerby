@@ -17,8 +17,42 @@ vi.mock("#src/utils.js", () => ({
 }));
 
 import BracketSvg from "#src/chart/svg/BracketSvg.svelte";
+import { augmentChartState } from "#src/utils.js";
 
 afterEach(cleanup);
+
+it("keeps only the championship column visible after completion", async () => {
+    await augmentChartState.withImplementation(
+        async () => ({ bracketClass: "complete", rsFromDexie: {} }),
+        async () => {
+            const view = render(BracketSvg, {
+                chartId: "completed-chart",
+                chartJson: {
+                    progress: {
+                        1: { WinnerDest: "2A", LoserDest: "OUT" },
+                        2: { WinnerDest: "3A", LoserDest: "OUT" },
+                        3: {
+                            WinnerDest: "Place1",
+                            LoserDest: "4A",
+                            Annotation: "Championship",
+                        },
+                        4: { WinnerDest: "Place3", LoserDest: "OUT" },
+                    },
+                },
+            });
+
+            await waitFor(() => {
+                expect(view.container.querySelectorAll(".heat")).toHaveLength(
+                    1
+                );
+                expect(
+                    view.getByText("Heat 3 (Championship)")
+                ).toBeInTheDocument();
+            });
+            expect(view.queryByText("Heat 4")).not.toBeInTheDocument();
+        }
+    );
+});
 
 it("hides, compacts, and restores a chart column", async () => {
     const view = render(BracketSvg, {
