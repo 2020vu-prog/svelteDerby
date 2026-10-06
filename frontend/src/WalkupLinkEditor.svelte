@@ -82,7 +82,7 @@
 <div class="actions">
     <SpinnerButton
         disabled={!saveValue || !valid}
-        on:click={() => (showPlayer = !showPlayer)}
+        onClick={() => (showPlayer = !showPlayer)}
     >
         {showPlayer ? "Hide player" : "Play"}
     </SpinnerButton>

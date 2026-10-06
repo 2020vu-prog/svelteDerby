@@ -205,18 +205,16 @@
 
     {#if chartIsEmpty}
         <SpinnerButton
-            on:click={(event) => {
+            onClick={() => {
                 push(`/drivers/selectable=true`);
-                event.stopPropagation();
             }}
         >
             Select Drivers
         </SpinnerButton>
         {#if $selectedDriverList.length}
             <SpinnerButton
-                on:click={(event) => {
+                onClick={() => {
                     fillRandom();
-                    event.stopPropagation();
                 }}
             >
                 Fill Chart With [{$selectedDriverList.length}] Drivers

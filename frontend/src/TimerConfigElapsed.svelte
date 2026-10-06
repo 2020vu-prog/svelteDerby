@@ -331,7 +331,7 @@
 {#if timerName && timerId}
     <SpinnerButton
         disabled={alignmentDisabled}
-        on:click={() =>
+        onClick={() =>
             push(`/timerPbAlignment?timerName=${timerName}&timerId=${timerId}`)}
     >
         Timer Alignment
@@ -537,7 +537,7 @@
 
     <SpinnerButton
         disabled={submitDisabled}
-        on:click={handleSubmit}
+        onClick={handleSubmit}
         spinning={submitSpinning}
     >
         Update

@@ -213,7 +213,7 @@
     </label>
     <SpinnerButton
         disabled={submitDisabled}
-        on:click={handleSubmit}
+        onClick={handleSubmit}
         spinning={submitSpinning}
     >
         {params.mode}

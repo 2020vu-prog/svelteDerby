@@ -373,6 +373,6 @@
     <!--
 
                             <MediaViewer/>
-    <SpinnerButton on:click={mediaDemo}>demo</SpinnerButton>
+    <SpinnerButton onClick={mediaDemo}>demo</SpinnerButton>
                             -->
 </div>

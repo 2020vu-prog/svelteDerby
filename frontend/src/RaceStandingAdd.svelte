@@ -288,7 +288,7 @@
     {/if}
     <SpinnerButton
         disabled={submitDisabled}
-        on:click={handleSubmit}
+        onClick={handleSubmit}
         spinning={submitSpinning}
         focused={submitFocused}
     >

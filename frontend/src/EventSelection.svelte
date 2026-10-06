@@ -263,7 +263,7 @@
         </div>
 
         <hr />
-        <SpinnerButton on:click={() => (currentViewMode = getInactiveMode())}>
+        <SpinnerButton onClick={() => (currentViewMode = getInactiveMode())}>
             View {getInactiveMode(currentViewMode)} Races
         </SpinnerButton>
     {:else}

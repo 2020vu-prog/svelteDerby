@@ -34,7 +34,7 @@
             />
         </label>
         <SpinnerButton
-            on:click={() => {
+            onClick={() => {
                 onRefresh();
             }}
             spinning={spinning}

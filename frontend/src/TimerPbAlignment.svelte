@@ -572,7 +572,7 @@
                 />
             </div>
             <div class="alignmentControl plotControl">
-                <SpinnerButton on:click={showTimerPlot}>Plot</SpinnerButton>
+                <SpinnerButton onClick={showTimerPlot}>Plot</SpinnerButton>
             </div>
         {/if}
     </div>

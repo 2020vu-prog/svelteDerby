@@ -5,7 +5,8 @@ const { openTab, selectEvent } = require("./support/ui");
 
 // Interactions where a child component hands a value to its parent through a
 // callback prop (a chart slot click, the ellipsis button on a race card, choosing
-// a timer, the walkup link's validity, dragging a chart hot spot). The other flows do not reach them, and the route sweep only loads the
+// a timer, the walkup link's validity, dragging a chart hot spot, holding the
+// Refresh button). The other flows do not reach them, and the route sweep only loads the
 // screens, so a callback that is not wired up would go unnoticed.
 test.skip(
     !loadCredentials(),
@@ -160,4 +161,28 @@ test("dragging a hot spot in chart edit mode changes the position that Copy Json
     const after = (await copied()).imgPositions[key];
     expect(after.left).toBe(before.left + 20);
     expect(after.top).toBe(before.top + 10);
+});
+
+test("holding the Refresh button asks for a fresh token, and a plain click does not", async ({
+    page,
+    request,
+}) => {
+    await page.goto("/");
+    const fixture = await createEventFixture(page, request);
+    await selectEvent(page, fixture.eventName);
+    const refresh = page.getByRole("button", { name: "Refresh" }).first();
+    const message = page.getByText("Refreshing token, please Wait.");
+
+    await refresh.click();
+    await page.waitForTimeout(500);
+    await expect(message).toHaveCount(0);
+
+    // a long press is a click held for more than 1.5 seconds
+    const box = await refresh.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(1800);
+    await page.mouse.up();
+
+    await expect(message.first()).toBeVisible();
 });

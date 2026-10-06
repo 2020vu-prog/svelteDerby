@@ -43,7 +43,7 @@
             {spotifyPremiumRequiredMessage}
         </p>
     {/if}
-    <SpinnerButton on:click={logoutSpotify}>
+    <SpinnerButton onClick={logoutSpotify}>
         Logout spotify
 
         {#await whoami()}
@@ -55,5 +55,5 @@
 
     <SpotifyDeviceSelection />
 {:else}
-    <SpinnerButton on:click={loginPKCE}>Login Spotify</SpinnerButton>
+    <SpinnerButton onClick={loginPKCE}>Login Spotify</SpinnerButton>
 {/if}

@@ -649,12 +649,12 @@
         onValidityChange={(detail) => (walkupLinkValid = detail.valid)}
     />
     <div class="form-actions">
-        <SpinnerButton on:click={requestSpeech} spinning={speakSpinning}>
+        <SpinnerButton onClick={requestSpeech} spinning={speakSpinning}>
             Speak
         </SpinnerButton>
         <SpinnerButton
             disabled={submitDisabled || !walkupLinkValid}
-            on:click={handleSubmit}
+            onClick={handleSubmit}
             spinning={submitSpinning}
         >
             {mode}
@@ -662,7 +662,7 @@
         {#if mode === "Update"}
             <SpinnerButton
                 btnClass="btn-danger"
-                on:click={deleteParticipant}
+                onClick={deleteParticipant}
                 spinning={deleteSpinning}
             >
                 Delete
@@ -673,7 +673,7 @@
         <br />
         <br />
         <h4>Delegate Walkup Maintenance</h4>
-        <SpinnerButton on:click={delegateWalkup} spinning={delegateSpinning}>
+        <SpinnerButton onClick={delegateWalkup} spinning={delegateSpinning}>
             Generate QR Code
         </SpinnerButton>
         {#if delegateLink}
@@ -692,7 +692,7 @@
                 {hash}
                 <SpinnerButton
                     spinning={revokeSpinningHash === hash}
-                    on:click={() => revokeMaintainer(hash)}
+                    onClick={() => revokeMaintainer(hash)}
                 >
                     Revoke
                 </SpinnerButton>
@@ -705,17 +705,14 @@
         <br />
         <br />
         <h4>Driver CSV</h4>
-        <SpinnerButton on:click={downloadDriverCsv}>Download</SpinnerButton>
-        <SpinnerButton on:click={uploadDriverCsv} spinning={csvUploadSpinning}>
+        <SpinnerButton onClick={downloadDriverCsv}>Download</SpinnerButton>
+        <SpinnerButton onClick={uploadDriverCsv} spinning={csvUploadSpinning}>
             Upload
         </SpinnerButton>
         <br />
         <h4>Driver json</h4>
-        <SpinnerButton on:click={downloadDriverJson}>Download</SpinnerButton>
-        <SpinnerButton
-            on:click={uploadDriverJson}
-            spinning={jsonUploadSpinning}
-        >
+        <SpinnerButton onClick={downloadDriverJson}>Download</SpinnerButton>
+        <SpinnerButton onClick={uploadDriverJson} spinning={jsonUploadSpinning}>
             Upload
         </SpinnerButton>
         <br />

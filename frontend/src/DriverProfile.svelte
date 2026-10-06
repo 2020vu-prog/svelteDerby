@@ -90,7 +90,7 @@
         <SpinnerButton
             disabled={!wLinkValid}
             spinning={saveSpinning}
-            on:click={save}>Save</SpinnerButton
+            onClick={save}>Save</SpinnerButton
         >
     </div>
 {/if}

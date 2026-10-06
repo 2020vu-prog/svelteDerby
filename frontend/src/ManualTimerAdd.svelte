@@ -216,14 +216,14 @@
         <div style="width: 100%; text-align: center;">
             <SpinnerButton
                 disabled={submitDisabled}
-                on:click={handleSubmit}
+                onClick={handleSubmit}
                 spinning={submitSpinning}
             >
                 Apply Time
             </SpinnerButton>
         </div>
     {:else}
-        <SpinnerButton on:click={handleSubmit} spinning={submitSpinning}>
+        <SpinnerButton onClick={handleSubmit} spinning={submitSpinning}>
             Complete Phase
         </SpinnerButton>
     {/if}

@@ -116,10 +116,10 @@
 
 <h3>Timer Config</h3>
 <br />
-<SpinnerButton on:click={() => push("/spMediaList/*/*")}>
+<SpinnerButton onClick={() => push("/spMediaList/*/*")}>
     List All Media
 </SpinnerButton>
-<SpinnerButton on:click={() => push("/timerAlignment")}>
+<SpinnerButton onClick={() => push("/timerAlignment")}>
     Timer Alignment
 </SpinnerButton>
 
@@ -167,7 +167,7 @@
 
     <SpinnerButton
         disabled={submitDisabled}
-        on:click={handleSubmit}
+        onClick={handleSubmit}
         spinning={submitSpinning}
     >
         Update

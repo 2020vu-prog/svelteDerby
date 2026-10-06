@@ -969,10 +969,7 @@
         >Time adjustment [f](ms)
         <input bind:value={$videoClientTimeFixedMs} type="number" />
     </label>
-    <SpinnerButton
-        on:click={calcClientTimeAdjustmentMs}
-        spinning={calcSpinning}
-    >
+    <SpinnerButton onClick={calcClientTimeAdjustmentMs} spinning={calcSpinning}>
         Calculate time offset
     </SpinnerButton>
 {/if}
@@ -997,11 +994,11 @@
 {/key}
 
 <p></p>
-<SpinnerButton on:click={doStart} spinning={recordingRequested}>
+<SpinnerButton onClick={doStart} spinning={recordingRequested}>
     Record
 </SpinnerButton>
 <SpinnerButton
-    on:click={clickedCapture}
+    onClick={clickedCapture}
     spinning={captureSpinning}
     disabled={captureDisabled}
 >
@@ -1010,7 +1007,7 @@
 <br />
 
 <SpinnerButton
-    on:click={clickedRequestCapture}
+    onClick={clickedRequestCapture}
     spinning={remoteeSpinning}
     disabled={remoteeDisabled}
 >

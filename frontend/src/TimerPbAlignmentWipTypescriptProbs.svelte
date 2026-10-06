@@ -553,7 +553,7 @@
                 {fmtXmitHour(tp, i)}
             </code>
         </div>
-        <SpinnerButton on:click={doCalcFinish(tp)} spinning={false}>
+        <SpinnerButton onClick={doCalcFinish(tp)} spinning={false}>
             CalcFinish
         </SpinnerButton>
     {/if}

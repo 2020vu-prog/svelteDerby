@@ -119,10 +119,10 @@
         <CarFilter allowKeyboardToggle />
     </h4>
     {#if selectable}
-        <SpinnerButton on:click={finishSelect}>
+        <SpinnerButton onClick={finishSelect}>
             Select [{$selectedDriverList.length}] Drivers
         </SpinnerButton>
-        <SpinnerButton on:click={clearSelect}>
+        <SpinnerButton onClick={clearSelect}>
             Clear Selected Drivers
         </SpinnerButton>
     {/if}
@@ -184,7 +184,7 @@
     </Card>
 </VirtualList>
 {#if selectable}
-    <SpinnerButton on:click={finishSelect}>
+    <SpinnerButton onClick={finishSelect}>
         Select [{$selectedDriverList.length}] Drivers
     </SpinnerButton>
 {/if}
