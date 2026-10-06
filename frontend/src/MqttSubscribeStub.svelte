@@ -5,12 +5,12 @@
     import { Base64 } from "js-base64";
     import { onMount } from "svelte";
     import { db } from "#src/eventDb.js";
-    import { createEventDispatcher } from "svelte";
     import { MqttMapSubscription } from "#src/utils.js";
     import { mqttMapData } from "#src/stores.js";
     export let mqTopic = "";
     export let verbose = "truthyString";
-    const dispatch = createEventDispatcher();
+    // Called with each message that arrives on `mqTopic`.
+    export let onMqMessage = () => {};
     if (mqTopic) {
         log.debug("MqttSubscribeStub:", mqTopic);
         MqttMapSubscription(mqTopic);
@@ -28,7 +28,7 @@
             log.debug(
                 `dispatchMsg. topic: [${mqTopic}] msg: [${JSON.stringify(msg)}]`
             );
-            dispatch("mqMessage", msg);
+            onMqMessage(msg);
         }
     }
 </script>

@@ -1,7 +1,6 @@
 <script>
     import SpinnerButton from "#src/SpinnerButton.svelte";
     import SpotifyEmbedded from "#src/SpotifyEmbedded.svelte";
-    import { createEventDispatcher } from "svelte";
     import Icon from "fa-svelte";
     import { faBackspace } from "@fortawesome/free-solid-svg-icons/faBackspace";
     import {
@@ -14,7 +13,13 @@
     let showPlayer = false;
     let valid = true;
     let focused = false;
-    const dispatch = createEventDispatcher();
+    // Called with { valid } now and whenever the link's validity changes.
+    export let onValidityChange = () => {};
+    // Read through a function so the reactive statement below depends on `valid`
+    // alone and not on the callback prop.
+    function notifyValidity(isValid) {
+        onValidityChange({ valid: isValid });
+    }
 
     function clear() {
         saveValue = "";
@@ -22,7 +27,7 @@
     }
 
     $: valid = isValidSpotifyTrack(saveValue);
-    $: dispatch("validitychange", { valid });
+    $: notifyValidity(valid);
     $: if (!saveValue || !valid) showPlayer = false;
     // Collapse a full URL/URI down to the bare track ID whenever the field
     // isn't actively being typed into. Reactive (not onMount-only) because
