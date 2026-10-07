@@ -6,13 +6,13 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-// preserveLegacyPage.sh runs in the deploy and keeps the previous frontend's entry
-// page as index_legacy.html. It cannot be tried against the real bucket here, so
+// preserveStablePage.sh runs in the deploy and keeps the previous frontend's entry
+// page as index_stable.html. It cannot be tried against the real bucket here, so
 // these run it against a fake `aws` that models the bucket as a folder.
 const script = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
     "..",
-    "preserveLegacyPage.sh"
+    "preserveStablePage.sh"
 );
 const MARKER = '<meta name="frontend-generation" content="svelte5">';
 const OLD_PAGE = "<html><!-- the old frontend --></html>";
@@ -38,7 +38,7 @@ echo "fake aws: unsupported: $*" >&2; exit 2
 `;
 
 function run({ build = NEW_PAGE, bucket = {}, headError = false } = {}) {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "legacy-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "stable-"));
     fs.mkdirSync(path.join(dir, "public"));
     fs.writeFileSync(path.join(dir, "public", "index.html"), build);
     fs.mkdirSync(path.join(dir, "bucket"));
@@ -69,16 +69,16 @@ function run({ build = NEW_PAGE, bucket = {}, headError = false } = {}) {
         status: result.status,
         output: result.stdout + result.stderr,
         calls: fs.readFileSync(log, "utf8").trim().split("\n").filter(Boolean),
-        legacy: read("index_legacy.html"),
+        stable: read("index_stable.html"),
         live: read("index.html"),
     };
 }
 
-test("keeps the live old page as index_legacy.html before the new one replaces it", () => {
+test("keeps the live old page as index_stable.html before the new one replaces it", () => {
     const r = run({ bucket: { "index.html": OLD_PAGE } });
 
     assert.equal(r.status, 0, r.output);
-    assert.equal(r.legacy, OLD_PAGE);
+    assert.equal(r.stable, OLD_PAGE);
     assert.equal(
         r.live,
         OLD_PAGE,
@@ -91,24 +91,24 @@ test("keeps the live old page as index_legacy.html before the new one replaces i
     assert.match(r.output, /kept the live index.html/);
 });
 
-test("never replaces a legacy page that already exists", () => {
+test("never replaces a stable page that already exists", () => {
     const r = run({
         bucket: {
             "index.html": OLD_PAGE,
-            "index_legacy.html": "<html>the first one</html>",
+            "index_stable.html": "<html>the first one</html>",
         },
     });
 
     assert.equal(r.status, 0, r.output);
-    assert.equal(r.legacy, "<html>the first one</html>");
+    assert.equal(r.stable, "<html>the first one</html>");
     assert.match(r.output, /already exists/);
 });
 
-test("does not save a page from an earlier new-frontend deploy as the legacy page", () => {
+test("does not save a page from an earlier new-frontend deploy as the stable page", () => {
     const r = run({ bucket: { "index.html": NEW_PAGE } });
 
     assert.equal(r.status, 0, r.output);
-    assert.equal(r.legacy, null);
+    assert.equal(r.stable, null);
     assert.match(r.output, /already the new frontend/);
 });
 
@@ -117,21 +117,21 @@ test("recognizes the marker whether or not the page was minified with quotes", (
         "<html><meta name=frontend-generation content=svelte5></html>";
 
     const liveIsNew = run({ bucket: { "index.html": unquoted } });
-    assert.equal(liveIsNew.legacy, null);
+    assert.equal(liveIsNew.stable, null);
     assert.match(liveIsNew.output, /already the new frontend/);
 
     const buildIsNew = run({
         build: unquoted,
         bucket: { "index.html": OLD_PAGE },
     });
-    assert.equal(buildIsNew.legacy, OLD_PAGE);
+    assert.equal(buildIsNew.stable, OLD_PAGE);
 });
 
 test("does nothing when the build being deployed is not the new frontend", () => {
     const r = run({ build: OLD_PAGE, bucket: { "index.html": OLD_PAGE } });
 
     assert.equal(r.status, 0, r.output);
-    assert.equal(r.legacy, null);
+    assert.equal(r.stable, null);
     assert.deepEqual(r.calls, [], "no bucket access at all");
 });
 
@@ -139,7 +139,7 @@ test("does nothing on the very first deploy, when there is no live page", () => 
     const r = run({ bucket: {} });
 
     assert.equal(r.status, 0, r.output);
-    assert.equal(r.legacy, null);
+    assert.equal(r.stable, null);
     assert.match(r.output, /first deploy/);
 });
 
@@ -147,14 +147,14 @@ test("stops the deploy on an unexpected error instead of silently skipping", () 
     const r = run({ bucket: { "index.html": OLD_PAGE }, headError: true });
 
     assert.notEqual(r.status, 0);
-    assert.equal(r.legacy, null);
+    assert.equal(r.stable, null);
     assert.match(r.output, /unexpected error/);
 });
 
 test("the script is executable and has valid shell syntax", () => {
     assert.ok(
         fs.statSync(script).mode & 0o111,
-        "run by deploy.yml as ./preserveLegacyPage.sh"
+        "run by deploy.yml as ./preserveStablePage.sh"
     );
     execFileSync("bash", ["-n", script]);
 });
