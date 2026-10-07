@@ -179,6 +179,16 @@ jobs:
           npm ci
           npm run build
 
+      # The sync below never deletes, so earlier bundles stay in the bucket, but it
+      # replaces index.html. Keep the page being replaced as index_stable.html (once,
+      # and only if it is the pre-Svelte-5 frontend) so a stable frontend can still be
+      # opened. See "A stable frontend to fall back to" in
+      # docs/TODO/SvelteUpgradeProposal.md.
+      - name: Keep the stable frontend entry page
+        if: ${{ needs.resolve_environment.outputs.deployment_mode == 'live' }}
+        working-directory: frontend
+        run: ./preserveStablePage.sh
+
       - name: Deploy frontend
         if: ${{ needs.resolve_environment.outputs.deployment_mode == 'live' }}
         working-directory: frontend
