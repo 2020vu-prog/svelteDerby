@@ -1,6 +1,6 @@
 {
     "name": "svelte-app",
-    "version": "2.0.5+rc03",
+    "version": "2.1.0+rc01",
     "imports": {
         "#src/*": "./src/*"
     },

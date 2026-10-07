@@ -210,6 +210,26 @@ The 14 components that used `createEventDispatcher` were converted in three batc
 
 **Covered end to end, including the timer callbacks.** `e2e/interactions.spec.js` has three tests covering four callbacks, and each callback was checked by unwiring it and confirming a test fails. Choosing a timer needs no live timer: the Timer Config Elapsed screen's "View Offline Timers" lists real stored timers, and the form refuses to submit without a chosen one ("Timer Selection required"), so the test selects an offline timer, submits, and asserts the posted body carries that timer's id (`TimerSelection` into `TimerConfigElapsed`). It then waits for the saved config to arrive through the asynchronous history load and checks that Capture Video's button reads `Simulate [Finish] Capture` (`TimerSelectByName` into `CaptureVideo`). The one path left unexercised is `TimerSelection` into the legacy `TimerConfig` screen, whose offline list is empty.
 
+## Falling back to the old frontend *(2026-10-07)*
+
+The upgrade was merged into `test.rr1.us` without the side-by-side setup that "Running two frontends concurrently" below describes, so there was no way back short of reverting and redeploying. Production was never affected: `stage.rr1.us` and `go.rr1.us` stayed on the old code, 52 commits behind. The way back that was adopted needs no second build and no change to the old code, because of how the deploy already behaves.
+
+**What the deploy already does.** `s3Push.sh` runs `aws s3 sync` without `--delete`, so every old hashed bundle stays in the bucket; only the unhashed entry page, `index.html`, is overwritten (with `Cache-Control: no-cache`, while the hashed bundles are `max-age=604800`). `copyVersioned.sh` also uploads each build's entry page under a second name, `index_<environment>_<version>.html`. An old entry page whose bundles still exist can therefore be opened directly. The app uses hash routing, so `https://<host>/index_legacy.html#/driverList` boots the old frontend straight into that screen. Sign-in is in `localStorage`, the IndexedDB schema (`eventDb.js`) was not touched by the upgrade, and the backend is unchanged, so both frontends share the same login and local data. The unversioned files the old page shares with the new deploy (`global922b.css`, the manifest, the images and audio) are unchanged apart from two chart logos the new build added.
+
+**What was added.**
+
+- **`index_legacy.html`, written once by the deploy.** `frontend/preserveLegacyPage.sh` runs just before the push and copies the live `index.html` to `index_legacy.html`, but only when all three hold: the build being deployed is the new frontend (its page carries `<meta name="frontend-generation" content="svelte5">`), `index_legacy.html` does not exist yet, and the live page does not carry that marker. Together these mean an old build never triggers it, it is never replaced once written, and a page from an earlier new-frontend deploy is never saved as "legacy". An unexpected error (permissions, network) fails the deploy instead of skipping, because skipping would lose the old page on the one deploy that matters. It cannot be run against the real bucket from the repository, so `test/preserveLegacyPage.test.mjs` runs it against a fake `aws` that models the bucket as a folder: it keeps the old page, never overwrites an existing legacy page, ignores a live page that is already new, ignores an old build, handles a first deploy with no live page, and stops on an unexpected error. Each guard was checked by removing it and confirming its test fails.
+- **A new package version.** `2.0.5+rc03` became `2.1.0+rc01`. All three branches had the same version, so deploying the new code would have overwritten `index_<environment>_2.0.5+rc03.html`, the old page the previous deploy saved under that name. With a new version the old versioned page is left alone and is a second route to the old frontend.
+
+**What to expect, and to check.**
+
+- `test.rr1.us` already has the new frontend live, and its old versioned page was overwritten by earlier deploys at the same version, so the test environment has no legacy page unless one is seeded; nothing is wrong, the deploy just correctly finds nothing old to keep.
+- The first deploy of the new code to `stage.rr1.us` and then `go.rr1.us` creates `index_legacy.html` from the old page that is live there. Its job log shows `legacy page: kept the live index.html as index_legacy.html`. After that, `https://<host>/index_legacy.html` is the way back, per device and with no redeploy.
+- **Before promoting, confirm the old page opens.** Open `index_<environment>_2.0.5+rc03.html` on production now (the environment names in the file names come from `frontend/webpack.config.js`: `derbyTest`, `derbyStage`, `go-derby-prod`) and check that it loads and works. That proves the mechanism with the real bucket before any deploy depends on it.
+- The old page loads Bootstrap 4.5.2 from the same CDN host production uses today. If that host ever goes away the legacy page loses its styles; the new frontend does not depend on it.
+
+**Not done, and cheap to add if wanted.** There is no link inside the new app to the legacy page (operators have to know the URL), and no switch that remembers a per-device choice; the two-build toggle in "Option 3" below would give that, at the cost of a second build in the deploy and a patch to the old code.
+
 ## Running two frontends concurrently, for Phases 0–3
 
 "Parallel migration" here actually covers two different problems, worth separating because they have different solutions:
@@ -226,6 +246,8 @@ Both are tractable here for a reason the rest of this proposal doesn't lean on: 
 **Option 3 — single-URL toggle with persistent opt-in.** Builds on Option 2's dual-build output, but adds a same-origin redirect so users only ever type one URL. Elaborated below.
 
 **Option 4 — per-route split via the router registry.** Have `routeDefinitions.js` → `routeRegistry.js` → `routeComponents.js` choose old-vs-new implementation per route. This is module-federation territory (two webpack builds sharing one runtime) — more machinery than needed, since Svelte 5's legacy-compat mode already lets old (`export let`, `on:`) and new (runes) components coexist in **one** build, which is exactly what Phase 4 already relies on. Skip this one.
+
+*(2026-10-07: none of these was built. The upgrade was merged straight into `test.rr1.us`, and a way back to the old frontend was added afterwards in the simpler form described in "Falling back to the old frontend" above.)*
 
 **Recommendation:** Option 1 for Phases 0–3 — it costs nothing beyond one more SSM-parameterized environment matching infra that already exists. Reach for Option 2 or 3 only if rollout specifically needs live-event operators split across versions simultaneously; otherwise it's added complexity for a capability Phase 4's legacy-compat mode makes unnecessary once Svelte 5 has actually landed.
 

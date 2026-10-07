@@ -179,6 +179,16 @@ jobs:
           npm ci
           npm run build
 
+      # The sync below never deletes, so old bundles stay in the bucket, but it
+      # replaces index.html. Keep the page being replaced as index_legacy.html (once,
+      # and only if it is the pre-Svelte-5 frontend) so the old frontend can still be
+      # opened. See "Falling back to the old frontend" in
+      # docs/TODO/SvelteUpgradeProposal.md.
+      - name: Keep the previous frontend entry page
+        if: ${{ needs.resolve_environment.outputs.deployment_mode == 'live' }}
+        working-directory: frontend
+        run: ./preserveLegacyPage.sh
+
       - name: Deploy frontend
         if: ${{ needs.resolve_environment.outputs.deployment_mode == 'live' }}
         working-directory: frontend
