@@ -48,6 +48,7 @@ def handler(event, context):
     destinationS3 = 's3://' + os.environ['DestinationBucket']
     mediaConvertRole = os.environ['MediaConvertRole']
     application = os.environ['Application']
+    deployEnvironment = os.environ['DeployEnvironment']
     region = os.environ['AWS_DEFAULT_REGION']
     statusCode = 200
     jobs = []
@@ -162,7 +163,19 @@ def handler(event, context):
             logger.info(json.dumps(jobSettings))
 
             # Convert the video using AWS Elemental MediaConvert
-            job = client.create_job(Role=mediaConvertRole, UserMetadata=jobMetadata, Settings=jobSettings)
+            job = client.create_job(
+                Role=mediaConvertRole,
+                UserMetadata=jobMetadata,
+                BillingTagsSource='JOB',
+                Tags={
+                    'Application': 'svelteDerby',
+                    'Component': 'vodTranscode',
+                    'Processor': 'mediaconvert',
+                    'Environment': deployEnvironment,
+                    'CostPilot': 'ffmpeg-vs-mediaconvert',
+                },
+                Settings=jobSettings,
+            )
 
     except Exception as e:
         logger.error('Exception: %s', e)
