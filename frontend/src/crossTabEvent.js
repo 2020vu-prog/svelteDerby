@@ -2,7 +2,7 @@
 // load. Another tab selecting a different event wipes the shared IndexedDB, and
 // this tab would keep showing (and writing back) the old event's data. The
 // browser fires "storage" in every *other* tab when localStorage changes, so
-// listen for the selected event changing there.
+// App.svelte checks each storage event with this helper.
 export const RACE_CONFIG_PREF_KEY = "pref:uiRaceConfig";
 
 function selectedEventOf(config) {
@@ -20,27 +20,17 @@ function parseStoredConfig(raw) {
 }
 
 /**
- * Calls `onChange(newConfig)` when another tab switches to a different event.
- * Updates to other raceConfig fields for the same event are ignored.
+ * Whether a "storage" event means another tab selected a different event than
+ * `currentConfig`. Updates to other fields of the same event and to other
+ * preference keys do not count.
  *
- * @param {Object} options
- * @param {EventTarget} [options.target=window] Where "storage" events fire.
- * @param {Function} options.getCurrent Returns this tab's in-memory raceConfig.
- * @param {Function} options.onChange Called with the other tab's raceConfig.
- * @returns {Function} Stops listening.
+ * @param {StorageEvent} event
+ * @param {Object} currentConfig This tab's in-memory raceConfig.
+ * @returns {boolean}
  */
-export function watchSelectedEventAcrossTabs({
-    target = window,
-    getCurrent,
-    onChange,
-}) {
-    const handler = (event) => {
-        // key is null when another tab calls localStorage.clear().
-        if (event.key !== null && event.key !== RACE_CONFIG_PREF_KEY) return;
-        const next = parseStoredConfig(event.newValue);
-        if (selectedEventOf(next) === selectedEventOf(getCurrent())) return;
-        onChange(next);
-    };
-    target.addEventListener("storage", handler);
-    return () => target.removeEventListener("storage", handler);
+export function selectedEventChangedElsewhere(event, currentConfig) {
+    // key is null when another tab calls localStorage.clear().
+    if (event.key !== null && event.key !== RACE_CONFIG_PREF_KEY) return false;
+    const next = parseStoredConfig(event.newValue);
+    return selectedEventOf(next) !== selectedEventOf(currentConfig);
 }
