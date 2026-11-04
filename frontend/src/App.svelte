@@ -37,7 +37,10 @@
     import { routeRegistry } from "#src/routes/routeRuntime.js";
     import { setIdTokenFromCognitoCallback } from "#src/utilHosted.js";
     import { urlParseSpotify } from "#src/utils/spotify";
-    import { selectedEventChangedElsewhere } from "#src/crossTabEvent.js";
+    import {
+        neutralReloadUrl,
+        selectedEventChangedElsewhere,
+    } from "#src/crossTabEvent.js";
     const { canAccessRoute } = require("#src/routes/routeAccess.js");
     const {
         getMenuItems,
@@ -150,7 +153,12 @@
     // old event's data.
     function reloadIfEventChangedElsewhere(event) {
         if (selectedEventChangedElsewhere(event, $raceConfig)) {
-            window.location.reload();
+            const neutralUrl = neutralReloadUrl(window.location.href);
+            if (neutralUrl) {
+                window.location.replace(neutralUrl);
+            } else {
+                window.location.reload();
+            }
         }
     }
     onMount(async () => {

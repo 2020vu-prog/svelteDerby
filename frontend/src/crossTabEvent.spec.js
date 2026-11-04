@@ -1,8 +1,38 @@
 import { describe, it, expect } from "vitest";
 import {
     RACE_CONFIG_PREF_KEY,
+    neutralReloadUrl,
     selectedEventChangedElsewhere,
 } from "#src/crossTabEvent.js";
+
+describe("neutralReloadUrl", () => {
+    const base = "https://go.rr1.us/";
+
+    it("drops the hash on an /as/ auto-select route", () => {
+        expect(neutralReloadUrl(`${base}#/as/kcMO/kcMO.2ff8b`)).toBe(base);
+        expect(
+            neutralReloadUrl(
+                `${base}#/as/kcMO/kcMO.2ff8b?then=/driverProfile/1`
+            )
+        ).toBe(base);
+    });
+
+    it("drops the hash when the as query requests auto-select", () => {
+        expect(neutralReloadUrl(`${base}#/orgSelection?as=1`)).toBe(base);
+    });
+
+    it("keeps the path and search of the page", () => {
+        expect(
+            neutralReloadUrl("https://x.test/app/?v=2#/as/kcMO/kcMO.2ff8b")
+        ).toBe("https://x.test/app/?v=2");
+    });
+
+    it("returns null for ordinary routes so the page reloads in place", () => {
+        expect(neutralReloadUrl(`${base}#/RpList`)).toBeNull();
+        expect(neutralReloadUrl(`${base}`)).toBeNull();
+        expect(neutralReloadUrl(`${base}#/orgSelection?other=1`)).toBeNull();
+    });
+});
 
 const stored = (config) => JSON.stringify({ Value: config });
 const storageEvent = (init) => new StorageEvent("storage", init);

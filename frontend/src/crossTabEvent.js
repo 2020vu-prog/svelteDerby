@@ -20,6 +20,24 @@ function parseStoredConfig(raw) {
 }
 
 /**
+ * Where to reload after another tab changed the event, when plain
+ * `location.reload()` would be wrong. EventSelection auto-selects an event for
+ * `/as/...` routes and the `as` query, so reloading on one would reselect this
+ * tab's old event and undo the other tab's choice. Dropping the hash lands on
+ * the default route instead.
+ *
+ * @param {string} href The current `window.location.href`.
+ * @returns {string|null} The URL to load, or null to reload in place.
+ */
+export function neutralReloadUrl(href) {
+    const url = new URL(href);
+    const [path, query = ""] = url.hash.slice(1).split("?");
+    const autoSelect =
+        path.startsWith("/as/") || new URLSearchParams(query).get("as");
+    return autoSelect ? url.origin + url.pathname + url.search : null;
+}
+
+/**
  * Whether a "storage" event means another tab selected a different event than
  * `currentConfig`. Updates to other fields of the same event and to other
  * preference keys do not count.
