@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const semver = require("semver");
 const { v4: uuidv4 } = require("uuid");
 import { persistable } from "#src/storedb.js";
+import { RACE_CONFIG_PREF_KEY } from "#src/crossTabEvent.js";
 import { derived, writable, readable, get as getStore } from "svelte/store";
 import { buildVersion, getSpaLocation } from "#src/utils.js";
 import { replace } from "svelte-spa-router";
@@ -163,7 +164,7 @@ export const spinnerPanelBusy = writable(false);
 export const uiPageSize = persistable("pref:uiPageSize", undefined);
 export const mqttPsUrlMap = persistable("mqttPsUrlMap", {});
 //export const uiPageSize = writable(100);
-export const raceConfig = persistable("pref:uiRaceConfig", {
+export const raceConfig = persistable(RACE_CONFIG_PREF_KEY, {
     orgName: "",
     orgId: "",
     baseUrl: "/app",

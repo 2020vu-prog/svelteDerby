@@ -37,6 +37,10 @@
     import { routeRegistry } from "#src/routes/routeRuntime.js";
     import { setIdTokenFromCognitoCallback } from "#src/utilHosted.js";
     import { urlParseSpotify } from "#src/utils/spotify";
+    import {
+        neutralReloadUrl,
+        selectedEventChangedElsewhere,
+    } from "#src/crossTabEvent.js";
     const { canAccessRoute } = require("#src/routes/routeAccess.js");
     const {
         getMenuItems,
@@ -144,6 +148,19 @@
         raceConfigParam.baseUrl = "/app";
         $raceConfig = raceConfigParam;
     };
+    // Another tab selected a different event and reset the shared database.
+    // Reload so this tab follows it instead of showing, and writing back, the
+    // old event's data.
+    function reloadIfEventChangedElsewhere(event) {
+        if (selectedEventChangedElsewhere(event, $raceConfig)) {
+            const neutralUrl = neutralReloadUrl(window.location.href);
+            if (neutralUrl) {
+                window.location.replace(neutralUrl);
+            } else {
+                window.location.reload();
+            }
+        }
+    }
     onMount(async () => {
         log.debug("mounted app");
         setEnvTitle();
@@ -355,6 +372,7 @@
 </style>
 
 <svelte:window
+    on:storage={reloadIfEventChangedElsewhere}
     on:pageshow={onPageShow}
     on:keydown={closeEventTitlePopoverOnEscape}
 />
