@@ -94,7 +94,7 @@ There is no separate counter or idempotency-marker item. The newest envelope is 
 
 ### CCA checkpoints and CCF final archives
 
-Reuse the CCA pattern of storing history in S3 and publishing a pointer. For v2, the pointer identifies an immutable S3 object and the highest sequence `C` it fully covers. Start from the previous checkpoint and paginate through the contiguous DynamoDB range up to `C`. Publish the pointer only after the complete object is written. Prune only covered envelopes, preserving the latest envelope for sequence allocation and the recent lookback used for retries.
+This is the existing CCA consolidation, ported to sequences. Today `getRaceHistory` requests a CCA when a read is expensive; `ccaMain.js` writes the consolidated history to S3, adds a `PK: "CCA"` pointer item with the `s3` key, deletes the consolidated `DerbyDist` items, and an optimistic lock allows one CCA per window. The client reads the pointer and fetches the S3 object itself (`HotLoad.svelte` `loadCcaHistory`). First load is therefore a pointer plus a recent tail, and without an equivalent for v2 both first load and the partition would grow with the event. v2 keeps the same trigger, lock and client flow, with the pointer carrying the highest covered sequence. For v2, the pointer identifies an immutable S3 object and the highest sequence `C` it fully covers. Start from the previous checkpoint and paginate through the contiguous DynamoDB range up to `C`. Publish the pointer only after the complete object is written. Prune only covered envelopes, preserving the latest envelope for sequence allocation and the recent lookback used for retries.
 
 To build a snapshot, read the checkpoint and the DynamoDB tail from `C + 1` through the chosen head `H`. Use `C = 0` when there is no checkpoint. Pin the checkpoint and head across pages. If pruning removes part of a reader's pinned tail, restart from the latest checkpoint. Return the seed only after the snapshot has complete coverage.
 
@@ -104,7 +104,7 @@ Revise the v2 CCF path in `ccaMain.js` to use the same checkpoint-plus-tail read
 
 v2 has no time-window read. The frontend never sends `loMicros` or `hiMicros` (`HotLoad.svelte` calls `getRaceHistory?orgId=...&orgIz=...`), so the server's default of "everything up to now" is the only mode in use for events. For a v2 event:
 
-- **First load:** `getRaceHistory` returns the checkpoint history and the remaining envelopes through seed `H` in sequence order.
+- **First load:** `getRaceHistory` returns the checkpoint pointer (the client fetches the S3 object, as with CCA today) and the remaining envelopes through seed `H` in sequence order.
 - **Gap fill:** the replay API reads an explicit sequence range, so a client that knows which sequences are missing requests exactly those (see Replay API).
 
 Both are `DS BETWEEN :lo AND :hi` on the v2 partition with `ConsistentRead = true`, a direct key condition. No timestamp lookup, binary search or index is needed. Verify no other caller (scripts, tests, other clients) sends a time window for an event (open question 5).
