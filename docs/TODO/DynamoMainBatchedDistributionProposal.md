@@ -1,10 +1,10 @@
 # Proposal: batched `dynamoMain` distribution with contiguous sequences
 
-Date: 2026-09-08. Revised 2026-11-13 after review (sequence-range reads, idempotency, publish policy, replay API, frozen legacy events, retained head messages, single conditional-put allocation).
+Date: 2026-09-08. Revised 2026-11-19 after audit and review (sequence-range reads, idempotency, publish policy, replay API, frozen legacy events, retained head messages, single conditional-put allocation).
 
 ## Objective
 
-Replace the current one-source-record/one-`DerbyDist`-item/one-MQTT-message flow with one ordered envelope per event for each batch consumed from SQS. Persist the full envelope and publish it inline when it fits, and give new envelopes contiguous per-event sequence numbers.
+Replace the current one-source-record/one-`DerbyDist`-item/one-MQTT-message flow with one ordered envelope per event for each DynamoDB Streams Lambda batch. Persist the full envelope and publish it inline when it fits, and give new envelopes contiguous per-event sequence numbers.
 
 Two goals, kept separate:
 
@@ -24,6 +24,10 @@ The DynamoDB event-source mapping collects up to 10 `DerbyMain` stream records, 
 1. Creates a distribution record with `DP = orgId` and an epoch-microsecond `DS`.
 2. writes that record to `DerbyDist` with `PutItem`;
 3. publishes that record to `derby/{orgId}/dist`.
+
+Storage and MQTT publication currently run concurrently for each record. Both helpers catch and log errors, so those failures do not fail the invocation. MQTT uses QoS 0 with retain unset. The proposed commit-before-publish and error propagation policies require handler changes.
+
+The FIFO SQS queue in `backend/sqs.tf` carries CCA/CCF requests sent by `DdbUtils.requestCC()` to `ccaMain.handler`. It supplies no ordering for the distribution stream. The current CCA handler also catches processing errors and returns success.
 
 The batching-window comment in `backend/dynamo.tf` describes an intended consolidation that is not implemented.
 
@@ -58,7 +62,7 @@ Step 0 (Delivery sequence) covers the part independent of v2: instrument `HotLoa
 
 ## Proposed envelope
 
-DynamoDB stream shards feed SQS. The Lambda consumes queued work sequentially, groups valid records by `orgId`, and preserves their order within the received batch. Create one envelope for each group:
+DynamoDB Streams invokes `dynamoMain` directly. Group valid records by `orgId` and preserve their order within the received Lambda batch. Create one envelope for each group:
 
 ```json
 {
@@ -77,7 +81,7 @@ DynamoDB stream shards feed SQS. The Lambda consumes queued work sequentially, g
 
 The envelope is the stored replay unit. MQTT carries either the same envelope or a fetch notice for its sequence. `committedMicros` is the commit time, kept for diagnostics only; nothing orders or queries by it. `batchKey` is the idempotency key (see Contiguous sequence allocation); `sourceEventIds` is a diagnostic and its input.
 
-Ordering guarantee, stated precisely: envelopes are ordered by **commit order per event**. Records inside an envelope keep their order within the received Lambda batch. This does not promise source-write order across stream shards; that is no stronger than today's behavior. The SQS consumer Lambda assigns sequences after dequeue. See Retained head message for the queue ordering contract.
+Ordering guarantee, stated precisely: envelopes are ordered by **commit order per event**. Records inside an envelope keep their order within the received Lambda batch. This does not promise source-write order across stream shards; that is no stronger than today's behavior. The Lambda assigns envelope sequences at commit. Cross-shard retry ordering remains a design question under Retained head message.
 
 ## Storage layout
 
@@ -98,7 +102,7 @@ This is the existing CCA consolidation, ported to sequences. Today `getRaceHisto
 
 To build a snapshot, read the checkpoint and the DynamoDB tail from `C + 1` through the chosen head `H`. Use `C = 0` when there is no checkpoint. Pin the checkpoint and head across pages. If pruning removes part of a reader's pinned tail, restart from the latest checkpoint. Return the seed only after the snapshot has complete coverage.
 
-Revise the v2 CCF path in `ccaMain.js` to use the same checkpoint-plus-tail reader. After event writes stop and queued distribution work drains, capture the final head and write a complete `archive.json` in the shape expected by the archived-event loader. The checkpoint and tail must preserve source entity revisions so archive reconstruction can apply the same stale-update rule. Keep the legacy archive reader for frozen events.
+Revise the v2 CCF path in `ccaMain.js` to use the same checkpoint-plus-tail reader. After event writes stop and a completion barrier confirms that all preceding source writes have reached distribution, capture the final head and write a complete `archive.json` in the shape expected by the archived-event loader. The checkpoint and tail must preserve source entity revisions so archive reconstruction can apply the same stale-update rule. Keep the legacy archive reader for frozen events.
 
 ### Reads by sequence
 
@@ -130,20 +134,20 @@ For each event group (or sub-envelope, see below):
 3. `next = headSequence + 1`; `committedMicros = now`.
 4. `PutItem` the envelope at `DS = next` with `ConditionExpression = attribute_not_exists(DS)`.
 5. **On success,** set `headSequence = next` and add `batchKey` to `recentBatchKeys`. **On `ConditionalCheckFailed`** (another writer took `next`, or the cache was stale) **or a timeout or network error** (unknown outcome): discard the event's cache entry and return to step 1, with bounded exponential backoff. The fresh lookback in step 1 also detects that this very put had in fact committed.
-6. Publish the committed envelope to MQTT.
+6. Attempt MQTT publication under the failure policy below. On a retry that finds an already committed batch, apply the retained-head ordering rule before any publication.
 
 **Lookback bound.** The idempotency check sees only the newest K envelopes. A batch retried after more than K other envelopes have committed would be written again as a duplicate envelope. That is tolerated, because the client checks each source entity revision, even when the retry has a new envelope sequence. K must also be at least the largest number of sub-envelopes a single group can split into, or a retried split cannot see its own earlier sub-envelopes. The cold-start query cost scales with K and envelope size (RCUs are charged on item size, not projection), so K is tuned small (open question 6).
 
-The SQS consumer processes each event sequentially and resolves publish retries before advancing to later work for that event. Preserve that ordering across invocations and redelivery. A concurrency limit can serialize invocations, while the queue and consumer must enforce the retry ordering.
+The existing `dynamoMain` reserved concurrency of one serializes invocations. A failed batch can be retried after another shard has advanced the same event. This setting therefore does not establish per-event commit and republish ordering across retries. Retained-head monotonicity requires an explicit publication design before rollout (open question 4).
 
 ## Failure semantics
 
 - If the put fails, no sequence is consumed; retrying is safe.
-- **Policy: a publish failure fails the queued work.** On retry, use the stored envelope when the batch key is found and retry its MQTT publication. Live delivery depends on IoT availability. If retries are exhausted, send the failed work to the dead-letter queue and record the event and sequence. After service recovers, a snapshot refresh reads committed data. Any operator redrive must preserve the retained head ordering.
+- **Operating assumption: AWS IoT is available for live delivery.** After a successful storage commit, attempt MQTT publication. Log and alert on publish errors, then continue processing successfully. A publish error does not fail the invocation or request a replay of the source batch. During an IoT interruption, clients may miss updates. A later sequence reveals a gap, and a snapshot refresh after recovery retrieves committed state when no later message arrives. Automatic delivery of a missed final update after an outage is outside this assumption.
 - Storage errors must not be swallowed. They fail the invocation.
 - Malformed, `REMOVE`, and records missing an `orgId` remain non-blocking and are skipped before grouping.
 - HotLoad compares source entity revisions to suppress stale updates and duplicate records.
-- Configure queue redelivery and dead-letter handling. Keep the batch identity and split boundaries stable across retries so the stored envelopes can be found by batch key.
+- Review the DynamoDB event-source mapping retry count, maximum record age, failure destination, batch bisection, and partial-batch response settings. Bisection or changing batch composition changes batch keys. Define the retry identity policy and test it.
 
 ## Payload limits and splitting
 
@@ -173,7 +177,7 @@ The new message path should:
 
 ### Source entity revisions
 
-Assign a monotonically increasing revision per entity at the original write and preserve it through SQS, envelopes, replay, and archives. HotLoad compares each v2 record's revision with the revision stored in Dexie for that entity. Apply newer revisions in array order and skip equal or older revisions. Persist the accepted revision with the entity update. If a deletion is represented as a record, preserve its revision as a tombstone to prevent an old retry from restoring it. Advance `lastSequence` only after successfully processing the envelope, including when all its records were skipped. A fetch notice advances the cursor only after replay has processed the advertised sequence.
+Assign a monotonically increasing revision per entity at the original write and preserve it through DynamoDB Streams, envelopes, replay, and archives. HotLoad compares each v2 record's revision with the revision stored in Dexie for that entity. Apply newer revisions in array order and skip equal or older revisions. Persist the accepted revision with the entity update. If a deletion is represented as a record, preserve its revision as a tombstone to prevent an old retry from restoring it. Advance `lastSequence` only after successfully processing the envelope, including when all its records were skipped. A fetch notice advances the cursor only after replay has processed the advertised sequence.
 
 ### Seeding `lastSequence`
 
@@ -209,7 +213,7 @@ This covers an envelope published before the subscription was live, and replaces
 
 Caveats and requirements:
 
-- **Publish ordering:** process SQS work and retries in event order. When resuming partially published work or redriving it after later work has succeeded, do not republish an older sequence as the retained head. Republish the current committed head through the same serialized consumer when repair is needed.
+- **Publish ordering remains unresolved:** a retry of sequence 41 can run after another shard has committed and published 42. Publishing 41 with retain would move the retained head backward. Define and test a mechanism that keeps retained publication monotonic across storage-triggered retries, partial-batch failures, and recovery. Publish errors themselves do not trigger invocation retries. Reading the current head before publishing alone leaves a race if another writer can commit and publish between that read and the publish. Any new serialization mechanism must be identified as implementation scope.
 - **Splitting:** sub-envelopes are published in sequence order, so the final retained message is the highest sequence.
 - **IAM:** publishing with retain needs `iot:RetainPublish` in addition to publish; verify.
 - **Lifecycle:** retained messages persist until cleared, leaving one per event topic. Check IoT retained-message quotas and pricing and decide whether to clear a topic when an event ends.
@@ -230,7 +234,7 @@ A stale cached client that opens a v2 event cannot parse envelopes. Legacy event
 - `backend/modules/lambdaDynamo/src/dynamoMain.js`
   - replace per-record propagation with validation, grouping, deterministic splitting, cached head state, idempotency check, conditional-put allocation, and ordered publishing;
   - retain source order within each event;
-  - make storage failures retryable and publish failures fail the invocation.
+  - make storage failures retryable, and log and alert on publish failures without failing the invocation.
 - `backend/modules/lambdaDynamo/src/dynamoMain.test.js`
   - multiple records for one event;
   - multiple events in one stream batch, including partial failure (event A commits, event B fails, retry does not duplicate A);
@@ -240,13 +244,13 @@ A stale cached client that opens a v2 event cannot parse envelopes. Legacy event
   - cold start queries the head once, and later writes use the cache;
   - unknown-outcome put (committed but reported as an error) does not duplicate within the lookback;
   - payload splitting, deterministic `subIndex`, resume after partial sub-envelope commit, K at least the max split count, and publish order;
-  - publish failure fails the invocation and the retry republishes the stored envelope;
+  - publish failure is logged and alerted, stored data remains replayable, and the invocation continues without a publish-triggered retry;
   - malformed, `REMOVE`, and records missing an `orgId` remain non-blocking.
 - `backend/modules/lambdaDynamo/main.tf`
   - grant `iot:RetainPublish` for retained head messages (verify), and `dynamodb:PutItem`, `dynamodb:Query` and `dynamodb:GetItem` on the table. No transaction permissions are needed; strong consistency is a request parameter;
   - add the cutover configuration (open question 1).
 - `backend/dynamo.tf`
-  - configure the stream-to-SQS handoff and sequential consumer, document retry ordering, and configure dead-letter handling.
+  - retain the direct DynamoDB Streams trigger, configure stream retry and failure handling, and implement the chosen retained-head publication design.
 - `backend/modules/lambdaDerby/src/DdbUtils.js`
   - update `ddbQueryRaceHistory()` to select the legacy or v2 path by the event's format; the legacy path is unchanged, and the v2 path returns the checkpoint and tail through seed `H`, per the Seeding section;
   - add the replay query for the new route.
@@ -258,7 +262,7 @@ A stale cached client that opens a v2 event cannot parse envelopes. Legacy event
   - add a CloudFront behavior for `getDist` with caching disabled (or `no-store` honored), separate from the cached `getRaceHistory` behavior, plus any API Gateway or Lambda routing and IAM it needs.
 - `backend/modules/lambdaSqs/src/ccaMain.js`
   - stop writing directly to the legacy partition for any event; frozen events are never written, and the destination of bulk/CCA reload data for new events is open question 2;
-  - share the paginated v2 checkpoint and tail reader with `DdbUtils.js` and use it to produce the final CCF archive after the queue drains.
+  - share the paginated v2 checkpoint and tail reader with `DdbUtils.js` and use it to produce the final CCF archive after a verified distribution completion barrier.
 - `backend/test/runIntegrationTests.js`
   - update `expectedMqttMessageCount` and the per-message `PK`/`SK` shape assertions on the `derby/{orgId}/dist` topic, which assume exactly one MQTT message per source record.
 
@@ -278,7 +282,7 @@ A stale cached client that opens a v2 event cannot parse envelopes. Legacy event
 1. How is an event's format recorded and decided: a field set at event creation, or whether any v2 envelope exists for it? How is the freeze enforced (reject writes to legacy events at the API), and what does `dynamoMain` do if a stream record arrives for a frozen event (drop and log)?
 2. Where does `ccaMain.js` bulk/CCA reload data go for new events, and why does it currently bypass `DerbyMain` and the stream? If it must go through sequence allocation, the allocation code needs to be shared.
 3. Choose checkpoint frequency and confirm how `DerbyDist` TTL interacts with pruning. Preserve the head and retry lookback.
-4. Choose the SQS queue and consumer settings that enforce per-event ordering, stable retries, and dead-letter handling.
+4. Choose the retained-head publication mechanism and DynamoDB Streams retry/failure settings. Define how CCF verifies that all source writes preceding event closure have reached distribution. A fixed sleep or a quiet stream does not establish that barrier.
 5. Confirm no caller sends `loMicros` or `hiMicros` for an event (scripts, tests, other clients); if one does, decide whether v2 needs a time window at all.
 6. Batch-size measurement, lookback size K and cache sizing: record the distribution of records per invocation and per event on real traffic. K trades duplicate-envelope risk against cold-query read cost (which scales with envelope size), so also measure typical envelope sizes.
 7. Stale-client policy for v2 events: accept the limited exposure, or add a minimum client version to the snapshot.
@@ -301,7 +305,7 @@ A stale cached client that opens a v2 event cannot parse envelopes. Legacy event
 - A failed conditional put consumes no sequence number, a stale head cache never produces a gap or an overwrite, and an unknown-outcome put does not produce a duplicate envelope within the lookback.
 - One Lambda invocation may safely produce envelopes for multiple events; a retry after partial failure creates no duplicates.
 - Oversized groups split into consecutively numbered, valid envelopes, and a retried invocation does not re-allocate sequences for sub-envelopes already committed within the lookback.
-- A publish failure retries the stored envelope in event order. Partial-batch retries and dead-letter redrive do not move the retained sequence backward.
+- A publish failure is logged and alerted without failing the invocation. Storage errors still trigger retries. Retries after partial storage completion must not republish older retained envelopes after a newer sequence.
 - An oversized final update is recoverable from its retained fetch notice on live delivery and reconnect without a subsequent publish.
 - `getRaceHistory` rebuilds a v2 event through seed `H` from the checkpoint and remaining envelopes. Test CCF final archive loading after covered envelopes are pruned and with a checkpoint spanning multiple query pages. Frozen legacy events still load in full. Replay returns the requested range when it is retained and requests a snapshot reload when the range was pruned.
 - A client seeds `lastSequence` from its snapshot (`H` read before the envelope query) and does not spuriously replay on its first live envelope.
