@@ -102,7 +102,7 @@ This is the existing CCA consolidation, ported to sequences. Today `getRaceHisto
 
 To build a snapshot, read the checkpoint and the DynamoDB tail from `C + 1` through the chosen head `H`. Use `C = 0` when there is no checkpoint. Pin the checkpoint and head across pages. If pruning removes part of a reader's pinned tail, restart from the latest checkpoint. Return the seed only after the snapshot has complete coverage.
 
-Revise the v2 CCF path in `ccaMain.js` to use the same checkpoint-plus-tail reader. After event writes stop and a completion barrier confirms that all preceding source writes have reached distribution, capture the final head and write a complete `archive.json` in the shape expected by the archived-event loader. The checkpoint and tail must preserve source entity revisions so archive reconstruction can apply the same stale-update rule. Keep the legacy archive reader for frozen events.
+Revise the v2 CCF path in `ccaMain.js` to use the same checkpoint-plus-tail reader. After event writes stop and a completion barrier confirms that all preceding source writes have reached distribution, capture the final head and write a complete `archive.json` in the shape expected by the archived-event loader. The checkpoint and tail must preserve each record's `at` so archive reconstruction can apply the same stale-update rule. Keep the legacy archive reader for frozen events.
 
 ### Reads by sequence
 
@@ -136,7 +136,7 @@ For each event group (or sub-envelope, see below):
 5. **On success,** set `headSequence = next` and add `batchKey` to `recentBatchKeys`. **On `ConditionalCheckFailed`** (another writer took `next`, or the cache was stale) **or a timeout or network error** (unknown outcome): discard the event's cache entry and return to step 1, with bounded exponential backoff. The fresh lookback in step 1 also detects that this very put had in fact committed.
 6. Attempt MQTT publication under the failure policy below. On a retry that finds an already committed batch, apply the retained-head ordering rule before any publication.
 
-**Lookback bound.** The idempotency check sees only the newest K envelopes. A batch retried after more than K other envelopes have committed would be written again as a duplicate envelope. That is tolerated, because the client checks each source entity revision, even when the retry has a new envelope sequence. K must also be at least the largest number of sub-envelopes a single group can split into, or a retried split cannot see its own earlier sub-envelopes. The cold-start query cost scales with K and envelope size (RCUs are charged on item size, not projection), so K is tuned small (open question 6).
+**Lookback bound.** The idempotency check sees only the newest K envelopes. A batch retried after more than K other envelopes have committed would be written again as a duplicate envelope. That is tolerated, because the client checks each record's `at` against the stored entity, even when the retry has a new envelope sequence. K must also be at least the largest number of sub-envelopes a single group can split into, or a retried split cannot see its own earlier sub-envelopes. The cold-start query cost scales with K and envelope size (RCUs are charged on item size, not projection), so K is tuned small (open question 6).
 
 The existing `dynamoMain` reserved concurrency of one serializes invocations. A failed batch can be retried after another shard has advanced the same event. This setting therefore does not establish per-event commit and republish ordering across retries. Retained-head monotonicity requires an explicit publication design before rollout (open question 4).
 
@@ -146,7 +146,7 @@ The existing `dynamoMain` reserved concurrency of one serializes invocations. A 
 - **Operating assumption: AWS IoT is available for live delivery.** After a successful storage commit, attempt MQTT publication. Log and alert on publish errors, then continue processing successfully. A publish error does not fail the invocation or request a replay of the source batch. During an IoT interruption, clients may miss updates. A later sequence reveals a gap, and a snapshot refresh after recovery retrieves committed state when no later message arrives. Automatic delivery of a missed final update after an outage is outside this assumption.
 - Storage errors must not be swallowed. They fail the invocation.
 - Malformed, `REMOVE`, and records missing an `orgId` remain non-blocking and are skipped before grouping.
-- HotLoad compares source entity revisions to suppress stale updates and duplicate records.
+- HotLoad compares each record's `at` (`lastUpdate`) to the stored entity to suppress stale updates and duplicate records.
 - Review the DynamoDB event-source mapping retry count, maximum record age, failure destination, batch bisection, and partial-batch response settings. Bisection or changing batch composition changes batch keys. Define the retry identity policy and test it.
 
 ## Payload limits and splitting
@@ -177,7 +177,17 @@ The new message path should:
 
 ### Source entity revisions
 
-Assign a monotonically increasing revision per entity at the original write and preserve it through DynamoDB Streams, envelopes, replay, and archives. HotLoad compares each v2 record's revision with the revision stored in Dexie for that entity. Apply newer revisions in array order and skip equal or older revisions. Persist the accepted revision with the entity update. If a deletion is represented as a record, preserve its revision as a tombstone to prevent an old retry from restoring it. Advance `lastSequence` only after successfully processing the envelope, including when all its records were skipped. A fetch notice advances the cursor only after replay has processed the advertised sequence.
+Use the revision the entities already carry: `at`, set by `EntityBase.preWrite()` in `EntityFactory.js` and exposed as `lastUpdate`. It is the writer's wall-clock time in milliseconds, stored on the item, so it already travels through DynamoDB Streams, envelopes, replay, and archives with no backend change. No new revision field is introduced.
+
+The guard is implemented against Dexie, using `at` on each record. Today `applyEntityToHist` in `HotLoad.svelte` compares only against the in-memory `hist` entry (`hist[pk][sk].lastUpdate > e.lastUpdate`), and only for entity types held in `hist`. v2 changes that:
+
+1. **Dexie is the authority.** For each record in a live or replayed envelope, read the stored row by primary key (`db[classType].get(SK)`; the entity tables in `eventDb.js` are keyed by `SK`, and `at` is a plain unindexed property, so no schema version bump is needed) and skip the record when `stored.at > record.at`. Otherwise stage it in `pendingBulk` for `bulkPut`, which persists the accepted `at` with the row. Batch the reads per envelope with `bulkGet`, and track the newest `at` per `SK` inside the envelope so a later record for the same entity compares against the earlier staged one, not only the stored row. Update the in-memory `hist` entry only from the same accepted record, so `hist` and Dexie cannot diverge. `EventHistory` is keyed `[PK+SK+at]`, so it is append-only and an exact duplicate is already idempotent; it needs no guard.
+2. **Ties.** The current rule applies a record with an equal `at`. For a duplicate of the same write that is idempotent, so keep it. Two distinct writes to one item in the same millisecond are indistinguishable by `at`, and an old duplicate could then overwrite the newer one. This is a narrow case. If measurement of write patterns shows it occurs, carry the stream record's `SequenceNumber` (ordered per item, because all changes to one item share a shard) in the envelope record as a tiebreaker. Do not add it speculatively.
+3. **Skew.** `at` comes from the writing Lambda's clock, and `derbyMain` writes can run on several instances. A small skew can order two near-simultaneous writes wrongly. That is pre-existing behavior and unchanged by v2. The stream order of writes to one item is authoritative, and the envelope array preserves it.
+
+**Deletes.** Deletion is already a record: `del` is a field on the entity, so a delete arrives as an ordinary `MODIFY` with a new `at` and the guard treats it like any update. That record is the tombstone and must not be pruned or compacted away while an old duplicate could still be replayed. `REMOVE` stream records come only from TTL expiry and are skipped, as today.
+
+Advance `lastSequence` only after successfully processing the envelope, including when all its records were skipped. A fetch notice advances the cursor only after replay has processed the advertised sequence.
 
 ### Seeding `lastSequence`
 
@@ -270,7 +280,7 @@ A stale cached client that opens a v2 event cannot parse envelopes. Legacy event
 
 - `frontend/src/HotLoad.svelte`
   - accept v2 envelopes live, and load frozen legacy events from the snapshot;
-  - apply envelope records in order with the Dexie revision guard and resolve fetch notices through replay;
+  - apply envelope records in order, replacing the in-memory-only `lastUpdate` check in `applyEntityToHist` with the Dexie `at` guard (`bulkGet`, skip when `stored.at > record.at`, `bulkPut` the rest) for live and replayed records, and resolve fetch notices through replay;
   - detect duplicate and missing sequences and fill gaps via the replay API;
   - seed `lastSequence` from the snapshot.
 - Tests and integration fixtures
@@ -309,7 +319,7 @@ A stale cached client that opens a v2 event cannot parse envelopes. Legacy event
 - An oversized final update is recoverable from its retained fetch notice on live delivery and reconnect without a subsequent publish.
 - `getRaceHistory` rebuilds a v2 event through seed `H` from the checkpoint and remaining envelopes. Test CCF final archive loading after covered envelopes are pruned and with a checkpoint spanning multiple query pages. Frozen legacy events still load in full. Replay returns the requested range when it is retained and requests a snapshot reload when the range was pruned.
 - A client seeds `lastSequence` from its snapshot (`H` read before the envelope query) and does not spuriously replay on its first live envelope.
-- An older source revision in a newly sequenced envelope cannot overwrite a newer Dexie record. The cursor still advances after processing.
+- A record with an older `at` in a newly sequenced envelope cannot overwrite a newer stored entity. The cursor still advances after processing.
 - A missing sequence causes deterministic fetch of exactly the missing envelopes through the uncached replay route.
 - Neither `dynamoMain.js` nor `ccaMain.js` writes to the legacy partition after cutover.
 - The stale-client policy chosen under open question 7 is implemented.
