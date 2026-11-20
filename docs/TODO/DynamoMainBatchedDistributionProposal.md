@@ -138,7 +138,7 @@ For each event group (or sub-envelope, see below):
 
 **Lookback bound.** The idempotency check sees only the newest K envelopes. A batch retried after more than K other envelopes have committed would be written again as a duplicate envelope. That is tolerated, because the client checks each record's `at` against the stored entity, even when the retry has a new envelope sequence. K must also be at least the largest number of sub-envelopes a single group can split into, or a retried split cannot see its own earlier sub-envelopes. The cold-start query cost scales with K and envelope size (RCUs are charged on item size, not projection), so K is tuned small (open question 6).
 
-The existing `dynamoMain` reserved concurrency of one serializes invocations. A failed batch can be retried after another shard has advanced the same event. This setting therefore does not establish per-event commit and republish ordering across retries. Retained-head monotonicity requires an explicit publication design before rollout (open question 4).
+The existing `dynamoMain` reserved concurrency of one serializes invocations, so no two invocations commit or publish concurrently. A failed batch can still be retried after another shard has advanced the same event, so serialization alone does not keep retained publication in sequence order across retries. The retained-head ordering rule below closes that gap, and it depends on the concurrency cap staying at one.
 
 ## Failure semantics
 
@@ -223,7 +223,13 @@ This covers an envelope published before the subscription was live, and replaces
 
 Caveats and requirements:
 
-- **Publish ordering remains unresolved:** a retry of sequence 41 can run after another shard has committed and published 42. Publishing 41 with retain would move the retained head backward. Define and test a mechanism that keeps retained publication monotonic across storage-triggered retries, partial-batch failures, and recovery. Publish errors themselves do not trigger invocation retries. Reading the current head before publishing alone leaves a race if another writer can commit and publish between that read and the publish. Any new serialization mechanism must be identified as implementation scope.
+- **Publication ordering rule:** the retained head must never move backward.
+  1. A fresh commit publishes its envelopes in sequence order.
+  2. A retry that finds its batch already committed (via `batchKey`) publishes an envelope only if that envelope's sequence equals the event's current head, read with a consistent `Query` just before publishing. Otherwise it skips publication.
+  3. A skipped publication needs no repair. A live client sees the gap at the next sequence and replays it, and a later subscriber receives the newer retained head.
+  4. For a split batch only the final sub-envelope can be the head, so a retry publishes a sub-envelope only if it is the head. Earlier sub-envelopes are recovered by replay.
+  5. The read and the publish are two steps. The rule is safe only because `reserved_concurrent_executions = 1` leaves no other invocation to commit or publish between them. Raising the cap makes it a real race again and requires a different mechanism, so the cap is a documented requirement of this design.
+  Publish errors themselves do not trigger invocation retries.
 - **Splitting:** sub-envelopes are published in sequence order, so the final retained message is the highest sequence.
 - **IAM:** publishing with retain needs `iot:RetainPublish` in addition to publish; verify.
 - **Lifecycle:** retained messages persist until cleared, leaving one per event topic. Check IoT retained-message quotas and pricing and decide whether to clear a topic when an event ends.
@@ -260,7 +266,7 @@ A stale cached client that opens a v2 event cannot parse envelopes. Legacy event
   - grant `iot:RetainPublish` for retained head messages (verify), and `dynamodb:PutItem`, `dynamodb:Query` and `dynamodb:GetItem` on the table. No transaction permissions are needed; strong consistency is a request parameter;
   - add the cutover configuration (open question 1).
 - `backend/dynamo.tf`
-  - retain the direct DynamoDB Streams trigger, configure stream retry and failure handling, and implement the chosen retained-head publication design.
+  - retain the direct DynamoDB Streams trigger, configure stream retry and failure handling, and implement the retained-head ordering rule (consistent head read before publishing a retried batch).
 - `backend/modules/lambdaDerby/src/DdbUtils.js`
   - update `ddbQueryRaceHistory()` to select the legacy or v2 path by the event's format; the legacy path is unchanged, and the v2 path returns the checkpoint and tail through seed `H`, per the Seeding section;
   - add the replay query for the new route.
@@ -292,7 +298,7 @@ A stale cached client that opens a v2 event cannot parse envelopes. Legacy event
 1. How is an event's format recorded and decided: a field set at event creation, or whether any v2 envelope exists for it? How is the freeze enforced (reject writes to legacy events at the API), and what does `dynamoMain` do if a stream record arrives for a frozen event (drop and log)?
 2. Where does `ccaMain.js` bulk/CCA reload data go for new events, and why does it currently bypass `DerbyMain` and the stream? If it must go through sequence allocation, the allocation code needs to be shared.
 3. Choose checkpoint frequency and confirm how `DerbyDist` TTL interacts with pruning. Preserve the head and retry lookback.
-4. Choose the retained-head publication mechanism and DynamoDB Streams retry/failure settings. Define how CCF verifies that all source writes preceding event closure have reached distribution. A fixed sleep or a quiet stream does not establish that barrier.
+4. Choose the DynamoDB Streams retry/failure settings (the retained-head ordering rule is specified above). Define how CCF verifies that all source writes preceding event closure have reached distribution. A fixed sleep or a quiet stream does not establish that barrier.
 5. Confirm no caller sends `loMicros` or `hiMicros` for an event (scripts, tests, other clients); if one does, decide whether v2 needs a time window at all.
 6. Batch-size measurement, lookback size K and cache sizing: record the distribution of records per invocation and per event on real traffic. K trades duplicate-envelope risk against cold-query read cost (which scales with envelope size), so also measure typical envelope sizes.
 7. Stale-client policy for v2 events: accept the limited exposure, or add a minimum client version to the snapshot.
@@ -315,7 +321,7 @@ A stale cached client that opens a v2 event cannot parse envelopes. Legacy event
 - A failed conditional put consumes no sequence number, a stale head cache never produces a gap or an overwrite, and an unknown-outcome put does not produce a duplicate envelope within the lookback.
 - One Lambda invocation may safely produce envelopes for multiple events; a retry after partial failure creates no duplicates.
 - Oversized groups split into consecutively numbered, valid envelopes, and a retried invocation does not re-allocate sequences for sub-envelopes already committed within the lookback.
-- A publish failure is logged and alerted without failing the invocation. Storage errors still trigger retries. Retries after partial storage completion must not republish older retained envelopes after a newer sequence.
+- A publish failure is logged and alerted without failing the invocation. Storage errors still trigger retries. Retries after partial storage completion must not republish older retained envelopes after a newer sequence: test a retry of a committed batch after a newer sequence has been committed and published, and confirm the retained head stays at the newer sequence and a client recovers the skipped sequence by replay.
 - An oversized final update is recoverable from its retained fetch notice on live delivery and reconnect without a subsequent publish.
 - `getRaceHistory` rebuilds a v2 event through seed `H` from the checkpoint and remaining envelopes. Test CCF final archive loading after covered envelopes are pruned and with a checkpoint spanning multiple query pages. Frozen legacy events still load in full. Replay returns the requested range when it is retained and requests a snapshot reload when the range was pruned.
 - A client seeds `lastSequence` from its snapshot (`H` read before the envelope query) and does not spuriously replay on its first live envelope.
